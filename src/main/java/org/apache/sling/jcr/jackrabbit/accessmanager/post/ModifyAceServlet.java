@@ -43,14 +43,51 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sling Post Servlet implementation for modifying the ACE for a principal on
- * a JCR resource.
- * 
- * @scr.component immediate="true" 
+ * <p>
+ * Sling Post Servlet implementation for modifying the ACE for a principal on a JCR
+ * resource.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Delete a set of Ace's from a node, the node is identified as a resource by the request
+ * url &gt;resource&lt;.modifyAce.html
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>principalId</dt>
+ * <dd>The principal of the Ace to modify in the ACL specified by the path.</dd>
+ * <dt>privilege@*</dt>
+ * <dd>One of more privileges, either granted or denied, where set the permission in the
+ * stored ACE is modified to match the request. Any permissions that are present in the
+ * stored ACE, but are not in the request are left untouched.</dd>
+ * </dl>
+ *
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success.</dd>
+ * <dt>404</dt>
+ * <dd>The resource was not found.</dd>
+ * <dt>500</dt>
+ * <dd>Failure. HTML explains the failure.</dd>
+ * </dl>
+ *
+ * <h4>Notes</h4>
+ * <p>
+ * The principalId is assumed to refer directly to an Authorizable, that comes direct from
+ * the UserManager. This can be a group or a user, but if its a group, denied permissions
+ * will not be added to the group. The group will only contain granted privileges.
+ * </p>
+ *
+ * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="modifyAce" 
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="modifyAce"
  */
 public class ModifyAceServlet extends AbstractAccessPostServlet {
 	private static final long serialVersionUID = -9182485466670280437L;

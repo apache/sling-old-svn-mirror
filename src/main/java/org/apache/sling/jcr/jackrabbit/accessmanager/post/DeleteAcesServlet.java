@@ -40,14 +40,41 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Sling Post Servlet implementation for deleting the ACE for a set of principals on
- * a JCR resource.
- * 
- * @scr.component immediate="true" 
+ * <p>
+ * Sling Post Servlet implementation for deleting the ACE for a set of principals on a JCR
+ * resource.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Delete a set of Ace's from a node, the node is identified as a resource by the request
+ * url &gt;resource&lt;.deleteAce.html
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>:applyTo</dt>
+ * <dd>An array of ace principal names to delete. Note the principal name is the primary
+ * key of the Ace in the Acl</dd>
+ * </dl>
+ *
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success.</dd>
+ * <dt>404</dt>
+ * <dd>The resource was not found.</dd>
+ * <dt>500</dt>
+ * <dd>Failure. HTML explains the failure.</dd>
+ * </dl>
+ *
+ * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="deleteAce" 
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="deleteAce"
  */
 public class DeleteAcesServlet extends AbstractAccessPostServlet {
 	private static final long serialVersionUID = 3784866802938282971L;
