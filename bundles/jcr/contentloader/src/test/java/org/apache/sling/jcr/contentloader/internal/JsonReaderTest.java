@@ -237,6 +237,37 @@ public class JsonReaderTest {
         }});
         this.parse(json);
     }
+    
+    
+    @org.junit.Test public void testCreateAcl() throws Exception {
+    	String json = " { " +
+    			"\"security:acl\" : [ " +
+    			"  { " +
+    			"    \"principal\" : \"username1\"," +
+    			"    \"granted\" : [\"jcr:read\",\"jcr:write\"]," +
+    			"    \"denied\" : []" +
+    			"  }," +
+    			"  {" +
+    			"    \"principal\" : \"groupname1\"," +
+    			"    \"granted\" : [\"jcr:read\",\"jcr:write\"]" +
+    			"  }," +
+    			"  {" +
+    			"    \"principal\" : \"groupname2\"," +
+    			"    \"granted\" : [\"jcr:read\"]," +
+    			"    \"denied\" : [\"jcr:write\"]" +
+    			"  }" +
+    			"]" +
+    			"}";	
+        this.mockery.checking(new Expectations() {{
+        	allowing(creator).createNode(null, null, null); inSequence(mySequence);
+            
+            allowing(creator).createAce("username1",new String[]{"jcr:read","jcr:write"},new String[]{}); inSequence(mySequence);
+            allowing(creator).createAce("groupname1",new String[]{"jcr:read","jcr:write"},null); inSequence(mySequence);
+            allowing(creator).createAce("groupname2",new String[]{"jcr:read"},new String[]{"jcr:write"}); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
 
     //---------- internal helper ----------------------------------------------
 

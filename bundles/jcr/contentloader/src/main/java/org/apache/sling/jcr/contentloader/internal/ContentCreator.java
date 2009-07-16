@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
@@ -131,5 +132,38 @@ public interface ContentCreator {
      * @throws RepositoryException
      */
     boolean switchCurrentNode(String subPath, String newNodeType)
+    throws RepositoryException;
+    
+    
+    /**
+     * Create a User in the jackrabbit UserManager
+     * @param name the name of the user
+     * @param password the password of the user
+     * @param extraProperties extra properties to assign to the created user
+     * @throws RepositoryException
+     */
+    void createUser(String name, String password, Map<String, Object> extraProperties)
+    throws RepositoryException;
+    
+    /**
+     * Create a Group in the jackrabbit UserManager
+     * @param name the name of the group
+     * @param members the members of the group (principal names)
+     * @param extraProperties extra properties to assign to the created group
+     * @throws RepositoryException
+     */
+    void createGroup(String name, String[] members, Map<String, Object> extraProperties)
+    throws RepositoryException;
+    
+    /**
+     * Creates an Access Control Entry for the current node for the specified 
+     *  principal and privileges.
+     * 
+     * @param principal the user or group id for the ACE
+     * @param grantedPrivileges the set of privileges to grant the principal
+     * @param deniedPrivileges the set of privileges to deny the principal (for users only)
+     * @throws RepositoryException
+     */
+    void createAce(String principal, String [] grantedPrivileges, String [] deniedPrivileges )
     throws RepositoryException;
 }

@@ -23,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
@@ -55,6 +57,17 @@ public class JsonReader implements ContentReader {
         ignoredNames.add("jcr:checkedOut");
         ignoredNames.add("jcr:created");
     }
+    
+    private static final Set<String> ignoredPrincipalPropertyNames = new HashSet<String>();
+    static {
+    	ignoredPrincipalPropertyNames.add("name");
+    	ignoredPrincipalPropertyNames.add("isgroup");
+    	ignoredPrincipalPropertyNames.add("members");
+    	ignoredPrincipalPropertyNames.add("dynamic");
+    	ignoredPrincipalPropertyNames.add("password");
+    }
+    private static final String SECURITY_PRINCIPLES = "security:principals";
+    private static final String SECURITY_ACL = "security:acl";
 
     public static final ImportProvider PROVIDER = new ImportProvider() {
         private JsonReader jsonReader;
@@ -127,7 +140,11 @@ public class JsonReader implements ContentReader {
             // skip well known objects
             if (!ignoredNames.contains(n)) {
                 Object o = obj.get(n);
-                if (o instanceof JSONObject) {
+                if (SECURITY_PRINCIPLES.equals(n)) {
+                	this.createPrincipals(o, contentCreator);
+                } else if (SECURITY_ACL.equals(n)) {
+                	this.createAcl(o, contentCreator);
+                } else if (o instanceof JSONObject) {
                     this.createNode(n, (JSONObject) o, contentCreator);
                 } else {
                     this.createProperty(n, o, contentCreator);
@@ -213,4 +230,151 @@ public class JsonReader implements ContentReader {
 
         return new String(bos.toByteArray(), encoding);
     }
+    
+    
+    /**
+     * Create or update one or more user and/or groups
+     *	<code>
+     *  {
+     *     "security:principals" : [
+     *        {
+     *           "name":"owner",
+     *           "isgroup":"true",
+     *           "members":[],
+     *           "dynamic":"true"
+     *        }
+     *     ],
+     *  }
+     *  </code>
+     */
+    protected void createPrincipals(Object obj, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
+    	if (obj instanceof JSONObject) {
+    		//single principal
+    		createPrincipal((JSONObject)obj, contentCreator);
+    	} else if (obj instanceof JSONArray) {
+    		//array of principals
+    		JSONArray jsonArray = (JSONArray)obj;
+    		for (int i=0; i < jsonArray.length(); i++) {
+    			Object object = jsonArray.get(i);
+    			if (object instanceof JSONObject) {
+    	    		createPrincipal((JSONObject)object, contentCreator);
+    			} else {
+    				throw new JSONException("Unexpected data type in principals array: " + object.getClass().getName());
+    			}
+    		}
+    	}
+    }
+    
+    /**
+     * Create or update a user or group
+     */
+    protected void createPrincipal(JSONObject json, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
+    	//create a principal
+    	String name = json.getString("name");
+    	boolean isGroup = json.optBoolean("isgroup", false);
+
+    	//collect the extra property names to assign to the new principal
+    	Map<String, Object> extraProps = new LinkedHashMap<String, Object>();
+		JSONArray names = json.names();
+		for(int p=0; p < names.length(); p++) {
+			String propName = names.getString(p);
+			if (!ignoredPrincipalPropertyNames.contains(propName)) {
+    			Object value = json.get(propName);
+    			extraProps.put(propName, value);
+			}
+		}
+
+    	if (isGroup) {
+    		String [] members = null;
+    		JSONArray membersJSONArray = json.optJSONArray("members");
+    		if (membersJSONArray != null) {
+    			members = new String[membersJSONArray.length()];
+    			for (int i=0; i < membersJSONArray.length(); i++) {
+    				members[i] = membersJSONArray.getString(i);
+    			}
+    		}
+    		contentCreator.createGroup(name, members, extraProps);
+    	} else {
+    		String password = json.getString("password");
+    		contentCreator.createUser(name, password, extraProps);
+    	}
+    }
+    
+    /**
+     * Create or update one or more access control entries for the current
+     * node.
+     * 
+     *  <code>
+     *  {
+     *   "security:acl" : [
+     *     	{
+     *     		"principal" : "username1",
+     *     		"granted" : [
+     *      		"jcr:read",
+     *      		"jcr:write"
+     *     		],
+     *     		"denied" : [
+     *     		]
+     *     	},
+     *     	{
+     *     		"principal" : "groupname1",
+     *     		"granted" : [
+     *      		"jcr:read",
+     *      		"jcr:write"
+     *     		]
+     *     	}    
+     *   ]    
+     *  }
+     *  </code>
+     */
+    protected void createAcl(Object obj, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
+    	if (obj instanceof JSONObject) {
+    		//single ace
+    		createAce((JSONObject)obj, contentCreator);
+    	} else if (obj instanceof JSONArray) {
+    		//array of aces
+    		JSONArray jsonArray = (JSONArray)obj;
+    		for (int i=0; i < jsonArray.length(); i++) {
+    			Object object = jsonArray.get(i);
+    			if (object instanceof JSONObject) {
+    	    		createAce((JSONObject)object, contentCreator);
+    			} else {
+    				throw new JSONException("Unexpected data type in acl array: " + object.getClass().getName());
+    			}
+    		}
+    	}
+    }
+    
+    /**
+     * Create or update an access control entry
+     */
+    protected void createAce(JSONObject ace, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
+		String principalID = ace.getString("principal");
+		
+		String [] grantedPrivileges = null;
+		JSONArray granted = ace.optJSONArray("granted");
+		if (granted != null) {
+			grantedPrivileges = new String[granted.length()];
+			for (int a=0; a < granted.length(); a++) {
+				grantedPrivileges[a] = granted.getString(a);
+			}
+		}
+
+		String [] deniedPrivileges = null;
+		JSONArray denied = ace.optJSONArray("denied");
+		if (denied != null) {
+			deniedPrivileges = new String[denied.length()];
+			for (int a=0; a < denied.length(); a++) {
+				deniedPrivileges[a] = denied.getString(a);
+			}
+		}
+		
+		//do the work.
+		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges);
+    }    
+    
 }

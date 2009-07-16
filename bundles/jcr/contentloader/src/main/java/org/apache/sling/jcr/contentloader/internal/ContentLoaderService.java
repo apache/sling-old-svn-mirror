@@ -18,7 +18,10 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +35,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -66,6 +70,16 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
     public static final String BUNDLE_CONTENT_NODE = "/var/sling/bundle-content";
 
+    /**
+     * To be used for the encryption. E.g. for passwords in
+     * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
+     * 
+     * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
+     */
+    private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
+    private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
+    private String passwordDigestAlgoritm = null;
+    
     /** default log */
     final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -196,6 +210,27 @@ public class ContentLoaderService implements SynchronousBundleListener {
         }
     }
 
+    /**
+     * Digest the given password using the configured digest algorithm
+     * 
+     * @param pwd the value to digest
+     * @return the digested value
+     * @throws IllegalArgumentException
+     */
+    protected String digestPassword(String pwd) throws IllegalArgumentException {
+        try {
+            StringBuffer password = new StringBuffer();
+            password.append("{").append(passwordDigestAlgoritm).append("}");
+            password.append(Text.digest(passwordDigestAlgoritm,
+                pwd.getBytes("UTF-8")));
+            return password.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalArgumentException(e.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e.toString());
+        }
+    }
+    
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -205,6 +240,14 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
         componentContext.getBundleContext().addBundleListener(this);
 
+        Dictionary<?, ?> props = componentContext.getProperties();
+        Object propValue = props.get(PROP_PASSWORD_DIGEST_ALGORITHM);
+        if (propValue instanceof String) {
+            passwordDigestAlgoritm = (String) propValue;
+        } else {
+            passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
+        }
+        
         Session session = null;
         try {
             session = this.getSession();
@@ -258,6 +301,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             this.initialContentLoader.dispose();
             this.initialContentLoader = null;
         }
+        passwordDigestAlgoritm = null;
     }
 
     // ---------- internal helper ----------------------------------------------

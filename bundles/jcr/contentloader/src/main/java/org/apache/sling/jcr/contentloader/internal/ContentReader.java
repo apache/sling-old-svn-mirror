@@ -31,7 +31,7 @@ public interface ContentReader {
 
     /**
      * Read the content from the URL and create the
-     * content throught the provided content creator.
+     * content using the provided content creator.
      * @param url The input stream.
      * @throws IOException
      */
