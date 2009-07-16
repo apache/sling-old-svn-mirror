@@ -98,12 +98,12 @@ public class DefaultContentCreator implements ContentCreator {
      * A one time use seed to randomize the user location.
      */
     private static final long INSTANCE_SEED = System.currentTimeMillis();
-    
+   
     /**
      * The number of levels folder used to store a user, could be a configuration option.
      */
     private static final int STORAGE_LEVELS = 3;
-    
+   
     /**
      * Constructor.
      * @param jcrContentHelper Helper class to get the mime type of a file
@@ -697,8 +697,8 @@ public class DefaultContentCreator implements ContentCreator {
         if (authorizable == null) {
             //principal does not exist yet, so create it
         	String digestedPassword = jcrContentHelper.digestPassword(password);
-        	User user = userManager.createUser(name, 
-        			digestedPassword, 
+        	User user = userManager.createUser(name,
+        			digestedPassword,
         			new Principal() {
 						public String getName() {
 							return name;
@@ -800,7 +800,7 @@ public class DefaultContentCreator implements ContentCreator {
 				for (Privilege privilege : privileges) {
 					String privilegeName = privilege.getName();
 					if (!postedPrivilegeNames.contains(privilegeName)) {
-						//this privilege was not posted, so record the existing state to be 
+						//this privilege was not posted, so record the existing state to be
 						// preserved when the ACE is re-created below
 						if (isAllow) {
 							preserveGrantedPrivileges.add(privilege);
