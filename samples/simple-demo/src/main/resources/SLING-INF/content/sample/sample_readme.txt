@@ -105,52 +105,39 @@ Nodes, Properties and in fact complete subtrees may be described in JSON files
 using the following skeleton structure (see http://www.json.org for information
 on the syntax of JSON) :
 
+# the name of the node is taken from the name of the file without the .json ext.
 	{
-		// optional node name on top level, default is file name without .json ext.
-		"name": "nodename",
+	
+		# optional primary node type, default "nt:unstructured"
+		"jcr:primaryType":"sling:ScriptedComponent",
+		# optional mixin node types as array
+		"jcr:mixinTypes": [ ],
 		
-		// optional primary node type, default "nt:unstructured"
-		"primaryNodeType": "sling:ScriptedComponent",
-		
-		// optional mixin node types as array
-		"mixinNodeTypes": [ ],
 	    
-	    // the "properties" property is an object indexed by property name whose
-	    // value is either the string property value, array for multi-values or
-	    // an object whose value[s] property denotes the property value(s) and
-	    // whose type property denotes the property type
-	    "properties": {
-	    	"sling:contentClass": "com.day.sling.jcr.test.Test",
-	    	"sampleMulti": [ "v1", "v2" ],
-	    	"sampleStruct": {
-	    		"value": 1,
-	    		"type": "Long"
-	    	}
-	    	"sampleStructMulti": {
-	    		"value": [ 1, 2, 3 ],
-	    		"type": "Long"
-	    	}
-	    },
+	    # "properties" are added as key value pairs, the name of the key being the name
+	    # of the property. The value is either the string property value, array for 
+	    # multi-values or an object whose value[s] property denotes the property 
+	    # value(s) and whose type property denotes the property type
+	    "sling:contentClass": "com.day.sling.jcr.test.Test",
+	    "sampleMulti": [ "v1", "v2" ],
+	    "sampleStruct": 1,
+	    "sampleStructMulti": [ 1, 2, 3 ],
 	    
-	    // the "nodes" property is an array of objects denoting child nodes. Nodes
-	    // may be further nested.
-		"nodes": [
-			{
-				// the name property is required on (nested) child nodes
-	            "name": "sling:scripts",
+	    # reference properties start with jcr:reference
+	    "jcr:reference:sampleReference": "/test/content",
+	    
+	    # path propertie start with jcr:path
+	    "jcr:path:sampleReference": "/test/path",
+	    	
+	    # nested nodes are added as nested maps. 
+		"sling:scripts":	{
 	            
-				"primaryNodeType": "sling:ScriptList",
-				
-				"nodes": [
-					{
+				"jcr:primaryType": "sling:ScriptList",
+				"script1" :{
 						"primaryNodeType": "sling:Script",
-						"properties": {
-							"sling:name": "/test/content/jsp/start.jsp",
-							"sling:type": "jsp",
-							"sling:glob": "*"
-						}
-					}
-				]
-			}
-		]
+					    "sling:name": "/test/content/jsp/start.jsp",
+						"sling:type": "jsp",
+						"sling:glob": "*"
+				}
+		}
 	}
