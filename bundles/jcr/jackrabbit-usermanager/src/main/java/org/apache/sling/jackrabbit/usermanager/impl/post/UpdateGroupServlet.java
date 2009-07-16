@@ -31,9 +31,44 @@ import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a group in the jackrabbit
- * UserManager.
+ * <p>
+ * Sling Post Operation implementation for updating a group in the 
+ * jackrabbit UserManager.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Updates a group's properties. Maps on to nodes of resourceType <code>sling/groups</code> like
+ * <code>/rep:system/rep:userManager/rep:groups/ae/3f/ed/testGroup</code> mapped to a resource url
+ * <code>/system/userManager/group/testGroup</code>. This servlet responds at
+ * <code>/system/userManager/group/testGroup.update.html</code>
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>*</dt>
+ * <dd>Any additional parameters become properties of the group node (optional)</dd>
+ * <dt>*@Delete</dt>
+ * <dd>The property is deleted, eg prop1@Delete</dd>
+ * </dl>
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success, a redirect is sent to the group's resource locator. The redirect comes with
+ * HTML describing the status.</dd>
+ * <dt>404</dt>
+ * <dd>The resource was not found</dd>
+ * <dt>500</dt>
+ * <dd>Failure</dd>
+ * </dl>
+ * <h4>Example</h4>
  * 
+ * <code>
+ * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/group/testGroup.update.html
+ * </code>
+ *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" values="sling/group"

@@ -31,9 +31,45 @@ import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a user in the jackrabbit
- * UserManager.
+ * <p>
+ * Sling Post Operation implementation for updating a user in the jackrabbit UserManager.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Updates a users properties. Maps on to nodes of resourceType <code>sling/users</code> like
+ * <code>/rep:system/rep:userManager/rep:users</code> mapped to a resource url
+ * <code>/system/userManager/user/ieb</code>. This servlet responds at
+ * <code>/system/userManager/user/ieb.update.html</code>
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>*</dt>
+ * <dd>Any additional parameters become properties of the user node (optional)</dd>
+ * <dt>*@Delete</dt>
+ * <dd>Delete the property eg prop3@Delete means prop3 will be deleted (optional)</dd>
+ * </dl>
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success, a redirect is sent to the users resource locator. The redirect comes with
+ * HTML describing the status.</dd>
+ * <dt>404</dt>
+ * <dd>The resource was not found</dd>
+ * <dt>500</dt>
+ * <dd>Failure</dd>
+ * </dl>
+ * <h4>Example</h4>
  * 
+ * <code>
+ * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/user/ieb.update.html
+ * </code>
+ * 
+ *
+ *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"

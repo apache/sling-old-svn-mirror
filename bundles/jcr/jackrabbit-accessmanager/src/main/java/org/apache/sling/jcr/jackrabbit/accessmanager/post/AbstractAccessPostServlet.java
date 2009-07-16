@@ -48,7 +48,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+   
 	/* (non-Javadoc)
 	 * @see org.apache.sling.api.servlets.SlingAllMethodsServlet#doPost(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
 	 */
@@ -76,12 +76,12 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         final List<Modification> changes = new ArrayList<Modification>();
-        
+       
         try {
             handleOperation(request, htmlResponse, changes);
-            
+           
             //TODO: maybe handle SlingAuthorizablePostProcessor handlers here
-            
+           
             // set changes on html response
             for(Modification change : changes) {
                 switch ( change.getType() ) {
@@ -93,7 +93,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
                     case ORDER : htmlResponse.onChange("ordered", change.getSource(), change.getDestination()); break;
                 }
             }
-            
+           
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -115,7 +115,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
                     e.getMessage(), e);
             }
         }
-        
+       
         // check for redirect URL if processing succeeded
         if (htmlResponse.isSuccessful()) {
             String redirect = getRedirectUrl(request, htmlResponse);
@@ -131,10 +131,10 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
 
 	/**
 	 * Extending Servlet should implement this operation to do the work
-	 * 
+	 *
 	 * @param request the sling http request to process
-	 * @param htmlResponse the response 
-	 * @param changes 
+	 * @param htmlResponse the response
+	 * @param changes
 	 */
 	abstract protected void handleOperation(SlingHttpServletRequest request,
 			HtmlResponse htmlResponse, List<Modification> changes) throws RepositoryException;
@@ -250,5 +250,5 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
 
         return ret.toString();
     }
-    
+   
 }

@@ -47,15 +47,76 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sling GET servlet implementation for dumping the declared ACL of a resource
- * to JSON.
- * 
- * @scr.component immediate="true" 
+ * <p>
+ * Sling GET servlet implementation for dumping the declared ACL of a resource to JSON.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Mapped to the default resourceType. Gets and Acl for a resource. Get of the form
+ * &gt;resource&lt;.acl.json Provided the user has access to the ACL, they get a chunk of
+ * JSON of the form.
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>GET</li>
+ * </ul>
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success.</dd>
+ * <dt>404</dt>
+ * <dd>The resource was not found.</dd>
+ * <dt>500</dt>
+ * <dd>Failure. HTML explains the failure.</dd>
+ * </dl>
+ * <h4>Example Response</h4>
+ * <code>
+ * <pre>
+ * {
+ * &quot;principalNameA&quot;:
+ *      { &quot;granted&quot; : [
+ *           &quot;permission1&quot;,
+ *           &quot;permission2&quot;,
+ *           &quot;permission3&quot;,
+ *           &quot;permission4&quot; ],
+ *        &quot;denied&quot; : [
+ *           &quot;permission5&quot;,
+ *           &quot;permission6&quot;,
+ *           &quot;permission7&quot;,
+ *           &quot;permission8&quot;]
+ *       },
+ * &quot;principalNameB&quot;:
+ *       { &quot;granted&quot; : [
+ *           &quot;permission1&quot;,
+ *           &quot;permission2&quot;,
+ *           &quot;permission3&quot;,
+ *           &quot;permission4&quot; ],
+ *         &quot;denied&quot; : [
+ *           &quot;permission5&quot;,
+ *           &quot;permission6&quot;,
+ *           &quot;permission7&quot;,
+ *           &quot;permission8&quot;] },
+ * &quot;principalNameC&quot;:
+ *       { &quot;granted&quot; : [
+ *           &quot;permission1&quot;,
+ *           &quot;permission2&quot;,
+ *           &quot;permission3&quot;,
+ *           &quot;permission4&quot; ],
+ *         &quot;denied&quot; : [
+ *           &quot;permission5&quot;,
+ *           &quot;permission6&quot;,
+ *           &quot;permission7&quot;,
+ *           &quot;permission8&quot;] }
+ * }
+ * </pre>
+ * </code>
+ *
+ * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="GET" 
- * @scr.property name="sling.servlet.selectors" value="acl" 
- * @scr.property name="sling.servlet.extensions " value="json" 
+ * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.property name="sling.servlet.selectors" value="acl"
+ * @scr.property name="sling.servlet.extensions " value="json"
  */
 public class GetAclServlet extends SlingAllMethodsServlet {
 	private static final long serialVersionUID = 3391376559396223184L;
