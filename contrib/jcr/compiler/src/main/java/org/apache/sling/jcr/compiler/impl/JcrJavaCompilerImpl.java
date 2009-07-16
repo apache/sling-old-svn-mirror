@@ -29,6 +29,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.compiler.ClassWriter;
 import org.apache.sling.commons.compiler.CompileUnit;
 import org.apache.sling.commons.compiler.CompilerEnvironment;
@@ -36,41 +37,35 @@ import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
 import org.apache.sling.jcr.compiler.JcrJavaCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * <code>JcrJavaCompilerImpl</code> ...
- * 
+ *
  * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.jcr.compiler.JcrJavaCompiler"
  */
 public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment {
 
     /** Logger instance */
-    private static final Logger log = LoggerFactory.getLogger(JcrJavaCompilerImpl.class);
-
-    private static final String CLASSLOADER_NAME = "admin";
+    private final Logger log = LoggerFactory.getLogger(JcrJavaCompilerImpl.class);
 
     /** @scr.reference */
     protected JavaCompiler compiler;
-    
-    /** @scr.reference */
-    protected RepositoryClassLoaderProvider clp;
 
     /** @scr.reference */
-    protected SlingRepository rep;
-    
-    // only accessed locally within scope of compile() method
-    private ClassLoader cl;
+    protected DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    // only accessed locally within scope of compile() method
+    /** The class loader used to compile the classes. */
+    protected ClassLoader javaClassLoader;
+
+    /** @scr.reference */
+    protected SlingRepository repository;
+
+    /** The session. */
     private Session session;
-
-    public JcrJavaCompilerImpl() {
-    }
 
     //------------------------------------------------------< JcrJavaCompiler >
     /* (non-Javadoc)
@@ -79,7 +74,7 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
     public boolean compile(String[] srcFiles, String outputDir,
             ErrorHandler errorHandler, boolean generateDebug, String javaVersion)
             throws Exception {
-        
+
         if (javaVersion == null) {
             javaVersion = System.getProperty("java.specification.version");
         }
@@ -87,61 +82,49 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
         if (outputDir == null) {
             throw new Exception("outputDir can not be null");
         }
-        
+
         ErrorHandlerWrapper handler = new ErrorHandlerWrapper(errorHandler);
 
-        cl = clp.getClassLoader(CLASSLOADER_NAME);
-        try {
-            session = rep.loginAdministrative(null);
-            
-            ClassWriter classWriter;
-            if (outputDir.startsWith("file://")) {
-                // write class files to local file system;
-                // only subdirectories of the system temp dir 
-                // will be accepted
-                File tempDir = new File(System.getProperty("java.io.tmpdir"));
-                File outDir = new File(outputDir.substring("file://".length()));
-                if (!outDir.isAbsolute()) {
-                    outDir = new File(tempDir, outputDir.substring("file://".length()));
-                } 
-                if (!outDir.getCanonicalPath().startsWith(tempDir.getCanonicalPath())) {
-                    throw new Exception("illegal outputDir (not a temp dir): " + outputDir);
-                }
-                outDir.mkdir();
-                classWriter = new FileClassWriter(outDir);
-            } else {
-                // write class files to the repository  (default)
-                if (!session.itemExists(outputDir)) {
-                    throw new Exception("outputDir does not exist: " + outputDir);
-                }
-                
-                Item item = session.getItem(outputDir);
-                if (item.isNode()) {
-                    Node folder = (Node) item;
-                    if (!folder.isNodeType("nt:folder")) {
-                        throw new Exception("outputDir must be a node of type nt:folder");
-                    }
-                    classWriter = new JcrClassWriter(folder);
-                } else {
-                    throw new Exception("outputDir must be a node of type nt:folder");
-                }
+        ClassWriter classWriter;
+        if (outputDir.startsWith("file://")) {
+            // write class files to local file system;
+            // only subdirectories of the system temp dir
+            // will be accepted
+            File tempDir = new File(System.getProperty("java.io.tmpdir"));
+            File outDir = new File(outputDir.substring("file://".length()));
+            if (!outDir.isAbsolute()) {
+                outDir = new File(tempDir, outputDir.substring("file://".length()));
+            }
+            if (!outDir.getCanonicalPath().startsWith(tempDir.getCanonicalPath())) {
+                throw new Exception("illegal outputDir (not a temp dir): " + outputDir);
+            }
+            outDir.mkdir();
+            classWriter = new FileClassWriter(outDir);
+        } else {
+            // write class files to the repository  (default)
+            if (!session.itemExists(outputDir)) {
+                throw new Exception("outputDir does not exist: " + outputDir);
             }
 
-            CompileUnit[] units = new CompileUnit[srcFiles.length];
-            for (int i = 0; i < units.length; i++) {
-                units[i] = createCompileUnit(srcFiles[i]);
-            }
-            compiler.compile(units, this, classWriter, handler, 
-                    new Options(javaVersion, generateDebug));
-        } finally {
-            // cleanup
-            clp.ungetClassLoader(cl);
-            if (session != null) {
-                session.logout();
-                session = null;
+            Item item = session.getItem(outputDir);
+            if (item.isNode()) {
+                Node folder = (Node) item;
+                if (!folder.isNodeType("nt:folder")) {
+                    throw new Exception("outputDir must be a node of type nt:folder");
+                }
+                classWriter = new JcrClassWriter(folder);
+            } else {
+                throw new Exception("outputDir must be a node of type nt:folder");
             }
         }
-        
+
+        CompileUnit[] units = new CompileUnit[srcFiles.length];
+        for (int i = 0; i < units.length; i++) {
+            units[i] = createCompileUnit(srcFiles[i]);
+        }
+        compiler.compile(units, this, classWriter, handler,
+                new Options(javaVersion, generateDebug));
+
         return handler.getNumErrors() == 0;
     }
 
@@ -150,7 +133,7 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
      * @see org.apache.sling.commons.compiler.CompilerEnvironment#findClass(java.lang.String)
      */
     public byte[] findClass(String className) throws Exception {
-        InputStream in = cl.getResourceAsStream(className.replace('.', '/') + ".class");
+        InputStream in = this.javaClassLoader.getResourceAsStream(className.replace('.', '/') + ".class");
         if (in == null) {
             return null;
         }
@@ -174,7 +157,7 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
      * @see org.apache.sling.commons.compiler.CompilerEnvironment#isPackage(java.lang.String)
      */
     public boolean isPackage(String packageName) {
-        InputStream in = cl.getResourceAsStream(packageName.replace('.', '/') + ".class");
+        InputStream in = this.javaClassLoader.getResourceAsStream(packageName.replace('.', '/') + ".class");
         if (in != null) {
             try {
                 in.close();
@@ -182,7 +165,7 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
             }
             return false;
         }
-        // FIXME need a better way to determine whether a name resolves 
+        // FIXME need a better way to determine whether a name resolves
         // to a package
         int pos = packageName.lastIndexOf('.');
         if (pos != -1) {
@@ -228,9 +211,9 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
         };
     }
 
-    private char[] readTextResource(String resourcePath) 
+    private char[] readTextResource(String resourcePath)
             throws RepositoryException, IOException {
-        String relPropPath = resourcePath.substring(1) 
+        String relPropPath = resourcePath.substring(1)
                 + "/jcr:content/jcr:data";
         InputStream in = session.getRootNode().getProperty(relPropPath).getStream();
         Reader reader = new InputStreamReader(in);
@@ -280,6 +263,66 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler, CompilerEnvironment
             log.debug("Warning in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
             warnings++;
             handler.onWarning(msg, sourceFile, line, position);
+        }
+    }
+
+    /**
+     * Bind the class load provider.
+     * @param repositoryClassLoaderProvider the new provider
+     */
+    protected void bindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
+        if ( this.javaClassLoader != null ) {
+            this.ungetClassLoader();
+        }
+        this.getClassLoader(rclp);
+    }
+
+    /**
+     * Unbind the class loader provider.
+     * @param repositoryClassLoaderProvider the old provider
+     */
+    protected void unbindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
+            this.ungetClassLoader();
+        }
+    }
+
+    /**
+     * Get the class loader
+     */
+    private void getClassLoader(DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.javaClassLoader = rclp.getDynamicClassLoader();
+    }
+
+    /**
+     * Unget the class loader
+     */
+    private void ungetClassLoader() {
+        this.dynamicClassLoaderManager = null;
+        this.javaClassLoader = null;
+    }
+
+    protected void bindRepository(final SlingRepository repo) {
+        if ( this.session != null ) {
+            this.session.logout();
+            this.session = null;
+        }
+        try {
+            this.session = repo.loginAdministrative(null);
+        } catch (RepositoryException re) {
+            log.error("Unable to open admin session.", re);
+        }
+        this.repository = repo;
+    }
+
+    protected void unbindRepository(final SlingRepository repo) {
+        if ( this.repository == repo ) {
+            if ( this.session != null ) {
+                this.session.logout();
+                this.session = null;
+            }
+            this.repository = null;
         }
     }
 }
