@@ -73,13 +73,13 @@ public class ContentLoaderService implements SynchronousBundleListener {
     /**
      * To be used for the encryption. E.g. for passwords in
      * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
-     * 
+     *
      * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
      */
     private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
     private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
     private String passwordDigestAlgoritm = null;
-    
+   
     /** default log */
     final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -212,7 +212,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
     /**
      * Digest the given password using the configured digest algorithm
-     * 
+     *
      * @param pwd the value to digest
      * @return the digested value
      * @throws IllegalArgumentException
@@ -230,7 +230,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             throw new IllegalArgumentException(e.toString());
         }
     }
-    
+   
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -247,7 +247,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
         } else {
             passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
         }
-        
+       
         Session session = null;
         try {
             session = this.getSession();

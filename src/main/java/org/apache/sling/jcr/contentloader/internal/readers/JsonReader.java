@@ -324,8 +324,8 @@ public class JsonReader implements ContentReader {
      *      		"jcr:read",
      *      		"jcr:write"
      *     		]
-     *     	}    
-     *   ]    
+     *     	}   
+     *   ]   
      *  }
      *  </code>
      */
@@ -347,7 +347,7 @@ public class JsonReader implements ContentReader {
     		}
     	}
     }
-    
+   
     /**
      * Create or update an access control entry
      */
@@ -375,6 +375,6 @@ public class JsonReader implements ContentReader {
 		
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges);
-    }    
-    
+    }   
+   
 }

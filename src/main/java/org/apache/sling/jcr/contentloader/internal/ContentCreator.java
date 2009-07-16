@@ -133,8 +133,8 @@ public interface ContentCreator {
      */
     boolean switchCurrentNode(String subPath, String newNodeType)
     throws RepositoryException;
-    
-    
+   
+   
     /**
      * Create a User in the jackrabbit UserManager
      * @param name the name of the user
@@ -144,7 +144,7 @@ public interface ContentCreator {
      */
     void createUser(String name, String password, Map<String, Object> extraProperties)
     throws RepositoryException;
-    
+   
     /**
      * Create a Group in the jackrabbit UserManager
      * @param name the name of the group
@@ -154,11 +154,11 @@ public interface ContentCreator {
      */
     void createGroup(String name, String[] members, Map<String, Object> extraProperties)
     throws RepositoryException;
-    
+   
     /**
-     * Creates an Access Control Entry for the current node for the specified 
+     * Creates an Access Control Entry for the current node for the specified
      *  principal and privileges.
-     * 
+     *
      * @param principal the user or group id for the ACE
      * @param grantedPrivileges the set of privileges to grant the principal
      * @param deniedPrivileges the set of privileges to deny the principal (for users only)
