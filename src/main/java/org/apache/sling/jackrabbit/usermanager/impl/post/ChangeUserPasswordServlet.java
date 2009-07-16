@@ -31,9 +31,43 @@ import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating the password of a user in
- * the jackrabbit UserManager.
- * 
+ * <p>
+ * Changes the password associated with a user. a new group. Maps on to nodes of resourceType <code>sling/groups</code> like
+ * <code>/rep:system/rep:userManager/rep:users/ae/fd/3e/ieb</code> mapped to a resource url
+ * <code>/system/userManager/user/ieb</code>. This servlet responds at
+ * <code>/system/userManager/user/ieb.changePassword.create.html</code>
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>oldPwd</dt>
+ * <dd>The current password for the user (required)</dd>
+ * <dt>newPwd</dt>
+ * <dd>The new password for the user (required)</dd>
+ * <dt>newPwdConfirm</dt>
+ * <dd>The confirm new password for the user (required)</dd>
+ * </dl>
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Sucess sent with no body</dd>
+ * <dt>404</dt>
+ * <dd>If the user was not found.</dd>
+ * <dt>500</dt>
+ * <dd>Failure, including group already exists. HTML explains the failure.</dd>
+ * </dl>
+ * <h4>Example</h4>
+ *
+ * <code>
+ * curl -FoldPwd=oldpassword -FnewPwd=newpassword =FnewPwdConfirm=newpassword http://localhost:8080/system/userManager/user/ieb.changePassword.html
+ * </code>
+ *
+ * <h4>Notes</h4>
+ *
+ *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"

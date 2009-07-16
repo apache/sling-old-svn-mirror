@@ -39,9 +39,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sling Post Servlet implementation for creating a user in the jackrabbit
- * UserManager.
- * 
+ * <p>
+ * Sling Post Servlet implementation for creating a user in the jackrabbit UserManager.
+ * </p>
+ * <h2>Rest Service Description</h2>
+ * <p>
+ * Creates a new user. Maps on to nodes of resourceType <code>sling/users</code> like
+ * <code>/rep:system/rep:userManager/rep:users</code> mapped to a resource url
+ * <code>/system/userManager/user</code>. This servlet responds at <code>/system/userManager/user.create.html</code>
+ * </p>
+ * <h4>Methods</h4>
+ * <ul>
+ * <li>POST</li>
+ * </ul>
+ * <h4>Post Parameters</h4>
+ * <dl>
+ * <dt>:name</dt>
+ * <dd>The name of the new user (required)</dd>
+ * <dt>:pwd</dt>
+ * <dd>The password of the new user (required)</dd>
+ * <dt>:pwdConfirm</dt>
+ * <dd>The password of the new user (required)</dd>
+ * <dt>*</dt>
+ * <dd>Any additional parameters become properties of the user node (optional)</dd>
+ * </dl>
+ * <h4>Response</h4>
+ * <dl>
+ * <dt>200</dt>
+ * <dd>Success, a redirect is sent to the users resource locator. The redirect comes with
+ * HTML describing the status.</dd>
+ * <dt>500</dt>
+ * <dd>Failure, including user already exists. HTML explains the failure.</dd>
+ * </dl>
+ * <h4>Example</h4>
+ *
+ * <code>
+ * curl -F:name=ieb -Fpwd=password -FpwdConfirm=password -Fproperty1=value1 http://localhost:8080/system/userManager/user.create.html
+ * </code>
+ *
+ *
  * @scr.component immediate="true" label="%createUser.post.operation.name"
  *                description="%createUser.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
@@ -70,7 +106,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
 
     /**
      * The JCR Repository we access to resolve resources
-     * 
+     *
      * @scr.reference
      */
     private SlingRepository repository;
@@ -104,7 +140,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
 
     /**
      * Activates this component.
-     * 
+     *
      * @param componentContext The OSGi <code>ComponentContext</code> of this
      *            component.
      */
