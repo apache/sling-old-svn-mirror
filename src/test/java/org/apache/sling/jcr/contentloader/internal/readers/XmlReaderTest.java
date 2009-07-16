@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * 	Test the XmlReader with an XSLT transform
@@ -44,7 +45,7 @@ public class XmlReaderTest extends TestCase {
     @SuppressWarnings("serial")
 	private static class MockContentCreator extends ArrayList<String> implements ContentCreator {
 
-        public MockContentCreator() {
+		public MockContentCreator() {
         }
 
         public void createNode(String name, String primaryNodeType, String[] mixinNodeTypes) throws RepositoryException {
@@ -72,5 +73,18 @@ public class XmlReaderTest extends TestCase {
         public boolean switchCurrentNode(String subPath, String newNodeType) throws RepositoryException {
             return true;
         }
+        
+		public void createAce(String principal,
+				String[] grantedPrivileges, String[] deniedPrivileges)
+				throws RepositoryException {
+		}
+
+		public void createGroup(String name, String[] members,
+				Map<String, Object> extraProperties) throws RepositoryException {
+		}
+
+		public void createUser(String name, String password,
+				Map<String, Object> extraProperties) throws RepositoryException {
+		}
     }
 }
