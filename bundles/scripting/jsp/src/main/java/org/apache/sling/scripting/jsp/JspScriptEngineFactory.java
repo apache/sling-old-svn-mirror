@@ -20,7 +20,6 @@ import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.Reader;
 
-import javax.jcr.RepositoryException;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -35,8 +34,8 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -83,10 +82,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
     /** @scr.reference */
     private ServletContext slingServletContext;
 
-    /**
-     * @scr.reference name="RepositoryClassLoaderProvider"
-     *                interface="org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider"
-     */
     private ClassLoader jspClassLoader;
 
     private SlingIOProvider ioProvider;
@@ -101,11 +96,10 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     private ServletConfig servletConfig;
 
-    private RepositoryClassLoaderProvider repoCLProvider;
+    /** @scr.reference */
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
-
-    private static final String CLASSLOADER_NAME = "admin";
 
     public JspScriptEngineFactory() {
         setExtensions(SCRIPT_TYPE);
@@ -131,7 +125,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
     @SuppressWarnings("unchecked")
     private void callJsp(Bindings bindings, SlingScriptHelper scriptHelper) {
 
-        ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
+        ioProvider.setRequestResourceResolver(scriptHelper.getScript().getScriptResource().getResourceResolver());
         try {
             JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
             // create a SlingBindings object
@@ -191,7 +185,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             // prepare some classes
             prepareJasperClasses();
 
-            ioProvider = new SlingIOProvider(repository, slingServletContext);
+            ioProvider = new SlingIOProvider(slingServletContext);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
                 componentContext.getBundleContext());
@@ -268,7 +262,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * Bind the class load provider.
      * @param repositoryClassLoaderProvider the new provider
      */
-    protected void bindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
         if ( this.jspClassLoader != null ) {
             this.ungetClassLoader();
         }
@@ -279,8 +273,8 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * Unbind the class loader provider.
      * @param repositoryClassLoaderProvider the old provider
      */
-    protected void unbindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
-        if ( this.repoCLProvider == rclp ) {
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
             this.ungetClassLoader();
         }
     }
@@ -288,26 +282,17 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
     /**
      * Get the class loader
      */
-    private void getClassLoader(RepositoryClassLoaderProvider rclp) {
-        try {
-            this.repoCLProvider = rclp;
-            this.jspClassLoader = rclp.getClassLoader(CLASSLOADER_NAME);
-        } catch (RepositoryException re) {
-            log.error("Cannot get JSP class loader", re);
-        }
+    private void getClassLoader(final DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.jspClassLoader = rclp.getDynamicClassLoader();
     }
 
     /**
      * Unget the class loader
      */
     private void ungetClassLoader() {
-        if ( this.repoCLProvider != null ) {
-            if ( this.jspClassLoader != null ) {
-                this.repoCLProvider.ungetClassLoader(this.jspClassLoader);
-                this.jspClassLoader = null;
-            }
-            this.repoCLProvider = null;
-        }
+        this.jspClassLoader = null;
+        this.dynamicClassLoaderManager = null;
     }
 
     private void prepareJasperClasses() {

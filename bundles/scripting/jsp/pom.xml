@@ -65,7 +65,6 @@
                             org.apache.sling.scripting.jsp.jasper.*,
                             org.apache.juli.logging
                         </Private-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
 
                         <Import-Package>
                             !org.eclipse.*, *
@@ -117,8 +116,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.classloader</artifactId>
-            <version>2.0.2-incubator</version>
+            <artifactId>org.apache.sling.commons.classloader</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

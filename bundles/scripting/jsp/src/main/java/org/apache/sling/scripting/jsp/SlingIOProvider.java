@@ -38,7 +38,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,20 +50,20 @@ class SlingIOProvider implements IOProvider {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
-    private final SlingRepository repository;
+    //private final SlingRepository repository;
 
     private final ThreadLocal<ResourceResolver> requestResourceResolver;
 
     // private session for write access
-    private final ThreadLocal<Session> privateSession;
-    
+    //private final ThreadLocal<Session> privateSession;
+
     // used to find out about the mime type for created files
     private final ServletContext servletContext;
 
-    SlingIOProvider(SlingRepository repository, ServletContext servletContext) {
-        this.repository = repository;
+    SlingIOProvider(ServletContext servletContext) {
+        //this.repository = repository;
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-        this.privateSession = new ThreadLocal<Session>();
+        //this.privateSession = new ThreadLocal<Session>();
         this.servletContext = servletContext;
     }
 
@@ -74,21 +73,12 @@ class SlingIOProvider implements IOProvider {
 
     void resetRequestResourceResolver() {
         requestResourceResolver.remove();
-
-        // at the same time logout this thread's session
-        Session session = privateSession.get();
-        if (session != null) {
-            if (session.isLive()) {
-                session.logout();
-            }
-            privateSession.remove();
-        }
     }
 
     ServletContext getServletContext() {
         return servletContext;
     }
-    
+
     // ---------- IOProvider interface -----------------------------------------
 
     /**
@@ -98,14 +88,14 @@ class SlingIOProvider implements IOProvider {
      */
     public InputStream getInputStream(String fileName)
             throws FileNotFoundException, IOException {
-        
+
         try {
-            
+
             Resource resource = getResourceInternal(fileName);
             if (resource == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
             }
-            
+
             InputStream stream = resource.adaptTo(InputStream.class);
             if (stream == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
@@ -284,14 +274,8 @@ class SlingIOProvider implements IOProvider {
 
     // ---------- internal -----------------------------------------------------
 
-    private Session getPrivateSession() throws RepositoryException {
-        Session session = privateSession.get();
-        if (session == null) {
-            session = repository.loginAdministrative(null);
-            privateSession.set(session);
-        }
-
-        return session;
+    private Session getPrivateSession()  {
+        return requestResourceResolver.get().adaptTo(Session.class);
     }
 
     private static void checkNode(Node node, String path) {
@@ -391,7 +375,7 @@ class SlingIOProvider implements IOProvider {
                 if (mimeType == null) {
                     mimeType = "application/octet-stream";
                 }
-                
+
                 contentNode.setProperty("jcr:lastModified",
                     System.currentTimeMillis());
                 contentNode.setProperty("jcr:data", new ByteArrayInputStream(
