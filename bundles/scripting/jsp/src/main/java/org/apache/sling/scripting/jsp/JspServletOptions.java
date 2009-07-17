@@ -113,11 +113,6 @@ public class JspServletOptions implements Options {
     private boolean errorOnUseBeanInvalidClassAttribute = true;
 
     /**
-     * I want to see my generated servlets. Which directory are they in?
-     */
-    private String scratchDir;
-
-    /**
      * Need to have this as is for versions 4 and 5 of IE. Can be set from the
      * initParams so if it changes in the future all that is needed is to have a
      * jsp initParam of type ieClassId="<value>"
@@ -127,7 +122,7 @@ public class JspServletOptions implements Options {
     /**
      * What classpath should I use while compiling generated servlets?
      */
-    private String classpath = null;
+    private String classpath;
 
     /**
      * Compiler target VM.
@@ -142,17 +137,17 @@ public class JspServletOptions implements Options {
     /**
      * Cache for the TLD locations
      */
-    private TldLocationsCache tldLocationsCache = null;
+    private TldLocationsCache tldLocationsCache;
 
     /**
      * Jsp config information
      */
-    private JspConfig jspConfig = null;
+    private JspConfig jspConfig;
 
     /**
      * TagPluginManager
      */
-    private TagPluginManager tagPluginManager = null;
+    private TagPluginManager tagPluginManager;
 
     /**
      * Java platform encoding to generate the JSP page servlet.
@@ -276,13 +271,6 @@ public class JspServletOptions implements Options {
      */
     public String getIeClassId() {
         return this.ieClassId;
-    }
-
-    /**
-     * What is my scratch dir?
-     */
-    public String getScratchDir() {
-        return this.scratchDir;
     }
 
     /**
@@ -607,9 +595,6 @@ public class JspServletOptions implements Options {
             this.classpath = classpath;
         }
 
-        String dir = getProperty("scratchdir");
-        this.scratchDir = (dir != null) ? dir : "/var/classes";
-
         String compilerTargetVM = getProperty("compilerTargetVM");
         if (compilerTargetVM != null) {
             this.compilerTargetVM = compilerTargetVM;
@@ -662,4 +647,7 @@ public class JspServletOptions implements Options {
         this.tagPluginManager = new TagPluginManager(servletContext);
     }
 
+    public String getScratchDir() {
+        return ":";
+    }
 }

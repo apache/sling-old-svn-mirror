@@ -34,6 +34,7 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -61,7 +62,6 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.genStringAsCharArray" value="false" type="Boolean"
  * @scr.property name="jasper.keepgenerated" value="true" type="Boolean"
  * @scr.property name="jasper.mappedfile" value="true" type="Boolean"
- * @scr.property name="jasper.scratchdir" value="/var/classes"
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.property name="jasper.checkInterval" value="300" type="Integer"
  * @scr.property name="jasper.displaySourceFragments" value="true"
@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
 public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(JspScriptEngineFactory.class);
+    private final Logger log = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
     ComponentContext componentContext;
 
@@ -94,6 +94,9 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /** @scr.reference */
     private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    /** @scr.reference */
+    private ClassLoaderWriter classLoaderWriter;
 
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
@@ -181,7 +184,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             // prepare some classes
             prepareJasperClasses();
 
-            ioProvider = new SlingIOProvider(slingServletContext);
+            ioProvider = new SlingIOProvider(classLoaderWriter);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
                 componentContext.getBundleContext());
