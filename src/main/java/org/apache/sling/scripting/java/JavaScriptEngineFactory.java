@@ -30,8 +30,10 @@ import javax.servlet.ServletContext;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -156,16 +158,24 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /**
      * Call the servlet.
-     * @param scriptHelper
+     * @param binding The bindings for the script invocation
+     * @param scriptHelper The script helper.
+     * @param context The script context.
      * @throws SlingServletException
      * @throws SlingIOException
      */
     @SuppressWarnings("unchecked")
-    private void callServlet(Bindings bindings, SlingScriptHelper scriptHelper) {
-
-        ioProvider.setRequestResourceResolver(scriptHelper.getScript().getScriptResource().getResourceResolver());
+    private void callServlet(final Bindings bindings,
+                             final SlingScriptHelper scriptHelper,
+                             final ScriptContext context) {
+        ResourceResolver resolver = (ResourceResolver) context.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
+                ScriptContext.ENGINE_SCOPE);
+        if ( resolver == null ) {
+            resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
+        }
+        ioProvider.setRequestResourceResolver(resolver);
         try {
-            ServletWrapper servlet = getWrapperAdapter(scriptHelper);
+            final ServletWrapper servlet = getWrapperAdapter(scriptHelper);
             // create a SlingBindings object
             final SlingBindings slingBindings = new SlingBindings();
             slingBindings.putAll(bindings);
@@ -251,7 +261,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
             final Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
             final SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
             if (scriptHelper != null) {
-                ((JavaScriptEngineFactory)this.getFactory()).callServlet(props, scriptHelper);
+                ((JavaScriptEngineFactory)this.getFactory()).callServlet(props, scriptHelper, context);
             }
             return null;
         }
