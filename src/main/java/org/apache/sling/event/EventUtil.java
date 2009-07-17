@@ -415,12 +415,29 @@ public abstract class EventUtil {
                                                     final String binPropertyName,
                                                     final String[] ignorePrefixes)
     throws RepositoryException, ClassNotFoundException {
+        return readProperties(node, binPropertyName, ignorePrefixes, Thread.currentThread().getContextClassLoader());
+    }
+
+    /**
+     * Read properties from a repository node and create a property map.
+     * As the properties might contain serialized java objects, a class loader can be specified
+     * for loading classes of the serialized java objects.
+     * @throws RepositoryException
+     * @throws ClassNotFoundException
+     * @since 2.0.6
+     */
+    public static EventPropertiesMap readProperties(final Node node,
+                                                    final String binPropertyName,
+                                                    final String[] ignorePrefixes,
+                                                    final ClassLoader objectClassLoader)
+    throws RepositoryException, ClassNotFoundException {
         final Map<String, Object> properties = new HashMap<String, Object>();
 
         // check the properties blob
         if ( node.hasProperty(binPropertyName) ) {
             try {
-                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(binPropertyName).getStream());
+                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(binPropertyName).getStream(),
+                        objectClassLoader);
                 int length = ois.readInt();
                 for(int i=0;i<length;i++) {
                     final String key = (String)ois.readObject();
@@ -623,9 +640,9 @@ public abstract class EventUtil {
 
         private ClassLoader classloader;
 
-        public ObjectInputStream(InputStream in) throws IOException {
+        public ObjectInputStream(final InputStream in, final ClassLoader classLoader) throws IOException {
             super(in);
-            this.classloader = Thread.currentThread().getContextClassLoader();
+            this.classloader = classLoader;
         }
 
         /**
