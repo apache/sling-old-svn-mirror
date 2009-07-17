@@ -397,7 +397,7 @@
                                 </goals>
                                 <configuration>
                                     <includeArtifactIds>
-                                        org.apache.felix.webconsole,org.apache.felix.bundlerepository,org.apache.sling.extensions.threaddump
+                                        org.apache.felix.webconsole,org.apache.felix.bundlerepository,org.apache.sling.extensions.threaddump,org.apache.sling.commons.classloader
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
