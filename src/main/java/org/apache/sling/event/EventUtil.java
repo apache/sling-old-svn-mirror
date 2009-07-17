@@ -406,6 +406,8 @@ public abstract class EventUtil {
 
     /**
      * Read properties from a repository node and create a property map.
+     * As the properties might contain serialized java objects, the thread context class
+     * loader is used to load these objects.
      * @throws RepositoryException
      * @throws ClassNotFoundException
      */
