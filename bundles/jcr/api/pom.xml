@@ -57,15 +57,8 @@
                         </Bundle-Category>
                         <Export-Package>
                             <!-- Export provider API selectively -->
-                            org.apache.sling.jcr.api;version=${pom.version},
-
-                            <!-- Re-export JCR API -->
-                            javax.jcr.*;version=1.0
+                            org.apache.sling.jcr.api;version=${pom.version}
                         </Export-Package>    
-                        <Import-Package>
-                            org.xml.sax.*;resolution:=optional,
-                            *
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -73,11 +66,10 @@
     </build>
 
     <dependencies>
-        <!-- The libraries to be re-exported -->
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
