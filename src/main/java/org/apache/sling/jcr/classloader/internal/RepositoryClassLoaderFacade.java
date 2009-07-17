@@ -47,15 +47,6 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
     private String[] classPath;
     private DynamicRepositoryClassLoader delegate;
 
-    /**
-     * The reference counter. If not greater than zero, there are this
-     * number of (assumed) life references.
-     *
-     * @see #ref()
-     * @see #deref()
-     */
-    private int refCtr = 0;
-
     public RepositoryClassLoaderFacade(
             RepositoryClassLoaderProviderImpl classLoaderProvider,
             ClassLoader parent,
@@ -140,27 +131,6 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
         }
     }
 
-    /**
-     * Increases the reference counter of this class loader.
-     */
-    /* package */void ref() {
-        this.refCtr++;
-    }
-
-    /**
-     * Decreases the reference counter of this class loader and calls the
-     * base class <code>destroy()</code> method, if this class loader has
-     * already been destroyed by calling the {@link #destroy()} method.
-     */
-    /* package */void deref() {
-        this.refCtr--;
-
-        // destroy if the loader should be destroyed and no refs exist
-//        if (refCtr <= 0 /* && destroyed */ ) {
-//            destroy();
-//        }
-    }
-
     //---------- internal -----------------------------------------------------
 
     private Session getSession() throws RepositoryException {
@@ -197,4 +167,5 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
 
         return this.delegate;
     }
+
 }
