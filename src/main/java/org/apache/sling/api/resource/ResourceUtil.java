@@ -373,4 +373,28 @@ public class ResourceUtil {
         }
         return resourceSuperType;
     }
+
+    /**
+     * Check if the resource is of the given type.
+     * This method first checks the resource type of the resource, then
+     * its super resource type and continues to go up the resource super
+     * type hierarchy.
+     * @since 2.0.6
+     */
+    public static boolean isA(final Resource resource, String resourceType) {
+        if ( resource == null || resourceType == null ) {
+            return false;
+        }
+        if ( resourceType.equals(resource.getResourceType()) ) {
+            return true;
+        }
+        String superType = findResourceSuperType(resource);
+        while ( superType != null ) {
+            if ( resourceType.equals(superType) ) {
+                return true;
+            }
+            superType = getResourceSuperType(resource.getResourceResolver(), superType);
+        }
+        return false;
+    }
 }

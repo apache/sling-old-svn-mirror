@@ -19,8 +19,10 @@
 package org.apache.sling.api.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.HashMap;
@@ -274,5 +276,37 @@ public class ResourceUtilTest {
         }});
         assertEquals("t:c", ResourceUtil.getResourceSuperType(r.getResourceResolver(), r.getResourceType()));
         assertNull(ResourceUtil.getResourceSuperType(r2.getResourceResolver(), r2.getResourceType()));
+    }
+
+    @Test public void test_isA() {
+        // the resource resolver
+        final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
+        // the resource to test
+        final Resource r = this.context.mock(Resource.class);
+        final Resource typeResource = this.context.mock(Resource.class);
+        this.context.checking(new Expectations() {{
+            allowing(r).getResourceType(); will(returnValue("a:b"));
+            allowing(r).getResourceSuperType(); will(returnValue("d:e"));
+            allowing(r).getResourceResolver(); will(returnValue(resolver));
+
+            allowing(typeResource).getResourceType();
+            will(returnValue("x:y"));
+            allowing(typeResource).getResourceSuperType();
+            will(returnValue("t:c"));
+
+            allowing(resolver).getResource("/a");
+            will(returnValue(r));
+            allowing(resolver).getResource("a/b");
+            will(returnValue(null));
+            allowing(resolver).getResource("t/c");
+            will(returnValue(null));
+            allowing(resolver).getResource("d/e");
+            will(returnValue(typeResource));
+        }});
+        assertTrue(ResourceUtil.isA(r, "a:b"));
+        assertTrue(ResourceUtil.isA(r, "d:e"));
+        assertFalse(ResourceUtil.isA(r, "x:y"));
+        assertTrue(ResourceUtil.isA(r, "t:c"));
+        assertFalse(ResourceUtil.isA(r, "h:p"));
     }
 }
