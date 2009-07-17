@@ -23,10 +23,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
- * The <code>SessionProvider</code> extends the standard JCR Repository
+ * The <code>SlingRepository</code> extends the standard JCR repository
  * interface with two methods: {@link #getDefaultWorkspace()} and
  * {@link #loginAdministrative(String)}. This method ease the use of a JCR
- * repository in a Sling Application in that the default (or standard) workspace
+ * repository in a Sling application in that the default (or standard) workspace
  * to use by the application may be configured and application bundles may use a
  * simple method to get an administrative session instead of being required to
  * provide their own configuration of administrative session details.
@@ -39,14 +39,14 @@ public interface SlingRepository extends Repository {
 
     /**
      * Returns the default workspace to use on login.
-     * 
+     *
      * @return null if the configured default workspace name is empty, SLING-256
      */
     String getDefaultWorkspace();
 
     /**
      * Returns a session to the default workspace which has administrative
-     * powsers.
+     * powers.
      * <p>
      * <b><i>NOTE: This method is intended for use by infrastructure bundles to
      * access the repository and provide general services. This method MUST not
