@@ -16,8 +16,6 @@
  */
 package org.apache.sling.scripting.jsp;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,36 +26,30 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.servlet.ServletContext;
-
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingIOProvider</code> TODO
+ * The <code>SlingIOProvider</code>
  */
 class SlingIOProvider implements IOProvider {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
+    private final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
     private final ThreadLocal<ResourceResolver> requestResourceResolver;
 
-    // used to find out about the mime type for created files
-    private final ServletContext servletContext;
+    private final ClassLoaderWriter classLoaderWriter;
 
-    SlingIOProvider(ServletContext servletContext) {
+    SlingIOProvider(final ClassLoaderWriter classLoaderWriter) {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-        this.servletContext = servletContext;
+        this.classLoaderWriter = classLoaderWriter;
     }
 
     void setRequestResourceResolver(ResourceResolver resolver) {
@@ -66,10 +58,6 @@ class SlingIOProvider implements IOProvider {
 
     void resetRequestResourceResolver() {
         requestResourceResolver.remove();
-    }
-
-    ServletContext getServletContext() {
-        return servletContext;
     }
 
     // ---------- IOProvider interface -----------------------------------------
@@ -81,7 +69,9 @@ class SlingIOProvider implements IOProvider {
      */
     public InputStream getInputStream(String fileName)
             throws FileNotFoundException, IOException {
-
+        if ( fileName.startsWith(":") ) {
+            return this.classLoaderWriter.getInputStream(fileName.substring(1));
+        }
         try {
 
             Resource resource = getResourceInternal(fileName);
@@ -109,6 +99,9 @@ class SlingIOProvider implements IOProvider {
      * returned.
      */
     public long lastModified(String fileName) {
+        if ( fileName.startsWith(":") ) {
+            return this.classLoaderWriter.getLastModified(fileName.substring(1));
+        }
         try {
             Resource resource = getResourceInternal(fileName);
             if (resource != null) {
@@ -129,97 +122,29 @@ class SlingIOProvider implements IOProvider {
      * Removes the named item from the repository.
      */
     public boolean delete(String fileName) {
-        Node parentNode = null;
-        try {
-            fileName = cleanPath(fileName);
-            Session session = getPrivateSession();
-            if (session.itemExists(fileName)) {
-                Item fileItem = session.getItem(fileName);
-                parentNode = fileItem.getParent();
-                fileItem.remove();
-                parentNode.save();
-                return true;
-            }
-        } catch (RepositoryException re) {
-            log.error("Cannot remove " + fileName, re);
-        } finally {
-            checkNode(parentNode, fileName);
-        }
-
-        // fall back to false if item does not exist or in case of error
-        return false;
+        return this.classLoaderWriter.delete(fileName.substring(1));
     }
 
     /**
      * Returns an output stream to write to the repository.
      */
     public OutputStream getOutputStream(String fileName) {
-        fileName = cleanPath(fileName);
-        return new RepositoryOutputStream(this, fileName);
+        return this.classLoaderWriter.getOutputStream(fileName.substring(1));
     }
 
     /**
      * Renames a node in the repository.
      */
     public boolean rename(String oldFileName, String newFileName) {
-        try {
-            oldFileName = cleanPath(oldFileName);
-            newFileName = cleanPath(newFileName);
-
-            Session session = getPrivateSession();
-            session.getWorkspace().move(oldFileName, newFileName);
-            return true;
-        } catch (RepositoryException re) {
-            log.error("Cannot rename " + oldFileName + " to " + newFileName, re);
-        }
-
-        // fallback to false in case of error or non-existence of oldFileName
-        return false;
+        return this.classLoaderWriter.rename(oldFileName.substring(1), newFileName.substring(1));
     }
 
     /**
      * Creates a folder hierarchy in the repository.
      */
     public boolean mkdirs(String path) {
-        Node parentNode = null;
-        try {
-            Session session = getPrivateSession();
-
-            // quick test
-            path = cleanPath(path);
-            if (session.itemExists(path) && session.getItem(path).isNode()) {
-                return true;
-            }
-
-            // check path walking it down
-            Node current = session.getRootNode();
-            String[] names = path.split("/");
-            for (int i = 0; i < names.length; i++) {
-                if (names[i] == null || names[i].length() == 0) {
-                    continue;
-                } else if (current.hasNode(names[i])) {
-                    current = current.getNode(names[i]);
-                } else {
-                    if (parentNode == null) {
-                        parentNode = current;
-                    }
-                    current = current.addNode(names[i], "nt:folder");
-                }
-            }
-
-            if (parentNode != null) {
-                parentNode.save();
-                return true;
-            }
-
-        } catch (RepositoryException re) {
-            log.error("Cannot create folder path " + path, re);
-        } finally {
-            checkNode(parentNode, path);
-        }
-
-        // false in case of error or no need to create
-        return false;
+        // we just do nothing
+        return true;
     }
 
     // ---------- Helper Methods for JspServletContext -------------------------
@@ -267,21 +192,6 @@ class SlingIOProvider implements IOProvider {
 
     // ---------- internal -----------------------------------------------------
 
-    private Session getPrivateSession()  {
-        return requestResourceResolver.get().adaptTo(Session.class);
-    }
-
-    private static void checkNode(Node node, String path) {
-        if (node != null && node.isModified()) {
-            try {
-                node.refresh(false);
-            } catch (RepositoryException re) {
-                log.error("Cannot refresh node for " + path
-                    + " after failed save", re);
-            }
-        }
-    }
-
     private String cleanPath(String path) {
         // replace backslash by slash
         path = path.replace('\\', '/');
@@ -292,97 +202,5 @@ class SlingIOProvider implements IOProvider {
         }
 
         return path;
-    }
-
-    private static class RepositoryOutputStream extends ByteArrayOutputStream {
-
-        private final SlingIOProvider repositoryOutputProvider;
-
-        private final String fileName;
-
-        RepositoryOutputStream(SlingIOProvider repositoryOutputProvider,
-                String fileName) {
-            this.repositoryOutputProvider = repositoryOutputProvider;
-            this.fileName = fileName;
-        }
-
-        public void close() throws IOException {
-            super.close();
-
-            Node parentNode = null;
-            try {
-                Session session = repositoryOutputProvider.getPrivateSession();
-                Node fileNode = null;
-                Node contentNode = null;
-                if (session.itemExists(fileName)) {
-                    Item item = session.getItem(fileName);
-                    if (item.isNode()) {
-                        Node node = item.isNode()
-                                ? (Node) item
-                                : item.getParent();
-                        if ("jcr:content".equals(node.getName())) {
-                            // replace the content properties of the jcr:content
-                            // node
-                            parentNode = node;
-                            contentNode = node;
-                        } else if (node.isNodeType("nt:file")) {
-                            // try to set the content properties of jcr:content
-                            // node
-                            parentNode = node;
-                            contentNode = node.getNode("jcr:content");
-                        } else { // fileName is a node
-                            // try to set the content properties of the node
-                            parentNode = node;
-                            contentNode = node;
-                        }
-                    } else {
-                        // replace property with an nt:file node (if possible)
-                        parentNode = item.getParent();
-                        String name = item.getName();
-                        fileNode = parentNode.addNode(name, "nt:file");
-                        item.remove();
-                    }
-                } else {
-                    int lastSlash = fileName.lastIndexOf('/');
-                    if (lastSlash <= 0) {
-                        parentNode = session.getRootNode();
-                    } else {
-                        Item parent = session.getItem(fileName.substring(0,
-                            lastSlash));
-                        if (!parent.isNode()) {
-                            // TODO: fail
-                        }
-                        parentNode = (Node) parent;
-                    }
-                    String name = fileName.substring(lastSlash + 1);
-                    fileNode = parentNode.addNode(name, "nt:file");
-                }
-
-                // if we have a file node, create the contentNode
-                if (fileNode != null) {
-                    contentNode = fileNode.addNode("jcr:content", "nt:resource");
-                }
-
-                String mimeType = repositoryOutputProvider.getServletContext().getMimeType(
-                    fileName);
-                if (mimeType == null) {
-                    mimeType = "application/octet-stream";
-                }
-
-                contentNode.setProperty("jcr:lastModified",
-                    System.currentTimeMillis());
-                contentNode.setProperty("jcr:data", new ByteArrayInputStream(
-                    buf, 0, size()));
-                contentNode.setProperty("jcr:mimeType", mimeType);
-
-                parentNode.save();
-            } catch (RepositoryException re) {
-                log.error("Cannot write file " + fileName, re);
-                throw new IOException("Cannot write file " + fileName
-                    + ", reason: " + re.toString());
-            } finally {
-                checkNode(parentNode, fileName);
-            }
-        }
     }
 }
