@@ -33,9 +33,9 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
@@ -70,12 +70,7 @@ import org.slf4j.LoggerFactory;
 public class SlingScriptAdapterFactory implements AdapterFactory,
         MimeTypeProvider, BundleListener {
 
-    private static final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
-
-    /**
-     * jcr:encoding
-     */
-    public static final String JCR_ENCODING = "jcr:encoding";
+    private final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
     private static final String ENGINE_FACTORY_SERVICE = "META-INF/services/"
         + ScriptEngineFactory.class.getName();
@@ -155,6 +150,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         return scriptEngineManager;
     }
 
+    @SuppressWarnings("unchecked")
     private Collection<?> registerFactories(SlingScriptEngineManager mgr,
             Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
@@ -167,7 +163,6 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
             String line;
             while ((line = reader.readLine()) != null) {
                 try {
-                    @SuppressWarnings("unchecked")
                     Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
                     ScriptEngineFactory spi = clazz.newInstance();
                     registerFactory(mgr, spi);
@@ -329,12 +324,12 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         final EventAdmin localEA = this.getEventAdmin();
         if ( localEA != null ) {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS, toArray(scriptEngineFactory.getExtensions()));
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME, scriptEngineFactory.getLanguageName());
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION, scriptEngineFactory.getLanguageVersion());
-            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES, toArray(scriptEngineFactory.getMimeTypes()));
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS, toArray(scriptEngineFactory.getExtensions()));
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME, scriptEngineFactory.getLanguageName());
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION, scriptEngineFactory.getLanguageVersion());
+            props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES, toArray(scriptEngineFactory.getMimeTypes()));
             localEA.postEvent(new Event(topic, props));
         }
     }
@@ -344,7 +339,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         engineSpiServices.add(scriptEngineFactory);
         scriptEngineManager = null;
         // send event
-        postEvent(SlingConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
+        postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
     }
 
     protected void unbindScriptEngineFactory(
@@ -352,7 +347,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         engineSpiServices.remove(scriptEngineFactory);
         scriptEngineManager = null;
         // send event
-        postEvent(SlingConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
+        postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
 
 }
