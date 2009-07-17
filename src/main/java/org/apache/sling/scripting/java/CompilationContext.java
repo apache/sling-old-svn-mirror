@@ -55,7 +55,7 @@ public class CompilationContext {
     private long lastModificationTest = 0L;
     private int removed = 0;
 
-    private Class servletClass;
+    private Class<?> servletClass;
 
     private final ServletWrapper wrapper;
 
@@ -194,7 +194,7 @@ public class CompilationContext {
     /**
      * Load the class.
      */
-    public Class load()
+    public Class<?> load()
     throws ServletException, FileNotFoundException {
         final String name = this.getClassFilePath().substring(1).replace('/', '.');
         try {

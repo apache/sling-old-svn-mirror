@@ -33,6 +33,7 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -52,7 +53,6 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="java.compilerSourceVM" value="1.5"
  * @scr.property name="java.compilerTargetVM" value="1.5"
  * @scr.property name="java.development" value="true"
- * @scr.property name="java.outputPath" value="/var/classes"
  * @scr.property name="java.modificationTestInterval" value="-1"
  * @scr.property name="java.classdebuginfo" value="true"
  */
@@ -73,6 +73,9 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /** @scr.reference */
     private ServletContext slingServletContext;
+
+    /** @scr.reference */
+    private ClassLoaderWriter classLoaderWriter;
 
     private SlingIOProvider ioProvider;
 
@@ -120,7 +123,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * @param componentContext
      */
     protected void activate(ComponentContext componentContext) {
-        this.ioProvider = new SlingIOProvider();
+        this.ioProvider = new SlingIOProvider(this.classLoaderWriter);
         this.servletCache = new ServletCache();
 
         this.javaServletContext = new JavaServletContext(ioProvider,
@@ -157,6 +160,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingServletException
      * @throws SlingIOException
      */
+    @SuppressWarnings("unchecked")
     private void callServlet(Bindings bindings, SlingScriptHelper scriptHelper) {
 
         ioProvider.setRequestResourceResolver(scriptHelper.getScript().getScriptResource().getResourceResolver());
