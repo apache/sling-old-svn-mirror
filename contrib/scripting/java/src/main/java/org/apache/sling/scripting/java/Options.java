@@ -36,8 +36,6 @@ public class Options {
 
     private static final String PROPERTY_DEVELOPMENT = "development";
 
-    private static final String PROPERTY_OUTPUT_PATH = "outputPath";
-
     private static final String PROPERTY_MODIFICATION_TEST_INTERVAL = "modificationTestInterval";
 
     private static final String PROPERTY_CLASSDEBUGINFO = "classdebuginfo";
@@ -80,8 +78,6 @@ public class Options {
      */
     private final ClassLoader classLoader;
 
-    private final String destinationDir;
-
     /**
      * Create an compiler options object using data available from
      * the component configuration.
@@ -100,7 +96,6 @@ public class Options {
         properties.put(PROPERTY_COMPILER_TARGET_V_M, DEFAULT_VM_VERSION);
         properties.put(PROPERTY_COMPILER_SOURCE_V_M, DEFAULT_VM_VERSION);
         properties.put(PROPERTY_JAVA_ENCODING, "UTF-8");
-        properties.put(PROPERTY_OUTPUT_PATH, "/var/classes");
 
         // now check component properties
         Dictionary<?, ?> config = componentContext.getProperties();
@@ -116,7 +111,6 @@ public class Options {
             }
         }
 
-        this.destinationDir = properties.get(PROPERTY_OUTPUT_PATH).toString();
         this.classDebugInfo = Boolean.valueOf(properties.get(PROPERTY_CLASSDEBUGINFO).toString());
         this.modificationTestInterval = Integer.valueOf(properties.get(PROPERTY_MODIFICATION_TEST_INTERVAL).toString());
         this.development = Boolean.valueOf(properties.get(PROPERTY_DEVELOPMENT).toString());
@@ -129,7 +123,7 @@ public class Options {
      * Return the destination directory.
      */
     public String getDestinationPath() {
-        return this.destinationDir;
+        return ":";
     }
 
     /**

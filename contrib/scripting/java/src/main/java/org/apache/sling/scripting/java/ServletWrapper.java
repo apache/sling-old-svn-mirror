@@ -102,7 +102,7 @@ public class ServletWrapper {
                     Servlet servlet = null;
 
                     try {
-                        final Class servletClass = ctxt.load();
+                        final Class<?> servletClass = ctxt.load();
                         servlet = (Servlet) servletClass.newInstance();
                     } catch (IllegalAccessException e) {
                         throw new ServletException(e);
