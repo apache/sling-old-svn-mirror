@@ -59,9 +59,12 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.core.ScriptHelper;
 import org.osgi.framework.BundleContext;
@@ -73,6 +76,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 	// name of the global variable containing the node to which the
 	// resource adapts (null if the resource does not adapt to a node
     private static final String NODE = "currentNode";
+
+    private static ThreadLocal<ResourceResolver> requestResourceResolver = new ThreadLocal<ResourceResolver>();
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -95,7 +100,16 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     // ---------- SlingScript interface ----------------------------------------
 
     public Resource getScriptResource() {
-        return scriptResource;
+        final ResourceResolver resolver = requestResourceResolver.get();
+        if ( resolver == null ) {
+            // if we don't have a request resolver we directly return the script resource
+            return scriptResource;
+        }
+        Resource rsrc = resolver.getResource(this.scriptResource.getPath());
+        if ( rsrc == null ) {
+            rsrc = new SyntheticResource(resolver, this.scriptResource.getPath(), this.scriptResource.getResourceType());
+        }
+        return rsrc;
     }
 
     /**
@@ -125,6 +139,13 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.setReader((Reader) bindings.get(READER));
             ctx.setWriter((Writer) bindings.get(OUT));
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
+
+            // set the current resource resolver
+            requestResourceResolver.set(props.getRequest().getResourceResolver());
+
+            // set the script resource resolver as an attribute
+            ctx.setAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
+                    this.scriptResource.getResourceResolver(), ScriptContext.ENGINE_SCOPE);
 
             reader = getScriptReader();
             if ( method != null && !(this.scriptEngine instanceof Invocable)) {
@@ -179,6 +200,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     // don't care
                 }
             }
+            requestResourceResolver.remove();
         }
     }
 

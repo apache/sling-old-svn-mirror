@@ -31,8 +31,10 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -122,11 +124,18 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingIOException
      */
     @SuppressWarnings("unchecked")
-    private void callJsp(Bindings bindings, SlingScriptHelper scriptHelper) {
+    private void callJsp(final Bindings bindings,
+                         final SlingScriptHelper scriptHelper,
+                         final ScriptContext context) {
 
-        ioProvider.setRequestResourceResolver(scriptHelper.getScript().getScriptResource().getResourceResolver());
+        ResourceResolver resolver = (ResourceResolver) context.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
+                ScriptContext.ENGINE_SCOPE);
+        if ( resolver == null ) {
+            resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
+        }
+        ioProvider.setRequestResourceResolver(resolver);
         try {
-            JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
+            final JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
             // create a SlingBindings object
             final SlingBindings slingBindings = new SlingBindings();
             slingBindings.putAll(bindings);
@@ -332,7 +341,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                 Thread.currentThread().setContextClassLoader(jspClassLoader);
 
                 try {
-                    callJsp(props, scriptHelper);
+                    callJsp(props, scriptHelper, context);
                 } catch (SlingServletException e) {
                     // ServletExceptions use getRootCause() instead of getCause(),
                     // so we have to extract the actual root cause and pass it as
