@@ -31,10 +31,11 @@ public class SyntheticResource implements Resource {
     /** The path of the synthetic resource */
     private final String path;
 
-    /** The type this synthetic resource assumes */
+    /** The type this synthetic resource assumes.
+     * TODO as soon as we remove the {@link #setResourceType(String)} methode we can make this final. */
     private String resourceType;
 
-    /** The metadat of this resource just containig the resource path */
+    /** The metadata of this resource just containig the resource path */
     private final ResourceMetadata resourceMetadata;
 
     /**
@@ -49,12 +50,12 @@ public class SyntheticResource implements Resource {
         this.resourceMetadata = new ResourceMetadata();
         this.resourceMetadata.setResolutionPath(path);
     }
-    
+
     /**
      * Creates a synthetic resource with the given <code>ResourceMetadata</code>
      * and <code>resourceType</code>.
      */
-    public SyntheticResource(ResourceResolver resourceResolver, ResourceMetadata rm, 
+    public SyntheticResource(ResourceResolver resourceResolver, ResourceMetadata rm,
     		String resourceType) {
         this.resourceResolver = resourceResolver;
         this.path = rm.getResolutionPath();
@@ -62,17 +63,29 @@ public class SyntheticResource implements Resource {
         this.resourceMetadata = rm;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getPath()
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     */
     public String getResourceType() {
         return resourceType;
     }
-    
+
+    /**
+     * Helper method for sub classes to set the resource type
+     * @param resourceType The resource type
+     * @deprecated The resource type should be set through the constructor.
+     */
+    @Deprecated
     protected void setResourceType(String resourceType) {
-        if(this.resourceType != null) {
-            throw new IllegalArgumentException("Resource type already set (" 
+        if (this.resourceType != null) {
+            throw new IllegalArgumentException("Resource type already set ("
                     + this.resourceType + "), cannot change it");
         }
         this.resourceType = resourceType;
@@ -84,7 +97,7 @@ public class SyntheticResource implements Resource {
     public String getResourceSuperType() {
         return null;
     }
-    
+
     /**
      * Returns a resource metadata object containing just the path of this
      * resource as the {@link ResourceMetadata#RESOLUTION_PATH} property.
@@ -109,6 +122,7 @@ public class SyntheticResource implements Resource {
         return null;
     }
 
+    @Override
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
             + ", path=" + getPath();
