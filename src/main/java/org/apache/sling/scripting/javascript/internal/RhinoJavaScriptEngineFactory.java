@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.script.ScriptEngine;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.javascript.RhinoHostObjectProvider;
 import org.apache.sling.scripting.javascript.SlingWrapper;
@@ -52,7 +53,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
- * 
+ *
  * @scr.component metatype="no"
  * @scr.service interface="javax.script.ScriptEngineFactory"
  * @scr.reference name="HostObjectProvider"
@@ -79,10 +80,13 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
     private String languageVersion;
 
     private SlingWrapFactory wrapFactory;
-    
+
     private Scriptable rootScope;
 
     private final Set<RhinoHostObjectProvider> hostObjectProvider = new HashSet<RhinoHostObjectProvider>();
+
+    /** @scr.reference */
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public ScriptEngine getScriptEngine() {
         return new RhinoJavaScriptEngine(this, getRootScope());
@@ -103,21 +107,21 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
     SlingWrapFactory getWrapFactory() {
         return wrapFactory;
     }
-    
+
     @SuppressWarnings("unchecked")
     private Scriptable getRootScope() {
         if (rootScope == null) {
 
             final Context rhinoContext = Context.enter();
             try {
-                
+
                 Scriptable tmpScope = rhinoContext.initStandardObjects(
                     new ImporterTopLevel(), false);
-    
+
                 // default classes
                 addHostObjects(tmpScope,
                     (Class<? extends ScriptableObject>[]) HOSTOBJECT_CLASSES);
-    
+
                 // provided classes
                 for (RhinoHostObjectProvider provider : hostObjectProvider) {
                     addHostObjects(tmpScope, provider.getHostObjectClasses());
@@ -126,10 +130,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
                     addImportedPackages(rhinoContext, tmpScope,
                         provider.getImportedPackages());
                 }
-                
+
                 // only assign the root scope when complete set up
                 rootScope = tmpScope;
-                
+
             } finally {
                 // ensure the context is exited after setting up the
                 // the new root scope
@@ -141,7 +145,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
     }
 
     private void dropRootScope() {
-        
+
         // ensure the debugger is closed if the root scope will
         // be replaced to ensure no references to the old scope
         // and context remain
@@ -149,11 +153,11 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         if (contextFactory instanceof SlingContextFactory) {
             ((SlingContextFactory) contextFactory).exitDebugger();
         }
-        
+
         // drop the scope
         rootScope = null;
     }
-    
+
     // ---------- SCR integration
 
     protected void activate(ComponentContext context) {
@@ -164,7 +168,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
 
         // setup the wrap factory
         wrapFactory = new SlingWrapFactory();
-        
+
         // initialize the Rhino Context Factory
         SlingContextFactory.setup(this);
 
@@ -179,9 +183,14 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
             "application/javascript");
         setNames("javascript", ECMA_SCRIPT_EXTENSION, ESP_SCRIPT_EXTENSION);
 
-        ContextFactory contextFactory = ContextFactory.getGlobal();
+        final ContextFactory contextFactory = ContextFactory.getGlobal();
         if (contextFactory instanceof SlingContextFactory) {
             ((SlingContextFactory) contextFactory).setDebugging(debugging);
+        }
+        // set the dynamic class loader as the application class loader
+        final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
+        if ( dclm != null ) {
+            contextFactory.initApplicationClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
         }
     }
 
@@ -189,10 +198,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
 
         // remove the root scope
         dropRootScope();
-        
+
         // remove our context factory
         SlingContextFactory.teardown();
-        
+
         // remove references
         wrapFactory = null;
         hostObjectProvider.clear();
@@ -226,24 +235,24 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
                     ScriptableObject.defineClass(scope, clazz);
 
                     if (SlingWrapper.class.isAssignableFrom(clazz)) {
-                        
+
                         // SlingWrappers can map to several classes if needed
                         final SlingWrapper hostWrapper = (SlingWrapper) clazz.newInstance();;
                         for (Class<?> c : hostWrapper.getWrappedClasses()) {
                             getWrapFactory().registerWrapper(c,
                                 hostWrapper.getClassName());
                         }
-                        
+
                     } else {
-                        
+
                         // but other Scriptable host objects need to be
                         // registered as well
                         final Scriptable host = clazz.newInstance();
                         getWrapFactory().registerWrapper(
                             host.getClass(), host.getClassName());
-                        
+
                     }
-                    
+
                 } catch (Throwable t) {
                     log.warn("addHostObjects: Cannot prepare host object "
                         + clazz, t);
