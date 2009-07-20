@@ -34,7 +34,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
@@ -71,7 +70,7 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
 
     /**
      * Called after the body has been processed.
-     * 
+     *
      * @return whether additional evaluations of the body are desired
      */
     public int doEndTag() throws JspException {
@@ -198,7 +197,7 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
 
         @Override
         public String getResourceSuperType() {
-            return JcrResourceUtil.getResourceSuperType(getResourceResolver(),
+            return ResourceUtil.getResourceSuperType(getResourceResolver(),
                 getResourceType());
         }
     }
