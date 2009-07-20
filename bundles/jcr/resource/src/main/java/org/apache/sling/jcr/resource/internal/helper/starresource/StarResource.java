@@ -64,27 +64,7 @@ public class StarResource extends SyntheticResource {
     }
 
     public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider[] jcrProviders) throws SlingException {
-        super(resourceResolver, getResourceMetadata(path), null);
-
-        // The only way we can set a meaningful resource type is via the drtp
-        final Node n = new FakeNode(getPath());
-        String resourceType = null;
-        if (jcrProviders != null) {
-            try {
-                int index = 0;
-                while ( resourceType == null && index < jcrProviders.length ) {
-                    resourceType = jcrProviders[index].getResourceTypeForNode(n);
-                    index++;
-                }
-            } catch(RepositoryException re) {
-                throw new SyntheticStarResourceException("getResourceTypeForNode failed", re);
-            }
-        }
-        if(resourceType == null) {
-            resourceType = DEFAULT_RESOURCE_TYPE;
-        }
-        setResourceType(resourceType);
-
+        super(resourceResolver, getResourceMetadata(path), getResourceType(jcrProviders, path));
         resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
@@ -126,5 +106,28 @@ public class StarResource extends SyntheticResource {
             result.setResolutionPath(path);
         }
         return result;
+    }
+
+    /** Get the resource type for the given path */
+    static String getResourceType(final JcrResourceTypeProvider[] jcrProviders,
+                                  final String path) {
+        // The only way we can set a meaningful resource type is via the drtp
+        final Node n = new FakeNode(getResourceMetadata(path).getResolutionPath());
+        String resourceType = null;
+        if (jcrProviders != null) {
+            try {
+                int index = 0;
+                while ( resourceType == null && index < jcrProviders.length ) {
+                    resourceType = jcrProviders[index].getResourceTypeForNode(n);
+                    index++;
+                }
+            } catch (RepositoryException re) {
+                throw new SyntheticStarResourceException("getResourceTypeForNode failed", re);
+            }
+        }
+        if (resourceType == null) {
+            resourceType = DEFAULT_RESOURCE_TYPE;
+        }
+        return resourceType;
     }
 }
