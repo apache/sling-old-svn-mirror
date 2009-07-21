@@ -212,7 +212,9 @@ public class JobEventHandler
             }
         }
         this.componentContext = null;
-        JOB_THREAD_POOL = null;
+        if ( JOB_THREAD_POOL == this.threadPool ) {
+            JOB_THREAD_POOL = null;
+        }
     }
 
     /**
@@ -1139,6 +1141,7 @@ public class JobEventHandler
         synchronized ( this.backgroundLock ) {
             // we might get here asnyc while this service has already been shutdown!
             if ( this.backgroundSession == null ) {
+                checkForNotify(job, null);
                 // we can only return false here
                 return false;
             }
@@ -1146,6 +1149,7 @@ public class JobEventHandler
                 this.backgroundSession.refresh(false);
                 // check if the job has been cancelled
                 if ( !this.backgroundSession.itemExists(eventNodePath) ) {
+                    checkForNotify(job, null);
                     return true;
                 }
                 final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
@@ -1222,14 +1226,7 @@ public class JobEventHandler
                     // if this is an own job queue, we simply signal the queue to continue
                     // it will pick up the event and either reschedule or wait
                     if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
-                        // we know the queue exists
-                        final JobBlockingQueue jobQueue;
-                        synchronized ( this.jobQueues ) {
-                            jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
-                        }
-                        synchronized ( jobQueue.getLock()) {
-                            jobQueue.notifyFinish(info);
-                        }
+                        checkForNotify(job, info);
                     } else {
 
                         // delay rescheduling?
@@ -1248,16 +1245,7 @@ public class JobEventHandler
                 } else {
                     // if this is an own job queue, we simply signal the queue to continue
                     // it will pick up the event and continue with the next event
-                    if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
-                        // we know the queue exists
-                        final JobBlockingQueue jobQueue;
-                        synchronized ( this.jobQueues ) {
-                            jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
-                        }
-                        synchronized ( jobQueue.getLock()) {
-                            jobQueue.notifyFinish(null);
-                        }
-                    }
+                    checkForNotify(job, null);
                 }
             } catch (RepositoryException re) {
                 this.logger.error("Unable to create new session.", re);
@@ -1292,6 +1280,19 @@ public class JobEventHandler
             return true;
         }
         return reschedule;
+    }
+
+    private void checkForNotify(final Event job, final EventInfo info) {
+        if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
+            // we know the queue exists
+            final JobBlockingQueue jobQueue;
+            synchronized ( this.jobQueues ) {
+                jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
+            }
+            synchronized ( jobQueue.getLock()) {
+                jobQueue.notifyFinish(info);
+            }
+        }
     }
 
     /**
