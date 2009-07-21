@@ -191,7 +191,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private String getResourceQuery(String key) {
         return String.format(QUERY_LOAD_RESOURCE, getLocale(),
-            getBaseNameTerm(), key);
+            getBaseNameTerm(), key.replace("'", "\\'"));
     }
 
     private String getBaseNameTerm() {
