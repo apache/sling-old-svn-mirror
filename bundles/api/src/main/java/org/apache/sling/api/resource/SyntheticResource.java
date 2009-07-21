@@ -18,12 +18,38 @@
  */
 package org.apache.sling.api.resource;
 
+import org.apache.sling.api.adapter.AdapterManager;
+
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
  * <code>Resource</code> interface which may be used to provide a resource
  * object which has no actual resource data.
  */
 public class SyntheticResource implements Resource {
+
+    /** The adapter manager used for adapting the synthetic resource. */
+    private static volatile AdapterManager ADAPTER_MANAGER;
+
+    /**
+     * Set the adapter manager to be used by a synthetic resource.
+     * A bundle implementing the adapter manager can set the manager through this method.
+     * The set adapter manager will be used in the {@link #adaptTo(Class)} method
+     * of a synthetic resource.
+     * @param adapterMgr The adapter manager.
+     */
+    public static void setAdapterManager(final AdapterManager adapterMgr) {
+        ADAPTER_MANAGER = adapterMgr;
+    }
+
+    /**
+     * Unset an adapter manager previously set with {@link #setAdapterManager(AdapterManager)}
+     * @param adapterMgr The adapter manager
+     */
+    public static void unsetAdapterManager(final AdapterManager adapterMgr) {
+        if ( ADAPTER_MANAGER == adapterMgr ) {
+            ADAPTER_MANAGER = null;
+        }
+    }
 
     /** The resoure resolver to which this resource is related */
     private final ResourceResolver resourceResolver;
@@ -115,10 +141,15 @@ public class SyntheticResource implements Resource {
     }
 
     /**
-     * Returns <code>null</code> because synthetic resources have no actual
-     * data and thus may not adapt to anything else.
+     * If a adapter manager has been set through {@link #setAdapterManager(AdapterManager)}
+     * this adapter manager is used to adapt the resource to the given class.
+     * Otherwise this method returns <code>null</code>.
      */
     public <Type> Type adaptTo(Class<Type> type) {
+        final AdapterManager adapterMgr = ADAPTER_MANAGER;
+        if ( adapterMgr != null ) {
+            return adapterMgr.getAdapter(this, type);
+        }
         return null;
     }
 
