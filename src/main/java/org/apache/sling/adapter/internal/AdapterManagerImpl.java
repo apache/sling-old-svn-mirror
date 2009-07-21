@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -172,12 +173,14 @@ public class AdapterManagerImpl implements AdapterManager {
                 "Not setting Instance field: Set to another manager "
                     + AdapterManagerImpl.INSTANCE, null);
         }
+        SyntheticResource.setAdapterManager(this);
     }
 
     /**
      * @param context Not used
      */
     protected synchronized void deactivate(ComponentContext context) {
+        SyntheticResource.unsetAdapterManager(this);
         // "disable" the manager by clearing the instance
         // do not clear the field if not set to this instance
         if (AdapterManagerImpl.INSTANCE == this) {
