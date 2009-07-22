@@ -21,6 +21,7 @@ package org.apache.sling.api.resource;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
@@ -396,5 +397,39 @@ public class ResourceUtil {
             superType = getResourceSuperType(resource.getResourceResolver(), superType);
         }
         return false;
+    }
+
+    /**
+     * @param <T>
+     * @since 2.0.6
+     */
+    public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator, final Class<T> type) {
+        return new Iterator<T>() {
+
+            private T nextObject;
+
+            public boolean hasNext() {
+                while ( nextObject == null && iterator.hasNext() ) {
+                    final Resource r = iterator.next();
+                    nextObject = r.adaptTo(type);
+                }
+                return nextObject != null;
+            }
+
+            public T next() {
+                hasNext();
+                if ( nextObject == null ) {
+                    throw new NoSuchElementException();
+                }
+                final T object = nextObject;
+                nextObject = null;
+                return object;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+        };
     }
 }
