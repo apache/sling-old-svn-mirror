@@ -25,8 +25,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.jmock.Expectations;
@@ -308,5 +312,65 @@ public class ResourceUtilTest {
         assertFalse(ResourceUtil.isA(r, "x:y"));
         assertTrue(ResourceUtil.isA(r, "t:c"));
         assertFalse(ResourceUtil.isA(r, "h:p"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void test_adaptTo() {
+        // we define three resources
+        // a and b are adaptable to List
+        // a, b, and c are adaptable to Map
+        // none is adaptable to String
+        // b and c are adaptable to long
+        // a and c are adaptable to boolean
+        final Resource a = this.context.mock(Resource.class);
+        final Resource b = this.context.mock(Resource.class);
+        final Resource c = this.context.mock(Resource.class);
+        final List<Resource> l = new ArrayList<Resource>();
+        l.add(a); l.add(b); l.add(c);
+        this.context.checking(new Expectations() {{
+            allowing(a).adaptTo(List.class); will(returnValue(new ArrayList()));
+            allowing(b).adaptTo(List.class); will(returnValue(new ArrayList()));
+            allowing(c).adaptTo(List.class); will(returnValue(null));
+            allowing(a).adaptTo(Map.class); will(returnValue(new HashMap()));
+            allowing(b).adaptTo(Map.class); will(returnValue(new HashMap()));
+            allowing(c).adaptTo(Map.class); will(returnValue(new HashMap()));
+            allowing(a).adaptTo(Long.class); will(returnValue(null));
+            allowing(b).adaptTo(Long.class); will(returnValue(new Long(1)));
+            allowing(c).adaptTo(Long.class); will(returnValue(new Long(2)));
+            allowing(a).adaptTo(Boolean.class); will(returnValue(new Boolean(true)));
+            allowing(b).adaptTo(Boolean.class); will(returnValue(null));
+            allowing(c).adaptTo(Boolean.class); will(returnValue(new Boolean(false)));
+            allowing(a).adaptTo(String.class); will(returnValue(null));
+            allowing(b).adaptTo(String.class); will(returnValue(null));
+            allowing(c).adaptTo(String.class); will(returnValue(null));
+        }});
+
+        assertEquals(2, checkIterator(l, List.class));
+        assertEquals(3, checkIterator(l, Map.class));
+        assertEquals(0, checkIterator(l, String.class));
+        assertEquals(2, checkIterator(l, Long.class));
+        assertEquals(2, checkIterator(l, Boolean.class));
+    }
+
+    private <T> int checkIterator(final List<Resource> resources, final Class<T> type) {
+        final Iterator<T> i = ResourceUtil.adaptTo(resources.iterator(), type);
+        // we call hasNext() several times upfront
+        i.hasNext();
+        i.hasNext();
+        int count = 0;
+        while ( i.hasNext() ) {
+            final T object = i.next();
+            assertNotNull(object);
+            count++;
+        }
+        assertFalse(i.hasNext());
+        // next should throw an exception
+        try {
+            i.next();
+            fail("Iterator should have reached end.");
+        } catch (NoSuchElementException nsee) {
+            // fine
+        }
+        return count;
     }
 }
