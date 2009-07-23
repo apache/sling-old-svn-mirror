@@ -117,4 +117,9 @@ final class SizeLimitedFileRotator implements FileRotator {
         }
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": maxSize=" + getMaxSize()
+            + ", generations=" + (getMaxIndex() + 1);
+    }
 }

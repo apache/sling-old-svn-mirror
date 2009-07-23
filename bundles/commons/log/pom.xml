@@ -71,6 +71,10 @@
                             org.slf4j.helpers, org.slf4j.impl,
                             org.slf4j.spi
                         </Private-Package>
+                        <Import-Package>
+                            javax.servlet.*;resolution:=optional,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -124,6 +128,12 @@
             <artifactId>org.osgi.compendium</artifactId>
             <scope>compile</scope>
             <optional>true</optional>
+        </dependency>
+        
+        <!-- servlet API for the web console plugin -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
         </dependency>
         
         <!-- testing -->

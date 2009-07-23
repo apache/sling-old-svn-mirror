@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.log.internal.slf4j.LogConfigManager;
+import org.apache.sling.commons.log.internal.slf4j.SlingLogPanel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -50,10 +51,10 @@ public class LogManager {
     public static final String LOG_LOGGERS = "org.apache.sling.commons.log.names";
 
     public static final String LOG_LEVEL_DEFAULT = "INFO";
-    
+
     public static final int LOG_FILE_NUMBER_DEFAULT = 5;
 
-    public static final String LOG_FILE_SIZE_DEFAULT = "10M";
+    public static final String LOG_FILE_SIZE_DEFAULT = "'.'yyyy-MM-dd";
 
     public static final String PID = "org.apache.sling.commons.log.LogManager";
 
@@ -115,9 +116,24 @@ public class LogManager {
         props.put(Constants.SERVICE_DESCRIPTION, msf.getName());
         configConfigurer = context.registerService(
             ManagedServiceFactory.class.getName(), msf, props);
+
+        // setup the web console plugin panel. This may fail loading
+        // the panel class if the Servlet API is not wired
+        try {
+            SlingLogPanel.registerPanel(context);
+        } catch (Throwable ignore) {
+        }
     }
 
     void shutdown() {
+
+        // tear down the web console plugin panel (if created at all). This
+        // may fail loading the panel class if the Servlet API is not wired
+        try {
+             SlingLogPanel.unregisterPanel();
+        } catch (Throwable ignore) {
+        }
+
         if (loggingConfigurable != null) {
             loggingConfigurable.unregister();
             loggingConfigurable = null;
@@ -156,7 +172,7 @@ public class LogManager {
         if (config.get(LOG_LEVEL) == null) {
             config.put(LOG_LEVEL, LOG_LEVEL_DEFAULT);
         }
-        
+
         return config;
     }
 
@@ -180,7 +196,7 @@ public class LogManager {
             if (properties == null) {
                 properties = defaultConfiguration;
             }
-            
+
             // set the logger name to a special value to indicate the global
             // (ROOT) logger setting (SLING-529)
             properties.put(LOG_LOGGERS, LogConfigManager.ROOT);
