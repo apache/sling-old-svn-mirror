@@ -270,6 +270,11 @@ final class ScheduledFileRotator implements FileRotator {
         return TOP_OF_TROUBLE; // Deliberately head for trouble...
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": datePattern" + getDatePattern();
+    }
+
     /**
      * RollingCalendar is a helper class to DailyRollingFileAppender. Given a
      * periodicity type and the current time, it computes the start of the next

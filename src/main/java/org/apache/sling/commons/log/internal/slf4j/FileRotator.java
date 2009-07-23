@@ -42,6 +42,11 @@ interface FileRotator {
         public void rotate(File file) {
             // no rotation
         }
+
+        @Override
+        public String toString() {
+            return "NullRotator";
+        }
     };
 
     /**
