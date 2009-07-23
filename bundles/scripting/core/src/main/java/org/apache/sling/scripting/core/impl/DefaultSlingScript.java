@@ -145,7 +145,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // set the script resource resolver as an attribute
             ctx.setAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
-                    this.scriptResource.getResourceResolver(), ScriptContext.ENGINE_SCOPE);
+                    this.scriptResource.getResourceResolver(), ScriptContext.GLOBAL_SCOPE);
 
             reader = getScriptReader();
             if ( method != null && !(this.scriptEngine instanceof Invocable)) {
