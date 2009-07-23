@@ -28,10 +28,16 @@ public abstract class SlingScriptConstants {
      * The name of the script context attribute holding the {@link org.apache.sling.api.resource.ResourceResolver} which
      * has been used to resolve the script. This resource resolver can be used by the
      * script engines to further locate scripts (for includes etc.).
-     * The value is set in the global scope of the script context.
+     * The value is set in the {@link SlingScriptConstants#SLING_SCOPE} of the script context.
      * @since 2.0.6
      */
     public static final String ATTR_SCRIPT_RESOURCE_RESOLVER = "org.apache.sling.api.scripting.ScriptResourceResolver";
+
+    /**
+     * The name of the script scope holding the {@link #ATTR_SCRIPT_RESOURCE_RESOLVER}.
+     * @since 2.0.6
+     */
+    public static final int SLING_SCOPE = -314;
 
     /**
      * The topic for the OSGi event which is sent when a script engine factory has been added.
