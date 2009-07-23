@@ -56,9 +56,10 @@ class SlingLoggerWriter extends Writer {
 
     /**
      * The PID of the configuration from which this instance has been
-     * configured.
+     * configured. If this is <code>null</code> this instance is an implicitly
+     * created instance which is not tied to any configuration.
      */
-    private final String configurationPID;
+    private String configurationPID;
 
     /**
      * The actual <code>Writer</code> to which this instance delegates any
@@ -162,12 +163,30 @@ class SlingLoggerWriter extends Writer {
         }
     }
 
+    /**
+     * Returns the PID of the configuration configuring this instance. This may
+     * be <code>null</code> if this is an implicitly defined log writer
+     * instance.
+     */
     String getConfigurationPID() {
         return configurationPID;
     }
 
+    /**
+     * Sets the PID of the configuration configuring this instance. This may be
+     * <code>null</code> if the configuration is removed but the writer is still
+     * referred to by any logger configuration.
+     */
+    void setConfigurationPID(String configurationPID) {
+        this.configurationPID = configurationPID;
+    }
+
     String getPath() {
         return path;
+    }
+
+    FileRotator getFileRotator() {
+        return fileRotator;
     }
 
     // ---------- Writer Overwrite ---------------------------------------------

@@ -162,7 +162,7 @@ public class LogConfigManager implements ILoggerFactory {
         }
     }
 
-    // ---------- ILoggerFactory -----------------------------------------------
+    // ---------- ILoggerFactory
 
     /**
      * Returns the name logger. If no logger for the name already exists, it is
@@ -184,7 +184,35 @@ public class LogConfigManager implements ILoggerFactory {
         return slingLogger;
     }
 
-    // ---------- Configuration support ----------------------------------------
+    // ---------- SlingLogPanel support
+
+    /**
+     * Return configured {@link SlingLoggerConfig} instances as an iterator.
+     */
+    Iterator<SlingLoggerConfig> getSlingLoggerConfigs() {
+        return configByPid.values().iterator();
+    }
+
+    /**
+     * Return configured and implicit {@link SlingLoggerWriter} instances as
+     * an iterator.
+     */
+    Iterator<SlingLoggerWriter> getSlingLoggerWriters() {
+        // configured writers
+        Collection<SlingLoggerWriter> writers = new HashSet<SlingLoggerWriter>(
+            writerByPid.values());
+
+        // add implicit writers
+        for (SlingLoggerWriter slw : writerByFileName.values()) {
+            if (slw.getConfigurationPID() == null) {
+                writers.add(slw);
+            }
+        }
+
+        return writers.iterator();
+    }
+
+    // ---------- Configuration support
 
     /**
      * Updates or removes the log writer configuration identified by the
@@ -214,7 +242,7 @@ public class LogConfigManager implements ILoggerFactory {
      * {@link LogManager#LOG_FILE_NUMBER_DEFAULT} is assumed. If the writer
      * writes standard output this property is ignored.</dd>
      * </dl>
-     * 
+     *
      * @param pid The identifier of the log writer to update or remove
      * @param configuration New configuration setting for the log writer or
      *            <code>null</code> to indicate to remove the log writer.
@@ -244,13 +272,22 @@ public class LogConfigManager implements ILoggerFactory {
 
                 // ensure unique configuration of the log writer
                 SlingLoggerWriter existingWriter = writerByFileName.get(logFileName);
-                if (existingWriter != null
-                    && !existingWriter.getConfigurationPID().equals(pid)) {
-                    // this file is already configured by another LOG_PID
-                    throw new ConfigurationException(LogManager.LOG_FILE,
-                        "LogFile " + logFileName
-                            + " already configured by configuration "
-                            + existingWriter.getConfigurationPID());
+                if (existingWriter != null) {
+                    if (slw != null) {
+
+                        // this is an implicit writer being configured now
+                        slw = existingWriter;
+                        slw.setConfigurationPID(pid);
+                        writerByPid.put(pid, slw);
+
+                    } else if (!existingWriter.getConfigurationPID().equals(pid)) {
+
+                        // this file is already configured by another LOG_PID
+                        throw new ConfigurationException(LogManager.LOG_FILE,
+                            "LogFile " + logFileName
+                                + " already configured by configuration "
+                                + existingWriter.getConfigurationPID());
+                    }
                 }
             }
 
@@ -266,9 +303,6 @@ public class LogConfigManager implements ILoggerFactory {
                     // don't care
                 }
             }
-            if (fileNum <= 0) {
-                fileNum = LogManager.LOG_FILE_NUMBER_DEFAULT;
-            }
 
             // get the log file size
             Object fileSizeProp = configuration.get(LogManager.LOG_FILE_SIZE);
@@ -276,57 +310,22 @@ public class LogConfigManager implements ILoggerFactory {
             if (fileSizeProp != null) {
                 fileSize = fileSizeProp.toString();
             }
-            if (fileSize == null || fileSize.length() == 0) {
-                fileSize = LogManager.LOG_FILE_SIZE_DEFAULT;
-            }
 
-            try {
-                if (slw == null) {
-                    slw = new SlingLoggerWriter(pid);
-                    slw.configure(logFileName, fileNum, fileSize);
-                    writerByPid.put(pid, slw);
-
-                    if (logFileName != null) {
-                        writerByFileName.put(logFileName, slw);
-                    }
-                } else {
-                    slw.configure(logFileName, fileNum, fileSize);
-                }
-            } catch (IOException ioe) {
-                internalFailure("Cannot create log file " + logFileName, ioe);
-                internalFailure("Logging to the console", null);
+            if (configureLogWriter(slw, pid, logFileName, fileNum, fileSize) == null) {
                 throw new ConfigurationException(LogManager.LOG_FILE,
                     "Cannot create writer for log file " + logFileName);
             }
 
         } else {
 
-            SlingLoggerWriter logWriter = writerByPid.remove(pid);
+            final SlingLoggerWriter logWriter = writerByPid.remove(pid);
             if (logWriter != null) {
 
-                // if the writer is writing to a file, remove the file mapping
-                String path = logWriter.getPath();
-                if (path != null) {
-                    writerByFileName.remove(path);
-                }
+                // make the writer implicit
+                logWriter.setConfigurationPID(null);
 
-                // make sure, no configuration is referring to this writer
-                // any more
-                for (SlingLoggerConfig config : configByPid.values()) {
-                    if (config.getLogWriter() == logWriter) {
-                        log.info(
-                            "updateLogWriter: Resetting configuration {} to the standard log writer",
-                            config.getConfigPid());
-                        config.setLogWriter(defaultWriter);
-                    }
-                }
-
-                // close the removed log writer
-                try {
-                    logWriter.close();
-                } catch (IOException ioe) {
-                    // don't care
-                }
+                // close if unused, otherwise reconfigure to default values
+                closeIfUnused(logWriter, true);
             }
         }
     }
@@ -364,7 +363,7 @@ public class LogConfigManager implements ILoggerFactory {
      * file configured for any log writer or it may be the configuration PID of
      * such a writer. If this property is missing or empty or does not refer to
      * an existing log writer configuration, the default log writer is used.</dd>
-     * 
+     *
      * @param pid The name of the configuration to update or remove.
      * @param configuration The configuration object.
      * @throws ConfigurationException If the log level and logger names
@@ -409,7 +408,7 @@ public class LogConfigManager implements ILoggerFactory {
                         file = getAbsoluteLogFile(file);
                         writer = writerByFileName.get(file);
                         if (writer == null) {
-                            writer = defaultWriter;
+                            writer = configureLogWriter(null, null, file, -1, null);
                         }
                     }
                 }
@@ -441,25 +440,32 @@ public class LogConfigManager implements ILoggerFactory {
             } else {
 
                 // remove category to configuration mappings
-                Set<String> oldCategories = config.getCategories();
+                final Set<String> oldCategories = config.getCategories();
+
+                // check whether the log writer is to be changed
+                final SlingLoggerWriter oldWriter = config.getLogWriter();
 
                 // reconfigure the configuration
                 config.configure(pattern, categories, logLevel, writer);
 
                 if (categories.equals(oldCategories)) {
 
-                    // remove the old categories if different from the new ones
-                    configByCategory.keySet().removeAll(oldCategories);
-
-                } else {
-
                     // no need to change category registrations, clear them
                     // also no need to reconfigure the loggers
                     categories.clear();
                     reconfigureLoggers = false;
 
+                } else {
+
+                    // remove the old categories if different from the new ones
+                    configByCategory.keySet().removeAll(oldCategories);
+
                 }
 
+                // close the old log writer if replaced and not used any more
+                if (oldWriter != writer) {
+                    closeIfUnused(oldWriter, false);
+                }
             }
 
             // relink categories
@@ -474,9 +480,12 @@ public class LogConfigManager implements ILoggerFactory {
             // remove configuration from pid list
             SlingLoggerConfig config = configByPid.remove(pid);
 
-            // remove all configured categories
             if (config != null) {
+                // remove all configured categories
                 configByCategory.keySet().removeAll(config.getCategories());
+
+                // close the writer if unused (and unconfigured)
+                closeIfUnused(config.getLogWriter(), false);
             }
 
         }
@@ -495,7 +504,7 @@ public class LogConfigManager implements ILoggerFactory {
      * is returned unmodified. Otherwise it is made absolute by resolving it
      * relative to the root directory set on this instance by the
      * {@link #setRoot(String)} method.
-     * 
+     *
      * @throws NullPointerException if <code>logFileName</code> is
      *             <code>null</code>.
      */
@@ -569,7 +578,7 @@ public class LogConfigManager implements ILoggerFactory {
      * an array of strings or a collection of strings. Each string may in turn be a
      * comma-separated list of strings. Each entry makes up an entry in the
      * resulting set.
-     * 
+     *
      * @param loggers The configuration object to be decomposed. If this is
      *            <code>null</code>, <code>null</code> is returned
      *            immediately
@@ -622,4 +631,115 @@ public class LogConfigManager implements ILoggerFactory {
         return loggerNames;
     }
 
+    /**
+     * Configures and returns a {@link SlingLoggerWriter}. If the
+     * <code>pid</code> is not <code>null</code> the writer is also added to the
+     * by pid map. If the <code>fileName</code> is not <code>null</code> the
+     * writer is also added to the file name map.
+     *
+     * @param writer The {@link SlingLoggerWriter} to configure. If this is
+     *            <code>null</code> a new instance is created.
+     * @param pid The configuration PID to set on the <code>writer</code>. This
+     *            may be <code>null</code> to indicate that the logger writer is
+     *            not configured by any configuration.
+     * @param fileName The name of the file to log to.
+     * @param fileNum The number of log files to keep (if rotating by size) or
+     *            -1 to assume the default (
+     *            {@link java.util.logging.LogManager#LOG_FILE_NUMBER_DEFAULT}).
+     * @param threshold The log rotation threashold (size or data/time format
+     *            pattern or <code>null</code> to assume the default (
+     *            {@link java.util.logging.LogManager#LOG_FILE_SIZE_DEFAULT}).
+     * @return The {@link SlingLoggerWriter} or <code>null</code> if an error
+     *         occurrs configuring the writer.
+     */
+    private SlingLoggerWriter configureLogWriter(SlingLoggerWriter writer,
+            String pid, String fileName, int fileNum, String threshold) {
+
+        // create the writer instance if it is new
+        if (writer == null) {
+            writer = new SlingLoggerWriter(pid);
+        } else {
+            writer.setConfigurationPID(pid);
+        }
+
+        if (fileNum < 0) {
+            fileNum = LogManager.LOG_FILE_NUMBER_DEFAULT;
+        }
+
+        if (threshold == null || threshold.length() == 0) {
+            threshold = LogManager.LOG_FILE_SIZE_DEFAULT;
+        }
+
+        try {
+            writer.configure(fileName, fileNum, threshold);
+        } catch (IOException ioe) {
+            internalFailure("Cannot create log file " + fileName, ioe);
+            internalFailure("Logging to the console", null);
+            return null;
+        }
+
+        // add to maps
+        if (pid != null) {
+            writerByPid.put(pid, writer);
+        }
+        if (fileName != null) {
+            writerByFileName.put(fileName, writer);
+        }
+
+        // everything set and done
+        return writer;
+    }
+
+    /**
+     * Closes or resets the given <code>logWriter</code> if it is not referred
+     * to by any logger config or writer configuration.
+     *
+     * @param logWriter The {@link SlingLoggerWriter} to close or (optionally)
+     *            reconfigure.
+     * @param reset Whether the log writer should be reset to default values if
+     *            it is still referred to by any logger configuration.
+     */
+    private void closeIfUnused(SlingLoggerWriter logWriter, boolean reset) {
+
+        // The log writer is based on configuration, don't touch
+        if (logWriter.getConfigurationPID() != null) {
+            return;
+        }
+
+        // "Implicit" writer : check for references
+        for (SlingLoggerConfig config : configByPid.values()) {
+            if (config.getLogWriter() == logWriter) {
+
+                // optionally reconfigure to default values
+                if (reset) {
+                    try {
+                        logWriter.configure(logWriter.getPath(),
+                            LogManager.LOG_FILE_NUMBER_DEFAULT,
+                            LogManager.LOG_FILE_SIZE_DEFAULT);
+                    } catch (IOException ioe) {
+                        internalFailure(
+                            "Cannot reset the log writer to default configuration",
+                            ioe);
+                    }
+                }
+
+                // done here...
+                return;
+            }
+        }
+        // invariant: writer is not used and not configured any more
+
+        // remove from the writer file name map
+        String path = logWriter.getPath();
+        if (path != null) {
+            writerByFileName.remove(path);
+        }
+
+        // close it to clean up
+        try {
+            logWriter.close();
+        } catch (IOException ioe) {
+            // don't care
+        }
+    }
 }
