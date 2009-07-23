@@ -20,23 +20,22 @@ package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Locale;
 
-import junit.framework.TestCase;
+public class SlingLogWriterTest extends AbstractSlingLogTest {
 
-public class SlingLogWriterTest extends TestCase {
-    private static int counter;
+    private long july21;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-    }
 
-    protected String getBase() {
-        final File baseFile = new File("target/" + getClass().getSimpleName()
-            + "/" + (counter++) + "-" + System.currentTimeMillis() + "/"
-            + getClass().getSimpleName());
-        baseFile.getParentFile().mkdirs();
-        return baseFile.getAbsolutePath();
+        july21 = DateFormat.getDateInstance(DateFormat.LONG,
+            Locale.US).parse("July 21, 2009").getTime();
     }
 
     @Override
@@ -44,7 +43,7 @@ public class SlingLogWriterTest extends TestCase {
         super.tearDown();
     }
 
-    public void testNoRotateSize() throws IOException {
+    public void test_size_no_rotation() throws IOException {
         final String base = getBase();
         SlingLoggerWriter slfw = createLogWriter(base, -1, 10);
 
@@ -61,6 +60,7 @@ public class SlingLogWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertTrue(test.length() > 0);
         assertFalse(test0.exists());
@@ -69,15 +69,16 @@ public class SlingLogWriterTest extends TestCase {
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertEquals(0, test.length());
         assertFalse(test0.exists());
         assertFalse(testn1.exists());
     }
 
-    public void testRotate0Size() throws IOException {
+    public void test_size_rotation_1() throws IOException {
         final String base = getBase();
-        SlingLoggerWriter slfw = createLogWriter(base, 0, 10);
+        SlingLoggerWriter slfw = createLogWriter(base, 1, 10);
 
         // only base file should exist with size 0 (for now)
         File test = new File(base);
@@ -94,6 +95,7 @@ public class SlingLogWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertTrue(test.length() > 0);
         assertFalse(test0.exists());
@@ -102,6 +104,7 @@ public class SlingLogWriterTest extends TestCase {
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertEquals(0, test.length());
         assertTrue(test0.exists());
@@ -109,9 +112,9 @@ public class SlingLogWriterTest extends TestCase {
         assertFalse(testn1.exists());
     }
 
-    public void testRotate1Size() throws IOException {
+    public void test_size_rotation_2() throws IOException {
         final String base = getBase();
-        SlingLoggerWriter slfw = createLogWriter(base, 1, 10);
+        SlingLoggerWriter slfw = createLogWriter(base, 2, 10);
 
         // only base file should exist with size 0 (for now)
         File test = new File(base);
@@ -128,6 +131,7 @@ public class SlingLogWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertTrue(test.length() > 0);
         assertFalse(test0.exists());
@@ -136,15 +140,17 @@ public class SlingLogWriterTest extends TestCase {
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertEquals(0, test.length());
         assertTrue(test0.exists());
         assertFalse(test1.exists());
         assertFalse(testn1.exists());
 
-        // write bytes to rotate in onw fell swoop
+        // write bytes to rotate in one fell swoop
         slfw.write("0123456789 - more");
         slfw.writeln();
+        slfw.checkRotate();
         assertTrue(test.exists());
         assertEquals(0, test.length());
         assertTrue(test0.exists());
@@ -152,36 +158,134 @@ public class SlingLogWriterTest extends TestCase {
         assertFalse(testn1.exists());
     }
 
-    public void testMaxSizeConversion() {
-        assertEquals(1, SlingLoggerWriter.convertMaxSizeSpec("1"));
+    public void test_daily_rotation() throws IOException {
+        final String base = getBase();
+        final SlingLoggerWriter slfw = createLogWriter(base, -1,
+            "'.'yyyy-MM-dd");
+        setNow(slfw, july21);
 
-        // kilo
-        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1K"));
-        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1k"));
-        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1KB"));
-        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1kb"));
+        // only base file should exist with size 0 (for now)
+        final File test = new File(base);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
 
-        // mega
-        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1M"));
-        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1m"));
-        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1MB"));
-        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1mb"));
+        final File test0 = new File(base + ".2009-07-21");
+        assertFalse(test0.exists());
+        final File testn1 = new File(base + ".2009-07-23");
+        assertFalse(testn1.exists());
 
-        // giga
-        assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLoggerWriter.convertMaxSizeSpec("1G"));
-        assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLoggerWriter.convertMaxSizeSpec("1g"));
-        assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLoggerWriter.convertMaxSizeSpec("1GB"));
-        assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLoggerWriter.convertMaxSizeSpec("1gb"));
+        // write some bytes and ensure size
+        slfw.write("012345");
+        slfw.writeln();
+
+        slfw.checkRotate();
+        assertTrue(test.exists());
+        assertTrue(test.length() > 0);
+        assertFalse(test0.exists());
+        assertFalse(testn1.exists());
+
+        // simulate July 23rd
+        setNow(slfw, july21 + 24*60*60*1000L);
+        forceRotate(slfw);
+        test.setLastModified(july21);
+
+        // rotate the file now
+        slfw.checkRotate();
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
+        assertTrue(test0.exists());
+        assertFalse(testn1.exists());
     }
 
-    private SlingLoggerWriter createLogWriter(String file, int numFiles, long size)
-            throws IOException {
+    public void test_something() throws ParseException {
+    }
+
+    public void test_createFileRotator() {
+        assertSize(1, "1");
+
+        // kilo
+        assertSize(1 * 1024, "1K");
+        assertSize(1 * 1024, "1k");
+        assertSize(1 * 1024, "1KB");
+        assertSize(1 * 1024, "1kb");
+
+        // mega
+        assertSize(1 * 1024 * 1024, "1M");
+        assertSize(1 * 1024 * 1024, "1m");
+        assertSize(1 * 1024 * 1024, "1MB");
+        assertSize(1 * 1024 * 1024, "1mb");
+
+        // giga
+        assertSize(1 * 1024 * 1024 * 1024, "1G");
+        assertSize(1 * 1024 * 1024 * 1024, "1g");
+        assertSize(1 * 1024 * 1024 * 1024, "1GB");
+        assertSize(1 * 1024 * 1024 * 1024, "1gb");
+
+        // some time stuff testing
+        assertTime("'.'yyyy-MM-dd", null);
+        assertTime("'.'yyyy-MM-dd", "");
+        assertTime("'.'yyyy-MM-dd-mm", "'.'yyyy-MM-dd-mm");
+    }
+
+    private SlingLoggerWriter createLogWriter(String file, int numFiles,
+            long size) throws IOException {
+        return createLogWriter(file, numFiles, String.valueOf(size));
+    }
+
+    private SlingLoggerWriter createLogWriter(String file, int numFiles,
+            String limit) throws IOException {
         SlingLoggerWriter slw = new SlingLoggerWriter(getClass().getName());
-        slw.configure(file, numFiles, String.valueOf(size));
+        slw.configure(file, numFiles, limit);
         return slw;
+    }
+
+    private void assertSize(final long expected, final String config) {
+        final FileRotator checker = SlingLoggerWriter.createFileRotator(-1,
+            config);
+        assertTrue("Size checker expeced",
+            checker instanceof SizeLimitedFileRotator);
+        assertEquals(expected, ((SizeLimitedFileRotator) checker).getMaxSize());
+    }
+
+    private void assertTime(final String expected, final String config) {
+        final FileRotator checker = SlingLoggerWriter.createFileRotator(-1,
+            config);
+        assertTrue("Size checker expeced",
+            checker instanceof ScheduledFileRotator);
+        assertEquals(expected,
+            ((ScheduledFileRotator) checker).getDatePattern());
+    }
+
+    private void setNow(SlingLoggerWriter writer, long now) {
+        try {
+            Field f = writer.getClass().getDeclaredField("fileRotator");
+            f.setAccessible(true);
+            ScheduledFileRotator sfr = (ScheduledFileRotator) f.get(writer);
+
+            // set the "now" time to the indicated time
+            f = sfr.getClass().getDeclaredField("now");
+            f.setAccessible(true);
+            ((Date) f.get(sfr)).setTime(now);
+
+            // clear scheduled filename to force its reasteblishment
+            f = sfr.getClass().getDeclaredField("scheduledFilename");
+            f.setAccessible(true);
+            f.set(sfr, null);
+        } catch (Throwable t) {
+            fail("Cannot set now on ScheduledFileRotator: " + t);
+        }
+    }
+
+    private void forceRotate(SlingLoggerWriter writer) {
+        try {
+            Field f = writer.getClass().getDeclaredField("fileRotator");
+            f.setAccessible(true);
+            ScheduledFileRotator sfr = (ScheduledFileRotator) f.get(writer);
+            f = sfr.getClass().getDeclaredField("nextCheck");
+            f.setAccessible(true);
+            f.setLong(sfr, -1);
+        } catch (Throwable t) {
+            fail("Cannot set now on ScheduledFileRotator: " + t);
+        }
     }
 }
