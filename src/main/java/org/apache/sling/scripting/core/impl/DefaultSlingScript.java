@@ -37,6 +37,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -134,7 +135,36 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         try {
             bindings = verifySlingBindings(scriptName, props);
 
-            ScriptContext ctx = new SimpleScriptContext();
+            final ScriptContext ctx = new SimpleScriptContext() {
+
+                private final Map<String, Object> slingScope = new HashMap<String, Object>();
+
+                @Override
+                public Object getAttribute(String name, int scope) {
+                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
+                        return slingScope.get(name);
+                    }
+                    return super.getAttribute(name, scope);
+                }
+
+                @Override
+                public Object removeAttribute(String name, int scope) {
+                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
+                        return slingScope.remove(name);
+                    }
+                    return super.removeAttribute(name, scope);
+                }
+
+                @Override
+                public void setAttribute(String name, Object value, int scope) {
+                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
+                        slingScope.put(name, value);
+                        return;
+                    }
+                    super.setAttribute(name, value, scope);
+                }
+
+            };
             ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             ctx.setReader((Reader) bindings.get(READER));
             ctx.setWriter((Writer) bindings.get(OUT));
@@ -145,7 +175,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // set the script resource resolver as an attribute
             ctx.setAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
-                    this.scriptResource.getResourceResolver(), ScriptContext.GLOBAL_SCOPE);
+                    this.scriptResource.getResourceResolver(), SlingScriptConstants.SLING_SCOPE);
 
             reader = getScriptReader();
             if ( method != null && !(this.scriptEngine instanceof Invocable)) {
