@@ -273,7 +273,7 @@ public class LogConfigManager implements ILoggerFactory {
                 // ensure unique configuration of the log writer
                 SlingLoggerWriter existingWriter = writerByFileName.get(logFileName);
                 if (existingWriter != null) {
-                    if (slw != null) {
+                    if (slw == null) {
 
                         // this is an implicit writer being configured now
                         slw = existingWriter;
