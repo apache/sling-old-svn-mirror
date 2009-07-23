@@ -20,6 +20,8 @@ package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
@@ -27,6 +29,14 @@ import junit.framework.TestCase;
 public class SlingLoggerTest extends TestCase {
 
     private SlingLoggerWriter output = new SlingLoggerWriter(null) {
+        {
+            try {
+                configure(null, -1, "1GB");
+            } catch (IOException ioe) {
+
+            }
+        }
+
         public void writeln() throws IOException {
             // just flush, no end of line
             flush();
@@ -38,6 +48,8 @@ public class SlingLoggerTest extends TestCase {
     private SlingLoggerConfig config;
 
     private SlingLogger logger;
+
+    private Method delegateeSetter;
 
     @Override
     protected void setUp() throws Exception {
@@ -134,7 +146,7 @@ public class SlingLoggerTest extends TestCase {
 
     public void testFormat() {
         StringWriter w = new StringWriter();
-        output.setDelegatee(w);
+        setDelagateeOn(output, w);
 
         // a single message
         config.configure(messageOnly, new HashSet<String>(),
@@ -160,5 +172,17 @@ public class SlingLoggerTest extends TestCase {
         logger.warn(message);
         assertEquals(Thread.currentThread().getName() + "|" + logger.getName()
             + "|" + SlingLoggerLevel.WARN + "|" + message, w.toString());
+    }
+
+    private static void setDelagateeOn(SlingLoggerWriter output, Writer w) {
+        try {
+            Method delegateeSetter = SlingLoggerWriter.class.getDeclaredMethod(
+                "setDelegatee", new Class[] { Writer.class });
+            delegateeSetter.setAccessible(true);
+            delegateeSetter.invoke(output, new Object[] { w });
+        } catch (Throwable t) {
+            fail("Cannot get or invoke SlingLoggerWriter.setDelagetee method: "
+                + t.getMessage());
+        }
     }
 }

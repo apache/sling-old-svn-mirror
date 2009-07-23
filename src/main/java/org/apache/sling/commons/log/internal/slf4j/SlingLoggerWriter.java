@@ -23,6 +23,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The <code>SlingLoggerWriter</code> abstract the output writing functionality
@@ -37,6 +39,14 @@ class SlingLoggerWriter extends Writer {
     private static final long FACTOR_MB = 1024 * FACTOR_KB;
 
     private static final long FACTOR_GB = 1024 * FACTOR_MB;
+
+    /**
+     * Regular expression matching a maximum file size specification. This
+     * pattern case-insensitively matches a number and an optional factor
+     * specifier of the forms k, kb, m, mb, g, or gb.
+     */
+    private static final Pattern SIZE_SPEC = Pattern.compile(
+        "([\\d]+)([kmg]b?)?", Pattern.CASE_INSENSITIVE);
 
     /**
      * The string to place at the end of a line. This is a platform specific
@@ -74,17 +84,11 @@ class SlingLoggerWriter extends Writer {
      */
     private String path;
 
-    /**
-     * The maximum size of the log file after which the current log file is
-     * rolled. This setting is ignored if logging to standard output.
-     */
-    private long maxSize;
-
-    /**
-     * The maximum number of old rotated log files to keep. This setting is
-     * ignored if logging to standard output.
-     */
-    private int maxNum;
+	/**
+	 * The {@link #writerLimitChecker} used to in the {@link #checkRotate()}
+	 * method to check whether the log file must be rotated.
+	 */
+    private FileRotator fileRotator;
 
     /**
      * Creates a new instance of this class to be configured from the given
@@ -97,7 +101,7 @@ class SlingLoggerWriter extends Writer {
 
     /**
      * (Re)configures this instance to log to the given file.
-     * 
+     *
      * @param logFileName The name of the file to log to or <code>null</code>
      *            to log to the standard output.
      * @param fileNum The maximum number of old (rotated) files to keep. This is
@@ -147,8 +151,11 @@ class SlingLoggerWriter extends Writer {
             }
 
             // assign new rotation values
-            this.maxNum = fileNum;
-            this.maxSize = convertMaxSizeSpec(fileSize);
+            if (this.file != null) {
+                this.fileRotator = createFileRotator(fileNum, fileSize);
+            } else {
+                this.fileRotator = FileRotator.DEFAULT;
+            }
 
             // check whether the new values cause different rotation
             checkRotate();
@@ -161,14 +168,6 @@ class SlingLoggerWriter extends Writer {
 
     String getPath() {
         return path;
-    }
-
-    long getMaxSize() {
-        return maxSize;
-    }
-
-    int getMaxNum() {
-        return maxNum;
     }
 
     // ---------- Writer Overwrite ---------------------------------------------
@@ -190,9 +189,6 @@ class SlingLoggerWriter extends Writer {
         synchronized (lock) {
             if (delegatee != null) {
                 delegatee.flush();
-
-                // check whether we have to rotate the log file
-                checkRotate();
             }
         }
 
@@ -252,92 +248,81 @@ class SlingLoggerWriter extends Writer {
 
     // ---------- internal -----------------------------------------------------
 
-    static long convertMaxSizeSpec(String maxSize) {
-        long factor;
-        int len = maxSize.length() - 1;
+    static FileRotator createFileRotator(int fileNum, String maxSizeSpec) {
+        if (maxSizeSpec != null && maxSizeSpec.length() > 0) {
+            Matcher sizeMatcher = SIZE_SPEC.matcher(maxSizeSpec);
+            if (sizeMatcher.matches()) {
+                // group 1 is the base size and is an integer number
+                final long baseSize = Long.parseLong(sizeMatcher.group(1));
 
-        maxSize = maxSize.toUpperCase();
+                // this will take the final size value
+                final long maxSize;
 
-        if (maxSize.endsWith("G")) {
-            factor = FACTOR_GB;
-        } else if (maxSize.endsWith("GB")) {
-            factor = FACTOR_GB;
-            len--;
-        } else if (maxSize.endsWith("M")) {
-            factor = FACTOR_MB;
-        } else if (maxSize.endsWith("MB")) {
-            factor = FACTOR_MB;
-            len--;
-        } else if (maxSize.endsWith("K")) {
-            factor = FACTOR_KB;
-        } else if (maxSize.endsWith("KB")) {
-            factor = FACTOR_KB;
-            len--;
-        } else {
-            factor = 1;
-            len = -1;
+                // group 2 is optional and is the size spec. If not null it is
+                // at least one character long and the first character is enough
+                // for use to know (the second is of no use here)
+                final String factorString = sizeMatcher.group(2);
+                if (factorString == null) {
+                    // no factor define, hence no multiplication
+                    maxSize = baseSize;
+                } else {
+                    switch (factorString.charAt(0)) {
+                        case 'k':
+                        case 'K':
+                            maxSize = baseSize * FACTOR_KB;
+                            break;
+                        case 'm':
+                        case 'M':
+                            maxSize = baseSize * FACTOR_MB;
+                            break;
+                        case 'g':
+                        case 'G':
+                            maxSize = baseSize * FACTOR_GB;
+                            break;
+                        default:
+                            // we don't really expect this according to the pattern
+                            maxSize = baseSize;
+                    }
+                }
+
+                // return a size limited rotator with desired number of generations
+                return new SizeLimitedFileRotator(fileNum, maxSize);
+            }
         }
 
-        if (len > 0) {
-            maxSize = maxSize.substring(0, len);
-        }
-
+        // no file size configuration, check for date form specification
         try {
-            return factor * Long.parseLong(maxSize);
-        } catch (NumberFormatException nfe) {
-            return 10 * 1024 * 1024;
+            return new ScheduledFileRotator(maxSizeSpec);
+        } catch (IllegalArgumentException iae) {
+            // illegal SimpleDateFormatPattern, fall back to no rotation
+            // TODO: log this somehow !!!
+            return FileRotator.DEFAULT;
         }
     }
 
-    void setDelegatee(Writer delegatee) {
+    private void setDelegatee(Writer delegatee) {
         synchronized (lock) {
             this.delegatee = delegatee;
         }
     }
 
-    Writer getDelegatee() {
+    private Writer getDelegatee() {
         synchronized (lock) {
             return delegatee;
         }
     }
 
-    /**
-     * Must be called while the lock is held !!
-     */
-    private void checkRotate() throws IOException {
-        if (file != null && file.length() > maxSize) {
+    void checkRotate() throws IOException {
+        synchronized (lock) {
+            if (fileRotator.isRotationDue(file)) {
 
-            getDelegatee().close();
+                getDelegatee().close();
 
-            if (maxNum >= 0) {
+                fileRotator.rotate(file);
 
-                // remove oldest file
-                File dstFile = new File(path + "." + maxNum);
-                if (dstFile.exists()) {
-                    dstFile.delete();
-                }
-
-                // rename next files
-                for (int i = maxNum - 1; i >= 0; i--) {
-                    File srcFile = new File(path + "." + i);
-                    if (srcFile.exists()) {
-                        srcFile.renameTo(dstFile);
-                    }
-                    dstFile = srcFile;
-                }
-
-                // rename youngest file
-                file.renameTo(dstFile);
-
-            } else {
-
-                // just remove the old file if we don't keep backups
-                file.delete();
-
+                // create new file
+                setDelegatee(createWriter());
             }
-
-            // create new file
-            setDelegatee(createWriter());
         }
     }
 
@@ -358,5 +343,4 @@ class SlingLoggerWriter extends Writer {
         // log file from a previous instance running
         return new OutputStreamWriter(new FileOutputStream(file, true));
     }
-
 }

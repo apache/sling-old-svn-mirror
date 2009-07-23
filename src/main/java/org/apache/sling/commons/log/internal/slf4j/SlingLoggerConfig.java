@@ -108,6 +108,11 @@ class SlingLoggerConfig {
         SlingLoggerWriter myOutput = writer;
         synchronized (myOutput) {
             try {
+
+                // check whether we have to rotate the log file before
+                // writing to it
+                myOutput.checkRotate();
+
                 myOutput.write(message);
 
                 // write line termination or flush, whatever is needed
