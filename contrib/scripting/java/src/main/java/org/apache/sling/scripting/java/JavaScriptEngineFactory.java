@@ -169,7 +169,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
                              final SlingScriptHelper scriptHelper,
                              final ScriptContext context) {
         ResourceResolver resolver = (ResourceResolver) context.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
-                ScriptContext.GLOBAL_SCOPE);
+                SlingScriptConstants.SLING_SCOPE);
         if ( resolver == null ) {
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
