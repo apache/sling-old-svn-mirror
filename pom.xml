@@ -37,6 +37,12 @@
         or a configurable pipeline.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/rewriter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/rewriter</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/rewriter</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
