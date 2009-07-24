@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/rewriter</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/rewriter</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/rewriter</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/rewriter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/rewriter</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/rewriter</url>
     </scm>
 
     <build>
