@@ -62,7 +62,7 @@ import org.osgi.service.event.EventAdmin;
  *
  * @scr.component label="%job.events.name" description="%job.events.description" immediate="true"
  * @scr.service interface="org.apache.sling.event.JobStatusProvider"
- * @scr.property name="event.topics" refValues="EventUtil.TOPIC_JOB"
+ * @scr.property name="event.topics" valueRefs="EventUtil.TOPIC_JOB"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
  *               private="true"
