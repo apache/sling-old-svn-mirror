@@ -59,7 +59,7 @@ import org.osgi.service.event.EventAdmin;
  *
  * @scr.component metatype="no"
  * @scr.service interface="TimedEventStatusProvider"
- * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
+ * @scr.property name="event.topics" valueRefs="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
  * @scr.property name="repository.path" value="/var/eventing/timed-jobs"
