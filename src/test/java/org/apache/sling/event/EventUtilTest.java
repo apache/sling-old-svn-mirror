@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
+import java.util.Dictionary;
 import java.util.Properties;
 
 import javax.jcr.PropertyType;
@@ -52,16 +53,16 @@ public class EventUtilTest {
     @Test public void testDistributeFlag() {
         final Event distributableEvent = EventUtil.createDistributableEvent("some/topic", null);
         assertTrue(EventUtil.shouldDistribute(distributableEvent));
-        final Event nonDistributableEvent = new Event("another/topic", null);
+        final Event nonDistributableEvent = new Event("another/topic", (Dictionary)null);
         assertFalse(EventUtil.shouldDistribute(nonDistributableEvent));
     }
 
     @Test public void testLocalFlag() {
-        final Event localEvent = new Event("local/event", null);
+        final Event localEvent = new Event("local/event", (Dictionary)null);
         assertTrue(EventUtil.isLocal(localEvent));
         final Properties props = new Properties();
         props.put(EventUtil.PROPERTY_APPLICATION, "application1");
-        final Event remoteEvent = new Event("remote/event", props);
+        final Event remoteEvent = new Event("remote/event", (Dictionary)props);
         assertFalse(EventUtil.isLocal(remoteEvent));
     }
 

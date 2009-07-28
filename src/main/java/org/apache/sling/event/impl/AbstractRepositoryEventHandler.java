@@ -170,7 +170,7 @@ public abstract class AbstractRepositoryEventHandler
         // stop background threads by putting empty objects into the queue
         this.running = false;
         try {
-            this.writeQueue.put(new Event("some", null));
+            this.writeQueue.put(new Event("some", (Dictionary)null));
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
@@ -303,7 +303,7 @@ public abstract class AbstractRepositoryEventHandler
             eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
             this.addEventProperties(eventNode, eventProps);
             try {
-                final Event event = new Event(topic, eventProps);
+                final Event event = new Event(topic, (Dictionary)eventProps);
                 return event;
             } catch (IllegalArgumentException iae) {
                 // this exception occurs if the topic is not correct (it should never happen,
