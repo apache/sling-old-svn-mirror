@@ -406,7 +406,7 @@ public class RepositoryClassLoaderProviderImpl
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
     public long getLastModified(String fileName) {
-        final String path = cleanPath(fileName) + "/jcr:content/jcr:lastModifed";
+        final String path = cleanPath(fileName) + "/jcr:content/jcr:lastModified";
         Session session = null;
         try {
             session = getSession(this.classLoaderOwner);
