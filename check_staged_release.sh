@@ -15,7 +15,7 @@ then
  echo "################################################################################"
  echo "                           DOWNLOAD STAGED REPOSITORY                           "
  echo "################################################################################"
-  
+
  if [ `wget --help | grep "no-check-certificate" | wc -l` -eq 1 ]
  then
    CHECK_SSL=--no-check-certificate
