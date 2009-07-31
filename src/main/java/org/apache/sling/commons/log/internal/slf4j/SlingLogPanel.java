@@ -31,6 +31,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+/**
+ * The <code>SlingLogPanel</code> is a Felix Web Console plugin to display the
+ * current active log bundle configuration.
+ * <p>
+ * In future revisions of this plugin, the configuration may probably even
+ * be modified through this panel.
+ */
 public class SlingLogPanel extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -42,6 +49,9 @@ public class SlingLogPanel extends HttpServlet {
             Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put("felix.webconsole.label", "slinglog");
             props.put("felix.webconsole.title", "Sling Log Support");
+
+            // SLING-1068 Prevent ClassCastException in Sling Engine 2.0.2-incubator
+            props.put("sling.core.servletName", "Sling Log Support Console Servlet");
 
             SlingLogPanel panel = new SlingLogPanel();
             panelRegistration = ctx.registerService("javax.servlet.Servlet",
@@ -63,6 +73,9 @@ public class SlingLogPanel extends HttpServlet {
         final PrintWriter pw = resp.getWriter();
         final LogConfigManager logConfigManager = LogConfigManager.getInstance();
 
+        final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
+        final String cfgColTitle = (consoleAppRoot == null) ? "PID" : "Configuration";
+
         pw.println("<div class='table'>");
 
         pw.println("<h1>Logger</h1>");
@@ -72,10 +85,10 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("<thead>");
         pw.println("</tr>");
         pw.println("<tr>");
-        pw.println("<th>PID</th>");
         pw.println("<th>Log Level</th>");
         pw.println("<th>Log File</th>");
         pw.println("<th>Logger</th>");
+        pw.println("<th>" + cfgColTitle + "</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
@@ -84,7 +97,6 @@ public class SlingLogPanel extends HttpServlet {
         while (loggers.hasNext()) {
             final SlingLoggerConfig logger = loggers.next();
             pw.println("<tr>");
-            pw.println("<td>" + logger.getConfigPid() + "</td>");
             pw.println("<td>" + logger.getLogLevel() + "</td>");
             pw.println("<td>" + getPath(logger.getLogWriter()) + "</td>");
 
@@ -96,6 +108,8 @@ public class SlingLogPanel extends HttpServlet {
                 sep = "<br />";
             }
             pw.println("</td>");
+
+            pw.println("<td>" + formatPid(consoleAppRoot, logger.getConfigPid()) + "</td>");
             pw.println("</tr>");
         }
 
@@ -111,9 +125,9 @@ public class SlingLogPanel extends HttpServlet {
 
         pw.println("<thead>");
         pw.println("<tr>");
-        pw.println("<th>PID</th>");
         pw.println("<th>Log File</th>");
         pw.println("<th>Rotator</th>");
+        pw.println("<th>" + cfgColTitle + "</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
@@ -121,13 +135,11 @@ public class SlingLogPanel extends HttpServlet {
         Iterator<SlingLoggerWriter> writers = logConfigManager.getSlingLoggerWriters();
         while (writers.hasNext()) {
             final SlingLoggerWriter writer = writers.next();
-            final String pid = (writer.getConfigurationPID() != null)
-                    ? writer.getConfigurationPID()
-                    : "[implicit]";
             pw.println("<tr>");
-            pw.println("<td>" + pid + "</td>");
             pw.println("<td>" + getPath(writer) + "</td>");
             pw.println("<td>" + writer.getFileRotator() + "</td>");
+            pw.println("<td>" + formatPid(consoleAppRoot, writer.getConfigurationPID())
+                + "</td>");
             pw.println("</tr>");
         }
 
@@ -139,5 +151,21 @@ public class SlingLogPanel extends HttpServlet {
     private static String getPath(SlingLoggerWriter writer) {
         final String path = writer.getPath();
         return (path != null) ? path : "[stdout]";
+    }
+
+    private static String formatPid(final String consoleAppRoot,
+            final String pid) {
+        if (pid == null) {
+            return "[implicit]";
+        }
+
+        // no recent web console, so just render the pid as the link
+        if (consoleAppRoot == null) {
+            return "<a href=\"configMgr/" + pid + "\">" + pid + "</a>";
+        }
+
+        // recent web console has app root and hence we can use an image
+        return "<a href=\"configMgr/" + pid + "\"><img src=\"" + consoleAppRoot
+            + "/res/imgs/component_configure.png\" border=\"0\" /></a>";
     }
 }
