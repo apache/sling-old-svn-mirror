@@ -15,8 +15,13 @@ then
  echo "################################################################################"
  echo "                           DOWNLOAD STAGED REPOSITORY                           "
  echo "################################################################################"
+  
+ if [ `wget --help | grep "no-check-certificate" | wc -l` -eq 1 ]
+ then
+   CHECK_SSL=--no-check-certificate
+ fi
 
- wget --no-check-certificate \
+ wget $CHECK_SSL \
   -nv -r -np "--reject=html,txt" "--follow-tags=" \
   -P "${DOWNLOAD}/${STAGING}" -nH "--cut-dirs=3" --ignore-length \
   "http://repository.apache.org/content/repositories/sling-staging-${STAGING}/org/apache/sling/"
