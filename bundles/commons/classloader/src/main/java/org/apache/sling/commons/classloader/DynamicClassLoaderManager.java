@@ -24,6 +24,11 @@ package org.apache.sling.commons.classloader;
  * It provides a class loader that can be used by
  * bundles requiring access to all publically available
  * classes.
+ *
+ * The default implementation uses the package admin
+ * service to load classes and resources. The search
+ * path can be extended by providing
+ * {@link DynamicClassLoaderProvider}s.
  */
 public interface DynamicClassLoaderManager {
 

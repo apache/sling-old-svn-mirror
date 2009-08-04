@@ -19,18 +19,29 @@
 package org.apache.sling.commons.classloader.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
  * The <code>ClassLoaderFacade</code> is a facade
  * for the dynamic class loading.
+ * This class loader is returned to the clients of the
+ * dynamic class loader manager.
+ * This class loader delegates to other class loaders
+ * but caches its result for performance.
  */
 public class ClassLoaderFacade extends ClassLoader {
 
     private final DynamicClassLoaderManagerImpl manager;
+
+    /** A cache for resolved classes. */
+    private Map<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
+
+    /** A cache for resolved urls. */
+    private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
 
     public ClassLoaderFacade(final DynamicClassLoaderManagerImpl manager) {
         this.manager = manager;
@@ -40,28 +51,20 @@ public class ClassLoaderFacade extends ClassLoader {
      * @see java.lang.ClassLoader#getResource(java.lang.String)
      */
     public URL getResource(String name) {
+        if ( !this.manager.isActive() ) {
+            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+        }
+        final URL cachedURL = urlCache.get(name);
+        if ( cachedURL != null ) {
+            return cachedURL;
+        }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
                 final URL u = cl.getResource(name);
                 if ( u != null ) {
+                    urlCache.put(name, u);
                     return u;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @see java.lang.ClassLoader#getResourceAsStream(java.lang.String)
-     */
-    public InputStream getResourceAsStream(String name) {
-        final ClassLoader[] loaders = manager.getDynamicClassLoaders();
-        for(final ClassLoader cl : loaders) {
-            if ( cl != null ) {
-                final InputStream i = cl.getResourceAsStream(name);
-                if ( i != null ) {
-                    return i;
                 }
             }
         }
@@ -72,6 +75,9 @@ public class ClassLoaderFacade extends ClassLoader {
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
     public Enumeration<URL> getResources(String name) throws IOException {
+        if ( !this.manager.isActive() ) {
+            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+        }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
@@ -88,13 +94,22 @@ public class ClassLoaderFacade extends ClassLoader {
      * @see java.lang.ClassLoader#loadClass(java.lang.String)
      */
     public Class<?> loadClass(String name) throws ClassNotFoundException {
+        if ( !this.manager.isActive() ) {
+            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+        }
+        final Class<?> cachedClass = this.classCache.get(name);
+        if ( cachedClass != null ) {
+            return cachedClass;
+        }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
                 try {
                     final Class<?> c = cl.loadClass(name);
+                    this.classCache.put(name, c);
                     return c;
                 } catch (Exception cnfe) {
+                    cnfe.printStackTrace();
                     // we just ignore this and try the next class loader
                 }
             }

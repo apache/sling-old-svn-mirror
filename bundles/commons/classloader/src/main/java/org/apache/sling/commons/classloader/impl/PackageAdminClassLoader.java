@@ -27,28 +27,52 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
- * The <code>PackageAdminClassLoader</code>
+ * The <code>PackageAdminClassLoader</code> loads
+ * classes and resources through the package admin service.
  */
 class PackageAdminClassLoader extends ClassLoader {
 
+    /** The package admin service. */
     private final PackageAdmin packageAdmin;
 
-    public PackageAdminClassLoader(final PackageAdmin pckAdmin, final ClassLoader parent) {
+    /** The manager factory. */
+    private final DynamicClassLoaderManagerFactory factory;
+
+    public PackageAdminClassLoader(final PackageAdmin pckAdmin,
+                                   final ClassLoader parent,
+                                   final DynamicClassLoaderManagerFactory factory) {
         super(parent);
         this.packageAdmin = pckAdmin;
+        this.factory = factory;
     }
 
+    /**
+     * Find the bundle for a given package.
+     * @param pckName The package name.
+     * @return The bundle or <code>null</code>
+     */
     private Bundle findBundleForPackage(final String pckName) {
         final ExportedPackage exportedPackage = this.packageAdmin.getExportedPackage(pckName);
-        return (exportedPackage == null ? null : exportedPackage.getExportingBundle());
+        final Bundle bundle = (exportedPackage == null ? null : exportedPackage.getExportingBundle());
+        return bundle;
     }
 
+    /**
+     * Return the package from a resource.
+     * @param resource The resource path.
+     * @return The package name.
+     */
     private String getPackageFromResource(final String resource) {
         final int lastSlash = resource.lastIndexOf('/');
         final String pckName = (lastSlash == -1 ? "" : resource.substring(0, lastSlash).replace('/', '.'));
         return pckName;
     }
 
+    /**
+     * Return the package from a class.
+     * @param resource The class name.
+     * @return The package name.
+     */
     private String getPackageFromClassName(final String name) {
         final int lastDot = name.lastIndexOf('.');
         final String pckName = (lastDot == -1 ? "" : name.substring(0, lastDot));
@@ -60,43 +84,73 @@ class PackageAdminClassLoader extends ClassLoader {
      */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getResources(String name) throws IOException {
-        final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-        if ( bundle == null ) {
-            return super.getResources(name);
+        Enumeration<URL> e = super.getResources(name);
+        if ( e == null || !e.hasMoreElements() ) {
+            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
+            if ( bundle != null ) {
+                e = bundle.getResources(name);
+                if ( e != null && e.hasMoreElements() ) {
+                    this.factory.addUsedBundle(bundle);
+                }
+            }
         }
-        return bundle.getResources(name);
+        return e;
     }
 
     /**
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
     public URL findResource(String name) {
-        final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-        if ( bundle == null ) {
-            return super.findResource(name);
+        URL url = super.findResource(name);
+        if ( url == null ) {
+            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
+            if ( bundle != null ) {
+                url = bundle.getResource(name);
+                if ( url != null ) {
+                    this.factory.addUsedBundle(bundle);
+                }
+            }
         }
-        return bundle.getResource(name);
+        return url;
     }
 
     /**
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-        if ( bundle == null ) {
-            return super.findClass(name);
+        Class<?> clazz = null;
+        try {
+            clazz = super.findClass(name);
+        } catch (ClassNotFoundException cnfe) {
+            final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
+            if ( bundle != null ) {
+                clazz = bundle.loadClass(name);
+                this.factory.addUsedBundle(bundle);
+            }
         }
-        return bundle.loadClass(name);
+        if ( clazz == null ) {
+            throw new ClassNotFoundException("Class not found " + name);
+        }
+        return clazz;
     }
 
     /**
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-        if ( bundle == null ) {
-            return super.loadClass(name, resolve);
+        Class<?> clazz = null;
+        try {
+            clazz = super.loadClass(name, resolve);
+        } catch (ClassNotFoundException cnfe) {
+            final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
+            if ( bundle != null ) {
+                clazz = bundle.loadClass(name);
+                this.factory.addUsedBundle(bundle);
+            }
         }
-        return bundle.loadClass(name);
+        if ( clazz == null ) {
+            throw new ClassNotFoundException("Class not found " + name);
+        }
+        return clazz;
     }
 }

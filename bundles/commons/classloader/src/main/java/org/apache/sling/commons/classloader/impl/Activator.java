@@ -21,17 +21,21 @@ package org.apache.sling.commons.classloader.impl;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * This activator registers the dynamic class loader manager.
+ * It listens for bundle events and reregisters the class loader manager
+ * if a bundle event for a used bundle occurs.
  */
-public class Activator implements BundleActivator {
+public class Activator implements SynchronousBundleListener, BundleListener {
 
     /** Package admin service name */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
@@ -45,26 +49,39 @@ public class Activator implements BundleActivator {
     /** The dynamic class loader service factory. */
     private DynamicClassLoaderManagerFactory service;
 
+    /** The bundle context. */
+    private BundleContext bundleContext;
+
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(BundleContext context) throws Exception {
-        this.packageAdminTracker = new ServiceTracker(context, PACKAGE_ADMIN_NAME, null);
+    public void start(BundleContext context) {
+        this.bundleContext = context;
+
+        this.packageAdminTracker = new ServiceTracker(this.bundleContext, PACKAGE_ADMIN_NAME, null);
         this.packageAdminTracker.open();
 
         // register service
-        final Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Dynamic Class Loader Service");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.service = new DynamicClassLoaderManagerFactory(context,
-                (PackageAdmin)this.packageAdminTracker.getService());
-        this.serviceReg = context.registerService(new String[] {DynamicClassLoaderManager.class.getName()}, service, props);
+        this.registerManagerFactory();
+        this.bundleContext.addBundleListener(this);
     }
 
     /**
-     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+     * Register the dynamic class loader manager factory.
      */
-    public void stop(BundleContext context) throws Exception {
+    protected void registerManagerFactory() {
+        final Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Dynamic Class Loader Service");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        this.service = new DynamicClassLoaderManagerFactory(this.bundleContext,
+                (PackageAdmin)this.packageAdminTracker.getService());
+        this.serviceReg = this.bundleContext.registerService(new String[] {DynamicClassLoaderManager.class.getName()}, service, props);
+    }
+
+    /**
+     * Unregister the dynamic class loader manager factory.
+     */
+    protected void unregisterManagerFactory() {
         if ( this.serviceReg != null ) {
             this.serviceReg.unregister();
             this.serviceReg = null;
@@ -72,9 +89,30 @@ public class Activator implements BundleActivator {
         if ( this.service != null ) {
             this.service = null;
         }
+    }
+
+    /**
+     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+     */
+    public void stop(BundleContext context) {
+        context.removeBundleListener(this);
+        this.unregisterManagerFactory();
         if ( this.packageAdminTracker != null ) {
             this.packageAdminTracker.close();
             this.packageAdminTracker = null;
+        }
+        this.bundleContext = null;
+    }
+
+    /**
+     * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
+     */
+    public void bundleChanged(BundleEvent event) {
+        final long bundleId = event.getBundle().getBundleId();
+        boolean needsUpdate = this.service.isBundleUsed(bundleId);
+        if ( needsUpdate ) {
+            this.unregisterManagerFactory();
+            this.registerManagerFactory();
         }
     }
 }

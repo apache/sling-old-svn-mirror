@@ -16,6 +16,10 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -34,6 +38,8 @@ public class DynamicClassLoaderManagerFactory
     /** The bundle context. */
     private final BundleContext context;
 
+    private final Set<Long> usedBundles = Collections.synchronizedSet(new HashSet<Long>());
+
     /**
      * Create a new service instance
      * @param ctx The bundle context.
@@ -50,7 +56,7 @@ public class DynamicClassLoaderManagerFactory
      */
     public Object getService(final Bundle bundle,
                              final ServiceRegistration registration) {
-        return new DynamicClassLoaderManagerImpl(this.context, this.pckAdmin, new BundleProxyClassLoader(bundle));
+        return new DynamicClassLoaderManagerImpl(this.context, this.pckAdmin, new BundleProxyClassLoader(bundle), this);
     }
 
     /**
@@ -62,5 +68,23 @@ public class DynamicClassLoaderManagerFactory
         if ( service != null ) {
             ((DynamicClassLoaderManagerImpl)service).deactivate();
         }
+    }
+
+    /**
+     * Check if a bundle has been used for class loading.
+     * @param bundleId The bundle id.
+     * @return <code>true</code> if the bundle has been used.
+     */
+    public boolean isBundleUsed(final long bundleId) {
+        return usedBundles.contains(bundleId);
+    }
+
+    /**
+     * Notify that a bundle is used as a source for class loading.
+     * @param bundle The bundle.
+     */
+    public void addUsedBundle(final Bundle bundle) {
+        final long id = bundle.getBundleId();
+        this.usedBundles.add(id);
     }
 }
