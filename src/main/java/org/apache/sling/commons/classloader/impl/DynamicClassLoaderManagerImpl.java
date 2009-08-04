@@ -44,9 +44,14 @@ public class DynamicClassLoaderManagerImpl
     /** The bundle context. */
     private final BundleContext context;
 
+    /** The cached chain of class loaders. */
     private ClassLoader[] cache;
 
+    /** Needs the cache an update? */
     private boolean updateCache = false;
+
+    /** Is this service still active? */
+    private boolean active = true;
 
     /**
      * Create a new service instance
@@ -56,10 +61,11 @@ public class DynamicClassLoaderManagerImpl
      */
     public DynamicClassLoaderManagerImpl(final BundleContext ctx,
             final PackageAdmin pckAdmin,
-            final ClassLoader parent) {
+            final ClassLoader parent,
+            final DynamicClassLoaderManagerFactory factory) {
         super(ctx, DynamicClassLoaderProvider.class.getName(), null);
         this.context = ctx;
-        this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent);
+        this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent, factory);
         this.cache = new ClassLoader[] {this.pckAdminCL};
         this.open();
         this.facade = new ClassLoaderFacade(this);
@@ -85,8 +91,7 @@ public class DynamicClassLoaderManagerImpl
             final ServiceReference[] refs = this.getServiceReferences();
             final ClassLoader[] loaders = new ClassLoader[1 + refs.length];
             Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
-            loaders[0] = this.pckAdminCL;
-            int index = 1;
+            int index = 0;
             for(final ServiceReference ref : refs) {
                 final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
                 if ( provider != null ) {
@@ -94,6 +99,7 @@ public class DynamicClassLoaderManagerImpl
                 }
                 index++;
             }
+            loaders[index] = this.pckAdminCL;
             // and now use new array
             this.cache = loaders;
             this.updateCache = false;
@@ -104,9 +110,16 @@ public class DynamicClassLoaderManagerImpl
      * Deactivate this service.
      */
     public void deactivate() {
+        this.active = false;
         this.close();
     }
 
+    /**
+     * Check if this service is still active.
+     */
+    public boolean isActive() {
+        return this.active;
+    }
 
     /**
      * @see org.apache.sling.commons.classloader.DynamicClassLoaderManager#getDynamicClassLoader()

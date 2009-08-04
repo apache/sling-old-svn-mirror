@@ -27,6 +27,8 @@ import org.osgi.framework.Bundle;
 /**
  * The <code>BundleProxyClassLoader</code> is a class loader
  * delegating to a bundle.
+ * We don't need to cache as the {@link ClassLoaderFacade} is
+ * already doing this.
  */
 public class BundleProxyClassLoader extends ClassLoader {
 

@@ -61,6 +61,8 @@ public class ClassLoadingTest {
             will(returnValue(ep));
             allowing(ep).getExportingBundle();
             will(returnValue(bundle));
+            allowing(bundle).getBundleId();
+            will(returnValue(2L));
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
             will(returnValue(java.util.Map.class));
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
@@ -68,13 +70,15 @@ public class ClassLoadingTest {
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
             will(returnValue(java.util.ArrayList.class));
         }});
-        DynamicClassLoaderManagerImpl manager = new DynamicClassLoaderManagerImpl(bundleContext, packageAdmin, null);
+        DynamicClassLoaderManagerImpl manager = new DynamicClassLoaderManagerImpl(bundleContext, packageAdmin, null,
+            new DynamicClassLoaderManagerFactory(bundleContext, packageAdmin));
         final ClassLoader cl = manager.getDynamicClassLoader();
         final Class c1 = cl.loadClass("org.apache.sling.test.A");
         Assert.assertEquals("java.util.Map", c1.getName());
         final Class c2 = cl.loadClass("org.apache.sling.test.A");
         Assert.assertEquals("java.util.Map", c2.getName());
+        // as we cache the result, we still get the map!
         final Class c3 = cl.loadClass("org.apache.sling.test.A");
-        Assert.assertEquals("java.util.ArrayList", c3.getName());
+        Assert.assertEquals("java.util.Map", c3.getName());
     }
 }
