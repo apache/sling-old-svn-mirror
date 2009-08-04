@@ -30,13 +30,45 @@ import java.io.OutputStream;
  */
 public interface ClassLoaderWriter {
 
-    OutputStream getOutputStream(String name);
+    /**
+     * Get the output stream for a class or resource handled
+     * by the underlying class loader.
+     * If the resource/class does not exists it should be created.
+     * @param path The path of the class/resource.
+     * @return The output stream.
+     */
+    OutputStream getOutputStream(String path);
 
-    InputStream getInputStream(String name) throws IOException;
+    /**
+     * Get the input stream for a class or resource handled
+     * by the underlying class loader.
+     * @param path The path of the class/resource.
+     * @return The input stream for the resource/class.
+     * @throws IOException If the resource/class does not exist.
+     */
+    InputStream getInputStream(String path) throws IOException;
 
-    long getLastModified(String name);
+    /**
+     * Return the last modified for the class or resource.
+     * @param path The path of the class/resource.
+     * @return The last modified information or <code>-1</code> if
+     *         the information can't be detected.
+     */
+    long getLastModified(String path);
 
-    boolean delete(String name);
+    /**
+     * Delete the class/resource
+     * @param path The path of the class/resource.
+     * @return <code>true</code> if the resource exists and could be deleted,
+     *     <code>false</code> otherwise.
+     */
+    boolean delete(String path);
 
-    boolean rename(String oldName, String newName);
+    /**
+     * Rename a class/resource.
+     * @param oldPath The path of the class/resource.
+     * @param newPath The new path.
+     * @return <code>true</code> if the renaming has been successful.
+     */
+    boolean rename(String oldPath, String newPath);
 }
