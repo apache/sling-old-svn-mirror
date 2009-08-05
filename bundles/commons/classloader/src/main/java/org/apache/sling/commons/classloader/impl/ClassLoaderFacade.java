@@ -21,8 +21,6 @@ package org.apache.sling.commons.classloader.impl;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -37,12 +35,6 @@ public class ClassLoaderFacade extends ClassLoader {
 
     private final DynamicClassLoaderManagerImpl manager;
 
-    /** A cache for resolved classes. */
-    private Map<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
-
-    /** A cache for resolved urls. */
-    private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
-
     public ClassLoaderFacade(final DynamicClassLoaderManagerImpl manager) {
         this.manager = manager;
     }
@@ -54,16 +46,11 @@ public class ClassLoaderFacade extends ClassLoader {
         if ( !this.manager.isActive() ) {
             throw new RuntimeException("Dynamic class loader has already been deactivated.");
         }
-        final URL cachedURL = urlCache.get(name);
-        if ( cachedURL != null ) {
-            return cachedURL;
-        }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
                 final URL u = cl.getResource(name);
                 if ( u != null ) {
-                    urlCache.put(name, u);
                     return u;
                 }
             }
@@ -97,19 +84,13 @@ public class ClassLoaderFacade extends ClassLoader {
         if ( !this.manager.isActive() ) {
             throw new RuntimeException("Dynamic class loader has already been deactivated.");
         }
-        final Class<?> cachedClass = this.classCache.get(name);
-        if ( cachedClass != null ) {
-            return cachedClass;
-        }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
                 try {
                     final Class<?> c = cl.loadClass(name);
-                    this.classCache.put(name, c);
                     return c;
                 } catch (Exception cnfe) {
-                    cnfe.printStackTrace();
                     // we just ignore this and try the next class loader
                 }
             }
