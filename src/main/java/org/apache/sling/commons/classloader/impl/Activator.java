@@ -21,10 +21,9 @@ package org.apache.sling.commons.classloader.impl;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
@@ -36,7 +35,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * It listens for bundle events and reregisters the class loader manager
  * if a bundle event for a used bundle occurs.
  */
-public class Activator implements SynchronousBundleListener, BundleListener, BundleActivator {
+public class Activator implements SynchronousBundleListener, BundleActivator {
 
     /** Package admin service name */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
