@@ -20,7 +20,12 @@ package org.apache.sling.commons.classloader.impl;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -37,6 +42,15 @@ class PackageAdminClassLoader extends ClassLoader {
 
     /** The manager factory. */
     private final DynamicClassLoaderManagerFactory factory;
+
+    /** A cache for resolved classes. */
+    private Map<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
+
+    /** Negative class cache. */
+    private Set<String> negativeClassCache = Collections.synchronizedSet(new HashSet<String>());
+
+    /** A cache for resolved urls. */
+    private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
 
     public PackageAdminClassLoader(final PackageAdmin pckAdmin,
                                    final ClassLoader parent,
@@ -101,6 +115,10 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
     public URL findResource(String name) {
+        final URL cachedURL = urlCache.get(name);
+        if ( cachedURL != null ) {
+            return cachedURL;
+        }
         URL url = super.findResource(name);
         if ( url == null ) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
@@ -108,6 +126,7 @@ class PackageAdminClassLoader extends ClassLoader {
                 url = bundle.getResource(name);
                 if ( url != null ) {
                     this.factory.addUsedBundle(bundle);
+                    urlCache.put(name, url);
                 }
             }
         }
@@ -118,6 +137,10 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
     public Class<?> findClass(String name) throws ClassNotFoundException {
+        final Class<?> cachedClass = this.classCache.get(name);
+        if ( cachedClass != null ) {
+            return cachedClass;
+        }
         Class<?> clazz = null;
         try {
             clazz = super.findClass(name);
@@ -131,6 +154,7 @@ class PackageAdminClassLoader extends ClassLoader {
         if ( clazz == null ) {
             throw new ClassNotFoundException("Class not found " + name);
         }
+        this.classCache.put(name, clazz);
         return clazz;
     }
 
@@ -138,19 +162,33 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        final Class<?> cachedClass = this.classCache.get(name);
+        if ( cachedClass != null ) {
+            return cachedClass;
+        }
+        if ( negativeClassCache.contains(name) ) {
+            throw new ClassNotFoundException("Class not found " + name);
+        }
         Class<?> clazz = null;
         try {
             clazz = super.loadClass(name, resolve);
         } catch (ClassNotFoundException cnfe) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
             if ( bundle != null ) {
-                clazz = bundle.loadClass(name);
+                try {
+                    clazz = bundle.loadClass(name);
+                } catch (ClassNotFoundException inner) {
+                    negativeClassCache.add(name);
+                    throw inner;
+                }
                 this.factory.addUsedBundle(bundle);
             }
         }
         if ( clazz == null ) {
+            negativeClassCache.add(name);
             throw new ClassNotFoundException("Class not found " + name);
         }
+        this.classCache.put(name, clazz);
         return clazz;
     }
 }
