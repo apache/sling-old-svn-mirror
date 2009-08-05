@@ -24,5 +24,5 @@
 
 <h1>jsp2.jsp</h1>
 <p>
-    text from jsp2.jsp:=<%= currentNode.getProperty("text").getValue().getString() %>
+    text from jsp2.jsp:<%= currentNode.getProperty("text").getValue().getString() %>
 </p>
