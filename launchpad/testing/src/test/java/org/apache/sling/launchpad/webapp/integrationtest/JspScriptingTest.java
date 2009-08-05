@@ -24,15 +24,15 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  *  that would help in testing all scripting engines.
  */
 public class JspScriptingTest extends HttpTestBase {
- 
+
     private String testRootUrl;
     private TestNode rtNode;
     private TestNode unstructuredNode;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         final String testRootPath = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis();
         testRootUrl = testClient.createNode(testRootPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         rtNode = new TestNode(testRootPath + "/rt", null);
@@ -44,7 +44,7 @@ public class JspScriptingTest extends HttpTestBase {
         testClient.delete(testRootUrl);
         super.tearDown();
     }
-    
+
     public void testRtNoScript() throws Exception {
         final String content = getContent(rtNode.nodeUrl + ".txt", CONTENT_TYPE_PLAIN);
         assertTrue(content.contains("PlainTextRendererServlet"));
@@ -56,7 +56,7 @@ public class JspScriptingTest extends HttpTestBase {
         assertTrue(content.contains("PlainTextRendererServlet"));
         assertTrue("Content contains " + unstructuredNode.testText + " (" + content + ")", content.contains(unstructuredNode.testText));
     }
-    
+
     public void testRtJsp() throws Exception {
         final String toDelete = uploadTestScript(rtNode.scriptPath, "rendering-test.jsp", "html.jsp");
         try {
@@ -78,17 +78,19 @@ public class JspScriptingTest extends HttpTestBase {
             }
         }
     }
-    
+
     /* Verify that overwriting a JSP script changes the output immediately */
     public void testChangingJsp() throws Exception {
         String toDelete = null;
-        
+
         try {
             final String [] scripts = { "jsp1.jsp", "jsp2.jsp" };
             for(String script : scripts) {
                 toDelete = uploadTestScript(unstructuredNode.scriptPath, script, "html.jsp");
+                // scripts are only checked every 4 seconds for a change (by default) - so we wait 5 seconds
+                Thread.sleep(5000);
                 final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
-                final String expected = "text from " + script + ":" + unstructuredNode.testText; 
+                final String expected = "text from " + script + ":" + unstructuredNode.testText;
                 assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));
             }
         } finally {
@@ -101,7 +103,7 @@ public class JspScriptingTest extends HttpTestBase {
     private void checkContent(TestNode tn) throws Exception {
         final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
         assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
-        
+
         final String [] expected = {
                 "using resource.adaptTo:" + tn.testText,
                 "using currentNode:" + tn.testText,
