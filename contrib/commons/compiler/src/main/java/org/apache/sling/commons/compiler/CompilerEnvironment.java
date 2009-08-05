@@ -16,28 +16,11 @@
  */
 package org.apache.sling.commons.compiler;
 
-/**
- *
- */
 public interface CompilerEnvironment {
 
-    /**
-     *
-     * @param className
-     * @return
-     * @throws Exception
-     */
     byte[] findClass(String className) throws Exception;
 
-    /**
-     *  
-     * @param packageName
-     * @return
-     */
     boolean isPackage(String packageName);
 
-    /**
-     *
-     */
     void cleanup();
 }

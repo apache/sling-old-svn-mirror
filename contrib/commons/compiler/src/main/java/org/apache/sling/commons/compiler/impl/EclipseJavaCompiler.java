@@ -16,40 +16,41 @@
  */
 package org.apache.sling.commons.compiler.impl;
 
+import java.io.BufferedReader;
+import java.io.CharArrayReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 import org.apache.sling.commons.compiler.ClassWriter;
 import org.apache.sling.commons.compiler.CompileUnit;
-import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.CompilerEnvironment;
 import org.apache.sling.commons.compiler.ErrorHandler;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ClassFile;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
+import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
+import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
+import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.compiler.IProblemFactory;
-import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
-import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ClassFile;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
-import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
-import java.util.HashMap;
-import java.io.PrintWriter;
-import java.io.CharArrayReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-
 /**
- * The <code>EclipseJavaCompiler</code> provides platform independant Java Compilation 
+ * The <code>EclipseJavaCompiler</code> provides platform independant Java Compilation
  * support using the Eclipse Java Compiler (org.eclipse.jdt).
- * 
+ *
  * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.commons.compiler.JavaCompiler"
  */
@@ -66,13 +67,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
     }
 
     /**
-     *
-     * @param units
-     * @param env
-     * @param classWriter
-     * @param errorHandler
-     * @param options
-     * @return
+     * @see org.apache.sling.commons.compiler.JavaCompiler#compile(org.apache.sling.commons.compiler.CompileUnit[], org.apache.sling.commons.compiler.CompilerEnvironment, org.apache.sling.commons.compiler.ClassWriter, org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
      */
     public boolean compile(CompileUnit[] units, CompilerEnvironment env,
             ClassWriter classWriter, ErrorHandler errorHandler,
@@ -87,8 +82,8 @@ public class EclipseJavaCompiler implements JavaCompiler {
         if (options == null) {
             options = new Options();
         }
-        
-        HashMap props = new HashMap();
+
+        Map<String, String> props = new HashMap<String, String>();
         if (options.isGenerateDebugInfo()) {
             props.put("org.eclipse.jdt.core.compiler.debug.localVariable", "generate");
             props.put("org.eclipse.jdt.core.compiler.debug.lineNumber", "generate");
@@ -102,13 +97,13 @@ public class EclipseJavaCompiler implements JavaCompiler {
         }
         //options.put("org.eclipse.jdt.core.encoding", "UTF8");
         CompilerOptions settings = new CompilerOptions(props);
-        
+
         CompileContext context = new CompileContext(units, env, errorHandler, classWriter);
 
         if (log.isDebugEnabled()) {
             log.debug(settings.toString());
         }
-        
+
         org.eclipse.jdt.internal.compiler.Compiler compiler =
                 new org.eclipse.jdt.internal.compiler.Compiler(
                         context,
@@ -121,7 +116,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         compiler.compile(context.sourceUnits());
 
         context.cleanup();
-        
+
         return !context.hadErrors;
     }
 
@@ -139,16 +134,16 @@ public class EclipseJavaCompiler implements JavaCompiler {
 
         CompileContext(CompileUnit[] units,
         		CompilerEnvironment compEnv,
-        		ErrorHandler errorHandler, 
+        		ErrorHandler errorHandler,
         		ClassWriter classWriter) {
-            
+
         	compUnits = new HashMap<String,ICompilationUnit>(units.length);
             for (int i = 0; i < units.length; i++) {
                 CompilationUnitAdapter cua = new CompilationUnitAdapter(units[i]);
                 char[][] compoundName = CharOperation.arrayConcat(cua.getPackageName(), cua.getMainTypeName());
                 compUnits.put(CharOperation.toString(compoundName), new CompilationUnitAdapter(units[i]));
             }
-        	
+
         	this.compEnv = compEnv;
         	this.errorHandler = errorHandler;
             this.classWriter = classWriter;
@@ -156,10 +151,10 @@ public class EclipseJavaCompiler implements JavaCompiler {
         }
 
         ICompilationUnit[] sourceUnits() {
-        	return (ICompilationUnit[]) compUnits.values().toArray(
+        	return compUnits.values().toArray(
         			new ICompilationUnit[compUnits.size()]);
         }
-        
+
         //---------------------------------------------------< ICompilerRequestor >
         /**
          * {@inheritDoc}
@@ -206,7 +201,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
             // check 1st if type corresponds with any of current compilation units
             String fqn = CharOperation.toString(compoundTypeName);
-            ICompilationUnit cu = (ICompilationUnit) compUnits.get(fqn);
+            ICompilationUnit cu = compUnits.get(fqn);
             if (cu != null) {
                 return new NameEnvironmentAnswer(cu, null);
             }
@@ -248,7 +243,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
             compEnv.cleanup();
         }
     }
-    
+
     private class CompilationUnitAdapter implements ICompilationUnit {
 
         CompileUnit compUnit;
