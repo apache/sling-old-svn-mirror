@@ -62,6 +62,9 @@ public class HttpTestBase extends TestCase {
     
     public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
 	public static final String DEFAULT_EXT = ".txt";
+	
+	public static final String EXECUTE_RESOURCE_TYPE = "SlingTesting" + HttpTestBase.class.getSimpleName();
+	private static int executeCounter;
 
     protected SlingIntegrationTestClient testClient;
     protected HttpClient httpClient;
@@ -347,6 +350,44 @@ public class HttpTestBase extends TestCase {
             }
         }
         return url;
+    }
+    
+    /** Upload script, execute with no parameters and return content */
+    protected String executeScript(String localFilename) throws Exception {
+        return executeScript(localFilename, null);
+    }
+    
+    /** Upload script, execute with given parameters (optional) and return content */
+    protected String executeScript(String localFilename, List<NameValuePair> params) throws Exception {
+        
+        // Use unique resource type
+        int counter = 0;
+        synchronized (getClass()) {
+            counter = ++executeCounter;
+        }
+        final String resourceType = EXECUTE_RESOURCE_TYPE + counter;
+        final String scriptPath = "/apps/" + resourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL , scriptPath);
+        
+        final int pos = localFilename.lastIndexOf(".");
+        if(pos < 1) {
+            throw new IllegalArgumentException("localFilename must have extension (" + localFilename + ")");
+        }
+        final String ext = localFilename.substring(pos + 1);
+        final List<String> toDelete = new LinkedList<String>(); 
+        try {
+            toDelete.add(uploadTestScript(scriptPath, localFilename, "txt." + ext));
+            final Map<String, String> props = new HashMap<String, String>();
+            props.put(SLING_RESOURCE_TYPE, resourceType);
+            final String nodePath = scriptPath + "/node" + counter;
+            final String nodeUrl = testClient.createNode(HTTP_BASE_URL + nodePath, props);
+            toDelete.add(nodeUrl);
+            return getContent(nodeUrl + ".txt", CONTENT_TYPE_DONTCARE, params);
+        } finally {
+            for(String url : toDelete) {
+                testClient.delete(url);
+            }
+        }
     }
 
     protected void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
