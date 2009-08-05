@@ -450,6 +450,7 @@ public class SlingServletResolver implements ServletResolver,
             final SlingHttpServletRequest request) {
         final Servlet scriptServlet = (this.cache != null ? this.cache.get(locationUtil) : null);
         if ( scriptServlet != null ) {
+            log.debug("Using cached servlet {}", scriptServlet.getClass().getName());
             return scriptServlet;
         }
 
@@ -481,6 +482,8 @@ public class SlingServletResolver implements ServletResolver,
                     if ( !hasOptingServlet && !isOptingServlet && this.cache != null ) {
                         this.cache.put(locationUtil, candidate);
                     }
+                    log.debug("Using servlet provided by candidate resource {}",
+                            candidateResource.getPath());
                     return candidate;
                 }
                 if ( isOptingServlet ) {
