@@ -17,21 +17,11 @@
 package org.apache.sling.commons.compiler;
 
 /**
- * The <code>JavaCompiler</code> provides platform independant Java Compilation 
+ * The <code>JavaCompiler</code> provides platform independant Java Compilation
  * support.
  */
 public interface JavaCompiler {
 
-	/**
-     *
-     * @param units
-     * @param env
-     * @param classWriter
-     * @param errorHandler
-     * @param generateDebugInfo
-     * @param sourceVersion
-     * @return
-     */
     boolean compile(CompileUnit[] units, CompilerEnvironment env,
                         ClassWriter classWriter, ErrorHandler errorHandler,
                         Options options);

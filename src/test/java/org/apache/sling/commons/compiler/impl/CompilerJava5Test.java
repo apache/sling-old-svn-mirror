@@ -23,13 +23,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import junit.framework.TestCase;
+
 import org.apache.sling.commons.compiler.ClassWriter;
 import org.apache.sling.commons.compiler.CompileUnit;
 import org.apache.sling.commons.compiler.CompilerEnvironment;
 import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.Options;
-
-import junit.framework.TestCase;
 
 /**
  * Test case for java 5 support
@@ -57,7 +57,6 @@ public class CompilerJava5Test extends TestCase
     //--------------------------------------------------< CompilerEnvironment >
 
     public byte[] findClass(String className) throws Exception {
-        System.out.println("findClass('" + className + "')");
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         InputStream in = cl.getResourceAsStream(className.replace('.', '/') + ".class");
         if (in == null) {
@@ -80,13 +79,10 @@ public class CompilerJava5Test extends TestCase
     }
 
     public char[] findSource(String className) throws Exception {
-        System.out.println("findSource('" + className + "')");
         return new char[0];
     }
 
     public boolean isPackage(String packageName) {
-        System.out.println("isPackage('" + packageName + "')");
-
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         InputStream in = cl.getResourceAsStream(packageName.replace('.', '/') + ".class");
         if (in != null) {
@@ -105,7 +101,7 @@ public class CompilerJava5Test extends TestCase
     //----------------------------------------------------------< ClassWriter >
 
     public void write(String className, byte[] data) throws Exception {
-        System.out.println("compiled class " + className + ", " + data.length + " bytes");
+        // nothing to do
     }
 
     //--------------------------------------------------------< misc. helpers >

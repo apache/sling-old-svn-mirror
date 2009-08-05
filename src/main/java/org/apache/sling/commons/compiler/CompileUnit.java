@@ -16,21 +16,10 @@
  */
 package org.apache.sling.commons.compiler;
 
-/**
- *
- */
 public interface CompileUnit {
 
-    /**
-     *
-     * @return
-     */
     String getSourceFileName();
 
-    /**
-     *
-     * @return
-     */
     char[] getSourceFileContents();
 
     /**
