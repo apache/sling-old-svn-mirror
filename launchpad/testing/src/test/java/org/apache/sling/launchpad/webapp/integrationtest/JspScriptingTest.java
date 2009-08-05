@@ -79,6 +79,25 @@ public class JspScriptingTest extends HttpTestBase {
         }
     }
     
+    /* Verify that overwriting a JSP script changes the output immediately */
+    public void testChangingJsp() throws Exception {
+        String toDelete = null;
+        
+        try {
+            final String [] scripts = { "jsp1.jsp", "jsp2.jsp" };
+            for(String script : scripts) {
+                toDelete = uploadTestScript(unstructuredNode.scriptPath, script, "html.jsp");
+                final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
+                final String expected = "text from " + script + ":" + unstructuredNode.testText; 
+                assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));
+            }
+        } finally {
+            if(toDelete != null) {
+                testClient.delete(toDelete);
+            }
+        }
+    }
+
     private void checkContent(TestNode tn) throws Exception {
         final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
         assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
