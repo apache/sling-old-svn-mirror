@@ -20,6 +20,7 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -96,8 +97,16 @@ public class RepositoryObserver implements Runnable, JcrInstallService {
 
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
+    
+    /** Configurable max. path depth for watched folders
+     *  @scr.property valueRef="DEFAULT_FOLDER_MAX_DEPTH" type="Integer"
+     */
+    public static final String PROP_INSTALL_FOLDER_MAX_DEPTH = "installFolder.maxDepth";
 
-    /** ComponentContext property that overrides the folder name regepx */
+    public static final int DEFAULT_FOLDER_MAX_DEPTH = 4;
+    private int maxWatchedFolderDepth;
+
+    /** ComponentContext property that overrides the folder name regexp */
     public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
 
     public static final String DATA_FILE = "service.properties";
@@ -114,6 +123,14 @@ public class RepositoryObserver implements Runnable, JcrInstallService {
     protected void activate(ComponentContext context) throws Exception {
         componentContext = context;
 
+        final Dictionary<?, ?> properties = context.getProperties();
+        final Integer maxDepth = (Integer)properties.get(PROP_INSTALL_FOLDER_MAX_DEPTH);
+        if(maxDepth == null) {
+            maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
+        } else {
+            maxWatchedFolderDepth = maxDepth.intValue();
+        }
+        
         // Call startup() if we already have a repository, else that will be called
         // by the bind method
         if(repository != null) {
@@ -129,6 +146,7 @@ public class RepositoryObserver implements Runnable, JcrInstallService {
     /** Called at activation time, or when repository becomes available again
      *  after going away. */
     protected void startup() throws Exception {
+        final long start = System.currentTimeMillis();
         log.debug("startup()");
 
     	// TODO make this more configurable (in sync with ResourceOverrideRulesImpl)
@@ -177,6 +195,8 @@ public class RepositoryObserver implements Runnable, JcrInstallService {
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
         t.setDaemon(true);
         t.start();
+        
+        log.info("startup() took {} msec", System.currentTimeMillis() - start);
     }
 
     protected File getServiceDataFile(ComponentContext context) {
@@ -269,12 +289,19 @@ public class RepositoryObserver implements Runnable, JcrInstallService {
      */
     void findWatchedFolders(Node n, Set<WatchedFolder> setToUpdate) throws RepositoryException
     {
-        if (folderNameFilter.accept(n.getPath())) {
-            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, filenameFilter, scanDelayMsec, roRules));
+        final String path = n.getPath();
+        if (folderNameFilter.accept(path)) {
+            setToUpdate.add(new WatchedFolder(repository, path, osgiController, filenameFilter, scanDelayMsec, roRules));
         }
-        final NodeIterator it = n.getNodes();
-        while (it.hasNext()) {
-            findWatchedFolders(it.nextNode(), setToUpdate);
+        final int depth = path.split("/").length;
+        if(depth > maxWatchedFolderDepth) {
+            log.debug("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
+            return;
+        } else {
+            final NodeIterator it = n.getNodes();
+            while (it.hasNext()) {
+                findWatchedFolders(it.nextNode(), setToUpdate);
+            }
         }
     }
 
