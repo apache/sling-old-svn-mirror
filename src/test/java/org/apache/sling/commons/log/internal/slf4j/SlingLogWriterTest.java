@@ -160,8 +160,8 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
 
     public void test_daily_rotation() throws IOException {
         final String base = getBase();
-        final SlingLoggerWriter slfw = createLogWriter(base, -1,
-            "'.'yyyy-MM-dd");
+        final String limit = "'.'yyyy-MM-dd";
+        SlingLoggerWriter slfw = createLogWriter(base, -1, limit);
         setNow(slfw, july21);
 
         // only base file should exist with size 0 (for now)
@@ -187,7 +187,10 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
         // simulate July 23rd
         setNow(slfw, july21 + 24*60*60*1000L);
         forceRotate(slfw);
+        // setLastModified fails under Windows if file is still open in logger
+        slfw.close();
         test.setLastModified(july21);
+        slfw = createLogWriter(base, -1, limit);
 
         // rotate the file now
         slfw.checkRotate();
