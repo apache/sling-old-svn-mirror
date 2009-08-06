@@ -155,17 +155,11 @@ public class SlingFileUploadHandler {
                 typeHint = createNtFile ? NT_FILE : NT_RESOURCE;
             }
 
-            // remove node
-            if (parent.hasNode(name)) {
-                parent.getNode(name).remove();
-            }
-
             // create nt:file node if needed
             Node resParent;
             if (createNtFile) {
                 // create nt:file
-                resParent = parent.addNode(name, typeHint);
-                changes.add(Modification.onCreated(resParent.getPath()));
+                resParent = getOrCreateChildNode(parent, name, typeHint, changes);
                 name = JCR_CONTENT;
                 typeHint = NT_RESOURCE;
             } else {
@@ -173,8 +167,7 @@ public class SlingFileUploadHandler {
             }
 
             // create resource node
-            Node res = resParent.addNode(name, typeHint);
-            changes.add(Modification.onCreated(res.getPath()));
+            Node res = getOrCreateChildNode(resParent, name, typeHint, changes);
 
             // get content type
             String contentType = value.getContentType();
@@ -208,4 +201,29 @@ public class SlingFileUploadHandler {
             }
 		}
     }
+
+    private Node getOrCreateChildNode(Node parent, String name, String typeHint,
+            List<Modification> changes) throws RepositoryException {
+        Node result;
+        if (parent.hasNode(name)) {
+            Node existing = parent.getNode(name);
+            if (!existing.isNodeType(typeHint)) {
+                existing.remove();
+                result = createWithChanges(parent, name, typeHint, changes);
+            } else {
+                result = existing;
+            }
+        } else {
+            result = createWithChanges(parent, name, typeHint, changes);
+        }
+        return result;
+    }
+
+    private Node createWithChanges(Node parent, String name, String typeHint, 
+            List<Modification> changes) throws RepositoryException {
+        Node result = parent.addNode(name, typeHint);
+        changes.add(Modification.onCreated(result.getPath()));
+        return result;
+    }
+
 }
