@@ -23,7 +23,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  *  TODO this class can be generalized to be used for any scripting language,
  *  that would help in testing all scripting engines.
  */
-public class JspScriptingTest extends HttpTestBase {
+public class JspScriptingTest extends JspTestBase {
 
     private String testRootUrl;
     private TestNode rtNode;
@@ -87,8 +87,6 @@ public class JspScriptingTest extends HttpTestBase {
             final String [] scripts = { "jsp1.jsp", "jsp2.jsp" };
             for(String script : scripts) {
                 toDelete = uploadTestScript(unstructuredNode.scriptPath, script, "html.jsp");
-                // scripts are only checked every 4 seconds for a change (by default) - so we wait 5 seconds
-                Thread.sleep(5000);
                 final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
                 final String expected = "text from " + script + ":" + unstructuredNode.testText;
                 assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));

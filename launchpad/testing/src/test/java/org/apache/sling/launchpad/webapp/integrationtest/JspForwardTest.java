@@ -29,7 +29,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 
 
 /** Test the {link ScriptHelper#forward) functionality */
- public class JspForwardTest extends HttpTestBase {
+ public class JspForwardTest extends JspTestBase {
 
     private String nodeUrlA;
     private String testTextA;

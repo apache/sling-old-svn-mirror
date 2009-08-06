@@ -29,7 +29,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 
 
 /** Test the {link ScriptHelper#include) functionality */
- public class JspIncludeTest extends HttpTestBase {
+ public class JspIncludeTest extends JspTestBase {
 
     private String nodeUrlA;
     private String testTextA;

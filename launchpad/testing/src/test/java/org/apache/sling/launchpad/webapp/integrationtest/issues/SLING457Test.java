@@ -21,9 +21,9 @@ package org.apache.sling.launchpad.webapp.integrationtest.issues;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
 
-public class SLING457Test extends HttpTestBase {
+public class SLING457Test extends JspTestBase {
 
     private String testRootUrl;
 
