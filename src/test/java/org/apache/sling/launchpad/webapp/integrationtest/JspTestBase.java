@@ -16,16 +16,23 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-/** Test the executeScript test method */
-public class ExecuteScriptTest extends JspTestBase {
-    
-    public void testEspScript() throws Exception {
-        final String content = executeScript("serverscripts/servertest.esp");
-        assertContains(content, "ESP path = /apps/SlingTesting");
-    }
+/** Base class for tests that use JSP - configures the JSP
+ *  scripting engine in a test-friendly way
+ */
+public class JspTestBase extends RenderingTestBase {
 
-    public void testJspScript() throws Exception {
-        final String content = executeScript("serverscripts/servertest.jsp");
-        assertContains(content, "JSP path = /apps/SlingTesting");
+    public static final String SCRIPT = "serverscripts/jsp-engine-setup.jsp";
+    private static boolean jspEngineConfigured;
+    
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+        if(!jspEngineConfigured) {
+            final String content = executeScript(SCRIPT);
+            assertTrue("JSP engine setup script must return success message", content.contains("Configuration updated"));
+            jspEngineConfigured = true;
+            System.err.println("JSP script engine configured using " + SCRIPT);
+        }
     }
 }
