@@ -158,7 +158,7 @@ public class JcrBackingStore implements BackingStore {
      */
     protected String getNodePath(PreferencesImpl prefs) {
         final PreferencesDescription desc = prefs.getDescription();
-        final StringBuffer buffer = new StringBuffer(this.rootNodePath);
+        final StringBuilder buffer = new StringBuilder(this.rootNodePath);
         buffer.append('/');
         buffer.append(desc.getBundleId());
         buffer.append('/');
@@ -184,7 +184,7 @@ public class JcrBackingStore implements BackingStore {
      * @return
      */
     protected String getNodePath(PreferencesDescription desc) {
-        final StringBuffer buffer = new StringBuffer(this.rootNodePath);
+        final StringBuilder buffer = new StringBuilder(this.rootNodePath);
         buffer.append('/');
         buffer.append(desc.getBundleId());
         buffer.append('/');
