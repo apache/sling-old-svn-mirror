@@ -93,6 +93,7 @@
           <module>jcr/jackrabbit-api</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
+          <module>jcr/prefs</module>
           <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
           <module>scripting/java</module>
