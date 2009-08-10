@@ -35,6 +35,7 @@ object JcrFS {
   def create(node: Node): JcrNode = node.getPrimaryNodeType.getName match {
     case "nt:file" => JcrFile(node) // todo fix: dont hc ns prefixes
     case "nt:folder" => JcrFolder(node)
+    case "sling:Folder" => JcrFolder(node)
     case _ => throw new IOException("Neither file nor folder: " + node.getPath)
   }
 

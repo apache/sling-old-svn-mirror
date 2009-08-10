@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -114,7 +115,7 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
                             createFolder(path)),
                         this);
             }
-            catch (final RepositoryException e) {
+            catch (final Exception e) {
                 return new AbstractSlingScriptEngine(this) {
                     public Object eval(Reader reader, ScriptContext context) throws ScriptException {
                         throw initCause(new ScriptException("Cannot access output directory: " + path), e);
@@ -174,10 +175,36 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
         return bundleFs;
     }
 
-    private AbstractFile createFolder(String path) throws RepositoryException {
+    private AbstractFile createFolder(String path) throws Exception {
         Session session = repository.loginAdministrative(null);
-        Node node = (Node) session.getItem(path);
-        return JcrFS.create(node);
+        try {
+            Node node = deepCreateNode(path, session, "sling:Folder");
+            if(node == null) {
+            	throw new Exception("Unable to create node " + path);
+            }
+            return JcrFS.create(node);
+        } finally {
+        	if(session != null) {
+        		session.logout();
+        	}
+        }
+    }
+    
+    private Node deepCreateNode(String path, Session session, String nodeType) throws RepositoryException {
+    	Node result = null;
+    	if(session.itemExists(path)) {
+    		final Item it = session.getItem(path);
+    		if(it.isNode()) {
+    			result = (Node)it;
+    		}
+    	} else {
+    		final int slashPos = path.lastIndexOf("/");
+    		final String parentPath = path.substring(0, slashPos);
+    		final String childPath = path.substring(slashPos + 1);
+    		result = deepCreateNode(parentPath, session, nodeType).addNode(childPath, nodeType);
+    		session.save();
+    	}
+    	return result;
     }
 
     private static URL[] getBootUrls(Bundle bundle) {
