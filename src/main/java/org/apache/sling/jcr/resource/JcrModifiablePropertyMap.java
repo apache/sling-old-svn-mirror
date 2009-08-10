@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 
@@ -50,12 +51,12 @@ public class JcrModifiablePropertyMap
      * @see java.util.Map#get(java.lang.Object)
      */
     public Object get(Object key) {
-        Object value = cache.get(key);
-        if (value == null &&  !this.fullyRead ) {
-            value = read((String) key);
+        CacheEntry entry = cache.get(key);
+        if (entry == null && !this.fullyRead ) {
+            entry = read((String) key);
         }
 
-        return value;
+        return entry == null ? null : entry.defaultValue;
     }
 
     /**
@@ -69,6 +70,7 @@ public class JcrModifiablePropertyMap
         }
         this.changedProperties.addAll(this.cache.keySet());
         this.cache.clear();
+        this.valueCache.clear();
     }
 
     /**
@@ -77,11 +79,16 @@ public class JcrModifiablePropertyMap
     public Object put(String key, Object value) {
         readFully();
         final Object oldValue = this.get(key);
+        try {
+            this.cache.put(key, new CacheEntry(value, getNode()));
+        } catch (RepositoryException re) {
+            throw new IllegalArgumentException("Value can't be put into node: " + value, re);
+        }
+        this.valueCache.put(key, value);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
         this.changedProperties.add(key);
-        this.cache.put(key, value);
         return oldValue;
     }
 
@@ -106,6 +113,7 @@ public class JcrModifiablePropertyMap
     public Object remove(Object key) {
         readFully();
         final Object oldValue = this.cache.remove(key);
+        this.valueCache.remove(key);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
@@ -121,6 +129,7 @@ public class JcrModifiablePropertyMap
             this.changedProperties = null;
         }
         this.cache.clear();
+        this.valueCache.clear();
         this.fullyRead = false;
     }
 
@@ -135,10 +144,16 @@ public class JcrModifiablePropertyMap
         try {
             final Node node = getNode();
             for(final String key : this.changedProperties) {
+                final String name = ISO9075.encode(key);
                 if ( cache.containsKey(key) ) {
-                    JcrResourceUtil.setProperty(node, key, this.cache.get(key));
+                    final CacheEntry entry = cache.get(key);
+                    if ( entry.isMulti ) {
+                        node.setProperty(name, entry.values);
+                    } else {
+                        node.setProperty(name, entry.values[0]);
+                    }
                 } else {
-                    node.setProperty(key, (String)null);
+                    node.setProperty(name, (String)null);
                 }
             }
             node.save();
