@@ -240,7 +240,7 @@ public class JcrPropertyMap implements ValueMap {
                 while (pi.hasNext()) {
                     Property prop = pi.nextProperty();
                     final String name = prop.getName();
-                    final String key = ISO9075.encode(name);
+                    final String key = ISO9075.decode(name);
                     if (!cache.containsKey(key)) {
                         final CacheEntry entry = new CacheEntry(prop);
                         cache.put(key, entry);
