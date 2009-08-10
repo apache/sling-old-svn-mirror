@@ -490,7 +490,7 @@ public class LogSupport implements BundleListener, ServiceListener,
         }
 
         /* package */boolean hasBundle(Bundle bundle) {
-            return bundle == bundle;
+            return this.bundle == bundle;
         }
     }
 
