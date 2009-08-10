@@ -19,6 +19,7 @@ package org.apache.sling.jcr.resource;
  */
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -237,5 +238,24 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         this.rootNode.setProperty(ISO9075.encode("a/a"), "value");
         final ValueMap vm = this.createPropertyMap(this.rootNode);
         assertEquals("value", vm.get("a/a"));
+    }
+
+    public void testIerators() throws Exception {
+        this.rootNode.setProperty(ISO9075.encode("a/a"), "value");
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertTrue(vm.containsKey("a/a"));
+        search(vm.keySet().iterator(), "a/a");
+        search(vm.values().iterator(), "value");
+    }
+
+    protected void search(Iterator<?> i, Object value) {
+        boolean found = false;
+        while ( !found && i.hasNext() ) {
+            final Object current = i.next();
+            found = current.equals(value);
+        }
+        if ( !found ) {
+            fail("Value " + value + " is not found in iterator.");
+        }
     }
 }
