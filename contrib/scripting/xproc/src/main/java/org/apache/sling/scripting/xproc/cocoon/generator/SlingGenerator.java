@@ -31,7 +31,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.mime.MimeTypeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,16 +50,12 @@ public class SlingGenerator extends AbstractGenerator {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private static final String XML_MIME_TYPE = "text/xml";
-	
 	private SlingHttpServletRequest request;
 	private SlingHttpServletResponse response;
-	private MimeTypeService mimeTypeService; 
 	
 	public SlingGenerator(SlingScriptHelper sling) {
 		this.request = sling.getRequest();
 		this.response = sling.getResponse();
-		this.mimeTypeService = sling.getService(MimeTypeService.class);
 	}
 	
 	public void execute() {
@@ -82,7 +77,7 @@ public class SlingGenerator extends AbstractGenerator {
 	
 	private InputStream genXmlSource() throws Exception {
 	
-		String xmlPath = request.getResource().getPath() + "." +  mimeTypeService.getExtension(XML_MIME_TYPE);
+		String xmlPath = request.getResource().getPath() + ".xml";
 		
 		// The source is a xml file
 		Resource xmlResource = this.request.getResourceResolver().resolve(xmlPath);
