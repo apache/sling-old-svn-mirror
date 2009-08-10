@@ -26,6 +26,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
@@ -68,68 +70,68 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     public void testTypeByClass() throws Exception {
         testValue(rootNode, "A String Value", String.class);
-        
+
         testValue(rootNode, 1l, Byte.class);
         testValue(rootNode, 1l, Short.class);
         testValue(rootNode, 1l, Integer.class);
         testValue(rootNode, 1l, Long.class);
-        
+
         testValue(rootNode, 1.0d, Float.class);
         testValue(rootNode, 1.0d, Double.class);
-        
+
         Calendar cal = Calendar.getInstance();
         testValue(rootNode, cal, Calendar.class);
         testValue(rootNode, cal, Date.class);
         testValue(rootNode, cal, Long.class);
     }
-    
+
     public void testTypeByDefaultValue() throws Exception {
         testValue(rootNode, "A String Value", "default");
-        
+
         testValue(rootNode, 1l, (byte) 10);
         testValue(rootNode, 1l, (short) 10);
         testValue(rootNode, 1l, 10);
         testValue(rootNode, 1l, 10l);
-        
+
         testValue(rootNode, 1.0d, 10.0f);
         testValue(rootNode, 1.0d, 10.0d);
-        
+
         long refTime = 1000l;
         Date refDate = new Date(refTime);
         Calendar refCal = Calendar.getInstance();
         refCal.setTimeInMillis(refTime);
-        
+
         Calendar cal = Calendar.getInstance();
         testValue(rootNode, cal, refCal);
         testValue(rootNode, cal, refDate);
         testValue(rootNode, cal, refTime);
     }
-    
+
     public void testDefaultValue() throws Exception {
         testDefaultValue(rootNode, "default");
-        
+
         testDefaultValue(rootNode, (byte) 10);
         testDefaultValue(rootNode, (short) 10);
         testDefaultValue(rootNode, 10);
         testDefaultValue(rootNode, 10l);
-        
+
         testDefaultValue(rootNode, 10.0f);
         testDefaultValue(rootNode, 10.0d);
-        
+
         long refTime = 1000l;
         Date refDate = new Date(refTime);
         Calendar refCal = Calendar.getInstance();
         refCal.setTimeInMillis(refTime);
-        
+
         testDefaultValue(rootNode, refCal);
         testDefaultValue(rootNode, refDate);
         testDefaultValue(rootNode, refTime);
     }
 
     public void testProperty() throws Exception {
-        JcrPropertyMap map = createProperty(rootNode, "Sample Value For Prop");
+        ValueMap map = createProperty(rootNode, "Sample Value For Prop");
         Property prop = rootNode.getProperty(PROP_NAME);
-        
+
         // explicite type
         Property result = map.get(PROP_NAME, Property.class);
         assertTrue(prop.isSame(result));
@@ -138,26 +140,26 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         Property defaultValue = rootNode.getProperty("jcr:primaryType");
         result = map.get(PROP_NAME, defaultValue);
         assertTrue(prop.isSame(result));
-        
+
         // default value
         result = map.get(PROP_NAME_NIL, defaultValue);
         assertSame(defaultValue, result);
     }
-    
+
     // ---------- internal
 
     private void testValue(Node node, Object value, Object defaultValue) throws RepositoryException {
-        JcrPropertyMap map = createProperty(rootNode, value);
+        ValueMap map = createProperty(rootNode, value);
         assertValueType(value, map.get(PROP_NAME, defaultValue), defaultValue.getClass());
     }
-    
+
     private void testDefaultValue(Node node, Object defaultValue) {
-        JcrPropertyMap map = new JcrPropertyMap(rootNode);
+        JcrPropertyMap map = createPropertyMap(rootNode);
         assertSame(defaultValue, map.get(PROP_NAME_NIL, defaultValue));
     }
-    
+
     private void testValue(Node node, Object value, Class<?> type) throws RepositoryException {
-        JcrPropertyMap map = createProperty(rootNode, value);
+        ValueMap map = createProperty(rootNode, value);
         assertValueType(value, map.get(PROP_NAME, type), type);
     }
 
@@ -166,10 +168,10 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         if (value instanceof Long && result instanceof Number) {
             assertEquals(((Number) value).longValue(), ((Number) result).longValue());
-            
+
         } else if (value instanceof Double && result instanceof Number) {
             assertEquals(((Number) value).doubleValue(), ((Number) result).doubleValue());
-            
+
         } else if (value instanceof Calendar) {
             long resultTime;
             if (result instanceof Date) {
@@ -183,18 +185,22 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
                 return;
             }
             assertEquals(((Calendar) value).getTimeInMillis(), resultTime);
-            
+
         } else {
             assertEquals(value, result);
         }
     }
-    
+
+    protected JcrPropertyMap createPropertyMap(final Node node) {
+        return new JcrPropertyMap(node);
+    }
+
     private void testValue(Node node, Object value) throws RepositoryException {
-        JcrPropertyMap map = createProperty(node, value);
+        ValueMap map = createProperty(node, value);
         assertEquals(value, map.get(PROP_NAME));
     }
 
-    private JcrPropertyMap createProperty(Node node, Object value)
+    private ValueMap createProperty(Node node, Object value)
             throws RepositoryException {
         if (node.hasProperty(PROP_NAME)) {
             node.getProperty(PROP_NAME).remove();
@@ -224,6 +230,12 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         node.setProperty(PROP_NAME, jcrValue);
         node.save();
 
-        return new JcrPropertyMap(node);
+        return createPropertyMap(node);
+    }
+
+    public void testNames() throws Exception {
+        this.rootNode.setProperty(ISO9075.encode("a/a"), "value");
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertEquals("value", vm.get("a/a"));
     }
 }

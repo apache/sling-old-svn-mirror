@@ -36,53 +36,85 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * An implementation of the value map based on a JCR node.
+ * @see JcrModifiablePropertyMap
+ */
 public class JcrPropertyMap implements ValueMap {
 
-    /** default log */
-    private Logger logger = LoggerFactory.getLogger(JcrPropertyMap.class);
+    /** default logger */
+    private static Logger LOGGER = LoggerFactory.getLogger(JcrPropertyMap.class);
 
+    /** The underlying node. */
     private final Node node;
 
-    protected final Map<String, Object> cache;
+    /** A cache for the properties. */
+    protected final Map<String, CacheEntry> cache;
 
+    /** A cache for the values. */
+    protected final Map<String, Object> valueCache;
+
+    /** Has the node been read completly? */
     protected boolean fullyRead;
 
-    public JcrPropertyMap(Node node) {
+    /**
+     * Constructor
+     * @param node The underlying node.
+     */
+    public JcrPropertyMap(final Node node) {
         this.node = node;
-        this.cache = new LinkedHashMap<String, Object>();
+        this.cache = new LinkedHashMap<String, CacheEntry>();
+        this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
     }
 
+    /**
+     * Get the node.
+     */
     protected Node getNode() {
         return node;
     }
 
     // ---------- ValueMap
 
+    /**
+     * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Class)
+     */
     @SuppressWarnings("unchecked")
-    public <T> T get(String name, Class<T> type) {
+    public <T> T get(final String key, final Class<T> type) {
         if (type == null) {
-            return (T) get(name);
+            return (T) get(key);
         }
 
-        return convertToType(name, type);
+        CacheEntry entry = cache.get(key);
+        if (entry == null) {
+            entry = read(key);
+        }
+        if ( entry == null ) {
+            return null;
+        }
+        return convertToType(entry, type);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ValueMap#get(java.lang.String, java.lang.Object)
+     */
     @SuppressWarnings("unchecked")
-    public <T> T get(String name, T defaultValue) {
+    public <T> T get(final String key,final T defaultValue) {
         if (defaultValue == null) {
-            return (T) get(name);
+            return (T) get(key);
         }
 
         // special handling in case the default value implements one
         // of the interface types supported by the convertToType method
         Class<T> type = (Class<T>) normalizeClass(defaultValue.getClass());
 
-        T value = get(name, type);
+        T value = get(key, type);
         if (value == null) {
             value = defaultValue;
         }
@@ -92,12 +124,18 @@ public class JcrPropertyMap implements ValueMap {
 
     // ---------- Map
 
-    public Object get(Object key) {
-        Object value = cache.get(key);
-        if (value == null) {
-            value = read((String) key);
+    /**
+     * @see java.util.Map#get(java.lang.Object)
+     */
+    public Object get(final Object key) {
+        if ( key == null ) {
+            return null;
         }
-
+        CacheEntry entry = cache.get(key);
+        if (entry == null) {
+            entry = read((String)key);
+        }
+        final Object value = (entry == null ? null : entry.defaultValue);
         return value;
     }
 
@@ -113,7 +151,7 @@ public class JcrPropertyMap implements ValueMap {
      */
     public boolean containsValue(Object value) {
         readFully();
-        return cache.containsValue(value);
+        return valueCache.containsValue(value);
     }
 
     /**
@@ -136,7 +174,7 @@ public class JcrPropertyMap implements ValueMap {
      */
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
-        return cache.entrySet();
+        return valueCache.entrySet();
     }
 
     /**
@@ -152,12 +190,12 @@ public class JcrPropertyMap implements ValueMap {
      */
     public Collection<Object> values() {
         readFully();
-        return cache.values();
+        return valueCache.values();
     }
 
     /**
      * Return the path of the current node.
-     * 
+     *
      * @throws IllegalStateException If a repository exception occurs
      */
     public String getPath() {
@@ -170,7 +208,7 @@ public class JcrPropertyMap implements ValueMap {
 
     // ---------- Helpers to access the node's property ------------------------
 
-    protected Object read(String key) {
+    protected CacheEntry read(final String key) {
 
         // if the node has been completely read, we need not check
         // again, as we certainly will not find the key
@@ -178,12 +216,14 @@ public class JcrPropertyMap implements ValueMap {
             return null;
         }
 
+        final String name = ISO9075.encode(key);
         try {
-            if (node.hasProperty(key)) {
-                Property prop = node.getProperty(key);
-                Object value = JcrResourceUtil.toJavaObject(prop);
-                cache.put(key, value);
-                return value;
+            if (node.hasProperty(name)) {
+                final Property prop = node.getProperty(name);
+                final CacheEntry entry = new CacheEntry(prop);
+                cache.put(key, entry);
+                valueCache.put(key, entry.defaultValue);
+                return entry;
             }
         } catch (RepositoryException re) {
             // TODO: log !!
@@ -199,9 +239,12 @@ public class JcrPropertyMap implements ValueMap {
                 PropertyIterator pi = node.getProperties();
                 while (pi.hasNext()) {
                     Property prop = pi.nextProperty();
-                    String key = prop.getName();
+                    final String name = prop.getName();
+                    final String key = ISO9075.encode(name);
                     if (!cache.containsKey(key)) {
-                        cache.put(key, JcrResourceUtil.toJavaObject(prop));
+                        final CacheEntry entry = new CacheEntry(prop);
+                        cache.put(key, entry);
+                        valueCache.put(key, entry.defaultValue);
                     }
                 }
                 fullyRead = true;
@@ -232,62 +275,55 @@ public class JcrPropertyMap implements ValueMap {
     // ---------- Implementation helper
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(String name, Class<T> type) {
+    private <T> T convertToType(final CacheEntry entry, Class<T> type) {
         T result = null;
 
         try {
-            if (node.hasProperty(name)) {
-                Property prop = node.getProperty(name);
+            final boolean array = type.isArray();
 
-                boolean multiValue = prop.getDefinition().isMultiple();
-                boolean array = type.isArray();
+            if (entry.isMulti) {
 
-                if (multiValue) {
+                if (array) {
 
-                    Value[] values = prop.getValues();
-                    if (array) {
+                    result = (T) convertToArray(entry,
+                        type.getComponentType());
 
-                        result = (T) convertToArray(prop, values,
+                } else if (entry.values.length > 0) {
+
+                    result = convertToType(entry, -1, entry.values[0], type);
+
+                }
+
+            } else {
+
+                if (array) {
+
+                    result = (T) convertToArray(entry,
                             type.getComponentType());
-
-                    } else if (values.length > 0) {
-
-                        result = convertToType(prop, -1, values[0], type);
-
-                    }
 
                 } else {
 
-                    Value value = prop.getValue();
-                    if (array) {
+                    result = convertToType(entry, -1, entry.values[0], type);
 
-                        result = (T) convertToArray(prop,
-                            new Value[] { value }, type.getComponentType());
-
-                    } else {
-
-                        result = convertToType(prop, -1, value, type);
-
-                    }
                 }
             }
 
         } catch (ValueFormatException vfe) {
-            logger.info("converToType: Cannot convert value of " + name
+            LOGGER.info("converToType: Cannot convert value of " + entry.defaultValue
                 + " to " + type, vfe);
         } catch (RepositoryException re) {
-            logger.info("converToType: Cannot get value of " + name, re);
+            LOGGER.info("converToType: Cannot get value of " + entry.defaultValue, re);
         }
 
         // fall back to nothing
         return result;
     }
 
-    private <T> T[] convertToArray(Property p, Value[] jcrValues, Class<T> type)
-            throws ValueFormatException, RepositoryException {
+    private <T> T[] convertToArray(final CacheEntry entry, Class<T> type)
+    throws ValueFormatException, RepositoryException {
         List<T> values = new ArrayList<T>();
-        for (int i = 0; i < jcrValues.length; i++) {
-            T value = convertToType(p, i, jcrValues[i], type);
+        for (int i = 0; i < entry.values.length; i++) {
+            T value = convertToType(entry, i, entry.values[i], type);
             if (value != null) {
                 values.add(value);
             }
@@ -300,7 +336,7 @@ public class JcrPropertyMap implements ValueMap {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(Property p, int index, Value jcrValue,
+    private <T> T convertToType(final CacheEntry entry, int index, Value jcrValue,
             Class<T> type) throws ValueFormatException, RepositoryException {
 
         if (String.class == type) {
@@ -318,9 +354,9 @@ public class JcrPropertyMap implements ValueMap {
         } else if (Long.class == type) {
             if (jcrValue.getType() == PropertyType.BINARY) {
                 if (index == -1) {
-                    return (T) Long.valueOf(p.getLength());
+                    return (T) Long.valueOf(entry.property.getLength());
                 }
-                return (T) Long.valueOf(p.getLengths()[index]);
+                return (T) Long.valueOf(entry.property.getLengths()[index]);
             }
             return (T) Long.valueOf(jcrValue.getLong());
 
@@ -343,7 +379,7 @@ public class JcrPropertyMap implements ValueMap {
             return (T) jcrValue;
 
         } else if (Property.class == type) {
-            return (T) p;
+            return (T) entry.property;
         }
 
         // fallback in case of unsupported type
@@ -361,5 +397,43 @@ public class JcrPropertyMap implements ValueMap {
             type = Property.class;
         }
         return type;
+    }
+
+    protected static final class CacheEntry {
+        public final Property property;
+        public final boolean isMulti;
+        public final Value[] values;
+
+        public final Object defaultValue;
+
+        public CacheEntry(final Property prop)
+        throws RepositoryException {
+            this.property = prop;
+            if ( prop.getDefinition().isMultiple() ) {
+                isMulti = true;
+                values = prop.getValues();
+            } else {
+                isMulti = false;
+                values = new Value[] {prop.getValue()};
+            }
+            this.defaultValue = JcrResourceUtil.toJavaObject(prop);
+        }
+
+        public CacheEntry(final Object value, final Node node)
+        throws RepositoryException {
+            this.property = null;
+            this.defaultValue = value;
+            if ( value.getClass().isArray() ) {
+                this.isMulti = true;
+                final Object[] values = (Object[])value;
+                this.values = new Value[values.length];
+                for(int i=0; i<values.length; i++) {
+                    this.values[i] = JcrResourceUtil.createValue(values[i], node.getSession());
+                }
+            } else {
+                this.isMulti = false;
+                this.values = new Value[] {JcrResourceUtil.createValue(value, node.getSession())};
+            }
+        }
     }
 }
