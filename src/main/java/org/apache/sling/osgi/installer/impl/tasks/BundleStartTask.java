@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.impl.EventsCounter;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
@@ -107,7 +106,7 @@ public class BundleStartTask extends OsgiControllerTask {
 	}
 	
 	/** Do not execute this task if waiting for events */
-    public boolean isExecutable(OsgiControllerTaskContext tctx) throws JcrInstallException {
+    public boolean isExecutable(OsgiControllerTaskContext tctx) {
         final long eventsCount = getEventsCount(tctx.getBundleContext()); 
         final boolean result = eventsCount >= eventsCountForRetrying; 
         if(!result) {
@@ -120,14 +119,14 @@ public class BundleStartTask extends OsgiControllerTask {
     }
     
     /** Return current events count */
-    protected long getEventsCount(BundleContext bc) throws JcrInstallException {
+    protected long getEventsCount(BundleContext bc) {
         final ServiceReference sr = bc.getServiceReference(EventsCounter.class.getName());
         if(sr == null) {
-            throw new JcrInstallException("EventsCounter service not found");
+            throw new IllegalStateException("EventsCounter service not found");
         }
         final EventsCounter ec = (EventsCounter)bc.getService(sr);
         if(ec == null) {
-            throw new JcrInstallException("EventsCounter service not found, although its ServiceReference was found");
+            throw new IllegalStateException("EventsCounter service not found, although its ServiceReference was found");
         }
         return ec.getTotalEventsCount();
     }

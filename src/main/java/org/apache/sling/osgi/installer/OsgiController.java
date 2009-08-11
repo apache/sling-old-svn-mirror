@@ -31,7 +31,7 @@ public interface OsgiController {
      *  @param uri Unique identifier for the resource
      *  @param data The data to install
      */
-    void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
+    void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException;
 
     /** Schedule uninstallation of resource that was installed via given uri.
      *  Might be called several times for the same URI - needless calls should
@@ -40,7 +40,7 @@ public interface OsgiController {
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method
      */
-    void scheduleUninstall(String uri) throws IOException, JcrInstallException;
+    void scheduleUninstall(String uri) throws IOException;
 
     /** Return the list of uri for resources that have been installed
      *  by this controller.
