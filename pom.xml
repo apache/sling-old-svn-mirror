@@ -24,23 +24,23 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>6</version>
-    <relativePath>../../../../parent/pom.xml</relativePath>
+    <relativePath>../../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.sling.osgi.installer</artifactId>
-  <version>2.0.3-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Apache Sling OSGi installer</name>
+  <name>Apache Sling OSGi Installer</name>
   <description> 
     Provides services to install OSGi bundles and configurations
     by supplying input streams and dictionaries.
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/jcrinstall/osgi</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/jcrinstall/osgi</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/whiteboard/jcrinstall</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/installer/osgi/installer</url>
   </scm>
   
   <build>
