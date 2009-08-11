@@ -221,7 +221,7 @@
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.launchpad.base</artifactId>
-                                    <version>2.0.4-incubator</version>
+                                    <version>2.0.5-SNAPSHOT</version>
                                 </artifactItem>
                             </artifactItems>
                             <stripVersion>true</stripVersion>
@@ -295,12 +295,11 @@
                         </resource>
                         <!-- Legal stuff -->
                         <resource>
-                            <directory>${basedir}</directory>
+                            <directory>src/main/resources/META-INF</directory>
                             <targetPath>META-INF</targetPath>
                             <includes>
                                 <include>LICENSE*</include>
                                 <include>NOTICE*</include>
-                                <include>DISCLAIMER</include>
                             </includes>
                         </resource>
                     </webResources>
@@ -648,7 +647,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.5-SNAPSHOT</version>
             <classifier>webapp</classifier>
             <type>war</type>
             <scope>runtime</scope>
