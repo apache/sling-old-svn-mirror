@@ -80,7 +80,7 @@ public class OsgiControllerTest implements FrameworkListener {
     
     protected void generateBundleEvent() throws Exception {
         // install a bundle manually to generate a bundle event
-        final File f = getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.0.jar");
+        final File f = getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar");
         final InputStream is = new FileInputStream(f);
         Bundle b = null;
         try {
@@ -249,19 +249,19 @@ public class OsgiControllerTest implements FrameworkListener {
     	long bundleId = 0;
     	final OsgiController c = getService(OsgiController.class);
     	{
-        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.1.jar")));
+        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
         	assertNull("Test bundle must be absent right after scheduleInstallOrUpdate", findBundle(symbolicName));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
-        	bundleId = b.getBundleId();
         	assertNotNull("Test bundle 1.1 must be found after executeScheduledOperations", b);
+        	bundleId = b.getBundleId();
         	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
     	}
     	
     	// Upgrade to later version, verify
     	{
-        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.2.jar")));
+        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after executeScheduledOperations", b);
@@ -272,7 +272,7 @@ public class OsgiControllerTest implements FrameworkListener {
     	
     	// Downgrade to lower version, installed bundle must not change
     	{
-        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.0.jar")));
+        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after executeScheduledOperations", b);
@@ -291,7 +291,7 @@ public class OsgiControllerTest implements FrameworkListener {
     	
     	// Install lower version, must work
     	{
-        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.0.jar")));
+        	c.scheduleInstallOrUpdate(uri, new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.0 must be found after executeScheduledOperations", b);
@@ -308,14 +308,16 @@ public class OsgiControllerTest implements FrameworkListener {
     	// Install two bundles, one started, one stopped
     	{
         	c.scheduleInstallOrUpdate("otherBundleA.jar", 
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testA-1.0.jar")));
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testA-1.0.jar")));
         	c.executeScheduledOperations();
     	}
     	{
         	c.scheduleInstallOrUpdate("testB.jar", 
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testB-1.0.jar")));
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testB-1.0.jar")));
         	c.executeScheduledOperations();
-        	findBundle("jcrinstall-testB").stop();
+        	final Bundle b = findBundle("jcrinstall-testB");
+        	assertNotNull("Test bundle must be found", b);
+        	b.stop();
     	}
     	
     	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
@@ -326,13 +328,13 @@ public class OsgiControllerTest implements FrameworkListener {
     	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
     	c.scheduleInstallOrUpdate(uri, 
-    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.1.jar")));
+    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
     	c.executeScheduledOperations();
     	c.scheduleInstallOrUpdate(uri, 
-    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.2.jar")));
+    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
     	c.executeScheduledOperations();
     	c.scheduleInstallOrUpdate(uri, 
-    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.0.jar")));
+    			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
     	c.executeScheduledOperations();
     	final Bundle b = findBundle(symbolicName);
     	assertNotNull("Installed bundle must be found", b);
@@ -366,7 +368,7 @@ public class OsgiControllerTest implements FrameworkListener {
     	// without testB, needsB must not start
     	{
         	c.scheduleInstallOrUpdate(needsB + JAR_EXT,
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-needsB.jar")));
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-needsB.jar")));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(needsB);
         	assertNotNull(needsB + " must be installed", b);
@@ -420,7 +422,7 @@ public class OsgiControllerTest implements FrameworkListener {
     	// now install testB -> needsB must start
     	{
         	c.scheduleInstallOrUpdate(testB + JAR_EXT,
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testB-1.0.jar")));
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testB-1.0.jar")));
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(needsB);
         	assertNotNull(needsB + " must be installed", b);
