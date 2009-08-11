@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +34,7 @@ import org.apache.sling.osgi.installer.impl.propertyconverter.ValueConverterExce
  *  syntax of the Properties class, enhanced to support
  *  multivalued properties and types supported by the PropertyConverter
  */
-public class DictionaryReader {
+class DictionaryReader {
     private final PropertyConverter converter = new PropertyConverter();
     
     /** Read Dictionary from the given InputStream,

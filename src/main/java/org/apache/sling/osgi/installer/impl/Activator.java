@@ -24,14 +24,18 @@ import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator, FrameworkListener, BundleListener {
 
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
     private static String START_LEVEL_NAME = StartLevel.class.getName();
@@ -42,8 +46,8 @@ public class Activator implements BundleActivator {
     private ServiceTracker logServiceTracker;
     private OsgiControllerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
-    private EventsCounterImpl eventsCounter;
-    private ServiceRegistration eventsCounterServiceReg;
+    
+    private static long eventsCount;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -56,6 +60,10 @@ public class Activator implements BundleActivator {
         this.packageAdminTracker.open();
         this.logServiceTracker.open();
 
+        // listen to framework and bundle events
+        context.addFrameworkListener(this);
+        context.addBundleListener(this);
+        
         // register OsgiController service        
         {
             final Hashtable<String, String> props = new Hashtable<String, String>();
@@ -79,12 +87,6 @@ public class Activator implements BundleActivator {
             final Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling EventsCounter Service");
             props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-            
-            this.eventsCounter = new EventsCounterImpl(context);
-            final String [] serviceInterfaces = {
-                    EventsCounter.class.getName()
-            };
-            eventsCounterServiceReg = context.registerService(serviceInterfaces, eventsCounter, props);
         }
     }
     
@@ -100,14 +102,9 @@ public class Activator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
-        if( this.eventsCounterServiceReg != null) {
-            this.eventsCounterServiceReg.unregister();
-            this.eventsCounterServiceReg = null;
-        }
-        if( this.eventsCounter != null) {
-            this.eventsCounter.deactivate();
-            this.eventsCounter = null;
-        }
+    	context.removeBundleListener(this);
+    	context.removeFrameworkListener(this);
+    	
         if ( this.osgiControllerServiceReg != null ) {
             this.osgiControllerServiceReg.unregister();
             this.osgiControllerServiceReg = null;
@@ -128,5 +125,19 @@ public class Activator implements BundleActivator {
             this.logServiceTracker.close();
             this.logServiceTracker = null;
         }
+    }
+    
+    public static long getTotalEventsCount() {
+        return eventsCount;
+    }
+
+    public void frameworkEvent(FrameworkEvent arg0) {
+        // we'll retry as soon as any FrameworkEvent or BundleEvent happens
+        eventsCount++;
+    }
+
+    public void bundleChanged(BundleEvent arg0) {
+        // we'll retry as soon as any FrameworkEvent or BundleEvent happens
+        eventsCount++;
     }
 }
