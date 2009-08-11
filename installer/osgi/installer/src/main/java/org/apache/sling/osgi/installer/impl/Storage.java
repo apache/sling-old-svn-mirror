@@ -39,7 +39,6 @@ import org.osgi.service.log.LogService;
 public class Storage {
     private final File dataFile;
     private final Map<String, Map<String, Object>> data;
-    private final OsgiControllerServices ocs;
     
     /** {@link Storage} key for the bundle ID */
     public static final String KEY_BUNDLE_ID = "bundle.id";
@@ -49,7 +48,6 @@ public class Storage {
     @SuppressWarnings("unchecked")
     Storage(File dataFile, OsgiControllerServices ocs) throws IOException {
         this.dataFile = dataFile;
-        this.ocs = ocs;
         ObjectInputStream ois = null;
         Map<String, Map<String, Object>> loadedData = null;
         Throwable loadException = null;

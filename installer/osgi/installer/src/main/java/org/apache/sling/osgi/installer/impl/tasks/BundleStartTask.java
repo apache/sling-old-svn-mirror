@@ -20,13 +20,11 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.impl.EventsCounter;
+import org.apache.sling.osgi.installer.impl.Activator;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 /** Task that starts a bundle */
@@ -94,9 +92,9 @@ public class BundleStartTask extends OsgiControllerTask {
 	            // that warrants a retry), but for the next ones wait for at least one bundle
 	            // event or framework event
 	            if(retryCount == 0) {
-	                eventsCountForRetrying = getEventsCount(tctx.getBundleContext());
+	                eventsCountForRetrying = Activator.getTotalEventsCount();
 	            } else {
-                    eventsCountForRetrying = getEventsCount(tctx.getBundleContext()) + 1;
+                    eventsCountForRetrying = Activator.getTotalEventsCount() + 1;
 	            }
 	            
 	            tctx.addTaskToNextCycle(this);
@@ -107,7 +105,7 @@ public class BundleStartTask extends OsgiControllerTask {
 	
 	/** Do not execute this task if waiting for events */
     public boolean isExecutable(OsgiControllerTaskContext tctx) {
-        final long eventsCount = getEventsCount(tctx.getBundleContext()); 
+        final long eventsCount = Activator.getTotalEventsCount(); 
         final boolean result = eventsCount >= eventsCountForRetrying; 
         if(!result) {
             if(tctx.getOsgiControllerServices().getLogService() != null) {
@@ -116,18 +114,5 @@ public class BundleStartTask extends OsgiControllerTask {
             }
         }
         return result;
-    }
-    
-    /** Return current events count */
-    protected long getEventsCount(BundleContext bc) {
-        final ServiceReference sr = bc.getServiceReference(EventsCounter.class.getName());
-        if(sr == null) {
-            throw new IllegalStateException("EventsCounter service not found");
-        }
-        final EventsCounter ec = (EventsCounter)bc.getService(sr);
-        if(ec == null) {
-            throw new IllegalStateException("EventsCounter service not found, although its ServiceReference was found");
-        }
-        return ec.getTotalEventsCount();
     }
 }

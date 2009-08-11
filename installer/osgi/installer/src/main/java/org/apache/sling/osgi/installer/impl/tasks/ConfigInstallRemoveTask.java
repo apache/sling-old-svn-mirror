@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
-import org.apache.sling.osgi.installer.impl.DictionaryReader;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.log.LogService;

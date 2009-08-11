@@ -18,14 +18,17 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.Map;
 
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
-
-import static org.junit.Assert.*;
 
 /** Test the Storage class */
 public class StorageTest {

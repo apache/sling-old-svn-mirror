@@ -19,7 +19,7 @@
 package org.apache.sling.osgi.installer.impl;
 
 import static org.junit.Assert.fail;
-import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
