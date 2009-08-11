@@ -28,8 +28,11 @@ class SimpleFileInstallableData implements InstallableData {
 	private final File testBundle;
 	private final String digest;
 	
-	SimpleFileInstallableData(File testBundle) {
+	SimpleFileInstallableData(File testBundle) throws IOException {
 		this.testBundle = testBundle;
+		if(!this.testBundle.exists()) {
+			throw new IOException("Test bundle not found: " + this.testBundle.getAbsolutePath());
+		}
 		digest = testBundle.getAbsolutePath() + System.currentTimeMillis();
 	}
 	
