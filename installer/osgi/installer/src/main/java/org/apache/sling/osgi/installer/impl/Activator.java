@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.framework.BundleActivator;
@@ -90,9 +89,9 @@ public class Activator implements BundleActivator {
     }
     
     /** Complain if value is null */
-    static Object checkNotNull(Object value, String what) throws JcrInstallException {
+    static Object checkNotNull(Object value, String what) {
     	if(value == null) {
-    		throw new JcrInstallException(what + " is null, cannot activate");
+    		throw new IllegalArgumentException(what + " is null, cannot activate");
     	}
     	return value;
     }

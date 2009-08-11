@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.OsgiControllerStatistics;
@@ -99,13 +98,13 @@ public class OsgiControllerImpl
 
     }
 
-    public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
+    public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException {
     	synchronized (tasks) {
         	tasks.add(getTaskForUri(uri, data));
 		}
     }
 
-    public void scheduleUninstall(String uri) throws IOException, JcrInstallException {
+    public void scheduleUninstall(String uri) throws IOException {
     	synchronized (tasks) {
         	tasks.add(getTaskForUri(uri, null));
     	}

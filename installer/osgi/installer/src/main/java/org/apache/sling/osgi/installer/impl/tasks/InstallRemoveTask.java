@@ -18,11 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import static org.apache.sling.osgi.installer.InstallResultCode.IGNORED;
-
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.impl.InstallableDataWrapper;
@@ -106,7 +103,7 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 
         // process install
         final Map<String, Object> map = context.getStorage().getMap(uri);
-        if(doInstallOrUpdate(context, map) != IGNORED) {
+        if(doInstallOrUpdate(context, map)) {
             map.put(OsgiControllerImpl.KEY_DIGEST, data.getDigest());
         }
         context.getStorage().saveToFile();
@@ -137,5 +134,5 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 	protected abstract void doUninstall(OsgiControllerTaskContext ctx, Map<String, Object> attributes) throws Exception;
 	
 	/** Do the actual install or update */
-	protected abstract InstallResultCode doInstallOrUpdate(OsgiControllerTaskContext ctx, Map<String, Object> attributes) throws Exception;
+	protected abstract boolean doInstallOrUpdate(OsgiControllerTaskContext ctx, Map<String, Object> attributes) throws Exception;
 }

@@ -7,7 +7,6 @@ import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
-import org.apache.sling.osgi.installer.impl.MissingServiceException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -89,11 +88,11 @@ class TaskUtilities {
     
     /** Get or create configuration */
     static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiControllerServices ocs)
-    throws IOException, InvalidSyntaxException, MissingServiceException
+    throws IOException, InvalidSyntaxException
     {
     	final ConfigurationAdmin configurationAdmin = ocs.getConfigurationAdmin();
     	if(configurationAdmin == null) {
-    		throw new MissingServiceException(ConfigurationAdmin.class);
+    		throw new IllegalStateException("Missing service: " + ConfigurationAdmin.class.getName());
     	}
 
         Configuration result = null;

@@ -23,9 +23,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.impl.DictionaryReader;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
@@ -55,7 +53,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected InstallResultCode doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
     	// Convert data to a configuration Dictionary
     	Dictionary dict = data.adaptTo(Dictionary.class);
     	if(dict == null) {
@@ -71,7 +69,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
     	}
 
     	if (dict == null) {
-    		throw new JcrInstallException("Null Dictionary for uri=" + uri);
+    		throw new IllegalArgumentException("Null Dictionary for uri=" + uri);
     	}
 
     	// Add pseudo-properties
@@ -89,10 +87,10 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
         }
 
         // get or create configuration
-        InstallResultCode result = InstallResultCode.UPDATED;
+        boolean created = false;
         Configuration config = TaskUtilities.getConfiguration(pid, false, ocs);
         if(config == null) {
-            result = InstallResultCode.INSTALLED;
+            created = true;
             config = TaskUtilities.getConfiguration(pid, true, ocs);
         }
         if (config.getBundleLocation() != null) {
@@ -101,10 +99,9 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
         config.update(dict);
         if(ocs.getLogService() != null) {
     		ocs.getLogService().log(LogService.LOG_INFO,
-    				"Configuration " + config.getPid() + " " + (result == InstallResultCode.UPDATED ? "updated" : "created")
-    				);
+    				"Configuration " + config.getPid() + " " + (created ? "created" : "updated"));
         }
-        return result;
+        return true;
 	}
 
 	@Override

@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.jar.Manifest;
 
-import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.impl.OsgiControllerImpl;
@@ -82,7 +81,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected InstallResultCode doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
 
     	// Check that we have bundle data and manifest
     	InputStream is = data.adaptTo(InputStream.class);
@@ -121,7 +120,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
 				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 				if(ignoreNewBundle(b.getSymbolicName(), uri, installedVersion, newBundleVersion)) {
-		            return InstallResultCode.IGNORED;
+		            return false;
 				}
 			}
 
@@ -163,7 +162,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
         // and updates where there are no attributes yet
         attributes.put(Storage.KEY_BUNDLE_ID, b.getBundleId());
 
-        return updated ? InstallResultCode.UPDATED : InstallResultCode.INSTALLED;
+        return true;
 	}
 
     /** Decide if new bundle musg be ignored, based on the supplied Versions */
