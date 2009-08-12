@@ -1,0 +1,254 @@
+<% 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+%>
+
+[<% 
+
+   /**
+     This script retrieve resource properties & resource children
+     
+     TODO : the Sling explorer has to support a mechanism based on plugins to render resource info. 
+   */
+   
+  
+    var streamProps = renderResourceProperties();
+    if (streamProps != "") 
+       out.print(streamProps);  
+   
+    var streamChildren = renderResourceChildren();
+
+	if (streamChildren != "")
+	{
+	    if (streamProps != null &&  streamProps != "")
+	        out.print(",");
+	        
+		out.print(streamChildren);
+	}
+
+	
+   /**
+	*
+	* This method get the resource properties and add them into the json stream
+	*
+	*/
+	function renderResourceProperties()
+	{
+	
+	   
+	   // Check if the resource is a JCR node
+	   var node = resource.adaptTo(Packages.javax.jcr.Node);
+	   if (node) {
+	      return renderJCRResourceProperties(); 
+	   }
+	   
+	   // Generic code for any kind of resource.
+	   else {
+	     return  renderGenericResourceProperties();
+	   }
+	   
+	}
+
+    function renderJCRResourceProperties() 
+    {
+        var jsonOutput = renderCommonJCRProperties();
+        
+        var properties = currentNode.properties
+        while(properties.hasNext()) 
+        {
+           
+            var property = properties.nextProperty() ;
+            
+    
+            // Single value property
+            if ( ! property.getDefinition().isMultiple())
+            {
+              jsonOutput += ","; 
+              jsonOutput += '{"name": "' + property.getName() + 
+                            '", "type" : "' + getType(property, false) + 
+                            '", "value" : "' + property.getValue().getString() + 
+                            '", "multi" : ' + false + ', "itemType" : "property" }';
+                            
+            }
+            
+            // Multi value property 
+            else
+            {
+                
+                jsonOutput += ","; 
+                //1. Retrieve the values 
+                var values = property.getValues(); 
+                var jsonOuputValues = "[";
+                
+                for (j=0; j<values.length;j=j+1) 
+                {
+                    if (j>0) jsonOuputValues += ",";
+                    var value = values[j];
+                    jsonOuputValues += "'"+ value.getString() +  "'"; 
+                }
+    
+                jsonOuputValues += "]"; 
+                
+                //2. Build the Json ouput for a multi val. property 
+                jsonOutput += '{"name": "' + property.getName() + 
+                            '", "type" : "' + getType(property, false) + 
+                            '", "value" : "' + jsonOuputValues + 
+                            '", "multi" : ' + true + ', "itemType" : "property" }';
+
+            
+    
+            }
+            
+        }
+        
+        return jsonOutput;      
+       
+    }	
+    
+    function renderCommonJCRProperties()
+    {
+        var jsonOutput = "";
+        
+        // Add the property 'name'
+         jsonOutput += '{"name": "name", "type" : "Name"'  + 
+                            ', "value" : "' + currentNode.name + 
+                            '", "multi" : ' + false + ', "itemType" : "property" }';
+
+        // Add the uuid
+        
+        jsonOutput += ',{"name": "uuid", "type" : "String"'  + 
+                            ', "value" : "' + currentNode.uuid + 
+                            '", "multi" : ' + false + ', "itemType" : "property" }';
+        
+        return jsonOutput;
+
+    }   
+	
+	function renderGenericResourceProperties() 
+	{
+       var jsonOutput = "";
+       var valueMap = Packages.org.apache.sling.api.resource.ResourceUtil.getValueMap(resource);
+       var propertyIterator = valueMap.keySet().iterator();
+       
+       var i = 0;
+       while(propertyIterator.hasNext()) { 
+       
+          i++;
+          if (i > 1) {
+              jsonOutput += ","; 
+            }
+          var propName = propertyIterator.next(); 
+     
+          jsonOutput += '{"name": "' + propName + 
+                            '", "type" : "To be defined", "value" : "' + valueMap.get(propName) + 
+                            '", "multi" : false, "itemType" : "property" }';
+       }
+        return jsonOutput;	
+	}
+    /**
+    *
+	* This method get the children (nodes) and add them into the json stream
+	*
+	*/
+	function renderResourceChildren()
+	{
+	    var resourceUtil = Packages.org.apache.sling.api.resource.ResourceUtil();
+		var jsonOutput = "";
+		
+		var iterator = resource.resourceResolver.listChildren(resource);
+		var i = 0;
+		while(iterator.hasNext()) 
+		{
+		    i++;
+		    var child = iterator.next() ;
+			if (i > 1) {
+			  jsonOutput += ","; 
+			}
+
+			jsonOutput += '{"name": "' + resourceUtil.getName(child) + 
+			   				'", "type" : "' + child.resourceType + 
+							'", "value" : " ", "multi" : false, "itemType" : "resources" }';
+							
+			
+		}
+		
+		return jsonOutput;
+	}
+	
+	
+	
+	function getType(property, isMultiValue)
+	{
+	   
+	   var type = property.getType();
+	   var returnType = ""; 
+	   if (type == 1)
+	   {
+	   	  returnType =  "String"
+	   }
+	   
+	    if (type == 2)
+	   {
+	   	  returnType =  "Binary"
+	   }
+
+ 	   if (type == 3)
+	   {
+	   	  returnType =  "Date"
+	   }
+
+ 	   if (type == 4)
+	   {
+	   	  returnType =  "Double"
+	   }
+	   
+	   
+ 	   if (type == 5)
+	   {
+	   	  returnType =  "Long"
+	   }
+	   
+	   
+ 	   if (type == 6)
+	   {
+	   	  returnType =  "Boolean"
+	   }
+	   if (type == 7)
+	   {
+	   	  returnType =  "Name"
+	   }
+	   
+	   if (type == 8)
+	   {
+	   	  returnType =  "Path"
+	   }
+	   
+	   if (type == 9)
+	   {
+	   	  returnType =  "Reference"
+	   }
+	  
+	   
+	   if (isMultiValue)
+	   {
+	   	 returnType += "*"
+	   }
+	   
+	   return returnType; 
+	   
+	}
+%>]

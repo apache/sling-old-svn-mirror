@@ -1,0 +1,200 @@
+/**
+ * Applied to the main layout of the page.
+ */
+
+.Application-Reference-chrome { 
+  height: 5px;
+  width: 5px;
+  zoom: 1;
+}
+.Application-top {
+  width: 100%;
+  margin-bottom: 10px;
+  border-bottom: 3px solid #CDCDCD;
+  padding: 0px 0px 4px 0px;
+}
+
+.Application-title {
+  padding: 0px 0px 0px 10px;
+}
+
+
+.Application-title h1 {
+  color: #666;
+  margin: 0px;
+  padding: 0px 0px 0px 4px;
+  font-size: 22px;
+}
+.Application-title h2 {
+  color: #333;
+  margin: 0px;
+  padding: 0px 0px 0px 4px;
+  font-size: 16px;
+}
+.Application-links {
+  padding: 2px 13px 2px 0px;
+  background: #eee;
+}
+.Application-links .gwt-HTML{
+  font-size: 12px;
+}
+.Application-options {
+  padding: 6px 10px 0px 0px;
+}
+.Application-options .gwt-ListBox {
+  width: 150px;
+  font-size: 11px;
+  color: blue;
+  margin-left: 4px;
+}
+.Application-options td {
+  font-size: 12px;
+}
+.Application-options .gwt-ToggleButton {
+  width: 36px;
+  height: 16px;
+  margin: 3px 0px 0px 10px;
+  padding: 0px;
+}
+.Application-options .gwt-ToggleButton-down,
+.Application-options .gwt-ToggleButton-down-hovering {
+  cursor: default;
+}
+.Application-options .sc-ThemeButton-standard {
+  background: #d0e4f6;
+}
+.Application-options .sc-ThemeButton-chrome {
+  background: #ccc;
+}
+.Application-options .sc-ThemeButton-dark {
+  background: #3d3d3d;
+}
+.Application-menu {
+  width: 18em;
+  text-align: left;
+}
+
+/** DISCLOSURE PANEL  */
+
+.application-DisclosurePanel .header,
+.application-DisclosurePanel .header a,
+.application-DisclosurePanel .header td {
+
+  color: #848484; 
+  cursor: pointer;
+  cursor: hand;
+  /* border-bottom : 1px; */
+}
+
+
+.application-DisclosurePanel .content {
+margin-left:6px;
+
+}
+
+
+/** FLEXIBLE TABLE Used  */
+
+.application-FlexTable {
+  /* border :  1px solid #BBBBBB;*/ 
+  border-top: thin solid #BBBBBB;
+  border-left: thin solid #BBBBBB;
+  border-right: thin solid #BBBBBB;
+  border-bottom: thin solid #BBBBBB;
+  border-spacing: 0px; 
+  width : 700px; 
+  
+}
+
+ 
+
+.application-FlexTable-EvenRow {
+  background-color: #F2F2F2;
+  
+}
+
+.application-FlexTable-OddRow {
+  background-color: #FFFFFF;
+}
+
+
+.application-FlexTable-ColumnLabel {
+  color: #2E2E2E;
+  background-color : #E6E6E6;
+  height:20px;
+   
+ 
+}
+
+.application-FlexTable-ColumnLabelCell {
+  
+  font-size: 12px;
+  border-width: 0 0 1px 0;
+  border-style: solid;
+  border-color: #BBBBBB;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+
+  
+
+}
+
+.application-FlexTable-Cell {
+  margin: 0;
+  font-size: 12px;
+  
+  border-width: 0px 0px 0px 1px;
+  border-style: solid;
+  border-color: #BBBBBB;
+  padding: 5px;
+
+}
+
+.application-FlexTable-Cell-first {
+  margin: 0;
+  font-size: 12px;
+  
+  border-width: 0px 0px 0px 0px;
+  border-style: solid;
+  border-color: #BBBBBB;
+  padding: 5px;
+
+}
+
+/**
+ * Applied to widgets in the content area.
+ */
+
+
+.Application-content-decorator {
+  margin-right: 8px;
+}
+
+.Application-content-title {
+  padding: 4px 0px 3px 6px;
+  text-align: left;
+  background: #530a0a url(../gwt/chrome/images/hborder.png) repeat-x 0px -2003px;
+  border-bottom: 2px solid #e3e3e3;
+}
+
+.Application-content-title .gwt-TabBarItem {
+  background: none;
+  padding: 0px;
+}
+
+.Application-content-title  .gwt-TabBarItem .gwt-Label {
+  padding-right: 20px;
+  color: #888888;
+}
+
+.Application-content-title  .gwt-TabBarItem-selected .gwt-Label {
+  color: black;
+}
+
+.Application-content-wrapper {
+  text-align: left;
+}
+
+
+
