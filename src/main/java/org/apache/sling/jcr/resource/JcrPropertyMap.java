@@ -54,13 +54,13 @@ public class JcrPropertyMap implements ValueMap {
     private final Node node;
 
     /** A cache for the properties. */
-    protected final Map<String, CacheEntry> cache;
+    final Map<String, CacheEntry> cache;
 
     /** A cache for the values. */
-    protected final Map<String, Object> valueCache;
+    final Map<String, Object> valueCache;
 
     /** Has the node been read completly? */
-    protected boolean fullyRead;
+    boolean fullyRead;
 
     /**
      * Constructor
@@ -76,7 +76,7 @@ public class JcrPropertyMap implements ValueMap {
     /**
      * Get the node.
      */
-    protected Node getNode() {
+    Node getNode() {
         return node;
     }
 
@@ -208,7 +208,7 @@ public class JcrPropertyMap implements ValueMap {
 
     // ---------- Helpers to access the node's property ------------------------
 
-    protected CacheEntry read(final String key) {
+    CacheEntry read(final String key) {
 
         // if the node has been completely read, we need not check
         // again, as we certainly will not find the key
@@ -233,7 +233,7 @@ public class JcrPropertyMap implements ValueMap {
         return null;
     }
 
-    protected void readFully() {
+    void readFully() {
         if (!fullyRead) {
             try {
                 PropertyIterator pi = node.getProperties();
@@ -399,7 +399,7 @@ public class JcrPropertyMap implements ValueMap {
         return type;
     }
 
-    protected static final class CacheEntry {
+    static final class CacheEntry {
         public final Property property;
         public final boolean isMulti;
         public final Value[] values;
