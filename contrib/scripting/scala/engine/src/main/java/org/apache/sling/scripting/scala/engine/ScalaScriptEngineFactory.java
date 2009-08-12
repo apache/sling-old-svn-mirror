@@ -160,16 +160,22 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
         AbstractFile[] bundleFs = new AbstractFile[bundles.length];
         for (int k = 0; k < bundles.length; k++) {
             URL url = bundles[k].getResource("/");
-            if ("file".equals(url.getProtocol())) {
-                try {
-                    bundleFs[k] = new PlainFile(new File(url.toURI()));
-                }
-                catch (URISyntaxException e) {
-                    throw initCause(new IllegalArgumentException("Can't determine url of bundle " + k), e);
-                }
+            if (url == null) {
+                url = bundles[k].getResource("");
             }
-            else {
-                bundleFs[k] = BundleFS.create(bundles[k]);
+            
+            if (url != null) { // FIXME: log null values
+                if ("file".equals(url.getProtocol())) {
+                    try {
+                        bundleFs[k] = new PlainFile(new File(url.toURI()));
+                    }
+                    catch (URISyntaxException e) {
+                        throw initCause(new IllegalArgumentException("Can't determine url of bundle " + k), e);
+                    }
+                }
+                else {
+                    bundleFs[k] = BundleFS.create(bundles[k]);
+                }
             }
         }
         return bundleFs;

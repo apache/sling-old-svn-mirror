@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package nt.unstructured {
+  object html {
+    import html_Bindings._
 
-val html = <h1>Scala rendering result</h1>
-<p>
-	text value using resource.adaptTo:{ resource.adaptTo(classOf[javax.jcr.Node]).getProperty("text").getValue().getString() }
-</p>
-<p>
-	text value using currentNode:{ currentNode.getProperty("text").getValue().getString() }
-</p>;
-
-println(html)
+    println {
+      <h1>Scala rendering result</h1>
+      <p>
+	    text value using resource.adaptTo:{ resource.adaptTo(classOf[javax.jcr.Node]).getProperty("text").getValue().getString() }
+      </p>
+      <p>
+	    text value using currentNode:{ currentNode.getProperty("text").getValue().getString() }
+      </p>;
+    }
+  }
+}

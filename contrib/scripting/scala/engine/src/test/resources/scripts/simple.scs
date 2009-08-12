@@ -1,1 +1,7 @@
-print(1 + 2)
+package a {
+  import Testi_Bindings._
+  
+  object Testi {
+    print(1 + 2)
+  }
+}

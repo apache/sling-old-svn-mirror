@@ -17,7 +17,7 @@
 import junit.framework.TestCase
 import junit.framework.Assert.{assertEquals, assertFalse}
 import scala.tools.nsc.Settings
-import scala.tools.nsc.io.VirtualDirectory
+import scala.tools.nsc.io.PlainFile
 import scala.tools.nsc.reporters.ConsoleReporter
 import org.apache.sling.scripting.scala.Utils.valueOrElse
 import java.io.PrintWriter
@@ -65,7 +65,8 @@ class InterpreterTest extends TestCase {
   }
 
   def testScalaInterpreter {
-    val outdir = new VirtualDirectory("outdir", None)
+    // xxx: Virtual file seems not to work here
+    val outdir = new PlainFile(new java.io.File("."))
     val interpreter = new ScalaInterpreter(settings, reporter(settings), outdir)
 
     val bindings = new ScalaBindings
@@ -73,17 +74,15 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
-    val code = "print(msg + \": \" + time)"
+    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val name = "a.Testi"
 
-    // todo fix: uncomment when trac-1618 is fixed
-    for (name <- /*"org.apache.sling.scripting.scala.interpreter.Testi"::*/"Testi"::Nil) {
-      val out = new java.io.ByteArrayOutputStream
-      val result = interpreter.interprete(name, code, bindings, None, Some(out))
-      assertFalse(result.hasErrors)
-      assertEquals("Hello world: " + time, out.toString)
-    }
+    val out = new java.io.ByteArrayOutputStream
+    val result = interpreter.interprete(name, code, bindings, None, Some(out))
+    assertFalse(result.hasErrors)
+    assertEquals("Hello world: " + time, out.toString)
   }
-
+  
   def testScalaInterpreterWithJcr {
     val appNode = testRoot.addNode("app", "nt:folder")
     testRoot.save()
@@ -98,19 +97,20 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
+    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val name = "a.Testi"
+    
     val src = srcDir.fileNamed("Testi")
     val writer = new PrintWriter(src.output)
-    writer.print("print(msg + \": \" + time)")
+    writer.print(code)
     writer.close
 
-    for (name <- "org.apache.sling.scripting.scala.interpreter.Testi"::"Testi"::Nil) {
-      val out = new java.io.ByteArrayOutputStream
-      val result = interpreter.interprete(name, src, bindings, None, Some(out))
-      assertFalse(result.hasErrors)
-      assertEquals("Hello world: " + time, out.toString)
-    }
+    val out = new java.io.ByteArrayOutputStream
+    val result = interpreter.interprete(name, src, bindings, None, Some(out))
+    assertFalse(result.hasErrors)
+    assertEquals("Hello world: " + time, out.toString)
   }
-
+  
   def testCompileExecute {
     val appNode = testRoot.addNode("app", "nt:folder")
     testRoot.save()
@@ -125,21 +125,22 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
+    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val name = "a.Testi"
+                                       
     val src = srcDir.fileNamed("Testi")
     val writer = new PrintWriter(src.output)
-    writer.print("print(msg + \": \" + time)")
+    writer.print(code)
     writer.close
 
-    for (name <- "org.apache.sling.scripting.scala.interpreter.Testi"::"Testi"::Nil) {
-      val out = new java.io.ByteArrayOutputStream
-      var result = interpreter.compile(name, src, bindings)
-      assertFalse(result.hasErrors)
+    val out = new java.io.ByteArrayOutputStream
+    var result = interpreter.compile(name, src, bindings)
+    assertFalse(result.hasErrors)
 
-      result = interpreter.execute(name, bindings, None, Some(out))
-      assertFalse(result.hasErrors)
+    result = interpreter.execute(name, bindings, None, Some(out))
+    assertFalse(result.hasErrors)
 
-      assertEquals("Hello world: " + time, out.toString)
-    }
+    assertEquals("Hello world: " + time, out.toString)
   }
 
 }

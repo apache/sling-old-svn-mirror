@@ -48,11 +48,14 @@ import org.apache.sling.scripting.scala.interpreter.ScalaBindings;
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter;
 import org.apache.sling.scripting.scala.interpreter.JcrFS.JcrNode;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import scala.tools.nsc.io.AbstractFile;
 import scala.tools.nsc.reporters.Reporter;
 
 public class ScalaScriptEngine extends AbstractSlingScriptEngine {
+    private static final Logger log = LoggerFactory.getLogger(ScalaScriptEngine.class);
+
     public static final String NL = System.getProperty("line.separator");
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -73,8 +76,24 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
 
             TypeHints typeHints = new TypeHints(bindings);
             final ScalaBindings scalaBindings = new ScalaBindings();
-            for (Object name : bindings.keySet()) {
-                scalaBindings.put((String) name, bindings.get(name), typeHints.get(name));
+            for (String name : bindings.keySet()) {
+                if (name == null) {
+                    log.debug("Bindings contain null key. skipping");
+                    continue;
+                }
+
+                Object value = bindings.get(name);
+                if (value == null) {
+                    log.debug("{} has null value. skipping", name);
+                    continue;
+                }
+                Class<?> typeHint = typeHints.getType(name);
+                if (typeHint == null) {
+                    log.debug("{} has no type hint. skipping");
+                    continue;
+                }
+
+                scalaBindings.put(makeIdentifier(name), value, typeHint);
             }
 
             final JcrNode script = getScriptSource(scriptHelper);
@@ -179,12 +198,12 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
     }
 
     private static String getScriptName(SlingScriptHelper scriptHelper) {
-        String path = scriptHelper.getScript().getScriptResource().getPath();
+        String path = getRelativePath(scriptHelper.getScript().getScriptResource());
         if (path.endsWith(".scala")) {
             path = path.substring(0, path.length() - 6);
         }
-        if (path.startsWith("/")) {
-            path = path.substring(1);
+        else if (path.endsWith(".scs")) {
+            path = path.substring(0, path.length() - 4);
         }
 
         String[] parts = path.split("/");
@@ -195,6 +214,23 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
         }
 
         return scriptName.toString();
+    }
+
+    private static String getRelativePath(Resource scriptResource) {
+        String path = scriptResource.getPath();
+        String[] searchPath = scriptResource.getResourceResolver().getSearchPath();
+
+        for (int i = 0; i < searchPath.length; i++) {
+            if (path.startsWith(searchPath[i])) {
+                path = path.substring(searchPath[i].length());
+                break;
+            }
+        }
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        return path;
     }
 
     /**

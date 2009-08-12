@@ -104,36 +104,40 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
    * @param code  source code of the script
    * @param bindings  bindings to be passed to the script
    * @return  a valid Scala source
+   * @throws InterpreterException
    */
+  @throws(classOf[InterpreterException])
   protected def preProcess(name: String, code: String, bindings: Bindings): String = {
     def bind(a: (String, Argument[_])) =
-      "val " + a._1 + " = bindings.getValue(\"" + a._1 + "\").asInstanceOf[" + a._2.getType.getName + "]"
+      "lazy val " + a._1 + " = bindings.getValue(\"" + a._1 + "\").asInstanceOf[" + a._2.getType.getName + "]"
 
     val compounds = packetize(name)
 
     def packageDeclaration =
       if (compounds.size > 1) compounds.init.mkString("package ", ".", "") + NL
-      else ""
+      else throw new InterpreterException("Default package not allowed: " + name)
 
     def className = compounds.last
 
-    packageDeclaration +
-    "object " + className + " {" + NL +
-    "  def main(bindings: org.apache.sling.scripting.scala.interpreter.Bindings," + NL +
-    "           stdIn: java.io.InputStream," + NL +
-    "           stdOut: java.io.OutputStream) {" + NL +
-    "    def run() {" + NL +
-           bindings.map(bind).mkString("", NL, NL) +
-           code + "" + NL +
-    "      return" + NL +
-    "    }" + NL +
-    "    Console.withIn(stdIn) {" + NL +
-    "      Console.withOut(stdOut) {" + NL +
-    "        run" + NL +
-    "        stdOut.flush" + NL +
+    code + NL + 
+    packageDeclaration + " {" + NL + 
+    "  object " + className + "_Bindings { " + NL +
+    "    var bindings: org.apache.sling.scripting.scala.interpreter.Bindings = null" + NL + 
+         bindings.map(bind).mkString("", NL, NL) +
+    "  } " + NL + 
+    "  object " + className + "Runner {" + NL +
+    "    def main(bindings: org.apache.sling.scripting.scala.interpreter.Bindings," + NL +
+    "             stdIn: java.io.InputStream," + NL +
+    "             stdOut: java.io.OutputStream) {" + NL +
+           className + "_Bindings.bindings = bindings" + NL +  
+    "      Console.withIn(stdIn) {" + NL +
+    "        Console.withOut(stdOut) {" + NL +
+               className + NL +
+    "          stdOut.flush" + NL +
+    "        }" + NL +
     "      }" + NL +
     "    }" + NL +
-    "  }" + NL +
+    "  }" + NL + 
     "}" + NL
   }
 
@@ -319,7 +323,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
   def execute(name: String, bindings: Bindings, in: Option[InputStream], out: Option[OutputStream]): Reporter = {
     try {
       val classLoader = new AbstractFileClassLoader(compiler.genJVM.outputDir, parentClassLoader)
-      val script = Class.forName(name, true, classLoader)
+      val script = Class.forName(name + "Runner", true, classLoader)
       val initMethod = (script
         .getDeclaredMethods
         .toList

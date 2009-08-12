@@ -36,6 +36,7 @@ import org.apache.sling.scripting.scala.interpreter.JcrFS.JcrNode;
 import scala.tools.nsc.io.AbstractFile;
 
 public class ScalaScriptEngineTest extends ScalaTestBase {
+    private final static String SCRIPT_NAME = "a.Testi";
 
     @Override
     protected void setUp() throws Exception {
@@ -43,7 +44,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
     }
 
     public void testEvalString() throws ScriptException, InvocationTargetException {
-        String code = "print(1 + 2)";
+        String code = "package a { object Testi { print(1 + 2)}}";
         assertEquals("3", evalScala(code));
     }
 
@@ -66,11 +67,19 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
             assertTrue("Expecting InvocationTargetException", false);
         }
         catch (ScriptException e) {
-            Throwable inner = e.getCause();
-            assertEquals("Inner exception is InterpreterException", InterpreterException.class, inner.getClass());
-            inner = inner.getCause();
-            assertEquals("Inner inner exception is java.lang.Error", Error.class, inner.getClass());
-            assertEquals("Inner inner exception message is \"" + err + "\"", err, inner.getMessage());
+            // expected
+        }
+    }
+    
+    public void testDefaultPackage() {
+        String code = "package a { object Testi { print(1 + 2)}}";
+        try {
+            evalScala("Testi", code, new ScalaBindings());
+        }
+        catch (ScriptException e) {
+            Throwable cause = e.getCause();
+            assertNotNull("Script exception has a cause", cause);
+            assertTrue("Script exception cause is InterpreterException", cause instanceof InterpreterException);
         }
     }
 
@@ -82,7 +91,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
 
     public void testNodeAccess() throws RepositoryException, NamingException, ScriptException, InvocationTargetException {
         Node n = getTestRootNode();
-        String code = "print(n.getPath)";
+        String code = "package a { import Testi_Bindings._; object Testi { print(n.getPath)}}";
         ScalaBindings bindings = new ScalaBindings();
         bindings.put("n", n, Node.class);
         assertEquals(n.getPath(), evalScala(code, bindings));
@@ -99,12 +108,14 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
 
         AbstractFile src = srcDir.fileNamed("Testi");
         PrintWriter writer = new PrintWriter(src.output());
-        writer.print("print(msg + \": \" + time)");
+        writer.print("package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}");
         writer.close();
 
-        for(String name : new String[]{"org.apache.sling.scripting.scala.interpreter.Testi", "Testi"}) {
-            evalScala(name, src, bindings);
-        }
+        evalScala(SCRIPT_NAME, src, bindings);
+    }
+    
+    protected String createScriptName() {
+        return SCRIPT_NAME;
     }
 
 }

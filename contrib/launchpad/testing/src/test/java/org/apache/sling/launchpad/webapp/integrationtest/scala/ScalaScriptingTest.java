@@ -16,6 +16,9 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.scala;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -29,6 +32,15 @@ public class ScalaScriptingTest extends HttpTestBase {
 
         final String testRootPath = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis();
         testRootUrl = testClient.createNode(testRootPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+
+        Map<String, String> nodeProperties = new HashMap<String, String>();
+        nodeProperties.put("jcr:primaryType", "nt:folder");
+
+        // fixme: this is a workaround for the post servlet returning 200 instead of 302
+        // if the path is /var/classes
+        nodeProperties.put(":redirect", "*.json");
+
+        testClient.createNode(HTTP_BASE_URL + "/var/classes", nodeProperties);
         testNode = new TestNode(testRootPath + "/test", null);
     }
 
