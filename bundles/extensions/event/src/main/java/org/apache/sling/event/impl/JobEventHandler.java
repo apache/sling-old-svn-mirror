@@ -225,7 +225,7 @@ public class JobEventHandler
         deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
         final String dateString = ISO8601.format(deleteBefore);
 
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
+        final StringBuilder buffer = new StringBuilder("/jcr:root");
         buffer.append(this.repositoryPath);
         buffer.append("//element(*, ");
         buffer.append(getEventNodeType());
@@ -861,10 +861,32 @@ public class JobEventHandler
      * Create a unique node path (folder and name) for the job.
      */
     private String getNodePath(final String jobTopic, final String jobId) {
+        final StringBuilder sb = new StringBuilder(jobTopic.replace('/', '.'));
+        sb.append('/');
         if ( jobId != null ) {
-            return jobTopic.replace('/', '.') + "/" + EventHelper.filter(jobId);
+            // we create an md from the job id - we use the first 6 bytes to
+            // create sub directories
+            final String md5 = EventHelper.md5(jobId);
+            sb.append(md5.substring(0, 2));
+            sb.append('/');
+            sb.append(md5.substring(2, 4));
+            sb.append('/');
+            sb.append(md5.substring(4, 6));
+            sb.append('/');
+            sb.append(EventHelper.filter(jobId));
+        } else {
+            // create a path from the uuid - we use the first 6 bytes to
+            // create sub directories
+            final String uuid = UUID.randomUUID().toString();
+            sb.append(uuid.substring(0, 2));
+            sb.append('/');
+            sb.append(uuid.substring(2, 4));
+            sb.append('/');
+            sb.append(uuid.substring(5, 7));
+            sb.append("/Job_");
+            sb.append(uuid.substring(8, 17));
         }
-        return jobTopic.replace('/', '.') + "/Job " + UUID.randomUUID().toString();
+        return sb.toString();
     }
 
     /**
@@ -1046,7 +1068,7 @@ public class JobEventHandler
     private void loadJobs() {
         try {
             final QueryManager qManager = this.backgroundSession.getWorkspace().getQueryManager();
-            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            final StringBuilder buffer = new StringBuilder("/jcr:root");
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
@@ -1312,7 +1334,7 @@ public class JobEventHandler
         try {
             s = this.createSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
-            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            final StringBuilder buffer = new StringBuilder("/jcr:root");
             buffer.append(this.repositoryPath);
             if ( topic != null ) {
                 buffer.append('/');

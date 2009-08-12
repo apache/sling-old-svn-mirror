@@ -18,6 +18,10 @@
  */
 package org.apache.sling.event.impl;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 
 /**
  * Helper class defining some constants and utility methods.
@@ -91,4 +95,47 @@ public abstract class EventHelper {
         return sb.toString();
     }
 
+    /**
+     * used for the md5
+     */
+    public static final char[] hexTable = "0123456789abcdef".toCharArray();
+
+    /**
+     * Calculate an MD5 hash of the string given using 'utf-8' encoding.
+     *
+     * @param data the data to encode
+     * @return a hex encoded string of the md5 digested input
+     */
+    public static String md5(String data) {
+        try {
+            return digest("MD5", data.getBytes("utf-8"));
+        } catch (NoSuchAlgorithmException e) {
+            throw new InternalError("MD5 digest not available???");
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError("UTF8 digest not available???");
+        }
+    }
+
+    /**
+     * Digest the plain string using the given algorithm.
+     *
+     * @param algorithm The alogrithm for the digest. This algorithm must be
+     *                  supported by the MessageDigest class.
+     * @param data      the data to digest with the given algorithm
+     * @return The digested plain text String represented as Hex digits.
+     * @throws java.security.NoSuchAlgorithmException if the desired algorithm is not supported by
+     *                                  the MessageDigest class.
+     */
+    private static String digest(String algorithm, byte[] data)
+    throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance(algorithm);
+        byte[] digest = md.digest(data);
+        StringBuffer res = new StringBuffer(digest.length * 2);
+        for (int i = 0; i < digest.length; i++) {
+            byte b = digest[i];
+            res.append(hexTable[(b >> 4) & 15]);
+            res.append(hexTable[b & 15]);
+        }
+        return res.toString();
+    }
 }

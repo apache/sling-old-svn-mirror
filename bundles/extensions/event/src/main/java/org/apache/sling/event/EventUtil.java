@@ -613,7 +613,7 @@ public abstract class EventUtil {
         if ( e == null ) {
             return "<null>";
         }
-        final StringBuffer buffer =new StringBuffer(e.getClass().getName());
+        final StringBuilder buffer = new StringBuilder(e.getClass().getName());
         buffer.append(" [topic=");
         buffer.append(e.getTopic());
         buffer.append(", properties=");
