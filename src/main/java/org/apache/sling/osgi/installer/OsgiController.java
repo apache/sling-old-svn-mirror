@@ -19,43 +19,41 @@
 package org.apache.sling.osgi.installer;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Map;
 
-/** jcrinstall component that installs/updates/removes
- *  OSGi resources (bundles, deployment packages, configs)
- *  in the OSGi framework.
+/** Controller that installs/updates/removes InstallableData
+ * 	in the OSGi framework. The client can register a number of such
+ *  resources, and the controller decides based on the resource weights,
+ *	bundle version numbers, etc. which ones are actually installed.
+ *
+ *	An InstallableResource can be a bundle, a configuration, and later 
+ *	we might support deployment packages as well.    	
  */
 public interface OsgiController {
-
-    /** Schedule installation or update of supplied resource
-     *  @param uri Unique identifier for the resource
-     *  @param data The data to install
-     */
-    void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException;
-
-    /** Schedule uninstallation of resource that was installed via given uri.
-     *  Might be called several times for the same URI - needless calls should
-     *  be ignored.
-     *  @param uri Unique identifier for the resource
-     *  @param attributes metadata stored by the OsgiController, will be
-     *      removed after calling this method
-     */
-    void scheduleUninstall(String uri) throws IOException;
-
-    /** Return the list of uri for resources that have been installed
-     *  by this controller.
-     */
-    Set<String> getInstalledUris();
-
-    /** Get the lastModified value for given uri, assuming the resource pointed
-     *  to by that uri was installed.
-     *  @return -1 if we don't have info for given uri
-     */
-    String getDigest(String uri);
-
-    /** Optionally set ResourceOverrideRules */
-    void setResourceOverrideRules(ResourceOverrideRules r);
-
-    /** Do the actual installs/uninistalls which were scheduled by the other methods */
-    void executeScheduledOperations() throws Exception;
+	
+	/** Provide the controller with the complete list of installable
+	 * 	resources for a given client.
+	 * 
+	 * 	Client must call this at startup and/or when the controller 
+	 * 	service becomes available. The controller stores the list of
+	 * 	previously registered/added resources, compares with the new
+	 * 	list and removes resources that have disappeared.
+	 * 
+	 * 	@param data the list of available resources
+	 * 	@param urlScheme identifies the client. All URLs of the supplied data
+	 * 		must use this scheme
+	 */
+	void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException;
+	
+	/** Inform the controller that a resource is available for installation.
+	 * 	also called if the resource has been modified since it was registered.
+	 */
+	void addResource(InstallableResource d) throws IOException;
+	
+	/** Inform the controller that a resource is no longer available */
+	void removeResource(InstallableResource d) throws IOException;
+	
+	/** Return counters used for statistics, console display, testing, etc. */
+	Map<String, Long> getCounters();
 }

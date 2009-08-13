@@ -5,8 +5,8 @@ import java.io.InputStream;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -27,7 +27,7 @@ class TaskUtilities {
      * This method gets its own input stream from the installable data object
      * and closes it after haing read the manifest file.
      *
-     * @param installableData The installable data providing the bundle jar file
+     * @param RegisteredResource The installable data providing the bundle jar file
      *            from the input stream.
      * @return The installed bundle with the same symbolic name as the bundle
      *         provided by the input stream or <code>null</code> if no such
@@ -51,10 +51,10 @@ class TaskUtilities {
     	return null;
     }
 
-    /** Read the manifest from the InstallableData */
-    static Manifest getManifest(InstallableData data) throws IOException {
+    /** Read the manifest from the RegisteredResource */
+    static Manifest getManifest(RegisteredResource data) throws IOException {
     	Manifest result = null;
-        InputStream ins = data.adaptTo(InputStream.class);
+        InputStream ins = data.getInputStream();
         if (ins == null) {
         	return null;
        	}
@@ -87,7 +87,7 @@ class TaskUtilities {
     }
     
     /** Get or create configuration */
-    static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiControllerServices ocs)
+    static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiControllerContext ocs)
     throws IOException, InvalidSyntaxException
     {
     	final ConfigurationAdmin configurationAdmin = ocs.getConfigurationAdmin();

@@ -19,19 +19,12 @@
 package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableData;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiController;
-import org.apache.sling.osgi.installer.OsgiControllerServices;
-import org.apache.sling.osgi.installer.OsgiControllerStatistics;
-import org.apache.sling.osgi.installer.ResourceOverrideRules;
-import org.apache.sling.osgi.installer.impl.tasks.BundleInstallRemoveTask;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -39,37 +32,13 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-/**
- * OsgiController service
- *
- */
-public class OsgiControllerImpl
-    implements OsgiController,
-               OsgiControllerServices,
-               OsgiControllerTaskContext,
-               OsgiControllerStatistics {
+/** OsgiController service */
+public class OsgiControllerImpl implements OsgiController, OsgiControllerContext {
 
 	private final BundleContext bundleContext;
-    private final Storage storage;
-    private ResourceOverrideRules roRules;
-    
-    // The data type of the "tasks" member must be consistent with the {@link TaskOrderingTest} class
-    private final Set<OsgiControllerTask> tasks = new TreeSet<OsgiControllerTask>();
-    private final Set<OsgiControllerTask> tasksForNextCycle = new TreeSet<OsgiControllerTask>();
-    private final Set<OsgiControllerTask> tasksForThisCycle = new TreeSet<OsgiControllerTask>();
-    private final ServiceTracker logServiceTracker;
-    private int threadCounter;
     private final PackageAdmin packageAdmin;
-    private int executedTasksCount;
-
-    public static final String BUNDLE_EXTENSION = ".jar";
-    public static final String STORAGE_FILENAME = "controller.storage";
-
-    /** Storage key: digest of an InstallableData */
-    public static final String KEY_DIGEST = "data.digest";
-
-    /** Default value for getLastModified() */
-    public static final long LAST_MODIFIED_NOT_FOUND = -1;
+    private final ServiceTracker logServiceTracker;
+    private Map<String, Long> counters = new HashMap<String, Long>();
 
     public OsgiControllerImpl(final BundleContext bc,
                               final PackageAdmin pa,
@@ -78,170 +47,14 @@ public class OsgiControllerImpl
         this.bundleContext = bc;
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
-        storage = new Storage(bc.getDataFile(STORAGE_FILENAME), this);
     }
 
     public void deactivate() {
-        try {
-            storage.saveToFile();
-        } catch(IOException ioe) {
-        	if (getLogService() != null) {
-        		getLogService().log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
-        	}
-        }
-
         if(getLogService() != null) {
             getLogService().log(LogService.LOG_WARNING,
                     OsgiController.class.getName()
                     + " service deactivated - this warning can be ignored if system is shutting down");
         }
-
-    }
-
-    public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException {
-    	synchronized (tasks) {
-        	tasks.add(getTaskForUri(uri, data));
-		}
-    }
-
-    public void scheduleUninstall(String uri) throws IOException {
-    	synchronized (tasks) {
-        	tasks.add(getTaskForUri(uri, null));
-    	}
-    }
-    
-    protected OsgiControllerTask getTaskForUri(String uri, InstallableData data) {
-        if(uri.endsWith(BUNDLE_EXTENSION)) {
-        	return new BundleInstallRemoveTask(uri, data, bundleContext, this);
-        } else {
-        	return new ConfigInstallRemoveTask(uri, data, this);
-        }
-    }
-
-    public Set<String> getInstalledUris() {
-        return storage.getKeys();
-    }
-
-    /** {@inheritDoc}
-     *  @return null if uri not found
-     */
-    public String getDigest(String uri) {
-        String result = null;
-
-        if(storage.contains(uri)) {
-            final Map<String, Object> uriData = storage.getMap(uri);
-            result = (String)uriData.get(KEY_DIGEST);
-        }
-        return result;
-    }
-
-    public static String getResourceLocation(String uri) {
-        return "jcrinstall://" + uri;
-    }
-
-    /** {@inheritDoc} */
-    public void executeScheduledOperations() throws Exception {
-
-        // Anything to do?
-        if(tasks.isEmpty()) {
-        	return;
-        }
-        
-        // No executable tasks?
-        boolean exec = false;
-        synchronized (tasks) {
-            for(OsgiControllerTask t : tasks) {
-                if(t.isExecutable(this)) {
-                    exec = true;
-                    break;
-                }
-            }
-        }
-        
-    	if(getLogService() != null) {
-    	    if(exec) {
-                getLogService().log(LogService.LOG_INFO, "executeScheduledOperations() starts");
-    	    } else {
-                getLogService().log(LogService.LOG_DEBUG, "No executable tasks, nothing to do");
-    	    }
-    	}
-    	
-    	if(!exec) {
-    	    return;
-    	}
-    	
-        synchronized (tasks) {
-        	if(getLogService() != null) {
-                getLogService().log(LogService.LOG_INFO, "Executing " + tasks.size() 
-                		+ " queued tasks (more might be created during execution cycle)");
-        	}
-            final long start = System.currentTimeMillis();
-            
-            // Now execute all our tasks in a separate thread
-        	// and re-add tasks scheduled for next cycle
-        	executeTasksInSeparateThread();
-        	tasks.clear();
-        	tasks.addAll(tasksForNextCycle);
-        	tasksForNextCycle.clear();
-
-        	if(getLogService() != null) {
-                getLogService().log(LogService.LOG_INFO,
-                		"executeScheduledOperations() ends (" + (System.currentTimeMillis() - start) + " msec)");
-        	}
-		}
-	}
-    
-    /** Execute a single task - meant to be called from worker thread */
-    private void executeTask(OsgiControllerTask t) {
-    	final long start = System.currentTimeMillis();
-    	final LogService log = getLogService();
-    	if(log != null) {
-    		log.log(LogService.LOG_DEBUG, "Executing task " + t);
-    	}
-    	
-    	try {
-    		t.execute(this);
-    		if(log != null) {
-    			final long delta = System.currentTimeMillis() - start;
-    			log.log(LogService.LOG_INFO, "Successfully executed " + t + " in " + delta + " msec");
-    		}
-    	} catch(Throwable th) {
-    		if(log != null) {
-    			log.log(LogService.LOG_INFO, "Task execution failed (" + th + ") will retry " + t);
-    		}
-    		tasksForNextCycle.add(t);
-    	}
-    }
-    
-    void executeTasksInSeparateThread() throws InterruptedException {
-		final Runnable r = new Runnable() {
-			public void run() {
-				while(!tasks.isEmpty()) {
-					final List<OsgiControllerTask> toRemove = new LinkedList<OsgiControllerTask>();
-					for(OsgiControllerTask t : tasks) {
-						toRemove.add(t);
-						executedTasksCount++;
-						executeTask(t);
-						if(!tasksForThisCycle.isEmpty()) {
-							break;
-						}
-					}
-					tasks.removeAll(toRemove);
-					tasks.addAll(tasksForThisCycle);
-					tasksForThisCycle.clear();
-				}
-			}
-		};
-		
-		final String threadName = getClass().getSimpleName() + " #" + (++threadCounter);
-		final Thread t = new Thread(r, threadName);
-		t.setDaemon(true);
-		t.start();
-		t.join();
-    }
-
-	public void setResourceOverrideRules(ResourceOverrideRules r) {
-        roRules = r;
     }
 
 	public ConfigurationAdmin getConfigurationAdmin() {
@@ -256,14 +69,6 @@ public class OsgiControllerImpl
 		return null;
 	}
 
-	public ResourceOverrideRules getResourceOverrideRules() {
-		return roRules;
-	}
-
-	public Storage getStorage() {
-		return storage;
-	}
-	
 	public LogService getLogService() {
 		return (LogService)logServiceTracker.getService();
 	}
@@ -272,14 +77,16 @@ public class OsgiControllerImpl
 		if(getLogService() != null) {
 			getLogService().log(LogService.LOG_DEBUG, "adding task to current cycle:" + t);
 		}
-		tasksForThisCycle.add(t);
+		// TODO
+		//tasksForThisCycle.add(t);
 	}
 
 	public void addTaskToNextCycle(OsgiControllerTask t) {
 		if(getLogService() != null) {
 			getLogService().log(LogService.LOG_DEBUG, "adding task to next cycle:" + t);
 		}
-		tasksForNextCycle.add(t);
+		// TODO
+		//tasksForNextCycle.add(t);
 	}
 
 	public BundleContext getBundleContext() {
@@ -290,11 +97,25 @@ public class OsgiControllerImpl
 		return packageAdmin;
 	}
 	
-	public OsgiControllerServices getOsgiControllerServices() {
-		return this;
+	public Map<String, Long> getCounters() {
+		return counters;
 	}
 
-	public long getExecutedTasksCount() {
-	    return executedTasksCount;
+	public void addResource(InstallableResource d) throws IOException {
+		// TODO
+	}
+
+	public void registerResources(Collection<InstallableResource> data,
+			String urlScheme) throws IOException {
+		// TODO
+	}
+
+	public void removeResource(InstallableResource d) throws IOException {
+		// TODO
+	}
+
+	public Storage getStorage() {
+		// TODO
+		return null;
 	}
 }

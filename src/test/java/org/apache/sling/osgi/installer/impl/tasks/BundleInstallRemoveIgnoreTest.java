@@ -21,10 +21,8 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.impl.MockOsgiControllerContext;
 import org.osgi.framework.Version;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 
 /** Test ignoring bundle updates based on Versions (SLING-1001) */
 public class BundleInstallRemoveIgnoreTest {
@@ -34,17 +32,7 @@ public class BundleInstallRemoveIgnoreTest {
 	private BundleInstallRemoveTask task;
 	
     @org.junit.Before public void setup() {
-    	OsgiControllerServices s = new OsgiControllerServices() {
-			public LogService getLogService() {
-				return null;
-			}
-			
-			public ConfigurationAdmin getConfigurationAdmin() {
-				return null;
-			}
-		};
-		
-        task = new BundleInstallRemoveTask(null, null, null, s);
+        task = new BundleInstallRemoveTask(null, null, null, new MockOsgiControllerContext());
     }
 
 	@org.junit.Test public void testLowerVersion() {

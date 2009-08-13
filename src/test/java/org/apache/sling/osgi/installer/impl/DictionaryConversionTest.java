@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl.tasks;
+package org.apache.sling.osgi.installer.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,13 +24,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.Properties;
 
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
 import org.apache.sling.osgi.installer.impl.propertyconverter.ValueConverterException;
 
-/** Test the DictionaryReader */
-public class DictionaryReaderTest {
+public class DictionaryConversionTest {
     
     private void assertArray(String info, String [] expected, Object obj) {
         assertTrue(info + ":obj (" + obj.getClass().getName() + ") must be a String[]", obj instanceof String[]);
@@ -65,22 +63,6 @@ public class DictionaryReaderTest {
         assertArray("a,b,c,d", new String[] { "a", "b, c ,", "d" }, c.convert("x[]", "a, b\\, c \\,,d ").getValue());
     }
      
-    @org.junit.Test public void testConvertProperties() throws ValueConverterException {
-        final Properties p = new Properties();
-        p.setProperty("a", "1");
-        p.setProperty("b", "2");
-        p.setProperty("c[]", "1, 2, 3");
-        p.setProperty("d []", "4, 5, 6");
-        
-        final DictionaryReader r = new DictionaryReader();
-        final Dictionary<?, ?> d = r.convert(p);
-        assertEquals("a", d.get("a"), "1");
-        assertEquals("b", d.get("b"), "2");
-        
-        assertArray("c", new String[] { "1", "2", "3" }, d.get("c"));
-        assertArray("d", new String[] { "4", "5", "6" }, d.get("d"));
-    }
-    
     @org.junit.Test public void testFromStream() throws IOException {
         final String data =
             "a = 1\n"
@@ -92,13 +74,8 @@ public class DictionaryReaderTest {
             ;
         
         final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-        final DictionaryReader r = new DictionaryReader();
-        Dictionary<?, ?> d = null;
-        try {
-            d = r.load(is);
-        } finally {
-            is.close();
-        }
+        final Dictionary<?, ?> d = RegisteredResource.readDictionary(is);
+        is.close();
         
         assertEquals("Number of entries must match", 4, d.size());
         assertEquals("a", d.get("a"), "1");
@@ -119,13 +96,8 @@ public class DictionaryReaderTest {
             ;
         
         final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-        final DictionaryReader r = new DictionaryReader();
-        Dictionary<?, ?> d = null;
-        try {
-            d = r.load(is);
-        } finally {
-            is.close();
-        }
+        final Dictionary<?, ?> d = RegisteredResource.readDictionary(is);
+        is.close();
         
         assertEquals("Number of entries must match", 5, d.size());
         assertEquals("String value matches", "1", d.get("a"));

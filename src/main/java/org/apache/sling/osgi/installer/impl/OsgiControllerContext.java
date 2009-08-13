@@ -16,17 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer;
+package org.apache.sling.osgi.installer.impl;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
+import org.osgi.service.packageadmin.PackageAdmin;
 
-/** Proxy for services that might not be always available, allows
- * 	classes which are not OSGi services to access such services easily.
- * 	Should normally be part of the implementation package, but it is
- * 	used in tests to find out when the controller is ready.
- */
-public interface OsgiControllerServices {
+/** Context for OsgiControllerTask */
+public interface OsgiControllerContext {
+	Storage getStorage();
+	BundleContext getBundleContext();
+	PackageAdmin getPackageAdmin();
 	ConfigurationAdmin getConfigurationAdmin();
 	LogService getLogService();
+	
+	/** Schedule a task for execution in the current OsgiController cycle */
+	void addTaskToCurrentCycle(OsgiControllerTask t);
+	
+	/** Schedule a task for execution in the next OsgiController cycle, 
+	 * 	usually to indicate that a task must be retried 
+	 */
+	void addTaskToNextCycle(OsgiControllerTask t);
 }

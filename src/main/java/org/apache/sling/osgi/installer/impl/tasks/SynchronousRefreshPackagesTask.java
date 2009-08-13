@@ -18,9 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -33,7 +32,7 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
 	private int packageRefreshEventsCount;
-	private OsgiControllerServices ocs;
+	private OsgiControllerContext ctx;
 
     /**
      * Handles the PACKAGES_REFRESHED framework event which is sent after
@@ -44,8 +43,8 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-        	if(ocs.getLogService() != null) {
-	    		ocs.getLogService().log(LogService.LOG_DEBUG,
+        	if(ctx!= null && ctx.getLogService() != null) {
+	    		ctx.getLogService().log(LogService.LOG_DEBUG,
 	    				"FrameworkEvent.PACKAGES_REFRESHED");
         	}
         	packageRefreshEventsCount++;
@@ -62,11 +61,11 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
 		return getClass().getSimpleName();
 	}
 
-	public void execute(OsgiControllerTaskContext ctx) throws Exception {
+	public void execute(OsgiControllerContext ctx) throws Exception {
+		this.ctx = ctx;
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
-        ocs = ctx.getOsgiControllerServices();
 
         // Refreshing packages might cause some bundles to be stopped,
         // make sure all currently active ones are restarted after
@@ -75,8 +74,8 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
     		if(b.getState() == Bundle.ACTIVE) {
     			final OsgiControllerTask t = new BundleStartTask(b.getBundleId());
     			ctx.addTaskToCurrentCycle(t);
-            	if(ctx.getOsgiControllerServices().getLogService() != null) {
-            		ctx.getOsgiControllerServices().getLogService().log(LogService.LOG_DEBUG, 
+            	if(ctx.getLogService() != null) {
+            		ctx.getLogService().log(LogService.LOG_DEBUG, 
             				"Added " + t + " to restart bundle if needed after refreshing packages"); 
             	}
     		}
@@ -89,8 +88,8 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
         try {
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
-                	if(ocs.getLogService() != null) {
-        	    		ocs.getLogService().log(LogService.LOG_WARNING,
+                	if(ctx.getLogService() != null) {
+        	    		ctx.getLogService().log(LogService.LOG_WARNING,
         	    				"No FrameworkEvent.PACKAGES_REFRESHED event received within "
         	    				+ MAX_REFRESH_PACKAGES_WAIT_SECONDS
         	    				+ " seconds after refresh");
@@ -99,8 +98,8 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
                 }
                 if(packageRefreshEventsCount >= targetEventCount) {
                     final long delta = System.currentTimeMillis() - start;
-                    if(ocs.getLogService() != null) {
-        	    		ocs.getLogService().log(LogService.LOG_DEBUG,
+                    if(ctx.getLogService() != null) {
+        	    		ctx.getLogService().log(LogService.LOG_DEBUG,
         	    				"FrameworkEvent.PACKAGES_REFRESHED received "
         	    				+ delta
         	    				+ " msec after refreshPackages call");

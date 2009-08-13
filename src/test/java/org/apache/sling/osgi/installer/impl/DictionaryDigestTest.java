@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer;
+package org.apache.sling.osgi.installer.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-public class DigestTest {
+public class DictionaryDigestTest {
 	private void setTestData(Hashtable<String, Object> d) {
 		d.put("str", "value");
 		d.put("long", new Long(12));
@@ -33,7 +33,7 @@ public class DigestTest {
 	
 	private String testDigestChanged(Dictionary<String, Object> d, 
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = DictionaryInstallableData.computeDigest(d);
+		final String newDigest = RegisteredResource.computeDigest(d);
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -51,8 +51,8 @@ public class DigestTest {
 		
 		assertEquals(
 				"Two dictionary with same values have the same key", 
-				DictionaryInstallableData.computeDigest(d1),
-				DictionaryInstallableData.computeDigest(d2)
+				RegisteredResource.computeDigest(d1),
+				RegisteredResource.computeDigest(d2)
 		);
 	}
 	

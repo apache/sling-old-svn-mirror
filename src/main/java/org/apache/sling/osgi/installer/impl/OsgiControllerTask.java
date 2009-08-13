@@ -21,7 +21,7 @@ package org.apache.sling.osgi.installer.impl;
 /** Base class for tasks that can be executed by the OsgiController */ 
 public abstract class OsgiControllerTask implements Comparable<OsgiControllerTask> {
 	/** Execute this task */
-	public abstract void execute(OsgiControllerTaskContext ctx) throws Exception;
+	public abstract void execute(OsgiControllerContext ctx) throws Exception;
 	
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
@@ -32,7 +32,7 @@ public abstract class OsgiControllerTask implements Comparable<OsgiControllerTas
 	}
 	
 	/** Is it worth executing this task now? */
-	public boolean isExecutable(OsgiControllerTaskContext ctx) throws Exception {
+	public boolean isExecutable(OsgiControllerContext ctx) throws Exception {
 	    return true;
 	}
 

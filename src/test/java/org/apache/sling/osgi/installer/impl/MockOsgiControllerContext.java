@@ -16,10 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer;
+package org.apache.sling.osgi.installer.impl;
 
-/** Statistics for the OsgiController */
-public interface OsgiControllerStatistics {
-    /** How many OsgiControllerTask the controller tried to execute */
-    long getExecutedTasksCount();
+import org.osgi.framework.BundleContext;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
+import org.osgi.service.packageadmin.PackageAdmin;
+
+public class MockOsgiControllerContext implements OsgiControllerContext {
+
+	public void addTaskToCurrentCycle(OsgiControllerTask t) {
+	}
+
+	public void addTaskToNextCycle(OsgiControllerTask t) {
+	}
+
+	public BundleContext getBundleContext() {
+		return null;
+	}
+
+	public ConfigurationAdmin getConfigurationAdmin() {
+		return null;
+	}
+
+	public LogService getLogService() {
+		return null;
+	}
+
+	public PackageAdmin getPackageAdmin() {
+		return null;
+	}
+
+	public Storage getStorage() {
+		return null;
+	}
 }
