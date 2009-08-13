@@ -23,10 +23,9 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.jar.Manifest;
 
-import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
 import org.apache.sling.osgi.installer.impl.OsgiControllerImpl;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.Storage;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -42,7 +41,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
-    public BundleInstallRemoveTask(String uri, InstallableData data, BundleContext ctx, OsgiControllerServices ocs) {
+    public BundleInstallRemoveTask(String uri, RegisteredResource data, BundleContext ctx, OsgiControllerContext ocs) {
     	super(uri, data, ocs);
     	this.bundleContext = ctx;
     }
@@ -57,7 +56,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected void doUninstall(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected void doUninstall(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
         final Long longId = (Long) attributes.get(Storage.KEY_BUNDLE_ID);
         if (longId == null) {
         	if(ocs.getLogService() != null) {
@@ -81,17 +80,17 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected boolean doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
 
     	// Check that we have bundle data and manifest
-    	InputStream is = data.adaptTo(InputStream.class);
+    	InputStream is = data.getInputStream();
     	if(is == null) {
-    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
+    		throw new IOException("RegisteredResource does not adapt to an InputStream: " + uri);
     	}
 
 		final Manifest m = TaskUtilities.getManifest(data);
 		if(m == null) {
-			throw new IOException("Manifest not found for InstallableData " + uri);
+			throw new IOException("Manifest not found for RegisteredResource " + uri);
 		}
 
         // Update if we already have a bundle id, else install
@@ -137,11 +136,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			    tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
 			} else {
 				// New bundle -> install
-			    final String fullUri = OsgiControllerImpl.getResourceLocation(uri);
-			    int level = data.getBundleStartLevel();
-			    if(level > 0) {
-			    	throw new BundleException("Non-zero start level is not supported anymore (" + level + ")");
-			    }
+			    final String fullUri = data.getURL();
 			    b = bundleContext.installBundle(fullUri, is);
 		    	if(ocs.getLogService() != null) {
 		    		ocs.getLogService().log(LogService.LOG_INFO, 

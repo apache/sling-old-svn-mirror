@@ -26,23 +26,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.OsgiControllerServices;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
-
 /** Test the Storage class */
 public class StorageTest {
 
-	private final OsgiControllerServices ocs = new OsgiControllerServices() {
-		
-		public LogService getLogService() {
-			return null;
-		}
-		
-		public ConfigurationAdmin getConfigurationAdmin() {
-			return null;
-		}
-	};
+	private final OsgiControllerContext ocs = new MockOsgiControllerContext();
 	
     @org.junit.Test public void testEmptyDataFile() throws Exception {
         final Storage s = new Storage(Utilities.getTestFile(), ocs);

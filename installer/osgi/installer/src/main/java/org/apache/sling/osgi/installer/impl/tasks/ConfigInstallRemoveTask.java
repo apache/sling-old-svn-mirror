@@ -18,14 +18,11 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.osgi.installer.OsgiControllerServices;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
+import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.log.LogService;
 
@@ -36,9 +33,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
     
-    private final DictionaryReader reader = new DictionaryReader();
-    
-	public ConfigInstallRemoveTask(String uri, InstallableData data, OsgiControllerServices ocs) {
+	public ConfigInstallRemoveTask(String uri, RegisteredResource data, OsgiControllerContext ocs) {
 		super(uri, data, ocs);
 	}
 	
@@ -52,20 +47,9 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected boolean doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
     	// Convert data to a configuration Dictionary
-    	Dictionary dict = data.adaptTo(Dictionary.class);
-    	if(dict == null) {
-	    	InputStream is = data.adaptTo(InputStream.class);
-	    	if (data == null) {
-	    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
-	    	}
-	    	try {
-	    		dict = reader.load(is);
-	    	} finally {
-	    	    is.close();
-	    	}
-    	}
+    	Dictionary dict = data.getDictionary();
 
     	if (dict == null) {
     		throw new IllegalArgumentException("Null Dictionary for uri=" + uri);
@@ -104,7 +88,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected void doUninstall(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
+	protected void doUninstall(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
         final ConfigurationPid pid = new ConfigurationPid(uri);
         final Configuration cfg = TaskUtilities.getConfiguration(pid, false, ocs);
         // TODO defer delete if ConfigAdmin not available?

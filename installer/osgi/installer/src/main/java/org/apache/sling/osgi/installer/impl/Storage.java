@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.service.log.LogService;
 
 /** Storage for the OSGi controller, stores Maps for the resources
@@ -46,7 +45,7 @@ public class Storage {
     /** Create Storage that uses dataFile for persistence, and
      *  read the current status from that file */
     @SuppressWarnings("unchecked")
-    Storage(File dataFile, OsgiControllerServices ocs) throws IOException {
+    Storage(File dataFile, OsgiControllerContext ocs) throws IOException {
         this.dataFile = dataFile;
         ObjectInputStream ois = null;
         Map<String, Map<String, Object>> loadedData = null;
