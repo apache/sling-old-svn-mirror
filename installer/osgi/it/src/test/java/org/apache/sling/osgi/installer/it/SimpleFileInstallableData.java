@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jcrinstall.it;
+package org.apache.sling.osgi.installer.it;
 
 import java.io.File;
 import java.io.FileInputStream;

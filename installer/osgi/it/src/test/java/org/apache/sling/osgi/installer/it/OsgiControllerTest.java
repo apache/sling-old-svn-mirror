@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jcrinstall.it;
+package org.apache.sling.osgi.installer.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -62,7 +62,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 @RunWith(JUnit4TestRunner.class)
 public class OsgiControllerTest implements FrameworkListener {
-	public final static String POM_VERSION = System.getProperty("jcrinstall.pom.version");
+	public final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
 	
@@ -158,7 +158,7 @@ public class OsgiControllerTest implements FrameworkListener {
     }
     
     protected File getTestBundle(String bundleName) {
-    	return new File(System.getProperty("jcrinstall.base.dir"), bundleName);
+    	return new File(System.getProperty("osgi.installer.base.dir"), bundleName);
     }
     
     protected void waitForConfigAdmin(boolean shouldBePresent) throws InterruptedException {
@@ -239,7 +239,7 @@ public class OsgiControllerTest implements FrameworkListener {
     
     @Test
     public void testInstallUpgradeDowngradeBundle() throws Exception {
-    	final String symbolicName = "jcrinstall-testbundle";
+    	final String symbolicName = "osgi-installer-testbundle";
     	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
     	
@@ -315,16 +315,16 @@ public class OsgiControllerTest implements FrameworkListener {
         	c.scheduleInstallOrUpdate("testB.jar", 
         			new SimpleFileInstallableData(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testB-1.0.jar")));
         	c.executeScheduledOperations();
-        	final Bundle b = findBundle("jcrinstall-testB");
+        	final Bundle b = findBundle("osgi-installer-testB");
         	assertNotNull("Test bundle must be found", b);
         	b.stop();
     	}
     	
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-testB").getState());
+    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("osgi-installer-testA").getState());
+    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("osgi-installer-testB").getState());
     	
     	// Execute some OsgiController operations
-    	final String symbolicName = "jcrinstall-testbundle";
+    	final String symbolicName = "osgi-installer-testbundle";
     	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
     	c.scheduleInstallOrUpdate(uri, 
@@ -342,19 +342,18 @@ public class OsgiControllerTest implements FrameworkListener {
     	assertEquals("Version must be 1.2", "1.2", b.getHeaders().get(BUNDLE_VERSION));
     	
     	// And check that bundles A and B have kept their states
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-testB").getState());
+    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("osgi-installer-testA").getState());
+    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("osgi-installer-testB").getState());
     }
     
-    /** needsB bundle requires testB, try loading needsB first,
-     *	then testB, and verify that in the end needsB is started 	
-     */
+    // needsB bundle requires testB, try loading needsB first,
+	// then testB, and verify that in the end needsB is started 	
     @Test
     public void testBundleDependencies() throws Exception {
     	final OsgiController c = getService(OsgiController.class);
     	
-    	final String testB = "jcrinstall-testB";
-    	final String needsB = "jcrinstall-needsB";
+    	final String testB = "osgi-installer-testB";
+    	final String needsB = "osgi-installer-needsB";
     	
     	{
         	final Bundle b = findBundle(testB);
@@ -432,13 +431,13 @@ public class OsgiControllerTest implements FrameworkListener {
 
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
-    	String vmOpt = "-Djrcinstall.testing";
+    	String vmOpt = "-Dosgi.installer.testing";
     	
     	// This runs in the VM that runs the build, but the tests run in another one.
-    	// Make all jcrinstall.* system properties available to OSGi framework VM
+    	// Make all osgi.installer.* system properties available to OSGi framework VM
     	for(Object o : System.getProperties().keySet()) {
     		final String key = (String)o;
-    		if(key.startsWith("jcrinstall.")) {
+    		if(key.startsWith("osgi.installer.")) {
     			vmOpt += " -D" + key + "=" + System.getProperty(key);
     		}
     	}
@@ -454,7 +453,6 @@ public class OsgiControllerTest implements FrameworkListener {
                 vmOption(vmOpt),
                 waitForFrameworkStartup(),
         		provision(
-        				// TODO use latest scr?
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
