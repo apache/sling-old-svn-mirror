@@ -84,7 +84,7 @@ public class RegisteredResource {
     	}
 	}
 	
-	protected File getDataFile(BundleContext ctx) {
+	protected File getDataFile(BundleContext ctx) throws IOException {
 		String filename = null;
 		synchronized (getClass()) {
 			filename = getClass().getSimpleName() + "." + fileNumber++;
@@ -151,7 +151,6 @@ public class RegisteredResource {
 			if(os != null) {
 				os.close();
 			}
-			data.close();
 		}
 		return digestToString(d);
 	}
