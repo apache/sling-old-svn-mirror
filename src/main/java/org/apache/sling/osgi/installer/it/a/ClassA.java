@@ -14,11 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jcrinstall.it.b;
-
-import org.apache.sling.jcr.jcrinstall.it.a.ClassA;
+package org.apache.sling.osgi.installer.it.a;
 
 /** Dummy class used in test bundles */
-public class ClassB {
-	ClassA a = new ClassA(); 
+public class ClassA {
 }

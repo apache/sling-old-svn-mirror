@@ -77,11 +77,11 @@
                             <value>${pax.exam.debug.port}</value>
                         </property>
                         <property>
-                            <name>jcrinstall.pom.version</name>
+                            <name>osgi.installer.pom.version</name>
                             <value>${pom.version}</value>
                         </property>
                         <property>
-                            <name>jcrinstall.base.dir</name>
+                            <name>osgi.installer.base.dir</name>
                             <value>${project.build.directory}</value>
                         </property>
                     </systemProperties>
@@ -123,8 +123,8 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-testbundle</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
                                     <Bundle-Version>1.0</Bundle-Version>
                                 </manifestEntries>
                             </archive>
@@ -141,8 +141,8 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-testbundle</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
                                     <Bundle-Version>1.1</Bundle-Version>
                                 </manifestEntries>
                             </archive>
@@ -159,8 +159,8 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-testbundle</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
                                     <Bundle-Version>1.2</Bundle-Version>
                                 </manifestEntries>
                             </archive>
@@ -177,8 +177,8 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-testA</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-testA</Bundle-SymbolicName>
                                     <Bundle-Version>1.0</Bundle-Version>
                                 </manifestEntries>
                             </archive>
@@ -199,10 +199,10 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-testB</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-testB</Bundle-SymbolicName>
                                     <Bundle-Version>1.0</Bundle-Version>
-                                    <Export-Package>org.apache.sling.jcr.jcrinstall.it.a;version="1.0"</Export-Package>
+                                    <Export-Package>org.apache.sling.osgi.installer.it.a;version="1.0"</Export-Package>
                                 </manifestEntries>
                             </archive>
                         </configuration>
@@ -222,10 +222,10 @@
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>jcrinstall-needsB</Bundle-SymbolicName>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-needsB</Bundle-SymbolicName>
                                     <Bundle-Version>1.0</Bundle-Version>
-                                    <Import-Package>org.apache.sling.jcr.jcrinstall.it.a;version="1.0"</Import-Package>
+                                    <Import-Package>org.apache.sling.osgi.installer.it.a;version="1.0"</Import-Package>
                                 </manifestEntries>
                             </archive>
                         </configuration>
