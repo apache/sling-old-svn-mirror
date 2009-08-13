@@ -60,3 +60,8 @@ you can checkout the latest source using the following command:
 
 See the Subversion documentation for other source control features.
 
+Running the Explorer
+====================
+After installing the Explorer, http://localhost:8080/apps/explorer/index.html should display
+its home page, which says "Sling Explorer" at the top and displays a tree with a Resources
+root.

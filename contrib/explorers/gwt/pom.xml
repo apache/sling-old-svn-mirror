@@ -66,9 +66,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>!*</Export-Package>
+                        <Private-Package>!*</Private-Package>
                         <Sling-Initial-Content>
-							SLING-INF/content/apps/explorer;overwrite:=true;uninstall=true;path:=/apps/explorer,
-							SLING-INF/content/apps/sling/servlet/default/explorer;overwrite:=true;uninstall=true;path:=/apps/sling/servlet/default/explorer
+			    SLING-INF/content/apps/explorer;overwrite:=true;uninstall=true;path:=/apps/explorer,
+			    SLING-INF/content/apps/sling/servlet/default/explorer;overwrite:=true;uninstall=true;path:=/apps/sling/servlet/default/explorer
                         </Sling-Initial-Content>
                     </instructions>
                 </configuration>
