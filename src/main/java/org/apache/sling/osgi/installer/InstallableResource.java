@@ -90,10 +90,6 @@ public class InstallableResource {
 	 * 	but the scheme must be the one used in the 
 	 * 	{@link OsgiInstaller#registerResources} call.
 	 */
-	public String getURL() {
-		return url;
-	}
-
 	public String getUrl() {
 		return url;
 	}

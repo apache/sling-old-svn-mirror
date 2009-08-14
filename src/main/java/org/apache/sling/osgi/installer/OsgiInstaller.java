@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 
 /** OSGi Service that installs/updates/removes InstallableData
  * 	in the OSGi framework. 
@@ -33,7 +32,7 @@ import java.util.Map;
  *	we might support deployment packages as well.    	
  */
 public interface OsgiInstaller {
-	
+    
 	/** Provide the installer with the complete list of installable
 	 * 	resources for a given client.
 	 * 
@@ -57,5 +56,11 @@ public interface OsgiInstaller {
 	void removeResource(InstallableResource d) throws IOException;
 	
 	/** Return counters used for statistics, console display, testing, etc. */
-	Map<String, Long> getCounters();
+	long [] getCounters();
+	
+	/** Counter index: number of OSGi tasks executed */
+	int OSGI_TASKS_COUNTER = 0;
+	
+	/** Size of the counters array */
+	int COUNTERS_SIZE = 1;
 }
