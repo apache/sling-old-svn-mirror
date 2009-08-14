@@ -305,29 +305,31 @@ public class MapEntries implements EventListener {
             // what is stored in the sling:vanityPath property
             String[] pVanityPaths = row.get("sling:vanityPath", new String[0]);
             for (String pVanityPath : pVanityPaths) {
-                String url = "^" + ANY_SCHEME_HOST
-                    + String.valueOf(pVanityPath);
+                // check for empty values
+                if ( pVanityPath != null && pVanityPath.trim().length() > 0 ) {
+                    String url = "^" + ANY_SCHEME_HOST + pVanityPath.trim();
 
-                // redirect target is the node providing the sling:vanityPath
-                // property (or its parent if the node is called jcr:content)
-                String redirect = resource.getPath();
-                if (ResourceUtil.getName(redirect).equals("jcr:content")) {
-                    redirect = ResourceUtil.getParent(redirect);
+                    // redirect target is the node providing the sling:vanityPath
+                    // property (or its parent if the node is called jcr:content)
+                    String redirect = resource.getPath();
+                    if (ResourceUtil.getName(redirect).equals("jcr:content")) {
+                        redirect = ResourceUtil.getParent(redirect);
+                    }
+
+                    // whether the target is attained by a 302/FOUND or by an
+                    // internal redirect is defined by the sling:redirect property
+                    int status = row.get("sling:redirect", false)
+                            ? HttpServletResponse.SC_FOUND
+                            : -1;
+
+                    // 1. entry with exact match
+                    entries.add(new MapEntry(url + "$", status, false, redirect
+                        + ".html"));
+
+                    // 2. entry with match supporting selectors and extension
+                    entries.add(new MapEntry(url + "(\\..*)", status, false,
+                        redirect + "$1"));
                 }
-
-                // whether the target is attained by a 302/FOUND or by an
-                // internal redirect is defined by the sling:redirect property
-                int status = row.get("sling:redirect", false)
-                        ? HttpServletResponse.SC_FOUND
-                        : -1;
-
-                // 1. entry with exact match
-                entries.add(new MapEntry(url + "$", status, false, redirect
-                    + ".html"));
-
-                // 2. entry with match supporting selectors and extension
-                entries.add(new MapEntry(url + "(\\..*)", status, false,
-                    redirect + "$1"));
             }
         }
     }
