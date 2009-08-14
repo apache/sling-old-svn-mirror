@@ -32,7 +32,7 @@ public class BundleInstallRemoveIgnoreTest {
 	private BundleInstallRemoveTask task;
 	
     @org.junit.Before public void setup() {
-        task = new BundleInstallRemoveTask(null, null, null, new MockOsgiControllerContext());
+        task = new BundleInstallRemoveTask(null, null, new MockOsgiControllerContext());
     }
 
 	@org.junit.Test public void testLowerVersion() {

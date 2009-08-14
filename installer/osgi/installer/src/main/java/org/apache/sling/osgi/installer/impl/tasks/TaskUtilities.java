@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -87,7 +87,7 @@ class TaskUtilities {
     }
     
     /** Get or create configuration */
-    static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiControllerContext ocs)
+    static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
     throws IOException, InvalidSyntaxException
     {
     	final ConfigurationAdmin configurationAdmin = ocs.getConfigurationAdmin();

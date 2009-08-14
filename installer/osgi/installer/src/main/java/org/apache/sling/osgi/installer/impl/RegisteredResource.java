@@ -57,36 +57,61 @@ public class RegisteredResource {
 	private final Dictionary<String, Object> dictionary;
 	private static long fileNumber;
 	
+	static enum State {
+	    NEW,
+	    ACTIVE,
+        INSTALLED,
+	    IGNORED,
+	    REMOVED,
+	}
+    private State desiredState = State.ACTIVE;
+    private State actualState = State.NEW;
+    
+    static enum ResourceType {
+        BUNDLE,
+        CONFIG
+    }
+    
+    private final ResourceType resourceType;
+	
 	public static final String DIGEST_TYPE = "MD5";
 	
+	/** Create a RegisteredResource from given data. If the data's extension
+	 *  maps to a configuration and the data provides an input stream, it is
+	 *  converted to a Dictionary 
+	 */
 	public RegisteredResource(BundleContext ctx, InstallableResource input) throws IOException {
-		url = input.getUrl();
-		
-		// TODO if input.url ends with a "config" extension, convert to dictionary
-		
-		try {
-			if(input.getDictionary() == null) {
-				dictionary = null;
-				if(input.getInputStream() == null) {
-					throw new IllegalArgumentException("input provides no Dictionary and no InputStream:" + input);
-				} else {
-					dataFile = getDataFile(ctx);
-					copyToLocalStorage(input.getInputStream(), dataFile);
-					digest = input.getDigest();
-					if(digest == null || digest.length() == 0) {
-					    throw new IllegalArgumentException(
-					            "Digest must be supplied for an InstallableResource that wraps an InputStream");
-					}
-				}
-			} else {
-				dataFile = null;
-				dictionary = copy(input.getDictionary());
-				digest = computeDigest(dictionary);
-			}
-			
-    	} catch(NoSuchAlgorithmException nse) {
-    		throw new IOException("NoSuchAlgorithmException:" + DIGEST_TYPE);
+	    
+	    try {
+    		url = input.getUrl();
+    		resourceType = computeResourceType(input.getExtension());
     		
+    		if(resourceType == ResourceType.BUNDLE) {
+                if(input.getInputStream() == null) {
+                    throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
+                }
+                dictionary = null;
+                dataFile = getDataFile(ctx);
+                copyToLocalStorage(input.getInputStream(), dataFile);
+                digest = input.getDigest();
+                if(digest == null || digest.length() == 0) {
+                    throw new IllegalArgumentException(
+                            "Digest must be supplied for BUNDLE resource type: " + input);
+                }
+    		} else {
+                dataFile = null;
+                if(input.getInputStream() == null) {
+                    // config provided as a Dictionary
+                    dictionary = copy(input.getDictionary());
+                } else {
+                    dictionary = readDictionary(input.getInputStream()); 
+                }
+                try {
+                    digest = computeDigest(dictionary);
+                } catch(NoSuchAlgorithmException nse) {
+                    throw new IOException("NoSuchAlgorithmException:" + DIGEST_TYPE);
+                }
+    		}
     	} finally {
     		if(input.getInputStream() != null) {
     			input.getInputStream().close();
@@ -146,7 +171,7 @@ public class RegisteredResource {
     }
     
     /** Copy data to local storage */
-	private void copyToLocalStorage(InputStream data, File f) throws IOException, NoSuchAlgorithmException {
+	private void copyToLocalStorage(InputStream data, File f) throws IOException {
 		final OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
 		try {
 			final byte[] buffer = new byte[16384];
@@ -191,4 +216,36 @@ public class RegisteredResource {
 	    }
 	    return result;
 	}
+	
+	public String getUrl() {
+	    return url;
+	}
+
+    public State getDesiredState() {
+        return desiredState;
+    }
+
+    public void setDesiredState(State desiredState) {
+        this.desiredState = desiredState;
+    }
+
+    public State getActualState() {
+        return actualState;
+    }
+
+    public void setActualState(State actualState) {
+        this.actualState = actualState;
+    }
+    
+    public ResourceType getResourceType() {
+        return resourceType;
+    }
+    
+    static ResourceType computeResourceType(String extension) {
+        if(extension.equals("jar")) {
+            return ResourceType.BUNDLE;
+        } else {
+            return ResourceType.CONFIG;
+        }
+    }
 }

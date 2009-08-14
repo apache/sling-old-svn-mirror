@@ -20,20 +20,20 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 
 /** Base class for OsgiControllerTasks that install or
  * 	remove OSGi bundles or configs (or deployment packages, etc.)
  */
-abstract class InstallRemoveTask extends OsgiControllerTask {
+abstract class InstallRemoveTask extends OsgiInstallerTask {
 
 	protected final String uri;
 	protected final RegisteredResource data;
-	protected final OsgiControllerContext ocs;
+	protected final OsgiInstallerContext ocs;
 
-    protected InstallRemoveTask(String uri, RegisteredResource data, OsgiControllerContext ocs) {
+    protected InstallRemoveTask(String uri, RegisteredResource data, OsgiInstallerContext ocs) {
     	this.uri = uri;
     	this.data = data;
     	this.ocs = ocs;
@@ -51,7 +51,7 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 	}
 
 	/** {@inheritDoc} */
-	public void execute(OsgiControllerContext context) throws Exception {
+	public void execute(OsgiInstallerContext context) throws Exception {
 		// TODO cleanup stored data? (previously RegisteredResourceWrapper)
 	}
 	
@@ -61,8 +61,8 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 	}
 	
 	/** Do the actual uninstall */
-	protected abstract void doUninstall(OsgiControllerContext ctx, Map<String, Object> attributes) throws Exception;
+	protected abstract void doUninstall(OsgiInstallerContext ctx, Map<String, Object> attributes) throws Exception;
 	
 	/** Do the actual install or update */
-	protected abstract boolean doInstallOrUpdate(OsgiControllerContext ctx, Map<String, Object> attributes) throws Exception;
+	protected abstract boolean doInstallOrUpdate(OsgiInstallerContext ctx, Map<String, Object> attributes) throws Exception;
 }

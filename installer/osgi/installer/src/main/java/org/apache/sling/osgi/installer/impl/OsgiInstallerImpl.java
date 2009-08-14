@@ -31,11 +31,12 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** OsgiInstaller service implementation */
-public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
+public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
 	private final BundleContext bundleContext;
     private final PackageAdmin packageAdmin;
     private final ServiceTracker logServiceTracker;
+    private final OsgiInstallerThread installerThread;
     private long [] counters = new long[COUNTERS_SIZE];
 
     public OsgiInstallerImpl(final BundleContext bc,
@@ -45,6 +46,10 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
         this.bundleContext = bc;
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
+        
+        installerThread = new OsgiInstallerThread(this);
+        installerThread.setDaemon(true);
+        installerThread.start();
     }
 
     public void deactivate() {
@@ -71,15 +76,11 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 		return (LogService)logServiceTracker.getService();
 	}
 
-	public void addTaskToCurrentCycle(OsgiControllerTask t) {
-		if(getLogService() != null) {
-			getLogService().log(LogService.LOG_DEBUG, "adding task to current cycle:" + t);
-		}
-		// TODO
-		//tasksForThisCycle.add(t);
+	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
+		installerThread.addTaskToCurrentCycle(t);
 	}
 
-	public void addTaskToNextCycle(OsgiControllerTask t) {
+	public void addTaskToNextCycle(OsgiInstallerTask t) {
 		if(getLogService() != null) {
 			getLogService().log(LogService.LOG_DEBUG, "adding task to next cycle:" + t);
 		}
@@ -99,8 +100,9 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 		return counters;
 	}
 
-	public void addResource(InstallableResource d) throws IOException {
-		// TODO
+	public void addResource(InstallableResource r) throws IOException {
+	    // TODO do not add if we already have it, based on digest
+	    installerThread.addResource(new RegisteredResource(bundleContext, r));
 	}
 
 	public void registerResources(Collection<InstallableResource> data,
@@ -115,5 +117,9 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 	public Storage getStorage() {
 		// TODO
 		return null;
+	}
+	
+	public void incrementCounter(int index) {
+	    counters[index]++;
 	}
 }

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,9 +42,9 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
         setupInstaller();
     }
     
-    @AfterClass
-    public void cleanup() {
-        super.cleanup();
+    @After
+    public void tearDown() {
+        super.tearDown();
     }
 
 	@Test
@@ -60,8 +60,10 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
     	{
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
     	    resetCounters();
-    	    installer.addResource(getInstallableResource(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
-    	    waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
+    	    installer.addResource(getInstallableResource(
+    	            getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
+    	    // wait for two tasks: install and start
+    	    waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
     	    final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.1 must be found after waitForInstallerAction", b);
         	bundleId = b.getBundleId();
@@ -69,18 +71,21 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
         	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
     	}
 
-    	/** TODO
+        /** TODO
     	// Upgrade to later version, verify
     	{
-        	c.scheduleInstallOrUpdate(uri, new FileInstallableResource(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
-        	c.executeScheduledOperations();
+    	    resetCounters();
+            installer.addResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
+            // wait for two tasks: update (includes stop) and start
+            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after waitForInstallerAction", b);
         	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-        	assertEquals("Version must be 1.2 after upgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
-        	assertEquals("Bundle ID must not change after upgrade", bundleId, b.getBundleId());
+        	assertEquals("Version must be 1.2 after update", "1.2", b.getHeaders().get(BUNDLE_VERSION));
+        	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
-    	
+
     	// Downgrade to lower version, installed bundle must not change
     	{
         	c.scheduleInstallOrUpdate(uri, new FileInstallableResource(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));

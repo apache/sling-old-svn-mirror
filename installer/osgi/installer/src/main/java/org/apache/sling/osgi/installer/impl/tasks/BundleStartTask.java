@@ -20,15 +20,16 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
+import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.impl.Activator;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.log.LogService;
 
 /** Task that starts a bundle */
-public class BundleStartTask extends OsgiControllerTask {
+public class BundleStartTask extends OsgiInstallerTask {
 
 	private final long bundleId;
 	private final String sortKey;
@@ -50,7 +51,7 @@ public class BundleStartTask extends OsgiControllerTask {
 		return getClass().getSimpleName() + " (bundle " + bundleId + ")";
 	}
 
-	public void execute(OsgiControllerContext tctx) throws Exception {
+	public void execute(OsgiInstallerContext tctx) throws Exception {
 		final Bundle b = tctx.getBundleContext().getBundle(bundleId);
 		final LogService log = tctx.getLogService();
 		boolean needToRetry = false;
@@ -101,10 +102,11 @@ public class BundleStartTask extends OsgiControllerTask {
 	        }
 		}
 		retryCount++;
+		tctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
 	}
 	
 	/** Do not execute this task if waiting for events */
-    public boolean isExecutable(OsgiControllerContext tctx) {
+    public boolean isExecutable(OsgiInstallerContext tctx) {
         final long eventsCount = Activator.getTotalEventsCount(); 
         final boolean result = eventsCount >= eventsCountForRetrying; 
         if(!result) {

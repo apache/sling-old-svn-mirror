@@ -18,28 +18,28 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-/** Base class for tasks that can be executed by the OsgiController */ 
-public abstract class OsgiControllerTask implements Comparable<OsgiControllerTask> {
+/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */ 
+public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 	/** Execute this task */
-	public abstract void execute(OsgiControllerContext ctx) throws Exception;
+	public abstract void execute(OsgiInstallerContext ctx) throws Exception;
 	
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
 
 	/** All comparisons are based on getSortKey() */
-	public final int compareTo(OsgiControllerTask o) {
+	public final int compareTo(OsgiInstallerTask o) {
 		return getSortKey().compareTo(o.getSortKey());
 	}
 	
 	/** Is it worth executing this task now? */
-	public boolean isExecutable(OsgiControllerContext ctx) throws Exception {
+	public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
 	    return true;
 	}
 
 	@Override
 	public final boolean equals(Object o) {
-		if(o instanceof OsgiControllerTask) {
-			return getSortKey().equals(((OsgiControllerTask)o).getSortKey());
+		if(o instanceof OsgiInstallerTask) {
+			return getSortKey().equals(((OsgiInstallerTask)o).getSortKey());
 		}
 		return false;
 	}

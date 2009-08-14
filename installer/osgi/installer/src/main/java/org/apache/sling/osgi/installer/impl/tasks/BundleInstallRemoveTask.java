@@ -23,27 +23,26 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.jar.Manifest;
 
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.Storage;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.log.LogService;
 
-/** Install/remove task for bundles */
+/** Install/remove task for bundles 
+ *  TODO unusued? remove? */
 public class BundleInstallRemoveTask extends InstallRemoveTask {
 
 	private final BundleContext bundleContext;
 	
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
-    public BundleInstallRemoveTask(String uri, RegisteredResource data, BundleContext ctx, OsgiControllerContext ocs) {
+    public BundleInstallRemoveTask(String uri, RegisteredResource data, OsgiInstallerContext ocs) {
     	super(uri, data, ocs);
-    	this.bundleContext = ctx;
+    	this.bundleContext = ocs.getBundleContext();
     }
     
 	@Override
@@ -56,7 +55,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected void doUninstall(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
+	protected void doUninstall(OsgiInstallerContext tctx, Map<String, Object> attributes) throws Exception {
         final Long longId = (Long) attributes.get(Storage.KEY_BUNDLE_ID);
         if (longId == null) {
         	if(ocs.getLogService() != null) {
@@ -80,7 +79,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected boolean doInstallOrUpdate(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiInstallerContext tctx, Map<String, Object> attributes) throws Exception {
 
     	// Check that we have bundle data and manifest
     	InputStream is = data.getInputStream();
@@ -95,7 +94,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 
         // Update if we already have a bundle id, else install
 		Bundle b;
-		boolean updated;
+		boolean updated = false;
 		try {
 			b = null;
 			updated = false;

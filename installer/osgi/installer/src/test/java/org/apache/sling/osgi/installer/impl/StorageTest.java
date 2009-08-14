@@ -29,7 +29,7 @@ import java.util.Map;
 /** Test the Storage class */
 public class StorageTest {
 
-	private final OsgiControllerContext ocs = new MockOsgiControllerContext();
+	private final OsgiInstallerContext ocs = new MockOsgiControllerContext();
 	
     @org.junit.Test public void testEmptyDataFile() throws Exception {
         final Storage s = new Storage(Utilities.getTestFile(), ocs);

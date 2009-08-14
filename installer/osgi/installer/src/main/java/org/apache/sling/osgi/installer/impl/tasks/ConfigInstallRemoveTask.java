@@ -21,7 +21,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.log.LogService;
@@ -33,7 +33,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
     
-	public ConfigInstallRemoveTask(String uri, RegisteredResource data, OsgiControllerContext ocs) {
+	public ConfigInstallRemoveTask(String uri, RegisteredResource data, OsgiInstallerContext ocs) {
 		super(uri, data, ocs);
 	}
 	
@@ -47,7 +47,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected boolean doInstallOrUpdate(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
+	protected boolean doInstallOrUpdate(OsgiInstallerContext tctx, Map<String, Object> attributes) throws Exception {
     	// Convert data to a configuration Dictionary
     	Dictionary dict = data.getDictionary();
 
@@ -88,7 +88,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 	}
 
 	@Override
-	protected void doUninstall(OsgiControllerContext tctx, Map<String, Object> attributes) throws Exception {
+	protected void doUninstall(OsgiInstallerContext tctx, Map<String, Object> attributes) throws Exception {
         final ConfigurationPid pid = new ConfigurationPid(uri);
         final Configuration cfg = TaskUtilities.getConfiguration(pid, false, ocs);
         // TODO defer delete if ConfigAdmin not available?

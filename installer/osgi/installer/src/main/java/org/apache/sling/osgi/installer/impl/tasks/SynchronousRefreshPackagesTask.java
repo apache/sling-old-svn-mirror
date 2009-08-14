@@ -18,21 +18,21 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
-import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 
 /** Task that executes an OSGi "refresh packages" operation, synchronously */
-public class SynchronousRefreshPackagesTask extends OsgiControllerTask implements FrameworkListener {
+public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
 
     /** Max time allowed to refresh packages (TODO configurable??) */
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
 	private int packageRefreshEventsCount;
-	private OsgiControllerContext ctx;
+	private OsgiInstallerContext ctx;
 
     /**
      * Handles the PACKAGES_REFRESHED framework event which is sent after
@@ -61,7 +61,7 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
 		return getClass().getSimpleName();
 	}
 
-	public void execute(OsgiControllerContext ctx) throws Exception {
+	public void execute(OsgiInstallerContext ctx) throws Exception {
 		this.ctx = ctx;
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
@@ -72,7 +72,7 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
         // this task executes
     	for(Bundle b : ctx.getBundleContext().getBundles()) {
     		if(b.getState() == Bundle.ACTIVE) {
-    			final OsgiControllerTask t = new BundleStartTask(b.getBundleId());
+    			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId());
     			ctx.addTaskToCurrentCycle(t);
             	if(ctx.getLogService() != null) {
             		ctx.getLogService().log(LogService.LOG_DEBUG, 
