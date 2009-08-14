@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.apache.sling.osgi.installer.impl.ConfigurationPid;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -31,7 +32,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
-    static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
+    public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
     
 	public ConfigInstallRemoveTask(String uri, RegisteredResource data, OsgiInstallerContext ocs) {
 		super(uri, data, ocs);

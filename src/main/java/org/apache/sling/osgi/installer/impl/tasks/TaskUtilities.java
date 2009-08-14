@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.sling.osgi.installer.impl.ConfigurationPid;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
@@ -51,41 +52,6 @@ class TaskUtilities {
     	return null;
     }
 
-    /** Read the manifest from the RegisteredResource */
-    static Manifest getManifest(RegisteredResource data) throws IOException {
-    	Manifest result = null;
-        InputStream ins = data.getInputStream();
-        if (ins == null) {
-        	return null;
-       	}
-
-        JarInputStream jis = null;
-        try {
-            jis = new JarInputStream(ins);
-            result= jis.getManifest();
-
-        } finally {
-
-            // close the jar stream or the inputstream, if the jar
-            // stream is set, we don't need to close the input stream
-            // since closing the jar stream closes the input stream
-            if (jis != null) {
-                try {
-                    jis.close();
-                } catch (IOException ignore) {
-                }
-            } else {
-                // ins is never null here
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-
-        return result;
-    }
-    
     /** Get or create configuration */
     static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
     throws IOException, InvalidSyntaxException

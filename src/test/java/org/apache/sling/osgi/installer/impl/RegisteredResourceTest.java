@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +37,11 @@ import org.apache.sling.osgi.installer.InstallableResource;
 
 public class RegisteredResourceTest {
 	
+    static File getTestBundle(String name) {
+        return new File(System.getProperty("osgi.installer.base.dir"),
+                "org.apache.sling.osgi.installer-" + System.getProperty("osgi.installer.pom.version") + "-" + name);
+    }
+    
 	@org.junit.Test public void testStreamIsClosed() throws Exception {
 		final String data = "some data";
 		
@@ -70,6 +77,7 @@ public class RegisteredResourceTest {
             assertNotNull("BUNDLE resource provides an InputStream", rs);
             rs.close();
             assertNull("BUNDLE resource does not provide a Dictionary", r.getDictionary());
+            assertEquals("RegisteredResource entity ID must match", "jar:1.jar", r.getEntityId());
         }
         
         {
@@ -161,5 +169,20 @@ public class RegisteredResourceTest {
                 r1.getDigest(),
                 r2.getDigest()
         );
+    }
+    
+    @org.junit.Test public void testBundleManifest() throws Exception {
+        final File f = getTestBundle("testbundle-1.0.jar");
+        final InstallableResource i = new InstallableResource(f.getAbsolutePath(), new FileInputStream(f), f.getName());
+        final RegisteredResource r = new LocalFileRegisteredResource(i);
+        assertNotNull("RegisteredResource must have manifest", r.getManifest());
+        assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
+    }
+    
+    @org.junit.Test public void testConfigEntity() throws Exception {
+        final InstallableResource i = new InstallableResource("/foo/someconfig", new Hashtable<String, Object>());
+        final RegisteredResource r = new LocalFileRegisteredResource(i);
+        assertNull("RegisteredResource must not have manifest", r.getManifest());
+        assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
     }
 }

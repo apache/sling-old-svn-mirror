@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.osgi.service.log.LogService;
 
 /** Worker thread where all OSGi tasks are executed.
@@ -36,8 +35,8 @@ import org.osgi.service.log.LogService;
 class OsgiInstallerThread extends Thread {
     
     private final OsgiInstallerContext ctx;
+    private final RegisteredResourceList registeredResources = new RegisteredResourceList();
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
-    private final List<RegisteredResource> registeredResources = new LinkedList<RegisteredResource>();
     private final TreeSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     
     OsgiInstallerThread(OsgiInstallerContext ctx) {
@@ -50,9 +49,21 @@ class OsgiInstallerThread extends Thread {
         while(true) {
             // TODO do nothing if nothing to process!
             try {
-                mergeNewResources();
-                computeListOfTasks();
+                // Add new resources to the list
+                synchronized (newResources) {
+                    for(RegisteredResource r : newResources) {
+                        registeredResources.add(r);
+                    }
+                    newResources.clear();
+                }
+                
+                // Compute OSGi tasks based on the list of resources
+                tasks.addAll(registeredResources.getTasks());
+                
+                // Execute all tasks
                 executeTasks();
+                
+                // Wait a bit before next cycle
                 Thread.sleep(250);
             } catch(Exception e) {
                 if(ctx.getLogService() != null) {
@@ -62,21 +73,6 @@ class OsgiInstallerThread extends Thread {
                     Thread.sleep(1000);
                 } catch(InterruptedException ignored) {
                 }
-            }
-        }
-    }
-    
-    private void mergeNewResources() {
-        synchronized (newResources) {
-            registeredResources.addAll(newResources);
-            newResources.clear();
-        }
-    }
-    
-    private void computeListOfTasks() {
-        for(RegisteredResource r : registeredResources) {
-            if(r.getResourceType() == RegisteredResource.ResourceType.BUNDLE) {
-                tasks.add(new BundleInstallTask(r));
             }
         }
     }
