@@ -22,21 +22,23 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
-/** Controller that installs/updates/removes InstallableData
- * 	in the OSGi framework. The client can register a number of such
- *  resources, and the controller decides based on the resource weights,
- *	bundle version numbers, etc. which ones are actually installed.
+/** OSGi Service that installs/updates/removes InstallableData
+ * 	in the OSGi framework. 
+ * 
+ *  The client can register a number of such resources, and the 
+ *  installer decides based on the resource weights, bundle version 
+ *  numbers, etc. which ones are actually installed.
  *
  *	An InstallableResource can be a bundle, a configuration, and later 
  *	we might support deployment packages as well.    	
  */
-public interface OsgiController {
+public interface OsgiInstaller {
 	
-	/** Provide the controller with the complete list of installable
+	/** Provide the installer with the complete list of installable
 	 * 	resources for a given client.
 	 * 
-	 * 	Client must call this at startup and/or when the controller 
-	 * 	service becomes available. The controller stores the list of
+	 * 	Client must call this at startup and/or when the installer 
+	 * 	service becomes available. The installer stores the list of
 	 * 	previously registered/added resources, compares with the new
 	 * 	list and removes resources that have disappeared.
 	 * 
@@ -46,12 +48,12 @@ public interface OsgiController {
 	 */
 	void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException;
 	
-	/** Inform the controller that a resource is available for installation.
+	/** Inform the installer that a resource is available for installation.
 	 * 	also called if the resource has been modified since it was registered.
 	 */
 	void addResource(InstallableResource d) throws IOException;
 	
-	/** Inform the controller that a resource is no longer available */
+	/** Inform the installer that a resource is no longer available */
 	void removeResource(InstallableResource d) throws IOException;
 	
 	/** Return counters used for statistics, console display, testing, etc. */

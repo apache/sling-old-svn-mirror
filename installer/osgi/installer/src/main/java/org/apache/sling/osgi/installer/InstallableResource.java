@@ -28,6 +28,7 @@ import java.util.Dictionary;
 public class InstallableResource {
 	private final String url;
 	private final String extension;
+	private final String digest;
 	private final InputStream inputStream;
 	private final Dictionary<String, Object> dictionary;
 	
@@ -37,22 +38,41 @@ public class InstallableResource {
 		this.extension = getExtension(url);
 		this.inputStream = null;
 		this.dictionary = null;
+		this.digest = null;
 	}
 	
-	/** Create a data object that wraps an InputStream */
-	public InstallableResource(String url, InputStream is) {
+	/** Create a data object that wraps an InputStream 
+	 *  @param url unique URL of the supplied data, must start with the scheme used 
+	 *     {@link OsgiInstaller#registerResources} call
+	 *  @param is the resource contents
+	 *  @param digest must be supplied by client. Does not need to be an actual digest
+	 *     of the contents, but must change if the contents change. Having this supplied
+	 *     by the client avoids having to compute real digests to find out if a resource
+	 *     has changed, which can be expensive.        
+	 */
+	public InstallableResource(String url, InputStream is, String digest) {
 		this.url = url;
 		this.extension = getExtension(url);
 		this.inputStream = is;
 		this.dictionary = null;
+		this.digest = digest;
 	}
 	
-	/** Create a data object that wraps a Dictionary */
+	/** Create a data object that wraps a Dictionary. Digest will be computed
+	 *  by the installer in this case, as configuration dictionaries are 
+	 *  usually small so computing a real digest to find out if they changed
+	 *  is ok.
+	 *  
+     *  @param url unique URL of the supplied data, must start with the scheme used 
+     *     {@link OsgiInstaller#registerResources} call
+     *  @param is the resource contents
+	 */
 	public InstallableResource(String url, Dictionary<String, Object> d) {
 		this.url = url;
 		this.extension = getExtension(url);
 		this.inputStream = null;
 		this.dictionary = d;
+        this.digest = null;
 	}
 
 	@Override
@@ -66,9 +86,9 @@ public class InstallableResource {
 		return (pos < 0 ? "" : url.substring(pos+1));
 	}
 	
-	/** Return this data's URL. It is opaque for the {@link OsgiController}
+	/** Return this data's URL. It is opaque for the {@link OsgiInstaller}
 	 * 	but the scheme must be the one used in the 
-	 * 	{@link OsgiController#registerResources} call.
+	 * 	{@link OsgiInstaller#registerResources} call.
 	 */
 	public String getURL() {
 		return url;
@@ -88,5 +108,9 @@ public class InstallableResource {
 
 	public Dictionary<String, Object> getDictionary() {
 		return dictionary;
+	}
+	
+	public String getDigest() {
+	    return digest;
 	}
 }

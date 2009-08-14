@@ -31,8 +31,12 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -58,6 +62,8 @@ public class RegisteredResource {
 	public RegisteredResource(BundleContext ctx, InstallableResource input) throws IOException {
 		url = input.getUrl();
 		
+		// TODO if input.url ends with a "config" extension, convert to dictionary
+		
 		try {
 			if(input.getDictionary() == null) {
 				dictionary = null;
@@ -65,12 +71,16 @@ public class RegisteredResource {
 					throw new IllegalArgumentException("input provides no Dictionary and no InputStream:" + input);
 				} else {
 					dataFile = getDataFile(ctx);
-					digest = copyToLocalStorage(input.getInputStream(), dataFile);
+					copyToLocalStorage(input.getInputStream(), dataFile);
+					digest = input.getDigest();
+					if(digest == null || digest.length() == 0) {
+					    throw new IllegalArgumentException(
+					            "Digest must be supplied for an InstallableResource that wraps an InputStream");
+					}
 				}
 			} else {
-				// TODO Copy dictionary
 				dataFile = null;
-				dictionary = input.getDictionary();
+				dictionary = copy(input.getDictionary());
 				digest = computeDigest(dictionary);
 			}
 			
@@ -135,16 +145,14 @@ public class RegisteredResource {
         return new String(bigInt.toString(16));
     }
     
-    /** Copy data to local storage and return digest */
-	private String copyToLocalStorage(InputStream data, File f) throws IOException, NoSuchAlgorithmException {
-        final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
+    /** Copy data to local storage */
+	private void copyToLocalStorage(InputStream data, File f) throws IOException, NoSuchAlgorithmException {
 		final OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
 		try {
 			final byte[] buffer = new byte[16384];
 			int count = 0;
 			while( (count = data.read(buffer, 0, buffer.length)) > 0) {
 				os.write(buffer, 0, count);
-				d.update(buffer, 0, count);
 			}
 			os.flush();
 		} finally {
@@ -152,7 +160,6 @@ public class RegisteredResource {
 				os.close();
 			}
 		}
-		return digestToString(d);
 	}
 	
 	/** Convert InputStream to Dictionary using our extended properties format,
@@ -168,5 +175,20 @@ public class RegisteredResource {
             result.put(v.getKey(), v.getValue());
         }
         return result;
+	}
+	
+	/** Copy given Dictionary, sorting keys */
+	static Dictionary<String, Object> copy(Dictionary<String, Object> d) {
+	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
+	    final List<String> keys = new ArrayList<String>();
+	    final Enumeration<String> e = d.keys();
+	    while(e.hasMoreElements()) {
+	        keys.add(e.nextElement());
+	    }
+	    Collections.sort(keys);
+	    for(String key : keys) {
+	        result.put(key, d.get(key));
+	    }
+	    return result;
 	}
 }

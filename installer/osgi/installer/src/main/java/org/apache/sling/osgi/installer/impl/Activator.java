@@ -20,7 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -43,7 +43,7 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     private ServiceTracker startLevelTracker;
     private ServiceTracker packageAdminTracker;
     private ServiceTracker logServiceTracker;
-    private OsgiControllerImpl osgiControllerService;
+    private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
     
     private static long eventsCount;
@@ -71,11 +71,11 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             
             // Assume PackageAdmin is available before this bundle is started.
             // That's the case when using Felix OSGi, not sure about other frameworks.
-            this.osgiControllerService = new OsgiControllerImpl(context,
+            this.osgiControllerService = new OsgiInstallerImpl(context,
                     (PackageAdmin)checkNotNull(this.packageAdminTracker.getService(), "PackageAdmin"),
                     logServiceTracker);
             final String [] serviceInterfaces = {
-                    OsgiController.class.getName()
+                    OsgiInstaller.class.getName()
             };
             osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
         }
