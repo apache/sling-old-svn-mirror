@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.impl.OsgiControllerContext;
-import org.apache.sling.osgi.installer.impl.OsgiControllerImpl;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.Storage;
 import org.osgi.framework.Bundle;

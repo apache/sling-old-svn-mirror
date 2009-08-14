@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -32,15 +32,15 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** OsgiController service */
-public class OsgiControllerImpl implements OsgiController, OsgiControllerContext {
+/** OsgiInstaller service implementation */
+public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 
 	private final BundleContext bundleContext;
     private final PackageAdmin packageAdmin;
     private final ServiceTracker logServiceTracker;
     private Map<String, Long> counters = new HashMap<String, Long>();
 
-    public OsgiControllerImpl(final BundleContext bc,
+    public OsgiInstallerImpl(final BundleContext bc,
                               final PackageAdmin pa,
                               final ServiceTracker logServiceTracker)
     throws IOException {
@@ -52,7 +52,7 @@ public class OsgiControllerImpl implements OsgiController, OsgiControllerContext
     public void deactivate() {
         if(getLogService() != null) {
             getLogService().log(LogService.LOG_WARNING,
-                    OsgiController.class.getName()
+                    OsgiInstaller.class.getName()
                     + " service deactivated - this warning can be ignored if system is shutting down");
         }
     }
