@@ -27,9 +27,13 @@ import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.junit.Before;
+import org.junit.AfterClass;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
@@ -40,15 +44,22 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
-/** Base class for OsgiController testing */
-class OsgiControllerTestBase implements FrameworkListener {
+/** Base class for OsgiInstaller testing */
+class OsgiInstallerTestBase implements FrameworkListener {
 	public final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
+	private ServiceTracker configAdminTracker;
+	protected OsgiInstaller installer;
+	private long [] counters;
+	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
 	
     @Inject
     protected BundleContext bundleContext;
+    
+    public static final String URL_SCHEME = "OsgiInstallerTestBase://";
     
     @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
@@ -57,6 +68,18 @@ class OsgiControllerTestBase implements FrameworkListener {
     	final T result = (T)(bundleContext.getService(ref));
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
+    }
+    
+    public void setupInstaller() {
+        installer = getService(OsgiInstaller.class);
+        resetCounters();
+    }
+    
+    public void cleanup() {
+        if(configAdminTracker != null) {
+            configAdminTracker.close();
+            configAdminTracker = null;
+        }
     }
     
     protected void generateBundleEvent() throws Exception {
@@ -142,18 +165,59 @@ class OsgiControllerTestBase implements FrameworkListener {
     	return new File(System.getProperty("osgi.installer.base.dir"), bundleName);
     }
     
+    protected InstallableResource getInstallableResource(File testBundle) throws IOException {
+        final String url = URL_SCHEME + testBundle.getAbsolutePath();
+        final String digest = testBundle.getAbsolutePath() + testBundle.lastModified();
+        return new InstallableResource(url, new FileInputStream(testBundle), digest);
+    }
+    
     protected void waitForConfigAdmin(boolean shouldBePresent) throws InterruptedException {
-    	final OsgiControllerServices svc = getService(OsgiControllerServices.class);
+        if(configAdminTracker == null) {
+            synchronized (this) {
+                configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+                configAdminTracker.open();
+            }
+        }
+        
     	final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
     	do {
-    		boolean isPresent = svc.getConfigurationAdmin() != null;
+    		boolean isPresent = configAdminTracker.getService() != null;
     		if(isPresent == shouldBePresent) {
     			return;
     		}
     		Thread.sleep(100L);
     	} while(System.currentTimeMillis() < waitUntil);
     	fail("ConfigurationAdmin service not available after waiting " + timeout + " seconds");
+    }
+    
+    protected void resetCounters() {
+        final long [] src = installer.getCounters();
+        counters = new long[src.length];
+        System.arraycopy(installer.getCounters(), 0, counters, 0, src.length);
+    }
+    
+    protected void sleep(long msec) {
+        try {
+            Thread.sleep(msec);
+        } catch(InterruptedException ignored) {
+        }
+    }
+    
+    protected void waitForInstallerAction(int counterType, long howMany) {
+        final long targetValue = counters[counterType] + howMany;
+        final long endTime = System.currentTimeMillis() + WAIT_FOR_ACTION_TIMEOUT_MSEC;
+        long lastValue = 0;
+        while(System.currentTimeMillis() < endTime) {
+            lastValue = installer.getCounters()[counterType]; 
+            if(lastValue >= targetValue) {
+                return;
+            }
+            sleep(10);
+        }
+        fail("waitForInstallerAction(" + counterType + "," + howMany 
+                + ") fails after " + WAIT_FOR_ACTION_TIMEOUT_MSEC + " msec"
+                + ", expected value " + targetValue + ", actual " + lastValue);
     }
     
     public static Option[] defaultConfiguration() {

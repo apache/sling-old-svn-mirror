@@ -20,8 +20,6 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -38,7 +36,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 	private final BundleContext bundleContext;
     private final PackageAdmin packageAdmin;
     private final ServiceTracker logServiceTracker;
-    private Map<String, Long> counters = new HashMap<String, Long>();
+    private long [] counters = new long[COUNTERS_SIZE];
 
     public OsgiInstallerImpl(final BundleContext bc,
                               final PackageAdmin pa,
@@ -97,7 +95,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiControllerContext {
 		return packageAdmin;
 	}
 	
-	public Map<String, Long> getCounters() {
+	public long [] getCounters() {
 		return counters;
 	}
 
