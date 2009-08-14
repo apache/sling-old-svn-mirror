@@ -32,8 +32,6 @@ import java.io.InputStream;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.junit.Before;
-import org.junit.AfterClass;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
@@ -75,7 +73,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         resetCounters();
     }
     
-    public void cleanup() {
+    public void tearDown() {
         if(configAdminTracker != null) {
             configAdminTracker.close();
             configAdminTracker = null;
