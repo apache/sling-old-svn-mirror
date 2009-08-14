@@ -39,11 +39,14 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
@@ -54,7 +57,9 @@ public class RegisteredResource {
 	private final String url;
 	private final String digest;
 	private final File dataFile;
+	private final String entity;
 	private final Dictionary<String, Object> dictionary;
+	private final Manifest manifest;
 	private static long fileNumber;
 	
 	static enum State {
@@ -75,6 +80,9 @@ public class RegisteredResource {
     private final ResourceType resourceType;
 	
 	public static final String DIGEST_TYPE = "MD5";
+    public static final String ENTITY_JAR_PREFIX = "jar:";
+	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
+	public static final String ENTITY_CONFIG_PREFIX = "config:";
 	
 	/** Create a RegisteredResource from given data. If the data's extension
 	 *  maps to a configuration and the data provides an input stream, it is
@@ -98,8 +106,21 @@ public class RegisteredResource {
                     throw new IllegalArgumentException(
                             "Digest must be supplied for BUNDLE resource type: " + input);
                 }
+                manifest = getManifest(getInputStream());
+                String name = null;
+                if(manifest != null) {
+                    name = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                }
+                if(name == null) {
+                    // not a bundle - use "jar" entity to make it easier to find out
+                    entity = ENTITY_JAR_PREFIX + input.getUrl();
+                } else {
+                    entity = ENTITY_BUNDLE_PREFIX + name;
+                }
     		} else {
                 dataFile = null;
+                manifest = null;
+                entity = ENTITY_CONFIG_PREFIX + new ConfigurationPid(input.getUrl()).getCompositePid();
                 if(input.getInputStream() == null) {
                     // config provided as a Dictionary
                     dictionary = copy(input.getDictionary());
@@ -241,11 +262,53 @@ public class RegisteredResource {
         return resourceType;
     }
     
+    public Manifest getManifest() {
+        return manifest;
+    }
+    
     static ResourceType computeResourceType(String extension) {
         if(extension.equals("jar")) {
             return ResourceType.BUNDLE;
         } else {
             return ResourceType.CONFIG;
         }
+    }
+    
+    /** Return the identifier of the OSGi "entity" that this resource
+     *  represents, for example "bundle:SID" where SID is the bundle's
+     *  symbolic ID, or "config:PID" where PID is config's PID. 
+     */
+    public String getEntityId() {
+        return entity;
+    }
+    
+    /** Read the manifest from supplied input stream, which is closed before return */
+    static Manifest getManifest(InputStream ins) throws IOException {
+        Manifest result = null;
+
+        JarInputStream jis = null;
+        try {
+            jis = new JarInputStream(ins);
+            result= jis.getManifest();
+
+        } finally {
+
+            // close the jar stream or the inputstream, if the jar
+            // stream is set, we don't need to close the input stream
+            // since closing the jar stream closes the input stream
+            if (jis != null) {
+                try {
+                    jis.close();
+                } catch (IOException ignore) {
+                }
+            } else {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+
+        return result;
     }
 }

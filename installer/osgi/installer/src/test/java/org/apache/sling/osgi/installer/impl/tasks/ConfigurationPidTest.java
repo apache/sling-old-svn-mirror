@@ -20,6 +20,8 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.sling.osgi.installer.impl.ConfigurationPid;
+
 public class ConfigurationPidTest {
 
     private void assertPid(String path, String expectedPid, String expectedFactoryPid) {

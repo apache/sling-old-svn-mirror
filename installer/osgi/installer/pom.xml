@@ -42,27 +42,68 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/installer/osgi/installer</url>
   </scm>
-  
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-            <instructions>
-                <Bundle-Activator>
-                    org.apache.sling.osgi.installer.impl.Activator
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-Activator>
+							org.apache.sling.osgi.installer.impl.Activator
                 </Bundle-Activator>
-                <Export-Package>
-                    org.apache.sling.osgi.installer
+						<Export-Package>
+							org.apache.sling.osgi.installer
                 </Export-Package>
-                <Private-Package>org.apache.sling.osgi.installer.impl.*</Private-Package>
-            </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+						<Private-Package>org.apache.sling.osgi.installer.impl.*</Private-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemProperties>
+						<property>
+							<name>osgi.installer.base.dir</name>
+							<value>${project.build.directory}</value>
+						</property>
+                        <property>
+                            <name>osgi.installer.pom.version</name>
+                            <value>${pom.version}</value>
+                        </property>
+					</systemProperties>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Create dummy test bundles -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>testbundle-1.0</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<classifier>testbundle-1.0</classifier>
+							<archive>
+								<manifestEntries>
+									<Manifest-Version>2</Manifest-Version>
+									<Bundle-Name>OSGi installer test bundle</Bundle-Name>
+									<Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
+									<Bundle-Version>1.0.4</Bundle-Version>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
   
   <dependencies>
     <dependency>

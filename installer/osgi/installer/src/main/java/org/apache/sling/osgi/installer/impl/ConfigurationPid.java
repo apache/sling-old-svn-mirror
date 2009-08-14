@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl.tasks;
+package org.apache.sling.osgi.installer.impl;
+
+import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar
  *      o.a.s.foo.bar-a.cfg -> pid = o.a.s.foo.bar, factory pid = a 
  */
-class ConfigurationPid {
+public class ConfigurationPid {
     private final String configPid;
     private final String factoryPid;
 
@@ -67,5 +69,9 @@ class ConfigurationPid {
 
     public String getFactoryPid() {
         return factoryPid;
+    }
+    
+    public String getCompositePid() {
+        return (factoryPid == null ? "" : factoryPid + ".") + configPid;
     }
 }

@@ -87,7 +87,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
     		throw new IOException("RegisteredResource does not adapt to an InputStream: " + uri);
     	}
 
-		final Manifest m = TaskUtilities.getManifest(data);
+		final Manifest m = data.getManifest();
 		if(m == null) {
 			throw new IOException("Manifest not found for RegisteredResource " + uri);
 		}
