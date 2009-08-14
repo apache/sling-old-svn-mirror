@@ -23,12 +23,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-public class MockOsgiControllerContext implements OsgiControllerContext {
+public class MockOsgiControllerContext implements OsgiInstallerContext {
 
-	public void addTaskToCurrentCycle(OsgiControllerTask t) {
+	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
 	}
 
-	public void addTaskToNextCycle(OsgiControllerTask t) {
+	public void addTaskToNextCycle(OsgiInstallerTask t) {
 	}
 
 	public BundleContext getBundleContext() {
@@ -50,4 +50,7 @@ public class MockOsgiControllerContext implements OsgiControllerContext {
 	public Storage getStorage() {
 		return null;
 	}
+
+    public void incrementCounter(int index) {
+    }
 }

@@ -23,19 +23,20 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-/** Context for OsgiControllerTask */
-public interface OsgiControllerContext {
+/** Installer context, gives access to selected methods of the {@link OsgiInstallerImpl} */
+public interface OsgiInstallerContext {
 	Storage getStorage();
 	BundleContext getBundleContext();
 	PackageAdmin getPackageAdmin();
 	ConfigurationAdmin getConfigurationAdmin();
 	LogService getLogService();
+	void incrementCounter(int index);
 	
 	/** Schedule a task for execution in the current OsgiController cycle */
-	void addTaskToCurrentCycle(OsgiControllerTask t);
+	void addTaskToCurrentCycle(OsgiInstallerTask t);
 	
 	/** Schedule a task for execution in the next OsgiController cycle, 
 	 * 	usually to indicate that a task must be retried 
 	 */
-	void addTaskToNextCycle(OsgiControllerTask t);
+	void addTaskToNextCycle(OsgiInstallerTask t);
 }

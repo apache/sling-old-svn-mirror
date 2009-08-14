@@ -37,21 +37,21 @@ import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask
  */
 public class TaskOrderingTest {
 
-	private Set<OsgiControllerTask> taskSet;
+	private Set<OsgiInstallerTask> taskSet;
 	
 	@org.junit.Before public void setUp() {
 	    // The data type must be consistent with the "tasks" member
 	    // of the {@link OsgiControllerImpl} class.
-		taskSet = new TreeSet<OsgiControllerTask>(); 
+		taskSet = new TreeSet<OsgiInstallerTask>(); 
 	}
 	
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
 		return new RegisteredResource(null, new InstallableResource(url, new Hashtable<String, Object>()));
 	}
 	
-	private void assertOrder(int testId, Collection<OsgiControllerTask> actual, OsgiControllerTask [] expected) {
+	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {
 		int index = 0;
-		for(OsgiControllerTask t : actual) {
+		for(OsgiInstallerTask t : actual) {
 			if(!t.equals(expected[index])) {
 				fail("Test " + testId + ": at index " + index + ", expected " + expected[index] + " but got " + t);
 			}
@@ -62,11 +62,11 @@ public class TaskOrderingTest {
 	@org.junit.Test 
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
-		final OsgiControllerTask [] tasksInOrder = {
+		final OsgiInstallerTask [] tasksInOrder = {
 			new ConfigInstallRemoveTask("someURI.cfg", null, null),
 			new ConfigInstallRemoveTask("someURI.cfg", getRegisteredResource("someURI.cfg"), null),
-			new BundleInstallRemoveTask("someURI", null, null, null),
-			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.jar"), null, null),
+			new BundleInstallRemoveTask("someURI.jar", null, new MockOsgiControllerContext()),
+			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.cfg"), new MockOsgiControllerContext()),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
@@ -115,15 +115,15 @@ public class TaskOrderingTest {
 	@org.junit.Test 
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
-		final OsgiControllerTask [] tasksInOrder = {
+		final OsgiInstallerTask [] tasksInOrder = {
 			new ConfigInstallRemoveTask("someURIa.cfg", null, null),
 			new ConfigInstallRemoveTask("someURIb.cfg", null, null),
 			new ConfigInstallRemoveTask("someURIa.cfg", getRegisteredResource("someURIa.cfg"), null),
 			new ConfigInstallRemoveTask("someURIb.cfg", getRegisteredResource("someURIb.cfg"), null),
-			new BundleInstallRemoveTask("someURIa.jar", null, null, null),
-			new BundleInstallRemoveTask("someURIb.jar", null, null, null),
-			new BundleInstallRemoveTask("someURIa.jar", getRegisteredResource("someURIa.jar"), null, null),
-			new BundleInstallRemoveTask("someURIb.jar", getRegisteredResource("someURIb.jar"), null, null),
+			new BundleInstallRemoveTask("someURIa.nothing", null, new MockOsgiControllerContext()),
+			new BundleInstallRemoveTask("someURIb.nothing", null, new MockOsgiControllerContext()),
+			new BundleInstallRemoveTask("someURIa.nothing", getRegisteredResource("someURIa.nothing"), new MockOsgiControllerContext()),
+			new BundleInstallRemoveTask("someURIb.nothing", getRegisteredResource("someURIb.nothing"), new MockOsgiControllerContext()),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
@@ -139,11 +139,11 @@ public class TaskOrderingTest {
 	@org.junit.Test 
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
-		final OsgiControllerTask [] tasksInOrder = {
+		final OsgiInstallerTask [] tasksInOrder = {
 			new ConfigInstallRemoveTask("someURI.cfg", null, null),
 			new ConfigInstallRemoveTask("someURI.cfg", getRegisteredResource("someURI.cfg"), null),
-			new BundleInstallRemoveTask("someURI", null, null, null),
-			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.jar"), null, null),
+			new BundleInstallRemoveTask("someURI", null, new MockOsgiControllerContext()),
+			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.nothing"), new MockOsgiControllerContext()),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 			new BundleStartTask(1),
@@ -180,7 +180,7 @@ public class TaskOrderingTest {
 	@org.junit.Test 
 	public void testBundleStartOrder() {
 		int testIndex = 1;
-		final OsgiControllerTask [] tasksInOrder = {
+		final OsgiInstallerTask [] tasksInOrder = {
 			new BundleStartTask(0),
 			new BundleStartTask(1),
 			new BundleStartTask(5),

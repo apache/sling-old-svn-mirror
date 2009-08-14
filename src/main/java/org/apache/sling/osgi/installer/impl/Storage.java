@@ -45,7 +45,7 @@ public class Storage {
     /** Create Storage that uses dataFile for persistence, and
      *  read the current status from that file */
     @SuppressWarnings("unchecked")
-    Storage(File dataFile, OsgiControllerContext ocs) throws IOException {
+    Storage(File dataFile, OsgiInstallerContext ocs) throws IOException {
         this.dataFile = dataFile;
         ObjectInputStream ois = null;
         Map<String, Map<String, Object>> loadedData = null;
