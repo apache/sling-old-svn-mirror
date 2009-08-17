@@ -61,6 +61,9 @@ public interface OsgiInstaller {
 	/** Counter index: number of OSGi tasks executed */
 	int OSGI_TASKS_COUNTER = 0;
 	
+    /** Counter index: number of installer cycles */
+    int INSTALLER_CYCLES_COUNTER = 1;
+    
 	/** Size of the counters array */
-	int COUNTERS_SIZE = 1;
+	int COUNTERS_SIZE = 2;
 }

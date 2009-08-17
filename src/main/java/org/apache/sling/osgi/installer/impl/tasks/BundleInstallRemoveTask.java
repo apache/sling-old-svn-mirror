@@ -50,7 +50,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 		if(isInstallOrUpdate()) {
 			return TaskOrder.BUNDLE_INSTALL_ORDER + uri;
 		} else {
-			return TaskOrder.BUNDLE_UNINSTALL_ORDER + uri;
+			return TaskOrder.BUNDLE_REMOVE_ORDER + uri;
 		}
 	}
 
@@ -87,17 +87,10 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
     		throw new IOException("RegisteredResource does not adapt to an InputStream: " + uri);
     	}
 
-		final Manifest m = data.getManifest();
-		if(m == null) {
-			throw new IOException("Manifest not found for RegisteredResource " + uri);
-		}
-
         // Update if we already have a bundle id, else install
-		Bundle b;
-		boolean updated = false;
+		Bundle b = null;
 		try {
 			b = null;
-			updated = false;
 
 			// check whether we know the bundle and it exists
 			final Long longId = (Long) attributes.get(Storage.KEY_BUNDLE_ID);
@@ -108,7 +101,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			// either we don't know the bundle yet or it does not exist,
 			// so check whether the bundle can be found by its symbolic name
 			if (b == null) {
-			    b = TaskUtilities.getMatchingBundle(bundleContext, m);
+			    b = TaskUtilities.getMatchingBundle(bundleContext, (String)data.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
 			}
 
 			// If the bundle (or one with the same symbolic name) is
@@ -116,7 +109,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			// version
 			if (b != null) {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
-				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+				final Version newBundleVersion = (Version)(data.getAttributes().get(Constants.BUNDLE_VERSION));
 				if(ignoreNewBundle(b.getSymbolicName(), uri, installedVersion, newBundleVersion)) {
 		            return false;
 				}
@@ -130,7 +123,6 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 		    	}
 		        b.stop();
 		        b.update(is);
-			    updated = true;
 			    tctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
 			    tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
 			} else {

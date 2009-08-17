@@ -35,6 +35,7 @@ import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask
 /** Test the ordering and duplicates elimination of
  * 	OsgiControllerTasks
  */
+// TODO add bundleUpdateTask and others
 public class TaskOrderingTest {
 
 	private Set<OsgiInstallerTask> taskSet;
@@ -46,7 +47,7 @@ public class TaskOrderingTest {
 	}
 	
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResource(null, new InstallableResource(url, new Hashtable<String, Object>()));
+		return new RegisteredResourceImpl(null, new InstallableResource(url, new Hashtable<String, Object>()));
 	}
 	
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {

@@ -34,6 +34,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.osgi.framework.Constants;
 
 public class RegisteredResourceTest {
 	
@@ -144,8 +145,8 @@ public class RegisteredResourceTest {
             d2.put(keys[i], keys[i] + "." + keys[i]);
         }
         
-        final RegisteredResource r1 = new RegisteredResource(null, new InstallableResource("url1", d1));
-        final RegisteredResource r2 = new RegisteredResource(null, new InstallableResource("url1", d2));
+        final RegisteredResource r1 = new RegisteredResourceImpl(null, new InstallableResource("url1", d1));
+        final RegisteredResource r2 = new RegisteredResourceImpl(null, new InstallableResource("url1", d2));
         
         assertEquals(
                 "Two RegisteredResource (Dictionary) with same values but different key orderings must have the same key", 
@@ -161,8 +162,8 @@ public class RegisteredResourceTest {
         final ByteArrayInputStream s1 = new ByteArrayInputStream(d1.getBytes());
         final ByteArrayInputStream s2 = new ByteArrayInputStream(d2.getBytes());
         
-        final RegisteredResource r1 = new RegisteredResource(null, new InstallableResource("url1.properties", s1, null));
-        final RegisteredResource r2 = new RegisteredResource(null, new InstallableResource("url2.properties", s2, null));
+        final RegisteredResource r1 = new RegisteredResourceImpl(null, new InstallableResource("url1.properties", s1, null));
+        final RegisteredResource r2 = new RegisteredResourceImpl(null, new InstallableResource("url2.properties", s2, null));
         
         assertEquals(
                 "Two RegisteredResource (InputStream) with same values but different key orderings must have the same key", 
@@ -175,14 +176,14 @@ public class RegisteredResourceTest {
         final File f = getTestBundle("testbundle-1.0.jar");
         final InstallableResource i = new InstallableResource(f.getAbsolutePath(), new FileInputStream(f), f.getName());
         final RegisteredResource r = new LocalFileRegisteredResource(i);
-        assertNotNull("RegisteredResource must have manifest", r.getManifest());
+        assertNotNull("RegisteredResource must have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
     }
     
     @org.junit.Test public void testConfigEntity() throws Exception {
         final InstallableResource i = new InstallableResource("/foo/someconfig", new Hashtable<String, Object>());
         final RegisteredResource r = new LocalFileRegisteredResource(i);
-        assertNull("RegisteredResource must not have manifest", r.getManifest());
+        assertNull("RegisteredResource must not have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
     }
 }

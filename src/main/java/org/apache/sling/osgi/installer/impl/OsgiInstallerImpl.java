@@ -47,7 +47,12 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
         
-        installerThread = new OsgiInstallerThread(this);
+        installerThread = new OsgiInstallerThread(this) {
+            @Override
+            protected void cycleDone() {
+                incrementCounter(INSTALLER_CYCLES_COUNTER);
+            }
+        };
         installerThread.setDaemon(true);
         installerThread.start();
     }
@@ -102,7 +107,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
 	public void addResource(InstallableResource r) throws IOException {
 	    // TODO do not add if we already have it, based on digest
-	    installerThread.addNewResource(new RegisteredResource(bundleContext, r));
+	    installerThread.addNewResource(new RegisteredResourceImpl(bundleContext, r));
 	}
 
 	public void registerResources(Collection<InstallableResource> data,
@@ -110,8 +115,10 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		// TODO
 	}
 
-	public void removeResource(InstallableResource d) throws IOException {
-		// TODO
+	public void removeResource(InstallableResource r) throws IOException {
+		final RegisteredResource rr = new RegisteredResourceImpl(bundleContext, r);
+		rr.setInstallable(false);
+		installerThread.addNewResource(rr);
 	}
 
 	public Storage getStorage() {

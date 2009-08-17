@@ -20,12 +20,37 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Comparator;
 
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+
 /** Comparator that defines priorities between RegisteredResources */
 class RegisteredResourceComparator implements Comparator<RegisteredResource >{
 
     public int compare(RegisteredResource a, RegisteredResource b) {
-        // TODO 
-        return 0;
+        if(a.getResourceType() == RegisteredResource.ResourceType.BUNDLE) {
+            return compareBundles(a, b);
+        } else {
+            return compareConfig(a, b);
+        }
     }
     
+    int compareBundles(RegisteredResource a, RegisteredResource b) {
+        
+        final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String nameB = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        int result = nameA.compareTo(nameB);
+        
+        if(result == 0) {
+            final Version va = (Version)a.getAttributes().get(Constants.BUNDLE_VERSION);
+            final Version vb = (Version)b.getAttributes().get(Constants.BUNDLE_VERSION);
+            // higher version has more priority, must come first so invert comparison
+            result = vb.compareTo(va);
+        }
+        
+        return result;
+    }
+    
+    int compareConfig(RegisteredResource a, RegisteredResource b) {
+        return 0;
+    }
 }

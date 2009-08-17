@@ -18,26 +18,25 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
-/** RegisteredResource that stores data to a local temporary file */
-class LocalFileRegisteredResource extends RegisteredResourceImpl {
-	private File storage;
-	
-	LocalFileRegisteredResource(InstallableResource r) throws IOException {
-		super(null, r);
-	}
-	
-	@Override
-	protected File getDataFile(BundleContext ctx) throws IOException {
-		if(storage == null) {
-			storage = File.createTempFile(getClass().getName(), "test");
-			storage.deleteOnExit();
-		}
-		return storage;
-	}
+/** BundleTaskCreator that simulates the presence and state of bundles */
+class MockBundleTaskCreator extends BundleTaskCreator {
+
+    private final Map<String, BundleInfo> fakeBundleInfo = new HashMap<String, BundleInfo>();
+    
+    void addBundleInfo(String symbolicName, String version, int state) {
+        fakeBundleInfo.put(symbolicName, new BundleInfo(new Version(version), state));
+    }
+    
+    @Override
+    protected BundleInfo getBundleInfo(BundleContext ctx, RegisteredResource bundle) {
+        return fakeBundleInfo.get(bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
+    }
+    
 }

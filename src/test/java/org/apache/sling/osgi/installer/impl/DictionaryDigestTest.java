@@ -33,7 +33,7 @@ public class DictionaryDigestTest {
 	
 	private String testDigestChanged(Dictionary<String, Object> d, 
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = RegisteredResource.computeDigest(d);
+		final String newDigest = RegisteredResourceImpl.computeDigest(d);
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -51,8 +51,8 @@ public class DictionaryDigestTest {
 		
 		assertEquals(
 				"Two dictionary with same values have the same key", 
-				RegisteredResource.computeDigest(d1),
-				RegisteredResource.computeDigest(d2)
+				RegisteredResourceImpl.computeDigest(d1),
+				RegisteredResourceImpl.computeDigest(d2)
 		);
 	}
 	
