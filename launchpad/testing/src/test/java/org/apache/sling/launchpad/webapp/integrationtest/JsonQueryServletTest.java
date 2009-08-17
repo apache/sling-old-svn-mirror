@@ -144,7 +144,7 @@ public class JsonQueryServletTest extends HttpTestBase {
         json = getContent(url, CONTENT_TYPE_JSON, params);
         assertJavascript("1.0", json, counterCode);
         assertJavascript("ok", json, "if(data[0].date) out.print('ok')");
-        assertJavascript("Sun Apr 13 2008 17:55:00 GMT+0200", json, "out.print(data[0].date)");
+        assertJavascript("Sun", json, "out.print(data[0].date.substring(0,3))");
         
         
     }
