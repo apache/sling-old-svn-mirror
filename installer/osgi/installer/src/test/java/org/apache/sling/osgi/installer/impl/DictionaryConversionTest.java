@@ -74,7 +74,7 @@ public class DictionaryConversionTest {
             ;
         
         final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-        final Dictionary<?, ?> d = RegisteredResource.readDictionary(is);
+        final Dictionary<?, ?> d = RegisteredResourceImpl.readDictionary(is);
         is.close();
         
         assertEquals("Number of entries must match", 4, d.size());
@@ -96,7 +96,7 @@ public class DictionaryConversionTest {
             ;
         
         final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-        final Dictionary<?, ?> d = RegisteredResource.readDictionary(is);
+        final Dictionary<?, ?> d = RegisteredResourceImpl.readDictionary(is);
         is.close();
         
         assertEquals("Number of entries must match", 5, d.size());

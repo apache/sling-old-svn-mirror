@@ -71,14 +71,13 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
         	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
     	}
 
-        /** TODO
     	// Upgrade to later version, verify
     	{
     	    resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
             // wait for two tasks: update (includes stop) and start
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
+            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after waitForInstallerAction", b);
         	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
@@ -87,16 +86,21 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
     	}
 
     	// Downgrade to lower version, installed bundle must not change
-    	{
-        	c.scheduleInstallOrUpdate(uri, new FileInstallableResource(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
-        	c.waitForInstallerAction();
-        	final Bundle b = findBundle(symbolicName);
-        	assertNotNull("Test bundle 1.2 must be found after waitForInstallerAction", b);
-        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-        	assertEquals("Version must be 1.2 after ignored downgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
-        	assertEquals("Bundle ID must not change after downgrade", bundleId, b.getBundleId());
-    	}
+        {
+            resetCounters();
+            installer.addResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
+            
+            // wait for two cycles to make sure no updates happen
+            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+            final Bundle b = findBundle(symbolicName);
+            assertNotNull("Test bundle 1.2 must still be found after waitForInstallerAction", b);
+            assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
+            assertEquals("Version must be 1.2 after ignored downgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
+            assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
+        }
     	
+        /** TODO
     	// Uninstall
     	{
         	c.scheduleUninstall(uri);

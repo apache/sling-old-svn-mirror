@@ -1,22 +1,17 @@
 package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.impl.ConfigurationPid;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
-import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /** Misc.utilities for classes of this package */
-class TaskUtilities {
+public class TaskUtilities {
     /**
      * Returns a bundle with the same symbolic name as the bundle provided in
      * the installable data. If the installable data has no manifest file or the
@@ -36,14 +31,13 @@ class TaskUtilities {
      *         with a symbolic name.
      * @throws IOException If an error occurrs reading from the input stream.
      */
-    static Bundle getMatchingBundle(BundleContext ctx, Manifest m) throws IOException {
+    public static Bundle getMatchingBundle(BundleContext ctx, String bundleSymbolicName) {
 
-        final String symbolicName = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-        if (symbolicName != null) {
+        if (bundleSymbolicName != null) {
 
             Bundle[] bundles = ctx.getBundles();
             for (Bundle bundle : bundles) {
-                if (symbolicName.equals(bundle.getSymbolicName())) {
+                if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
                     return bundle;
                 }
             }
@@ -53,7 +47,7 @@ class TaskUtilities {
     }
 
     /** Get or create configuration */
-    static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
+    public static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
     throws IOException, InvalidSyntaxException
     {
     	final ConfigurationAdmin configurationAdmin = ocs.getConfigurationAdmin();
