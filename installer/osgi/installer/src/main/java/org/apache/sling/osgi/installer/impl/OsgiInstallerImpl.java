@@ -102,7 +102,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
 	public void addResource(InstallableResource r) throws IOException {
 	    // TODO do not add if we already have it, based on digest
-	    installerThread.addResource(new RegisteredResource(bundleContext, r));
+	    installerThread.addNewResource(new RegisteredResource(bundleContext, r));
 	}
 
 	public void registerResources(Collection<InstallableResource> data,

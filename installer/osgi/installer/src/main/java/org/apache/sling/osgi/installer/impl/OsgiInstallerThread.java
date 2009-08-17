@@ -18,8 +18,10 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.osgi.service.log.LogService;
@@ -35,9 +37,22 @@ import org.osgi.service.log.LogService;
 class OsgiInstallerThread extends Thread {
     
     private final OsgiInstallerContext ctx;
-    private final RegisteredResourceList registeredResources = new RegisteredResourceList();
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
     private final TreeSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
+    
+    /** Group our RegisteredResource by OSGi entity */ 
+    private final Map<String, TreeSet<RegisteredResource>> registeredResources = 
+    	new HashMap<String, TreeSet<RegisteredResource>>();
+    
+    static interface TaskCreator {
+    	/** Add the required OsgiInstallerTasks to the tasks collection, so that the resources reach
+    	 * 	their desired states.
+    	 * 	@param resources ordered set of RegisteredResource which all have the same entityId
+    	 * 	@param tasks lists of tasks, to which we'll add the ones computed by this method
+    	 */
+    	void createTasks(TreeSet<RegisteredResource> resources, TreeSet<OsgiInstallerTask> tasks);
+    }
+    private final TaskCreator bundleTaskCreator = new BundleTaskCreator();
     
     OsgiInstallerThread(OsgiInstallerContext ctx) {
         setName(getClass().getSimpleName());
@@ -49,21 +64,9 @@ class OsgiInstallerThread extends Thread {
         while(true) {
             // TODO do nothing if nothing to process!
             try {
-                // Add new resources to the list
-                synchronized (newResources) {
-                    for(RegisteredResource r : newResources) {
-                        registeredResources.add(r);
-                    }
-                    newResources.clear();
-                }
-                
-                // Compute OSGi tasks based on the list of resources
-                tasks.addAll(registeredResources.getTasks());
-                
-                // Execute all tasks
+            	mergeNewResources();
+                computeTasks();
                 executeTasks();
-                
-                // Wait a bit before next cycle
                 Thread.sleep(250);
             } catch(Exception e) {
                 if(ctx.getLogService() != null) {
@@ -86,6 +89,43 @@ class OsgiInstallerThread extends Thread {
         }
     }
     
+    /** Register a new resource, will be processed on the next cycle */
+    void addNewResource(RegisteredResource r) {
+        synchronized (newResources) {
+            newResources.add(r);
+        }
+    }
+    
+    private void addRegisteredResource(RegisteredResource r) {
+        TreeSet<RegisteredResource> t = registeredResources.get(r.getEntityId());
+        if(t == null) {
+            t = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+            registeredResources.put(r.getEntityId(), t);
+        }
+        t.add(r);
+
+    }
+    
+    private void mergeNewResources() {
+        synchronized (newResources) {
+            for(RegisteredResource r : newResources) {
+            	addRegisteredResource(r);
+            }
+            newResources.clear();
+        }
+    }
+    
+    private void computeTasks() {
+        // Walk the list of entities, and create appropriate OSGi tasks for each group
+        for(TreeSet<RegisteredResource> group : registeredResources.values()) {
+        	if(group.first().getResourceType().equals(RegisteredResource.ResourceType.BUNDLE)) {
+        		bundleTaskCreator.createTasks(group, tasks);
+        	} else {
+        		throw new IllegalArgumentException("No TaskCreator for resource type "+ group.first().getResourceType());
+        	} 
+        }
+    }
+    
     private void executeTasks() throws Exception {
         while(!tasks.isEmpty()) {
             OsgiInstallerTask t = null;
@@ -99,9 +139,4 @@ class OsgiInstallerThread extends Thread {
         }
     }
     
-    void addResource(RegisteredResource r) {
-        synchronized (newResources) {
-            newResources.add(r);
-        }
-    }
 }
