@@ -46,6 +46,8 @@ public class JsonQueryServletTest extends HttpTestBase {
         for(char folder = 'A'; folder <= 'E'; folder++) {
             final Map<String, String> props = new HashMap<String, String> ();
             props.put("creator", getClass().getSimpleName());
+            props.put("date", "2008-04-13T17:55:00"); 
+            props.put("date@TypeHint", "Date");
             props.put("text", "folder " + folder);
             final String subfolderUrl = testClient.createNode(testFolderUrl + "/folder" + folder, props);
             for(int i=0; i < 5; i++) {
@@ -137,5 +139,13 @@ public class JsonQueryServletTest extends HttpTestBase {
         assertJavascript("folder B node 3", json, "out.print(data[0].text)");
         assertJavascript("ok", json, "if(data[0].creator) out.print('ok')");
         assertJavascript(getClass().getSimpleName(), json, "out.print(data[0].creator)");
+        
+        params.add(new NameValuePair("property", "date"));
+        json = getContent(url, CONTENT_TYPE_JSON, params);
+        assertJavascript("1.0", json, counterCode);
+        assertJavascript("ok", json, "if(data[0].date) out.print('ok')");
+        assertJavascript("Sun Apr 13 2008 17:55:00 GMT+0200", json, "out.print(data[0].date)");
+        
+        
     }
 }
