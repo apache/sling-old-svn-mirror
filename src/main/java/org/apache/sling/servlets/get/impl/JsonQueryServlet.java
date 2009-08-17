@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.servlets.get.impl.helpers.JsonResourceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,13 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     /** rep:exerpt */
     private static final String REP_EXCERPT = "rep:excerpt()";
+    
+    private final JsonResourceWriter itemWriter;
 
+    public JsonQueryServlet() {
+        itemWriter = new JsonResourceWriter(null);
+    }    
+    
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws IOException {
@@ -107,6 +114,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
             Iterator<Map<String, Object>> result = resolver.queryResources(
                 statement, queryType);
+          
 
             if (req.getParameter(OFFSET) != null) {
                 long skip = Long.parseLong(req.getParameter(OFFSET));
@@ -143,6 +151,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
             while (result.hasNext() && count != 0) {
                 Map<String, Object> row = result.next();
 
+                
                 w.object();
                 String path = row.get("jcr:path").toString();
 
@@ -156,10 +165,13 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                     if (colName.equals(REP_EXCERPT)) {
                         Object ev = row.get("rep:excerpt(" + exerptPath + ")");
                         strValue = (ev == null) ? "" : ev.toString();
+                        w.value(strValue);
+                        
                     } else {
-                        strValue = formatValue(row.get(colName));
+                        //strValue = formatValue(row.get(colName));
+                    	itemWriter.dumpValue(w, row.get(colName));
                     }
-                    w.value(strValue);
+                    //w.value(strValue);
                 }
 
                 // load properties and add it to the result set
@@ -169,6 +181,8 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                 }
 
                 w.endObject();
+                
+                
                 count--;
             }
             w.endArray();
@@ -184,55 +198,11 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         if (nodeRes == null) {
             return;
         }
-
-        // get the properties of the resource, nothing todo if none
-        ValueMap props = nodeRes.adaptTo(ValueMap.class);
-        if (props == null) {
-            return;
-        }
         
-        // get the actual properties now into the JSON output
-        for (String property : properties) {
-            Object value = props.get(property);
-            if (value != null) {
-                w.key(property);
-
-                if (value.getClass().isArray()) {
-
-                    w.array();
-                    for (int i = 0; i < Array.getLength(value); i++) {
-                        w.value(formatValue(Array.get(value, i)));
-                    }
-                    w.endArray();
-
-                } else {
-
-                    w.value(formatValue(value));
-
-                }
-            }
-        }
+        itemWriter.dumpProperties(nodeRes, w, properties);
+        
     }
 
-    private String formatValue(Object value) {
-        String strValue;
-        if (value instanceof InputStream) {
-            // binary value comes as a LazyInputStream
-            strValue = "[binary]";
-
-            // just to be clean, close the stream
-            try {
-                ((InputStream) value).close();
-            } catch (IOException ignore) {
-            }
-        } else if (value != null) {
-            strValue = value.toString();
-        } else {
-            strValue = "";
-        }
-
-        return strValue;
-    }
 
     /**
      * @param e
@@ -242,4 +212,6 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         log.warn("Error in QueryServlet: " + e.toString(), e);
         return new SlingException(e.toString(), e);
     }
+    
+    
 }

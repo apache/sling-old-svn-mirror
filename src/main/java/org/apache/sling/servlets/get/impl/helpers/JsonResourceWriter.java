@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,9 @@ import org.apache.sling.commons.json.io.JSONWriter;
 
 /**
  * Dumps JCR Items as JSON data. The dump methods are threadsafe.
+ * 
+ * Dump can be done on the Resource, property or value level. 
+ * 
  */
 public class JsonResourceWriter {
 
@@ -77,6 +81,7 @@ public class JsonResourceWriter {
         jw.setTidy(tidy);
         dump(resource, jw, 0, maxRecursionLevels);
     }
+    
 
     /** Dump given resource in JSON, optionally recursing into its objects */
     protected void dump(Resource resource, JSONWriter w,
@@ -132,6 +137,66 @@ public class JsonResourceWriter {
         }
 
         w.endObject();
+    }
+    
+    /** Dump only a subset of the resource properties */
+    public void dumpProperties(Resource resource, JSONWriter w,
+            List<String> properties)
+            throws JSONException {
+
+        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
+
+        @SuppressWarnings("unchecked")
+        final Map propertyMap = (valueMap != null)
+                ? valueMap
+                : resource.adaptTo(Map.class);
+
+        if (propertyMap == null) {
+        	
+        	//TODO : not sure if we have to do something in this case ?
+        	return; 
+
+        } else {
+
+            @SuppressWarnings("unchecked")
+            final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
+
+            // the node's actual properties
+            while (props.hasNext()) {
+                @SuppressWarnings("unchecked")
+                final Map.Entry prop = props.next();
+
+                if (propertyNamesToIgnore != null
+                    && propertyNamesToIgnore.contains(prop.getKey())) {
+                    continue;
+                }
+
+                if (properties.contains(prop.getKey().toString()))
+                    writeProperty(w, valueMap, prop.getKey().toString(),
+                                  prop.getValue());
+            }
+        }
+    }        
+    
+    /** Dump only a value in the correct format */
+    public void dumpValue(JSONWriter w, Object value)
+    throws JSONException {
+        if ( value instanceof InputStream ) {
+            // input stream is already handled
+            w.value(0);
+        } else if ( value instanceof Calendar ) {
+            w.value(format((Calendar)value));
+        } else if ( value instanceof Boolean ) {
+            w.value(((Boolean)value).booleanValue());
+        } else if ( value instanceof Long ) {
+            w.value(((Long)value).longValue());
+        } else if ( value instanceof Integer ) {
+            w.value(((Integer)value).longValue());
+        } else if ( value instanceof Double ) {
+            w.value(((Double)value).doubleValue());
+        } else {
+            w.value(value.toString());
+        }
     }
     
     /** Dump a single node */
@@ -226,25 +291,6 @@ public class JsonResourceWriter {
         w.value(length);
     }
 
-    protected void dumpValue(JSONWriter w, Object value)
-    throws JSONException {
-        if ( value instanceof InputStream ) {
-            // input stream is already handled
-            w.value(0);
-        } else if ( value instanceof Calendar ) {
-            w.value(format((Calendar)value));
-        } else if ( value instanceof Boolean ) {
-            w.value(((Boolean)value).booleanValue());
-        } else if ( value instanceof Long ) {
-            w.value(((Long)value).longValue());
-        } else if ( value instanceof Integer ) {
-            w.value(((Integer)value).longValue());
-        } else if ( value instanceof Double ) {
-            w.value(((Double)value).doubleValue());
-        } else {
-            w.value(value.toString());
-        }
-    }
 
     public static synchronized String format(Calendar date) {
         if (calendarFormat == null) {
