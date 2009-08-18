@@ -54,6 +54,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            !sun.io,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.commons.html
                         </Export-Package>
