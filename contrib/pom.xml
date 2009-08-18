@@ -79,6 +79,7 @@
     <modules>
           <module>commons/compiler</module>
           <module>commons/fsclassloader</module>
+          <module>commons/html</module>
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
           <module>extensions/dojo</module>
