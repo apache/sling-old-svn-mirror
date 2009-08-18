@@ -110,6 +110,12 @@ class OsgiInstallerThread extends Thread {
                     t = createRegisteredResourcesEntry();
                     registeredResources.put(r.getEntityId(), t);
                 }
+                
+                // If an object with same sort key is already present, replace with the
+                // new one which might have different attributes
+                if(t.contains(r)) {
+                    t.remove(r);
+                }
                 t.add(r);
             }
             newResources.clear();
