@@ -150,7 +150,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
         this.addProcessor("*", "", new ProcessorConfigurationImpl(
                 new String[] {MIME_TYPE_HTML}, // content types
                 null, // paths,
-                null, // extension
+                new String[] {"html"}, // extension
                 -1,   // order
                 new ProcessingComponentConfigurationImpl("html-generator", null), // generator config
                 null, // transformer config

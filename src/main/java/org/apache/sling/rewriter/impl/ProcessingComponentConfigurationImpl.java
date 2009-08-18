@@ -19,6 +19,8 @@ package org.apache.sling.rewriter.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 
 /**
@@ -27,7 +29,7 @@ import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 public class ProcessingComponentConfigurationImpl implements ProcessingComponentConfiguration {
 
     /** Empty configuration map. */
-    public static final Map<String, Object> EMPTY_CONFIG = new HashMap<String, Object>();
+    public static final ValueMap EMPTY_CONFIG = new ValueMapDecorator(new HashMap<String, Object>());
 
     /** Empty configuration. */
     public static final ProcessingComponentConfiguration EMPTY = new ProcessingComponentConfigurationImpl("<empty>", null);
@@ -36,7 +38,7 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
     private final String type;
 
     /** The configuration map. */
-    private final Map<String, Object> configuration;
+    private final ValueMap configuration;
 
     /**
      * Create a new configuration.
@@ -45,13 +47,13 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
      */
     public ProcessingComponentConfigurationImpl(final String type, final Map<String, Object> config) {
         this.type = type;
-        this.configuration = (config == null ? EMPTY_CONFIG : config);
+        this.configuration = (config == null ? EMPTY_CONFIG : new ValueMapDecorator(config));
     }
 
     /**
      * @see org.apache.sling.rewriter.ProcessingComponentConfiguration#getConfiguration()
      */
-    public Map<String, Object> getConfiguration() {
+    public ValueMap getConfiguration() {
         return this.configuration;
     }
 

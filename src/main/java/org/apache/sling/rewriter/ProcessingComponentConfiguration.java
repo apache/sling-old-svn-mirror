@@ -16,7 +16,7 @@
  */
 package org.apache.sling.rewriter;
 
-import java.util.Map;
+import org.apache.sling.api.resource.ValueMap;
 
 
 /**
@@ -34,5 +34,5 @@ public interface ProcessingComponentConfiguration {
      * Return the configuration for this component.
      * @return The configuration for this component or an empty map if there is none.
      */
-    Map<String, Object> getConfiguration();
+    ValueMap getConfiguration();
 }
