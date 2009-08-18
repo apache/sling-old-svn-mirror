@@ -19,6 +19,7 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.junit.After;
@@ -100,26 +101,39 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
             assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
         }
     	
-        /** TODO
     	// Uninstall
     	{
-        	c.scheduleUninstall(uri);
-        	c.waitForInstallerAction();
-        	final Bundle b = findBundle(symbolicName);
-        	assertNull("Test bundle 1.2 must be gone", b);
+            resetCounters();
+            installer.removeResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
+            installer.removeResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
+            installer.removeResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.2.jar")));
+            
+            // wait for one task: uninstall
+            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
+            final Bundle b = findBundle(symbolicName);
+            assertNull("Bundle must be gone", b);
     	}
     	
-    	// Install lower version, must work
-    	{
-        	c.scheduleInstallOrUpdate(uri, new FileInstallableResource(getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar")));
-        	c.waitForInstallerAction();
-        	final Bundle b = findBundle(symbolicName);
-        	assertNotNull("Test bundle 1.0 must be found after waitForInstallerAction", b);
-        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-        	assertEquals("Version must be 1.0 after uninstall and downgrade", "1.0", b.getHeaders().get(BUNDLE_VERSION));
-        	assertFalse("Bundle ID must have changed after uninstall and reinstall", bundleId == b.getBundleId());
-    	}
-    	*/
+    	/** TODO
+    	// Reinstall lower version, must work
+        {
+            resetCounters();
+            installer.addResource(getInstallableResource(
+                    getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.1.jar")));
+            // wait for two tasks: install and start
+            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            final Bundle b = findBundle(symbolicName);
+            assertNotNull("Reinstalled test bundle 1.1 must be found after waitForInstallerAction", b);
+            bundleId = b.getBundleId();
+            assertEquals("Reinstalled bundle must be started", Bundle.ACTIVE, b.getState());
+            assertEquals("Reinstalled bundle version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
+            assertFalse("Bundle ID must have changed after uninstall and reinstall", bundleId == b.getBundleId());
+        }
+        */
+        
     }
 	
 	/** TODO
