@@ -32,6 +32,11 @@ public class BundleInstallTask extends OsgiInstallerTask {
         this.resource = r;
     }
     
+    @Override 
+    public String toString() {
+    	return getClass().getSimpleName() + ": " + resource;
+    }
+    
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
         final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream());

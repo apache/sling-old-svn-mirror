@@ -18,10 +18,16 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import org.osgi.service.log.LogService;
+
 /** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */ 
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 	/** Execute this task */
-	public abstract void execute(OsgiInstallerContext ctx) throws Exception;
+	public void execute(OsgiInstallerContext ctx) throws Exception {
+		if(ctx.getLogService() != null) {
+			ctx.getLogService().log(LogService.LOG_DEBUG, "Executing task " + this);
+		}
+	}
 	
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
