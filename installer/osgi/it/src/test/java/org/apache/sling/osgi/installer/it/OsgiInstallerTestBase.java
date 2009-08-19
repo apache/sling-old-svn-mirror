@@ -17,13 +17,16 @@
 package org.apache.sling.osgi.installer.it;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
+import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -218,6 +221,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 + ", expected value " + targetValue + ", actual " + lastValue);
     }
     
+    /** Verify that no OSGi actions are executed in next two installer cycles */
+    protected void assertNoOsgiTasks(String info) {
+    	final long actionsCounter = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+    	waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+    	assertEquals(info + ": OSGi tasks counter should not have changed", 
+    			actionsCounter, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
+    }
+    
     public static Option[] defaultConfiguration() {
     	String vmOpt = "-Dosgi.installer.testing";
     	
@@ -231,6 +242,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	}
 
     	// optional debugging
+    	final String paxDebugLevel = System.getProperty("pax.exam.log.level");
     	final String paxDebugPort = System.getProperty("pax.exam.debug.port");
     	if(paxDebugPort != null && paxDebugPort.length() > 0) {
         	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort; 
@@ -240,7 +252,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 felix(),
                 vmOption(vmOpt),
                 waitForFrameworkStartup(),
-        		provision(
+                
+                logProfile(),
+                systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
+                
+                provision(
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),

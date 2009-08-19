@@ -48,7 +48,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + " (bundle " + bundleId + ")";
+		return getClass().getSimpleName() + ": bundle " + bundleId;
 	}
 
 	public void execute(OsgiInstallerContext tctx) throws Exception {

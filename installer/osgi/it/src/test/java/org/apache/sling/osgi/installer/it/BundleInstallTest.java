@@ -19,7 +19,6 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertFalse;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.junit.After;
@@ -47,12 +46,13 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
     public void tearDown() {
         super.tearDown();
     }
-
+    
 	@Test
     public void testInstallUpgradeDowngradeBundle() throws Exception {
     	final String symbolicName = "osgi-installer-testbundle";
     	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
+    	int testIndex = 0;
     	
     	assertNull("Test bundle must not be present before test", findBundle(symbolicName));
     	
@@ -71,6 +71,8 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
         	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
     	}
+    	
+    	assertNoOsgiTasks("After test " + testIndex++);
 
     	// Upgrade to later version, verify
     	{
@@ -86,6 +88,8 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
         	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
 
+    	assertNoOsgiTasks("After test " + testIndex++);
+    	
     	// Downgrade to lower version, installed bundle must not change
         {
             resetCounters();
@@ -101,6 +105,8 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
             assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
         }
     	
+    	assertNoOsgiTasks("After test " + testIndex++);
+    	
     	// Uninstall
     	{
             resetCounters();
@@ -115,9 +121,13 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
             waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
             final Bundle b = findBundle(symbolicName);
             assertNull("Bundle must be gone", b);
+            
+            // uninstall task generates package refresh and a number of bundle start tasks, consume these
+            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
     	}
     	
-    	/** TODO
+    	assertNoOsgiTasks("After test " + testIndex++);
+    	
     	// Reinstall lower version, must work
         {
             resetCounters();
@@ -130,14 +140,12 @@ public class BundleInstallTest extends OsgiInstallerTestBase {
             bundleId = b.getBundleId();
             assertEquals("Reinstalled bundle must be started", Bundle.ACTIVE, b.getState());
             assertEquals("Reinstalled bundle version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
-            assertFalse("Bundle ID must have changed after uninstall and reinstall", bundleId == b.getBundleId());
         }
-        */
         
+    	assertNoOsgiTasks("After test " + testIndex++);
     }
 	
-	/** TODO
-    
+    /** TODO
     @Test
     public void testBundleStatePreserved() throws Exception {
     	final OsgiInstaller c = getService(OsgiInstaller.class);
