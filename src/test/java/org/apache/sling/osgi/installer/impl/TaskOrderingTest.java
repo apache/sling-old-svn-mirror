@@ -27,15 +27,16 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.impl.tasks.BundleInstallRemoveTask;
+import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
+import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
+import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
 import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask;
 
 /** Test the ordering and duplicates elimination of
  * 	OsgiControllerTasks
  */
-// TODO add bundleUpdateTask and others
+// TODO add config-related tasks
 public class TaskOrderingTest {
 
 	private Set<OsgiInstallerTask> taskSet;
@@ -64,17 +65,15 @@ public class TaskOrderingTest {
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new ConfigInstallRemoveTask("someURI.cfg", null, null),
-			new ConfigInstallRemoveTask("someURI.cfg", getRegisteredResource("someURI.cfg"), null),
-			new BundleInstallRemoveTask("someURI.jar", null, new MockOsgiControllerContext()),
-			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.cfg"), new MockOsgiControllerContext()),
+		    new BundleRemoveTask(getRegisteredResource("url")),
+		    new BundleUpdateTask(getRegisteredResource("url")),
+		    new BundleInstallTask(getRegisteredResource("url")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
 	
 		taskSet.clear();
-		taskSet.add(tasksInOrder[5]);
-		taskSet.add(tasksInOrder[4]);
+        taskSet.add(tasksInOrder[4]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[1]);
@@ -88,7 +87,6 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[4]);
-		taskSet.add(tasksInOrder[5]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 		
@@ -97,7 +95,6 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
-		taskSet.add(tasksInOrder[5]);
 		taskSet.add(tasksInOrder[4]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
@@ -106,7 +103,6 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[4]);
-		taskSet.add(tasksInOrder[5]);
 		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[1]);
 		
@@ -117,14 +113,8 @@ public class TaskOrderingTest {
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new ConfigInstallRemoveTask("someURIa.cfg", null, null),
-			new ConfigInstallRemoveTask("someURIb.cfg", null, null),
-			new ConfigInstallRemoveTask("someURIa.cfg", getRegisteredResource("someURIa.cfg"), null),
-			new ConfigInstallRemoveTask("someURIb.cfg", getRegisteredResource("someURIb.cfg"), null),
-			new BundleInstallRemoveTask("someURIa.nothing", null, new MockOsgiControllerContext()),
-			new BundleInstallRemoveTask("someURIb.nothing", null, new MockOsgiControllerContext()),
-			new BundleInstallRemoveTask("someURIa.nothing", getRegisteredResource("someURIa.nothing"), new MockOsgiControllerContext()),
-			new BundleInstallRemoveTask("someURIb.nothing", getRegisteredResource("someURIb.nothing"), new MockOsgiControllerContext()),
+			new BundleInstallTask(getRegisteredResource("someURIa.nothing")),
+            new BundleInstallTask(getRegisteredResource("someURIb.nothing")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
@@ -135,32 +125,35 @@ public class TaskOrderingTest {
 		}
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
+		
+        taskSet.clear();
+        for(int i = 0 ; i < tasksInOrder.length; i++) {
+            taskSet.add(tasksInOrder[i]);
+        }
+        
+        assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
 	
 	@org.junit.Test 
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new ConfigInstallRemoveTask("someURI.cfg", null, null),
-			new ConfigInstallRemoveTask("someURI.cfg", getRegisteredResource("someURI.cfg"), null),
-			new BundleInstallRemoveTask("someURI", null, new MockOsgiControllerContext()),
-			new BundleInstallRemoveTask("someURI", getRegisteredResource("someURI.nothing"), new MockOsgiControllerContext()),
+		    new BundleRemoveTask(getRegisteredResource("url")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 			new BundleStartTask(1),
 		};
 		
 		taskSet.clear();
-		taskSet.add(tasksInOrder[6]);
-		taskSet.add(tasksInOrder[6]);
+		taskSet.add(tasksInOrder[3]);
+		taskSet.add(tasksInOrder[3]);
 		taskSet.add(new SynchronousRefreshPackagesTask());
-		taskSet.add(tasksInOrder[5]);
-		taskSet.add(tasksInOrder[5]);
-		taskSet.add(tasksInOrder[4]);
+		taskSet.add(tasksInOrder[2]);
+		taskSet.add(tasksInOrder[2]);
+		taskSet.add(tasksInOrder[1]);
 		taskSet.add(new SynchronousRefreshPackagesTask());
 		taskSet.add(new SynchronousRefreshPackagesTask());
-		taskSet.add(tasksInOrder[4]);
-		taskSet.add(tasksInOrder[4]);
+		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(new SynchronousRefreshPackagesTask());
 		taskSet.add(tasksInOrder[3]);
@@ -171,9 +164,6 @@ public class TaskOrderingTest {
 		taskSet.add(new SynchronousRefreshPackagesTask());
 		taskSet.add(tasksInOrder[1]);
 		taskSet.add(new SynchronousRefreshPackagesTask());
-		taskSet.add(tasksInOrder[0]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
-		taskSet.add(tasksInOrder[0]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
@@ -194,5 +184,12 @@ public class TaskOrderingTest {
 			taskSet.add(tasksInOrder[i]);
 		}
 		assertOrder(testIndex++, taskSet, tasksInOrder);
+		
+        taskSet.clear();
+        for(int i = 0 ; i < tasksInOrder.length; i++) {
+            taskSet.add(tasksInOrder[i]);
+        }
+        
+        assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
 }

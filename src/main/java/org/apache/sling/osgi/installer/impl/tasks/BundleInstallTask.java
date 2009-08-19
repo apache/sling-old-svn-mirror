@@ -24,6 +24,8 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 
+/** Install a bundle supplied as a RegisteredResource.
+ *  Creates a BundleStartTask to start the bundle */
 public class BundleInstallTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
@@ -46,7 +48,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_INSTALL_ORDER;
+        return TaskOrder.BUNDLE_INSTALL_ORDER + resource.getUrl();
     }
 
 }

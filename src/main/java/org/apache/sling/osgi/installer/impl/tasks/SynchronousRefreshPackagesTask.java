@@ -25,7 +25,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 
-/** Task that executes an OSGi "refresh packages" operation, synchronously */
+/** Execute an OSGi "refresh packages" operation, synchronously */
 public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
 
     /** Max time allowed to refresh packages (TODO configurable??) */

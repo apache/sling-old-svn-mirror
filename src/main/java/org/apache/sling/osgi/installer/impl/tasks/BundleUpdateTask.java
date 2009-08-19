@@ -58,7 +58,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_UPDATE_ORDER;
+        return TaskOrder.BUNDLE_UPDATE_ORDER + resource.getUrl();
     }
 
 }
