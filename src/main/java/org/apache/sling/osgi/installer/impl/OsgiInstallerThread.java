@@ -18,11 +18,11 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -42,6 +42,7 @@ class OsgiInstallerThread extends Thread {
     private final OsgiInstallerContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
+    private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
     
     /** Group our RegisteredResource by OSGi entity */ 
     private Map<String, SortedSet<RegisteredResource>>registeredResources = 
@@ -121,6 +122,12 @@ class OsgiInstallerThread extends Thread {
             newResources.clear();
         }
     }
+    
+    void addTaskToNextCycle(OsgiInstallerTask t) {
+        synchronized (tasksForNextCycle) {
+            tasksForNextCycle.add(t);
+        }
+    }
 
     /** Factored out to use the exact same structure in tests */
     static SortedSet<RegisteredResource> createRegisteredResourcesEntry() {
@@ -128,8 +135,22 @@ class OsgiInstallerThread extends Thread {
     }
     
     
-    /** Compute OSGi tasks based on our resources, and add to supplied list of tasks */
-    void computeTasks() {
+    /** Compute OSGi tasks based on our resources, and add to supplied list of tasks */ 
+    void computeTasks() throws Exception {
+        // Add tasks that were scheduled for next cycle and are executable now
+        final List<OsgiInstallerTask> toKeep = new ArrayList<OsgiInstallerTask>();
+        synchronized (tasksForNextCycle) {
+            for(OsgiInstallerTask t : tasksForNextCycle) {
+                if(t.isExecutable(ctx)) {
+                    tasks.add(t);
+                } else {
+                    toKeep.add(t);
+                }
+            }
+            tasksForNextCycle.clear();
+            tasksForNextCycle.addAll(toKeep);
+        }
+        
         // Walk the list of entities, and create appropriate OSGi tasks for each group
         for(SortedSet<RegisteredResource> group : registeredResources.values()) {
             if(group.first().getResourceType().equals(RegisteredResource.ResourceType.BUNDLE)) {
