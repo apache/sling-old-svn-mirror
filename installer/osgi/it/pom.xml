@@ -235,6 +235,32 @@
                             </archive>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>snapshot-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>snap</classifier>
+                            <includes>
+                                <include>**/b/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
+                                    <!-- 
+                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                        In real bundles, bnd and similar tools to the conversion.
+                                     -->
+                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
           </plugins>
