@@ -125,7 +125,9 @@ public class BundleTaskCreatorTest {
     
     @Test 
     public void testBundleUpgradeSnapshot() {
-        final String v = "2.0.7.-SNAPSHOT";
+        // Need to use OSGi-compliant version number, in bundles
+        // bnd and other tools generate correct numbers.
+        final String v = "2.0.7.SNAPSHOT";
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, v)
         };
