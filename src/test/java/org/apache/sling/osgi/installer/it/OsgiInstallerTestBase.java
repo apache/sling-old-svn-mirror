@@ -56,7 +56,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	protected OsgiInstaller installer;
 	private long [] counters;
 	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
-	
+    public static final String BUNDLE_BASE_NAME = "org.apache.sling.osgi.installer.it-" + POM_VERSION;
+    
     @Inject
     protected BundleContext bundleContext;
     
@@ -206,6 +207,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected void waitForInstallerAction(int counterType, long howMany) {
+        // if waiting for installer cycles, reset counters first - we know
+        // we want to wait from now on, not from an earlier resetCounters() call
+        if(counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER) {
+            resetCounters();
+        }
         final long targetValue = counters[counterType] + howMany;
         final long endTime = System.currentTimeMillis() + WAIT_FOR_ACTION_TIMEOUT_MSEC;
         long lastValue = 0;
