@@ -28,7 +28,11 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.log.LogService;
 
-/** Task that starts a bundle */
+/** Start a bundle given its bundle ID
+ *  Restarts if the bundle does not start on the first try,
+ *  but only after receiving a bundle or framework event,
+ *  indicating that it's worth retrying
+ */
 public class BundleStartTask extends OsgiInstallerTask {
 
 	private final long bundleId;

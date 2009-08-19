@@ -25,8 +25,9 @@ import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
-/** Remove a bundle from a RegisteredResource. Creates
- *  a refresh packages task when executed.
+/** Remove a bundle from a RegisteredResource. 
+ *  Creates a SynchronousRefreshPackagesTask when 
+ *  executed.
  */
 public class BundleRemoveTask extends OsgiInstallerTask {
 
@@ -56,7 +57,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_REMOVE_ORDER;
+        return TaskOrder.BUNDLE_REMOVE_ORDER + resource.getUrl();
     }
 
 }
