@@ -89,8 +89,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		if(getLogService() != null) {
 			getLogService().log(LogService.LOG_DEBUG, "adding task to next cycle:" + t);
 		}
-		// TODO
-		//tasksForNextCycle.add(t);
+		installerThread.addTaskToNextCycle(t);
 	}
 
 	public BundleContext getBundleContext() {
