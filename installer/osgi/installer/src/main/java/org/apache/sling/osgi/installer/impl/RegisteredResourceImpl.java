@@ -57,6 +57,7 @@ import org.osgi.framework.Version;
  */
 public class RegisteredResourceImpl implements RegisteredResource { 
 	private final String url;
+	private final String urlScheme;
 	private final String digest;
 	private final File dataFile;
 	private final String entity;
@@ -85,6 +86,7 @@ public class RegisteredResourceImpl implements RegisteredResource {
 	    
 	    try {
     		url = input.getUrl();
+    		urlScheme = getUrlScheme(url);
     		resourceType = computeResourceType(input.getExtension());
     		
     		if(resourceType == RegisteredResource.ResourceType.BUNDLE) {
@@ -305,5 +307,17 @@ public class RegisteredResourceImpl implements RegisteredResource {
             attributes.put(Constants.BUNDLE_VERSION, 
             		new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION)));
         }
+    }
+    
+    static String getUrlScheme(String url) {
+        final int pos = url.indexOf(':');
+        if(pos <= 0) {
+            throw new IllegalArgumentException("URL does not contain (or starts with) scheme separator ':': " + url);
+        }
+        return url.substring(0, pos);
+    }
+    
+    public String getUrlScheme() {
+        return urlScheme;
     }
 }

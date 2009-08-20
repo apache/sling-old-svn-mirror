@@ -37,7 +37,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
     int compareBundles(RegisteredResource a, RegisteredResource b) {
         
         final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        final String nameB = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         int result = nameA.compareTo(nameB);
         
         if(result == 0) {

@@ -19,7 +19,9 @@
 package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -105,19 +107,21 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	}
 
 	public void addResource(InstallableResource r) throws IOException {
-	    // TODO do not add if we already have it, based on digest
-	    installerThread.addNewResource(new RegisteredResourceImpl(bundleContext, r));
+	    synchronized (installerThread) {
+	        installerThread.addNewResource(new RegisteredResourceImpl(bundleContext, r));
+        }
 	}
 
-	public void registerResources(Collection<InstallableResource> data,
-			String urlScheme) throws IOException {
-		// TODO
+	public void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException {
+        installerThread.addNewResources(data, urlScheme, bundleContext);
 	}
 
 	public void removeResource(InstallableResource r) throws IOException {
 		final RegisteredResource rr = new RegisteredResourceImpl(bundleContext, r);
 		rr.setInstallable(false);
-		installerThread.addNewResource(rr);
+        synchronized (installerThread) {
+            installerThread.addNewResource(rr);
+        }
 	}
 
 	public Storage getStorage() {

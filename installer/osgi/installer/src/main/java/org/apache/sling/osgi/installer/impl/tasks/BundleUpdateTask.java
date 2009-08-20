@@ -55,6 +55,8 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
         if(b.getState() == Bundle.ACTIVE) {
+            // bundle was active before the update - restart it once updated, but
+            // in sequence, not right now
             ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         }
         b.stop();

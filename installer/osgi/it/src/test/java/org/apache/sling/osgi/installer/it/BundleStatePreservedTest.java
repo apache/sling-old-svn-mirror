@@ -67,8 +67,8 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
             b.stop();
         }
     	
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("osgi-installer-testA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("osgi-installer-testB").getState());
+        assertBundle("Bundle A must be started", "osgi-installer-testA", null, Bundle.ACTIVE);
+        assertBundle("Bundle B must be stopped", "osgi-installer-testB", null, Bundle.RESOLVED);
     	
     	// Execute some OsgiController operations
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
@@ -91,7 +91,7 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         assertNull("testbundle must be gone at end of test", findBundle(symbolicName));
         
     	// Now check that bundles A and B have kept their states
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("osgi-installer-testA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("osgi-installer-testB").getState());
+        assertBundle("Bundle A must still be started", "osgi-installer-testA", null, Bundle.ACTIVE);
+        assertBundle("Bundle B must still be stopped", "osgi-installer-testB", null, Bundle.RESOLVED);
     }
 }
