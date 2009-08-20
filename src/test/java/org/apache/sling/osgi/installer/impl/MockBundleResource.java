@@ -74,6 +74,10 @@ public class MockBundleResource implements RegisteredResource {
 	public String getURL() {
 		return null;
 	}
+	
+    public String getUrlScheme() {
+        return null;
+    }
 
     public boolean isInstallable() {
         return installable;

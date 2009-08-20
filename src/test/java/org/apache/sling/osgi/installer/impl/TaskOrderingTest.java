@@ -65,9 +65,9 @@ public class TaskOrderingTest {
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-		    new BundleRemoveTask(getRegisteredResource("url")),
-		    new BundleUpdateTask(getRegisteredResource("url")),
-		    new BundleInstallTask(getRegisteredResource("url")),
+		    new BundleRemoveTask(getRegisteredResource("test:url")),
+		    new BundleUpdateTask(getRegisteredResource("test:url")),
+		    new BundleInstallTask(getRegisteredResource("test:url")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
@@ -113,8 +113,8 @@ public class TaskOrderingTest {
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new BundleInstallTask(getRegisteredResource("someURIa.nothing")),
-            new BundleInstallTask(getRegisteredResource("someURIb.nothing")),
+			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing")),
+            new BundleInstallTask(getRegisteredResource("test:someURIb.nothing")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
@@ -138,7 +138,7 @@ public class TaskOrderingTest {
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-		    new BundleRemoveTask(getRegisteredResource("url")),
+		    new BundleRemoveTask(getRegisteredResource("test:url")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 			new BundleStartTask(1),

@@ -18,14 +18,20 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /** Worker thread where all OSGi tasks are executed.
@@ -42,6 +48,7 @@ class OsgiInstallerThread extends Thread {
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
+    private final List<SortedSet<RegisteredResource>> newResourcesSets = new ArrayList<SortedSet<RegisteredResource>>();
     
     /** Group our RegisteredResource by OSGi entity */ 
     private Map<String, SortedSet<RegisteredResource>>registeredResources = 
@@ -95,15 +102,64 @@ class OsgiInstallerThread extends Thread {
         }
     }
     
-    /** Register a new resource, will be processed on the next cycle */
+    /** Register a single new resource, will be processed on the next cycle */
     void addNewResource(RegisteredResource r) {
         synchronized (newResources) {
             newResources.add(r);
         }
     }
     
+    /** Register a number of new resources, and mark others having the same scheme as not installable.
+     *  Used with {@link OsgiInstaller.registerResources}
+     */
+    void addNewResources(Collection<InstallableResource> data, String urlScheme, BundleContext bundleContext) throws IOException {
+        // Check scheme, do nothing if at least one of them is wrong
+        final SortedSet<RegisteredResource> toAdd = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+        for(InstallableResource r : data) {
+            final RegisteredResource rr = new RegisteredResourceImpl(bundleContext, r);
+            if(!rr.getUrlScheme().equals(urlScheme)) {
+                throw new IllegalArgumentException(
+                        "URL of all supplied InstallableResource must start with supplied scheme"
+                        + ", scheme is not '" + urlScheme + "' for URL " + r.getUrl());
+            }
+            toAdd.add(rr);
+        }
+        
+        if(!toAdd.isEmpty()) {
+            synchronized (newResources) {
+                newResourcesSets.add(toAdd);
+            }
+        }
+    }
+    
     private void mergeNewResources() {
         synchronized (newResources) {
+            // If we have sets of new resources, each of them represents the complete list
+            // of available resources for a given scheme. So, before adding them mark
+            // all resources with the same scheme in newResources, and existing
+            // registeredResources, as not installable
+            for(SortedSet<RegisteredResource> s : newResourcesSets) {
+                final String scheme = s.first().getUrlScheme();
+                debug("Processing set of new resources with scheme " + scheme);
+                for(RegisteredResource r : newResources) {
+                    if(r.getUrlScheme().equals(scheme)) {
+                        r.setInstallable(false);
+                        debug("New resource set to non-installable: " + r); 
+                    }
+                 }
+                for(SortedSet<RegisteredResource> ss : registeredResources.values()) {
+                    for(RegisteredResource r : ss) {
+                        if(r.getUrlScheme().equals(scheme)) {
+                            r.setInstallable(false);
+                            debug("Existing resource set to non-installable: " + r); 
+                        }
+                    }
+                }
+                newResources.addAll(s);
+                debug("Added set of " + s.size() + " new resources with scheme " + scheme);
+            }
+            newResourcesSets.clear();
+            
             for(RegisteredResource r : newResources) {
                 SortedSet<RegisteredResource> t = registeredResources.get(r.getEntityId());
                 if(t == null) {
@@ -176,5 +232,11 @@ class OsgiInstallerThread extends Thread {
     }
     
     protected void cycleDone() {
-    }   
+    }
+    
+    private void debug(String str) {
+        if(ctx.getLogService() != null) {
+            ctx.getLogService().log(LogService.LOG_DEBUG, str);
+        }
+    }
 }
