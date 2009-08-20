@@ -192,11 +192,17 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
+        return getInstallableResource(testBundle, digest, InstallableResource.DEFAULT_PRIORITY);
+    }
+    
+    protected InstallableResource getInstallableResource(File testBundle, String digest, int priority) throws IOException {
         final String url = URL_SCHEME + ":" + testBundle.getAbsolutePath();
         if(digest == null) {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
-        return new InstallableResource(url, new FileInputStream(testBundle), digest);
+        final InstallableResource result = new InstallableResource(url, new FileInputStream(testBundle), digest);
+        result.setPriority(priority);
+        return result;
     }
     
     protected void waitForConfigAdmin(boolean shouldBePresent) throws InterruptedException {
