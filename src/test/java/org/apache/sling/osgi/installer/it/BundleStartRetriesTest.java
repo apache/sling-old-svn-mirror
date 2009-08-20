@@ -1,8 +1,6 @@
 package org.apache.sling.osgi.installer.it;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -44,9 +42,7 @@ public class BundleStartRetriesTest extends OsgiInstallerTestBase {
         final long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
         waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
-        Bundle b = findBundle(needsB);
-        assertNotNull(needsB + " must be installed", b);
-        assertFalse(needsB + " must not be started, testB not present", b.getState() == Bundle.ACTIVE);
+        assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
         
         // the bundle start task must be retried immediately
         // (== 3 tasks since last counters reset)

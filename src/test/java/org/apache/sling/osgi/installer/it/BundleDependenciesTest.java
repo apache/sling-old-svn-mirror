@@ -16,10 +16,8 @@
  */
 package org.apache.sling.osgi.installer.it;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.junit.After;
@@ -62,9 +60,7 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
             waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
-            final Bundle b = findBundle(needsB);
-            assertNotNull(needsB + " must be installed", b);
-            assertFalse(needsB + " must not be started, testB not present", b.getState() == Bundle.ACTIVE);
+            assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
         }
         
        // now install testB -> needsB must start
@@ -73,9 +69,7 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
             installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
             waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
             assertNotNull(testB + " must be installed", findBundle(testB));
-            final Bundle b = findBundle(needsB);
-            assertNotNull(needsB + " must still be installed", b);
-            assertTrue(needsB + " must be started now that testB is installed", b.getState() == Bundle.ACTIVE);
+            assertBundle(needsB + " must be started now that testB is installed", needsB, null, Bundle.ACTIVE);
         }
     }
 }

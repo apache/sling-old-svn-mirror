@@ -17,7 +17,6 @@
 package org.apache.sling.osgi.installer.it;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -28,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 
 @RunWith(JUnit4TestRunner.class)
 public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
@@ -51,7 +49,6 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
 	@Test
     public void testInstallUpgradeDowngradeBundle() throws Exception {
     	final String symbolicName = "osgi-installer-testbundle";
-    	final String BUNDLE_VERSION = "Bundle-Version";
     	int testIndex = 0;
     	
     	assertNull("Test bundle must not be present before test", findBundle(symbolicName));
@@ -65,11 +62,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
     	    // wait for two tasks: install and start
     	    waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
-    	    final Bundle b = findBundle(symbolicName);
-        	assertNotNull("Test bundle 1.1 must be found after waitForInstallerAction", b);
-        	bundleId = b.getBundleId();
-        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-        	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
+    	    final Bundle b = assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
+    	    bundleId = b.getBundleId();
     	}
     	
     	assertNoOsgiTasks("After test " + testIndex++);
@@ -81,10 +75,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
             // wait for two tasks: update (includes stop) and start
             waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
-        	final Bundle b = findBundle(symbolicName);
-        	assertNotNull("Test bundle 1.2 must be found after waitForInstallerAction", b);
-        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-        	assertEquals("Version must be 1.2 after update", "1.2", b.getHeaders().get(BUNDLE_VERSION));
+        	final Bundle b = assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);
         	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
 
@@ -98,10 +89,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             
             // wait for two cycles to make sure no updates happen
             waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
-            final Bundle b = findBundle(symbolicName);
-            assertNotNull("Test bundle 1.2 must still be found after waitForInstallerAction", b);
-            assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-            assertEquals("Version must be 1.2 after ignored downgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
+            final Bundle b = assertBundle("After ignored downgrade", symbolicName, "1.2", Bundle.ACTIVE);
             assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
         }
     	
@@ -135,11 +123,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             // wait for two tasks: install and start
             waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
-            final Bundle b = findBundle(symbolicName);
-            assertNotNull("Reinstalled test bundle 1.1 must be found after waitForInstallerAction", b);
-            bundleId = b.getBundleId();
-            assertEquals("Reinstalled bundle must be started", Bundle.ACTIVE, b.getState());
-            assertEquals("Reinstalled bundle version must be 1.1", "1.1", b.getHeaders().get(Constants.BUNDLE_VERSION));
+            assertBundle("After reinstalling 1.1", symbolicName, "1.1", Bundle.ACTIVE);
         }
 
         assertNoOsgiTasks("After test " + testIndex++);

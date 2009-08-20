@@ -112,7 +112,8 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"));
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
+        // update also generates a start task, as the bundle was started before
+        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
         
         // And no more OSGi tasks after that
         assertNoOsgiTasks("At end of test");

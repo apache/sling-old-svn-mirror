@@ -16,17 +16,17 @@
  */
 package org.apache.sling.osgi.installer.it;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
-import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
+import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
+import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +39,7 @@ import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
@@ -61,7 +62,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     @Inject
     protected BundleContext bundleContext;
     
-    public static final String URL_SCHEME = "OsgiInstallerTestBase://";
+    public static final String URL_SCHEME = "OsgiInstallerTest";
     
     @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
@@ -163,6 +164,25 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	return null;
     }
     
+    protected Bundle assertBundle(String info, String symbolicName, String version, int state) {
+        final Bundle b = findBundle(symbolicName);
+        if(info == null) {
+            info = "";
+        } else {
+            info += ": ";
+        }
+        assertNotNull(info + "Expected bundle " + symbolicName + " to be installed", b);
+        if(version != null) {
+            assertEquals(info + "Expected bundle " + symbolicName + " to be version " + version,
+                    version, b.getHeaders().get(Constants.BUNDLE_VERSION));
+        }
+        if(state >= 0) {
+            assertEquals(info + "Expected bundle " + symbolicName + " to be in state " + state,
+                    state, b.getState());
+        }
+        return b;
+    }
+    
     protected File getTestBundle(String bundleName) {
     	return new File(System.getProperty("osgi.installer.base.dir"), bundleName);
     }
@@ -172,7 +192,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
-        final String url = URL_SCHEME + testBundle.getAbsolutePath();
+        final String url = URL_SCHEME + ":" + testBundle.getAbsolutePath();
         if(digest == null) {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
