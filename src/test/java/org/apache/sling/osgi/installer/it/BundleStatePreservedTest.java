@@ -16,7 +16,6 @@
  */
 package org.apache.sling.osgi.installer.it;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -28,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 
 @RunWith(JUnit4TestRunner.class)
 public class BundleStatePreservedTest extends OsgiInstallerTestBase {
@@ -78,17 +76,18 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 1);
         
-        final String symbolicName = "osgi-installer-testbundle";
-    	final Bundle b = findBundle(symbolicName);
-    	assertNotNull("Installed bundle must be found", b);
-    	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
-    	assertEquals("Version must be 1.2", "1.2", b.getHeaders().get(Constants.BUNDLE_VERSION));
+        assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
+    	
+        // Verify number of registered resources and groups
+        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 1);
+        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 5);
+        assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 3);
     	
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
         waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
-        assertNull("testbundle must be gone at end of test", findBundle(symbolicName));
+        assertNull("testbundle must be gone at end of test", findBundle("osgi-installer-testbundle"));
         
     	// Now check that bundles A and B have kept their states
         assertBundle("Bundle A must still be started", "osgi-installer-testA", null, Bundle.ACTIVE);
