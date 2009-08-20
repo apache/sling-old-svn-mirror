@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -210,6 +209,9 @@ class OsgiInstallerThread extends Thread {
         // TODO do nothing for a group that's "stable" - i.e. one where no tasks were
         // created in the last cycle??
         for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+            if(group.isEmpty()) {
+                continue;
+            }
             if(group.first().getResourceType().equals(RegisteredResource.ResourceType.BUNDLE)) {
                 bundleTaskCreator.createTasks(ctx, group, tasks);
             } else {
@@ -231,12 +233,46 @@ class OsgiInstallerThread extends Thread {
         }
     }
     
-    protected void cycleDone() {
+    private void cycleDone() {
+        // Cleanup resources that are not marked installable,
+        // they have been processed by now
+        int resourceCount = 0;
+        final List<RegisteredResource> toDelete = new ArrayList<RegisteredResource>();
+        final List<String> groupKeysToRemove = new ArrayList<String>();
+        for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+            toDelete.clear();
+            String key = null;
+            for(RegisteredResource r : group) {
+                key = r.getEntityId();
+                resourceCount++;
+                if(!r.isInstallable()) {
+                    toDelete.add(r);
+                }
+            }
+            for(RegisteredResource r : toDelete) {
+                group.remove(r);
+                if(ctx.getLogService() != null) {
+                    ctx.getLogService().log(LogService.LOG_DEBUG,
+                            "Resource deleted, not installable and has been processed: " + r);
+                }
+            }
+            if(group.isEmpty() && key != null) {
+                groupKeysToRemove.add(key);
+            }
+        }
+        
+        for(String key : groupKeysToRemove) {
+            registeredResources.remove(key);
+        }
+        
+        ctx.setCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, resourceCount);
+        ctx.setCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, registeredResources.size());
+        ctx.incrementCounter(OsgiInstaller.INSTALLER_CYCLES_COUNTER);
     }
     
     private void debug(String str) {
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, str);
-        }
+       }
     }
 }

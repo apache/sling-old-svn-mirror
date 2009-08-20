@@ -64,6 +64,13 @@ public interface OsgiInstaller {
     /** Counter index: number of installer cycles */
     int INSTALLER_CYCLES_COUNTER = 1;
     
+    /** Counter index: number of currently registered resources */
+    int REGISTERED_RESOURCES_COUNTER = 2;
+    
+    /** Counter index: number of currently registered resource groups 
+     *  of resources having the same OSGi entity ID */
+    int REGISTERED_GROUPS_COUNTER = 3;
+    
 	/** Size of the counters array */
-	int COUNTERS_SIZE = 2;
+	int COUNTERS_SIZE = 4;
 }

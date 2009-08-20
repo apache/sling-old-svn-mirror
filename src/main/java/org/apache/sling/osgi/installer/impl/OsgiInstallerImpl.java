@@ -49,12 +49,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
         
-        installerThread = new OsgiInstallerThread(this) {
-            @Override
-            protected void cycleDone() {
-                incrementCounter(INSTALLER_CYCLES_COUNTER);
-            }
-        };
+        installerThread = new OsgiInstallerThread(this);
         installerThread.setDaemon(true);
         installerThread.start();
     }
@@ -132,4 +127,8 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	public void incrementCounter(int index) {
 	    counters[index]++;
 	}
+
+    public void setCounter(int index, long value) {
+        counters[index] = value;
+    }
 }
