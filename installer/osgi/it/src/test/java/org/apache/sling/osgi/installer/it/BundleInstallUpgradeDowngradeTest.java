@@ -95,6 +95,10 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	
     	assertNoOsgiTasks("After test " + testIndex++);
     	
+    	// Verify number of registered resources and groups
+        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 3);
+        assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 1);
+        
     	// Uninstall
     	{
             resetCounters();
@@ -113,6 +117,10 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             // uninstall task generates package refresh and a number of bundle start tasks, consume these
             waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
     	}
+    	
+    	// No resources must be registered anymore
+        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 0);
+    	assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 0);
     	
     	assertNoOsgiTasks("After test " + testIndex++);
     	

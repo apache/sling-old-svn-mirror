@@ -268,6 +268,10 @@ class OsgiInstallerTestBase implements FrameworkListener {
     			actionsCounter, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
     }
     
+    public void assertCounter(int index, long value) {
+        assertEquals("Expected value matches for counter " + index, value, installer.getCounters()[index]);
+    }
+    
     public static Option[] defaultConfiguration() {
     	String vmOpt = "-Dosgi.installer.testing";
     	

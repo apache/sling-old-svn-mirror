@@ -53,4 +53,7 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
     public void incrementCounter(int index) {
     }
+    
+    public void setCounter(int index, long value) {
+    }
 }

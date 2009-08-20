@@ -31,6 +31,7 @@ public interface OsgiInstallerContext {
 	ConfigurationAdmin getConfigurationAdmin();
 	LogService getLogService();
 	void incrementCounter(int index);
+    void setCounter(int index, long value);
 	
 	/** Schedule a task for execution in the current OsgiController cycle */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);
