@@ -24,6 +24,7 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.service.log.LogService;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -61,6 +62,9 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         }
         b.stop();
         b.update(resource.getInputStream());
+        if(ctx.getLogService() != null) {
+            ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
+        }
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
     }
 

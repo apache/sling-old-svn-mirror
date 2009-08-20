@@ -31,6 +31,10 @@ public class InstallableResource {
 	private final String digest;
 	private final InputStream inputStream;
 	private final Dictionary<String, Object> dictionary;
+	private int priority;
+	
+	/** Default resource priority */
+	public static final int DEFAULT_PRIORITY = 100;
 	
 	/** Create an empty data object, used when removing resources */
 	public InstallableResource(String url) {
@@ -39,6 +43,7 @@ public class InstallableResource {
 		this.inputStream = null;
 		this.dictionary = null;
 		this.digest = null;
+		this.priority = DEFAULT_PRIORITY;
 	}
 	
 	/** Create a data object that wraps an InputStream 
@@ -56,6 +61,7 @@ public class InstallableResource {
 		this.inputStream = is;
 		this.dictionary = null;
 		this.digest = digest;
+        this.priority = DEFAULT_PRIORITY;
 	}
 	
 	/** Create a data object that wraps a Dictionary. Digest will be computed
@@ -73,6 +79,7 @@ public class InstallableResource {
 		this.inputStream = null;
 		this.dictionary = d;
         this.digest = null;
+        this.priority = DEFAULT_PRIORITY;
 	}
 
 	@Override
@@ -94,19 +101,40 @@ public class InstallableResource {
 		return url;
 	}
 
+	/** Return this resource's extension, based on its URL */
 	public String getExtension() {
 		return extension;
 	}
 
+	/** Return an input stream with the data of this resource. Null if resource
+	 *  contains a dictionary instead. Caller is responsible for closing the stream.
+	 */
 	public InputStream getInputStream() {
 		return inputStream;
 	}
 
+	/** Return this resource's dictionary. Null if resource contains an InputStream instead */
 	public Dictionary<String, Object> getDictionary() {
 		return dictionary;
 	}
-	
+
+	/** Return this resource's digest. Not necessarily an actual md5 or other digest of the
+	 *  data, can be any string that changes if the data changes. 
+	 */
 	public String getDigest() {
 	    return digest;
 	}
+
+	/** Return the priority of this resource. Priorities are used to decide which 
+	 *  resource to install when several are registered for the same OSGi entity
+	 *  (bundle, config, etc.)
+	 */
+    public int getPriority() {
+        return priority;
+    }
+
+    /** Set the priority of this resource */
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
 }

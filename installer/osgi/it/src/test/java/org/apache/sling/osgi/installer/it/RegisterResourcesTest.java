@@ -29,6 +29,8 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
 
@@ -71,7 +73,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
     }
     
     @Test
-    public void removeAndReaddBundlesTest() throws IOException {
+    public void removeAndReaddBundlesTest() throws IOException, BundleException {
         {
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
@@ -126,9 +128,13 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             
             final String info = "After re-adding missing bundles";
             assertBundle(info, "osgi-installer-testB", "1.0", Bundle.ACTIVE);
-            assertBundle(info, "osgi-installer-needsB", "1.0", Bundle.ACTIVE);
             assertBundle(info, "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
             assertBundle(info, "osgi-installer-snapshot-test", "1.0.0.SNAPSHOT", Bundle.ACTIVE);
+            
+            final Bundle b = findBundle("osgi-installer-needsB");
+            b.start();
+            assertBundle("After reinstalling testB, needsB must be startable, ",
+            		"osgi-installer-needsB", "1.0", Bundle.ACTIVE);
         }
     }
 }

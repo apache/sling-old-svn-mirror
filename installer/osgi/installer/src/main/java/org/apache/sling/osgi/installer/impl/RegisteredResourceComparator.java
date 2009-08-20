@@ -35,16 +35,45 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
     }
     
     int compareBundles(RegisteredResource a, RegisteredResource b) {
+
+        boolean isSnapshot = false;
         
+        // Order first by symbolic name
         final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         int result = nameA.compareTo(nameB);
         
+        // Then by version
         if(result == 0) {
             final Version va = (Version)a.getAttributes().get(Constants.BUNDLE_VERSION);
             final Version vb = (Version)b.getAttributes().get(Constants.BUNDLE_VERSION);
+            isSnapshot = va.toString().contains(BundleTaskCreator.MAVEN_SNAPSHOT_MARKER);
             // higher version has more priority, must come first so invert comparison
             result = vb.compareTo(va);
+        }
+        
+        // Then by priority, higher values first
+        if(result == 0) {
+            if(a.getPriority() < b.getPriority()) {
+                result = 1;
+            } else if(a.getPriority() > b.getPriority()) {
+                result = -1;
+            }
+        }
+        
+        if(result == 0) {
+            if(isSnapshot) {
+                // For snapshots, compare serial numbers so that snapshots registered
+                // later get priority
+                if(a.getSerialNumber() < b.getSerialNumber()) {
+                    result = 1;
+                } else if(a.getSerialNumber() > b.getSerialNumber()) {
+                    result = -1;
+                }
+            } else {
+                // Non-snapshot: compare digests
+                result = a.getDigest().compareTo(b.getDigest());
+            }
         }
         
         return result;

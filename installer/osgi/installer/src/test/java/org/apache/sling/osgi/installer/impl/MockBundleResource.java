@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -33,11 +34,44 @@ public class MockBundleResource implements RegisteredResource {
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private boolean installable = true;
 	private final String digest;
+	private final int priority;
+	private final long serialNumber;
+	private static long serialNumberCounter = System.currentTimeMillis();
 	
-	MockBundleResource(String symbolicName, String version) {
+    MockBundleResource(String symbolicName, String version) {
+        this(symbolicName, version, InstallableResource.DEFAULT_PRIORITY);
+    }
+    
+	MockBundleResource(String symbolicName, String version, int priority) {
 		attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
 		attributes.put(Constants.BUNDLE_VERSION, new Version(version));
 		digest = symbolicName + "." + version;
+		this.priority = priority;
+		serialNumber = getNextSerialNumber();
+	}
+	
+    MockBundleResource(String symbolicName, String version, int priority, String digest) {
+        attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
+        attributes.put(Constants.BUNDLE_VERSION, new Version(version));
+        this.digest = digest;
+        this.priority = priority;
+        serialNumber = getNextSerialNumber();
+    }
+    
+    private static long getNextSerialNumber() {
+        synchronized (MockBundleResource.class) {
+            return serialNumberCounter++; 
+        }
+    }
+    
+	@Override
+	public String toString() {
+	    return getClass().getSimpleName() 
+	    + ", n=" + attributes.get(Constants.BUNDLE_SYMBOLICNAME)
+        + ", v= " + attributes.get(Constants.BUNDLE_VERSION)
+        + ", d=" + digest
+        + ", p=" + priority
+        ;
 	}
 	
 	public void cleanup() {
@@ -85,5 +119,13 @@ public class MockBundleResource implements RegisteredResource {
 
     public void setInstallable(boolean installable) {
         this.installable = installable;
+    }
+    
+    public int getPriority() {
+        return priority;
+    }
+    
+    public long getSerialNumber() {
+        return serialNumber;
     }
 }

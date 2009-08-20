@@ -50,6 +50,8 @@ public interface RegisteredResource {
 	void setInstallable(boolean installable);
 	ResourceType getResourceType();
 	String getUrlScheme();
+	int getPriority();
+	long getSerialNumber();
 	
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
 	Map<String, Object> getAttributes();

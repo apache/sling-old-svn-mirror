@@ -65,6 +65,9 @@ public class RegisteredResourceImpl implements RegisteredResource {
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private static long fileNumber;
 	private boolean installable = true;
+	private final int priority;
+    private final long serialNumber;
+    private static long serialNumberCounter = System.currentTimeMillis();
 	
     static enum ResourceType {
         BUNDLE,
@@ -88,6 +91,8 @@ public class RegisteredResourceImpl implements RegisteredResource {
     		url = input.getUrl();
     		urlScheme = getUrlScheme(url);
     		resourceType = computeResourceType(input.getExtension());
+    		priority = input.getPriority();
+    		serialNumber = getNextSerialNumber();
     		
     		if(resourceType == RegisteredResource.ResourceType.BUNDLE) {
                 if(input.getInputStream() == null) {
@@ -131,9 +136,15 @@ public class RegisteredResourceImpl implements RegisteredResource {
     	}
 	}
 	
+    private static long getNextSerialNumber() {
+        synchronized (RegisteredResourceImpl.class) {
+            return serialNumberCounter++; 
+        }
+    }
+
 	@Override
 	public String toString() {
-	    return getClass().getSimpleName() + " " + url + " (" + digest + ")";
+	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
 	}
 	
 	protected File getDataFile(BundleContext ctx) throws IOException {
@@ -319,5 +330,13 @@ public class RegisteredResourceImpl implements RegisteredResource {
     
     public String getUrlScheme() {
         return urlScheme;
+    }
+    
+    public int getPriority() {
+        return priority;
+    }
+    
+    public long getSerialNumber() {
+        return serialNumber;
     }
 }
