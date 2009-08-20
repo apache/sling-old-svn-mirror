@@ -129,6 +129,11 @@ public class RegisteredResourceImpl implements RegisteredResource {
     	}
 	}
 	
+	@Override
+	public String toString() {
+	    return getClass().getSimpleName() + " " + url + " (" + digest + ")";
+	}
+	
 	protected File getDataFile(BundleContext ctx) throws IOException {
 		String filename = null;
 		synchronized (getClass()) {

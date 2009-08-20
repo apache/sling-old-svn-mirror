@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /** Worker thread where all OSGi tasks are executed.
@@ -57,7 +56,7 @@ class OsgiInstallerThread extends Thread {
     	 * 	@param resources ordered set of RegisteredResource which all have the same entityId
     	 * 	@param tasks lists of tasks, to which we'll add the ones computed by this method
     	 */
-    	void createTasks(BundleContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks);
+    	void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks);
     }
     
     OsgiInstallerThread(OsgiInstallerContext ctx) {
@@ -152,9 +151,11 @@ class OsgiInstallerThread extends Thread {
         }
         
         // Walk the list of entities, and create appropriate OSGi tasks for each group
+        // TODO do nothing for a group that's "stable" - i.e. one where no tasks were
+        // created in the last cycle??
         for(SortedSet<RegisteredResource> group : registeredResources.values()) {
             if(group.first().getResourceType().equals(RegisteredResource.ResourceType.BUNDLE)) {
-                bundleTaskCreator.createTasks(ctx.getBundleContext(), group, tasks);
+                bundleTaskCreator.createTasks(ctx, group, tasks);
             } else {
                 throw new IllegalArgumentException("No TaskCreator for resource type "+ group.first().getResourceType());
             } 

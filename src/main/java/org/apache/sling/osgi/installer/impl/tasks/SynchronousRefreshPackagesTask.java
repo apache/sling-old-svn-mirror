@@ -62,6 +62,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 	}
 
 	public void execute(OsgiInstallerContext ctx) throws Exception {
+        super.execute(ctx);
 		this.ctx = ctx;
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();

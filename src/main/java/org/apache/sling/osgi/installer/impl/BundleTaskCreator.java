@@ -18,6 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
@@ -25,14 +27,20 @@ import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
 import org.apache.sling.osgi.installer.impl.tasks.TaskUtilities;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.service.log.LogService;
 
 /** TaskCreator that processes a list of bundle RegisteredResources */
 class BundleTaskCreator implements OsgiInstallerThread.TaskCreator {
 
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+    
+    /** Store the digests of the bundles for which we create update tasks,
+     *  keyed by symbolic name, to avoid generating repated updates
+     *  for snapshot bundles
+     */
+    private final Map<String, String> digests = new HashMap<String, String>();
     
     /** Holds the bundle info that we need, makes it easier to test
      *  without an OSGi framework */ 
@@ -56,7 +64,7 @@ class BundleTaskCreator implements OsgiInstallerThread.TaskCreator {
 	 *  has desired state == active, and generates the appropriate OSGi tasks to
 	 *  reach this state. 
 	 */
-	public void createTasks(BundleContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
+	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
 		
 		// Find the bundle that must be active: the resources collection is ordered according
 		// to priorities, so we just need to find the first one that is installable
@@ -68,10 +76,15 @@ class BundleTaskCreator implements OsgiInstallerThread.TaskCreator {
 			}
 		}
 
+		RegisteredResource toUpdate = null;
+		String digestToSave = null;
+		final RegisteredResource firstResource = resources.first(); 
+		final String symbolicName = firstResource == null ? null : 
+		    (String)firstResource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+		
 		if(toActivate == null) {
-		    // None of our resources are installable, remove corresponding bundle
-		    final BundleInfo info = getBundleInfo(ctx, resources.first());
-		    if(info != null) {
+		    // None of our resources are installable, remove corresponding bundle if present
+		    if(getBundleInfo(ctx, resources.first()) != null) {
 	            tasks.add(new BundleRemoveTask(resources.first()));
 	        }
 			
@@ -79,26 +92,55 @@ class BundleTaskCreator implements OsgiInstallerThread.TaskCreator {
 			final BundleInfo info = getBundleInfo(ctx, toActivate);
 			final Version newVersion = (Version)toActivate.getAttributes().get(Constants.BUNDLE_VERSION);
 			if(info == null) {
-			    // bundle is not installed yet
+			    // bundle is not installed yet: install and save digest to avoid
+			    // unnecessary updates
 				tasks.add(new BundleInstallTask(toActivate));
+				digestToSave = toActivate.getDigest();
 			} else {
 			    final int compare = info.version.compareTo(newVersion); 
 			    if(compare != 0) {
 	                // installed but different version. Can be a later version if 
 			        // the newer version resource was removed, in case we downgrade
-	                tasks.add(new BundleUpdateTask(toActivate));
+			        toUpdate = toActivate;
 			    } else if(compare == 0 && newVersion.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0){
 			        // installed, same version but SNAPSHOT
-			        // TODO: update only if not updated with same digest yet
-			        tasks.add(new BundleUpdateTask(toActivate));
+                    toUpdate = toActivate;
 			    }
+			}
+
+			// Save the digest of installed and updated resources, keyed by
+			// bundle symbolic name, to avoid unnecessary updates
+			if(toUpdate != null) {
+			    final String previousDigest = digests.get(symbolicName);
+			    if(toUpdate.getDigest().equals(previousDigest)) {
+			        if(ctx.getLogService() != null) {
+			            ctx.getLogService().log(LogService.LOG_DEBUG, 
+			                    "Ignoring update of " + toUpdate + ", digest didn't change");
+			        }
+                    digestToSave = previousDigest;
+			    } else {
+                    if(ctx.getLogService() != null) {
+                        ctx.getLogService().log(LogService.LOG_DEBUG, 
+                                "Scheduling update of " + toUpdate + ", digest has changed");
+                    }
+			        tasks.add(new BundleUpdateTask(toUpdate));
+			        digestToSave = toUpdate.getDigest();
+			    }
+			}
+			
+			if(digestToSave == null) {
+			    if(symbolicName != null) {
+			        digests.remove(symbolicName);
+			    }
+			} else {
+			    digests.put(symbolicName, digestToSave);
 			}
 		}
 	}
 
-	protected BundleInfo getBundleInfo(BundleContext ctx, RegisteredResource bundle) {
+	protected BundleInfo getBundleInfo(OsgiInstallerContext ctx, RegisteredResource bundle) {
 		final String symbolicName = (String)bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-		final Bundle b = TaskUtilities.getMatchingBundle(ctx, symbolicName);
+		final Bundle b = TaskUtilities.getMatchingBundle(ctx.getBundleContext(), symbolicName);
 		if(b == null) {
 		    return null;
         }
