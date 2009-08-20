@@ -32,10 +32,12 @@ public class MockBundleResource implements RegisteredResource {
 
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private boolean installable = true;
+	private final String digest;
 	
 	MockBundleResource(String symbolicName, String version) {
 		attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
 		attributes.put(Constants.BUNDLE_VERSION, new Version(version));
+		digest = symbolicName + "." + version;
 	}
 	
 	public void cleanup() {
@@ -50,7 +52,7 @@ public class MockBundleResource implements RegisteredResource {
 	}
 
 	public String getDigest() {
-		return null;
+		return digest;
 	}
 
 	public String getEntityId() {

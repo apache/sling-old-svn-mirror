@@ -21,7 +21,6 @@ package org.apache.sling.osgi.installer.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -35,8 +34,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     }
     
     @Override
-    protected BundleInfo getBundleInfo(BundleContext ctx, RegisteredResource bundle) {
+    protected BundleInfo getBundleInfo(OsgiInstallerContext ctx, RegisteredResource bundle) {
         return fakeBundleInfo.get(bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
     }
-    
 }

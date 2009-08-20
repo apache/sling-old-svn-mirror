@@ -168,8 +168,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected InstallableResource getInstallableResource(File testBundle) throws IOException {
+        return getInstallableResource(testBundle, null);
+    }
+    
+    protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
         final String url = URL_SCHEME + testBundle.getAbsolutePath();
-        final String digest = testBundle.getAbsolutePath() + testBundle.lastModified();
+        if(digest == null) {
+            digest = testBundle.getAbsolutePath() + testBundle.lastModified();
+        }
         return new InstallableResource(url, new FileInputStream(testBundle), digest);
     }
     
@@ -207,12 +213,13 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected void waitForInstallerAction(int counterType, long howMany) {
-        // if waiting for installer cycles, reset counters first - we know
-        // we want to wait from now on, not from an earlier resetCounters() call
+        // if waiting for installer cycles, get initial value from
+        // that counter - we know we want to wait from now on, not from an 
+        // earlier resetCounters() call
+        long targetValue = counters[counterType] + howMany;
         if(counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER) {
-            resetCounters();
+            targetValue = installer.getCounters()[counterType] + howMany;
         }
-        final long targetValue = counters[counterType] + howMany;
         final long endTime = System.currentTimeMillis() + WAIT_FOR_ACTION_TIMEOUT_MSEC;
         long lastValue = 0;
         while(System.currentTimeMillis() < endTime) {

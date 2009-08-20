@@ -41,8 +41,14 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         return resource;
     }
     
+    @Override 
+    public String toString() {
+        return getClass().getSimpleName() + ": " + resource;
+    }
+    
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
+        super.execute(ctx);
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = TaskUtilities.getMatchingBundle(ctx.getBundleContext(), symbolicName);
         if(b == null) {

@@ -55,9 +55,10 @@ public class BundleStartTask extends OsgiInstallerTask {
 		return getClass().getSimpleName() + ": bundle " + bundleId;
 	}
 
-	public void execute(OsgiInstallerContext tctx) throws Exception {
-		final Bundle b = tctx.getBundleContext().getBundle(bundleId);
-		final LogService log = tctx.getLogService();
+	public void execute(OsgiInstallerContext ctx) throws Exception {
+        super.execute(ctx);
+		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
+		final LogService log = ctx.getLogService();
 		boolean needToRetry = false;
 		
 		if(b == null) {
@@ -102,11 +103,11 @@ public class BundleStartTask extends OsgiInstallerTask {
                     eventsCountForRetrying = Activator.getTotalEventsCount() + 1;
 	            }
 	            
-	            tctx.addTaskToNextCycle(this);
+	            ctx.addTaskToNextCycle(this);
 	        }
 		}
 		retryCount++;
-		tctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+		ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
 	}
 	
 	/** Do not execute this task if waiting for events */

@@ -32,6 +32,7 @@ import org.osgi.framework.Bundle;
 
 public class BundleTaskCreatorTest {
 	public static final String SN = "TestSymbolicName";
+	private final OsgiInstallerContext ctx = new MockOsgiInstallerContext();
 	
 	private SortedSet<OsgiInstallerTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) {
 		final SortedSet<RegisteredResource> s = OsgiInstallerThread.createRegisteredResourcesEntry();
@@ -40,7 +41,7 @@ public class BundleTaskCreatorTest {
 		}
 		
 		final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
-		btc.createTasks(null, s, tasks);
+		btc.createTasks(ctx, s, tasks);
 		return tasks;
 	}
 	

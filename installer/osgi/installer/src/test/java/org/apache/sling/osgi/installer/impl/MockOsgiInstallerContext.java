@@ -23,7 +23,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-public class MockOsgiControllerContext implements OsgiInstallerContext {
+public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
 	}
