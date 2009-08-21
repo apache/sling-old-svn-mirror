@@ -31,12 +31,13 @@ import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
+import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
+import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask;
 
 /** Test the ordering and duplicates elimination of
  * 	OsgiControllerTasks
  */
-// TODO add config-related tasks
 public class TaskOrderingTest {
 
 	private Set<OsgiInstallerTask> taskSet;
@@ -65,6 +66,8 @@ public class TaskOrderingTest {
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
+		    new ConfigRemoveTask(getRegisteredResource("test:a")),    
+            new ConfigInstallTask(getRegisteredResource("test:a")),    
 		    new BundleRemoveTask(getRegisteredResource("test:url")),
 		    new BundleUpdateTask(getRegisteredResource("test:url")),
 		    new BundleInstallTask(getRegisteredResource("test:url")),
@@ -73,38 +76,46 @@ public class TaskOrderingTest {
 		};
 	
 		taskSet.clear();
-        taskSet.add(tasksInOrder[4]);
+        taskSet.add(tasksInOrder[6]);
+		taskSet.add(tasksInOrder[5]);
+		taskSet.add(tasksInOrder[4]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
-		taskSet.add(tasksInOrder[1]);
-		taskSet.add(tasksInOrder[0]);
+        taskSet.add(tasksInOrder[1]);
+        taskSet.add(tasksInOrder[0]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 		
 		taskSet.clear();
-		taskSet.add(tasksInOrder[0]);
-		taskSet.add(tasksInOrder[1]);
+        taskSet.add(tasksInOrder[0]);
+        taskSet.add(tasksInOrder[1]);
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[4]);
+		taskSet.add(tasksInOrder[5]);
+		taskSet.add(tasksInOrder[6]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 		
 		taskSet.clear();
-		taskSet.add(tasksInOrder[1]);
-		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
+        taskSet.add(tasksInOrder[0]);
+		taskSet.add(tasksInOrder[5]);
 		taskSet.add(tasksInOrder[4]);
+        taskSet.add(tasksInOrder[1]);
+		taskSet.add(tasksInOrder[6]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 		
 		taskSet.clear();
+		taskSet.add(tasksInOrder[4]);
+		taskSet.add(tasksInOrder[5]);
+		taskSet.add(tasksInOrder[6]);
+        taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[3]);
-		taskSet.add(tasksInOrder[4]);
-		taskSet.add(tasksInOrder[0]);
-		taskSet.add(tasksInOrder[1]);
+        taskSet.add(tasksInOrder[1]);
 		
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
