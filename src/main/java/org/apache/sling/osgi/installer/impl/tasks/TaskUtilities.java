@@ -2,13 +2,8 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.impl.ConfigurationPid;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 /** Misc.utilities for classes of this package */
 public class TaskUtilities {
@@ -44,36 +39,5 @@ public class TaskUtilities {
         }
 
     	return null;
-    }
-
-    /** Get or create configuration */
-    public static Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
-    throws IOException, InvalidSyntaxException
-    {
-    	final ConfigurationAdmin configurationAdmin = ocs.getConfigurationAdmin();
-    	if(configurationAdmin == null) {
-    		throw new IllegalStateException("Missing service: " + ConfigurationAdmin.class.getName());
-    	}
-
-        Configuration result = null;
-
-        if (cp.getFactoryPid() == null) {
-            result = configurationAdmin.getConfiguration(cp.getConfigPid(), null);
-        } else {
-            Configuration configs[] = configurationAdmin.listConfigurations(
-                "(|(" + ConfigInstallRemoveTask.ALIAS_KEY
-                + "=" + cp.getFactoryPid() + ")(.alias_factory_pid=" + cp.getFactoryPid()
-                + "))");
-
-            if (configs == null || configs.length == 0) {
-                if(createIfNeeded) {
-                    result = configurationAdmin.createFactoryConfiguration(cp.getConfigPid(), null);
-                }
-            } else {
-                result = configs[0];
-            }
-        }
-
-        return result;
     }
 }

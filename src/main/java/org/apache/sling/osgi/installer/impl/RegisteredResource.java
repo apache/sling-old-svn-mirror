@@ -62,4 +62,7 @@ public interface RegisteredResource {
      */
     String getEntityId();
     
+    /** Attribute key: configuration pid */
+    String CONFIG_PID_ATTRIBUTE = "config.pid";
+    
 }

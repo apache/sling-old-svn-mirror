@@ -59,16 +59,7 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
         new HashMap<String, SortedSet<RegisteredResource>>();
     
     private final BundleTaskCreator bundleTaskCreator = new BundleTaskCreator();
-    
-    static interface TaskCreator {
-    	/** Add the required OsgiInstallerTasks to the tasks collection, so that the resources reach
-    	 * 	their desired states.
-    	 *  @param ctx used to find out which bundles and configs are currently active
-    	 * 	@param resources ordered set of RegisteredResource which all have the same entityId
-    	 * 	@param tasks lists of tasks, to which we'll add the ones computed by this method
-    	 */
-    	void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks);
-    }
+    private final ConfigTaskCreator configTaskCreator = new ConfigTaskCreator();
     
     OsgiInstallerThread(OsgiInstallerContext ctx) {
         setName(getClass().getSimpleName());
@@ -256,8 +247,11 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
             if(group.isEmpty()) {
                 continue;
             }
-            if(group.first().getResourceType().equals(RegisteredResource.ResourceType.BUNDLE)) {
+            final RegisteredResource.ResourceType rt = group.first().getResourceType();  
+            if(rt.equals(RegisteredResource.ResourceType.BUNDLE)) {
                 bundleTaskCreator.createTasks(ctx, group, tasks);
+            } else if(rt.equals(RegisteredResource.ResourceType.CONFIG)) {
+                configTaskCreator.createTasks(ctx, group, tasks);
             } else {
                 throw new IllegalArgumentException("No TaskCreator for resource type "+ group.first().getResourceType());
             } 
