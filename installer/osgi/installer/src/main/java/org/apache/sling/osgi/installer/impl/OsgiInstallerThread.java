@@ -31,6 +31,10 @@ import java.util.TreeSet;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 
 /** Worker thread where all OSGi tasks are executed.
@@ -41,13 +45,14 @@ import org.osgi.service.log.LogService;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-class OsgiInstallerThread extends Thread {
+class OsgiInstallerThread extends Thread implements FrameworkListener, BundleListener {
     
     private final OsgiInstallerContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
     private final List<SortedSet<RegisteredResource>> newResourcesSets = new ArrayList<SortedSet<RegisteredResource>>();
+    private boolean active = true;
     
     /** Group our RegisteredResource by OSGi entity */ 
     private Map<String, SortedSet<RegisteredResource>>registeredResources = 
@@ -70,16 +75,50 @@ class OsgiInstallerThread extends Thread {
         this.ctx = ctx;
     }
 
+    void deactivate() {
+        ctx.getBundleContext().removeBundleListener(this);
+        ctx.getBundleContext().removeFrameworkListener(this);
+        active = false;
+        synchronized (newResources) {
+            newResources.notify();
+        }
+    }
+    
     @Override
     public void run() {
-        while(true) {
-            // TODO do nothing if nothing to process!
+        ctx.getBundleContext().addFrameworkListener(this);
+        ctx.getBundleContext().addBundleListener(this);
+        
+        while(active) {
             try {
             	mergeNewResources();
             	computeTasks();
+            	
+            	if(tasks.isEmpty()) {
+            	    // No tasks to execute - wait until new resources are
+            	    // registered
+            	    cleanupInstallableResources();
+            	    if(ctx.getLogService() != null) {
+            	        ctx.getLogService().log(LogService.LOG_DEBUG, "No tasks to process, going idle");
+            	    }
+                    ctx.setCounter(OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, 1);
+                    ctx.incrementCounter(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER);
+            	    synchronized (newResources) {
+                        newResources.wait();
+                    }
+                    if(ctx.getLogService() != null) {
+                        ctx.getLogService().log(LogService.LOG_DEBUG, "Notified of new resources, back to work");
+                    }
+                    ctx.setCounter(OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, 0);
+            	    continue;
+            	}
+            	
                 executeTasks();
+                
+                // Some integration tests depend on this delay, make sure to
+                // rerun/adapt them if changing this value
                 Thread.sleep(250);
-                cycleDone();
+                cleanupInstallableResources();
             } catch(Exception e) {
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(LogService.LOG_WARNING, e.toString(), e);
@@ -89,6 +128,9 @@ class OsgiInstallerThread extends Thread {
                 } catch(InterruptedException ignored) {
                 }
             }
+        }
+        if(ctx.getLogService() != null) {
+            ctx.getLogService().log(LogService.LOG_INFO, "Deactivated, exiting");
         }
     }
     
@@ -105,6 +147,7 @@ class OsgiInstallerThread extends Thread {
     void addNewResource(RegisteredResource r) {
         synchronized (newResources) {
             newResources.add(r);
+            newResources.notify();
         }
     }
     
@@ -127,6 +170,7 @@ class OsgiInstallerThread extends Thread {
         if(!toAdd.isEmpty()) {
             synchronized (newResources) {
                 newResourcesSets.add(toAdd);
+                newResources.notify();
             }
         }
     }
@@ -233,7 +277,7 @@ class OsgiInstallerThread extends Thread {
         }
     }
     
-    private void cycleDone() {
+    private void cleanupInstallableResources() {
         // Cleanup resources that are not marked installable,
         // they have been processed by now
         int resourceCount = 0;
@@ -274,5 +318,19 @@ class OsgiInstallerThread extends Thread {
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, str);
        }
+    }
+
+    /** Need to wake up on framework and bundle events, as we might have tasks waiting to retry */
+    public void frameworkEvent(FrameworkEvent arg0) {
+        synchronized (newResources) {
+            newResources.notify();
+        }
+    }
+
+    /** Need to wake up on framework and bundle events, as we might have tasks waiting to retry */
+    public void bundleChanged(BundleEvent arg0) {
+        synchronized (newResources) {
+            newResources.notify();
+        }
     }
 }

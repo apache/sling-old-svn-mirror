@@ -60,8 +60,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	    resetCounters();
     	    installer.addResource(getInstallableResource(
     	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-    	    // wait for two tasks: install and start
-    	    waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
     	    final Bundle b = assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
     	    bundleId = b.getBundleId();
     	}
@@ -73,8 +72,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	    resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-            // wait for two tasks: update (includes stop) and start
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         	final Bundle b = assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);
         	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
@@ -87,8 +85,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             
-            // wait for two cycles to make sure no updates happen
-            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+            // make sure no updates happen
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             final Bundle b = assertBundle("After ignored downgrade", symbolicName, "1.2", Bundle.ACTIVE);
             assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
         }
@@ -104,18 +102,20 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.removeResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            
+            resetCounters();
             installer.removeResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            
+            resetCounters();
             installer.removeResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             
-            // wait for one task: uninstall
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
             final Bundle b = findBundle(symbolicName);
-            assertNull("Bundle must be gone", b);
-            
-            // uninstall task generates package refresh and a number of bundle start tasks, consume these
-            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+            assertNull("Testbundle must be gone", b);
     	}
     	
     	// No resources must be registered anymore
@@ -129,8 +129,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-            // wait for two tasks: install and start
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("After reinstalling 1.1", symbolicName, "1.1", Bundle.ACTIVE);
         }
 

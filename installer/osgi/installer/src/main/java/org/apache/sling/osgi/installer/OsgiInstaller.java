@@ -71,6 +71,12 @@ public interface OsgiInstaller {
      *  of resources having the same OSGi entity ID */
     int REGISTERED_GROUPS_COUNTER = 3;
     
+    /** Counter index: is worker thread idle? (not really a counter: 1 means true) */
+    int WORKER_THREAD_IS_IDLE_COUNTER = 4;
+    
+    /** Counter index: how many times did worker thread become idle */
+    int WORKER_THREAD_BECOMES_IDLE_COUNTER = 5;
+    
 	/** Size of the counters array */
-	int COUNTERS_SIZE = 4;
+	int COUNTERS_SIZE = 6;
 }
