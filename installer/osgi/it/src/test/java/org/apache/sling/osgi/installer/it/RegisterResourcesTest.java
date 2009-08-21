@@ -16,6 +16,7 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,6 +99,17 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         }
         
         {
+            // Add a bundle with different URL scheme - must not be removed by registerResources
+            resetCounters();
+            installer.addResource(new InstallableResource(
+                    "anotherscheme:testA.jar", 
+                    new FileInputStream(getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")), 
+                    "digest1"));
+            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            assertBundle("testA bundle added", "osgi-installer-testA", "1.0", Bundle.ACTIVE);
+        }
+        
+        {
             // Simulate later registration where some bundles have disappeared
             // the installer must mark them "not installable" and act accordingly
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
@@ -117,6 +129,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             assertFalse("Bundle needsB must be stopped as testB is gone (" + state + ")", Bundle.ACTIVE == state);
             assertBundle("Testbundle must be back to 1.0 as 1.1 and 1.2 is gone", 
                     "osgi-installer-testbundle", "1.0", Bundle.ACTIVE);
+            assertBundle("testA bundle should still be present", "osgi-installer-testA", "1.0", Bundle.ACTIVE);
         }
         
         {
@@ -135,6 +148,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             b.start();
             assertBundle("After reinstalling testB, needsB must be startable, ",
             		"osgi-installer-needsB", "1.0", Bundle.ACTIVE);
+            assertBundle("testA bundle should still be present", "osgi-installer-testA", "1.0", Bundle.ACTIVE);
         }
     }
 }
