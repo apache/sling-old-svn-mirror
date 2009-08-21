@@ -58,6 +58,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
     
     @Test
     public void initialRegistrationTest() throws IOException {
+        resetCounters();
         final List<InstallableResource> r = new ArrayList<InstallableResource>();
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
@@ -65,7 +66,9 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
         
         installer.registerResources(r, URL_SCHEME);
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+        
+        // Wait for worker thread to wake up and become idle once
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         
         final String info = "After initial registration";
         assertBundle(info, "osgi-installer-testB", "1.0", Bundle.ACTIVE);
@@ -76,6 +79,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
     @Test
     public void removeAndReaddBundlesTest() throws IOException, BundleException {
         {
+            resetCounters();
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
@@ -83,7 +87,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             
             installer.registerResources(r, URL_SCHEME);
-            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             
             final String info = "After initial registration";
             assertBundle(info, "osgi-installer-testB", "1.0", Bundle.ACTIVE);
@@ -93,8 +97,9 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         
         {
             // Add test 1.2 in between, to make sure it disappears in next registerResources call
+            resetCounters();
             installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-            waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("After adding testbundle V1.2", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
         }
         

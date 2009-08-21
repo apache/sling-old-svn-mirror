@@ -95,7 +95,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
             b.start();
             final long timeout = System.currentTimeMillis() + 2000L;
             while(b.getState() != Bundle.ACTIVE && System.currentTimeMillis() < timeout) {
-                Thread.sleep(10L);
+                sleep(10L);
             }
         } finally {
             if(is != null) {
@@ -130,10 +130,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 if(packageRefreshEventsCount >= targetEventCount) {
                     break;
                 }
-                try {
-                    Thread.sleep(250L);
-                } catch(InterruptedException ignore) {
-                }
+                sleep(250L);
             }
         } finally {
             bundleContext.removeFrameworkListener(this);
@@ -205,7 +202,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         return result;
     }
     
-    protected void waitForConfigAdmin(boolean shouldBePresent) throws InterruptedException {
+    protected void waitForConfigAdmin(boolean shouldBePresent) {
         if(configAdminTracker == null) {
             synchronized (this) {
                 configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
@@ -220,7 +217,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     		if(isPresent == shouldBePresent) {
     			return;
     		}
-    		Thread.sleep(100L);
+    		sleep(100L);
     	} while(System.currentTimeMillis() < waitUntil);
     	fail("ConfigurationAdmin service not available after waiting " + timeout + " seconds");
     }
@@ -239,23 +236,40 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
     
     protected void waitForInstallerAction(int counterType, long howMany) {
-        // if waiting for installer cycles, get initial value from
-        // that counter - we know we want to wait from now on, not from an 
-        // earlier resetCounters() call
-        long targetValue = counters[counterType] + howMany;
-        if(counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER) {
+        waitForInstallerAction(null, counterType, howMany);
+    }
+    
+    /** @param howMany negative values means absolute, instead of relative to current value */
+    protected void waitForInstallerAction(String info, int counterType, long howMany) {
+        if(info == null) {
+            info = "";
+        } else {
+            info += ": ";
+        }
+        
+        final boolean waitForCycles = counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER;
+        
+        long targetValue = howMany <  0 ? -howMany : counters[counterType] + howMany;
+        if(waitForCycles) {
+            // if waiting for installer cycles, get initial value from
+            // that counter - we know we want to wait from now on, not from an 
+            // earlier resetCounters() call
             targetValue = installer.getCounters()[counterType] + howMany;
         }
+        
         final long endTime = System.currentTimeMillis() + WAIT_FOR_ACTION_TIMEOUT_MSEC;
         long lastValue = 0;
         while(System.currentTimeMillis() < endTime) {
-            lastValue = installer.getCounters()[counterType]; 
+            lastValue = installer.getCounters()[counterType];
             if(lastValue >= targetValue) {
+                return;
+            } else if(waitForCycles && installer.getCounters()[OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER] == 1) {
+                // Waiting for controller cycles, but worker thread became idle -> ok
                 return;
             }
             sleep(10);
         }
-        fail("waitForInstallerAction(" + counterType + "," + howMany 
+        fail(info + "waitForInstallerAction(" + counterType + "," + howMany 
                 + ") fails after " + WAIT_FOR_ACTION_TIMEOUT_MSEC + " msec"
                 + ", expected value " + targetValue + ", actual " + lastValue);
     }

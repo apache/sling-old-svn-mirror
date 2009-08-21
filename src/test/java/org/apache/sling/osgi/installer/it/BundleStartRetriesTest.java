@@ -48,16 +48,18 @@ public class BundleStartRetriesTest extends OsgiInstallerTestBase {
         // (== 3 tasks since last counters reset)
         waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 3);
         
-        // and no more retries must happen before receiving a bundle event 
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+        // and no more retries must happen before receiving a bundle event
+        sleep(1000L);
         assertEquals("Exactly 3 OSGi tasks must have been executed after a few installer cycles",
                 nOps + 3, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
 
         // generate a bundle event -> must trigger just one retry
+        resetCounters();
         generateBundleEvent();
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 3);
-        assertEquals("Exactly 4 OSGi tasks total must have been executed after bundle event received",
-                nOps + 4, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        sleep(1000L);
+        assertEquals("Exactly 5 OSGi tasks total must have been executed after bundle event received",
+                nOps + 5, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
     }
 
 }
