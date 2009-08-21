@@ -20,7 +20,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 /** Define the basic ordering of tasks */
 class TaskOrder {
-	static final String CONFIG_UNINSTALL_ORDER = "10-";
+	static final String CONFIG_REMOVE_ORDER = "10-";
 	static final String CONFIG_INSTALL_ORDER = "20-";
 	static final String BUNDLE_REMOVE_ORDER = "30-";
     static final String BUNDLE_UPDATE_ORDER = "40-";

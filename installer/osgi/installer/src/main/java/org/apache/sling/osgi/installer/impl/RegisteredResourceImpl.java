@@ -116,7 +116,9 @@ public class RegisteredResourceImpl implements RegisteredResource {
                 }
     		} else {
                 dataFile = null;
-                entity = ENTITY_CONFIG_PREFIX + new ConfigurationPid(input.getUrl()).getCompositePid();
+                final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
+                entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
+                attributes.put(CONFIG_PID_ATTRIBUTE, pid);
                 if(input.getInputStream() == null) {
                     // config provided as a Dictionary
                     dictionary = copy(input.getDictionary());

@@ -32,7 +32,7 @@ import org.osgi.framework.Version;
 import org.osgi.service.log.LogService;
 
 /** TaskCreator that processes a list of bundle RegisteredResources */
-class BundleTaskCreator implements OsgiInstallerThread.TaskCreator {
+class BundleTaskCreator {
 
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
     

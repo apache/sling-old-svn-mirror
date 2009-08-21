@@ -18,7 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
+import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar
@@ -37,7 +37,7 @@ public class ConfigurationPid {
         }
         
         // cut off extension if it's one of our config extensions
-        for(String ext : ConfigInstallRemoveTask.CONFIG_EXTENSIONS) {
+        for(String ext : ConfigInstallTask.CONFIG_EXTENSIONS) {
             if(pid.endsWith(ext)) {
                 final int lastDot = pid.lastIndexOf('.');
                 if(lastDot >= 0) {
