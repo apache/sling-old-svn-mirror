@@ -80,11 +80,18 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 5);
         assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 3);
     	
+        resetCounters();
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+
+        resetCounters();
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        
         resetCounters();
         installer.removeResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 1);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        
         assertNull("testbundle must be gone at end of test", findBundle("osgi-installer-testbundle"));
         
     	// Now check that bundles A and B have kept their states
