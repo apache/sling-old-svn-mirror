@@ -38,7 +38,7 @@ import org.osgi.service.cm.Configuration;
 
 public class ConfigInstallTest extends OsgiInstallerTestBase {
     
-    private final static long TIMEOUT = 2500L;
+    private final static long TIMEOUT = 5000L;
     
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
