@@ -16,45 +16,68 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.Bundle;
+import org.osgi.service.cm.Configuration;
 
 @RunWith(JUnit4TestRunner.class)
+
 public class ConfigInstallTest extends OsgiInstallerTestBase {
+    
+    private final static long TIMEOUT = 2500L;
+    
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
-    	return defaultConfiguration();
+        return defaultConfiguration();
     }
     
-    @Test
-    public void TODOReactivateTests() {
+    @Before
+    public void setUp() {
+        setupInstaller();
     }
     
-    /**
+    @After
+    public void tearDown() {
+        super.tearDown();
+    }
+    
     @Test
     public void testInstallAndRemoveConfig() throws Exception {
-    	final OsgiInstaller c = getService(OsgiInstaller.class);
-    	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
-    	cfgData.put("foo", "bar");
-    	final String cfgPid = getClass().getName() + "." + System.currentTimeMillis();
-    	
-    	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
-    	
-    	c.scheduleInstallOrUpdate(cfgPid, new DictionaryInstallableData(cfgData));
-    	assertNull("Config " + cfgPid + " must not be found right after scheduleInstall", findConfiguration(cfgPid));
-    	c.executeScheduledOperations();
-    	
-    	final Configuration cfg = findConfiguration(cfgPid);
-    	assertNotNull("Config " + cfgPid + " must be found right after executeScheduledOperations()", cfg);
-    	final String value = (String)cfg.getProperties().get("foo");
-    	assertEquals("Config value must match", "bar", value);
-    	
-    	c.scheduleUninstall(cfgPid);
-    	assertNotNull("Config " + cfgPid + " must still be found right after scheduleUninstall", cfg);
-    	c.executeScheduledOperations();
-    	assertNull("Config " + cfgPid + " must be gone after executeScheduledOperations", findConfiguration(cfgPid));
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        final String cfgPid = getClass().getSimpleName() + "." + System.currentTimeMillis();
+        final InstallableResource r = getInstallableResource(cfgPid, cfgData); 
+        
+        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+        
+        resetCounters();
+        installer.addResource(r);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        
+        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
+        assertNotNull("Config " + cfgPid + " must be found after installing", cfg);
+        final String value = (String)cfg.getProperties().get("foo");
+        assertEquals("Config value must match", "bar", value);
+        
+        resetCounters();
+        installer.removeResource(r);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        
+        waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
     }
     
     @Test
@@ -71,28 +94,35 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
     	assertNotNull(cfgName + " bundle must be found", configAdmin);
     	waitForConfigAdmin(true);
     	
-    	final OsgiInstaller c = getService(OsgiInstaller.class);
     	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
     	cfgData.put("foo", "bar");
-    	final String cfgPid = getClass().getName() + ".deferred." + System.currentTimeMillis();
+    	final String cfgPid = getClass().getSimpleName() + ".deferred." + System.currentTimeMillis();
     	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
-    	
-    	c.scheduleInstallOrUpdate(cfgPid, new DictionaryInstallableData(cfgData));
-    	assertNull("Config " + cfgPid + " must not be found right after scheduleInstall", findConfiguration(cfgPid));
-    	
+
     	// Config installs must be deferred if ConfigAdmin service is stopped
     	configAdmin.stop();
     	waitForConfigAdmin(false);
-    	c.executeScheduledOperations();
-    	configAdmin.start();
+        resetCounters();
+        final InstallableResource r = getInstallableResource(cfgPid, cfgData);
+        installer.addResource(r);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        sleep(1000L);
+        configAdmin.start();
     	waitForConfigAdmin(true);
-    	assertNull("Config " + cfgPid + " must not be installed if ConfigAdmin was stopped", findConfiguration(cfgPid));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForConfiguration("Config must be installed once ConfigurationAdmin restarts", 
+                cfgPid, TIMEOUT, true);
     	
-    	// with configadmin back, executeScheduledOperations must install deferred configs
-    	c.executeScheduledOperations();
-    	assertNotNull("Config " + cfgPid + " must be installed after restarting ConfigAdmin", findConfiguration(cfgPid));
-    	findConfiguration(cfgPid).delete();
-    	assertNull("Config " + cfgPid + " must be gone after test", findConfiguration(cfgPid));
+        configAdmin.stop();
+        waitForConfigAdmin(false);
+        resetCounters();
+        installer.removeResource(r);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        sleep(1000L);
+        configAdmin.start();
+        waitForConfigAdmin(true);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForConfiguration("Config must be removed once ConfigurationAdmin restarts", 
+                cfgPid, TIMEOUT, false);
     }
-    */    
 }

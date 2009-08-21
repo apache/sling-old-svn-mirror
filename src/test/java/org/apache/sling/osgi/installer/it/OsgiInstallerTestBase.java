@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Dictionary;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -152,6 +153,34 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	return null;
     }
     
+    protected Configuration waitForConfiguration(String info, String pid, long timeoutMsec, boolean shouldBePresent) throws Exception {
+        if(info == null) {
+            info = "";
+        } else {
+            info += ": ";
+        }
+        
+        Configuration result = null;
+        final long end = System.currentTimeMillis() + timeoutMsec;
+        do {
+            result = findConfiguration(pid);
+            if(result != null) {
+                break;
+            }
+            if(!shouldBePresent && result == null) {
+                break;
+            }
+            sleep(25);
+        } while(System.currentTimeMillis() < end);
+        
+        if(shouldBePresent && result == null) {
+            fail(info + "Configuration not found (" + pid + ")");
+        } else if(!shouldBePresent && result != null) {
+            fail(info + "Configuration is still present (" + pid + ")");
+        }
+        return result;
+    }
+    
     protected Bundle findBundle(String symbolicName) {
     	for(Bundle b : bundleContext.getBundles()) {
     		if(symbolicName.equals(b.getSymbolicName())) {
@@ -198,6 +227,16 @@ class OsgiInstallerTestBase implements FrameworkListener {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
         final InstallableResource result = new InstallableResource(url, new FileInputStream(testBundle), digest);
+        result.setPriority(priority);
+        return result;
+    }
+    
+    protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data) {
+        return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
+    }
+    
+    protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
+        final InstallableResource result = new InstallableResource(URL_SCHEME + ":/" + configPid, data);
         result.setPriority(priority);
         return result;
     }
