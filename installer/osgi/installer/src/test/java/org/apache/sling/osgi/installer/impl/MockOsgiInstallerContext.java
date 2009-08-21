@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -47,13 +48,13 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 		return null;
 	}
 
-	public Storage getStorage() {
-		return null;
-	}
-
     public void incrementCounter(int index) {
     }
     
     public void setCounter(int index, long value) {
+    }
+
+    public Bundle getMatchingBundle(String bundleSymbolicName) {
+        return null;
     }
 }

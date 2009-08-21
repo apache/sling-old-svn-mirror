@@ -69,6 +69,11 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     }
     
     @Override
+    public String toString() {
+        return getClass().getName() + ": " + resource;
+    }
+
+    @Override
     public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
         return ctx.getConfigurationAdmin() != null;
     }

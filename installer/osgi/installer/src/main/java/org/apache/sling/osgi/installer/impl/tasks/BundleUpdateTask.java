@@ -51,7 +51,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     public void execute(OsgiInstallerContext ctx) throws Exception {
         super.execute(ctx);
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = TaskUtilities.getMatchingBundle(ctx.getBundleContext(), symbolicName);
+        final Bundle b = ctx.getMatchingBundle(symbolicName);
         if(b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }

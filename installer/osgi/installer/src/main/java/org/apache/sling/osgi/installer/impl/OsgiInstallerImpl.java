@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -62,8 +63,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
     }
 
 	public ConfigurationAdmin getConfigurationAdmin() {
-		// TODO ConfigurationAdmin should be bound/unbound rather than
-		// looking it up every time, but that caused problems in the it/OsgiControllerTest
 		if(bundleContext != null) {
 		   	final ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
 		    if(ref != null) {
@@ -118,16 +117,26 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         }
 	}
 
-	public Storage getStorage() {
-		// TODO
-		return null;
-	}
-	
 	public void incrementCounter(int index) {
 	    counters[index]++;
 	}
 
     public void setCounter(int index, long value) {
         counters[index] = value;
+    }
+    
+    /**
+     * Finds the bundle with given symbolic name in our BundleContext.
+     */
+    public Bundle getMatchingBundle(String bundleSymbolicName) {
+        if (bundleSymbolicName != null) {
+            Bundle[] bundles = bundleContext.getBundles();
+            for (Bundle bundle : bundles) {
+                if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
+                    return bundle;
+                }
+            }
+        }
+        return null;
     }
 }

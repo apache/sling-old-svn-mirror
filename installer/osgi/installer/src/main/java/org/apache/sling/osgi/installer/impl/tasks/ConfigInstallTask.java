@@ -26,9 +26,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 
-/** Install/remove task for configurations 
- *  TODO split into install / remove tasks and reimplement
- * */
+/** Install/remove task for configurations */ 
 public class ConfigInstallTask extends AbstractConfigTask {
 
     static final String ALIAS_KEY = "_alias_factory_pid";
@@ -44,11 +42,6 @@ public class ConfigInstallTask extends AbstractConfigTask {
         return TaskOrder.CONFIG_INSTALL_ORDER + pid.getCompositePid();
     }
     
-    @Override
-    public String toString() {
-        return getClass().getName() + ": " + resource;
-    }
-
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
         super.execute(ctx);

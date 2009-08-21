@@ -30,12 +30,6 @@ class Utilities {
         return result;
     }
     
-    static void setStorage(OsgiInstallerImpl c, Storage s) throws Exception {
-        final Field f = c.getClass().getDeclaredField("storage");
-        f.setAccessible(true);
-        f.set(c, s);
-    }
-    
     static void setField(Object o, String name, Object value) throws Exception {
         final Field f = o.getClass().getDeclaredField(name);
         f.setAccessible(true);
