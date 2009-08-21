@@ -19,9 +19,7 @@
 package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -55,6 +53,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
     }
 
     public void deactivate() {
+        installerThread.deactivate();
         if(getLogService() != null) {
             getLogService().log(LogService.LOG_WARNING,
                     OsgiInstaller.class.getName()
