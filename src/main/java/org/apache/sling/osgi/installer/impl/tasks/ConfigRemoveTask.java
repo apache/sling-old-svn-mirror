@@ -41,11 +41,6 @@ import org.osgi.service.log.LogService;
     }
     
     @Override
-    public String toString() {
-        return getClass().getName() + ": " + resource;
-    }
-
-    @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
         super.execute(ctx);
         

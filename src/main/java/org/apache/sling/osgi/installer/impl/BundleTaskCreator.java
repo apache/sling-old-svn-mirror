@@ -25,7 +25,6 @@ import java.util.SortedSet;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
-import org.apache.sling.osgi.installer.impl.tasks.TaskUtilities;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -140,7 +139,7 @@ class BundleTaskCreator {
 
 	protected BundleInfo getBundleInfo(OsgiInstallerContext ctx, RegisteredResource bundle) {
 		final String symbolicName = (String)bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-		final Bundle b = TaskUtilities.getMatchingBundle(ctx.getBundleContext(), symbolicName);
+		final Bundle b = ctx.getMatchingBundle(symbolicName);
 		if(b == null) {
 		    return null;
         }

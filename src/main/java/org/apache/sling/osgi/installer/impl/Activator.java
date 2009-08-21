@@ -125,17 +125,16 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         }
     }
     
+    /** Used for tasks that wait for a framework or bundle event before retrying their operations */
     public static long getTotalEventsCount() {
         return eventsCount;
     }
 
     public void frameworkEvent(FrameworkEvent arg0) {
-        // we'll retry as soon as any FrameworkEvent or BundleEvent happens
         eventsCount++;
     }
 
     public void bundleChanged(BundleEvent arg0) {
-        // we'll retry as soon as any FrameworkEvent or BundleEvent happens
         eventsCount++;
     }
 }

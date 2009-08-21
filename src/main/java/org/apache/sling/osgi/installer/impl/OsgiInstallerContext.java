@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -25,13 +26,13 @@ import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Installer context, gives access to selected methods of the {@link OsgiInstallerImpl} */
 public interface OsgiInstallerContext {
-	Storage getStorage();
 	BundleContext getBundleContext();
 	PackageAdmin getPackageAdmin();
 	ConfigurationAdmin getConfigurationAdmin();
 	LogService getLogService();
 	void incrementCounter(int index);
     void setCounter(int index, long value);
+    Bundle getMatchingBundle(String bundleSymbolicName);
 	
 	/** Schedule a task for execution in the current OsgiController cycle */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);
