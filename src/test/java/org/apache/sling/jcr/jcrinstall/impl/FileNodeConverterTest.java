@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.impl;
 
 import junit.framework.TestCase;
 
 public class FileNodeConverterTest extends TestCase {
-    private final FileNodeConverter fc = new FileNodeConverter(0);
+    private final FileNodeConverter fc = new FileNodeConverter();
     
     public void testAcceptedFilenames() {
         final String [] filenames = {
