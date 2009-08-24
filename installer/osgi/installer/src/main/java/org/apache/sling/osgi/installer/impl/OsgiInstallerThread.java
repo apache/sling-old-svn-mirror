@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -52,6 +54,7 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
     private final List<SortedSet<RegisteredResource>> newResourcesSets = new ArrayList<SortedSet<RegisteredResource>>();
+    private final Set<String> newResourcesSchemes = new HashSet<String>(); 
     private boolean active = true;
     
     /** Group our RegisteredResource by OSGi entity */ 
@@ -158,11 +161,14 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
             toAdd.add(rr);
         }
         
-        if(!toAdd.isEmpty()) {
-            synchronized (newResources) {
-                newResourcesSets.add(toAdd);
-                newResources.notify();
+        synchronized (newResources) {
+            if(!toAdd.isEmpty()) {
+            	newResourcesSets.add(toAdd);
             }
+            // Need to manage schemes separately: in case toAdd is empty we
+            // want to mark all such resources as non-installable
+            newResourcesSchemes.add(urlScheme);
+            newResources.notify();
         }
     }
     
@@ -172,8 +178,7 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
             // of available resources for a given scheme. So, before adding them mark
             // all resources with the same scheme in newResources, and existing
             // registeredResources, as not installable
-            for(SortedSet<RegisteredResource> s : newResourcesSets) {
-                final String scheme = s.first().getUrlScheme();
+        	for(String scheme : newResourcesSchemes) {
                 debug("Processing set of new resources with scheme " + scheme);
                 for(RegisteredResource r : newResources) {
                     if(r.getUrlScheme().equals(scheme)) {
@@ -189,10 +194,13 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
                         }
                     }
                 }
+        	}
+            for(SortedSet<RegisteredResource> s : newResourcesSets) {
                 newResources.addAll(s);
-                debug("Added set of " + s.size() + " new resources with scheme " + scheme);
+                debug("Added set of " + s.size() + " new resources with scheme " + s.first().getUrlScheme());
             }
             newResourcesSets.clear();
+            newResourcesSchemes.clear();
             
             for(RegisteredResource r : newResources) {
                 SortedSet<RegisteredResource> t = registeredResources.get(r.getEntityId());
