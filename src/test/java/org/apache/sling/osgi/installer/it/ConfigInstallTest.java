@@ -119,6 +119,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
         installer.removeResource(r);
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
+        resetCounters();
         configAdmin.start();
         waitForConfigAdmin(true);
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
