@@ -25,6 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+/** TODO adapt or remove */
 class ContentHelper {
     public static final String NT_FOLDER = "nt:folder";
     public static final String NT_FILE = "nt:file";
@@ -85,7 +86,9 @@ class ContentHelper {
     }
     
     void createOrUpdateFile(String path, MockInstallableData d) throws RepositoryException {
+    	/*
     	createOrUpdateFile(path, d.adaptTo(InputStream.class), d.getLastModified());
+    	*/
     }
     
     void createOrUpdateFile(String path, InputStream data, long lastModified) throws RepositoryException {

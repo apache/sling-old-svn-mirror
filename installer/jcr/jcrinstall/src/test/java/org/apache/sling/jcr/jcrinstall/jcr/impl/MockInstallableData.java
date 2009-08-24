@@ -18,13 +18,11 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.InstallableData;
+/** TODO adapt or remove */
+public class MockInstallableData /* implements InstallableData */ {
 
-public class MockInstallableData implements InstallableData {
-
+	/*
 	private final InputStream inputStream;
 	private long lastModified;
 	private String digest;
@@ -78,4 +76,5 @@ public class MockInstallableData implements InstallableData {
     public int getBundleStartLevel() {
         return 0;
     }
+    */
 }

@@ -28,6 +28,7 @@ import javax.jcr.observation.EventListener;
 /** Used by tests to wait until JCR notification events
  * 	have been delivered.
  */
+/** TODO remove if not needed for new tests */
 class EventHelper implements EventListener {
 	private final Session session;
 	private int eventCount;

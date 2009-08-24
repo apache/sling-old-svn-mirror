@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.lang.reflect.Array;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -31,38 +29,25 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
-import org.apache.sling.osgi.installer.DictionaryInstallableData;
-import org.apache.sling.osgi.installer.InstallableData;
-import org.apache.sling.runmode.RunMode;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Converts configuration nodes to InstallableData, taking
- * 	RunMode into account.
- */
-class ConfigNodeConverter implements NodeConverter {
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+/** Converts configuration nodes to InstallableData */
+class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 	
 	public static final String CONFIG_NODE_TYPE = "sling:OsgiConfig";
-	
-	/**	TODO making this dynamic and optional would be better, but
-	 * 	that would probably create issues at startup 
-	 * 	@scr.reference 
-	 */
-	private RunMode runMode;
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	/** Convert n to an InstallableData, or return null
 	 * 	if we don't know how to convert it.
 	 */
-	public InstallableData convertNode(Node n) throws Exception {
-		InstallableData result = null;
+	public InstallableResource convertNode(String urlScheme, Node n) throws Exception {
+		InstallableResource result = null;
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			final Dictionary<String, Object> config = load(n);
-			result = new DictionaryInstallableData(config);
+			result = new InstallableResource(urlScheme + ":" + n.getPath(), load(n));
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());
@@ -79,22 +64,6 @@ class ConfigNodeConverter implements NodeConverter {
         // load default values from node itself
         log.debug("Loading {} properties", n.getPath());
         loadProperties(result, n);
-        
-        if(runMode != null) {
-            final String [] modeStr = runMode.getCurrentRunModes();
-            final SortedSet<String> modes = new TreeSet<String>();
-            for(String s : modeStr) {
-                modes.add(s);
-            }
-            for(String mode : modes) {
-                if(n.hasNode(mode)) {
-                    log.debug(
-                            "Loading {}/{} properties for current run mode, overriding previous values", 
-                            n.getPath(), mode);
-                    loadProperties(result, n.getNode(mode));
-                }
-            }
-        }
         
         return result;
     }
