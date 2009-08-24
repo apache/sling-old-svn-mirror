@@ -16,9 +16,13 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
@@ -31,9 +35,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertFalse;
 
 @RunWith(JUnit4TestRunner.class)
 /** Test the {@link OsgiInstaller.registerResources} method, which lets a client
@@ -154,6 +155,35 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             assertBundle("After reinstalling testB, needsB must be startable, ",
             		"osgi-installer-needsB", "1.0", Bundle.ACTIVE);
             assertBundle("testA bundle should still be present", "osgi-installer-testA", "1.0", Bundle.ACTIVE);
+        }
+    }
+    
+    @Test
+    public void reAddZeroResourcesTest() throws IOException {
+        {
+            resetCounters();
+            final List<InstallableResource> r = new ArrayList<InstallableResource>();
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            
+            installer.registerResources(r, URL_SCHEME);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            
+            final String info = "After initial registration";
+            assertBundle(info, "osgi-installer-testB", "1.0", Bundle.ACTIVE);
+            assertBundle(info, "osgi-installer-needsB", "1.0", Bundle.ACTIVE);
+            assertBundle(info, "osgi-installer-testbundle", "1.1", Bundle.ACTIVE);
+        }
+        
+        {
+        	resetCounters();
+        	installer.registerResources(new LinkedList<InstallableResource>(), URL_SCHEME);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            assertNull("After registration with no resources, testB bundle must be gone", findBundle("osgi-installer-testB"));
+            assertNull("After registration with no resources, testB bundle must be gone", findBundle("osgi-installer-needsB"));
+            assertNull("After registration with no resources, testB bundle must be gone", findBundle("osgi-installer-testbundle"));
         }
     }
 }
