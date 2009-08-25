@@ -473,4 +473,31 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.delete(testRoot);
     }
 
+    public void testMoveAtRoot() throws IOException {
+        final String pathA = "/" + getClass().getSimpleName() + "_A";
+        final String pathB = "/" + getClass().getSimpleName() + "_B";
+        
+        final String testText = "Hello." + Math.random();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", testText);
+        
+        // Create pathA
+        testClient.delete(HTTP_BASE_URL + pathA);
+        assertHttpStatus(HTTP_BASE_URL + pathA, HttpServletResponse.SC_NOT_FOUND);
+        testClient.createNode(HTTP_BASE_URL + pathA, props);
+        
+        // Move to pathB
+        testClient.delete(HTTP_BASE_URL + pathB);
+        assertHttpStatus(HTTP_BASE_URL + pathB, HttpServletResponse.SC_NOT_FOUND);
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, pathB);
+        props.put(SlingPostConstants.RP_REPLACE, "true");
+        testClient.createNode(HTTP_BASE_URL + pathA, props);
+        String content = getContent(HTTP_BASE_URL + pathB + ".json", CONTENT_TYPE_JSON);
+        assertJavascript(testText, content, "out.println(data.text)");
+        assertHttpStatus(HTTP_BASE_URL + pathA, HttpServletResponse.SC_NOT_FOUND);
+    }
+
 }
