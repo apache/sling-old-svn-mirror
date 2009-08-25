@@ -180,9 +180,9 @@ public class JcrInstaller implements Runnable {
     	// Scan watchedFolders and register resources with installer
     	final List<InstallableResource> resources = new LinkedList<InstallableResource>();
     	for(WatchedFolder f : watchedFolders) {
-    		final Collection<InstallableResource> c = f.scan();
-    		log.debug("Startup: {} provides resources {}", f, c);
-    		resources.addAll(c);
+    		final WatchedFolder.ScanResult r = f.scan();
+    		log.debug("Startup: {} provides resources {}", f, r.toAdd);
+    		resources.addAll(r.toAdd);
     	}
     	
     	log.info("Registering {} resources with OSGi installer", resources.size());
@@ -315,6 +315,21 @@ public class JcrInstaller implements Runnable {
             try {
                 // TODO rendezvous with installer if any folder has been deleted
                 addAndDeleteFolders();
+
+                // Rescan WatchedFolders if needed
+                if(System.currentTimeMillis() > WatchedFolder.getNextScanTime()) {
+                    for(WatchedFolder wf : watchedFolders) {
+                        final WatchedFolder.ScanResult sr = wf.scan();
+                        for(InstallableResource r : sr.toRemove) {
+                            log.info("Removing resource from OSGi installer: {}",r);
+                            installer.removeResource(r);
+                        }
+                        for(InstallableResource r : sr.toAdd) {
+                            log.info("Adding resource to OSGi installer: {}",r);
+                            installer.addResource(r);
+                        }
+                    }
+                }
                 cyclesCount++;
 
                 // TODO wait for events from our listeners, and/or WatchedFolder scan time

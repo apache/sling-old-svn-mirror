@@ -18,12 +18,18 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Map;
 
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 
 /** Utility class used to create test content */
 class ContentHelper {
@@ -47,10 +53,34 @@ class ContentHelper {
         "/apps/noninstall"
     };
     
+    final String [] FAKE_RESOURCES = {
+        "/libs/foo/bar/install/bundle1.jar",
+        "/libs/foo/bar/install/cfg3.cfg",
+        "/libs/foo/wii/install/bundle2.jar",
+        "/libs/foo/wii/install/cfg1.properties",
+        "/libs/foo/wii/install/cfg2.properties",
+    };
+    
+    final String [] FAKE_CONFIGS = {
+        "/libs/foo/bar/install/cfgA",
+        "/libs/foo/wii/install/cfgB",
+        "/libs/foo/wii/install/cfgC"
+    };
+    
     private final Session session;
     
-    ContentHelper(Session s) {
+    ContentHelper(Session s) throws RepositoryException, IOException {
     	session = s;
+    	
+        final NamespaceRegistry r = session.getWorkspace().getNamespaceRegistry();
+        try {
+            r.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
+        } catch(RepositoryException ignore) {
+            // don't fail if already registered
+        }
+        
+        RepositoryUtil.registerNodeType(session,
+                this.getClass().getResourceAsStream("/SLING-INF/nodetypes/osgiconfig.cnd"));
     }
 
     void cleanupContent() throws Exception {
@@ -70,6 +100,12 @@ class ContentHelper {
         for(String folder : IGNORED_FOLDERS) {
             createFolder(folder);
         }
+        for(String path : FAKE_RESOURCES) {
+            createOrUpdateFile(path);
+        }
+        for(String path : FAKE_CONFIGS) {
+            createConfig(path, null);
+        }
     }
     
     void createFolder(String path) throws Exception {
@@ -88,6 +124,12 @@ class ContentHelper {
     void delete(String path) throws RepositoryException {
         session.getItem(path).remove();
         session.save();
+    }
+    
+    void createOrUpdateFile(String path) throws RepositoryException {
+        final String data = "Fake data for " + path;
+        final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
+        createOrUpdateFile(path, is, System.currentTimeMillis());
     }
     
     void createOrUpdateFile(String path, MockInstallableResource d) throws RepositoryException {
@@ -121,4 +163,15 @@ class ContentHelper {
         }
         return path;
     }
+    
+    void createConfig(String path, Map<String, String> data) throws RepositoryException {
+        path = relPath(path);
+        Node cfg = null;
+        if(session.getRootNode().hasNode(path)) {
+            cfg = session.getRootNode().getNode(path);
+        } else {
+            cfg = session.getRootNode().addNode(path, "sling:OsgiConfig");
+        }
+        cfg.getParent().save();
+   }
 }
