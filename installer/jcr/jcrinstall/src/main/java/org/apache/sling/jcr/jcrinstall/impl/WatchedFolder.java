@@ -18,9 +18,12 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -47,6 +50,14 @@ class WatchedFolder implements EventListener{
     private final String urlScheme;
     private final Collection <JcrInstaller.NodeConverter> converters;
     protected final Logger log = LoggerFactory.getLogger(getClass());
+    
+    static class ScanResult {
+        List<InstallableResource> toAdd = new ArrayList<InstallableResource>(); 
+        List<InstallableResource> toRemove = new ArrayList<InstallableResource>();
+    };
+    
+    /** Store the digests of the last returned resources, keyed by path, to detect changes */
+    private final Map<String, String> digests = new HashMap<String, String>();
     
     // WatchedFolders that need a rescan will be scanned
     // once no JCR events have been received for this amount of time.
@@ -101,12 +112,12 @@ class WatchedFolder implements EventListener{
     	return needsScan;
     }
     
-    long getNextScanTime() {
+    static long getNextScanTime() {
     	return nextScanTime;
     }
     
     /** Scan the contents of our folder and return the corresponding InstallableResource */
-    List<InstallableResource> scan() throws Exception {
+    ScanResult scan() throws Exception {
         log.debug("Scanning {}", path);
         
         Node folder = null;
@@ -123,18 +134,38 @@ class WatchedFolder implements EventListener{
         }
         
         // Return an InstallableResource for all child nodes for which we have a NodeConverter
-        final List<InstallableResource> result = new ArrayList<InstallableResource>();
+        final ScanResult result = new ScanResult();
         final NodeIterator it = folder.getNodes();
         while(it.hasNext()) {
         	final Node n = it.nextNode();
         	for(JcrInstaller.NodeConverter nc : converters) {
         		final InstallableResource r = nc.convertNode(urlScheme, n);
         		if(r != null) {
-        			r.setPriority(priority);
-        			result.add(r);
+        		    final String oldDigest = digests.get(r.getUrl());
+        		    if(r.getDigest().equals(oldDigest)) {
+        		        // Already returned that resource, ignore
+        		        digests.remove(r.getUrl());
+        		    } else {
+                        r.setPriority(priority);
+                        result.toAdd.add(r);
+        		    }
         			break;
         		}
         	}
+        }
+        
+        // Resources left in the digests map have been deleted since last scan, 
+        // need to be removed from OsgiInstaller
+        final ByteArrayInputStream emptyStream = new ByteArrayInputStream("".getBytes());
+        for(Map.Entry<String, String> e : digests.entrySet()) {
+            InstallableResource r = new InstallableResource(e.getKey(), emptyStream, e.getValue());
+            result.toRemove.add(r);
+        }
+        
+        // Store digests of the resources that we're adding, for next time
+        digests.clear();
+        for(InstallableResource r : result.toAdd) {
+            digests.put(r.getUrl(), r.getDigest());
         }
         
         return result;

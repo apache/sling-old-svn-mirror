@@ -20,23 +20,59 @@ package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 
 class MockOsgiInstaller implements OsgiInstaller {
 
+    private final long [] counters = new long[OsgiInstaller.COUNTERS_SIZE];
+    
+    static class InstallableResourceComparator implements Comparator<InstallableResource> {
+        public int compare(InstallableResource a, InstallableResource b) {
+            return a.getUrl().compareTo(b.getUrl());
+        }
+        
+    }
+    
+    /** Keep track of our method calls, for verification */
+    private final List<String> recordedCalls = new LinkedList<String>();
+    
     public void addResource(InstallableResource d) throws IOException {
+        recordCall("add", d);
     }
 
     public long[] getCounters() {
-        return null;
+        return counters;
     }
 
-    public void registerResources(Collection<InstallableResource> data,
-            String urlScheme) throws IOException {
+    public void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException {
+        // Sort the data to allow comparing the recorded calls reliably
+        final List<InstallableResource> sorted = new LinkedList<InstallableResource>();
+        sorted.addAll(data);
+        Collections.sort(sorted, new InstallableResourceComparator());
+        for(InstallableResource r : data) {
+            recordCall("register", r);
+        }
     }
 
     public void removeResource(InstallableResource d) throws IOException {
+        recordCall("remove", d);
+    }
+    
+    private synchronized void recordCall(String prefix, InstallableResource r) {
+        recordedCalls.add(prefix + ":" + r.getUrl() + ":" + r.getPriority());
+    }
+    
+    synchronized void clearRecordedCalls() {
+        recordedCalls.clear();
+    }
+    
+    List<String> getRecordedCalls() {
+        return recordedCalls;
     }
 }
