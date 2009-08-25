@@ -18,7 +18,13 @@
  */
 package org.apache.sling.osgi.installer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
 
 /** A piece of data that can be installed by the OSGi controller.
@@ -32,6 +38,7 @@ public class InstallableResource {
 	private final InputStream inputStream;
 	private final Dictionary<String, Object> dictionary;
 	private int priority;
+    public static final String DIGEST_TYPE = "MD5";
 	
 	/** Default resource priority */
 	public static final int DEFAULT_PRIORITY = 100;
@@ -78,7 +85,11 @@ public class InstallableResource {
 		this.extension = getExtension(url);
 		this.inputStream = null;
 		this.dictionary = d;
-        this.digest = null;
+		try {
+	        this.digest = computeDigest(d);
+		} catch(Exception e) {
+		    throw new IllegalStateException("Unexpected Exception while computing digest", e);
+		}
         this.priority = DEFAULT_PRIORITY;
 	}
 
@@ -136,5 +147,23 @@ public class InstallableResource {
     /** Set the priority of this resource */
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+    
+    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
+    public static String digestToString(MessageDigest d) {
+        final BigInteger bigInt = new BigInteger(1, d.digest());
+        return new String(bigInt.toString(16));
+    }
+    
+    /** Digest is needed to detect changes in data 
+     * @throws  */
+    public static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
+        final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(data);
+        bos.flush();
+        d.update(bos.toByteArray());
+        return digestToString(d);
     }
 }

@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.osgi.installer.InstallableResource;
+
 public class DictionaryDigestTest {
 	private void setTestData(Hashtable<String, Object> d) {
 		d.put("str", "value");
@@ -33,7 +35,7 @@ public class DictionaryDigestTest {
 	
 	private String testDigestChanged(Dictionary<String, Object> d, 
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = RegisteredResourceImpl.computeDigest(d);
+		final String newDigest = InstallableResource.computeDigest(d);
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -51,8 +53,8 @@ public class DictionaryDigestTest {
 		
 		assertEquals(
 				"Two dictionary with same values have the same key", 
-				RegisteredResourceImpl.computeDigest(d1),
-				RegisteredResourceImpl.computeDigest(d2)
+				InstallableResource.computeDigest(d1),
+				InstallableResource.computeDigest(d2)
 		);
 	}
 	

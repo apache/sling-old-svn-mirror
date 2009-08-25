@@ -85,7 +85,7 @@ public class RegisteredResourceTest {
         
         {
             final InputStream s = new ByteArrayInputStream("foo=bar\nother=2".getBytes());
-            final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.properties", s, null));
+            final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.properties", s, "digest1"));
             assertEquals(".properties URL creates a CONFIG resource", 
                     RegisteredResource.ResourceType.CONFIG, r.getResourceType());
             final InputStream rs = r.getInputStream();
@@ -132,48 +132,9 @@ public class RegisteredResourceTest {
         
         try {
             new LocalFileRegisteredResource(new InstallableResource("test:1.foo", in, null));
+            fail("With non-jar extension, expected an IllegalArgumentException as digest is null");
         } catch(IllegalArgumentException asExpected) {
-            fail("With non-jar extension, did not expect an IllegalArgumentException if digest is null");
         }
-    }
-    
-    @org.junit.Test public void testDictionaryDigestFromDictionaries() throws Exception {
-        final Hashtable<String, Object> d1 = new Hashtable<String, Object>();
-        final Hashtable<String, Object> d2 = new Hashtable<String, Object>();
-        
-        final String [] keys = { "foo", "bar", "something" };
-        for(int i=0 ; i < keys.length; i++) {
-            d1.put(keys[i], keys[i] + "." + keys[i]);
-        }
-        for(int i=keys.length - 1 ; i >= 0; i--) {
-            d2.put(keys[i], keys[i] + "." + keys[i]);
-        }
-        
-        final RegisteredResource r1 = new RegisteredResourceImpl(null, new InstallableResource("test:url1", d1));
-        final RegisteredResource r2 = new RegisteredResourceImpl(null, new InstallableResource("test:url1", d2));
-        
-        assertEquals(
-                "Two RegisteredResource (Dictionary) with same values but different key orderings must have the same key", 
-                r1.getDigest(),
-                r2.getDigest()
-        );
-    }
-    
-    @org.junit.Test public void testDictionaryDigestFromInputStreams() throws Exception {
-        final String d1 = "foo=bar\nsomething=another\n";
-        final String d2 = "something=another\nfoo=bar\n";
-        
-        final ByteArrayInputStream s1 = new ByteArrayInputStream(d1.getBytes());
-        final ByteArrayInputStream s2 = new ByteArrayInputStream(d2.getBytes());
-        
-        final RegisteredResource r1 = new RegisteredResourceImpl(null, new InstallableResource("test:url1.properties", s1, null));
-        final RegisteredResource r2 = new RegisteredResourceImpl(null, new InstallableResource("test:url2.properties", s2, null));
-        
-        assertEquals(
-                "Two RegisteredResource (InputStream) with same values but different key orderings must have the same key", 
-                r1.getDigest(),
-                r2.getDigest()
-        );
     }
     
     @org.junit.Test public void testBundleManifest() throws Exception {
@@ -217,7 +178,7 @@ public class RegisteredResourceTest {
         };
         
         for(String url : goodOnes) {
-            final RegisteredResource r = new RegisteredResourceImpl(null, new InstallableResource(url, s, null));
+            final RegisteredResource r = new RegisteredResourceImpl(null, new InstallableResource(url, s, "digest1"));
             assertEquals("Expected scheme 'foo' for URL " + url, "foo", r.getUrlScheme());
         }
     }

@@ -76,7 +76,6 @@ public class RegisteredResourceImpl implements RegisteredResource {
     
     private final RegisteredResource.ResourceType resourceType;
 	
-	public static final String DIGEST_TYPE = "MD5";
     public static final String ENTITY_JAR_PREFIX = "jar:";
 	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
 	public static final String ENTITY_CONFIG_PREFIX = "config:";
@@ -94,6 +93,10 @@ public class RegisteredResourceImpl implements RegisteredResource {
     		priority = input.getPriority();
     		serialNumber = getNextSerialNumber();
     		
+            if(input.getDigest() == null || input.getDigest().length() == 0) {
+                throw new IllegalArgumentException("Missing digest: " + input);
+            }
+            
     		if(resourceType == RegisteredResource.ResourceType.BUNDLE) {
                 if(input.getInputStream() == null) {
                     throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
@@ -102,10 +105,6 @@ public class RegisteredResourceImpl implements RegisteredResource {
                 dataFile = getDataFile(ctx);
                 copyToLocalStorage(input.getInputStream(), dataFile);
                 digest = input.getDigest();
-                if(digest == null || digest.length() == 0) {
-                    throw new IllegalArgumentException(
-                            "Digest must be supplied for BUNDLE resource type: " + input);
-                }
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME); 
                 if(name == null) {
@@ -125,11 +124,7 @@ public class RegisteredResourceImpl implements RegisteredResource {
                 } else {
                     dictionary = readDictionary(input.getInputStream()); 
                 }
-                try {
-                    digest = computeDigest(dictionary);
-                } catch(NoSuchAlgorithmException nse) {
-                    throw new IOException("NoSuchAlgorithmException:" + DIGEST_TYPE);
-                }
+                digest = input.getDigest();
     		}
     	} finally {
     		if(input.getInputStream() != null) {
@@ -182,24 +177,6 @@ public class RegisteredResourceImpl implements RegisteredResource {
 		return digest;
 	}
 	
-    /** Digest is needed to detect changes in data 
-     * @throws  */
-    static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
-        final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        final ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(data);
-        bos.flush();
-        d.update(bos.toByteArray());
-        return digestToString(d);
-    }
-
-    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
-    private static String digestToString(MessageDigest d) {
-        final BigInteger bigInt = new BigInteger(1, d.digest());
-        return new String(bigInt.toString(16));
-    }
-    
     /** Copy data to local storage */
 	private void copyToLocalStorage(InputStream data, File f) throws IOException {
 		final OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
