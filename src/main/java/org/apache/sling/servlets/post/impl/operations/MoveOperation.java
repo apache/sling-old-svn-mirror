@@ -45,6 +45,9 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         }
 
         String sourcePath = source.getPath();
+        if (destParent.equals("/")) {
+            destParent = "";
+        }
         String destPath = destParent + "/" + destName;
         Session session = source.getSession();
 
