@@ -70,7 +70,7 @@ class WatchedFolder implements EventListener{
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
 
-        log.info("Watching folder " + path);
+        log.info("Watching folder {} (priority {})", path, priority);
     }
     
     void cleanup() {

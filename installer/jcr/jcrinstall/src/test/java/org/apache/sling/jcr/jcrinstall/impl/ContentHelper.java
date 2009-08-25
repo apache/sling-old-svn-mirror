@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -25,7 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-/** TODO adapt or remove */
+/** Utility class used to create test content */
 class ContentHelper {
     public static final String NT_FOLDER = "nt:folder";
     public static final String NT_FILE = "nt:file";
@@ -37,14 +37,14 @@ class ContentHelper {
     public static final String JCR_DATA = "jcr:data";
     
     final String [] WATCHED_FOLDERS = {
-        "libs/foo/bar/install",
-        "libs/foo/wii/install",
-        "apps/install"
+        "/libs/foo/bar/install",
+        "/libs/foo/wii/install",
+        "/apps/install"
     };
 
     final String [] IGNORED_FOLDERS = {
-        "libs/foo/bar/installed",
-        "apps/noninstall"
+        "/libs/foo/bar/installed",
+        "/apps/noninstall"
     };
     
     private final Session session;
@@ -73,7 +73,7 @@ class ContentHelper {
     }
     
     void createFolder(String path) throws Exception {
-        final String [] parts = path.split("/");
+        final String [] parts = relPath(path).split("/");
         Node n = session.getRootNode();
         for(String part : parts) {
             if(n.hasNode(part)) {
@@ -85,14 +85,17 @@ class ContentHelper {
         session.save();
     }
     
-    void createOrUpdateFile(String path, MockInstallableData d) throws RepositoryException {
-    	/*
-    	createOrUpdateFile(path, d.adaptTo(InputStream.class), d.getLastModified());
-    	*/
+    void delete(String path) throws RepositoryException {
+        session.getItem(path).remove();
+        session.save();
+    }
+    
+    void createOrUpdateFile(String path, MockInstallableResource d) throws RepositoryException {
+    	createOrUpdateFile(path, d.getInputStream(), System.currentTimeMillis());
     }
     
     void createOrUpdateFile(String path, InputStream data, long lastModified) throws RepositoryException {
-        final String relPath = path.substring(1);
+        final String relPath = relPath(path);
         Node f = null;
         Node res = null;
         if(session.getRootNode().hasNode(relPath)) {
@@ -110,5 +113,12 @@ class ContentHelper {
         res.setProperty(JCR_MIMETYPE, "");
         
         f.getParent().save();
+    }
+    
+    String relPath(String path) {
+        if(path.startsWith("/")) {
+            return path.substring(1);
+        }
+        return path;
     }
 }
