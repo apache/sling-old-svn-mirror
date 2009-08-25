@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.impl;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -28,7 +28,6 @@ import javax.jcr.observation.EventListener;
 /** Used by tests to wait until JCR notification events
  * 	have been delivered.
  */
-/** TODO remove if not needed for new tests */
 class EventHelper implements EventListener {
 	private final Session session;
 	private int eventCount;

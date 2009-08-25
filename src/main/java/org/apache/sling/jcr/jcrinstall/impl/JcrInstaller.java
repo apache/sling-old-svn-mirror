@@ -18,20 +18,20 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.runmode.RunMode;
@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
  */
-public class JcrInstaller implements Serializable {
+public class JcrInstaller implements Runnable {
 	private static final long serialVersionUID = 1L;
 	public static final String URL_SCHEME = "jcrinstall";
 
@@ -110,6 +110,12 @@ public class JcrInstaller implements Serializable {
     /** Session shared by all WatchedFolder */
     private Session session;
     
+    /** Count cycles of our run() method, used in testing */
+    private int cyclesCount;
+    
+    /** Used to stop background thread when deactivated */
+    private int deactivationCounter = 1;
+    
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(String urlScheme, Node n) throws Exception;
@@ -117,6 +123,9 @@ public class JcrInstaller implements Serializable {
     
     /** Our NodeConverters*/
     private final Collection <NodeConverter> converters = new ArrayList<NodeConverter>();
+    
+    /** Detect newly created folders that we must watch */
+    private final List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
     
     protected void activate(ComponentContext context) throws Exception {
     	
@@ -156,8 +165,13 @@ public class JcrInstaller implements Serializable {
             log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
     	
+    	// Setup folder filtering and watching
+        folderNameFilter = new FolderNameFilter(roots, folderNameRegexp, runMode);
+        for (String path : roots) {
+            listeners.add(new WatchedFolderCreationListener(session, folderNameFilter, path));
+        }
+        
     	// Find paths to watch and create WatchedFolders to manage them
-    	folderNameFilter = new FolderNameFilter(roots, folderNameRegexp, runMode);
     	watchedFolders = new LinkedList<WatchedFolder>();
     	for(String root : roots) {
     		findPathsToWatch(root, watchedFolders);
@@ -173,16 +187,29 @@ public class JcrInstaller implements Serializable {
     	
     	log.info("Registering {} resources with OSGi installer", resources.size());
     	installer.registerResources(resources, URL_SCHEME);
+    	
+    	final Thread t = new Thread(this, getClass().getSimpleName() + "." + deactivationCounter);
+    	t.setDaemon(true);
+    	t.start();
     }
     
     protected void deactivate(ComponentContext context) {
-    	folderNameFilter = null;
-    	watchedFolders = null;
-    	converters.clear();
-    	if(session != null) {
-    		session.logout();
-    		session = null;
-    	}
+        try {
+            deactivationCounter++;
+            listeners.clear();
+            folderNameFilter = null;
+            watchedFolders = null;
+            converters.clear();
+            if(session != null) {
+                for(WatchedFolderCreationListener wfc : listeners) {
+                    wfc.cleanup(session);
+                }
+                session.logout();
+                session = null;
+            }
+        } catch(Exception e) {
+            log.warn("Exception in deactivate()", e);
+        }
     }
     
     /** Get a property value from the component context or bundle context */
@@ -206,7 +233,7 @@ public class JcrInstaller implements Serializable {
             } else {
                 log.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
                 final Node n = s.getRootNode().getNode(relPath(rootPath));
-                findAndAddPaths(n, result);
+                findPathsUnderNode(n, result);
             }
         } finally {
             if (s != null) {
@@ -219,7 +246,7 @@ public class JcrInstaller implements Serializable {
      * Add n to result if it is a folder that we must watch, and recurse into its children
      * to do the same.
      */
-    void findAndAddPaths(Node n, List<WatchedFolder> result) throws RepositoryException
+    void findPathsUnderNode(Node n, List<WatchedFolder> result) throws RepositoryException
     {
         final String path = n.getPath();
         final int priority = folderNameFilter.getPriority(path); 
@@ -233,7 +260,7 @@ public class JcrInstaller implements Serializable {
         } else {
             final NodeIterator it = n.getNodes();
             while (it.hasNext()) {
-                findAndAddPaths(it.nextNode(), result);
+                findPathsUnderNode(it.nextNode(), result);
             }
         }
     }
@@ -246,6 +273,65 @@ public class JcrInstaller implements Serializable {
             return path.substring(1);
         }
         return path;
+    }
+    
+    /** Add new folders to watch if any have been detected
+     *  @return true if any WatchedFolders have been removed 
+     */ 
+    private boolean addAndDeleteFolders() throws RepositoryException {
+        for(WatchedFolderCreationListener wfc : listeners) {
+            final Set<String> newPaths = wfc.getAndClearPaths();
+            if(newPaths != null && newPaths.size() > 0) {
+                log.info("Detected {} new folder(s to watch", newPaths.size());
+                for(String path : newPaths) {
+                    watchedFolders.add(
+                            new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
+                }
+            }
+        }
+        
+        boolean deleted = false;
+        final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
+        for(WatchedFolder wf : watchedFolders) {
+            if(!session.itemExists(wf.getPath())) {
+                deleted = true;
+                log.info("Deleting {}, path does not exist anymore", wf);
+                wf.cleanup();
+                toRemove.add(wf);
+            }
+        }
+        for(WatchedFolder wf : toRemove) {
+            watchedFolders.remove(wf);
+        }
+        
+        return deleted;
+    }
+    
+    /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
+    public void run() {
+        log.info("Background thread {} starting", Thread.currentThread().getName());
+        final int savedCounter = deactivationCounter;
+        while(savedCounter == deactivationCounter) {
+            try {
+                // TODO rendezvous with installer if any folder has been deleted
+                addAndDeleteFolders();
+                cyclesCount++;
+
+                // TODO wait for events from our listeners, and/or WatchedFolder scan time
+                try {
+                    Thread.sleep(500L);
+                } catch(InterruptedException ignore) {
+                }
+                
+            } catch(Exception e) {
+                log.warn("Exception in run()", e);
+                try {
+                    Thread.sleep(1000L);
+                } catch(InterruptedException ignore) {
+                }
+            }
+        }
+        log.info("Background thread {} stopping", Thread.currentThread().getName());
     }
 
 }

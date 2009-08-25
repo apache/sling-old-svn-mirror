@@ -21,6 +21,9 @@ package org.apache.sling.jcr.jcrinstall.impl;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
@@ -29,11 +32,25 @@ import org.slf4j.LoggerFactory;
 
 /** Listen for JCR events to find out when new WatchedFolders
  * 	must be created.
- * 	TODO reactivate
  */
 class WatchedFolderCreationListener implements EventListener {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private Set<String> paths = new HashSet<String>();
+    private final FolderNameFilter folderNameFilter;
+    
+    WatchedFolderCreationListener(Session session, FolderNameFilter fnf, String path) throws RepositoryException {
+        folderNameFilter = fnf;
+        
+        int eventTypes = Event.NODE_ADDED;
+        boolean isDeep = true;
+        boolean noLocal = true;
+        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
+                isDeep, null, null, noLocal);
+    }
+    
+    void cleanup(Session session) throws RepositoryException {
+        session.getWorkspace().getObservationManager().removeEventListener(this);
+    }
     
     /** Return our saved paths and clear the list
      * 	@return null if no paths have been saved 
@@ -52,11 +69,10 @@ class WatchedFolderCreationListener implements EventListener {
     
     /** Store the paths of new WatchedFolders to create */
     public void onEvent(EventIterator it) {
-    	/*
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
-                if(folderNameFilter.accept(e.getPath())) {
+                if(folderNameFilter.getPriority(e.getPath()) > 0) {
                     synchronized(paths) {
                         paths.add(e.getPath());
                     }
@@ -65,7 +81,5 @@ class WatchedFolderCreationListener implements EventListener {
         } catch(RepositoryException re) {
             log.warn("RepositoryException in onEvent", re);
         }
-        */
     }
-
 }
