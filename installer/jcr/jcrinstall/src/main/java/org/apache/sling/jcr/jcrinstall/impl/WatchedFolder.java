@@ -128,30 +128,27 @@ class WatchedFolder implements EventListener{
         	}
         }
         
-        if(folder == null) {
-        	log.info("Folder {} does not exist (or not anymore), cannot scan", path);
-        	return null;
-        }
-        
         // Return an InstallableResource for all child nodes for which we have a NodeConverter
         final ScanResult result = new ScanResult();
-        final NodeIterator it = folder.getNodes();
-        while(it.hasNext()) {
-        	final Node n = it.nextNode();
-        	for(JcrInstaller.NodeConverter nc : converters) {
-        		final InstallableResource r = nc.convertNode(urlScheme, n);
-        		if(r != null) {
-        		    final String oldDigest = digests.get(r.getUrl());
-        		    if(r.getDigest().equals(oldDigest)) {
-        		        // Already returned that resource, ignore
-        		        digests.remove(r.getUrl());
-        		    } else {
-                        r.setPriority(priority);
-                        result.toAdd.add(r);
-        		    }
-        			break;
-        		}
-        	}
+        if(folder != null) {
+            final NodeIterator it = folder.getNodes();
+            while(it.hasNext()) {
+            	final Node n = it.nextNode();
+            	for(JcrInstaller.NodeConverter nc : converters) {
+            		final InstallableResource r = nc.convertNode(urlScheme, n);
+            		if(r != null) {
+            		    final String oldDigest = digests.get(r.getUrl());
+            		    if(r.getDigest().equals(oldDigest)) {
+            		        // Already returned that resource, ignore
+            		        digests.remove(r.getUrl());
+            		    } else {
+                            r.setPriority(priority);
+                            result.toAdd.add(r);
+            		    }
+            			break;
+            		}
+            	}
+            }
         }
         
         // Resources left in the digests map have been deleted since last scan, 

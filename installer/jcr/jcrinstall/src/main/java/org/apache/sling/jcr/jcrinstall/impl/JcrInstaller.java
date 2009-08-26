@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  *      value="The Apache Software Foundation"
  */
 public class JcrInstaller implements Runnable {
-	private static final long serialVersionUID = 1L;
+	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -129,6 +129,8 @@ public class JcrInstaller implements Runnable {
     
     protected void activate(ComponentContext context) throws Exception {
     	
+    	log.info("activate()");
+    	
     	session = repository.loginAdministrative(repository.getDefaultWorkspace());
     	
     	// Setup converters
@@ -194,9 +196,10 @@ public class JcrInstaller implements Runnable {
     }
     
     protected void deactivate(ComponentContext context) {
+    	log.info("deactivate()");
+    	
         try {
             deactivationCounter++;
-            listeners.clear();
             folderNameFilter = null;
             watchedFolders = null;
             converters.clear();
@@ -207,6 +210,7 @@ public class JcrInstaller implements Runnable {
                 session.logout();
                 session = null;
             }
+            listeners.clear();
         } catch(Exception e) {
             log.warn("Exception in deactivate()", e);
         }
@@ -276,13 +280,15 @@ public class JcrInstaller implements Runnable {
     }
     
     /** Add new folders to watch if any have been detected
-     *  @return true if any WatchedFolders have been removed 
+     *  @return a list of InstallableResource that must be unregistered,
+     *  	for folders that have been removed
      */ 
-    private boolean addAndDeleteFolders() throws RepositoryException {
+    private List<InstallableResource> addAndDeleteFolders() throws Exception {
+    	final List<InstallableResource> result = new LinkedList<InstallableResource>();
         for(WatchedFolderCreationListener wfc : listeners) {
             final Set<String> newPaths = wfc.getAndClearPaths();
             if(newPaths != null && newPaths.size() > 0) {
-                log.info("Detected {} new folder(s to watch", newPaths.size());
+                log.info("Detected {} new folder(s) to watch", newPaths.size());
                 for(String path : newPaths) {
                     watchedFolders.add(
                             new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
@@ -290,12 +296,11 @@ public class JcrInstaller implements Runnable {
             }
         }
         
-        boolean deleted = false;
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
             if(!session.itemExists(wf.getPath())) {
-                deleted = true;
                 log.info("Deleting {}, path does not exist anymore", wf);
+                result.addAll(wf.scan().toRemove);
                 wf.cleanup();
                 toRemove.add(wf);
             }
@@ -304,7 +309,7 @@ public class JcrInstaller implements Runnable {
             watchedFolders.remove(wf);
         }
         
-        return deleted;
+        return result;
     }
     
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
@@ -313,8 +318,11 @@ public class JcrInstaller implements Runnable {
         final int savedCounter = deactivationCounter;
         while(savedCounter == deactivationCounter) {
             try {
-                // TODO rendezvous with installer if any folder has been deleted
-                addAndDeleteFolders();
+                final List<InstallableResource> toRemove = addAndDeleteFolders();
+                for(InstallableResource r : toRemove) {
+                    log.info("Removing resource from OSGi installer (folder deleted): {}",r);
+                    installer.removeResource(r);
+                }
 
                 // Rescan WatchedFolders if needed
                 if(System.currentTimeMillis() > WatchedFolder.getNextScanTime()) {
@@ -334,14 +342,14 @@ public class JcrInstaller implements Runnable {
 
                 // TODO wait for events from our listeners, and/or WatchedFolder scan time
                 try {
-                    Thread.sleep(500L);
+                    Thread.sleep(RUN_LOOP_DELAY_MSEC);
                 } catch(InterruptedException ignore) {
                 }
                 
             } catch(Exception e) {
                 log.warn("Exception in run()", e);
                 try {
-                    Thread.sleep(1000L);
+                    Thread.sleep(RUN_LOOP_DELAY_MSEC);
                 } catch(InterruptedException ignore) {
                 }
             }
