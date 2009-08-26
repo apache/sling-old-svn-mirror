@@ -74,7 +74,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
         assertEquals("Config value must match", "bar", value);
         
         resetCounters();
-        installer.removeResource(r);
+        installer.removeResource(new InstallableResource(r.getUrl()));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         
         waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
@@ -116,7 +116,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
         configAdmin.stop();
         waitForConfigAdmin(false);
         resetCounters();
-        installer.removeResource(r);
+        installer.removeResource(new InstallableResource(r.getUrl()));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
         resetCounters();

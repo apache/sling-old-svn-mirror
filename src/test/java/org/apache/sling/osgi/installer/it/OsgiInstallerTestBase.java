@@ -217,6 +217,10 @@ class OsgiInstallerTestBase implements FrameworkListener {
         return getInstallableResource(testBundle, null);
     }
     
+    protected InstallableResource getNonInstallableResource(File testBundle) throws IOException {
+    	return new InstallableResource(URL_SCHEME + ":" + testBundle.getAbsolutePath());
+    }
+    
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
         return getInstallableResource(testBundle, digest, InstallableResource.DEFAULT_PRIORITY);
     }
