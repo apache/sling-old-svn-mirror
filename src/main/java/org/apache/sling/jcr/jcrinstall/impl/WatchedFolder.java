@@ -21,8 +21,10 @@ package org.apache.sling.jcr.jcrinstall.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -48,6 +50,7 @@ class WatchedFolder implements EventListener{
     private boolean needsScan;
     private final String urlScheme;
     private final Collection <JcrInstaller.NodeConverter> converters;
+    private final Set<String> existingResourceUrls = new HashSet<String>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
     
     static class ScanResult {
@@ -129,6 +132,7 @@ class WatchedFolder implements EventListener{
         
         // Return an InstallableResource for all child nodes for which we have a NodeConverter
         final ScanResult result = new ScanResult();
+        final Set<String> resourcesSeen = new HashSet<String>();
         if(folder != null) {
             final NodeIterator it = folder.getNodes();
             while(it.hasNext()) {
@@ -136,11 +140,9 @@ class WatchedFolder implements EventListener{
             	for(JcrInstaller.NodeConverter nc : converters) {
             		final InstallableResource r = nc.convertNode(urlScheme, n);
             		if(r != null) {
+            			resourcesSeen.add(r.getUrl());
             		    final String oldDigest = digests.get(r.getUrl());
-            		    if(r.getDigest().equals(oldDigest)) {
-            		        // Already returned that resource, ignore
-            		        digests.remove(r.getUrl());
-            		    } else {
+            		    if(!r.getDigest().equals(oldDigest)) {
                             r.setPriority(priority);
                             result.toAdd.add(r);
             		    }
@@ -150,16 +152,22 @@ class WatchedFolder implements EventListener{
             }
         }
         
-        // Resources left in the digests map have been deleted since last scan, 
-        // need to be removed from OsgiInstaller
-        for(Map.Entry<String, String> e : digests.entrySet()) {
-            InstallableResource r = new InstallableResource(e.getKey());
-            result.toRemove.add(r);
+        // Resources that existed but are not in resourcesSeen need to be 
+        // unregistered from OsgiInstaller
+        for(String url : existingResourceUrls) {
+        	if(!resourcesSeen.contains(url)) {
+                InstallableResource r = new InstallableResource(url);
+                result.toRemove.add(r);
+        	}
+        }
+        for(InstallableResource r : result.toRemove) {
+        	existingResourceUrls.remove(r.getUrl());
+        	digests.remove(r.getUrl());
         }
         
-        // Store digests of the resources that we're adding, for next time
-        digests.clear();
+        // Update saved digests of the resources that we're returning
         for(InstallableResource r : result.toAdd) {
+            existingResourceUrls.add(r.getUrl());
             digests.put(r.getUrl(), r.getDigest());
         }
         

@@ -187,7 +187,7 @@ public class JcrInstaller implements Runnable {
     		resources.addAll(r.toAdd);
     	}
     	
-    	log.info("Registering {} resources with OSGi installer", resources.size());
+    	log.info("Registering {} resources with OSGi installer: {}", resources.size(), resources);
     	installer.registerResources(resources, URL_SCHEME);
     	
     	final Thread t = new Thread(this, getClass().getSimpleName() + "." + deactivationCounter);
@@ -333,7 +333,7 @@ public class JcrInstaller implements Runnable {
                             installer.removeResource(r);
                         }
                         for(InstallableResource r : sr.toAdd) {
-                            log.info("Adding resource to OSGi installer: {}",r);
+                            log.info("Registering resource with OSGi installer: {}",r);
                             installer.addResource(r);
                         }
                     }

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
+import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
@@ -149,9 +150,8 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         	assertRegistered(contentHelper.FAKE_CONFIGS[i], i != toRemove);
         }
      
-        final int nCalls = contentHelper.FAKE_RESOURCES.length + contentHelper.FAKE_CONFIGS.length;
-        assertEquals("Expecting both remove and add calls when resources are deleted", 
-        		nCalls, osgiInstaller.getRecordedCalls().size());
+        assertEquals("Expecting only remove calls when resources are deleted", 
+        		2, osgiInstaller.getRecordedCalls().size());
     }
     
     public void testStopAndRestart() throws Exception {
@@ -222,4 +222,60 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         	assertRegistered(path, !path.startsWith("/libs"));
         }
     }
+    
+    public void testFileUpdate() throws Exception {
+    	final String path = contentHelper.FAKE_RESOURCES[0];
+    	assertRegistered(path, true);
+    	
+    	// Make a change that does not influence the file's digest,
+    	// and verify that no OSGi registrations result
+    	int nCalls = osgiInstaller.getRecordedCalls().size();
+    	((Node)session.getItem(path + "/jcr:content")).setProperty("jcr:mimeType", "application/" + getClass().getName());
+    	session.save();
+        eventHelper.waitForEvents(TIMEOUT);
+        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        assertEquals("Expected no OsgiInstaller calls for no-impact file change",
+        		nCalls, osgiInstaller.getRecordedCalls().size());
+        
+        // Make a content change -> resource must be re-registered
+        osgiInstaller.clearRecordedCalls();
+        contentHelper.createOrUpdateFile(path, null, System.currentTimeMillis());
+        eventHelper.waitForEvents(TIMEOUT);
+        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        assertEquals("Expected one OsgiInstaller call for file content change",
+        		1, osgiInstaller.getRecordedCalls().size());
+        assertRecordedCall("add", path);
+    }
+    
+    public void testConfigUpdate() throws Exception {
+       	final String path = contentHelper.FAKE_CONFIGS[0];
+    	assertRegistered(path, true);
+    	
+    	// Setup a known value for the config
+    	final String key = "foo" + System.currentTimeMillis();
+    	final String value = "value" + System.currentTimeMillis();
+    	((Node)session.getItem(path)).setProperty(key, value);
+    	session.save();
+        eventHelper.waitForEvents(TIMEOUT);
+        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+    			
+    	// Make a change that does not influence the configs's digest,
+    	// and verify that no OSGi registrations result
+    	int nCalls = osgiInstaller.getRecordedCalls().size();
+    	((Node)session.getItem(path)).setProperty(key, value);
+    	session.save();
+        eventHelper.waitForEvents(TIMEOUT);
+        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        assertEquals("Expected no OsgiInstaller calls for no-impact config change",
+        		nCalls, osgiInstaller.getRecordedCalls().size());
+        
+        // Make a content change -> resource must be re-registered
+        osgiInstaller.clearRecordedCalls();
+    	((Node)session.getItem(path)).setProperty(key, value + "-changed");
+        eventHelper.waitForEvents(TIMEOUT);
+        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        assertEquals("Expected one OsgiInstaller call for config content change",
+        		1, osgiInstaller.getRecordedCalls().size());
+        assertRecordedCall("add", path);
+   }
 }
