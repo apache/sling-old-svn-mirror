@@ -68,6 +68,9 @@ class MockOsgiInstaller implements OsgiInstaller {
     }
 
     public void removeResource(InstallableResource d) throws IOException {
+    	if(!d.isEmpty()) {
+    		throw new IllegalArgumentException("InstallableResource must be empty for removeResource call");
+    	}
     	urls.remove(d.getUrl());
         recordCall("remove", d);
     }

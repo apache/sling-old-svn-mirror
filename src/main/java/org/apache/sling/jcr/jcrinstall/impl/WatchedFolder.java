@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -153,9 +152,8 @@ class WatchedFolder implements EventListener{
         
         // Resources left in the digests map have been deleted since last scan, 
         // need to be removed from OsgiInstaller
-        final ByteArrayInputStream emptyStream = new ByteArrayInputStream("".getBytes());
         for(Map.Entry<String, String> e : digests.entrySet()) {
-            InstallableResource r = new InstallableResource(e.getKey(), emptyStream, e.getValue());
+            InstallableResource r = new InstallableResource(e.getKey());
             result.toRemove.add(r);
         }
         
