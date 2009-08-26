@@ -60,7 +60,7 @@ class ConfigTaskCreator {
 		    final String previousDigest = digests.get(pid);
 		    if(toActivate.getDigest().equals(previousDigest)) {
 		        if(ctx.getLogService() != null) {
-		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration already installed, ignored: " + toActivate); 
+		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + pid + ") already installed, ignored: " + toActivate); 
 		        }
 		    } else {
 		        tasks.add(new ConfigInstallTask(toActivate));
