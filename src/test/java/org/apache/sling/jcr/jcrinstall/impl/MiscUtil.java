@@ -41,6 +41,8 @@ import org.osgi.service.component.ComponentContext;
 /** JcrInstall test utilities */
 class MiscUtil {
 
+    static final Mockery mockery = new Mockery();
+    
     public static String SEARCH_PATHS [] = { "/libs/", "/apps/" };
     public static String RUN_MODES [] = { "dev", "staging" };
     
@@ -104,13 +106,23 @@ class MiscUtil {
     
     /** Return a JcrInstaller setup for testing */ 
     static JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller) throws Exception {
+        final JcrInstaller installer = new JcrInstaller();
+        setField(installer, "repository", repository);
+        setField(installer, "resourceResolverFactory", new MockJcrResourceResolverFactory());
+        setField(installer, "installer", osgiInstaller);
+        setField(installer, "runMode", new MockRunMode(RUN_MODES));
+
+        installer.activate(getMockComponentContext());
+        return installer;
+    }
+    
+    static ComponentContext getMockComponentContext() {
         // Setup fake ComponentContext to allow JcrInstaller to start
-        final Mockery m = new Mockery();
-        final ComponentContext cc = m.mock(ComponentContext.class);
-        final BundleContext bc = m.mock(BundleContext.class);
+        final ComponentContext cc = mockery.mock(ComponentContext.class);
+        final BundleContext bc = mockery.mock(BundleContext.class);
         
         final Dictionary<String, Object> emptyDict = new Hashtable<String, Object>();
-        m.checking(new Expectations() {{
+        mockery.checking(new Expectations() {{
             allowing(cc).getProperties();
             will(returnValue(emptyDict));
             allowing(cc).getBundleContext();
@@ -118,15 +130,7 @@ class MiscUtil {
             allowing(bc).getProperty(with(any(String.class)));
             will(returnValue(null));
         }});
-        
-        final JcrInstaller installer = new JcrInstaller();
-        setField(installer, "repository", repository);
-        setField(installer, "resourceResolverFactory", new MockJcrResourceResolverFactory());
-        setField(installer, "installer", osgiInstaller);
-        setField(installer, "runMode", new MockRunMode(RUN_MODES));
-
-        installer.activate(cc);
-        return installer;
+        return cc;
     }
     
     static void waitForCycles(JcrInstaller installer, int nCycles, long timeoutMsec) throws Exception {

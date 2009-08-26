@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -42,7 +44,11 @@ class MockOsgiInstaller implements OsgiInstaller {
     /** Keep track of our method calls, for verification */
     private final List<String> recordedCalls = new LinkedList<String>();
     
+    /** Keep track of registered URLS */
+    private final Set<String> urls = new HashSet<String>();
+    
     public void addResource(InstallableResource d) throws IOException {
+    	urls.add(d.getUrl());
         recordCall("add", d);
     }
 
@@ -56,11 +62,13 @@ class MockOsgiInstaller implements OsgiInstaller {
         sorted.addAll(data);
         Collections.sort(sorted, new InstallableResourceComparator());
         for(InstallableResource r : data) {
+        	urls.add(r.getUrl());
             recordCall("register", r);
         }
     }
 
     public void removeResource(InstallableResource d) throws IOException {
+    	urls.remove(d.getUrl());
         recordCall("remove", d);
     }
     
@@ -74,5 +82,9 @@ class MockOsgiInstaller implements OsgiInstaller {
     
     List<String> getRecordedCalls() {
         return recordedCalls;
+    }
+    
+    boolean isRegistered(String urlScheme, String path) {
+    	return urls.contains(urlScheme + ":" + path);
     }
 }
