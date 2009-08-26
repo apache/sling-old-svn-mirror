@@ -100,17 +100,17 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Uninstall
     	{
             resetCounters();
-            installer.removeResource(getInstallableResource(
+            installer.removeResource(getNonInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             
             resetCounters();
-            installer.removeResource(getInstallableResource(
+            installer.removeResource(getNonInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             
             resetCounters();
-            installer.removeResource(getInstallableResource(
+            installer.removeResource(getNonInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             

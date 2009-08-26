@@ -81,11 +81,11 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         installer.addResource(c);
         assertConfigValue(pid, "foo", "c", TIMEOUT);
         installer.addResource(a);
-        installer.removeResource(c);
+        installer.removeResource(new InstallableResource(c.getUrl()));
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.removeResource(b);
+        installer.removeResource(new InstallableResource(b.getUrl()));
         assertConfigValue(pid, "foo", "a", TIMEOUT);
-        installer.removeResource(a);
+        installer.removeResource(new InstallableResource(a.getUrl()));
         waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
     }
 }

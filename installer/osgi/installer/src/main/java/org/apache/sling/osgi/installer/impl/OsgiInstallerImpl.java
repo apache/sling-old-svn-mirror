@@ -110,10 +110,8 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	}
 
 	public void removeResource(InstallableResource r) throws IOException {
-		final RegisteredResource rr = new RegisteredResourceImpl(bundleContext, r);
-		rr.setInstallable(false);
         synchronized (installerThread) {
-            installerThread.addNewResource(rr);
+            installerThread.removeResource(r);
         }
 	}
 

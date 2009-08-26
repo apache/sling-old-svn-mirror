@@ -50,10 +50,11 @@ public interface OsgiInstaller {
 	/** Inform the installer that a resource is available for installation.
 	 * 	also called if the resource has been modified since it was registered.
 	 */
-	void addResource(InstallableResource d) throws IOException;
+	void addResource(InstallableResource r) throws IOException;
 	
-	/** Inform the installer that a resource is no longer available */
-	void removeResource(InstallableResource d) throws IOException;
+	/** Inform the installer that a resource is no longer available 
+	 * 	@param r an empty InstallableResource, isEmpty() must return true */
+	void removeResource(InstallableResource r) throws IOException;
 	
 	/** Return counters used for statistics, console display, testing, etc. */
 	long [] getCounters();

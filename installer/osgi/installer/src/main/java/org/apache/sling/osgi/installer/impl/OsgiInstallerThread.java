@@ -54,7 +54,8 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
     private final List<SortedSet<RegisteredResource>> newResourcesSets = new ArrayList<SortedSet<RegisteredResource>>();
-    private final Set<String> newResourcesSchemes = new HashSet<String>(); 
+    private final Set<String> newResourcesSchemes = new HashSet<String>();
+    private final Set<String> urlsToRemove = new HashSet<String>();
     private boolean active = true;
     
     /** Group our RegisteredResource by OSGi entity */ 
@@ -134,6 +135,21 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
         }
         synchronized (tasks) {
             tasks.add(t);
+        }
+    }
+    
+    /** Register a resource for removal, or ignore if we don't have that URL */
+    void removeResource(InstallableResource r) {
+		if(!r.isEmpty()) {
+			throw new IllegalArgumentException("removeResource() got non-empty InstallableResource: " + r);
+		}
+		
+		// Will mark all resources which have r's URL as uninstallable
+		debug("Adding URL " + r.getUrl() + " to urlsToRemove");
+		urlsToRemove.add(r.getUrl());
+		
+        synchronized (newResources) {
+            newResources.notify();
         }
     }
     
@@ -217,6 +233,19 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
                 t.add(r);
             }
             newResources.clear();
+            
+            // Mark resources for removal according to urlsToRemove
+            if(!urlsToRemove.isEmpty()) {
+                for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+                	for(RegisteredResource r : group) {
+                		if(urlsToRemove.contains(r.getUrl())) {
+                			debug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
+                			r.setInstallable(false);
+                		}
+                	}
+                }
+            }
+            urlsToRemove.clear();
         }
     }
     
