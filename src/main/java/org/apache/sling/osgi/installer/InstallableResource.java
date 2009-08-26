@@ -38,6 +38,7 @@ public class InstallableResource {
 	private final InputStream inputStream;
 	private final Dictionary<String, Object> dictionary;
 	private int priority;
+	private final boolean empty;
     public static final String DIGEST_TYPE = "MD5";
 	
 	/** Default resource priority */
@@ -51,6 +52,7 @@ public class InstallableResource {
 		this.dictionary = null;
 		this.digest = null;
 		this.priority = DEFAULT_PRIORITY;
+		this.empty = true;
 	}
 	
 	/** Create a data object that wraps an InputStream 
@@ -69,6 +71,7 @@ public class InstallableResource {
 		this.dictionary = null;
 		this.digest = digest;
         this.priority = DEFAULT_PRIORITY;
+        this.empty = false;
 	}
 	
 	/** Create a data object that wraps a Dictionary. Digest will be computed
@@ -91,6 +94,7 @@ public class InstallableResource {
 		    throw new IllegalStateException("Unexpected Exception while computing digest", e);
 		}
         this.priority = DEFAULT_PRIORITY;
+        this.empty = false;
 	}
 
 	@Override
@@ -165,5 +169,9 @@ public class InstallableResource {
         bos.flush();
         d.update(bos.toByteArray());
         return digestToString(d);
+    }
+    
+    public boolean isEmpty() {
+    	return empty;
     }
 }
