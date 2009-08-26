@@ -127,9 +127,7 @@ class ContentHelper {
     }
     
     void createOrUpdateFile(String path) throws RepositoryException {
-        final String data = "Fake data for " + path;
-        final ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-        createOrUpdateFile(path, is, System.currentTimeMillis());
+        createOrUpdateFile(path, null, System.currentTimeMillis());
     }
     
     void createOrUpdateFile(String path, MockInstallableResource d) throws RepositoryException {
@@ -137,6 +135,11 @@ class ContentHelper {
     }
     
     void createOrUpdateFile(String path, InputStream data, long lastModified) throws RepositoryException {
+    	if(data == null) {
+            final String content = "Fake data for " + path;
+            data = new ByteArrayInputStream(content.getBytes());
+    	}
+    	
         final String relPath = relPath(path);
         Node f = null;
         Node res = null;
