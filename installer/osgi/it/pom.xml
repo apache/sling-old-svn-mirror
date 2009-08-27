@@ -261,6 +261,16 @@
                             </archive>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>missing-headers</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>notabundle</classifier>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
           </plugins>

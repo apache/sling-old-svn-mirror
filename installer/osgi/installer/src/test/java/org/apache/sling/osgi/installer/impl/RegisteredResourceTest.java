@@ -72,7 +72,7 @@ public class RegisteredResourceTest {
 	
     @org.junit.Test public void testResourceType() throws Exception {
         {
-            final InputStream s = new ByteArrayInputStream("Some data".getBytes());
+            final InputStream s = new FileInputStream(getTestBundle("testbundle-1.0.jar"));
             final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, "some digest"));
             assertEquals(".jar URL creates a BUNDLE resource", 
                     RegisteredResource.ResourceType.BUNDLE, r.getResourceType());
@@ -80,7 +80,7 @@ public class RegisteredResourceTest {
             assertNotNull("BUNDLE resource provides an InputStream", rs);
             rs.close();
             assertNull("BUNDLE resource does not provide a Dictionary", r.getDictionary());
-            assertEquals("RegisteredResource entity ID must match", "jar:test:1.jar", r.getEntityId());
+            assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
         }
         
         {
@@ -113,11 +113,12 @@ public class RegisteredResourceTest {
     }
     
 	@org.junit.Test public void testLocalFileCopy() throws Exception {
-		final String data = "This is some data";
-		final InputStream in = new ByteArrayInputStream(data.getBytes());
-		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", in, "somedigest"));
+	    final File f = getTestBundle("testbundle-1.0.jar");
+        final InputStream s = new FileInputStream(f);
+		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, "somedigest"));
 		assertTrue("Local file exists", r.getDataFile(null).exists());
-		assertEquals("Local file length matches our data", data.getBytes().length, r.getDataFile(null).length());
+		
+		assertEquals("Local file length matches our data", f.length(), r.getDataFile(null).length());
 	}
 	
     @org.junit.Test public void testMissingDigest() throws Exception {

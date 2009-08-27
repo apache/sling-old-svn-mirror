@@ -164,11 +164,22 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
     /** Register a number of new resources, and mark others having the same scheme as not installable.
      *  Used with {@link OsgiInstaller.registerResources}
      */
-    void addNewResources(Collection<InstallableResource> data, String urlScheme, BundleContext bundleContext) throws IOException {
+    void addNewResources(Collection<InstallableResource> data, String urlScheme, BundleContext bundleContext) {
         // Check scheme, do nothing if at least one of them is wrong
         final SortedSet<RegisteredResource> toAdd = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
         for(InstallableResource r : data) {
-            final RegisteredResource rr = new RegisteredResourceImpl(bundleContext, r);
+            RegisteredResource rr =  null;
+            try {
+                rr = new RegisteredResourceImpl(bundleContext, r);
+            } catch(IOException ioe) {
+                if(ctx.getLogService() != null) {
+                    ctx.getLogService().log(
+                            LogService.LOG_WARNING,
+                            "Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+                }
+                continue;
+            }
+            
             if(!rr.getUrlScheme().equals(urlScheme)) {
                 throw new IllegalArgumentException(
                         "URL of all supplied InstallableResource must start with supplied scheme"

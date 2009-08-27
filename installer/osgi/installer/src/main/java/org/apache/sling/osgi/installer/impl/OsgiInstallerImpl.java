@@ -99,17 +99,29 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		return counters;
 	}
 
-	public void addResource(InstallableResource r) throws IOException {
-	    synchronized (installerThread) {
-	        installerThread.addNewResource(new RegisteredResourceImpl(bundleContext, r));
+	public void addResource(InstallableResource r) {
+	    RegisteredResource rr = null; 
+        try {
+            rr = new RegisteredResourceImpl(bundleContext, r);
+        } catch(IOException ioe) {
+            if(getLogService() != null) {
+                getLogService().log(
+                        LogService.LOG_WARNING,
+                        "Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+            }
+            return;
+        }
+        
+        synchronized (installerThread) {
+            installerThread.addNewResource(rr);
         }
 	}
 
-	public void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException {
+	public void registerResources(Collection<InstallableResource> data, String urlScheme) {
         installerThread.addNewResources(data, urlScheme, bundleContext);
 	}
 
-	public void removeResource(InstallableResource r) throws IOException {
+	public void removeResource(InstallableResource r) {
         synchronized (installerThread) {
             installerThread.removeResource(r);
         }

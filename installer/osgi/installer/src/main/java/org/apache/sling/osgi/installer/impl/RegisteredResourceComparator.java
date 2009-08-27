@@ -37,19 +37,24 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
     int compareBundles(RegisteredResource a, RegisteredResource b) {
 
         boolean isSnapshot = false;
+        int result = 0;
         
         // Order first by symbolic name
         final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        int result = nameA.compareTo(nameB);
+        if(nameA != null) {
+            result = nameA.compareTo(nameB);
+        }
         
         // Then by version
         if(result == 0) {
             final Version va = (Version)a.getAttributes().get(Constants.BUNDLE_VERSION);
             final Version vb = (Version)b.getAttributes().get(Constants.BUNDLE_VERSION);
-            isSnapshot = va.toString().contains(BundleTaskCreator.MAVEN_SNAPSHOT_MARKER);
-            // higher version has more priority, must come first so invert comparison
-            result = vb.compareTo(va);
+            isSnapshot = va!= null && va.toString().contains(BundleTaskCreator.MAVEN_SNAPSHOT_MARKER);
+            if(va != null && vb != null) {
+                // higher version has more priority, must come first so invert comparison
+                result = vb.compareTo(va);
+            }
         }
         
         // Then by priority, higher values first
