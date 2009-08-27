@@ -41,20 +41,23 @@ public interface OsgiInstaller {
 	 * 	previously registered/added resources, compares with the new
 	 * 	list and removes resources that have disappeared.
 	 * 
+     *  Invalid resources are ignored.
+	 * 
 	 * 	@param data the list of available resources
 	 * 	@param urlScheme identifies the client. All URLs of the supplied data
 	 * 		must use this scheme
 	 */
-	void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException;
+	void registerResources(Collection<InstallableResource> data, String urlScheme);
 	
 	/** Inform the installer that a resource is available for installation.
 	 * 	also called if the resource has been modified since it was registered.
+	 *  Invalid resources are ignored.
 	 */
-	void addResource(InstallableResource r) throws IOException;
+	void addResource(InstallableResource r);
 	
 	/** Inform the installer that a resource is no longer available 
 	 * 	@param r an empty InstallableResource, isEmpty() must return true */
-	void removeResource(InstallableResource r) throws IOException;
+	void removeResource(InstallableResource r);
 	
 	/** Return counters used for statistics, console display, testing, etc. */
 	long [] getCounters();

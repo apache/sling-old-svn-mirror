@@ -20,17 +20,12 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -292,10 +287,23 @@ public class RegisteredResourceImpl implements RegisteredResource {
     
     private void setAttributesFromManifest() throws IOException {
     	final Manifest m = getManifest(getInputStream());
+    	if(m == null) {
+            throw new IOException("Cannot get manifest of bundle resource");
+    	}
+    	
+    	final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+        if(sn == null) {
+            throw new IOException("Manifest does not supply " + Constants.BUNDLE_SYMBOLICNAME);
+        }
+    	
+    	final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+        if(v == null) {
+            throw new IOException("Manifest does not supply " + Constants.BUNDLE_VERSION);
+        }
+    	
         if(m != null) {
-            attributes.put(Constants.BUNDLE_SYMBOLICNAME, m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME));
-            attributes.put(Constants.BUNDLE_VERSION, 
-            		new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION)));
+            attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
+            attributes.put(Constants.BUNDLE_VERSION, new Version(v));
         }
     }
     
