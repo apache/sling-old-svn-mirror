@@ -94,17 +94,21 @@ class ContentHelper {
     
     void setupContent() throws Exception {
     	cleanupContent();
-        for(String folder : WATCHED_FOLDERS) {
-            createFolder(folder);
-        }
-        for(String folder : IGNORED_FOLDERS) {
-            createFolder(folder);
-        }
+    	setupFolders();
         for(String path : FAKE_RESOURCES) {
             createOrUpdateFile(path);
         }
         for(String path : FAKE_CONFIGS) {
             createConfig(path, null);
+        }
+    }
+    
+    void setupFolders() throws Exception {
+        for(String folder : WATCHED_FOLDERS) {
+            createFolder(folder);
+        }
+        for(String folder : IGNORED_FOLDERS) {
+            createFolder(folder);
         }
     }
     

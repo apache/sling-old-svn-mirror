@@ -61,6 +61,13 @@ public class JcrInstaller implements Runnable {
 	public static final String URL_SCHEME = "jcrinstall";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	
+	/** Counters, used for statistics and testing */
+	private final long [] counters = new long[COUNTERS_COUNT];
+	public static final int SCAN_FOLDERS_COUNTER = 0;
+    public static final int UPDATE_FOLDERS_LIST_COUNTER = 1;
+    public static final int RUN_LOOP_COUNTER = 2;
+    public static final int COUNTERS_COUNT = 3;
     
     /**	This class watches the repository for installable resources  
      * @scr.reference 
@@ -110,9 +117,6 @@ public class JcrInstaller implements Runnable {
     /** Session shared by all WatchedFolder */
     private Session session;
     
-    /** Count cycles of our run() method, used in testing */
-    private int cyclesCount;
-    
     /** Used to stop background thread when deactivated */
     private int deactivationCounter = 1;
     
@@ -125,8 +129,11 @@ public class JcrInstaller implements Runnable {
     private final Collection <NodeConverter> converters = new ArrayList<NodeConverter>();
     
     /** Detect newly created folders that we must watch */
-    private final List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
+    private final List<RootFolderListener> listeners = new LinkedList<RootFolderListener>();
     
+    /** Timer used to call updateFoldersList() */
+    private final RescanTimer updateFoldersListTimer = new RescanTimer();
+
     protected void activate(ComponentContext context) throws Exception {
     	
     	log.info("activate()");
@@ -170,7 +177,7 @@ public class JcrInstaller implements Runnable {
     	// Setup folder filtering and watching
         folderNameFilter = new FolderNameFilter(roots, folderNameRegexp, runMode);
         for (String path : roots) {
-            listeners.add(new WatchedFolderCreationListener(session, folderNameFilter, path));
+            listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
         }
         
     	// Find paths to watch and create WatchedFolders to manage them
@@ -204,7 +211,7 @@ public class JcrInstaller implements Runnable {
             watchedFolders = null;
             converters.clear();
             if(session != null) {
-                for(WatchedFolderCreationListener wfc : listeners) {
+                for(RootFolderListener wfc : listeners) {
                     wfc.cleanup(session);
                 }
                 session.logout();
@@ -259,7 +266,7 @@ public class JcrInstaller implements Runnable {
         }
         final int depth = path.split("/").length;
         if(depth > maxWatchedFolderDepth) {
-            log.debug("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
+            log.info("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
             return;
         } else {
             final NodeIterator it = n.getNodes();
@@ -283,15 +290,27 @@ public class JcrInstaller implements Runnable {
      *  @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
      */ 
-    private List<InstallableResource> addAndDeleteFolders() throws Exception {
+    private List<InstallableResource> updateFoldersList() throws Exception {
     	final List<InstallableResource> result = new LinkedList<InstallableResource>();
-        for(WatchedFolderCreationListener wfc : listeners) {
-            final Set<String> newPaths = wfc.getAndClearPaths();
-            if(newPaths != null && newPaths.size() > 0) {
-                log.info("Detected {} new folder(s) to watch", newPaths.size());
-                for(String path : newPaths) {
-                    watchedFolders.add(
-                            new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
+        for(RootFolderListener wfc : listeners) {
+            final Set<String> changedPaths = wfc.getAndClearPaths();
+            if(changedPaths != null && changedPaths.size() > 0) {
+                log.debug("Detected {} paths with possible watched folder changes", changedPaths.size());
+                for(String path : changedPaths) {
+                    // Deletions are handled below
+                    if(folderNameFilter.getPriority(path) > 0  && session.itemExists(path)) {
+                        WatchedFolder existing = null;
+                        for(WatchedFolder wf : watchedFolders) {
+                            if(wf.getPath().equals(path)) {
+                                existing = wf;
+                                break;
+                            }
+                        }
+                        if(existing == null) {
+                            watchedFolders.add(
+                                    new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
+                        }
+                    }
                 }
             }
         }
@@ -299,13 +318,13 @@ public class JcrInstaller implements Runnable {
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
             if(!session.itemExists(wf.getPath())) {
-                log.info("Deleting {}, path does not exist anymore", wf);
                 result.addAll(wf.scan().toRemove);
                 wf.cleanup();
                 toRemove.add(wf);
             }
         }
         for(WatchedFolder wf : toRemove) {
+            log.info("Deleting {}, path does not exist anymore", wf);
             watchedFolders.remove(wf);
         }
         
@@ -318,15 +337,15 @@ public class JcrInstaller implements Runnable {
         final int savedCounter = deactivationCounter;
         while(savedCounter == deactivationCounter) {
             try {
-                final List<InstallableResource> toRemove = addAndDeleteFolders();
-                for(InstallableResource r : toRemove) {
-                    log.info("Removing resource from OSGi installer (folder deleted): {}",r);
-                    installer.removeResource(r);
-                }
-
                 // Rescan WatchedFolders if needed
-                if(System.currentTimeMillis() > WatchedFolder.getNextScanTime()) {
+                final boolean scanWf = WatchedFolder.getRescanTimer().expired(); 
+                if(scanWf) {
                     for(WatchedFolder wf : watchedFolders) {
+                        if(!wf.needsScan()) {
+                            continue;
+                        }
+                        WatchedFolder.getRescanTimer().reset();
+                        counters[SCAN_FOLDERS_COUNTER]++;
                         final WatchedFolder.ScanResult sr = wf.scan();
                         for(InstallableResource r : sr.toRemove) {
                             log.info("Removing resource from OSGi installer: {}",r);
@@ -338,9 +357,19 @@ public class JcrInstaller implements Runnable {
                         }
                     }
                 }
-                cyclesCount++;
 
-                // TODO wait for events from our listeners, and/or WatchedFolder scan time
+                // Update list of WatchedFolder if we got any relevant events,
+                // or if there were any WatchedFolder events
+                if(scanWf || updateFoldersListTimer.expired()) {
+                    updateFoldersListTimer.reset();
+                    counters[UPDATE_FOLDERS_LIST_COUNTER]++;
+                    final List<InstallableResource> toRemove = updateFoldersList();
+                    for(InstallableResource r : toRemove) {
+                        log.info("Removing resource from OSGi installer (folder deleted): {}",r);
+                        installer.removeResource(r);
+                    }
+                }
+
                 try {
                     Thread.sleep(RUN_LOOP_DELAY_MSEC);
                 } catch(InterruptedException ignore) {
@@ -353,8 +382,13 @@ public class JcrInstaller implements Runnable {
                 } catch(InterruptedException ignore) {
                 }
             }
+            counters[RUN_LOOP_COUNTER]++;
         }
-        log.info("Background thread {} stopping", Thread.currentThread().getName());
+        log.info("Background thread {} done", Thread.currentThread().getName());
+        counters[RUN_LOOP_COUNTER] = -1;
     }
-
+    
+    long [] getCounters() {
+        return counters;
+    }
 }

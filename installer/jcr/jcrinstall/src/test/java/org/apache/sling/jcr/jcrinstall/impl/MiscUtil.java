@@ -133,13 +133,11 @@ class MiscUtil {
         return cc;
     }
     
-    static void waitForCycles(JcrInstaller installer, int nCycles, long timeoutMsec) throws Exception {
-        final Field f = installer.getClass().getDeclaredField("cyclesCount");
-        f.setAccessible(true);
-        final int endCycles = ((Integer)f.get(installer)).intValue() + nCycles;
+    static private void waitForCycles(JcrInstaller installer, int nCycles, long timeoutMsec) throws Exception {
+        final long endCycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER];
         final long endTime = System.currentTimeMillis() + timeoutMsec;
         while(System.currentTimeMillis() < endTime) {
-            if(((Integer)f.get(installer)).intValue() > endCycles) {
+            if(installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] > endCycles) {
                 return;
             }
         }
@@ -152,5 +150,26 @@ class MiscUtil {
         final Field f = installer.getClass().getDeclaredField("watchedFolders");
         f.setAccessible(true);
         return (Collection<WatchedFolder>)f.get(installer);
+    }
+    
+    /** Wait long enough for all changes in content to be processed by JcrInstaller */ 
+    static void waitAfterContentChanges(EventHelper eventHelper, JcrInstaller installer) throws Exception {
+        // First wait for all JCR events to be delivered
+        eventHelper.waitForEvents(5000L);
+        // RescanTimer causes a SCAN_DELAY_MSEC wait after JCR events are received
+        Thread.sleep(RescanTimer.SCAN_DELAY_MSEC * 2);
+        // And wait for 2 complete JcrInstaller run cycles, to be on the safe side
+        MiscUtil.waitForCycles(installer, 3, 5000L);
+    }
+    
+    /** Wait until installer thread exits */
+    static void waitForInstallerThread(JcrInstaller installer, long timeoutMsec) throws Exception {
+        final long endTime = System.currentTimeMillis() + timeoutMsec;
+        while(System.currentTimeMillis() < endTime) {
+            if(installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] == -1) {
+                return;
+            }
+        }
+        throw new Exception("JcrInstaller thread did not signal its end (timeout=" + timeoutMsec + " msec)"); 
     }
 }
