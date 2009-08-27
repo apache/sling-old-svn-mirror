@@ -47,7 +47,7 @@ class MockOsgiInstaller implements OsgiInstaller {
     /** Keep track of registered URLS */
     private final Set<String> urls = new HashSet<String>();
     
-    public void addResource(InstallableResource d) throws IOException {
+    public void addResource(InstallableResource d) {
     	urls.add(d.getUrl());
         recordCall("add", d);
     }
@@ -56,7 +56,7 @@ class MockOsgiInstaller implements OsgiInstaller {
         return counters;
     }
 
-    public void registerResources(Collection<InstallableResource> data, String urlScheme) throws IOException {
+    public void registerResources(Collection<InstallableResource> data, String urlScheme) {
         // Sort the data to allow comparing the recorded calls reliably
         final List<InstallableResource> sorted = new LinkedList<InstallableResource>();
         sorted.addAll(data);
@@ -67,7 +67,7 @@ class MockOsgiInstaller implements OsgiInstaller {
         }
     }
 
-    public void removeResource(InstallableResource d) throws IOException {
+    public void removeResource(InstallableResource d) {
     	if(!d.isEmpty()) {
     		throw new IllegalArgumentException("InstallableResource must be empty for removeResource call");
     	}
