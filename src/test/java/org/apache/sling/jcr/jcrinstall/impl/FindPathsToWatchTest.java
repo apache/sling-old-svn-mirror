@@ -30,6 +30,8 @@ import org.apache.sling.jcr.api.SlingRepository;
  */
 public class FindPathsToWatchTest extends RepositoryTestBase {
     
+    public static final long TIMEOUT = 5000L;
+    
     SlingRepository repo;
     Session session;
     private EventHelper eventHelper; 
@@ -57,6 +59,8 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         session.logout();
         eventHelper = null;
         contentHelper = null;
+        installer.deactivate(MiscUtil.getMockComponentContext());
+        MiscUtil.waitForInstallerThread(installer, TIMEOUT);
     }
 
     private boolean isWatched(String path, Collection<WatchedFolder> wfList) {
@@ -67,7 +71,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         }
         return false;
     }
-    
+
     public void testInitialFind() throws Exception {
         final Collection<WatchedFolder> wf = MiscUtil.getWatchedFolders(installer);
         assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, wf.size());
@@ -94,8 +98,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
             // Create folder, wait for observation event and check that
             // it is detected
             contentHelper.createFolder(newPath);
-            eventHelper.waitForEvents(5000L);
-            MiscUtil.waitForCycles(installer, 2, 5000L);
+            MiscUtil.waitAfterContentChanges(eventHelper, installer);
             
             if(newPath.contains("NOT")) {
                 assertFalse(newPath + " must not be watched after test", isWatched(newPath, 
@@ -111,10 +114,10 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         final int nBefore = MiscUtil.getWatchedFolders(installer).size();
         contentHelper.delete(folder);
         eventHelper.waitForEvents(5000L);
-        MiscUtil.waitForCycles(installer, 2, 5000L);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertFalse(folder + " must not be watched anymore after deleting", isWatched(folder, 
                 MiscUtil.getWatchedFolders(installer)));
-       assertEquals("Expecting only one WatchedFolder to be deleted", nBefore - 1,
+        assertEquals("Expecting only one WatchedFolder to be deleted", nBefore - 1,
                MiscUtil.getWatchedFolders(installer).size());
     }
     
@@ -122,8 +125,7 @@ public class FindPathsToWatchTest extends RepositoryTestBase {
         final Collection<WatchedFolder> wf = MiscUtil.getWatchedFolders(installer);
         assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, wf.size());
         contentHelper.cleanupContent();
-        eventHelper.waitForEvents(5000L);
-        MiscUtil.waitForCycles(installer, 2, 5000L);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertEquals("After deleting content, no more folders must be watched", 0, wf.size());
     }
 }

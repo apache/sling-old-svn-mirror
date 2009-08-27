@@ -30,22 +30,32 @@ import javax.jcr.observation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Listen for JCR events to find out when new WatchedFolders
- * 	must be created.
+/** Listen for JCR events under one of our roots, to find out 
+ *  when new WatchedFolders must be created, or when some might 
+ *  have been deleted.
  */
-class WatchedFolderCreationListener implements EventListener {
+class RootFolderListener implements EventListener {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
     private Set<String> paths = new HashSet<String>();
     private final FolderNameFilter folderNameFilter;
+    private final RescanTimer timer;
+    private final String watchedPath;
     
-    WatchedFolderCreationListener(Session session, FolderNameFilter fnf, String path) throws RepositoryException {
+    RootFolderListener(Session session, FolderNameFilter fnf, String path, RescanTimer timer) throws RepositoryException {
         folderNameFilter = fnf;
+        this.timer = timer;
+        this.watchedPath = path;
         
-        int eventTypes = Event.NODE_ADDED;
+        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
         boolean isDeep = true;
         boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
+    }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " (" + watchedPath + ")";
     }
     
     void cleanup(Session session) throws RepositoryException {
@@ -72,7 +82,10 @@ class WatchedFolderCreationListener implements EventListener {
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
-                if(folderNameFilter.getPriority(e.getPath()) > 0) {
+                // Rescan on all NODE_REMOVED events, to be on the safe side:
+                // an install folder might have been removed, and (I think) this is
+                // the safest way of finding out.
+                if(e.getType() == Event.NODE_REMOVED || folderNameFilter.getPriority(e.getPath()) > 0) {
                     synchronized(paths) {
                         paths.add(e.getPath());
                     }
@@ -81,5 +94,7 @@ class WatchedFolderCreationListener implements EventListener {
         } catch(RepositoryException re) {
             log.warn("RepositoryException in onEvent", re);
         }
+        log.debug("{} got JCR events, scheduling rescan of {}", this, paths);
+        timer.scheduleScan();
     }
 }

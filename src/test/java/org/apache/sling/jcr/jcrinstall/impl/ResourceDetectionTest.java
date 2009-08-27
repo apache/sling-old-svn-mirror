@@ -58,6 +58,8 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         session.logout();
         eventHelper = null;
         contentHelper = null;
+        installer.deactivate(MiscUtil.getMockComponentContext());
+        MiscUtil.waitForInstallerThread(installer, TIMEOUT);
     }
 
     private void assertRegisteredPaths(String [] paths) {
@@ -106,8 +108,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         for(String path : paths) {
             contentHelper.createOrUpdateFile(path);
         }
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegisteredPaths(paths);
     }
     
@@ -125,8 +126,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             contentHelper.createConfig(path, null);
         }
         
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegisteredPaths(paths);
     }
     
@@ -140,8 +140,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final int toRemove = 1;
         contentHelper.delete(contentHelper.FAKE_RESOURCES[toRemove]);
         contentHelper.delete(contentHelper.FAKE_CONFIGS[toRemove]);
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         
         for(int i=0; i < contentHelper.FAKE_RESOURCES.length; i++) {
         	assertRegistered(contentHelper.FAKE_RESOURCES[i], i != toRemove);
@@ -184,7 +183,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Restart JcrInstaller and verify that all remaining resources are re-registered
         installer.activate(cc);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         
         for(int i=0; i < contentHelper.FAKE_RESOURCES.length; i++) {
         	final String path = contentHelper.FAKE_RESOURCES[i];
@@ -213,8 +212,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Removing a folder, all resources that it contains must be unregistered
         contentHelper.delete("/libs");
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         for(String path : contentHelper.FAKE_RESOURCES) {
         	assertRegistered(path, !path.startsWith("/libs"));
         }
@@ -232,16 +230,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
     	int nCalls = osgiInstaller.getRecordedCalls().size();
     	((Node)session.getItem(path + "/jcr:content")).setProperty("jcr:mimeType", "application/" + getClass().getName());
     	session.save();
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertEquals("Expected no OsgiInstaller calls for no-impact file change",
         		nCalls, osgiInstaller.getRecordedCalls().size());
         
         // Make a content change -> resource must be re-registered
         osgiInstaller.clearRecordedCalls();
         contentHelper.createOrUpdateFile(path, null, System.currentTimeMillis());
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertEquals("Expected one OsgiInstaller call for file content change",
         		1, osgiInstaller.getRecordedCalls().size());
         assertRecordedCall("add", path);
@@ -256,24 +252,21 @@ public class ResourceDetectionTest extends RepositoryTestBase {
     	final String value = "value" + System.currentTimeMillis();
     	((Node)session.getItem(path)).setProperty(key, value);
     	session.save();
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
     			
     	// Make a change that does not influence the configs's digest,
     	// and verify that no OSGi registrations result
     	int nCalls = osgiInstaller.getRecordedCalls().size();
     	((Node)session.getItem(path)).setProperty(key, value);
     	session.save();
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertEquals("Expected no OsgiInstaller calls for no-impact config change",
         		nCalls, osgiInstaller.getRecordedCalls().size());
         
         // Make a content change -> resource must be re-registered
         osgiInstaller.clearRecordedCalls();
     	((Node)session.getItem(path)).setProperty(key, value + "-changed");
-        eventHelper.waitForEvents(TIMEOUT);
-        MiscUtil.waitForCycles(installer, 2, TIMEOUT);
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertEquals("Expected one OsgiInstaller call for config content change",
         		1, osgiInstaller.getRecordedCalls().size());
         assertRecordedCall("add", path);

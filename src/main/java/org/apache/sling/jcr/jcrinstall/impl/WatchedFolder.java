@@ -46,7 +46,7 @@ class WatchedFolder implements EventListener{
     private final String path;
     private final int priority;
     private final Session session;
-    private static long nextScanTime;
+    private static RescanTimer rescanTimer = new RescanTimer();
     private boolean needsScan;
     private final String urlScheme;
     private final Collection <JcrInstaller.NodeConverter> converters;
@@ -61,12 +61,12 @@ class WatchedFolder implements EventListener{
     /** Store the digests of the last returned resources, keyed by path, to detect changes */
     private final Map<String, String> digests = new HashMap<String, String>();
     
-    // WatchedFolders that need a rescan will be scanned
-    // once no JCR events have been received for this amount of time.
-    public static final long SCAN_DELAY_MSEC = 500L;
-    
     WatchedFolder(Session session, String path, int priority, 
     		String urlScheme, Collection<JcrInstaller.NodeConverter> converters) throws RepositoryException {
+        if(priority < 1) {
+            throw new IllegalArgumentException("Cannot watch folder with priority 0:" + path);
+        }
+        
         this.path = path;
         this.converters = converters;
         this.priority = priority;
@@ -105,7 +105,7 @@ class WatchedFolder implements EventListener{
     
     /** Set a static "timer" whenever an event occurs */
     public void onEvent(EventIterator it) {
-    	nextScanTime = System.currentTimeMillis() + SCAN_DELAY_MSEC; 
+    	rescanTimer.scheduleScan(); 
     	needsScan = true;
     	log.debug("Event received, scheduling scan of {}", path);
     }
@@ -114,13 +114,14 @@ class WatchedFolder implements EventListener{
     	return needsScan;
     }
     
-    static long getNextScanTime() {
-    	return nextScanTime;
+    static RescanTimer getRescanTimer() {
+    	return rescanTimer;
     }
     
     /** Scan the contents of our folder and return the corresponding InstallableResource */
     ScanResult scan() throws Exception {
         log.debug("Scanning {}", path);
+        needsScan = false;
         
         Node folder = null;
         if(session.itemExists(path)) {
