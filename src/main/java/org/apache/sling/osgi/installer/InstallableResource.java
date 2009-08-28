@@ -89,7 +89,7 @@ public class InstallableResource {
 		this.inputStream = null;
 		this.dictionary = d;
 		try {
-	        this.digest = computeDigest(d);
+	        this.digest = url + ":" + computeDigest(d);
 		} catch(Exception e) {
 		    throw new IllegalStateException("Unexpected Exception while computing digest", e);
 		}
