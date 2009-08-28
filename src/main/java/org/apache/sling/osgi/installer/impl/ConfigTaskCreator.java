@@ -49,27 +49,32 @@ class ConfigTaskCreator {
 		if(toActivate == null) {
 		    // None of our resources are installable, remove corresponding config
 		    // (task simply does nothing if config does not exist)
-		    tasks.add(new ConfigRemoveTask(resources.first()));
+		    final RegisteredResource first = resources.first();
+		    tasks.add(new ConfigRemoveTask(first));
+		    digests.remove(getDigestKey(first));
 		} else {
-		    final ConfigurationPid cp = (ConfigurationPid)toActivate.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-		    if(cp == null) {
-		        throw new IllegalArgumentException("Resource does not provide a CONFIG_PID_ATTRIBUTE: " + toActivate);
-		    }
-		    final String pid = cp.getCompositePid();
-		    
-		    final String previousDigest = digests.get(pid);
+		    final String key = getDigestKey(toActivate);
+		    final String previousDigest = digests.get(key);
 		    if(toActivate.getDigest().equals(previousDigest)) {
 		        if(ctx.getLogService() != null) {
-		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + pid + ") already installed, ignored: " + toActivate); 
+		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + key+ ") already installed, ignored: " + toActivate); 
 		        }
 		    } else {
 		        tasks.add(new ConfigInstallTask(toActivate));
-		        digests.put(pid, toActivate.getDigest());
+		        digests.put(key, toActivate.getDigest());
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(LogService.LOG_DEBUG, 
                             "Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
                 }
 		    }
 		}
+	}
+	
+	private String getDigestKey(RegisteredResource r) {
+        final ConfigurationPid cp = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        if(cp == null) {
+            throw new IllegalArgumentException("Resource does not provide a CONFIG_PID_ATTRIBUTE: " + r);
+        }
+        return cp.getCompositePid();
 	}
 }
