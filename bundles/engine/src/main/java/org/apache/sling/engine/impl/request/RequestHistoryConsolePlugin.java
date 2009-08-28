@@ -20,9 +20,11 @@ package org.apache.sling.engine.impl.request;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -51,6 +53,10 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
 
   public static final int STORED_REQUESTS_COUNT = 20;
   private final SlingHttpServletRequest[] requests = new SlingHttpServletRequest[STORED_REQUESTS_COUNT];
+  
+  /** Need to store methods separately, apparently requests clear this data when done processing */
+  private final String [] methods = new String[STORED_REQUESTS_COUNT];
+  
   private int lastRequestIndex = -1;
 
   private RequestHistoryConsolePlugin() {
@@ -69,6 +75,7 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
       index = 0;
     }
     requests[index] = r;
+    methods[index] = r.getMethod();
     lastRequestIndex = index;
   }
   
@@ -130,6 +137,55 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
     return "Recent requests";
   }
 
+  private int getArrayIndex(int displayIndex) {
+      int result = lastRequestIndex - displayIndex;
+      if (result < 0) {
+        result += requests.length;
+      }
+      return result;
+  }
+  
+  private String getLinksTable(int currentRequestIndex) {
+        final List<String> links = new ArrayList<String>();
+        for (int i = 0; i < requests.length; i++) {
+            final StringBuilder sb = new StringBuilder();
+            if (requests[i] != null) {
+                sb.append("<a href='" + LABEL + "?index=" + i + "'>");
+                if (i == currentRequestIndex) {
+                    sb.append("<b>");
+                }
+                sb.append(getRequestLabel(getArrayIndex(i)));
+                if (i == currentRequestIndex) {
+                    sb.append("</b>");
+                }
+                sb.append("</a> ");
+                links.add(sb.toString());
+            }
+        }
+        
+        final int nCols = 5;
+        while((links.size() % nCols) != 0) {
+            links.add("&nbsp;");
+        }
+
+        final StringBuilder tbl = new StringBuilder();
+        
+        tbl.append("<table>\n<tr>\n");
+        int i=0;
+        for(String str : links) {
+            if( (i++ % nCols) == 0) {
+                tbl.append("</tr>\n<tr>\n");
+            }
+            tbl.append("<td>");
+            tbl.append(str);
+            tbl.append("</td>\n");
+        }
+        tbl.append("</tr>\n");
+
+        tbl.append("</table>\n");
+        return tbl.toString();
+  }
+  
   @Override
   protected void renderContent(HttpServletRequest req, HttpServletResponse res)
       throws ServletException, IOException {
@@ -153,10 +209,7 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     // index is relative to lastRequestIndex
-    int arrayIndex = lastRequestIndex - index;
-    if (arrayIndex < 0) {
-      arrayIndex += requests.length;
-    }
+    final int arrayIndex = getArrayIndex(index); 
 
     SlingHttpServletRequest r = null;
     try {
@@ -178,27 +231,14 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
     pw.println("</thead>");
     pw.println("<tbody>");
     pw.println("<tr class='content'><td>");
-    for (int i = 0; i < requests.length; i++) {
-      if (requests[i] != null) {
-        final String info = (i == 0 ? " (latest)" : "");
-        pw.print("<a href='" + LABEL + "?index=" + i + "'>");
-        if (i == index) {
-          pw.print("<b>");
-        }
-        pw.print("Request&nbsp;" + i + info);
-        if (i == index) {
-          pw.print("</b>");
-        }
-        pw.println("</a> ");
-      }
-    }
+    pw.println(getLinksTable(index));
     pw.println("</td></tr>");
 
     if (r != null) {
       // Request Progress Tracker Info
       pw.println("<tr class='content'>");
       pw.println("<th colspan='2'class='content container'>");
-      pw.print("Request " + index + " - RequestProgressTracker Info");
+      pw.print("Request " + index + " (" + getRequestLabel(index) + ") - RequestProgressTracker Info");
       pw.println("</th></tr>");
       pw.println("<tr><td colspan='2'>");
       final Iterator<String> it = r.getRequestProgressTracker().getMessages();
@@ -209,5 +249,24 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
       pw.println("</pre></td></tr>");
     }
     pw.println("</tbody></table>");
+  }
+  
+  private String getRequestLabel(int index) {
+      final StringBuilder sb = new StringBuilder();
+      String path = requests[index].getPathInfo();
+      if(path == null) {
+          path = "";
+      }
+      
+      sb.append(methods[index]);
+      sb.append(' ');
+      
+      final int pos = requests[index].getPathInfo().lastIndexOf('/');
+      if(pos < 0) {
+          sb.append(requests[index].getPathInfo());
+      } else {
+          sb.append(requests[index].getPathInfo().substring(pos+1));
+      }
+      return sb.toString();
   }
 }
