@@ -135,4 +135,41 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
 
         assertNoOsgiTasks("After test " + testIndex++);
 	}
+	
+	   @Test
+	    public void testRemoveAndReadd() throws Exception {
+	        final String symbolicName = "osgi-installer-testbundle";
+	        int testIndex = 0;
+	        
+	        {
+	            assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
+	            resetCounters();
+	            installer.addResource(getInstallableResource(
+	                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+	            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+	            assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
+	        }
+	        
+	        assertNoOsgiTasks("After test " + testIndex++);
+	        
+            {
+                resetCounters();
+                installer.removeResource(getNonInstallableResource(
+                        getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+                waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+                assertNull("Test bundle must be gone", findBundle(symbolicName));
+            }
+            
+            assertNoOsgiTasks("After test " + testIndex++);
+            
+            {
+                resetCounters();
+                installer.addResource(getInstallableResource(
+                        getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+                waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+                assertBundle("After reinstalling", symbolicName, "1.1", Bundle.ACTIVE);
+            }
+            
+            assertNoOsgiTasks("After test " + testIndex++);
+	   }
 }

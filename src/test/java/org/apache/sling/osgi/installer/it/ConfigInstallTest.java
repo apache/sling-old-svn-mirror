@@ -68,16 +68,26 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
         installer.addResource(r);
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         
-        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
-        assertNotNull("Config " + cfgPid + " must be found after installing", cfg);
-        final String value = (String)cfg.getProperties().get("foo");
-        assertEquals("Config value must match", "bar", value);
+        Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", (String)cfg.getProperties().get("foo"));
         
         resetCounters();
         installer.removeResource(new InstallableResource(r.getUrl()));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
-        
         waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
+        
+        // Reinstalling with same digest must work
+        resetCounters();
+        installer.addResource(r);
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        cfg = waitForConfiguration("After reinstalling", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", (String)cfg.getProperties().get("foo"));
+        
+        resetCounters();
+        installer.removeResource(new InstallableResource(r.getUrl()));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
+        
     }
     
     @Test
