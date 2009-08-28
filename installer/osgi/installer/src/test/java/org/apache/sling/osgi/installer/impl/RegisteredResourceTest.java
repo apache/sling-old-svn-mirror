@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -151,6 +152,15 @@ public class RegisteredResourceTest {
         final RegisteredResource r = new LocalFileRegisteredResource(i);
         assertNull("RegisteredResource must not have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
+    }
+    
+    @org.junit.Test public void testConfigDigestIncludesUrl() throws Exception {
+        final Dictionary<String, Object> data = new Hashtable<String, Object>();
+        final InstallableResource rA = new InstallableResource("test:urlA", data);
+        final InstallableResource rB = new InstallableResource("test:urlB", data);
+        assertFalse(
+                "Expecting configs with same data but different URLs to have different digests",
+                rA.getDigest().equals(rB.getDigest()));
     }
     
     @org.junit.Test public void testUrlScheme() throws Exception {
