@@ -72,7 +72,6 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
         assertNoOsgiTasks("At the end of test");
     }
 
-    /**
 	@Test
     public void testIndividualInvalidBundles() throws Exception {
     	final String symbolicName = "osgi-installer-testbundle";
@@ -122,5 +121,4 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
 
     	assertNoOsgiTasks("After test " + testIndex++);
 	}
-	*/
 }
