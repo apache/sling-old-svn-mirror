@@ -25,13 +25,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -90,13 +88,6 @@ class MiscUtil {
         }
     }
     
-    static class MockJcrResourceResolverFactory implements JcrResourceResolverFactory {
-
-        public ResourceResolver getResourceResolver(Session arg0) {
-            return new MockResourceResolver();
-        }
-    }
-    
     /** Set a non-public Field */
     static void setField(Object target, String fieldName, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
         final Field f = target.getClass().getDeclaredField(fieldName);
@@ -108,7 +99,6 @@ class MiscUtil {
     static JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller) throws Exception {
         final JcrInstaller installer = new JcrInstaller();
         setField(installer, "repository", repository);
-        setField(installer, "resourceResolverFactory", new MockJcrResourceResolverFactory());
         setField(installer, "installer", osgiInstaller);
         setField(installer, "runMode", new MockRunMode(RUN_MODES));
 
