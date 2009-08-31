@@ -35,8 +35,6 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 
 /** Worker thread where all OSGi tasks are executed.
@@ -47,7 +45,7 @@ import org.osgi.service.log.LogService;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-class OsgiInstallerThread extends Thread implements FrameworkListener, BundleListener {
+class OsgiInstallerThread extends Thread implements BundleListener {
     
     private final OsgiInstallerContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
@@ -72,7 +70,6 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
 
     void deactivate() {
         ctx.getBundleContext().removeBundleListener(this);
-        ctx.getBundleContext().removeFrameworkListener(this);
         active = false;
         synchronized (newResources) {
             newResources.notify();
@@ -81,7 +78,6 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
     
     @Override
     public void run() {
-        ctx.getBundleContext().addFrameworkListener(this);
         ctx.getBundleContext().addBundleListener(this);
         
         while(active) {
@@ -381,17 +377,27 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
         ctx.incrementCounter(OsgiInstaller.INSTALLER_CYCLES_COUNTER);
     }
     
-    /** Need to wake up on framework and bundle events, as we might have tasks waiting to retry */
-    public void frameworkEvent(FrameworkEvent arg0) {
-        synchronized (newResources) {
-            newResources.notify();
-        }
+    /** If we have any tasks waiting to be retried, schedule their execution */
+    private void scheduleRetries() {
+    	final int toRetry = tasksForNextCycle.size(); 
+    	if(toRetry > 0) {
+    		if(ctx.getLogService() != null) {
+    			ctx.getLogService().log(LogService.LOG_DEBUG, toRetry + " tasks scheduled for retrying");
+    		}
+            synchronized (newResources) {
+                newResources.notify();
+            }
+    	}
     }
-
-    /** Need to wake up on framework and bundle events, as we might have tasks waiting to retry */
-    public void bundleChanged(BundleEvent arg0) {
-        synchronized (newResources) {
-            newResources.notify();
-        }
+    
+    public void bundleChanged(BundleEvent e) {
+    	final int t = e.getType();
+    	if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
+    		if(ctx.getLogService() != null) {
+    			ctx.getLogService().log(LogService.LOG_DEBUG, 
+    					"Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
+    		}
+    		scheduleRetries();
+    	}
     }
 }
