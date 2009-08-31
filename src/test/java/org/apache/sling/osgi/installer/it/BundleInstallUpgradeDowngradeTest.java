@@ -71,19 +71,19 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	{
     	    resetCounters();
             installer.addResource(getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"), "digestA"));
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         	final Bundle b = assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);
         	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
 
     	assertNoOsgiTasks("After test " + testIndex++);
-    	
+
     	// Downgrade to lower version, installed bundle must not change
         {
             resetCounters();
             installer.addResource(getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestA"));
             
             // make sure no updates happen
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
@@ -97,6 +97,14 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
         assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 3);
         assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 1);
         
+    	// Update to same version with different digest must be ignored
+    	{
+    	    resetCounters();
+            installer.addResource(getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestB"));
+        	assertNoOsgiTasks("Update to same version should generate no OSGi tasks");
+    	}
+    	
     	// Uninstall
     	{
             resetCounters();
