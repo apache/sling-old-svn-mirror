@@ -70,7 +70,9 @@ public class DictionaryDigestTest {
 		digest = testDigestChanged(d, digest, step, true);
 		d.put("key", "value");
 		digest = testDigestChanged(d, digest, step, false);
-		
+		d.put("key", "valueB");
+		digest = testDigestChanged(d, digest, step, true);
+		                		
 		d.put("int", new Integer(12));
 		digest = testDigestChanged(d, digest, step, true);
 		d.put("int", new Integer(12));

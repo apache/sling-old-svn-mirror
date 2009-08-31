@@ -42,7 +42,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
         // Order first by symbolic name
         final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        if(nameA != null) {
+        if(nameA != null && nameB != null) {
             result = nameA.compareTo(nameB);
         }
         
@@ -85,6 +85,31 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
     }
     
     int compareConfig(RegisteredResource a, RegisteredResource b) {
-        return 0;
+        int result = 0;
+        
+        // First compare by pid
+        final ConfigurationPid pA = (ConfigurationPid)a.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        final ConfigurationPid pB = (ConfigurationPid)b.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        if(pA != null && pA.getCompositePid() != null && pB != null && pB.getCompositePid() != null) {
+            result = pA.getCompositePid().compareTo(pB.getCompositePid());
+        }
+        
+        // Then by priority, higher values first
+        if(result == 0) {
+            if(a.getPriority() < b.getPriority()) {
+                result = 1;
+            } else if(a.getPriority() > b.getPriority()) {
+                result = -1;
+            }
+        }
+        
+        // Then by digest
+        if(result == 0) {
+            if(a.getDigest() != null) {
+                result = a.getDigest().compareTo(b.getDigest());
+            }
+        }
+        
+        return result;
     }
 }

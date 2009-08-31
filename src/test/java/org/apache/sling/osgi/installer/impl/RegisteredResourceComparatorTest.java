@@ -18,20 +18,23 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
     
-    private void assertOrder(List<RegisteredResource> toTest, RegisteredResource[] inOrder) {
+    private void assertOrder(Set<RegisteredResource> toTest, RegisteredResource[] inOrder) {
         assertEquals("Expected sizes to match", toTest.size(), inOrder.length);
-        Collections.sort(toTest, new RegisteredResourceComparator());
         int i = 0;
         for(RegisteredResource r : toTest) {
             final RegisteredResource ref = inOrder[i];
@@ -40,8 +43,18 @@ public class RegisteredResourceComparatorTest {
         }
     }
     
+    private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority) throws IOException {
+        if(data == null) {
+            data = new Hashtable<String, Object>();
+            data.put("foo", "bar");
+        }
+        final InstallableResource r = new InstallableResource("test:" + url, data);
+        r.setPriority(priority);
+        return new RegisteredResourceImpl(null, r);
+    }
+    
     private void assertOrder(RegisteredResource[] inOrder) {
-        final List<RegisteredResource> toTest = new ArrayList<RegisteredResource>();
+        final SortedSet<RegisteredResource> toTest = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
         for(int i = inOrder.length - 1 ; i >= 0; i--) {
             toTest.add(inOrder[i]);
         }
@@ -117,6 +130,46 @@ public class RegisteredResourceComparatorTest {
         inOrder[2] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestC");
         inOrder[1] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestB");
         inOrder[0] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestA");
+        assertOrder(inOrder);
+    }
+    
+    @Test
+    public void testConfigPriority() throws IOException {
+        final RegisteredResource [] inOrder = new RegisteredResource [3];
+        inOrder[0] = getConfig("pid", null, 2); 
+        inOrder[1] = getConfig("pid", null, 1); 
+        inOrder[2] = getConfig("pid", null, 0); 
+        assertOrder(inOrder);
+    }
+    
+    @Test
+    public void testConfigDigest() throws IOException {
+        final Dictionary<String, Object> data = new Hashtable<String, Object>();
+        final RegisteredResource [] inOrder = new RegisteredResource [2];
+        data.put("three", "bar");
+        inOrder[0] = getConfig("pid", data, 0); 
+        data.put("two", "bar");
+        inOrder[1] = getConfig("pid", data, 0); 
+        assertOrder(inOrder);
+        
+    }
+    
+    @Test
+    public void testConfigPid() throws IOException {
+        final RegisteredResource [] inOrder = new RegisteredResource [3];
+        inOrder[0] = getConfig("pidA", null, 0); 
+        inOrder[1] = getConfig("pidB", null, 0); 
+        inOrder[2] = getConfig("pidC", null, 0); 
+        assertOrder(inOrder);
+    }
+    
+    @Test
+    public void testConfigComposite() throws IOException {
+        final RegisteredResource [] inOrder = new RegisteredResource [4];
+        inOrder[0] = getConfig("pidA", null, 10); 
+        inOrder[1] = getConfig("pidA", null, 0); 
+        inOrder[2] = getConfig("pidB", null, 1); 
+        inOrder[3] = getConfig("pidB", null, 0); 
         assertOrder(inOrder);
     }
 }
