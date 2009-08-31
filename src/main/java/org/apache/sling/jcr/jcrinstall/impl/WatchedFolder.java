@@ -143,7 +143,9 @@ class WatchedFolder implements EventListener{
             		if(r != null) {
             			resourcesSeen.add(r.getUrl());
             		    final String oldDigest = digests.get(r.getUrl());
-            		    if(!r.getDigest().equals(oldDigest)) {
+            		    if(r.getDigest().equals(oldDigest)) {
+            		    	log.debug("Digest didn't change, ignoring " + r);
+            		    } else {
                             r.setPriority(priority);
                             result.toAdd.add(r);
             		    }
