@@ -171,4 +171,13 @@ public class RegisteredResourceComparatorTest {
         inOrder[3] = getConfig("pidB", null, 0); 
         assertOrder(inOrder);
     }
+    
+    @Test
+    public void testConfigAndBundle() throws IOException {
+    	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
+    	final RegisteredResource b = new MockBundleResource("a", "1.0");
+    	final RegisteredResourceComparator c = new RegisteredResourceComparator();
+    	assertEquals("bundle is > config when compared", 1, c.compare(b, cfg));
+    	assertEquals("config is < bundle when compared", -1, c.compare(cfg, b));
+    }
 }

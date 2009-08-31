@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -57,4 +58,8 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
     public Bundle getMatchingBundle(String bundleSymbolicName) {
         return null;
     }
+    
+	public boolean isSnapshot(Version v) {
+		return v.toString().indexOf(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER) >= 0;
+	}
 }

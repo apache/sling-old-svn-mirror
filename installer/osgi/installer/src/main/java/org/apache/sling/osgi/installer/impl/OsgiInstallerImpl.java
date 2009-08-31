@@ -26,6 +26,7 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -34,6 +35,8 @@ import org.osgi.util.tracker.ServiceTracker;
 /** OsgiInstaller service implementation */
 public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
+    public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+    
 	private final BundleContext bundleContext;
     private final PackageAdmin packageAdmin;
     private final ServiceTracker logServiceTracker;
@@ -149,4 +152,8 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         }
         return null;
     }
+    
+	public boolean isSnapshot(Version v) {
+		return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
+	}
 }

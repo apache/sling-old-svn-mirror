@@ -40,9 +40,7 @@ import org.osgi.service.log.LogService;
         return TaskOrder.CONFIG_REMOVE_ORDER + pid.getCompositePid();
     }
     
-    @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
         
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
@@ -54,6 +52,7 @@ import org.osgi.service.log.LogService;
             return;
         }
         
+        logExecution(ctx);
         final Configuration cfg = getConfiguration(ca, pid, false, ctx);
         if(cfg == null) {
             if(ctx.getLogService() != null) {

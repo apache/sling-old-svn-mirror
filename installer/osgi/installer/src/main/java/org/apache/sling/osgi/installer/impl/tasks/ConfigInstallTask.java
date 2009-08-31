@@ -44,7 +44,6 @@ public class ConfigInstallTask extends AbstractConfigTask {
     
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
         
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
@@ -55,6 +54,8 @@ public class ConfigInstallTask extends AbstractConfigTask {
             }
             return;
         }
+        
+        logExecution(ctx);
         
         // Convert data to a configuration Dictionary
         Dictionary<String, Object> dict = resource.getDictionary();

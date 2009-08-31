@@ -23,14 +23,25 @@ import java.util.Comparator;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
-/** Comparator that defines priorities between RegisteredResources */
+/** Comparator that defines priorities between RegisteredResources.
+ * 	The RegisteredResources are grouped by OSGi "entity" (bundle symbolic
+ * 	name, config PID, etc.) in sorted sets, and this comparator is used
+ *  to sort the resources in the sets.
+ */
 class RegisteredResourceComparator implements Comparator<RegisteredResource >{
 
     public int compare(RegisteredResource a, RegisteredResource b) {
-        if(a.getResourceType() == RegisteredResource.ResourceType.BUNDLE) {
+    	final boolean aBundle = a.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
+    	final boolean bBundle = b.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
+    	
+        if(aBundle && bBundle) {
             return compareBundles(a, b);
-        } else {
+        } else if(!aBundle && !bBundle){
             return compareConfig(a, b);
+        } else if(aBundle) {
+        	return 1;
+        } else {
+        	return -1;
         }
     }
     
@@ -50,7 +61,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
         if(result == 0) {
             final Version va = (Version)a.getAttributes().get(Constants.BUNDLE_VERSION);
             final Version vb = (Version)b.getAttributes().get(Constants.BUNDLE_VERSION);
-            isSnapshot = va!= null && va.toString().contains(BundleTaskCreator.MAVEN_SNAPSHOT_MARKER);
+            isSnapshot = va!= null && va.toString().contains(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER);
             if(va != null && vb != null) {
                 // higher version has more priority, must come first so invert comparison
                 result = vb.compareTo(va);

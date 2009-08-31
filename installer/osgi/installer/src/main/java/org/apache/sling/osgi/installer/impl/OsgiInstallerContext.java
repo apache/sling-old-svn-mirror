@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -33,6 +34,7 @@ public interface OsgiInstallerContext {
 	void incrementCounter(int index);
     void setCounter(int index, long value);
     Bundle getMatchingBundle(String bundleSymbolicName);
+    boolean isSnapshot(Version v);
 	
 	/** Schedule a task for execution in the current OsgiController cycle */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);

@@ -33,8 +33,6 @@ import org.osgi.service.log.LogService;
 /** TaskCreator that processes a list of bundle RegisteredResources */
 class BundleTaskCreator {
 
-    public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
-    
     /** Store the digests of the bundles for which we create update tasks,
      *  keyed by symbolic name, to avoid generating repated updates
      *  for snapshot bundles
@@ -101,7 +99,7 @@ class BundleTaskCreator {
 	                // installed but different version. Can be a later version if 
 			        // the newer version resource was removed, in case we downgrade
 			        toUpdate = toActivate;
-			    } else if(compare == 0 && newVersion.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0){
+			    } else if(compare == 0 && ctx.isSnapshot(newVersion)){
 			        // installed, same version but SNAPSHOT
                     toUpdate = toActivate;
 			    }
