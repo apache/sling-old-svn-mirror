@@ -24,6 +24,7 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.osgi.service.log.LogService;
 
 /** Update a bundle from a RegisteredResource. Creates
@@ -49,12 +50,27 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = ctx.getMatchingBundle(symbolicName);
         if(b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
+        
+        // Do not update if same version, unless snapshot
+        if(b != null) {
+        	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
+        	final Version newVersion = (Version)resource.getAttributes().get(Constants.BUNDLE_VERSION);
+        	if(currentVersion.equals(newVersion) && !ctx.isSnapshot(newVersion)) {
+        		if(ctx.getLogService() != null) {
+            		ctx.getLogService().log(
+            				LogService.LOG_DEBUG, 
+            				"Same version is already installed, and not a snapshot, ignoring update:" + resource);
+        		}
+        		return;
+        	}
+        }
+        
+        logExecution(ctx);
         if(b.getState() == Bundle.ACTIVE) {
             // bundle was active before the update - restart it once updated, but
             // in sequence, not right now

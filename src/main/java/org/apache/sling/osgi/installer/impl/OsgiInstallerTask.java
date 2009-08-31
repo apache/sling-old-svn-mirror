@@ -22,10 +22,11 @@ import org.osgi.service.log.LogService;
 
 /** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */ 
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
-	/** Execute this task */
-	public void execute(OsgiInstallerContext ctx) throws Exception {
+    public abstract void execute(OsgiInstallerContext ctx) throws Exception;
+
+	protected void logExecution(OsgiInstallerContext ctx) {
 		if(ctx.getLogService() != null) {
-			ctx.getLogService().log(LogService.LOG_DEBUG, "Executing task " + this);
+			ctx.getLogService().log(LogService.LOG_DEBUG, "OsgiInstallerTask: executing  " + this);
 		}
 	}
 	

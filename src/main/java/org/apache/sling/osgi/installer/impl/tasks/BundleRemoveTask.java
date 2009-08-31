@@ -44,7 +44,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
     
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
+        logExecution(ctx);
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = ctx.getMatchingBundle(symbolicName);
         if(b == null) {

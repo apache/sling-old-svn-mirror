@@ -39,10 +39,9 @@ public class BundleInstallTask extends OsgiInstallerTask {
     	return getClass().getSimpleName() + ": " + resource;
     }
     
-    @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
         final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream());
+        logExecution(ctx);
         ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
     }

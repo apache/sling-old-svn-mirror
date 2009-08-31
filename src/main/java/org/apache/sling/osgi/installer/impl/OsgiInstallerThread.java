@@ -360,7 +360,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 group.remove(r);
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(LogService.LOG_DEBUG,
-                            "Resource deleted, not installable and has been processed: " + r);
+                            "Removing RegisteredResource from list, not installable and has been processed: " + r);
                 }
             }
             if(group.isEmpty() && key != null) {

@@ -56,7 +56,6 @@ public class BundleStartTask extends OsgiInstallerTask {
 	}
 
 	public void execute(OsgiInstallerContext ctx) throws Exception {
-        super.execute(ctx);
 		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
 		final LogService log = ctx.getLogService();
 		boolean needToRetry = false;
@@ -75,6 +74,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 	            }
 	        } else {
 	            // Try to start bundle, and if that doesn't work we'll need to retry
+	            logExecution(ctx);
 	            try {
 	                b.start();
 	                if(log != null) {
