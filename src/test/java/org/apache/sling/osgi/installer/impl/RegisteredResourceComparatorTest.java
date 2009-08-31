@@ -114,13 +114,11 @@ public class RegisteredResourceComparatorTest {
     }
     
     @Test
-    public void testDigest() {
-        final RegisteredResource [] inOrder = {
-                new MockBundleResource("a", "1.2.0", 0, "digestA"),
-                new MockBundleResource("a", "1.2.0", 0, "digestB"),
-                new MockBundleResource("a", "1.2.0", 0, "digestC"),
-        };
-        assertOrder(inOrder);
+    public void testBundleDigests() {
+        final RegisteredResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
+        final RegisteredResource b = new MockBundleResource("a", "1.2.0", 0, "digestB");
+        final RegisteredResourceComparator c = new RegisteredResourceComparator();
+        assertEquals("Digests must not be included in bundles comparison", 0, c.compare(a, b));
     }
     
     @Test
@@ -143,15 +141,16 @@ public class RegisteredResourceComparatorTest {
     }
     
     @Test
-    public void testConfigDigest() throws IOException {
-        final Dictionary<String, Object> data = new Hashtable<String, Object>();
-        final RegisteredResource [] inOrder = new RegisteredResource [2];
-        data.put("three", "bar");
-        inOrder[0] = getConfig("pid", data, 0); 
-        data.put("two", "bar");
-        inOrder[1] = getConfig("pid", data, 0); 
-        assertOrder(inOrder);
-        
+    /** Digests must not be included in comparisons: a and b might represent the same
+     * 	config even if their digests are different */
+    public void testConfigDigests() throws IOException {
+    	final Dictionary<String, Object> data = new Hashtable<String, Object>();
+        data.put("foo", "bar");
+        final RegisteredResource a = getConfig("pid", data, 0);
+        data.put("foo", "changed");
+        final RegisteredResource b = getConfig("pid", data, 0);
+        final RegisteredResourceComparator c = new RegisteredResourceComparator();
+        assertEquals("Digests must not be included in configs comparison", 0, c.compare(a, b));
     }
     
     @Test

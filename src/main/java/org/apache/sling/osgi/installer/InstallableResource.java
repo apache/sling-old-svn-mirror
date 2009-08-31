@@ -26,6 +26,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /** A piece of data that can be installed by the OSGi controller.
  * 	Wraps either a Dictionary or an InputStream.
@@ -159,13 +162,21 @@ public class InstallableResource {
         return new String(bigInt.toString(16));
     }
     
-    /** Digest is needed to detect changes in data 
-     * @throws  */
+    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
     public static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
         final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(data);
+        
+        final SortedSet<String> sortedKeys = new TreeSet<String>();
+        for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
+        	sortedKeys.add(e.nextElement());
+        }
+        for(String key : sortedKeys) {
+        	oos.writeObject(key);
+        	oos.writeObject(data.get(key));
+        }
+        
         bos.flush();
         d.update(bos.toByteArray());
         return digestToString(d);
