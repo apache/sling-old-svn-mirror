@@ -234,9 +234,9 @@ public class JcrInstaller implements Runnable {
     
     /** Get a property value from the component context or bundle context */
     protected Object getPropertyValue(ComponentContext ctx, String name) {
-        Object result = ctx.getProperties().get(name);
+        Object result = ctx.getBundleContext().getProperty(name);
         if(result == null) {
-            result = ctx.getBundleContext().getProperty(name);
+            result = ctx.getProperties().get(name);
         }
         return result;
     }
