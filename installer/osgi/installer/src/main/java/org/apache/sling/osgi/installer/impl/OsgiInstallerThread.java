@@ -145,7 +145,9 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
 		}
 		
 		// Will mark all resources which have r's URL as uninstallable
-		debug("Adding URL " + r.getUrl() + " to urlsToRemove");
+        if(ctx.getLogService() != null) {
+            ctx.getLogService().log(LogService.LOG_DEBUG, "Adding URL " + r.getUrl() + " to urlsToRemove");
+        }
 		urlsToRemove.add(r.getUrl());
 		
         synchronized (newResources) {
@@ -156,6 +158,9 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
     /** Register a single new resource, will be processed on the next cycle */
     void addNewResource(RegisteredResource r) {
         synchronized (newResources) {
+            if(ctx.getLogService() != null) {
+                ctx.getLogService().log(LogService.LOG_DEBUG, "Adding new resource " + r);
+            }
             newResources.add(r);
             newResources.notify();
         }
@@ -185,6 +190,9 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
                         "URL of all supplied InstallableResource must start with supplied scheme"
                         + ", scheme is not '" + urlScheme + "' for URL " + r.getUrl());
             }
+            if(ctx.getLogService() != null) {
+                ctx.getLogService().log(LogService.LOG_DEBUG, "Adding new resource " + r);
+            }
             toAdd.add(rr);
         }
         
@@ -194,6 +202,9 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
             }
             // Need to manage schemes separately: in case toAdd is empty we
             // want to mark all such resources as non-installable
+            if(ctx.getLogService() != null) {
+                ctx.getLogService().log(LogService.LOG_DEBUG, "Adding to newResourcesSchemes: " + urlScheme);
+            }
             newResourcesSchemes.add(urlScheme);
             newResources.notify();
         }
@@ -206,25 +217,35 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
             // all resources with the same scheme in newResources, and existing
             // registeredResources, as not installable
         	for(String scheme : newResourcesSchemes) {
-                debug("Processing set of new resources with scheme " + scheme);
+                if(ctx.getLogService() != null) {
+                    ctx.getLogService().log(LogService.LOG_DEBUG, "Processing set of new resources with scheme " + scheme);
+                }
                 for(RegisteredResource r : newResources) {
                     if(r.getUrlScheme().equals(scheme)) {
                         r.setInstallable(false);
-                        debug("New resource set to non-installable: " + r); 
+                        if(ctx.getLogService() != null) {
+                            ctx.getLogService().log(LogService.LOG_DEBUG, "New resource set to non-installable: " + r);
+                        }
                     }
                  }
                 for(SortedSet<RegisteredResource> ss : registeredResources.values()) {
                     for(RegisteredResource r : ss) {
                         if(r.getUrlScheme().equals(scheme)) {
                             r.setInstallable(false);
-                            debug("Existing resource set to non-installable: " + r); 
+                            if(ctx.getLogService() != null) {
+                                ctx.getLogService().log(LogService.LOG_DEBUG, "Existing resource set to non-installable: " + r);
+                            }
                         }
                     }
                 }
         	}
             for(SortedSet<RegisteredResource> s : newResourcesSets) {
                 newResources.addAll(s);
-                debug("Added set of " + s.size() + " new resources with scheme " + s.first().getUrlScheme());
+                if(ctx.getLogService() != null) {
+                    ctx.getLogService().log(LogService.LOG_DEBUG, 
+                            "Added set of " + s.size() + " new resources with scheme " 
+                            + s.first().getUrlScheme() + ": " + s);
+                }
             }
             newResourcesSets.clear();
             newResourcesSchemes.clear();
@@ -250,7 +271,11 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
                 for(SortedSet<RegisteredResource> group : registeredResources.values()) {
                 	for(RegisteredResource r : group) {
                 		if(urlsToRemove.contains(r.getUrl())) {
-                			debug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
+                            if(ctx.getLogService() != null) {
+                                ctx.getLogService().log(LogService.LOG_DEBUG, 
+                                    "Marking " + r + " uninistallable, URL is included in urlsToRemove" 
+                                    );
+                            }
                 			r.setInstallable(false);
                 		}
                 	}
@@ -356,12 +381,6 @@ class OsgiInstallerThread extends Thread implements FrameworkListener, BundleLis
         ctx.incrementCounter(OsgiInstaller.INSTALLER_CYCLES_COUNTER);
     }
     
-    private void debug(String str) {
-        if(ctx.getLogService() != null) {
-            ctx.getLogService().log(LogService.LOG_DEBUG, str);
-       }
-    }
-
     /** Need to wake up on framework and bundle events, as we might have tasks waiting to retry */
     public void frameworkEvent(FrameworkEvent arg0) {
         synchronized (newResources) {
