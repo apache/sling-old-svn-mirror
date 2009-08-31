@@ -66,18 +66,13 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
             }
         }
         
-        if(result == 0) {
-            if(isSnapshot) {
-                // For snapshots, compare serial numbers so that snapshots registered
-                // later get priority
-                if(a.getSerialNumber() < b.getSerialNumber()) {
-                    result = 1;
-                } else if(a.getSerialNumber() > b.getSerialNumber()) {
-                    result = -1;
-                }
-            } else {
-                // Non-snapshot: compare digests
-                result = a.getDigest().compareTo(b.getDigest());
+        if(result == 0 && isSnapshot) {
+            // For snapshots, compare serial numbers so that snapshots registered
+            // later get priority
+            if(a.getSerialNumber() < b.getSerialNumber()) {
+                result = 1;
+            } else if(a.getSerialNumber() > b.getSerialNumber()) {
+                result = -1;
             }
         }
         
@@ -100,13 +95,6 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
                 result = 1;
             } else if(a.getPriority() > b.getPriority()) {
                 result = -1;
-            }
-        }
-        
-        // Then by digest
-        if(result == 0) {
-            if(a.getDigest() != null) {
-                result = a.getDigest().compareTo(b.getDigest());
             }
         }
         

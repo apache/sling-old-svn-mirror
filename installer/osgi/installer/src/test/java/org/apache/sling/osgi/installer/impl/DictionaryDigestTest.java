@@ -89,4 +89,21 @@ public class DictionaryDigestTest {
 		d.put("another", new String [] { "a", "b", "D"});
 		digest = testDigestChanged(d, digest, step, true);
 	}
+	
+	@org.junit.Test public void testDictionaryOrderDoesNotMatter() throws Exception {
+		final Dictionary<String, Object> a = new Hashtable<String, Object>();
+		a.put("one", "A");
+		a.put("two", "B");
+		a.put("three", "C");
+		
+		final Dictionary<String, Object> b = new Hashtable<String, Object>();
+		b.put("two", "B");
+		b.put("one", "A");
+		b.put("three", "C");
+		
+		assertEquals("Same data in different order must have same digest", 
+				InstallableResource.computeDigest(a),
+				InstallableResource.computeDigest(b)
+		);
+	}
 }
