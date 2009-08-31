@@ -58,6 +58,7 @@
                 <Private-Package>org.apache.sling.jcr.jcrinstall.impl.*</Private-Package>
                 <Sling-Nodetypes>SLING-INF/nodetypes/osgiconfig.cnd</Sling-Nodetypes>
                 <Sling-Namespaces>sling=http://sling.apache.org/jcr/sling/1.0</Sling-Namespaces>
+                <Embed-Dependency>*;artifactId=org.apache.sling.commons.osgi</Embed-Dependency>
             </instructions>
         </configuration>
       </plugin>
@@ -75,12 +76,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.jcr.resource</artifactId>
+      <artifactId>org.apache.sling.jcr.api</artifactId>
       <version>2.0.2-incubator</version>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.jcr.api</artifactId>
+      <artifactId>org.apache.sling.commons.osgi</artifactId>
       <version>2.0.2-incubator</version>
     </dependency>
     <dependency>

@@ -29,9 +29,8 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.runmode.RunMode;
@@ -86,12 +85,6 @@ public class JcrInstaller implements Runnable {
      */
     private OsgiInstaller installer;
     
-    /**	This class looks for installable resources under the search
-     * 	paths of the Sling ResourceResolver (by default: /libs and /apps)
-     * 	@scr.reference
-     */
-    private JcrResourceResolverFactory resourceResolverFactory;
-    
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
 
@@ -104,6 +97,15 @@ public class JcrInstaller implements Runnable {
      *  @scr.property valueRef="DEFAULT_FOLDER_MAX_DEPTH" type="Integer"
      */
     public static final String PROP_INSTALL_FOLDER_MAX_DEPTH = "sling.jcrinstall.folder.max.depth";
+    
+    /**	Configurable search path. We could get it from the ResourceResolver, but
+     * 	introducing a dependency on this just to get those values is too much
+     * 	for this module that's meant to bootstrap other services.
+     * 
+     * 	@scr.property values.1="/apps" values.2="/libs"
+     */
+    public static final String PROP_SEARCH_PATH = "sling.jcrinstall.search.path";
+    public static final String [] DEFAULT_SEARCH_PATH = { "/apps/", "/libs/" };
 
     public static final int DEFAULT_FOLDER_MAX_DEPTH = 4;
     private int maxWatchedFolderDepth;
@@ -144,14 +146,21 @@ public class JcrInstaller implements Runnable {
     	converters.add(new FileNodeConverter());
     	converters.add(new ConfigNodeConverter());
     	
-    	// Get root paths for installable resources, from ResourceResolver
-    	final ResourceResolver rr = resourceResolverFactory.getResourceResolver(session);
-    	final String [] roots = rr.getSearchPath();
-    	for(int i=0; i < roots.length; i++) {
-    		if(!roots[i].startsWith("/")) {
-    			roots[i] = "/" + roots[i];
-     		}
-    		log.info("Using root folder {} (provided by ResourceResolver)", roots[i]);
+    	// Get search paths, and make sure each part starts and ends with a /
+        String [] roots = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
+        if (roots == null) {
+        	roots = DEFAULT_SEARCH_PATH;
+        }
+        for (int i = 0; i < roots.length; i++) {
+            if (!roots[i].startsWith("/")) {
+            	roots[i] = "/" + roots[i];
+            }
+            if (!roots[i].endsWith("/")) {
+            	roots[i] += "/";
+            }
+        }
+        for(int i = 0; i < roots.length; i++) {
+    		log.info("Configured root folder: {}", roots[i]);
     	}
     	
     	// Configurable max depth, system property (via bundle context) overrides default value
