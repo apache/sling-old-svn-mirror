@@ -79,7 +79,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
 
     @Test
     public void testIdleState() throws Exception {
-        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
+        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 4);
         assertIdle();
     }
     
