@@ -108,9 +108,11 @@ public class SlingServerRepository extends AbstractSlingRepository
             File configFile = new File(configURLObj);
             if (configFile.canRead()) {
                 ins = new FileInputStream(configFile);
+                log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
             } else {
                 URL configURL = new URL(configURLObj);
                 ins = configURL.openStream();
+                log(LogService.LOG_INFO, "Using configuration URL " + configURL);
             }
 
             RepositoryConfig crc = RepositoryConfig.create(ins, home);
