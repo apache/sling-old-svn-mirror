@@ -49,8 +49,10 @@ class RootFolderListener implements EventListener {
         int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
         boolean isDeep = true;
         boolean noLocal = true;
-        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
+        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
                 isDeep, null, null, noLocal);
+        
+        log.info("Watching {} to detect potential changes in subfolders", watchedPath);
     }
     
     @Override
