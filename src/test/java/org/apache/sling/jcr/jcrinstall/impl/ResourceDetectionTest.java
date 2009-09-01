@@ -19,82 +19,24 @@
 package org.apache.sling.jcr.jcrinstall.impl;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
 
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 
 /** Test that added/updated/removed resources are
  * 	correctly translated to OsgiInstaller registration
  *  calls.
  */
-public class ResourceDetectionTest extends RepositoryTestBase {
-    public static final long TIMEOUT = 5000L;
-    SlingRepository repo;
-    Session session;
-    private EventHelper eventHelper; 
-    private ContentHelper contentHelper;
-    private JcrInstaller installer;
-    private MockOsgiInstaller osgiInstaller;
+public class ResourceDetectionTest extends JcrInstallTestBase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        repo = getRepository();
-        session = repo.loginAdministrative(repo.getDefaultWorkspace());
-        eventHelper = new EventHelper(session);
-        contentHelper = new ContentHelper(session);
-        contentHelper.cleanupContent();
-        contentHelper.setupContent();
-        osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller);
-    }
-    
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        contentHelper.cleanupContent();
-        session.logout();
-        eventHelper = null;
-        contentHelper = null;
-        installer.deactivate(MiscUtil.getMockComponentContext());
-        MiscUtil.waitForInstallerThread(installer, TIMEOUT);
-    }
-
-    private void assertRegisteredPaths(String [] paths) {
-        for(String path : paths) {
-        	assertRegistered(path, !path.contains("NOT"));
-        }
-    }
-    
-    private void assertRegistered(String path, boolean registered) {
-       	if(registered) {
-    		assertTrue("Expected " + path + " to be registered",
-    				osgiInstaller.isRegistered(JcrInstaller.URL_SCHEME, path));
-    	} else {
-    		assertFalse("Expected " + path + " to be unregistered",
-    				osgiInstaller.isRegistered(JcrInstaller.URL_SCHEME, path));
-    	}
-    }
-    
-    private void assertRecordedCall(String action, String path) {
-    	final String callStr = action + ":" + JcrInstaller.URL_SCHEME + ":" + path;
-    	boolean found = false;
-    	for(String call : osgiInstaller.getRecordedCalls()) {
-    		if(call.startsWith(callStr)) {
-    			found = true;
-    			break;
-    		}
-    	}
-    	assertTrue("Expecting '" + callStr + "' in recorded calls (" + osgiInstaller.getRecordedCalls() + ")", found);
-    }
-    
     public void testInitialResourceDetection() throws Exception {
         assertRegisteredPaths(contentHelper.FAKE_RESOURCES);
         assertRegisteredPaths(contentHelper.FAKE_CONFIGS);
     }
-    
+
+    protected boolean needsTestContent() {
+        return true;
+    }
+
     public void testAddFiles() throws Exception {
         final String [] paths = {
             "/libs/foo/bar/install/" + System.currentTimeMillis() + ".jar",

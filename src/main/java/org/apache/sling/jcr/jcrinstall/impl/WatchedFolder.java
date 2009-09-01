@@ -105,9 +105,14 @@ class WatchedFolder implements EventListener{
     
     /** Set a static "timer" whenever an event occurs */
     public void onEvent(EventIterator it) {
-    	rescanTimer.scheduleScan(); 
-    	needsScan = true;
-    	log.debug("Event received, scheduling scan of {}", path);
+        log.debug("JCR event received for path {}", path);
+    	scheduleScan();
+    }
+    
+    void scheduleScan() {
+        log.debug("Scheduling scan of {}", path);
+        rescanTimer.scheduleScan(); 
+        needsScan = true;
     }
     
     boolean needsScan() {

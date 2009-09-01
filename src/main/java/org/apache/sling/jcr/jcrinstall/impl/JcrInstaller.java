@@ -20,6 +20,7 @@ package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,9 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -55,7 +59,7 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
  */
-public class JcrInstaller implements Runnable {
+public class JcrInstaller implements Runnable, EventListener {
 	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
 
@@ -122,6 +126,12 @@ public class JcrInstaller implements Runnable {
     /** Used to stop background thread when deactivated */
     private int deactivationCounter = 1;
     
+    /** The root folders that we watch */
+    private String [] roots;
+    
+    /** Path of newly created root folders */
+    private Set<String> newRoots = new HashSet<String>();
+    
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(String urlScheme, Node n) throws Exception;
@@ -141,13 +151,14 @@ public class JcrInstaller implements Runnable {
     	log.info("activate()");
     	
     	session = repository.loginAdministrative(repository.getDefaultWorkspace());
+    	newRoots.clear();
     	
     	// Setup converters
     	converters.add(new FileNodeConverter());
     	converters.add(new ConfigNodeConverter());
     	
     	// Get search paths, and make sure each part starts and ends with a /
-        String [] roots = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
+        roots = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
         if (roots == null) {
         	roots = DEFAULT_SEARCH_PATH;
         }
@@ -162,6 +173,15 @@ public class JcrInstaller implements Runnable {
         for(int i = 0; i < roots.length; i++) {
     		log.info("Configured root folder: {}", roots[i]);
     	}
+        
+        // Watch for DELETE events on the root - that might be one of our root folders
+        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
+        boolean isDeep = false;
+        boolean noLocal = true;
+        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, "/",
+                isDeep, null, null, noLocal);
+        log.info("Watching for NODE_REMOVED events on / to detect removal of our root folders");
+
     	
     	// Configurable max depth, system property (via bundle context) overrides default value
     	Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
@@ -213,7 +233,7 @@ public class JcrInstaller implements Runnable {
     
     protected void deactivate(ComponentContext context) {
     	log.info("deactivate()");
-    	
+
         try {
             deactivationCounter++;
             folderNameFilter = null;
@@ -223,10 +243,12 @@ public class JcrInstaller implements Runnable {
                 for(RootFolderListener wfc : listeners) {
                     wfc.cleanup(session);
                 }
+                session.getWorkspace().getObservationManager().removeEventListener(this);
                 session.logout();
                 session = null;
             }
             listeners.clear();
+            newRoots.clear();
         } catch(Exception e) {
             log.warn("Exception in deactivate()", e);
         }
@@ -295,12 +317,45 @@ public class JcrInstaller implements Runnable {
         return path;
     }
     
+    /** Add WatchedFolder to our list if it doesn't exist yet */
+    private void addWatchedFolder(WatchedFolder toAdd) {
+        WatchedFolder existing = null;
+        for(WatchedFolder wf : watchedFolders) {
+            if(wf.getPath().equals(toAdd.getPath())) {
+                existing = wf;
+                break;
+            }
+        }
+        if(existing == null) {
+            watchedFolders.add(toAdd);
+            toAdd.scheduleScan();
+        }
+    }
+    
     /** Add new folders to watch if any have been detected
      *  @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
      */ 
     private List<InstallableResource> updateFoldersList() throws Exception {
     	final List<InstallableResource> result = new LinkedList<InstallableResource>();
+    	
+    	// If one of our root folders was just created, scan it for folders to watch
+    	if(newRoots.size() > 0) {
+    	    final Set<String> toScan = new HashSet<String>();
+    	    synchronized (newRoots) {
+                toScan.addAll(newRoots);
+                newRoots.clear();
+            }
+            final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
+    	    for(String root : toScan) {
+    	        findPathsToWatch(root, newFolders);
+    	    }
+    	    for(WatchedFolder wf : newFolders) {
+    	        addWatchedFolder(wf);
+    	    }
+    	}
+    	
+    	// If changed occured in our watched paths, rescan
         for(RootFolderListener wfc : listeners) {
             final Set<String> changedPaths = wfc.getAndClearPaths();
             if(changedPaths != null && changedPaths.size() > 0) {
@@ -308,22 +363,13 @@ public class JcrInstaller implements Runnable {
                 for(String path : changedPaths) {
                     // Deletions are handled below
                     if(folderNameFilter.getPriority(path) > 0  && session.itemExists(path)) {
-                        WatchedFolder existing = null;
-                        for(WatchedFolder wf : watchedFolders) {
-                            if(wf.getPath().equals(path)) {
-                                existing = wf;
-                                break;
-                            }
-                        }
-                        if(existing == null) {
-                            watchedFolders.add(
-                                    new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
-                        }
+                        addWatchedFolder(new WatchedFolder(session, path, folderNameFilter.getPriority(path), URL_SCHEME, converters));
                     }
                 }
             }
         }
         
+        // Check all WatchedFolder, in case some were deleted
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
             if(!session.itemExists(wf.getPath())) {
@@ -340,6 +386,31 @@ public class JcrInstaller implements Runnable {
         return result;
     }
     
+    public void onEvent(EventIterator it) {
+        // Got a DELETE on root - schedule folders rescan if one
+        // of our root folders is impacted
+        try {
+            while(it.hasNext()) {
+                final Event e = it.nextEvent();
+                for(String root : roots) {
+                    if(root.startsWith(e.getPath())) {
+                        if(e.getType() == Event.NODE_ADDED) {
+                            synchronized (newRoots) {
+                                newRoots.add(e.getPath());
+                            }
+                            log.info("Got create event for root {}, scheduling scanning of new folders", root);
+                        } else {
+                            log.info("Got delete event for root {}, scheduling folders rescan", root);
+                        }
+                        updateFoldersListTimer.scheduleScan();
+                    }
+                }
+            }
+        } catch(RepositoryException re) {
+            log.warn("RepositoryException in onEvent", re);
+        }
+    }
+
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
     public void run() {
         log.info("Background thread {} starting", Thread.currentThread().getName());
