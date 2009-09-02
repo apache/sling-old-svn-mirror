@@ -27,6 +27,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -161,16 +162,26 @@ public class InstallableResource {
         final BigInteger bigInt = new BigInteger(1, d.digest());
         return new String(bigInt.toString(16));
     }
+
+    /** Compute digest on all keys of supplied data */
+    public static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
+    	return computeDigest(data, null);
+    }
     
     /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
-    public static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
+    public static String computeDigest(Dictionary<String, Object> data, Set<String> keysToIgnore) throws IOException, NoSuchAlgorithmException {
         final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final ObjectOutputStream oos = new ObjectOutputStream(bos);
         
         final SortedSet<String> sortedKeys = new TreeSet<String>();
-        for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
-        	sortedKeys.add(e.nextElement());
+        if(data != null) {
+            for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
+            	final String key = e.nextElement();
+            	if(keysToIgnore == null || !keysToIgnore.contains(key)) {
+            		sortedKeys.add(key);
+            	}
+            }
         }
         for(String key : sortedKeys) {
         	oos.writeObject(key);

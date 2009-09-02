@@ -65,6 +65,10 @@ class OsgiInstallerTestBase implements FrameworkListener {
     
     public static final String URL_SCHEME = "OsgiInstallerTest";
     
+    static interface Condition {
+    	boolean isTrue() throws Exception;
+    }
+    
     @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
     	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
@@ -151,6 +155,29 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	    	}
     	}
     	return null;
+    }
+    
+    protected void waitForCondition(String info, long timeoutMsec, Condition c) throws Exception {
+        final long end = System.currentTimeMillis() + timeoutMsec;
+        do {
+        	if(c.isTrue()) {
+        		return;
+        	}
+        	Thread.sleep(100L);
+        } while(System.currentTimeMillis() < end);
+        fail("WaitForCondition failed: " + info);
+    }
+    
+    protected void waitForConfigValue(String info, String pid, long timeoutMsec, String key, String value) throws Exception {
+        final long end = System.currentTimeMillis() + timeoutMsec;
+        do {
+        	final Configuration c = waitForConfiguration(info, pid, timeoutMsec, true);
+        	if(value.equals(c.getProperties().get(key))) {
+        		return;
+        	}
+        	Thread.sleep(100L);
+        } while(System.currentTimeMillis() < end);
+        fail("Did not get " + key + "=" + value + " for config " + pid);
     }
     
     protected Configuration waitForConfiguration(String info, String pid, long timeoutMsec, boolean shouldBePresent) throws Exception {
@@ -245,7 +272,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
         return result;
     }
     
-    protected void waitForConfigAdmin(boolean shouldBePresent) {
+    protected ConfigurationAdmin waitForConfigAdmin(boolean shouldBePresent) {
+    	ConfigurationAdmin result = null;
         if(configAdminTracker == null) {
             synchronized (this) {
                 configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
@@ -256,13 +284,13 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
     	do {
-    		boolean isPresent = configAdminTracker.getService() != null;
-    		if(isPresent == shouldBePresent) {
-    			return;
-    		}
-    		sleep(100L);
+    		result = (ConfigurationAdmin)configAdminTracker.getService();
+    		boolean isPresent = result != null;
+    		assertEquals("Expected ConfigurationAdmin to be " + (shouldBePresent ? "present" : "absent"),
+    				shouldBePresent, isPresent);
     	} while(System.currentTimeMillis() < waitUntil);
-    	fail("ConfigurationAdmin service not available after waiting " + timeout + " seconds");
+    	
+    	return result;
     }
     
     protected void resetCounters() {
