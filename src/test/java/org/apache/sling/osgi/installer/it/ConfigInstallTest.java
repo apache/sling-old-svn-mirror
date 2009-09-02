@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -32,13 +34,19 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 
 @RunWith(JUnit4TestRunner.class)
 
-public class ConfigInstallTest extends OsgiInstallerTestBase {
+public class ConfigInstallTest extends OsgiInstallerTestBase implements ConfigurationListener {
     
     private final static long TIMEOUT = 5000L;
+    private List<ConfigurationEvent> events = new LinkedList<ConfigurationEvent>();
+    private ServiceRegistration serviceRegistration;
     
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
@@ -48,14 +56,24 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
     @Before
     public void setUp() {
         setupInstaller();
+        events.clear();
+        serviceRegistration = bundleContext.registerService(ConfigurationListener.class.getName(), this, null);
     }
     
     @After
     public void tearDown() {
         super.tearDown();
+        if(serviceRegistration != null) {
+        	serviceRegistration.unregister();
+        	serviceRegistration = null;
+        }
     }
     
-    @Test
+    public void configurationEvent(ConfigurationEvent e) {
+    	events.add(e);
+	}
+
+	@Test
     public void testInstallAndRemoveConfig() throws Exception {
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
@@ -135,5 +153,34 @@ public class ConfigInstallTest extends OsgiInstallerTestBase {
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("Config must be removed once ConfigurationAdmin restarts", 
                 cfgPid, TIMEOUT, false);
+    }
+    
+    @Test
+    public void testReinstallSameConfig() throws Exception {
+    	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+    	cfgData.put("foo", "bar");
+    	final String cfgPid = getClass().getSimpleName() + ".reinstall." + System.currentTimeMillis();
+    	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+    	
+    	// Install config directly
+    	ConfigurationAdmin ca = waitForConfigAdmin(true);
+    	final Configuration c = ca.getConfiguration(cfgPid);
+    	c.update(cfgData);
+        waitForConfigValue("After manual installation", cfgPid, TIMEOUT, "foo", "bar");
+        assertEquals("Expected one ConfigurationEvent after manual install", 1, events.size());
+    	
+        long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+        installer.addResource(getInstallableResource(cfgPid, cfgData));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        assertEquals("Registering a Configuration that's already installed must not generate OSGi tasks",
+                nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
+        assertEquals("Expected one ConfigurationEvent after (ignored) install via OsgiInstaller", 1, events.size());
+    	
+    	// Reinstalling with a change must be executed
+        cfgData.put("foo", "changed");
+        installer.addResource(getInstallableResource(cfgPid, cfgData));
+        waitForConfigValue("After changing value", cfgPid, TIMEOUT, "foo", "changed");
+		final Condition cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
+        waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
     }
 }
