@@ -50,7 +50,10 @@ public class BundleRemoveTask extends OsgiInstallerTask {
         if(b == null) {
             throw new IllegalStateException("Bundle to remove (" + symbolicName + ") not found");
         }
-        b.stop();
+        final int state = b.getState();
+        if(state == Bundle.ACTIVE || state == Bundle.STARTING) {
+        	b.stop();
+        }
         b.uninstall();
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
