@@ -51,25 +51,26 @@ import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the sling client library "protocol"
- * 
+ *
  * @scr.component immediate="true" label="%servlet.post.name"
  *                description="%servlet.post.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="Sling Post Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * Use this as the default servlet for POST requests for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="POST" private="true"
- * 
+ * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
+ *
  * Get all SlingPostProcessors
  * @scr.reference name="postProcessor"
  *                interface="org.apache.sling.servlets.post.SlingPostProcessor"
  *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="postOperation" 
- * 					interface="org.apache.sling.servlets.post.SlingPostOperation" 
- * 					cardinality="0..n" 
+ * @scr.reference name="postOperation"
+ * 					interface="org.apache.sling.servlets.post.SlingPostOperation"
+ * 					cardinality="0..n"
  * 					policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
@@ -118,7 +119,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private final Map<String, SlingPostOperation> postOperations = new HashMap<String, SlingPostOperation>();
 
     private final List<ServiceReference> delayedPostProcessors = new ArrayList<ServiceReference>();
-    
+
     private final List<ServiceReference> postProcessors = new ArrayList<ServiceReference>();
 
     private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
@@ -316,7 +317,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         dateParser = null;
         this.componentContext = null;
     }
-    
+
     protected void bindPostOperation(ServiceReference ref) {
     	synchronized ( this.delayedPostOperations ) {
 			if (this.componentContext == null) {
@@ -326,7 +327,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 			}
 		}
     }
-    
+
     protected void registerPostOperation(ServiceReference ref) {
     	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
 		SlingPostOperation operation = (SlingPostOperation) this.componentContext.locateService("postOperation", ref);
@@ -334,7 +335,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 			this.postOperations.put(operationName, operation);
     	}
     }
-    
+
     protected void unbindPostOperation(ServiceReference ref) {
     	synchronized ( this.delayedPostOperations ) {
         	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);

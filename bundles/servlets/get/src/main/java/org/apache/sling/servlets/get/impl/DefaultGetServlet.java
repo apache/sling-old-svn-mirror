@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
  * Use this as a default servlet for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
+ * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
  *
  * Generic handler for all get requests
  * @scr.property name="sling.servlet.methods" value="GET" private="true"

@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
  *               value="sling/servlet/default"
  * @scr.property name="sling.servlet.extensions" value="json"
  * @scr.property name="sling.servlet.selectors" value="query"
+ * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
  */
 public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
@@ -198,7 +199,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         if (nodeRes == null) {
             return;
         }
-        
+
         itemWriter.dumpProperties(nodeRes, w, properties);
         
     }
