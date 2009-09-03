@@ -68,4 +68,12 @@ public interface SharedConstants {
     public static final String DEFAULT_SLING_LAUNCHER_JAR = "/resources/"
         + LAUNCHER_JAR_REL_PATH;
 
+    /**
+     * True or false value which controls whether sling will load bundles which
+     * are contained in the resources/# path locations in the sling jar or war <br/>
+     * The default is to unpack the jars and deploy them to the startup folder
+     * in sling home
+     */
+    public static final String DISABLE_PACKAGE_BUNDLE_LOADING = "org.apache.sling.launchpad.disable.package.bundle.loading";
+
 }
