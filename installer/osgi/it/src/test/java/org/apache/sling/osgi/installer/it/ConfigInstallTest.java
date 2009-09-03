@@ -167,7 +167,8 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     	final Configuration c = ca.getConfiguration(cfgPid);
     	c.update(cfgData);
         waitForConfigValue("After manual installation", cfgPid, TIMEOUT, "foo", "bar");
-        assertEquals("Expected one ConfigurationEvent after manual install", 1, events.size());
+		Condition cond = new Condition() { public boolean isTrue() { return events.size() == 1; }};
+        waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
     	
         long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(cfgPid, cfgData));
@@ -180,7 +181,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "changed");
         installer.addResource(getInstallableResource(cfgPid, cfgData));
         waitForConfigValue("After changing value", cfgPid, TIMEOUT, "foo", "changed");
-		final Condition cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
+		cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
     }
 }
