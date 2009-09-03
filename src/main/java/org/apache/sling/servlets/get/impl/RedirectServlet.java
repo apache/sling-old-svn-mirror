@@ -57,6 +57,7 @@ import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
  *
  * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"
  * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
  */
 public class RedirectServlet extends SlingSafeMethodsServlet {
 
@@ -180,7 +181,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         if (base.endsWith("/")) {
             base = base.concat(String.valueOf(Character.MAX_VALUE));
         }
-        
+
         String[] bParts = base.substring(1).split("/");
         String[] tParts = target.substring(1).split("/");
 
