@@ -85,15 +85,9 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         pw.println("Resource metadata: " + r.getResourceMetadata());
         pw.println("Resource type: " + r.getResourceType());
 
-        String resourceSuperType = r.getResourceSuperType();
+        String resourceSuperType = ResourceUtil.findResourceSuperType(r);
         if (resourceSuperType == null) {
-            resourceSuperType = ResourceUtil.getResourceSuperType(
-                r.getResourceResolver(), r.getResourceType());
-            if (resourceSuperType == null) {
-                resourceSuperType = "sling/servlet/default (default resource super type)";
-            } else {
-                resourceSuperType += " (from resource type hierarchy)";
-            }
+            resourceSuperType = "-";
         }
         pw.println("Resource super type: " + resourceSuperType);
 
