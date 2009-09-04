@@ -42,6 +42,7 @@ import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
@@ -131,7 +132,9 @@ public class JcrNodeResource extends JcrItemResource {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + ", type=" + getResourceType()
+        return getClass().getSimpleName() 
+        	+ ", type=" + getResourceType()
+        	+ ", superType=" + ResourceUtil.findResourceSuperType(this) 
             + ", path=" + getPath();
     }
 
