@@ -99,6 +99,21 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
         pw.println("<p>Resource path: <b>" + r.getPath() + "</b></p>");
         pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata()
             + "</b></p>");
+
+        pw.println("<p>Resource type: <b>" + r.getResourceType() + "</b></p>");
+
+        String resourceSuperType = r.getResourceSuperType();
+        if (resourceSuperType == null) {
+            resourceSuperType = ResourceUtil.getResourceSuperType(
+                r.getResourceResolver(), r.getResourceType());
+            if (resourceSuperType == null) {
+                resourceSuperType = "sling/servlet/default (default resource super type)";
+            } else {
+                resourceSuperType += " (from resource type hierarchy)";
+            }
+        }
+        pw.println("<p>Resource super type: <b>" + resourceSuperType
+            + "</b></p>");
     }
 
     @SuppressWarnings("unchecked")
