@@ -1,4 +1,4 @@
-package org.apache.sling.jcr.resource;
+package org.apache.sling.jcr.resource.internal;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import javax.jcr.Node;
 
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
 
