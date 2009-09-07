@@ -103,7 +103,7 @@ public class InstallableResource {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + ", url=" + url;
+		return getClass().getSimpleName() + ", priority=" + priority + ", url=" + url;
 	}
 	
 	/** Compute the extension */ 
