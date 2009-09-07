@@ -225,7 +225,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             // if this is an included request, sendError() would fail
             // as the response is already committed, in this case we throw an exception
             if ( isIncluded ) {
-                throw new ServletException("No renderer found for extensions " + ext);
+                throw new ServletException("No renderer found for extension " + ext);
             }
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
