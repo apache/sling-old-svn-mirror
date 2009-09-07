@@ -102,14 +102,14 @@ public class JcrInstaller implements Runnable, EventListener {
      */
     public static final String PROP_INSTALL_FOLDER_MAX_DEPTH = "sling.jcrinstall.folder.max.depth";
     
-    /**	Configurable search path. We could get it from the ResourceResolver, but
-     * 	introducing a dependency on this just to get those values is too much
-     * 	for this module that's meant to bootstrap other services.
+    /**	Configurable search path, with per-path priorities. 
+     *  We could get it from the ResourceResolver, but introducing a dependency on this just to get those 
+     *  values is too much for this module that's meant to bootstrap other services.
      * 
-     * 	@scr.property values.1="/apps" values.2="/libs"
+     * 	@scr.property values.1="/libs:100" values.2="/apps:200"
      */
     public static final String PROP_SEARCH_PATH = "sling.jcrinstall.search.path";
-    public static final String [] DEFAULT_SEARCH_PATH = { "/apps/", "/libs/" };
+    public static final String [] DEFAULT_SEARCH_PATH = { "/libs:100", "/apps:200" };
 
     public static final int DEFAULT_FOLDER_MAX_DEPTH = 4;
     private int maxWatchedFolderDepth;
@@ -157,10 +157,39 @@ public class JcrInstaller implements Runnable, EventListener {
     	converters.add(new FileNodeConverter());
     	converters.add(new ConfigNodeConverter());
     	
+    	// Configurable max depth, system property (via bundle context) overrides default value
+    	Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
+    	if(obj != null) {
+    		// depending on where it's coming from, obj might be a string or integer
+    		maxWatchedFolderDepth = Integer.valueOf(String.valueOf(obj)).intValue();
+            log.info("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
+    	} else {
+            maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
+            log.info("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
+    	}
+        
+    	// Configurable folder regexp, system property overrides default value
+    	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
+    	if(folderNameRegexp != null) {
+            log.info("Using configured ({}) folder name regexp {}", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
+    	} else {
+    	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
+            log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
+    	}
+    	
+    	// Setup folder filtering and watching
+    	String [] rootsConfig = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
+    	if(rootsConfig == null) {
+    		rootsConfig = DEFAULT_SEARCH_PATH;
+    	}
+        folderNameFilter = new FolderNameFilter(rootsConfig, folderNameRegexp, runMode);
+        roots = folderNameFilter.getRootPaths();
+        for (String path : roots) {
+            listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
+        }
+        
     	// Get search paths, and make sure each part starts and ends with a /
-        roots = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
         if (roots == null) {
-        	roots = DEFAULT_SEARCH_PATH;
         }
         for (int i = 0; i < roots.length; i++) {
             if (!roots[i].startsWith("/")) {
@@ -183,32 +212,6 @@ public class JcrInstaller implements Runnable, EventListener {
         log.info("Watching for NODE_REMOVED events on / to detect removal of our root folders");
 
     	
-    	// Configurable max depth, system property (via bundle context) overrides default value
-    	Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
-    	if(obj != null) {
-    		// depending on where it's coming from, obj might be a string or integer
-    		maxWatchedFolderDepth = Integer.valueOf(String.valueOf(obj)).intValue();
-            log.info("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
-    	} else {
-            maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
-            log.info("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
-    	}
-        
-    	// Configurable folder regexp, system property overrides default value
-    	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
-    	if(folderNameRegexp != null) {
-            log.info("Using configured ({}) folder name regexp {}", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
-    	} else {
-    	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
-            log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
-    	}
-    	
-    	// Setup folder filtering and watching
-        folderNameFilter = new FolderNameFilter(roots, folderNameRegexp, runMode);
-        for (String path : roots) {
-            listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
-        }
-        
     	// Find paths to watch and create WatchedFolders to manage them
     	watchedFolders = new LinkedList<WatchedFolder>();
     	for(String root : roots) {
@@ -471,4 +474,5 @@ public class JcrInstaller implements Runnable, EventListener {
     long [] getCounters() {
         return counters;
     }
+    
 }
