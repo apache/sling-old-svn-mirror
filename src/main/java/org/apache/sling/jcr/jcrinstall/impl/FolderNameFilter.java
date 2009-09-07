@@ -39,25 +39,55 @@ class FolderNameFilter {
     private final Pattern pattern;
     private final String regexp;
     private final RunMode runMode;
+    private final String [] rootPaths;
     private Map<String, Integer> rootPriorities = new HashMap<String, Integer>();
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    /** getPriority computes priorities as follows: each root gets (N+1) * ROOT_PRIORITY_FACTOR,
-     * 	where N is the index in the roots array, and paths that match one or several
-     * 	run level get an additional RUNMODE_PRIORITY_OFFSET per matched run level
+    /** getPriority computes priorities as follows: each root gets its own base priority,
+     * 	and paths that match one or several run levels get an additional RUNMODE_PRIORITY_OFFSET 
+     *  per matched run level
      */
-    public static final int ROOT_PRIORITY_FACTOR = 100;
     public static final int RUNMODE_PRIORITY_BOOST = 1;
+    public static final int DEFAULT_ROOT_PRIORITY = 99;
     
-    FolderNameFilter(String [] roots, String regexp, RunMode runMode) {
+    FolderNameFilter(String [] rootsConfig, String regexp, RunMode runMode) {
         this.regexp = regexp;
         this.pattern = Pattern.compile(regexp);
         this.runMode = runMode;
         
-        // Assign priorities to our root folders
-        for(int i = 0; i < roots.length; i++) {
-        	rootPriorities.put(roots[i], new Integer((i + 1) * ROOT_PRIORITY_FACTOR));
+        // Each entry in rootsConfig is like /libs:100, where 100
+        // is the priority.
+        // Break that up into paths and priorities
+        rootPaths = new String[rootsConfig.length];
+        for(int i = 0; i < rootsConfig.length; i++) {
+        	final String [] parts = rootsConfig[i].split(":");
+        	rootPaths[i] = cleanupRootPath(parts[0]);
+        	Integer priority = new Integer(DEFAULT_ROOT_PRIORITY);
+        	if(parts.length > 1) {
+        		try {
+        			priority = Integer.parseInt(parts[1].trim());
+        		} catch(NumberFormatException nfe) {
+        			log.warn("Invalid priority in path definition '{}'", rootsConfig[i]);
+        		}
+        	}
+        	rootPriorities.put(rootPaths[i], priority);
+        	log.debug("Root path {} has priority {}", rootPaths[i], priority);
         }
+    }
+    
+    String [] getRootPaths() {
+    	return rootPaths;
+    }
+    
+    static String cleanupRootPath(final String str) {
+    	String result = str.trim();
+    	if(!result.startsWith("/")) {
+    		result = "/" + result;
+    	}
+    	if(result.endsWith("/")) {
+    		result = result.substring(0, result.length() - 1);
+    	}
+    	return result;
     }
     
     /** If a folder at given path can contain installable resources
@@ -110,6 +140,10 @@ class FolderNameFilter {
         return result;
     }
     
+    public String toString() {
+        return getClass().getSimpleName() + " (" + regexp + "), RunMode=" + runMode;
+    }
+    
     int getRootPriority(String path) {
     	for(Map.Entry<String, Integer> e : rootPriorities.entrySet()) {
     		if(path.startsWith(e.getKey())) {
@@ -117,9 +151,5 @@ class FolderNameFilter {
     		}
     	}
     	return 0;
-    }
-
-    public String toString() {
-        return getClass().getSimpleName() + " (" + regexp + "), RunMode=" + runMode;
     }
 }

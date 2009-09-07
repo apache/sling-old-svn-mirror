@@ -25,8 +25,37 @@ import static org.junit.Assert.assertEquals;
 
 public class FolderNameFilterTest {
     public static final String DEFAULT_REGEXP =  ".*/install$";
-    public static final String [] ROOTS = { "/libs", "/apps" };
+    public static final String [] ROOTS = JcrInstaller.DEFAULT_SEARCH_PATH;
 
+    @Test
+    public void testParseRootPaths() {
+    	{
+    		final String [] paths = { "a", "b/" };
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            assertEquals("/a", f.getRootPaths()[0]);
+            assertEquals("/b", f.getRootPaths()[1]);
+            assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/a/foo"));
+            assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/b/foo"));
+            assertEquals(0, f.getRootPriority("/notInThoseRoots"));
+    	}
+    	{
+    		final String [] paths = { "a:100", "/b/: 200 " };
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            assertEquals("/a", f.getRootPaths()[0]);
+            assertEquals("/b", f.getRootPaths()[1]);
+            assertEquals(100, f.getRootPriority("/a/foo"));
+            assertEquals(200, f.getRootPriority("/b/foo"));
+    	}
+    	{
+    		final String [] paths = { "a/:NOT_AN_INTEGER", "/b/: 200 " };
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            assertEquals("/a", f.getRootPaths()[0]);
+            assertEquals("/b", f.getRootPaths()[1]);
+            assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/a/foo"));
+            assertEquals(200, f.getRootPriority("/b/foo"));
+    	}
+    }
+    
     @Test
     public void testNoRunMode() {
         final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(new String[0]));
