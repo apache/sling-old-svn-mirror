@@ -620,6 +620,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
             resource = getResourceInternal("/");
+            StringBuilder resolutionPath = new StringBuilder();
             StringTokenizer tokener = new StringTokenizer(absPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
                 String childNameRaw = tokener.nextToken();
@@ -628,6 +629,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 if (nextResource != null) {
 
                     resource = nextResource;
+                    resolutionPath.append("/").append(childNameRaw);
 
                 } else {
 
@@ -642,20 +644,29 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                     // switch the currentResource to the nextResource (may be
                     // null)
                     resource = nextResource;
+                    resolutionPath.append("/").append(childName);
 
-                    // SLING-627: set the part cut off from the uriPath as
-                    // sling.resolutionPathInfo property such that
-                    // uriPath = curPath + sling.resolutionPathInfo
+                    // terminate the search if a resource has been found
+                    // with the extension cut off
                     if (nextResource != null) {
-                        String path = ResourceUtil.normalize(ResourceUtil.getParent(
-                            nextResource).getPath()
-                            + "/" + childName);
-                        String pathInfo = absPath.substring(path.length());
-                        nextResource.getResourceMetadata().setResolutionPathInfo(
-                            pathInfo);
                         break;
                     }
                 }
+            }
+
+            // SLING-627: set the part cut off from the uriPath as
+            // sling.resolutionPathInfo property such that
+            // uriPath = curPath + sling.resolutionPathInfo
+            if (resource != null) {
+                final String path = resolutionPath.toString();
+                final String pathInfo = absPath.substring(path.length());
+
+                resource.getResourceMetadata().setResolutionPath(path);
+                resource.getResourceMetadata().setResolutionPathInfo(pathInfo);
+
+                log.debug(
+                    "resolveInternal: Found resource {} with path info {} for {}",
+                    new Object[] { resource, pathInfo, absPath });
             }
         }
 
