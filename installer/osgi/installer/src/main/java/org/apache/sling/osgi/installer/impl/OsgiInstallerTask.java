@@ -26,7 +26,7 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 
 	protected void logExecution(OsgiInstallerContext ctx) {
 		if(ctx.getLogService() != null) {
-			ctx.getLogService().log(LogService.LOG_DEBUG, "OsgiInstallerTask: executing  " + this);
+			ctx.getLogService().log(LogService.LOG_INFO, "OsgiInstallerTask: executing  " + this);
 		}
 	}
 	
