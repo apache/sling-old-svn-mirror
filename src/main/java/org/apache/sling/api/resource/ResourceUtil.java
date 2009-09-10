@@ -346,13 +346,26 @@ public class ResourceUtil {
                                               final String resourceType) {
         // normalize resource type to a path string
         final String rtPath = resourceTypeToPath(resourceType);
-        // get the resource type resource
-        final Resource rtResource = resourceResolver.getResource(rtPath);
-        // check for endless recursion
-        if ( rtResource != null ) {
-            return rtResource.getResourceSuperType();
+        // get the resource type resource and check its super type
+        String resourceSuperType = null;
+        // if the path is absolute, use it directly
+        if ( rtPath != null && rtPath.startsWith("/") ) {
+            final Resource rtResource = resourceResolver.getResource(rtPath);
+            if ( rtResource != null ) {
+                resourceSuperType = rtResource.getResourceSuperType();
+            }
+
+        } else {
+            // if the path is relative we use the search paths
+            for(final String searchPath : resourceResolver.getSearchPath()) {
+                final Resource rtResource = resourceResolver.getResource(searchPath + rtPath);
+                if ( rtResource != null && rtResource.getResourceSuperType() != null ) {
+                    resourceSuperType = rtResource.getResourceSuperType();
+                    break;
+                }
+            }
         }
-        return null;
+        return resourceSuperType;
     }
 
     /**

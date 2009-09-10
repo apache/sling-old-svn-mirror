@@ -277,6 +277,8 @@ public class ResourceUtilTest {
             will(returnValue(typeResource));
             allowing(resolver).getResource("a/c");
             will(returnValue(null));
+            allowing(resolver).getSearchPath();
+            will(returnValue(new String[] {""}));
         }});
         assertEquals("t:c", ResourceUtil.getResourceSuperType(r.getResourceResolver(), r.getResourceType()));
         assertNull(ResourceUtil.getResourceSuperType(r2.getResourceResolver(), r2.getResourceType()));
@@ -306,6 +308,8 @@ public class ResourceUtilTest {
             will(returnValue(null));
             allowing(resolver).getResource("d/e");
             will(returnValue(typeResource));
+            allowing(resolver).getSearchPath();
+            will(returnValue(new String[] {""}));
         }});
         assertTrue(ResourceUtil.isA(r, "a:b"));
         assertTrue(ResourceUtil.isA(r, "d:e"));
