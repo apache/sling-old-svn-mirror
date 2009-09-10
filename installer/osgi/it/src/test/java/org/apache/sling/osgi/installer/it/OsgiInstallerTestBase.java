@@ -46,6 +46,7 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -65,8 +66,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
     
     public static final String URL_SCHEME = "OsgiInstallerTest";
     
-    static interface Condition {
-    	boolean isTrue() throws Exception;
+    static abstract class Condition {
+    	abstract boolean isTrue() throws Exception;
+    	String additionalInfo() { return null; }
+    	void onFailure() { }
+    	long getMsecBetweenEvaluations() { return 100L; }
     }
     
     @SuppressWarnings("unchecked")
@@ -163,8 +167,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	if(c.isTrue()) {
         		return;
         	}
-        	Thread.sleep(100L);
+        	Thread.sleep(c.getMsecBetweenEvaluations());
         } while(System.currentTimeMillis() < end);
+        
+        if(c.additionalInfo() != null) {
+        	info += " " + c.additionalInfo();
+        }
+        
+        c.onFailure();
         fail("WaitForCondition failed: " + info);
     }
     
@@ -355,6 +365,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
     
     public void assertCounter(int index, long value) {
         assertEquals("Expected value matches for counter " + index, value, installer.getCounters()[index]);
+    }
+    
+    protected void log(int level, String msg) {
+    	final LogService log = getService(LogService.class);
+    	log.log(LogService.LOG_INFO, msg);
     }
     
     public static Option[] defaultConfiguration() {
