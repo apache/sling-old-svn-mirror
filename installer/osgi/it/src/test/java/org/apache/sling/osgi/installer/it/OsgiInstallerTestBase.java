@@ -320,8 +320,12 @@ class OsgiInstallerTestBase implements FrameworkListener {
         waitForInstallerAction(null, counterType, howMany);
     }
     
-    /** @param howMany negative values means absolute, instead of relative to current value */
     protected void waitForInstallerAction(String info, int counterType, long howMany) {
+    	waitForInstallerAction(info, counterType, howMany, 0);
+    }
+    
+    /** @param howMany negative values means absolute, instead of relative to current value */
+    protected void waitForInstallerAction(String info, int counterType, long howMany, long timeoutMsec) {
         if(info == null) {
             info = "";
         } else {
@@ -338,7 +342,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
             targetValue = installer.getCounters()[counterType] + howMany;
         }
         
-        final long endTime = System.currentTimeMillis() + WAIT_FOR_ACTION_TIMEOUT_MSEC;
+        final long timeout = timeoutMsec > 0 ? timeoutMsec : WAIT_FOR_ACTION_TIMEOUT_MSEC;
+        final long endTime = System.currentTimeMillis() + timeout;
         long lastValue = 0;
         while(System.currentTimeMillis() < endTime) {
             lastValue = installer.getCounters()[counterType];

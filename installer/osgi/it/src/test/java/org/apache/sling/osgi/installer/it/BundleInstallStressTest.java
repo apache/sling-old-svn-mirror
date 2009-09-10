@@ -131,7 +131,8 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	// Start by installing all bundles
     	log(LogService.LOG_INFO,"Registering all test bundles, " + testBundles.size() + " resources");
     	install(testBundles);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction("After registering all bundles", OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 
+        		1, expectBundlesTimeoutMsec);
     	expectBundleCount("After installing all test bundles", initialBundleCount + testBundles.size());
     	
     	for(int i=0; i < cycleCount; i++) {
@@ -140,7 +141,8 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     		final List<File> toInstall = selectRandomBundles();
         	log(LogService.LOG_INFO,"Re-registering " + toInstall.size() + " randomly selected resources (other test bundles should be uninstalled)");
     		install(toInstall);
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction("At cycle " + i, OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 
+            		1, expectBundlesTimeoutMsec);
             // TODO this sleep shouldn't be needed, probably hides a bug in OsgiInstallerImpl
             sleep(2500L);
         	expectBundleCount("At cycle " + i, initialBundleCount + toInstall.size());
