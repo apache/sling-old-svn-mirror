@@ -125,8 +125,10 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     		fail("Cycle count (" + cycleCount + ") should be >= 1");
     	}
     	
+    	
     	final int initialBundleCount = bundleContext.getBundles().length;
     	log(LogService.LOG_INFO,"Initial bundle count=" + initialBundleCount);
+    	logInstalledBundles();
     	
     	// Start by installing all bundles
     	log(LogService.LOG_INFO,"Registering all test bundles, " + testBundles.size() + " resources");
@@ -177,9 +179,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
 			@Override
 			void onFailure() {
 				log(LogService.LOG_INFO, "Failure: " + additionalInfo());
-				for(Bundle b : bundleContext.getBundles()) {
-					log(LogService.LOG_INFO, "Installed bundle: " + b.getSymbolicName());
-				}
+				logInstalledBundles();
 			}
 			
 			@Override
@@ -204,5 +204,11 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	}
     	
     	return result;
+    }
+    
+    private void logInstalledBundles() {
+		for(Bundle b : bundleContext.getBundles()) {
+			log(LogService.LOG_INFO, "Installed bundle: " + b.getSymbolicName());
+		}
     }
 }
