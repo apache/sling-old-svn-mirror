@@ -55,6 +55,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     private final Set<String> newResourcesSchemes = new HashSet<String>();
     private final Set<String> urlsToRemove = new HashSet<String>();
     private boolean active = true;
+    private boolean retriesScheduled;
     
     /** Group our RegisteredResource by OSGi entity */ 
     private Map<String, SortedSet<RegisteredResource>>registeredResources = 
@@ -85,7 +86,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             	mergeNewResources();
             	computeTasks();
             	
-            	if(tasks.isEmpty()) {
+            	if(tasks.isEmpty() && !retriesScheduled) {
             	    // No tasks to execute - wait until new resources are
             	    // registered
             	    cleanupInstallableResources();
@@ -104,6 +105,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             	    continue;
             	}
             	
+            	retriesScheduled = false;
                 executeTasks();
                 
                 // Some integration tests depend on this delay, make sure to
@@ -386,6 +388,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     		}
             synchronized (newResources) {
                 newResources.notify();
+                retriesScheduled = true;
             }
     	}
     }
