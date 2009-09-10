@@ -37,6 +37,13 @@
     <pax.exam.log.level>INFO</pax.exam.log.level>
     <!-- This can be set to activate remote debugging of the Pax Exam tests -->
     <pax.exam.debug.port></pax.exam.debug.port>
+    
+    <!-- BundleInstallStressTest parameters -->
+    <BundleInstallStressTest.default.bundles.folder>${project.build.directory}/bundle-install-stress-test-bundles</BundleInstallStressTest.default.bundles.folder>
+    <osgi.installer.BundleInstallStressTest.bundles.folder>${BundleInstallStressTest.default.bundles.folder}</osgi.installer.BundleInstallStressTest.bundles.folder>
+    <osgi.installer.BundleInstallStressTest.cycle.count>10</osgi.installer.BundleInstallStressTest.cycle.count>
+    <osgi.installer.BundleInstallStressTest.expect.timeout.seconds>30</osgi.installer.BundleInstallStressTest.expect.timeout.seconds>
+    
   </properties>
 
   <scm>
@@ -88,6 +95,18 @@
                         <property>
                             <name>osgi.installer.base.dir</name>
                             <value>${project.build.directory}</value>
+                        </property>
+                        <property>
+                            <name>osgi.installer.BundleInstallStressTest.bundles.folder</name>
+                            <value>${osgi.installer.BundleInstallStressTest.bundles.folder}</value>
+                        </property>
+                        <property>
+                            <name>osgi.installer.BundleInstallStressTest.cycle.count</name>
+                            <value>${osgi.installer.BundleInstallStressTest.cycle.count}</value>
+                        </property>
+                        <property>
+                            <name>osgi.installer.BundleInstallStressTest.expect.timeout.seconds</name>
+                            <value>${osgi.installer.BundleInstallStressTest.expect.timeout.seconds}</value>
                         </property>
                     </systemProperties>
                 </configuration>
@@ -270,6 +289,31 @@
                         <configuration>
                             <classifier>notabundle</classifier>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>test-compile</phase>
+                        <configuration>
+                            <tasks>
+                                <!-- Copy a set of distinct valid bundles for the BundleInstallStressTest -->
+                                <mkdir dir="${BundleInstallStressTest.default.bundles.folder}"/>
+                                <copy todir="${BundleInstallStressTest.default.bundles.folder}">
+                                    <fileset dir="${project.build.directory}">
+                                        <include name="*testbundle-1.2.jar"/>
+                                        <include name="*testB-1.0.jar"/>
+                                        <include name="*testA-1.0.jar"/>
+                                        <include name="*needsB.jar"/>
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
