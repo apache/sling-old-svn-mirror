@@ -150,9 +150,9 @@ class MiscUtil {
         // First wait for all JCR events to be delivered
         eventHelper.waitForEvents(5000L);
         // RescanTimer causes a SCAN_DELAY_MSEC wait after JCR events are received
-        Thread.sleep(RescanTimer.SCAN_DELAY_MSEC * 2);
-        // And wait for one JcrInstaller run cycle
-        MiscUtil.waitForCycles(installer, startCycles, 1, 5000L);
+        Thread.sleep(RescanTimer.SCAN_DELAY_MSEC * 4);
+        // And wait for a few JcrInstaller run cycles
+        MiscUtil.waitForCycles(installer, startCycles, 2, 10000L);
     }
     
     /** Wait until installer thread exits */
