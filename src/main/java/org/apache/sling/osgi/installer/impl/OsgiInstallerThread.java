@@ -146,9 +146,9 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, "Adding URL " + r.getUrl() + " to urlsToRemove");
         }
-		urlsToRemove.add(r.getUrl());
 		
         synchronized (newResources) {
+            urlsToRemove.add(r.getUrl());
             newResources.notify();
         }
     }
