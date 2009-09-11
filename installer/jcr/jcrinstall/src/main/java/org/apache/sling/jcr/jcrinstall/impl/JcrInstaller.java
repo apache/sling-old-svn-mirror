@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
  */
-public class JcrInstaller implements Runnable, EventListener {
+public class JcrInstaller implements EventListener {
 	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
 
@@ -123,9 +123,6 @@ public class JcrInstaller implements Runnable, EventListener {
     /** Session shared by all WatchedFolder */
     private Session session;
     
-    /** Used to stop background thread when deactivated */
-    private int deactivationCounter = 1;
-    
     /** The root folders that we watch */
     private String [] roots;
     
@@ -145,6 +142,29 @@ public class JcrInstaller implements Runnable, EventListener {
     
     /** Timer used to call updateFoldersList() */
     private final RescanTimer updateFoldersListTimer = new RescanTimer();
+    
+    /** Thread that can be cleanly stopped with a flag */
+    static int bgThreadCounter;
+    class StoppableThread extends Thread {
+        boolean active = true;
+        StoppableThread() {
+            synchronized (JcrInstaller.class) {
+                setName("JcrInstaller." + (++bgThreadCounter));
+            }
+            setDaemon(true);
+        }
+        
+        @Override
+        public final void run() {
+            log.info("Background thread {} starting", Thread.currentThread().getName());
+            while(active) {
+                runOneCycle();
+            }
+            log.info("Background thread {} done", Thread.currentThread().getName());
+            counters[RUN_LOOP_COUNTER] = -1;
+        }
+    };
+    private StoppableThread backgroundThread;
 
     protected void activate(ComponentContext context) throws Exception {
     	
@@ -229,16 +249,27 @@ public class JcrInstaller implements Runnable, EventListener {
     	log.info("Registering {} resources with OSGi installer: {}", resources.size(), resources);
     	installer.registerResources(resources, URL_SCHEME);
     	
-    	final Thread t = new Thread(this, getClass().getSimpleName() + "." + deactivationCounter);
-    	t.setDaemon(true);
-    	t.start();
+    	if(backgroundThread != null) {
+    	    throw new IllegalStateException("Expected backgroundThread to be null in activate()");
+    	}
+        backgroundThread = new StoppableThread();
+        backgroundThread.start();
     }
     
     protected void deactivate(ComponentContext context) {
     	log.info("deactivate()");
 
+    	final long timeout = 30000L;
+    	try {
+            backgroundThread.active = false;
+            log.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
+            backgroundThread.join(timeout);
+            backgroundThread = null;
+    	} catch(InterruptedException iex) {
+    	    throw new IllegalStateException("backgroundThread.join interrupted after " + timeout + " msec");
+    	}
+        
         try {
-            deactivationCounter++;
             folderNameFilter = null;
             watchedFolders = null;
             converters.clear();
@@ -415,60 +446,54 @@ public class JcrInstaller implements Runnable, EventListener {
     }
 
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
-    public void run() {
-        log.info("Background thread {} starting", Thread.currentThread().getName());
-        final int savedCounter = deactivationCounter;
-        while(savedCounter == deactivationCounter) {
-            try {
-                // Rescan WatchedFolders if needed
-                final boolean scanWf = WatchedFolder.getRescanTimer().expired(); 
-                if(scanWf) {
-                    for(WatchedFolder wf : watchedFolders) {
-                        if(!wf.needsScan()) {
-                            continue;
-                        }
-                        WatchedFolder.getRescanTimer().reset();
-                        counters[SCAN_FOLDERS_COUNTER]++;
-                        final WatchedFolder.ScanResult sr = wf.scan();
-                        for(InstallableResource r : sr.toRemove) {
-                            log.info("Removing resource from OSGi installer: {}",r);
-                            installer.removeResource(r);
-                        }
-                        for(InstallableResource r : sr.toAdd) {
-                            log.info("Registering resource with OSGi installer: {}",r);
-                            installer.addResource(r);
-                        }
+    public void runOneCycle() {
+        try {
+            // Rescan WatchedFolders if needed
+            final boolean scanWf = WatchedFolder.getRescanTimer().expired(); 
+            if(scanWf) {
+                for(WatchedFolder wf : watchedFolders) {
+                    if(!wf.needsScan()) {
+                        continue;
                     }
-                }
-
-                // Update list of WatchedFolder if we got any relevant events,
-                // or if there were any WatchedFolder events
-                if(scanWf || updateFoldersListTimer.expired()) {
-                    updateFoldersListTimer.reset();
-                    counters[UPDATE_FOLDERS_LIST_COUNTER]++;
-                    final List<InstallableResource> toRemove = updateFoldersList();
-                    for(InstallableResource r : toRemove) {
-                        log.info("Removing resource from OSGi installer (folder deleted): {}",r);
+                    WatchedFolder.getRescanTimer().reset();
+                    counters[SCAN_FOLDERS_COUNTER]++;
+                    final WatchedFolder.ScanResult sr = wf.scan();
+                    for(InstallableResource r : sr.toRemove) {
+                        log.info("Removing resource from OSGi installer: {}",r);
                         installer.removeResource(r);
                     }
-                }
-
-                try {
-                    Thread.sleep(RUN_LOOP_DELAY_MSEC);
-                } catch(InterruptedException ignore) {
-                }
-                
-            } catch(Exception e) {
-                log.warn("Exception in run()", e);
-                try {
-                    Thread.sleep(RUN_LOOP_DELAY_MSEC);
-                } catch(InterruptedException ignore) {
+                    for(InstallableResource r : sr.toAdd) {
+                        log.info("Registering resource with OSGi installer: {}",r);
+                        installer.addResource(r);
+                    }
                 }
             }
-            counters[RUN_LOOP_COUNTER]++;
+
+            // Update list of WatchedFolder if we got any relevant events,
+            // or if there were any WatchedFolder events
+            if(scanWf || updateFoldersListTimer.expired()) {
+                updateFoldersListTimer.reset();
+                counters[UPDATE_FOLDERS_LIST_COUNTER]++;
+                final List<InstallableResource> toRemove = updateFoldersList();
+                for(InstallableResource r : toRemove) {
+                    log.info("Removing resource from OSGi installer (folder deleted): {}",r);
+                    installer.removeResource(r);
+                }
+            }
+
+            try {
+                Thread.sleep(RUN_LOOP_DELAY_MSEC);
+            } catch(InterruptedException ignore) {
+            }
+            
+        } catch(Exception e) {
+            log.warn("Exception in run()", e);
+            try {
+                Thread.sleep(RUN_LOOP_DELAY_MSEC);
+            } catch(InterruptedException ignore) {
+            }
         }
-        log.info("Background thread {} done", Thread.currentThread().getName());
-        counters[RUN_LOOP_COUNTER] = -1;
+        counters[RUN_LOOP_COUNTER]++;
     }
     
     long [] getCounters() {

@@ -190,20 +190,25 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
     	assertRegistered(path, true);
     	
     	// Setup a known value for the config
+        osgiInstaller.clearRecordedCalls();
     	final String key = "foo" + System.currentTimeMillis();
     	final String value = "value" + System.currentTimeMillis();
     	((Node)session.getItem(path)).setProperty(key, value);
     	session.save();
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
+        assertEquals("Expected one OsgiInstaller call for initial config change",
+                1, osgiInstaller.getRecordedCalls().size());
     			
     	// Make a change that does not influence the configs's digest,
     	// and verify that no OSGi registrations result
-    	int nCalls = osgiInstaller.getRecordedCalls().size();
+        osgiInstaller.clearRecordedCalls();
     	((Node)session.getItem(path)).setProperty(key, value);
     	session.save();
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        assertEquals("Expected no OsgiInstaller calls for no-impact config change",
-        		nCalls, osgiInstaller.getRecordedCalls().size());
+        assertEquals(
+                "Expected no OsgiInstaller calls for no-impact config change, got " 
+                + osgiInstaller.getRecordedCalls(),
+        		0, osgiInstaller.getRecordedCalls().size());
         
         // Make a content change -> resource must be re-registered
         osgiInstaller.clearRecordedCalls();
