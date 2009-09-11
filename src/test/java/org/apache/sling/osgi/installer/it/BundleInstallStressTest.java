@@ -36,7 +36,13 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
 /** Repeatedly install/remove/reinstall semi-random sets
- * 	of bundles, to stress-test the installer and framework. 
+ * 	of bundles, to stress-test the installer and framework.
+ *  
+ *  Randomly selects bundles to remove and reinstall in a folder
+ *  containing from 4 to N bundles - by supplying a folder with many 
+ *  bundles, and increasing the number of cycles executed (via 
+ *  system properties, see pom.xml) the test can be turned into a 
+ *  long-running stress test. 
  */
 @RunWith(JUnit4TestRunner.class)
 public class BundleInstallStressTest extends OsgiInstallerTestBase {
@@ -60,6 +66,10 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
 	
 	/** Timeout for expectBundles() */
 	private long expectBundlesTimeoutMsec;
+	
+	/** Synchronize (somewhat) with OSGi operations, to be fair */
+	private EventsDetector eventsDetector;
+	public static final long MSEC_WITHOUT_EVENTS = 1000L;
 	
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
@@ -112,11 +122,13 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
         }
         
         random = new Random(42 + cycleCount);
+        eventsDetector = new EventsDetector(bundleContext);
     }
     
     @After
     public void tearDown() {
         super.tearDown();
+        eventsDetector.close();
     }
     
     @Test
@@ -124,7 +136,6 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	if(cycleCount < 1) {
     		fail("Cycle count (" + cycleCount + ") should be >= 1");
     	}
-    	
     	
     	final int initialBundleCount = bundleContext.getBundles().length;
     	log(LogService.LOG_INFO,"Initial bundle count=" + initialBundleCount);
@@ -137,6 +148,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
         		1, expectBundlesTimeoutMsec);
     	expectBundleCount("After installing all test bundles", initialBundleCount + testBundles.size());
     	
+    	// And run a number of cycles where randomly selected bundles are removed and reinstalled
     	for(int i=0; i < cycleCount; i++) {
     		final long start = System.currentTimeMillis();
     		log(LogService.LOG_DEBUG, "Test cycle " + i + ", semi-randomly selecting a subset of our test bundles");
@@ -145,8 +157,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     		install(toInstall);
             waitForInstallerAction("At cycle " + i, OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 
             		1, expectBundlesTimeoutMsec);
-            // TODO this sleep shouldn't be needed, probably hides a bug in OsgiInstallerImpl
-            sleep(2500L);
+            eventsDetector.waitForNoEvents(MSEC_WITHOUT_EVENTS, expectBundlesTimeoutMsec);
         	expectBundleCount("At cycle " + i, initialBundleCount + toInstall.size());
         	log(LogService.LOG_INFO,"Test cycle " + i + " successful, " 
         			+ toInstall.size() + " bundles, " 
