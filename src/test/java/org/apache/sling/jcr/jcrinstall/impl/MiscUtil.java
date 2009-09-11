@@ -123,15 +123,16 @@ class MiscUtil {
         return cc;
     }
     
-    static private void waitForCycles(JcrInstaller installer, int nCycles, long timeoutMsec) throws Exception {
-        final long endCycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER];
+    static private void waitForCycles(JcrInstaller installer, long initialCycleCount, int expectedCycles, long timeoutMsec) throws Exception {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
+        long cycles = 0;
         while(System.currentTimeMillis() < endTime) {
-            if(installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] > endCycles) {
+            cycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER] - initialCycleCount;
+            if(cycles >= expectedCycles) {
                 return;
             }
         }
-        throw new Exception("did not get " + nCycles + " installer cycles in " + timeoutMsec + " msec"); 
+        throw new Exception("did not get " + expectedCycles + " installer cycles in " + timeoutMsec + " msec, got " + cycles); 
     }
     
     /** Get the WatchedFolders of supplied JcrInstaller */
@@ -144,12 +145,14 @@ class MiscUtil {
     
     /** Wait long enough for all changes in content to be processed by JcrInstaller */ 
     static void waitAfterContentChanges(EventHelper eventHelper, JcrInstaller installer) throws Exception {
+        final long startCycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER];
+        
         // First wait for all JCR events to be delivered
         eventHelper.waitForEvents(5000L);
         // RescanTimer causes a SCAN_DELAY_MSEC wait after JCR events are received
         Thread.sleep(RescanTimer.SCAN_DELAY_MSEC * 2);
-        // And wait for 2 complete JcrInstaller run cycles, to be on the safe side
-        MiscUtil.waitForCycles(installer, 3, 5000L);
+        // And wait for one JcrInstaller run cycle
+        MiscUtil.waitForCycles(installer, startCycles, 1, 5000L);
     }
     
     /** Wait until installer thread exits */
