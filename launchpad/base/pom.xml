@@ -72,33 +72,7 @@
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Embed-Dependency>
                             org.apache.felix.framework;inline=org/**,
-                            org.osgi.core;inline=org/osgi/service/condpermadmin/**|
-                                org/osgi/service/permissionadmin/**,
-                            org.osgi.compendium;inline=org/osgi/service/log/**|
-                                org/osgi/service/http/**|
-                                org/osgi/service/device/**|
-                                org/osgi/service/cm/**|
-                                org/osgi/service/metatype/**|
-                                org/osgi/service/prefs/**|
-                                org/osgi/service/useradmin/**|
-                                org/osgi/service/wireadmin/**|
-                                org/osgi/service/io/**|
-                                org/osgi/service/provisioning/**|
-                                org/osgi/service/upnp/**|
-                                org/osgi/service/component/**|
-                                org/osgi/service/event/**|
-                                org/osgi/service/deploymentadmin/**|
-                                org/osgi/service/deploymentadmin/spi/**|
-                                org/osgi/service/application/**|
-                                info/dmtree/**| info/dmtree/notification/**|
-                                info/dmtree/notification/spi/**|
-                                info/dmtree/registry/**|
-                                info/dmtree/security/**| info/dmtree/spi/**|
-                                org/osgi/service/monitor/**|
-                                org/osgi/application/**|
-                                org/osgi/util/xml/**|
-                                org/osgi/util/position/**|
-                                org/osgi/util/measurement/**,
+                            org.osgi.compendium;inline=org/osgi/service/http/**,
                             servlet-api;inline=javax/servlet/**,
                             servlet;inline=org/eclipse/**
                         </Embed-Dependency>
