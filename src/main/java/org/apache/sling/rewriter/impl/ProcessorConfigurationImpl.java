@@ -175,7 +175,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                 final Resource childResource = configResource.getResourceResolver().getResource(configResource, resourceName);
                 final Map<String, Object> config;
                 if ( childResource != null ) {
-                    final ValueMap childProps = ResourceUtil.getValueMap(configResource);
+                    final ValueMap childProps = ResourceUtil.getValueMap(childResource);
                     config = new HashMap<String, Object>(childProps);
                 } else {
                     config = null;
