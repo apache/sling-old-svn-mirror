@@ -31,12 +31,14 @@ class ResolutionTestBase extends HttpTestBase {
   public static final String TEST_SERVLET_MARKER = "created by org.apache.sling.launchpad.testservices.servlets";
   public static final String TEST_RESOURCE_TYPE = "LAUNCHPAD_TEST_ResourceType";
   public static final String TEST_PATH = "/servlet-resolution-tests/" + System.currentTimeMillis();
+  public static final String NONEXISTING_RESOURCE_URL = HTTP_BASE_URL + TEST_PATH + "/NonExistingResource"; 
    
   public static final String EXT_SERVLET_SUFFIX = "testservices.servlets.ExtensionServlet";
   public static final String SEL_SERVLET_SUFFIX = "testservices.servlets.SelectorServlet";
   public static final String PREFIX_0_SERVLET_SUFFIX = "testservices.servlets.PrefixServletZero";
   public static final String PREFIX_M1_SERVLET_SUFFIX = "testservices.servlets.PrefixServletMinusOne";
   public static final String PUT_SERVLET_SUFFIX = "testservices.servlets.PutMethodServlet";
+  public static final String REQUEST_URI_OPTING_SERVLET_SUFFIX = "testservices.servlets.RequestUriOptingServlet";
   
   protected TestNode testNodeNORT;
   protected TestNode testNodeRT;
