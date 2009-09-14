@@ -732,6 +732,7 @@ public class SlingServletResolver implements ServletResolver,
         ServiceRegistration reg = context.getBundleContext().registerService(
             ResourceProvider.SERVICE_NAME, provider, params);
 
+        log.info("Registered {}", provider.toString());
         servletsByReference.put(reference, reg);
 
         return true;

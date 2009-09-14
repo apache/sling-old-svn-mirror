@@ -18,6 +18,7 @@
  */
 package org.apache.sling.servlets.resolver.internal.resource;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -71,5 +72,12 @@ public class ServletResourceProvider implements ResourceProvider {
     public String[] getSerlvetPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
-
+    
+    /** Return suitable info for logging */
+    @Override
+    public String toString() {
+    	return getClass().getSimpleName() 
+    	+ ": servlet=" + servlet.getClass().getName() 
+    	+ ", paths=" + Arrays.asList(resourcePaths);
+    }
 }
