@@ -39,6 +39,12 @@ class TestServlet extends SlingAllMethodsServlet {
     dumpRequestAsProperties(request, response);
   }
   
+  @Override
+  protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+  throws ServletException, IOException {
+    dumpRequestAsProperties(request, response);
+  }
+  
   protected void dumpRequestAsProperties(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
     final Properties props = new Properties();
     response.setContentType("text/plain");
