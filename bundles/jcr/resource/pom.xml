@@ -83,6 +83,9 @@
                             SLING-INF/nodetypes/mapping.cnd
                         </Sling-Nodetypes>
 
+                        <_versionpolicy>
+                            $${version;===;${@}}
+                        </_versionpolicy>
                     </instructions>
                 </configuration>
             </plugin>
