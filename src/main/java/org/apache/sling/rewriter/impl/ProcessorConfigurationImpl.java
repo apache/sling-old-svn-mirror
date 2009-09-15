@@ -42,9 +42,11 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     private static final String PROPERTY_PROCESSOR_TYPE = "processorType";
 
-    private static final String PROPERTY_CONTENT_TYPE = "contentTypes";
+    private static final String PROPERTY_CONTENT_TYPES = "contentTypes";
 
-    private static final String PROPERTY_TRANFORMER = "transformerTypes";
+    private static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
+
+    private static final String PROPERTY_TRANFORMERS = "transformerTypes";
 
     private static final String PROPERTY_GENERATOR = "generatorType";
 
@@ -63,6 +65,9 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     /** For which extensions should this processor be applied. */
     private final String[] extensions;
+
+    /** For which resource types should this processor be applied. */
+    private final String[] resourceTypes;
 
     /** The order of this processor */
     private final int order;
@@ -96,12 +101,14 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     public ProcessorConfigurationImpl(String[] contentTypes,
                                       String[] paths,
                                       String[] extensions,
+                                      String[] resourceTypes,
                                       int      order,
                                       ProcessingComponentConfiguration generatorConfig,
                                       ProcessingComponentConfiguration[] transformerConfigs,
                                       ProcessingComponentConfiguration serializerConfig,
                                       boolean processErrorResponse) {
         this.contentTypes = contentTypes;
+        this.resourceTypes = resourceTypes;
         this.paths = paths;
         this.extensions = extensions;
         this.order = order;
@@ -121,13 +128,14 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
      */
     public ProcessorConfigurationImpl(final Resource resource) {
         final ValueMap properties = ResourceUtil.getValueMap(resource);
-        this.contentTypes = properties.get(PROPERTY_CONTENT_TYPE, String[].class);
+        this.contentTypes = properties.get(PROPERTY_CONTENT_TYPES, String[].class);
+        this.resourceTypes = properties.get(PROPERTY_RESOURCE_TYPES, String[].class);
         this.paths = properties.get(PROPERTY_PATHS, String[].class);
         this.extensions = properties.get(PROPERTY_EXTENSIONS, String[].class);
 
         this.processorConfig = this.getComponentConfig(resource, PROPERTY_PROCESSOR_TYPE, "processor");
         this.generatorConfiguration = this.getComponentConfig(resource, PROPERTY_GENERATOR, "generator");
-        this.transformerConfigurations = this.getComponentConfigs(resource, PROPERTY_TRANFORMER, "transformer");
+        this.transformerConfigurations = this.getComponentConfigs(resource, PROPERTY_TRANFORMERS, "transformer");
         this.serializerConfiguration = this.getComponentConfig(resource, PROPERTY_SERIALIZER, "serializer");
 
         this.order = properties.get(PROPERTY_ORDER, 0);
@@ -243,6 +251,21 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
              if ( !found ) {
                  return false;
              }
+        }
+        // check resource types
+        if ( this.resourceTypes != null && this.resourceTypes.length > 0 ) {
+            final Resource resource = processContext.getRequest().getResource();
+            boolean found = false;
+            int index = 0;
+            while ( !found && index < this.resourceTypes.length ) {
+                if ( ResourceUtil.isA(resource, resourceTypes[index]) ) {
+                    found = true;
+                }
+                index++;
+            }
+            if ( !found ) {
+                return false;
+            }
         }
 
         // now check for path
