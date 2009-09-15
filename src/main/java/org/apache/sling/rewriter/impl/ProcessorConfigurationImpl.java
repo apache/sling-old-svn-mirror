@@ -179,8 +179,17 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         if ( types != null && types.length > 0 ) {
             final ProcessingComponentConfiguration[] configs = new ProcessingComponentConfiguration[types.length];
             for(int i=0; i<types.length; i++) {
+                // there are two possible ways for a component configuration:
+                // 1. {prefix}-{type}, like generator-html
+                // 2. {prefix}-{index}, like generator-1 (with the index starting at 1)
+                // while usually the first way is sufficient, the second one is required if the
+                // same transformer is used more than once in a pipeline.
                 final String resourceName = prefix + '-' + types[i];
-                final Resource childResource = configResource.getResourceResolver().getResource(configResource, resourceName);
+                Resource childResource = configResource.getResourceResolver().getResource(configResource, resourceName);
+                if ( childResource == null ) {
+                    final String secondResourceName = prefix + '-' + (i+1);
+                    childResource = configResource.getResourceResolver().getResource(configResource, secondResourceName);
+                }
                 final Map<String, Object> config;
                 if ( childResource != null ) {
                     final ValueMap childProps = ResourceUtil.getValueMap(childResource);
