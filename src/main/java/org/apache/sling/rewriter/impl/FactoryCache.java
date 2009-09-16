@@ -21,9 +21,12 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.GeneratorFactory;
+import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
+import org.apache.sling.rewriter.ProcessorConfiguration;
 import org.apache.sling.rewriter.ProcessorFactory;
 import org.apache.sling.rewriter.Serializer;
 import org.apache.sling.rewriter.SerializerFactory;
@@ -42,6 +45,27 @@ import org.slf4j.LoggerFactory;
  * it also acts like a cache for the factories.
  */
 public class FactoryCache {
+
+    /** The required property containing the component type. */
+    private static final String PROPERTY_TYPE = "pipeline.type";
+
+    /** The optional property for the pipeline mode (global) */
+    private static final String PROPERTY_MODE = "pipeline.mode";
+
+    /** The global mode. */
+    private static final String MODE_GLOBAL = "global";
+
+    /** The optional property for the paths the component should apply to */
+    private static final String PROPERTY_PATHS = "pipeline.paths";
+
+    /** The optional property for the paths the component should apply to */
+    private static final String PROPERTY_EXTENSIONS = "pipeline.extensions";
+
+    /** The optional property for the paths the component should apply to */
+    private static final String PROPERTY_CONTENT_TYPES = "pipeline.contentTypes";
+
+    /** The optional property for the paths the component should apply to */
+    private static final String PROPERTY_RESOURCE_TYPES = "pipeline.resourceTypes";
 
     /** The logger. */
     protected static final Logger LOGGER = LoggerFactory.getLogger(FactoryCache.class);
@@ -150,37 +174,45 @@ public class FactoryCache {
     private static final Transformer[][] EMPTY_DOUBLE_ARRAY = new Transformer[][] {EMPTY_ARRAY, EMPTY_ARRAY};
 
     /**
-     * Lookup all factory components for rewriter transformers and return
-     * new rewriter transformer instances in two arrays.
+     * Lookup all global transformers that apply to the current request and return
+     * the transformer instances in two arrays.
      * The first array contains all pre transformers and the second one contains
      * all post transformers.
+     * @param context The current processing context.
      */
-    public Transformer[][] getRewriterTransformers() {
-        final TransformerFactory[][] factories = this.transformerTracker.getTransformerFactories();
+    public Transformer[][] getGlobalTransformers(final ProcessingContext context) {
+        final TransformerFactory[][] factories = this.transformerTracker.getGlobalTransformerFactories(context);
         return createTransformers(factories);
     }
 
+    /**
+     * Create new instances from the factories
+     * @param factories The transformer factories
+     * @return The transformer instances
+     */
     protected Transformer[][] createTransformers(final TransformerFactory[][] factories) {
         if ( factories == EMPTY_DOUBLE_ARRAY ) {
             return FactoryCache.EMPTY_DOUBLE_ARRAY;
         }
         final Transformer[][] transformers = new Transformer[2][];
-        if ( factories[0].length == 0 ) {
-            transformers[0] = FactoryCache.EMPTY_ARRAY;
-        } else {
-            transformers[0] = new Transformer[factories[0].length];
-            for(int i=0; i < factories[0].length; i++) {
-                transformers[0][i] = factories[0][i].createTransformer();
+        for(int arrayIndex = 0; arrayIndex < 2; arrayIndex++) {
+            int count = factories[arrayIndex].length;
+            for(final TransformerFactory factory : factories[arrayIndex]) {
+                if ( factory == null ) count--;
+            }
+            if ( count == 0 ) {
+                transformers[arrayIndex] = FactoryCache.EMPTY_ARRAY;
+            } else {
+                transformers[arrayIndex] = new Transformer[count];
+                for(int i=0; i < factories[arrayIndex].length; i++) {
+                    final TransformerFactory factory = factories[arrayIndex][i];
+                    if ( factory != null ) {
+                        transformers[arrayIndex][i] = factory.createTransformer();
+                    }
+                }
             }
         }
-        if ( factories[1].length == 0 ) {
-            transformers[1] = FactoryCache.EMPTY_ARRAY;
-        } else {
-            transformers[1] = new Transformer[factories[1].length];
-            for(int i=0; i < factories[1].length; i++) {
-                transformers[1][i] = factories[1][i].createTransformer();
-            }
-        }
+
         return transformers;
     }
 
@@ -205,7 +237,7 @@ public class FactoryCache {
         }
 
         private String getType(final ServiceReference ref) {
-            final String type = (String) ref.getProperty("pipeline.type");
+            final String type = (String) ref.getProperty(PROPERTY_TYPE);
             return type;
         }
 
@@ -239,18 +271,21 @@ public class FactoryCache {
     protected static final class TransformerFactoryServiceTracker<T> extends HashingServiceTrackerCustomizer<T> {
 
         private String getMode(final ServiceReference ref) {
-            final String mode = (String) ref.getProperty("pipeline.mode");
+            final String mode = (String) ref.getProperty(PROPERTY_MODE);
             return mode;
         }
 
         private boolean isGlobal(final ServiceReference ref) {
-            return "global".equalsIgnoreCase(this.getMode(ref));
+            return MODE_GLOBAL.equalsIgnoreCase(this.getMode(ref));
         }
 
-        public static final TransformerFactory[] EMPTY_ARRAY = new TransformerFactory[0];
-        public static final TransformerFactory[][] EMPTY_DOUBLE_ARRAY = new TransformerFactory[][] {EMPTY_ARRAY, EMPTY_ARRAY};
+        public static final TransformerFactoryEntry[] EMPTY_ENTRY_ARRAY = new TransformerFactoryEntry[0];
+        public static final TransformerFactoryEntry[][] EMPTY_DOUBLE_ENTRY_ARRAY = new TransformerFactoryEntry[][] {EMPTY_ENTRY_ARRAY, EMPTY_ENTRY_ARRAY};
 
-        private TransformerFactory[][] cached = EMPTY_DOUBLE_ARRAY;
+        public static final TransformerFactory[] EMPTY_FACTORY_ARRAY = new TransformerFactory[0];
+        public static final TransformerFactory[][] EMPTY_DOUBLE_FACTORY_ARRAY = new TransformerFactory[][] {EMPTY_FACTORY_ARRAY, EMPTY_FACTORY_ARRAY};
+
+        private TransformerFactoryEntry[][] cached = EMPTY_DOUBLE_ENTRY_ARRAY;
 
         /** flag for cache. */
         private boolean cacheIsValid = true;
@@ -291,13 +326,17 @@ public class FactoryCache {
             super.removedService(reference, service);
         }
 
-        public TransformerFactory[][] getTransformerFactories() {
+        /**
+         * Get all global transformer factories.
+         * @return Two arrays of transformer factories
+         */
+        public TransformerFactoryEntry[][] getGlobalTransformerFactories() {
             if ( !this.cacheIsValid ) {
                 synchronized ( this ) {
                     if ( !this.cacheIsValid ) {
                         final ServiceReference[] refs = this.getServiceReferences();
                         if ( refs == null || refs.length == 0 ) {
-                            this.cached = EMPTY_DOUBLE_ARRAY;
+                            this.cached = EMPTY_DOUBLE_ENTRY_ARRAY;
                         } else {
                             Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
 
@@ -314,35 +353,64 @@ public class FactoryCache {
                                     }
                                 }
                             }
-                            final TransformerFactory[][] rewriters = new TransformerFactory[2][];
+                            final TransformerFactoryEntry[][] globalFactories = new TransformerFactoryEntry[2][];
                             if ( preCount == 0 ) {
-                                rewriters[0] = EMPTY_ARRAY;
+                                globalFactories[0] = EMPTY_ENTRY_ARRAY;
                             } else {
-                                rewriters[0] = new TransformerFactory[preCount];
+                                globalFactories[0] = new TransformerFactoryEntry[preCount];
                             }
                             if ( postCount == 0) {
-                                rewriters[1] = EMPTY_ARRAY;
+                                globalFactories[1] = EMPTY_ENTRY_ARRAY;
                             } else {
-                                rewriters[1] = new TransformerFactory[postCount];
+                                globalFactories[1] = new TransformerFactoryEntry[postCount];
                             }
                             int index = 0;
                             for(final ServiceReference ref : refs) {
                                 if ( isGlobal(ref) ) {
                                     if ( index < preCount ) {
-                                        rewriters[0][index] = (TransformerFactory) this.getService(ref);
+                                        globalFactories[0][index] = new TransformerFactoryEntry((TransformerFactory) this.getService(ref), ref);
                                     } else {
-                                        rewriters[1][index - preCount] = (TransformerFactory) this.getService(ref);
+                                        globalFactories[1][index - preCount] = new TransformerFactoryEntry((TransformerFactory) this.getService(ref), ref);
                                     }
                                     index++;
                                 }
                             }
-                            this.cached = rewriters;
+                            this.cached = globalFactories;
                         }
                     }
                     this.cacheIsValid = true;
                 }
             }
+
             return this.cached;
+        }
+
+        /**
+         * Get all global transformer factories that apply to the current request.
+         * @param context The current processing context.
+         * @return Two arrays containing the transformer factories.
+         */
+        public TransformerFactory[][] getGlobalTransformerFactories(final ProcessingContext context) {
+            final TransformerFactoryEntry[][] globalFactoryEntries = this.getGlobalTransformerFactories();
+            // quick check
+            if ( globalFactoryEntries == EMPTY_DOUBLE_ENTRY_ARRAY ) {
+                return EMPTY_DOUBLE_FACTORY_ARRAY;
+            }
+            final TransformerFactory[][] factories = new TransformerFactory[2][];
+            for(int i=0; i<2; i++) {
+                if ( globalFactoryEntries[i] == EMPTY_ENTRY_ARRAY ) {
+                    factories[i] = EMPTY_FACTORY_ARRAY;
+                } else {
+                    factories[i] = new TransformerFactory[globalFactoryEntries[i].length];
+                    for(int m=0; m<globalFactoryEntries[i].length; m++) {
+                        final TransformerFactoryEntry entry = globalFactoryEntries[i][m];
+                        if ( entry.match(context) ) {
+                            factories[i][m] = entry.factory;
+                        }
+                    }
+                }
+            }
+            return factories;
         }
     }
 
@@ -383,6 +451,36 @@ public class FactoryCache {
 
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
+        }
+    }
+
+    protected static final class TransformerFactoryEntry {
+        public final TransformerFactory factory;
+
+        private final ProcessorConfiguration configuration;
+
+        public TransformerFactoryEntry(final TransformerFactory factory, final ServiceReference ref) {
+            this.factory = factory;
+            final String[] paths = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_PATHS), null);
+            final String[] extensions = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_EXTENSIONS), null);
+            final String[] contentTypes = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_CONTENT_TYPES), null);
+            final String[] resourceTypes = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_RESOURCE_TYPES), null);
+            final boolean noCheckRequired = (paths == null || paths.length == 0) &&
+                                   (extensions == null || extensions.length == 0) &&
+                                   (contentTypes == null || contentTypes.length == 0) &&
+                                   (resourceTypes == null || resourceTypes.length == 0);
+            if ( !noCheckRequired ) {
+                this.configuration = new ProcessorConfigurationImpl(contentTypes, paths, extensions, resourceTypes);
+            } else {
+                this.configuration = null;
+            }
+        }
+
+        public boolean match(final ProcessingContext context) {
+            if ( configuration == null ) {
+                return true;
+            }
+            return configuration.match(context);
         }
     }
 }
