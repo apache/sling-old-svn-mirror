@@ -202,4 +202,31 @@ public class PipelineImpl implements Processor {
             throw ioe;
         }
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Pipeline Processor (");
+        sb.append(super.toString());
+        sb.append(") : ");
+        sb.append("generator: ");
+        sb.append(this.generator != null ? this.generator : "-");
+        sb.append(", transformers: [");
+        if ( this.transformers != null && this.transformers.length > 0 ) {
+            boolean first = true;
+            for(final Transformer t : this.transformers ) {
+                if ( !first ) {
+                    sb.append(", ");
+                }
+                first = false;
+                sb.append(t);
+            }
+            sb.append("]");
+        } else {
+            sb.append("-");
+        }
+        sb.append(", serializer: ");
+        sb.append(this.serializer != null ? this.serializer : "-");
+        return sb.toString();
+    }
 }

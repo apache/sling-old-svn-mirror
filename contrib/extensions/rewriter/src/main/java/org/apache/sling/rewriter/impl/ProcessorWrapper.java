@@ -68,4 +68,9 @@ public class ProcessorWrapper implements Processor {
     throws IOException {
         delegatee.init(context, config);
     }
+
+    @Override
+    public String toString() {
+        return delegatee.toString();
+    }
 }

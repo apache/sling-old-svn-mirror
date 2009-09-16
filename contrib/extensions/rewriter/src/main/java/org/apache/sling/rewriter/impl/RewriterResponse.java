@@ -101,18 +101,9 @@ class RewriterResponse
              });
         }
         if (writer == null) {
-            final ProcessingContext processorContext = new ServletProcessingContext(this.request, this, this.getSlingResponse(), this.contentType);
-            boolean found = false;
-            final List<ProcessorConfiguration> processorConfigs = this.processorManager.getProcessorConfigurations();
-            final Iterator<ProcessorConfiguration> i = processorConfigs.iterator();
-            while ( !found && i.hasNext() ) {
-                final ProcessorConfiguration config = i.next();
-                if ( config.match(processorContext) ) {
-                    found = true;
-
-                    this.processor = this.processorManager.getProcessor(config, processorContext);
-                    this.writer = this.processor.getWriter();
-                }
+            this.processor = this.getProcessor();
+            if ( this.processor != null ) {
+                this.writer = this.processor.getWriter();
             }
             if ( this.writer == null ) {
                 this.writer = super.getWriter();
@@ -151,18 +142,7 @@ class RewriterResponse
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if ( type == ContentHandler.class ) {
             try {
-                final ProcessingContext processorContext = new ServletProcessingContext(this.request, this, this.getSlingResponse(), this.contentType);
-                boolean found = false;
-                final List<ProcessorConfiguration> processorConfigs = this.processorManager.getProcessorConfigurations();
-                final Iterator<ProcessorConfiguration> i = processorConfigs.iterator();
-                while ( !found && i.hasNext() ) {
-                    final ProcessorConfiguration config = i.next();
-                    if ( config.match(processorContext) ) {
-                        found = true;
-
-                        this.processor = this.processorManager.getProcessor(config, processorContext);
-                    }
-                }
+                this.processor = this.getProcessor();
             } catch (IOException e) {
                 throw new SlingException("Unable to setup pipeline: " + e.getMessage(), e);
             }
@@ -173,5 +153,23 @@ class RewriterResponse
             }
         }
         return super.adaptTo(type);
+    }
+
+    /**
+     * Search the first matching processor
+     */
+    private Processor getProcessor() throws IOException {
+        final ProcessingContext processorContext = new ServletProcessingContext(this.request, this, this.getSlingResponse(), this.contentType);
+        Processor found = null;
+        final List<ProcessorConfiguration> processorConfigs = this.processorManager.getProcessorConfigurations();
+        final Iterator<ProcessorConfiguration> i = processorConfigs.iterator();
+        while ( found == null && i.hasNext() ) {
+            final ProcessorConfiguration config = i.next();
+            if ( config.match(processorContext) ) {
+                found = this.processorManager.getProcessor(config, processorContext);
+                this.request.getRequestProgressTracker().log("Found processor for post processing {}", found);
+            }
+        }
+        return found;
     }
 }
