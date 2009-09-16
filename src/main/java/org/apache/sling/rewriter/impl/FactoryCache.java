@@ -421,36 +421,7 @@ public class FactoryCache {
         public static ServiceReferenceComparator INSTANCE = new ServiceReferenceComparator();
 
         public int compare(ServiceReference o1, ServiceReference o2) {
-
-            Long id = (Long) o1.getProperty(Constants.SERVICE_ID);
-            Long otherId = (Long) o2.getProperty(Constants.SERVICE_ID);
-
-            if (id.equals(otherId)) {
-                return 0; // same service
-            }
-
-            Object rankObj = o1.getProperty(Constants.SERVICE_RANKING);
-            Object otherRankObj = o2.getProperty(Constants.SERVICE_RANKING);
-
-            // If no rank, then spec says it defaults to zero.
-            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-            otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
-
-            // If rank is not Integer, then spec says it defaults to zero.
-            Integer rank = !(rankObj instanceof Integer)
-                ? new Integer(0) : (Integer) rankObj;
-            Integer otherRank = !(otherRankObj instanceof Integer)
-                ? new Integer(0) : (Integer) otherRankObj;
-
-            // Sort by rank in ascending order.
-            if (rank.compareTo(otherRank) < 0) {
-                return -1; // lower rank
-            } else if (rank.compareTo(otherRank) > 0) {
-                return 1; // higher rank
-            }
-
-            // If ranks are equal, then sort by service id in descending order.
-            return (id.compareTo(otherId) < 0) ? 1 : -1;
+            return o1.compareTo(o2);
         }
     }
 
