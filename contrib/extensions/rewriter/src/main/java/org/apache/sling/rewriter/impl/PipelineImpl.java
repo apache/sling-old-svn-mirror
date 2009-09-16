@@ -79,7 +79,7 @@ public class PipelineImpl implements Processor {
         // create components and initialize them
 
         // lets get custom rewriter transformers
-        final Transformer[][] rewriters = this.factoryCache.getRewriterTransformers();
+        final Transformer[][] rewriters = this.factoryCache.getGlobalTransformers(processingContext);
 
         final ProcessingComponentConfiguration generatorConfig = config.getGeneratorConfiguration();
         this.generator = this.getPipelineComponent(Generator.class, generatorConfig.getType());

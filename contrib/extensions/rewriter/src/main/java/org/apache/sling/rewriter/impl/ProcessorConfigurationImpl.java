@@ -123,6 +123,16 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     }
 
     /**
+     * This is the constructor for a pipeline
+     */
+    public ProcessorConfigurationImpl(String[] contentTypes,
+                                      String[] paths,
+                                      String[] extensions,
+                                      String[] resourceTypes) {
+        this(contentTypes, paths, extensions, resourceTypes, 0, null, null, null, false);
+    }
+
+    /**
      * Constructor.
      * This constructor reads the configuration from the specified resource.
      */
