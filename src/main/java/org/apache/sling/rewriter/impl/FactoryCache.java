@@ -330,7 +330,7 @@ public class FactoryCache {
          * Get all global transformer factories.
          * @return Two arrays of transformer factories
          */
-        public TransformerFactoryEntry[][] getGlobalTransformerFactories() {
+        public TransformerFactoryEntry[][] getGlobalTransformerFactoryEntries() {
             if ( !this.cacheIsValid ) {
                 synchronized ( this ) {
                     if ( !this.cacheIsValid ) {
@@ -391,7 +391,7 @@ public class FactoryCache {
          * @return Two arrays containing the transformer factories.
          */
         public TransformerFactory[][] getGlobalTransformerFactories(final ProcessingContext context) {
-            final TransformerFactoryEntry[][] globalFactoryEntries = this.getGlobalTransformerFactories();
+            final TransformerFactoryEntry[][] globalFactoryEntries = this.getGlobalTransformerFactoryEntries();
             // quick check
             if ( globalFactoryEntries == EMPTY_DOUBLE_ENTRY_ARRAY ) {
                 return EMPTY_DOUBLE_FACTORY_ARRAY;
