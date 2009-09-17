@@ -40,6 +40,7 @@ import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -92,6 +93,18 @@ class OsgiInstallerTestBase implements FrameworkListener {
             configAdminTracker.close();
             configAdminTracker = null;
         }
+    }
+    
+    protected void restartInstaller() throws BundleException {
+        final String symbolicName = "org.apache.sling.osgi.installer";
+        final Bundle b = findBundle(symbolicName);
+        if(b == null) {
+            fail("Bundle " + symbolicName + " not found");
+        }
+        log(LogService.LOG_INFO, "Restarting " + symbolicName + " bundle");
+        b.stop();
+        b.start();
+        setupInstaller();
     }
     
     protected void generateBundleEvent() throws Exception {

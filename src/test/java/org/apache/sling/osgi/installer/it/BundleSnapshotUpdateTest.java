@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 
 /** Verify that snapshot bundles are updated even if
  *  their version number does not change.
@@ -86,8 +87,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         assertNoOsgiTasks("At end of test");
     }
     
-    @Test
-    public void testSnapshot() throws IOException {
+    private void testSnapshotPrimitive(boolean restartInstaller) throws IOException, BundleException {
         
         // Install test bundle
         final String symbolicName = "osgi-installer-snapshot-test";
@@ -100,6 +100,10 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         final Bundle b = findBundle(symbolicName);
         assertNotNull("Snapshot bundle must be found after waitForInstallerAction", b);
 
+        if(restartInstaller) {
+            restartInstaller();
+        }
+        
         // Update with same digest must be ignored
         final long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(
@@ -117,5 +121,15 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         
         // And no more OSGi tasks after that
         assertNoOsgiTasks("At end of test");
+    }
+
+    @Test
+    public void testSnapshot() throws IOException, BundleException {
+        testSnapshotPrimitive(false);
+    }
+    
+    @Test
+    public void testSnapshotWithInstallerRestart() throws IOException, BundleException {
+        testSnapshotPrimitive(true);
     }
 }
