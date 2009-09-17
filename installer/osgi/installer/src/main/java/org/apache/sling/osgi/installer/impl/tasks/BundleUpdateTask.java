@@ -96,6 +96,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         b.stop();
         b.update(resource.getInputStream());
         ctx.saveBundleDigest(b, resource.getDigest());
+        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         }
