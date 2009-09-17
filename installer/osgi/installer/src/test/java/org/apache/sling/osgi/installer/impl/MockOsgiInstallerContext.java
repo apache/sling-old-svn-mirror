@@ -18,6 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.IOException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
@@ -62,4 +64,11 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 	public boolean isSnapshot(Version v) {
 		return v.toString().indexOf(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
+
+    public String getBundleDigest(Bundle b) throws IOException {
+        return null;
+    }
+
+    public void saveBundleDigest(Bundle b, String digest) throws IOException {
+    }
 }

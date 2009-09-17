@@ -41,6 +41,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
     
     public void execute(OsgiInstallerContext ctx) throws Exception {
         final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream());
+        ctx.saveBundleDigest(b, resource.getDigest());
         logExecution(ctx);
         ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
