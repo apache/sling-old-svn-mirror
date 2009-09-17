@@ -18,6 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.IOException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
@@ -43,4 +45,12 @@ public interface OsgiInstallerContext {
 	 * 	usually to indicate that a task must be retried 
 	 */
 	void addTaskToNextCycle(OsgiInstallerTask t);
+	
+	/** Store a bundle's digest, keyed by symbolic ID + version */
+	void saveBundleDigest(Bundle b, String digest) throws IOException;
+	
+	/** Retrieve a bundle's digest that was stored by storeBundleDigest 
+	 *  @return null if no digest was stored   
+	 * */
+	String getBundleDigest(Bundle b) throws IOException;
 }

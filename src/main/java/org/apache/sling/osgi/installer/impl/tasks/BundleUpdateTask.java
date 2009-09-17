@@ -57,10 +57,12 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         }
         
         // Do not update if same version, unless snapshot
+        boolean snapshot = false;
         if(b != null) {
         	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
         	final Version newVersion = (Version)resource.getAttributes().get(Constants.BUNDLE_VERSION);
-        	if(currentVersion.equals(newVersion) && !ctx.isSnapshot(newVersion)) {
+        	snapshot = ctx.isSnapshot(newVersion);
+        	if(currentVersion.equals(newVersion) && !snapshot) {
         		if(ctx.getLogService() != null) {
             		ctx.getLogService().log(
             				LogService.LOG_DEBUG, 
@@ -68,6 +70,21 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         		}
         		return;
         	}
+        }
+        
+        // If snapshot and ready to update, cancel if digest didn't change - as the list
+        // of RegisteredResources is not saved, this might not have been detected earlier,
+        // if the snapshot was installed and the installer was later restarted
+        if( (b != null) && snapshot) {
+            final String oldDigest = ctx.getBundleDigest(b);
+            if(resource.getDigest().equals(oldDigest)) {
+                if(ctx.getLogService() != null) {
+                    ctx.getLogService().log(
+                            LogService.LOG_DEBUG, 
+                            "Snapshot digest did not change, ignoring update:" + resource);
+                }
+                return;
+            }
         }
         
         logExecution(ctx);
@@ -78,6 +95,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         }
         b.stop();
         b.update(resource.getInputStream());
+        ctx.saveBundleDigest(b, resource.getDigest());
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         }

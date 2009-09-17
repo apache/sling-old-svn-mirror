@@ -18,13 +18,19 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -42,6 +48,8 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
     private final ServiceTracker logServiceTracker;
     private final OsgiInstallerThread installerThread;
     private long [] counters = new long[COUNTERS_SIZE];
+    
+    public static String BUNDLE_DIGEST_PREFIX = "bundle-digest-";
 
     public OsgiInstallerImpl(final BundleContext bc,
                               final PackageAdmin pa,
@@ -56,8 +64,14 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         installerThread.start();
     }
 
-    public void deactivate() {
+    public void deactivate() throws InterruptedException {
         installerThread.deactivate();
+        
+        if(getLogService() != null) {
+            getLogService().log(LogService.LOG_INFO, "Waiting for installer thread to stop");
+        }
+        installerThread.join();
+        
         if(getLogService() != null) {
             getLogService().log(LogService.LOG_WARNING,
                     OsgiInstaller.class.getName()
@@ -156,4 +170,37 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	public boolean isSnapshot(Version v) {
 		return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
+
+    public String getBundleDigest(Bundle b) throws IOException {
+        // TODO it would be cleaner to use a single file to 
+        // store those digests - and currently digests files
+        // are not purged
+        String result = null;
+        final File f = getBundleDigestFile(b);
+        if(f.exists()) {
+            final FileReader fr = new FileReader(f);
+            try {
+                result = new BufferedReader(fr).readLine();
+            } finally {
+                fr.close();
+            }
+        }
+        return result;
+    }
+
+    public void saveBundleDigest(Bundle b, String digest) throws IOException {
+        final File f = getBundleDigestFile(b);
+        final FileWriter fw = new FileWriter(f);
+        try {
+            new PrintWriter(fw).write(digest);
+        } finally {
+            fw.close();
+        }
+    }
+    
+    private File getBundleDigestFile(Bundle b) {
+        final String version = (String)b.getHeaders().get(Constants.BUNDLE_VERSION);
+        final String filename = BUNDLE_DIGEST_PREFIX + b.getSymbolicName() + version + ".txt";
+        return bundleContext.getDataFile(filename);
+    }
 }
