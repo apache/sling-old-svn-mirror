@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -65,20 +64,19 @@ public class XMLRendererServlet extends SlingSafeMethodsServlet {
 
         final Node node = r.adaptTo(Node.class);
         if ( node != null ) {
-            // check if response is adaptable to a content handler
-            ContentHandler ch = null;
-            if ( resp instanceof Adaptable ) {
-                ch = ((Adaptable)resp).adaptTo(ContentHandler.class);
-            }
             try {
                 if ( req.getRequestPathInfo().getSelectorString() == null
                      || req.getRequestPathInfo().getSelectorString().equals(DOCVIEW) ) {
+                    // check if response is adaptable to a content handler
+                    final ContentHandler ch = resp.adaptTo(ContentHandler.class);
                     if ( ch == null ) {
                         node.getSession().exportDocumentView(node.getPath(), resp.getOutputStream(), false, false);
                     } else {
                         node.getSession().exportDocumentView(node.getPath(), ch, false, false);
                     }
                 } else if ( req.getRequestPathInfo().getSelectorString().equals(SYSVIEW) ) {
+                    // check if response is adaptable to a content handler
+                    final ContentHandler ch = resp.adaptTo(ContentHandler.class);
                     if ( ch == null ) {
                         node.getSession().exportSystemView(node.getPath(), resp.getOutputStream(), false, false);
                     } else {

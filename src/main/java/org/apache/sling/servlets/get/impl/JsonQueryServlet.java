@@ -19,8 +19,6 @@
 package org.apache.sling.servlets.get.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +32,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -84,13 +81,13 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     /** rep:exerpt */
     private static final String REP_EXCERPT = "rep:excerpt()";
-    
+
     private final JsonResourceWriter itemWriter;
 
     public JsonQueryServlet() {
         itemWriter = new JsonResourceWriter(null);
-    }    
-    
+    }
+
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws IOException {
@@ -115,7 +112,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
             Iterator<Map<String, Object>> result = resolver.queryResources(
                 statement, queryType);
-          
+
 
             if (req.getParameter(OFFSET) != null) {
                 long skip = Long.parseLong(req.getParameter(OFFSET));
@@ -152,7 +149,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
             while (result.hasNext() && count != 0) {
                 Map<String, Object> row = result.next();
 
-                
+
                 w.object();
                 String path = row.get("jcr:path").toString();
 
@@ -167,7 +164,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                         Object ev = row.get("rep:excerpt(" + exerptPath + ")");
                         strValue = (ev == null) ? "" : ev.toString();
                         w.value(strValue);
-                        
+
                     } else {
                         //strValue = formatValue(row.get(colName));
                     	itemWriter.dumpValue(w, row.get(colName));
@@ -182,8 +179,8 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                 }
 
                 w.endObject();
-                
-                
+
+
                 count--;
             }
             w.endArray();
@@ -201,7 +198,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         }
 
         itemWriter.dumpProperties(nodeRes, w, properties);
-        
+
     }
 
 
@@ -213,6 +210,6 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         log.warn("Error in QueryServlet: " + e.toString(), e);
         return new SlingException(e.toString(), e);
     }
-    
-    
+
+
 }
