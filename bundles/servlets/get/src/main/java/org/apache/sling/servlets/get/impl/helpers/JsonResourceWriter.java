@@ -36,9 +36,9 @@ import org.apache.sling.commons.json.io.JSONWriter;
 
 /**
  * Dumps JCR Items as JSON data. The dump methods are threadsafe.
- * 
- * Dump can be done on the Resource, property or value level. 
- * 
+ *
+ * Dump can be done on the Resource, property or value level.
+ *
  */
 public class JsonResourceWriter {
 
@@ -81,7 +81,7 @@ public class JsonResourceWriter {
         jw.setTidy(tidy);
         dump(resource, jw, 0, maxRecursionLevels);
     }
-    
+
 
     /** Dump given resource in JSON, optionally recursing into its objects */
     protected void dump(Resource resource, JSONWriter w,
@@ -138,7 +138,7 @@ public class JsonResourceWriter {
 
         w.endObject();
     }
-    
+
     /** Dump only a subset of the resource properties */
     public void dumpProperties(Resource resource, JSONWriter w,
             List<String> properties)
@@ -152,32 +152,31 @@ public class JsonResourceWriter {
                 : resource.adaptTo(Map.class);
 
         if (propertyMap == null) {
-        	
+
         	//TODO : not sure if we have to do something in this case ?
-        	return; 
+        	return;
 
-        } else {
-
-            @SuppressWarnings("unchecked")
-            final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
-
-            // the node's actual properties
-            while (props.hasNext()) {
-                @SuppressWarnings("unchecked")
-                final Map.Entry prop = props.next();
-
-                if (propertyNamesToIgnore != null
-                    && propertyNamesToIgnore.contains(prop.getKey())) {
-                    continue;
-                }
-
-                if (properties.contains(prop.getKey().toString()))
-                    writeProperty(w, valueMap, prop.getKey().toString(),
-                                  prop.getValue());
-            }
         }
-    }        
-    
+
+        @SuppressWarnings("unchecked")
+        final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
+
+        // the node's actual properties
+        while (props.hasNext()) {
+            @SuppressWarnings("unchecked")
+            final Map.Entry prop = props.next();
+
+            if (propertyNamesToIgnore != null
+                && propertyNamesToIgnore.contains(prop.getKey())) {
+                continue;
+            }
+
+            if (properties.contains(prop.getKey().toString()))
+                writeProperty(w, valueMap, prop.getKey().toString(),
+                              prop.getValue());
+        }
+    }
+
     /** Dump only a value in the correct format */
     public void dumpValue(JSONWriter w, Object value)
     throws JSONException {
@@ -198,7 +197,7 @@ public class JsonResourceWriter {
             w.value(value.toString());
         }
     }
-    
+
     /** Dump a single node */
     protected void dumpSingleResource(Resource n, JSONWriter w,
             int currentRecursionLevel, int maxRecursionLevels)
