@@ -123,6 +123,12 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
      */
     protected static String toRedirectPath(String targetPath,
             SlingHttpServletRequest request) {
+        // first check for an absolute path
+        final int protocolIndex = targetPath.indexOf(":/");
+        final int queryIndex = targetPath.indexOf('?');
+        if (  protocolIndex > -1 && (queryIndex == -1 || queryIndex > protocolIndex) ) {
+            return targetPath;
+        }
 
         String postFix;
         RequestPathInfo rpi = request.getRequestPathInfo();
