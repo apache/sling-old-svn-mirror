@@ -212,12 +212,13 @@ public class JcrPropertyMap implements ValueMap {
     CacheEntry read(final String key) {
 
         // if the node has been completely read, we need not check
-        // again, as we certainly will not find the key
-        if (fullyRead) {
+        // again if the key does not point to a sub node
+        if (fullyRead && key.indexOf('/') == -1 ) {
+            // except if the key contains
             return null;
         }
 
-        final String name = ISO9075.encode(key);
+        final String name = ISO9075.encodePath(key);
         try {
             if (node.hasProperty(name)) {
                 final Property prop = node.getProperty(name);
