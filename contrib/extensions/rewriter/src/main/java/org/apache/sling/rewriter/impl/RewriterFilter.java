@@ -34,7 +34,7 @@ import org.apache.sling.rewriter.ProcessorManager;
  *
  * @scr.component metatype="no"
  * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="2500" type="Integer" private="true"
+ * @scr.property name="filter.order" value="-2500" type="Integer" private="true"
  * @scr.service interface="javax.servlet.Filter"
  */
 public class RewriterFilter implements Filter {
