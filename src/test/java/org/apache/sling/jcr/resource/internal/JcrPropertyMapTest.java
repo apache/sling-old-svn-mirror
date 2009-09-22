@@ -234,17 +234,19 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         return createPropertyMap(node);
     }
 
+    private static final String TEST_PATH = "a<a";
+
     public void testNames() throws Exception {
-        this.rootNode.setProperty(ISO9075.encode("a/a"), "value");
+        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), "value");
         final ValueMap vm = this.createPropertyMap(this.rootNode);
-        assertEquals("value", vm.get("a/a"));
+        assertEquals("value", vm.get(TEST_PATH));
     }
 
     public void testIerators() throws Exception {
-        this.rootNode.setProperty(ISO9075.encode("a/a"), "value");
+        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), "value");
         final ValueMap vm = this.createPropertyMap(this.rootNode);
-        assertTrue(vm.containsKey("a/a"));
-        search(vm.keySet().iterator(), "a/a");
+        assertTrue(vm.containsKey(TEST_PATH));
+        search(vm.keySet().iterator(), TEST_PATH);
         search(vm.values().iterator(), "value");
     }
 

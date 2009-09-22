@@ -46,19 +46,6 @@ public class JcrModifiablePropertyMap
     }
 
     // ---------- Map
-
-    /**
-     * @see java.util.Map#get(java.lang.Object)
-     */
-    public Object get(Object key) {
-        CacheEntry entry = cache.get(key);
-        if (entry == null && !this.fullyRead ) {
-            entry = read((String) key);
-        }
-
-        return entry == null ? null : entry.defaultValue;
-    }
-
     /**
      * @see java.util.Map#clear()
      */
@@ -77,6 +64,9 @@ public class JcrModifiablePropertyMap
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
     public Object put(String key, Object value) {
+        if ( key == null || key.indexOf('/') != -1 ) {
+            throw new IllegalArgumentException("Invalud key: " + key);
+        }
         readFully();
         final Object oldValue = this.get(key);
         try {
@@ -144,7 +134,7 @@ public class JcrModifiablePropertyMap
         try {
             final Node node = getNode();
             for(final String key : this.changedProperties) {
-                final String name = ISO9075.encode(key);
+                final String name = ISO9075.encodePath(key);
                 if ( cache.containsKey(key) ) {
                     final CacheEntry entry = cache.get(key);
                     if ( entry.isMulti ) {
