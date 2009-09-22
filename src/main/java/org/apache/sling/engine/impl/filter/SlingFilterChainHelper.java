@@ -26,7 +26,7 @@ import javax.servlet.Filter;
 
 /**
  * The <code>SlingFilterChainHelper</code> class is used by Sling to
- * support building lists of <code>RenderFilter</code>s. To ensure filter
+ * support building lists of <code>Filter</code>s. To ensure filter
  * ordering, each filter is optionally registered with an ordering index. If
  * none is provided the default ordering index is Integer.MAX_VALUE to append
  * the filter to the end of the list.
@@ -95,7 +95,7 @@ public class SlingFilterChainHelper {
     }
 
     /**
-     * Returns the list of <code>RenderFilter</code>s added to this instance
+     * Returns the list of <code>Filter</code>s added to this instance
      * or <code>null</code> if no filters have been added.
      */
     public synchronized Filter[] getFilters() {
@@ -113,7 +113,20 @@ public class SlingFilterChainHelper {
         return filters;
     }
 
-    private static class FilterListEntry implements Comparable<FilterListEntry> {
+    /**
+     * Returns the list of <code>FilterListEntry</code>s added to this instance
+     * or <code>null</code> if no filters have been added.
+     */
+    public synchronized FilterListEntry[] getFilterListEntries() {
+        FilterListEntry[] result = null;
+        if (filterList != null && !filterList.isEmpty()) {
+            result = new FilterListEntry[filterList.size()];
+            filterList.toArray(result);
+        }
+        return result;
+    }
+
+    public static class FilterListEntry implements Comparable<FilterListEntry> {
 
         private Filter filter;
 
@@ -127,12 +140,16 @@ public class SlingFilterChainHelper {
             this.order = order;
         }
 
-        Filter getFilter() {
+        public Filter getFilter() {
             return filter;
         }
 
-        Long getFitlerId() {
+        public Long getFitlerId() {
             return filterId;
+        }
+
+        public int getOrder() {
+            return order;
         }
 
         /**

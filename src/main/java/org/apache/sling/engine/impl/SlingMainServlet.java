@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -90,6 +91,7 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
+ * @scr.service interface="ConfigurationPrinter"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
@@ -97,7 +99,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class SlingMainServlet extends GenericServlet implements ErrorHandler,
-        HttpContext {
+        HttpContext, ConfigurationPrinter {
 
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_CALL_COUNTER" */
     public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls";
@@ -879,4 +881,42 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         return oldThreadName;
     }
 
+    /**
+     * Return the title for the configuration printer
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     */
+    public String getTitle() {
+        return "Servlet Filter";
+    }
+
+    /**
+     * Helper method for printing out a filter chain.
+     */
+    private void printFilterChain(final PrintWriter pw, final SlingFilterChainHelper.FilterListEntry[] entries) {
+        if ( entries == null ) {
+            pw.println("---");
+        } else {
+            for(final SlingFilterChainHelper.FilterListEntry entry : entries) {
+                pw.print(entry.getOrder());
+                pw.print(" : ");
+                pw.print(entry.getFilter().getClass());
+                pw.print(" (");
+                pw.print(entry.getFitlerId());
+                pw.println(")");
+            }
+        }
+    }
+    /**
+     * Print out the servlet filter chains.
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     */
+    public void printConfiguration(PrintWriter pw) {
+        pw.println("Current Apache Sling Servlet Filter Configuration");
+        pw.println();
+        pw.println("Request Filters:");
+        printFilterChain(pw, this.requestFilterChain.getFilterListEntries());
+        pw.println();
+        pw.println("Component Filters:");
+        printFilterChain(pw, this.innerFilterChain.getFilterListEntries());
+    }
 }
