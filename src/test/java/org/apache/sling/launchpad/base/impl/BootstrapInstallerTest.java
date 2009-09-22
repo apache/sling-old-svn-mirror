@@ -40,7 +40,7 @@ public class BootstrapInstallerTest {
      * .
      */
     @Test
-    public void testExtractFileName() {
+    public void testExtractFileNameForwardSlash() {
         String filename = BootstrapInstaller.extractFileName("myfile.html");
         assertEquals("myfile.html", filename);
 
@@ -59,6 +59,44 @@ public class BootstrapInstallerTest {
 
         try {
             filename = BootstrapInstaller.extractFileName("LOTS/of/random/things/");
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e.getMessage());
+        }
+
+        try {
+            filename = BootstrapInstaller.extractFileName(null);
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e.getMessage());
+        }
+    }
+
+    /**
+     * Test method for
+     * {@link org.apache.sling.launchpad.base.impl.BootstrapInstaller#extractFileName(java.lang.String)}
+     * .
+     */
+    @Test
+    public void testExtractFileNameSeparatorChar() {
+        String filename = BootstrapInstaller.extractFileName("myfile.html".replace('/', File.separatorChar));
+        assertEquals("myfile.html", filename);
+
+        filename = BootstrapInstaller.extractFileName("/things/myfile.html".replace('/', File.separatorChar));
+        assertEquals("myfile.html", filename);
+
+        filename = BootstrapInstaller.extractFileName("LOTS/of/random/things/myfile.html".replace('/', File.separatorChar));
+        assertEquals("myfile.html", filename);
+
+        try {
+            filename = BootstrapInstaller.extractFileName("LOTS/of/random/things/".replace('/', File.separatorChar));
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e.getMessage());
+        }
+
+        try {
+            filename = BootstrapInstaller.extractFileName("LOTS/of/random/things/".replace('/', File.separatorChar));
             fail("should have thrown exception");
         } catch (IllegalArgumentException e) {
             assertNotNull(e.getMessage());
@@ -101,9 +139,11 @@ public class BootstrapInstallerTest {
             FileInputStream copyStream = new FileInputStream(copy);
             byte[] copyData = new byte[copyStream.available()];
             copyStream.read(copyData);
+            copyStream.close();
             FileInputStream origStream = new FileInputStream(copy);
             byte[] origData = new byte[origStream.available()];
             origStream.read(origData);
+            origStream.close();
             assertArrayEquals(copyData, origData);
         } catch (FileNotFoundException e) {
             fail(e.getMessage());

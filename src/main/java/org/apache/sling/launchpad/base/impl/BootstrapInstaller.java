@@ -763,8 +763,12 @@ class BootstrapInstaller implements BundleActivator {
         if (isBlank(path)) {
             throw new IllegalArgumentException("Invalid blank path specified, cannot extract filename: " + path);
         }
+
+        // ensure forward slashes in the path
+        path = path.replace(File.separatorChar, '/');
+
         String name = "";
-        int slashPos = path.lastIndexOf(File.separatorChar);
+        int slashPos = path.lastIndexOf('/');
         if (slashPos == -1) {
             // this is only a filename (no directory path included)
             name = path;
