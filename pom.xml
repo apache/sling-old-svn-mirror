@@ -241,6 +241,7 @@ setting is not correct.
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                            <_versionpolicy>$${version;===;${@}}</_versionpolicy>
                         </instructions>
                     </configuration>
                 </plugin>
