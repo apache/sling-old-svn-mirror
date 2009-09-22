@@ -75,7 +75,7 @@ public class SlingServletContext implements ServletContext {
 
     /**
      * The service registration of this service as ServletContext
-     * @see #SlingServletContext(SlingMainServlet)ling
+     * @see #SlingServletContext(SlingMainServlet)
      * @see #dispose()
      */
     private final ServiceRegistration registration;
