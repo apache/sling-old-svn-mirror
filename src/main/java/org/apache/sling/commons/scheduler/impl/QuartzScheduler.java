@@ -79,8 +79,8 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
 
-    /** Map key for the concurrent handler */
-    static final String DATA_MAP_CONCURRENT_HANDLER = "QuartzJobExecutor.ConcurrentHandler";
+    /** Map key for the job handler */
+    static final String DATA_MAP_JOB_HANDLER = "QuartzJobExecutor.JobHandler";
 
     /** Theq quartz scheduler. */
     protected volatile org.quartz.Scheduler scheduler;
@@ -203,7 +203,7 @@ public class QuartzScheduler implements Scheduler {
      *
      * @throws SchedulerException thrown in case of errors
      */
-    protected void scheduleJob(String name,
+    protected void scheduleJob(final String name,
                                final Object job,
                                final Map<String, Serializable>    config,
                                final Trigger trigger,
@@ -228,16 +228,16 @@ public class QuartzScheduler implements Scheduler {
                 }
             } catch (final SchedulerException ignored) {
             }
-        } else {
-            name = PREFIX + UUID.randomUUID().toString();
         }
 
+        final String jobName = this.getJobName(name);
+
         // create the data map
-        final JobDataMap jobDataMap = this.initDataMap(name, job, config, canRunConcurrently);
+        final JobDataMap jobDataMap = this.initDataMap(jobName, job, config, canRunConcurrently);
 
-        final JobDetail detail = this.createJobDetail(name, jobDataMap);
+        final JobDetail detail = this.createJobDetail(jobName, jobDataMap);
 
-        this.logger.debug("Scheduling job {} with name {} and trigger {}", new Object[] {job, name, trigger});
+        this.logger.debug("Scheduling job {} with name {} and trigger {}", new Object[] {job, jobName, trigger});
         s.scheduleJob(detail, trigger);
     }
 
@@ -249,18 +249,17 @@ public class QuartzScheduler implements Scheduler {
      * @param concurent
      * @return
      */
-    protected JobDataMap initDataMap(String  jobName,
-                                     Object  job,
-                                     Map<String, Serializable> config,
-                                     boolean concurent) {
+    protected JobDataMap initDataMap(final String  jobName,
+                                     final Object  job,
+                                     final Map<String, Serializable> config,
+                                     final boolean concurrent) {
         final JobDataMap jobDataMap = new JobDataMap();
 
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
-        final ConcurrentHandler handler = new ConcurrentHandler();
-        handler.runConcurrently = concurent;
-        jobDataMap.put(DATA_MAP_CONCURRENT_HANDLER, handler);
+        final JobHandler handler = new JobHandler(concurrent);
+        jobDataMap.put(DATA_MAP_JOB_HANDLER, handler);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
         if ( config != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, config);
@@ -275,7 +274,7 @@ public class QuartzScheduler implements Scheduler {
      * @param jobDataMap
      * @return
      */
-    protected JobDetail createJobDetail(String name, JobDataMap jobDataMap) {
+    protected JobDetail createJobDetail(final String name, final JobDataMap jobDataMap) {
         final JobDetail detail = new JobDetail(name, DEFAULT_QUARTZ_JOB_GROUP, QuartzJobExecutor.class);
         detail.setJobDataMap(jobDataMap);
         return detail;
@@ -294,11 +293,11 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
-    public void addJob(String name,
-                       Object job,
-                       Map<String, Serializable>    config,
-                       String schedulingExpression,
-                       boolean canRunConcurrently)
+    public void addJob(final String name,
+                       final Object job,
+                       final Map<String, Serializable>    config,
+                       final String schedulingExpression,
+                       final boolean canRunConcurrently)
     throws SchedulerException {
         final CronTrigger cronJobEntry = new CronTrigger(name, DEFAULT_QUARTZ_JOB_GROUP);
 
@@ -313,44 +312,105 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
-    public void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
+    public void addPeriodicJob(final String name,
+                               final Object job,
+                               final Map<String, Serializable> config,
+                               final long period,
+                               final boolean canRunConcurrently)
     throws SchedulerException {
         final long ms = period * 1000;
-        if ( name == null ) {
-            name = PREFIX + UUID.randomUUID().toString();
-        }
+        final String jobName = this.getJobName(name);
+
         final SimpleTrigger timeEntry =
-            new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, new Date(System.currentTimeMillis() + ms), null,
+            new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, new Date(System.currentTimeMillis() + ms), null,
                               SimpleTrigger.REPEAT_INDEFINITELY, ms);
 
-        this.scheduleJob(name, job, config, timeEntry, canRunConcurrently);
+        this.scheduleJob(jobName, job, config, timeEntry, canRunConcurrently);
     }
 
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
-    public void fireJob(Object job, Map<String, Serializable> config)
+    public void fireJob(final Object job, final Map<String, Serializable> config)
     throws SchedulerException {
         this.checkJob(job);
-        final String name = job.getClass().getName();
-        final JobDataMap dataMap = this.initDataMap(name, job, config, true);
+        final String jobName = job.getClass().getName();
+        final JobDataMap dataMap = this.initDataMap(jobName, job, config, true);
 
-        final JobDetail detail = this.createJobDetail(name, dataMap);
+        final JobDetail detail = this.createJobDetail(jobName, dataMap);
 
-        final Trigger trigger = new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP);
+        final Trigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP);
         this.scheduler.scheduleJob(detail, trigger);
     }
 
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
-    public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
+    public void fireJobAt(final String name, final Object job, final Map<String, Serializable> config, final Date date)
     throws SchedulerException {
-        if ( name == null ) {
-            name = PREFIX + UUID.randomUUID().toString();
+        final String jobName = this.getJobName(name);
+        final SimpleTrigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, date);
+        this.scheduleJob(jobName, job, config, trigger, true);
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map, int, long)
+     */
+    public boolean fireJob(final Object job,
+                           final Map<String, Serializable> config,
+                           final int times,
+                           final long period) {
+        this.checkJob(job);
+        if ( times < 2 ) {
+            throw new IllegalArgumentException("Times argument must be higher than 1");
         }
-        final SimpleTrigger trigger = new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, date);
-        this.scheduleJob(name, job, config, trigger, true);
+        final long ms = period * 1000;
+        final String jobName = job.getClass().getName();
+        final JobDataMap dataMap = this.initDataMap(jobName, job, config, true);
+
+        final JobDetail detail = this.createJobDetail(jobName, dataMap);
+
+        final Trigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, times, ms);
+        try {
+            this.scheduler.scheduleJob(detail, trigger);
+        } catch (final SchedulerException se) {
+            // ignore this and return false
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date, int, long)
+     */
+    public boolean fireJobAt(final String name,
+                             final Object job,
+                             final Map<String, Serializable> config,
+                             final Date date,
+                             final int times,
+                             final long period) {
+        if ( times < 2 ) {
+            throw new IllegalArgumentException("Times argument must be higher than 1");
+        }
+        final String jobName = job.getClass().getName();
+        final long ms = period * 1000;
+        final SimpleTrigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, date, null, times, ms);
+        try {
+            this.scheduleJob(jobName, job, config, trigger, true);
+        } catch (final SchedulerException se) {
+            // ignore this and return false
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Helper method which gets always a job name.
+     * @param name The job name or null
+     * @return The input job name or a unique job name.
+     */
+    private String getJobName(final String name) {
+        return name != null ? name : PREFIX + UUID.randomUUID();
     }
 
     /**
@@ -577,12 +637,5 @@ public class QuartzScheduler implements Scheduler {
             // so we can just return
             this.executor = null;
         }
-    }
-
-    protected static final class ConcurrentHandler {
-
-        public boolean runConcurrently;
-
-        public boolean isRunning = false;
     }
 }
