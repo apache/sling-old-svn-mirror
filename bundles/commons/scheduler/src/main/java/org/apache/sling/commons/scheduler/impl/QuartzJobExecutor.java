@@ -40,15 +40,14 @@ public class QuartzJobExecutor implements Job {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
 
-        final QuartzScheduler.ConcurrentHandler concurrentHandler
-             = (QuartzScheduler.ConcurrentHandler)data.get(QuartzScheduler.DATA_MAP_CONCURRENT_HANDLER);
-        final boolean canRunConcurrently = (concurrentHandler == null ? true : concurrentHandler.runConcurrently);
+        final JobHandler handler = (JobHandler)data.get(QuartzScheduler.DATA_MAP_JOB_HANDLER);
+        final boolean canRunConcurrently = (handler == null ? true : handler.runConcurrently);
 
         if (!canRunConcurrently) {
-            if ( concurrentHandler.isRunning ) {
+            if ( handler.isRunning ) {
                 return;
             }
-            concurrentHandler.isRunning = true;
+            handler.isRunning = true;
         }
 
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
@@ -77,7 +76,7 @@ public class QuartzJobExecutor implements Job {
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
         } finally {
             if (!canRunConcurrently) {
-                concurrentHandler.isRunning = false;
+                handler.isRunning = false;
             }
         }
     }

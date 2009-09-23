@@ -88,6 +88,19 @@ public interface Scheduler {
     throws Exception;
 
     /**
+     * Fire a job immediately more than once.
+     *
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param times The number of times this job should be started (must be higher than 1)
+     * @param period Every period seconds this job is started.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @return true if the code could be added, false otherwise.
+     * @since 2.1
+     */
+    boolean fireJob(Object job, Map<String, Serializable> config, int times, long period);
+
+    /**
      * Fire a job once at a specific date
      * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
      * the old job.
@@ -101,6 +114,23 @@ public interface Scheduler {
      */
     void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
     throws Exception;
+
+    /**
+     * Fire a job once at a specific date, several times with a given interval.
+     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * the old job.
+     *
+     * @param name The name of the job - or null. If no name is specified it can't be cancelled.
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param date The date this job should be run.
+     * @param times The number of times this job should be started (must be higher than 1)
+     * @param period Every period seconds this job is started.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @return true if the code could be added, false otherwise.
+     * @since 2.1
+     */
+    boolean fireJobAt(String name, Object job, Map<String, Serializable> config, Date date, int times, long period);
 
     /**
      * Remove a scheduled job by name.
