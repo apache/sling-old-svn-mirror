@@ -426,134 +426,16 @@ setting is not correct.
         </mailingList>
     </mailingLists>
 
-
+    <!-- Please visit our website for the current information about the 
+         Apache Sling project team. (see #SLING-1120 why we don't include
+         the list here) -->
     <developers>
         <developer>
-            <name>Felix Meschberger</name>
-            <id>fmeschbe</id>
-            <email />
-            <organization>Day Software</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Carsten Ziegeler</name>
-            <id>cziegeler</id>
-            <email />
-            <organization>Day Software</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Bertrand Delacretaz</name>
-            <id>bdelacretaz</id>
-            <email />
-            <organization>Day Software</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Christophe Lombart</name>
-            <id>clombart</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Juan José Vázquez Delgado</name>
-            <id>juanjo</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone />
-        </developer>
-        <developer>
-            <name>Karl Pauls</name>
-            <id>pauls</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Alexandru Popescu</name>
-            <id>apopescu</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Padraic Hannon</name>
-            <id>hannonpi</id>
-            <email />
-            <organization>Edmunds, Inc.</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone />
-        </developer>
-        <developer>
-            <name>Vidar Skauge Ramdal</name>
-            <id>vramdal</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Jukka Zitting</name>
-            <id>jukka</id>
-            <email />
-            <organization>Day Software</organization>
-            <roles>
-                <role>Champion</role>
-                <role>Mentor</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Gianugo Rabellino</name>
-            <id>gianugo</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Mentor</role>
-            </roles>
-            <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>J Aaron Farr</name>
-            <id>farra</id>
-            <email />
-            <organization />
-            <roles>
-                <role>Mentor</role>
-            </roles>
-            <timezone />
+            <name>Apache Sling Project</name>
+            <id>sling</id>
+            <url>http://sling.apache.org/site/project-team.html</url>
         </developer>
     </developers>
-
-
-    <contributors />
-
 
     <dependencyManagement>
 
