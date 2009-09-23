@@ -36,6 +36,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.PersistableValueMap;
@@ -253,7 +254,14 @@ public class JcrNodeResource extends JcrItemResource {
             }
 
             if (node.hasProperty(JCR_LASTMODIFIED)) {
-                metadata.setModificationTime(node.getProperty(JCR_LASTMODIFIED).getLong());
+                // We don't check node type, so JCR_LASTMODIFIED might not be a long
+                final Property prop = node.getProperty(JCR_LASTMODIFIED); 
+                try {
+                    metadata.setModificationTime(prop.getLong());
+                } catch(ValueFormatException vfe) {
+                    log.info("Property {} cannot be converted to a long, ignored ({})", 
+                            prop.getPath(), vfe);
+                }
             }
         } catch (RepositoryException re) {
             log.info(
