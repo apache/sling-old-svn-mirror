@@ -30,6 +30,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.sling.event.impl.EventHelper;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -62,7 +63,7 @@ public class EventUtilTest {
         assertTrue(EventUtil.isLocal(localEvent));
         final Properties props = new Properties();
         props.put(EventUtil.PROPERTY_APPLICATION, "application1");
-        final Event remoteEvent = new Event("remote/event", (Dictionary)props);
+        final Event remoteEvent = new Event("remote/event", props);
         assertFalse(EventUtil.isLocal(remoteEvent));
     }
 
@@ -89,17 +90,17 @@ public class EventUtilTest {
             will(returnValue(getValueOfType(PropertyType.DATE)));
         }});
         // boolean
-        assertEquals(PropertyType.BOOLEAN, EventUtil.getNodePropertyValue(factory, true).getType());
-        assertEquals(PropertyType.BOOLEAN, EventUtil.getNodePropertyValue(factory, false).getType());
-        assertEquals(PropertyType.BOOLEAN, EventUtil.getNodePropertyValue(factory, Boolean.TRUE).getType());
-        assertEquals(PropertyType.BOOLEAN, EventUtil.getNodePropertyValue(factory, Boolean.FALSE).getType());
+        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, true).getType());
+        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, false).getType());
+        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, Boolean.TRUE).getType());
+        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, Boolean.FALSE).getType());
         // long
-        assertEquals(PropertyType.LONG, EventUtil.getNodePropertyValue(factory, (long)5).getType());
+        assertEquals(PropertyType.LONG, EventHelper.getNodePropertyValue(factory, (long)5).getType());
         // int = not possible
-        assertEquals(null, EventUtil.getNodePropertyValue(factory, 5));
+        assertEquals(null, EventHelper.getNodePropertyValue(factory, 5));
         // string
-        assertEquals(PropertyType.STRING, EventUtil.getNodePropertyValue(factory, "something").getType());
+        assertEquals(PropertyType.STRING, EventHelper.getNodePropertyValue(factory, "something").getType());
         // calendar
-        assertEquals(PropertyType.DATE, EventUtil.getNodePropertyValue(factory, Calendar.getInstance()).getType());
+        assertEquals(PropertyType.DATE, EventHelper.getNodePropertyValue(factory, Calendar.getInstance()).getType());
     }
 }
