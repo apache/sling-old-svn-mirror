@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.rewriter</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.7.0-tlp-817658</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Rewriter</name>
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.html</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
+            <version>0.9.0-R805442</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
