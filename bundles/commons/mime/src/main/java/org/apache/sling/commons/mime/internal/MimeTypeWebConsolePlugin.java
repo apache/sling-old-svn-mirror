@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -166,7 +165,7 @@ class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
         int slash = type.indexOf('/');
         return (slash > 0) ? type.substring(0, slash) : type;
     }
-    
+
     private boolean spoolResource(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
