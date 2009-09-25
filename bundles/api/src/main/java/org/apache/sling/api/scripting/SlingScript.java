@@ -22,14 +22,14 @@ import org.apache.sling.api.resource.Resource;
 
 /**
  * The <code>SlingScript</code> defines the API for objects which encapsulate
- * a script resolved by the {@link SlingScriptResolver}. To have a script
- * evaluated prepare a {@link SlingBindings} instance of variables used as
- * global variables to the script and call the {@link #eval(SlingBindings)}
- * method.
+ * a script. To evaluate a script prepare a {@link SlingBindings} instance of
+ * variables used as global variables to the script and call the
+ * {@link #eval(SlingBindings)} method.
  * <p>
- * Objects implementing this interface are returned by the
- * {@link SlingScriptResolver#findScript(org.apache.sling.api.resource.ResourceResolver, String)}
- * method.
+ * You can obtain scripts by resolving a script resource through
+ * {@link org.apache.sling.api.resource.ResourceResolver#resolve(String)}
+ * and then trying to adapt the resource to a script by
+ * calling {@link Resource#adaptTo(Class)}.
  */
 public interface SlingScript {
 
