@@ -693,10 +693,10 @@ public class TimedJobHandler
                     while ( i.hasNext() ) {
                         final Map.Entry<String, Object> current = i.next();
                         // check prop name first
-                        final String propName = EventUtil.getNodePropertyName(current.getKey());
+                        final String propName = EventHelper.getNodePropertyName(current.getKey());
                         if ( propName != null ) {
                             // check value
-                            final Value value = EventUtil.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                            final Value value = EventHelper.getNodePropertyValue(s.getValueFactory(), current.getValue());
                             if ( value != null ) {
                                 if ( first ) {
                                     first = false;
