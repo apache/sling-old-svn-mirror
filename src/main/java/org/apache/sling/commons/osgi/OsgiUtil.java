@@ -110,20 +110,20 @@ public class OsgiUtil {
      * <code>defaultValue</code> if no such reference property exists or if
      * the property is not an <code>Double</code> and cannot be converted to
      * an <code>Double</code> from the property's string value.
-     * 
+     *
      * @deprecated since 2.0.4, use {@link #toDouble(Object, double)} instead
      */
     @Deprecated
     public static double getProperty(Object propValue, double defaultValue) {
         return toDouble(propValue, defaultValue);
     }
-    
+
     /**
      * Returns the named service reference property as a double or the
      * <code>defaultValue</code> if no such reference property exists or if
      * the property is not an <code>Double</code> and cannot be converted to
      * an <code>Double</code> from the property's string value.
-     * 
+     *
      * @since 2.0.4
      */
     public static double toDouble(Object propValue, double defaultValue) {
@@ -155,7 +155,7 @@ public class OsgiUtil {
         } else if (propValue.getClass().isArray()) {
             Object[] prop = (Object[]) propValue;
             return prop.length > 0 ? prop[0] : null;
-        } else if (propValue instanceof Collection) {
+        } else if (propValue instanceof Collection<?>) {
             Collection<?> prop = (Collection<?>) propValue;
             return prop.isEmpty() ? null : prop.iterator().next();
         } else {
@@ -210,7 +210,7 @@ public class OsgiUtil {
             }
             return values.toArray(new String[values.size()]);
 
-        } else if (propValue instanceof Collection) {
+        } else if (propValue instanceof Collection<?>) {
             // collection
             Collection<?> valueCollection = (Collection<?>) propValue;
             List<String> valueList = new ArrayList<String>(valueCollection.size());
