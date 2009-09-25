@@ -336,7 +336,9 @@ public abstract class EventUtil {
      * @param ignoreProps optional list of property which should be ignored
      * @param binPropertyName The name of the binary property.
      * @throws RepositoryException
+     * @deprecated
      */
+    @Deprecated
     public static void addProperties(final Node node,
                                      final Map<String, Object> properties,
                                      final String[] ignoreProps,
@@ -356,7 +358,9 @@ public abstract class EventUtil {
      * @param ignoreProps optional list of property which should be ignored
      * @param binPropertyName The name of the binary property.
      * @throws RepositoryException
+     * @deprecated
      */
+    @Deprecated
     public static void addProperties(final Node node,
                                      final EventPropertiesMap properties,
                                      final String[] ignoreProps,
@@ -410,26 +414,12 @@ public abstract class EventUtil {
      * loader is used to load these objects.
      * @throws RepositoryException
      * @throws ClassNotFoundException
+     * @deprecated
      */
+    @Deprecated
     public static EventPropertiesMap readProperties(final Node node,
                                                     final String binPropertyName,
                                                     final String[] ignorePrefixes)
-    throws RepositoryException, ClassNotFoundException {
-        return readProperties(node, binPropertyName, ignorePrefixes, Thread.currentThread().getContextClassLoader());
-    }
-
-    /**
-     * Read properties from a repository node and create a property map.
-     * As the properties might contain serialized java objects, a class loader can be specified
-     * for loading classes of the serialized java objects.
-     * @throws RepositoryException
-     * @throws ClassNotFoundException
-     * @since 2.0.6
-     */
-    public static EventPropertiesMap readProperties(final Node node,
-                                                    final String binPropertyName,
-                                                    final String[] ignorePrefixes,
-                                                    final ClassLoader objectClassLoader)
     throws RepositoryException, ClassNotFoundException {
         final Map<String, Object> properties = new HashMap<String, Object>();
 
@@ -437,7 +427,7 @@ public abstract class EventUtil {
         if ( node.hasProperty(binPropertyName) ) {
             try {
                 final ObjectInputStream ois = new ObjectInputStream(node.getProperty(binPropertyName).getStream(),
-                        objectClassLoader);
+                        Thread.currentThread().getContextClassLoader());
                 int length = ois.readInt();
                 for(int i=0;i<length;i++) {
                     final String key = (String)ois.readObject();
@@ -503,7 +493,9 @@ public abstract class EventUtil {
      * Return the converted repository property name
      * @param name The java object property name
      * @return The converted name or null if not possible.
+     * @deprecated
      */
+    @Deprecated
     public static String getNodePropertyName(final String name) {
         // if name contains a colon, we can't set it as a property
         if ( name.indexOf(':') != -1 ) {
@@ -517,7 +509,9 @@ public abstract class EventUtil {
      * @param valueFactory The value factory
      * @param eventValue The event value
      * @return The converted value or null if not possible
+     * @deprecated
      */
+    @Deprecated
     public static Value getNodePropertyValue(final ValueFactory valueFactory, final Object eventValue) {
         final Value val;
         if (eventValue instanceof Calendar) {
@@ -541,7 +535,9 @@ public abstract class EventUtil {
      * @param value
      * @return
      * @throws RepositoryException
+     * @deprecated
      */
+    @Deprecated
     private static Object getPropertyValue(final Value value)
     throws RepositoryException {
         final Object o;
@@ -569,7 +565,9 @@ public abstract class EventUtil {
      * @param node
      * @return
      * @throws RepositoryException
+     * @deprecated
      */
+    @Deprecated
     private static boolean setProperty(String name, Object value, Node node)
     throws RepositoryException {
         final String propName = getNodePropertyName(name);

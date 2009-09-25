@@ -32,8 +32,6 @@ import javax.jcr.observation.EventListener;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.SlingSettingsService;
-import org.apache.sling.event.EventPropertiesMap;
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.apache.sling.event.ThreadPool;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -100,19 +98,6 @@ public abstract class AbstractRepositoryEventHandler
     protected SlingSettingsService settingsService;
 
     public static String APPLICATION_ID;
-
-    /** List of ignored properties to write to the repository. */
-    private static final String[] IGNORE_PROPERTIES = new String[] {
-        EventUtil.PROPERTY_DISTRIBUTE,
-        EventUtil.PROPERTY_APPLICATION,
-        JobStatusProvider.PROPERTY_EVENT_ID,
-        EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME
-    };
-
-    /** List of ignored prefixes to read from the repository. */
-    private static final String[] IGNORE_PREFIXES = new String[] {
-        EventHelper.EVENT_PREFIX
-    };
 
     /**
      * Activate this component.
@@ -273,10 +258,7 @@ public abstract class AbstractRepositoryEventHandler
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, e.getTopic());
         eventNode.setProperty(EventHelper.NODE_PROPERTY_APPLICATION, this.applicationId);
 
-        EventUtil.addProperties(eventNode,
-                                new EventPropertiesMap(e),
-                                IGNORE_PROPERTIES,
-                                EventHelper.NODE_PROPERTY_PROPERTIES);
+        EventHelper.writeEventProperties(eventNode, e);
         this.addNodeProperties(eventNode, e);
         rootNode.save();
 
@@ -292,26 +274,19 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
-        final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(this.classLoaderManager.getDynamicClassLoader());
-            final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
-            final EventPropertiesMap eventProps = EventUtil.readProperties(eventNode,
-                    EventHelper.NODE_PROPERTY_PROPERTIES,
-                    IGNORE_PREFIXES);
+        final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
+        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode,
+                this.classLoaderManager.getDynamicClassLoader());
 
-            eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
-            this.addEventProperties(eventNode, eventProps);
-            try {
-                final Event event = new Event(topic, (Dictionary)eventProps);
-                return event;
-            } catch (IllegalArgumentException iae) {
-                // this exception occurs if the topic is not correct (it should never happen,
-                // but you never know)
-                throw new RepositoryException("Unable to read event: " + iae.getMessage(), iae);
-            }
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldCL);
+        eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
+        this.addEventProperties(eventNode, eventProps);
+        try {
+            final Event event = new Event(topic, eventProps);
+            return event;
+        } catch (IllegalArgumentException iae) {
+            // this exception occurs if the topic is not correct (it should never happen,
+            // but you never know)
+            throw new RepositoryException("Unable to read event: " + iae.getMessage(), iae);
         }
     }
 
