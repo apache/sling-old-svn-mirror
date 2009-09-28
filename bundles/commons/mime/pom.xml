@@ -64,8 +64,7 @@
                             org.apache.sling.commons.mime.internal
                         </Private-Package>
                         <Import-Package>
-                            javax.servlet.*;
-                            org.apache.felix.webconsole;resolution:=optional,
+                            javax.servlet.*;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
@@ -103,11 +102,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

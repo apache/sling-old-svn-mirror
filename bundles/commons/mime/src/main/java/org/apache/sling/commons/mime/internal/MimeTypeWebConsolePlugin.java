@@ -19,29 +19,30 @@
 package org.apache.sling.commons.mime.internal;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-
-class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
+class MimeTypeWebConsolePlugin extends HttpServlet {
 
     /** Serial Version */
     private static final long serialVersionUID = -2025952303202431607L;
 
-    private static final String LABEL = "mimetypes";
+    static final String LABEL = "mimetypes";
 
-    private static final String TITLE = "MIME Types";
+    static final String TITLE = "MIME Types";
+
+    static final String RES_LOC = LABEL + "/res";
+
+    static final String CSS_REFS = RES_LOC + "/jquery.treeTable.css";
 
     private final MimeTypeServiceImpl mimeTypeService;
 
@@ -50,27 +51,8 @@ class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    @Override
-    public String getTitle() {
-        return TITLE;
-    }
-
-    @Override
     protected void doGet(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-
-        if (!spoolResource(request, response)) {
-            super.doGet(request, response);
-        }
-    }
-
-    @Override
-    protected void renderContent(HttpServletRequest req, HttpServletResponse res)
-            throws IOException {
+            HttpServletResponse response) throws IOException {
 
         Map<String, Set<String>> mimetab = new TreeMap<String, Set<String>>();
 
@@ -96,12 +78,9 @@ class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
             numExt++;
         }
 
-        PrintWriter pw = res.getWriter();
+        PrintWriter pw = response.getWriter();
 
-        String resLoc = getLabel() + "/res";
-        pw.println("<link href='" + resLoc
-            + "/jquery.treeTable.css' rel='stylesheet' type='text/css' />");
-        pw.println("<script type='text/javascript' src='" + resLoc
+        pw.println("<script type='text/javascript' src='" + RES_LOC
             + "/jquery.treeTable.min.js'></script>");
         pw.println("<script type='text/javascript'>");
         pw.println("  $(document).ready(function()  {");
@@ -166,34 +145,21 @@ class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
         return (slash > 0) ? type.substring(0, slash) : type;
     }
 
-    private boolean spoolResource(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+    /**
+     * Resource Provider method for the Web Console 2 integration
+     * @param resourcePath
+     * @return
+     */
+    @SuppressWarnings("unused")
+    private URL getResource(final String resourcePath) {
 
-        String pi = request.getPathInfo();
-        int rPi = pi.indexOf("/res/");
+        final int rPi = resourcePath.indexOf("/res/");
         if (rPi >= 0) {
-            pi = pi.substring(rPi);
-            InputStream ins = getClass().getResourceAsStream(pi);
-            if (ins != null) {
-                try {
-                    response.setContentType(getServletContext().getMimeType(pi));
-                    OutputStream out = response.getOutputStream();
-                    byte[] buf = new byte[2048];
-                    int rd;
-                    while ((rd = ins.read(buf)) >= 0) {
-                        out.write(buf, 0, rd);
-                    }
-                    return true;
-                } finally {
-                    try {
-                        ins.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
+            final String path = resourcePath.substring(rPi);
+            return getClass().getResource(path);
         }
 
-        return false;
+        return null;
     }
 
 }

@@ -29,7 +29,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -43,7 +42,7 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>MimeTypeServiceImpl</code> is the official implementation of the
  * {@link MimeTypeService} interface.
- * 
+ *
  * @scr.component immediate="false" label="%mime.service.name"
  *                description="%mime.service.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -73,8 +72,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     private MimeTypeProvider[] typeProviders;
 
     private List<MimeTypeProvider> typeProviderList = new ArrayList<MimeTypeProvider>();
-
-    private MimeTypeWebConsolePlugin webConsolePlugin;
 
     private ServiceRegistration webConsolePluginService;
 
@@ -207,14 +204,14 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
         try {
             MimeTypeWebConsolePlugin plugin = new MimeTypeWebConsolePlugin(this);
-            plugin.activate(context.getBundleContext());
 
             Dictionary<String, String> props = new Hashtable<String, String>();
-            props.put(WebConsoleConstants.PLUGIN_LABEL, plugin.getLabel());
+            props.put("felix.webconsole.label", MimeTypeWebConsolePlugin.LABEL);
+            props.put("felix.webconsole.title", MimeTypeWebConsolePlugin.TITLE);
+            props.put("felix.webconsole.css", MimeTypeWebConsolePlugin.CSS_REFS);
 
             webConsolePluginService = context.getBundleContext().registerService(
-                WebConsoleConstants.SERVICE_NAME, plugin, props);
-            webConsolePlugin = plugin;
+                "javax.servlet.Servlet", plugin, props);
         } catch (Throwable t) {
             // don't care, we thus don't have the console plugin
         }
@@ -226,12 +223,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         if (webConsolePluginService != null) {
             webConsolePluginService.unregister();
             webConsolePluginService = null;
-
-        }
-
-        if (webConsolePlugin != null) {
-            webConsolePlugin.deactivate();
-            webConsolePlugin = null;
         }
     }
 
@@ -308,7 +299,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
      * Splits the <code>line</code> on whitespace an registers the MIME type
      * mappings provided the line contains more than one whitespace separated
      * fields.
-     * 
+     *
      * @throws NullPointerException if <code>line</code> is <code>null</code>.
      */
     private void registerMimeType(String line) {
