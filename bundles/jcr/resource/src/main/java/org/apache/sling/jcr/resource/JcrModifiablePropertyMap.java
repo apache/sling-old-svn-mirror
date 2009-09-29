@@ -39,6 +39,7 @@ public final class JcrModifiablePropertyMap
      * Constructor
      * @param node The underlying node.
      * @param dynamicCL Dynamic class loader for loading serialized objects.
+     * @since 2.0.6
      */
     public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL) {
         super(node, dynamicCL);
