@@ -33,11 +33,11 @@ import org.apache.sling.api.resource.ResourceResolver;
 public class MockResourceResolver implements ResourceResolver {
 
     private final Session session;
-    
+
     MockResourceResolver(Session session) {
         this.session = session;
     }
-    
+
     public Iterator<Resource> findResources(String query, String language) {
         return null;
     }
@@ -46,16 +46,16 @@ public class MockResourceResolver implements ResourceResolver {
         // assume path is absolute for testing purposes
         try {
             Item item = session.getItem(path);
-            
+
             if (item.isNode()) {
-                return new JcrNodeResource(this, (Node) item, null);
+                return new JcrNodeResource(this, (Node) item, null, null);
             }
-            
+
             return new JcrPropertyResource(this, path, (Property) item, null);
         } catch (Exception e) {
             // don't care
         }
-        
+
         return null;
     }
 
@@ -74,7 +74,7 @@ public class MockResourceResolver implements ResourceResolver {
     public String map(String resourcePath) {
         return null;
     }
-    
+
     public String map(HttpServletRequest request, String resourcePath) {
         return null;
     }
@@ -87,7 +87,7 @@ public class MockResourceResolver implements ResourceResolver {
     public Resource resolve(HttpServletRequest request, String absPath) {
         return null;
     }
-    
+
     public Resource resolve(HttpServletRequest request) {
         return null;
     }

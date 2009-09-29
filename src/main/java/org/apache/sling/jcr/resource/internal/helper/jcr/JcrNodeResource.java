@@ -67,10 +67,23 @@ public class JcrNodeResource extends JcrItemResource {
 
     protected String resourceSuperType;
 
-    public JcrNodeResource(ResourceResolver resourceResolver, Node node,
-            JcrResourceTypeProvider[] resourceTypeProviders)
-            throws RepositoryException {
+    private final ClassLoader dynamicClassLoader;
+
+    /**
+     * Constructor
+     * @param resourceResolver
+     * @param node
+     * @param resourceTypeProviders
+     * @param dynamicClassLoader Dynamic class loader for loading serialized objects.
+     * @throws RepositoryException
+     */
+    public JcrNodeResource(final ResourceResolver resourceResolver,
+                           final Node node,
+                           final JcrResourceTypeProvider[] resourceTypeProviders,
+                           final ClassLoader dynamicClassLoader)
+    throws RepositoryException {
         super(resourceResolver, node.getPath(), resourceTypeProviders);
+        this.dynamicClassLoader = dynamicClassLoader;
         this.node = node;
         resourceType = getResourceTypeForNode(node);
         resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
@@ -114,7 +127,7 @@ public class JcrNodeResource extends JcrItemResource {
             try {
                 getNode().getSession().checkPermission(getNode().getPath(),
                     "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode());
+                return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 log.info(
@@ -133,9 +146,9 @@ public class JcrNodeResource extends JcrItemResource {
     }
 
     public String toString() {
-        return getClass().getSimpleName() 
+        return getClass().getSimpleName()
         	+ ", type=" + getResourceType()
-        	+ ", superType=" + ResourceUtil.findResourceSuperType(this) 
+        	+ ", superType=" + ResourceUtil.findResourceSuperType(this)
             + ", path=" + getPath();
     }
 
@@ -223,7 +236,7 @@ public class JcrNodeResource extends JcrItemResource {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes(), this.resourceTypeProviders);
+                    getNode().getNodes(), this.resourceTypeProviders, this.dynamicClassLoader);
             }
         } catch (RepositoryException re) {
             log.error("listChildren: Cannot get children of " + this, re);
@@ -255,11 +268,11 @@ public class JcrNodeResource extends JcrItemResource {
 
             if (node.hasProperty(JCR_LASTMODIFIED)) {
                 // We don't check node type, so JCR_LASTMODIFIED might not be a long
-                final Property prop = node.getProperty(JCR_LASTMODIFIED); 
+                final Property prop = node.getProperty(JCR_LASTMODIFIED);
                 try {
                     metadata.setModificationTime(prop.getLong());
                 } catch(ValueFormatException vfe) {
-                    log.info("Property {} cannot be converted to a long, ignored ({})", 
+                    log.info("Property {} cannot be converted to a long, ignored ({})",
                             prop.getPath(), vfe);
                 }
             }

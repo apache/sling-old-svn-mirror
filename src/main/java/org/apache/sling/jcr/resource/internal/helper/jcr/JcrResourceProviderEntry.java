@@ -31,11 +31,12 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
     private final Session session;
 
     private final JcrResourceTypeProvider[] resourceTypeProviders;
-    
+
     public JcrResourceProviderEntry(Session session,
                                     ResourceProviderEntry delegatee,
-                                    JcrResourceTypeProvider[] resourceTypeProviders) {
-        super("/", new JcrResourceProvider(session, resourceTypeProviders), null);
+                                    JcrResourceTypeProvider[] resourceTypeProviders,
+                                    final ClassLoader dynamicClassLoader) {
+        super("/", new JcrResourceProvider(session, resourceTypeProviders, dynamicClassLoader), null);
 
         this.delegatee = delegatee;
         this.session = session;
@@ -49,7 +50,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
     public JcrResourceTypeProvider[] getResourceTypeProviders() {
         return resourceTypeProviders;
     }
-    
+
     @Override
     public ResourceProviderEntry[] getEntries() {
         return delegatee.getEntries();
@@ -59,7 +60,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
     public boolean addResourceProvider(String prefix, ResourceProvider provider) {
         return delegatee.addResourceProvider(prefix, provider);
     }
-    
+
     @Override
     public boolean removeResourceProvider(String prefix) {
         return delegatee.removeResourceProvider(prefix);

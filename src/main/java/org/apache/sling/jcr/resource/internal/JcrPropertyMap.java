@@ -70,15 +70,26 @@ public class JcrPropertyMap implements ValueMap {
     /** Has the node been read completly? */
     boolean fullyRead;
 
+    private final ClassLoader dynamicClassLoader;
+
     /**
      * Constructor
      * @param node The underlying node.
      */
     public JcrPropertyMap(final Node node) {
+        this(node, null);
+    }
+
+    /**
+     * Constructor
+     * @param node The underlying node.
+     */
+    public JcrPropertyMap(final Node node, final ClassLoader dynamicCL) {
         this.node = node;
         this.cache = new LinkedHashMap<String, CacheEntry>();
         this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
+        this.dynamicClassLoader = dynamicCL;
     }
 
     /**
@@ -400,7 +411,7 @@ public class JcrPropertyMap implements ValueMap {
                 && jcrValue.getType() == PropertyType.BINARY) {
             ObjectInputStream ois = null;
             try {
-                ois = new ObjectInputStream(jcrValue.getStream(), null);
+                ois = new ObjectInputStream(jcrValue.getStream(), this.dynamicClassLoader);
                 final Object obj = ois.readObject();
                 if ( type.isInstance(obj) ) {
                     return (T)obj;
