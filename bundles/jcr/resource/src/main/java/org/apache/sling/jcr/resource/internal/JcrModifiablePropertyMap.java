@@ -65,14 +65,17 @@ public class JcrModifiablePropertyMap
      */
     public Object put(String key, Object value) {
         if ( key == null || key.indexOf('/') != -1 ) {
-            throw new IllegalArgumentException("Invalud key: " + key);
+            throw new IllegalArgumentException("Invalid key: " + key);
+        }
+        if ( value == null ) {
+            throw new NullPointerException("Value should not be null (key = " + key + ")");
         }
         readFully();
         final Object oldValue = this.get(key);
         try {
-            this.cache.put(key, new CacheEntry(value, getNode()));
+            this.cache.put(key, new CacheEntry(value, getNode().getSession()));
         } catch (RepositoryException re) {
-            throw new IllegalArgumentException("Value can't be put into node: " + value, re);
+            throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
         this.valueCache.put(key, value);
         if ( this.changedProperties == null ) {
