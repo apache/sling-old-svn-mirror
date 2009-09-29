@@ -48,10 +48,14 @@ public class JcrResourceProvider implements ResourceProvider {
 
     private final Session session;
     private final JcrResourceTypeProvider[] resourceTypeProviders;
+    private final ClassLoader dynamicClassLoader;
 
-    public JcrResourceProvider(Session session, JcrResourceTypeProvider[] resourceTypeProviders) {
+    public JcrResourceProvider(final Session session,
+                               final JcrResourceTypeProvider[] resourceTypeProviders,
+                               final ClassLoader dynamicClassLoader) {
         this.session = session;
         this.resourceTypeProviders = resourceTypeProviders;
+        this.dynamicClassLoader = dynamicClassLoader;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -130,7 +134,7 @@ public class JcrResourceProvider implements ResourceProvider {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     path);
-                return new JcrNodeResource(resourceResolver, (Node) item, resourceTypeProviders);
+                return new JcrNodeResource(resourceResolver, (Node) item, resourceTypeProviders, dynamicClassLoader);
             }
 
             log.debug(

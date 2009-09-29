@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -82,10 +82,6 @@
                             SLING-INF/nodetypes/vanitypath.cnd,
                             SLING-INF/nodetypes/mapping.cnd
                         </Sling-Nodetypes>
-
-                        <_versionpolicy>
-                            $${version;===;${@}}
-                        </_versionpolicy>
                     </instructions>
                 </configuration>
             </plugin>
@@ -106,11 +102,11 @@
     </reporting>
     <dependencies>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
@@ -131,6 +127,11 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.classloader</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
         </dependency>
         
         <!--

@@ -41,8 +41,12 @@ public class JcrModifiablePropertyMap
     /** Set of removed and changed properties. */
     private Set<String> changedProperties;
 
-    public JcrModifiablePropertyMap(Node node) {
-        super(node);
+    public JcrModifiablePropertyMap(final Node node) {
+        this(node, null);
+    }
+
+    public JcrModifiablePropertyMap(final Node node, final ClassLoader dynamicCL) {
+        super(node, dynamicCL);
     }
 
     // ---------- Map

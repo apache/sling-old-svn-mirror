@@ -51,16 +51,21 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     private final JcrResourceTypeProvider[] resourceTypeProviders;
 
+    private final ClassLoader dynamicClassLoader;
+
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
-    public JcrNodeResourceIterator(ResourceResolver resourceResolver,
-            NodeIterator nodes, JcrResourceTypeProvider[] resourceTypeProviders) {
+    public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
+                                   final NodeIterator nodes,
+                                   final JcrResourceTypeProvider[] resourceTypeProviders,
+                                   final ClassLoader dynamicClassLoader) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
         this.resourceTypeProviders = resourceTypeProviders;
         this.nextResult = seek();
+        this.dynamicClassLoader = dynamicClassLoader;
     }
 
     public boolean hasNext() {
@@ -89,7 +94,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         while (nodes.hasNext()) {
             try {
                 Resource resource = new JcrNodeResource(resourceResolver,
-                    nodes.nextNode(), resourceTypeProviders);
+                    nodes.nextNode(), resourceTypeProviders, dynamicClassLoader);
                 log.debug("seek: Returning Resource {}", resource);
                 return resource;
             } catch (Throwable t) {
