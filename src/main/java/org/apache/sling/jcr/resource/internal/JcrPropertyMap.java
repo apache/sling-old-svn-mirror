@@ -18,6 +18,12 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,6 +39,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
@@ -338,8 +345,14 @@ public class JcrPropertyMap implements ValueMap {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(final CacheEntry entry, int index, Value jcrValue,
-            Class<T> type) throws ValueFormatException, RepositoryException {
+    private <T> T convertToType(final CacheEntry entry,
+                                final int index,
+                                final Value jcrValue,
+                                final Class<T> type)
+    throws ValueFormatException, RepositoryException {
+        if ( type.isInstance(entry.defaultValue) ) {
+            return (T) entry.defaultValue;
+        }
 
         if (String.class == type) {
             return (T) jcrValue.getString();
@@ -382,6 +395,29 @@ public class JcrPropertyMap implements ValueMap {
 
         } else if (Property.class == type) {
             return (T) entry.property;
+
+        } else if (Serializable.class.isAssignableFrom(type)
+                && jcrValue.getType() == PropertyType.BINARY) {
+            ObjectInputStream ois = null;
+            try {
+                ois = new ObjectInputStream(jcrValue.getStream(), null);
+                final Object obj = ois.readObject();
+                if ( type.isInstance(obj) ) {
+                    return (T)obj;
+                }
+            } catch (ClassNotFoundException cnfe) {
+                 // ignore and use fallback
+            } catch (IOException ioe) {
+                // ignore and use fallback
+            } finally {
+                if ( ois != null ) {
+                    try {
+                        ois.close();
+                    } catch (IOException ignore) {
+                        // ignore
+                    }
+                }
+            }
         }
 
         // fallback in case of unsupported type
@@ -408,6 +444,33 @@ public class JcrPropertyMap implements ValueMap {
 
         public final Object defaultValue;
 
+        /**
+         * Create a value for the object.
+         * If the value type is supported directly through a jcr property type,
+         * the corresponding value is created. If the value is serializable,
+         * it is serialized through an object stream. Otherwise null is returned.
+         */
+        private Value createValue(final Object obj, final Session session)
+        throws RepositoryException {
+            Value value = JcrResourceUtil.createValue(obj, session);
+            if ( value == null && obj instanceof Serializable ) {
+                try {
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    oos.writeObject(obj);
+                    oos.close();
+                    final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                    value = session.getValueFactory().createValue(bais);
+                } catch (IOException ioe) {
+                    // we ignore this here and return null
+                }
+            }
+            return value;
+        }
+
+        /**
+         * Create a new cache entry from a property.
+         */
         public CacheEntry(final Property prop)
         throws RepositoryException {
             this.property = prop;
@@ -421,7 +484,10 @@ public class JcrPropertyMap implements ValueMap {
             this.defaultValue = JcrResourceUtil.toJavaObject(prop);
         }
 
-        public CacheEntry(final Object value, final Node node)
+        /**
+         * Create a new cache entry from a value.
+         */
+        public CacheEntry(final Object value, final Session session)
         throws RepositoryException {
             this.property = null;
             this.defaultValue = value;
@@ -430,12 +496,43 @@ public class JcrPropertyMap implements ValueMap {
                 final Object[] values = (Object[])value;
                 this.values = new Value[values.length];
                 for(int i=0; i<values.length; i++) {
-                    this.values[i] = JcrResourceUtil.createValue(values[i], node.getSession());
+                    this.values[i] = this.createValue(values[i], session);
+                    if ( this.values[i] == null ) {
+                        throw new IllegalArgumentException("Value can't be stored in the repository: " + values[i]);
+                    }
                 }
             } else {
                 this.isMulti = false;
-                this.values = new Value[] {JcrResourceUtil.createValue(value, node.getSession())};
+                this.values = new Value[] {this.createValue(value, session)};
+                if ( this.values[0] == null ) {
+                    throw new IllegalArgumentException("Value can't be stored in the repository: " + value);
+                }
             }
+        }
+    }
+
+    /**
+     * This is an extended version of the object input stream which uses the
+     * thread context class loader.
+     */
+    private static class ObjectInputStream extends java.io.ObjectInputStream {
+
+        private ClassLoader classloader;
+
+        public ObjectInputStream(final InputStream in, final ClassLoader classLoader) throws IOException {
+            super(in);
+            this.classloader = classLoader;
+        }
+
+        /**
+         * @see java.io.ObjectInputStream#resolveClass(java.io.ObjectStreamClass)
+         */
+        @Override
+        protected Class<?> resolveClass(java.io.ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
+            if ( this.classloader != null ) {
+                return Class.forName(classDesc.getName(), true, this.classloader);
+            }
+            return super.resolveClass(classDesc);
         }
     }
 }
