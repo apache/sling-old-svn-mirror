@@ -101,7 +101,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
+            <version>0.9.1-SNAPSHOT</version>
         </dependency>
 
      <!-- We use the same eclipse jdt as the jsp bundle -->
