@@ -77,10 +77,10 @@ public class ClassLoaderFacade extends ClassLoader {
         return null;
     }
 
-    /**
-     * @see java.lang.ClassLoader#loadClass(java.lang.String)
-     */
-    public Class<?> loadClass(String name) throws ClassNotFoundException {
+    @Override
+    protected synchronized Class<?> loadClass(String name, boolean resolve)
+            throws ClassNotFoundException {
+
         if ( !this.manager.isActive() ) {
             throw new RuntimeException("Dynamic class loader has already been deactivated.");
         }
