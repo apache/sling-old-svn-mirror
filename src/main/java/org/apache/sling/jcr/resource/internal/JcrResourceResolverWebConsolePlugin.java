@@ -22,18 +22,20 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.jcr.Session;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
@@ -42,10 +44,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugin {
-    
+public class JcrResourceResolverWebConsolePlugin extends
+        AbstractWebConsolePlugin implements ConfigurationPrinter {
+
     private static final long serialVersionUID = 0;
-    
+
     private static final String ATTR_TEST = "plugin.test";
 
     private static final String ATTR_SUBMIT = "plugin.submit";
@@ -69,7 +72,9 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put(WebConsoleConstants.PLUGIN_LABEL, getLabel());
 
-        service = context.registerService(Servlet.class.getName(), this, props);
+        service = context.registerService(new String[] {
+            WebConsoleConstants.SERVICE_NAME, ConfigurationPrinter.SERVICE },
+            this, props);
     }
 
     void dispose() {
@@ -79,6 +84,8 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
             service = null;
         }
     }
+
+    // ---------- AbstractWebConsolePlugin
 
     @Override
     public String getLabel() {
@@ -104,7 +111,7 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
         MapEntries mapEntries = resolverFactory.getMapEntries();
 
-        title(
+        titleHtml(
             pw,
             "Configuration Test",
             "To test the configuration, enter an URL or a resource path into the field and click 'Resolve' to resolve the URL or click 'Map' to map the resource path");
@@ -132,7 +139,7 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
         separator(pw);
 
-        dumpMap(
+        dumpMapHtml(
             pw,
             "Resolver Map Entries",
             "Lists the entries used by the ResourceResolver.resolve methods to map URLs to Resources",
@@ -140,7 +147,7 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
         separator(pw);
 
-        dumpMap(
+        dumpMapHtml(
             pw,
             "Mapping Map Entries",
             "Lists the entries used by the ResourceResolver.map methods to map Resource Paths to URLs",
@@ -148,60 +155,6 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
         pw.println("</table>");
 
-    }
-
-    private void dumpMap(PrintWriter pw, String title, String description,
-            Collection<MapEntry> list) {
-
-        title(pw, title, description);
-
-        pw.println("<tr class='content'>");
-        pw.println("<th class='content'>Pattern</th>");
-        pw.println("<th class='content'>Replacement</th>");
-        pw.println("<th class='content'>Redirect</th>");
-        pw.println("</tr>");
-
-        for (MapEntry entry : list) {
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content' style='vertical-align: top'>"
-                + entry.getPattern() + "</td>");
-
-            pw.print("<td class='content' style='vertical-align: top'>");
-            String[] repls = entry.getRedirect();
-            for (String repl : repls) {
-                pw.print(repl + "<br/>");
-            }
-            pw.println("</td>");
-
-            pw.print("<td class='content' style='vertical-align: top'>");
-            if (entry.isInternal()) {
-                pw.print("internal");
-            } else {
-                pw.print("external: " + entry.getStatus());
-            }
-            pw.println("</td>");
-
-        }
-    }
-
-    private void title(PrintWriter pw, String title, String description) {
-        pw.println("<tr class='content'>");
-        pw.println("<th colspan='3'class='content container'>" + title
-            + "</th>");
-        pw.println("</tr>");
-
-        if (description != null) {
-            pw.println("<tr class='content'>");
-            pw.println("<td colspan='3'class='content'>" + description
-                + "</th>");
-            pw.println("</tr>");
-        }
-    }
-
-    private void separator(PrintWriter pw) {
-        pw.println("<tr class='content'>");
-        pw.println("<td class='content' colspan='3'>&nbsp;</td>");
-        pw.println("</tr>");
     }
 
     @Override
@@ -236,7 +189,7 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
                 request.setAttribute(ATTR_RESULT, result.toString());
 
             } catch (Throwable t) {
-            
+
                 // some error occurred, report it as a result
                 request.setAttribute(ATTR_RESULT, "Test Failure: " + t);
 
@@ -250,6 +203,97 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
         // finally render the result
         doGet(request, response);
+    }
+
+    // ---------- ConfigurationPrinter
+
+    public void printConfiguration(PrintWriter pw) {
+        final MapEntries mapEntries = resolverFactory.getMapEntries();
+
+        dumpMapText(
+            pw,
+            "Resolver Map Entries",
+            mapEntries.getResolveMaps());
+
+        separator(pw);
+
+        dumpMapText(
+            pw,
+            "Mapping Map Entries",
+            mapEntries.getMapMaps());
+    }
+
+    // ---------- internal
+
+    private void dumpMapHtml(PrintWriter pw, String title, String description,
+            Collection<MapEntry> list) {
+
+        titleHtml(pw, title, description);
+
+        pw.println("<tr class='content'>");
+        pw.println("<th class='content'>Pattern</th>");
+        pw.println("<th class='content'>Replacement</th>");
+        pw.println("<th class='content'>Redirect</th>");
+        pw.println("</tr>");
+
+        for (MapEntry entry : list) {
+            pw.println("<tr class='content'>");
+            pw.println("<td class='content' style='vertical-align: top'>"
+                + entry.getPattern() + "</td>");
+
+            pw.print("<td class='content' style='vertical-align: top'>");
+            String[] repls = entry.getRedirect();
+            for (String repl : repls) {
+                pw.print(repl + "<br/>");
+            }
+            pw.println("</td>");
+
+            pw.print("<td class='content' style='vertical-align: top'>");
+            if (entry.isInternal()) {
+                pw.print("internal");
+            } else {
+                pw.print("external: " + entry.getStatus());
+            }
+            pw.println("</td>");
+
+        }
+    }
+
+    private void titleHtml(PrintWriter pw, String title, String description) {
+        pw.println("<tr class='content'>");
+        pw.println("<th colspan='3'class='content container'>" + title
+            + "</th>");
+        pw.println("</tr>");
+
+        if (description != null) {
+            pw.println("<tr class='content'>");
+            pw.println("<td colspan='3'class='content'>" + description
+                + "</th>");
+            pw.println("</tr>");
+        }
+    }
+
+    private void dumpMapText(PrintWriter pw, String title,
+            Collection<MapEntry> list) {
+
+        pw.println(title);
+
+        final String format = "%25s%25s%15s\r\n";
+        pw.printf(format, "Pattern", "Replacement", "Redirect");
+
+        for (MapEntry entry : list) {
+            final List<String> redir = Arrays.asList(entry.getRedirect());
+            final String status = entry.isInternal()
+                    ? "internal"
+                    : "external: " + entry.getStatus();
+            pw.printf(format, entry.getPattern(), redir, status);
+        }
+    }
+
+    private void separator(PrintWriter pw) {
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content' colspan='3'>&nbsp;</td>");
+        pw.println("</tr>");
     }
 
     private static class ResolverRequest extends HttpServletRequestWrapper {
