@@ -103,6 +103,15 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * process.
      */
     private static final String REQUEST_PROCESSING_TIMER = "Request Processing";
+    
+    /** Prefix for "start timer" messages, to make them parseable */
+    public static final String TIMER_START = "TIMER_START|";
+    
+    /** Prefix for "end timer" messages, to make them parseable */
+    public static final String TIMER_END = "TIMER_END|";
+
+    /** Prefix for "elapsed time" */
+    public static final String TIMER_ELAPSED = "TIMER_ELAPSED";
 
     /**
      * The system time at creation of this instance or the last {@link #reset()}.
@@ -218,37 +227,39 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         long timer = System.currentTimeMillis();
         namedTimerEntries.put(name, timer);
 
-        log(timer, "Starting " + name);
+        log(timer, TIMER_START + name);
 
         return timer;
     }
 
     /**
      * Logs an entry with the message set to the name of the timer and the
-     * number of milliseconds ellapsed since the timer start.
+     * number of milliseconds elapsed since the timer start.
      */
     public void logTimer(String name) {
         if (namedTimerEntries.containsKey(name)) {
-            long timer = namedTimerEntries.get(name);
-            long currentTime = System.currentTimeMillis();
-            log(currentTime, name + ", elapsed = " + (currentTime - timer)
-                + "ms");
+            logTimerInternal(name, null, namedTimerEntries.get(name));
         }
     }
 
     public void logTimer(String name, String format, Object... args) {
         if (namedTimerEntries.containsKey(name)) {
-            long timer = namedTimerEntries.get(name);
-            long currentTime = System.currentTimeMillis();
-            String message = MessageFormat.format(format, args);
-            log(currentTime, message + ", elapsed = " + (currentTime - timer)
-                + "ms");
+            logTimerInternal(name, MessageFormat.format(format, args), namedTimerEntries.get(name));
         }
+    }
+    
+    private void logTimerInternal(String name, String msg, long timer) {
+        final long currentTime = System.currentTimeMillis();
+        String info = name;
+        if(msg != null) {
+            info += "|" + msg;
+        }
+        log(currentTime, TIMER_END + info + "|" + TIMER_ELAPSED + "=" + (currentTime - timer) + " msec");
     }
     
     public void done() {
         if(done) return;
-        logTimer(REQUEST_PROCESSING_TIMER, REQUEST_PROCESSING_TIMER + " ends");
+        logTimer(REQUEST_PROCESSING_TIMER, REQUEST_PROCESSING_TIMER);
         done = true;
     }
 
