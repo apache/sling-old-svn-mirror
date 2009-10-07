@@ -104,15 +104,15 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     private static final String REQUEST_PROCESSING_TIMER = "Request Processing";
     
-    /** Prefix for "start timer" messages, to make them parseable */
-    public static final String TIMER_START = "TIMER_START|";
+    /** Prefix for log messages */
+    private static final String LOG_PREFIX = "LOG ";
     
-    /** Prefix for "end timer" messages, to make them parseable */
-    public static final String TIMER_END = "TIMER_END|";
-
-    /** Prefix for "elapsed time" */
-    public static final String TIMER_ELAPSED = "TIMER_ELAPSED";
-
+    /** Prefix for comment messages */
+    private static final String COMMENT_PREFIX = "COMMENT ";
+    
+    /** TIMER_END format explanation */
+    private static final String TIMER_END_FORMAT = "{<elapsed msec>,<timer name>} <optional message>";
+    
     /**
      * The system time at creation of this instance or the last {@link #reset()}.
      */
@@ -124,7 +124,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     private final List<TrackingEntry> entries = new ArrayList<TrackingEntry>();
 
     /**
-     * Map of named timers indexed by timer name storing the sytsem time of
+     * Map of named timers indexed by timer name storing the system time of
      * start of the respective timer.
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
@@ -149,8 +149,9 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         entries.clear();
         namedTimerEntries.clear();
 
-        // enter start message
+        // enter initial messages
         processingStart = startTimerInternal(REQUEST_PROCESSING_TIMER);
+        entries.add(new TrackingEntry(COMMENT_PREFIX + "timer_end format is " + TIMER_END_FORMAT));
     }
 
     public Iterator<String> getMessages() {
@@ -192,13 +193,13 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
 
     /** Creates an entry with the given message. */
     public void log(String message) {
-        entries.add(new TrackingEntry(message));
+        entries.add(new TrackingEntry(LOG_PREFIX + message));
     }
 
     /** Creates an entry with the given entry tag and message */
     public void log(String format, Object... args) {
         String message = MessageFormat.format(format, args);
-        entries.add(new TrackingEntry(message));
+        entries.add(new TrackingEntry(LOG_PREFIX + message));
     }
 
     /**
@@ -220,21 +221,21 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     }
     
     /**
-     * Actually starts the named timer and returns the start time in
-     * milliseconds
+     * Start the named timer and returns the start time in milliseconds.
+     * Logs a message with format
+     * <pre>
+     * TIMER_START{<name>} <optional message> 
+     * </pre>
      */
     private long startTimerInternal(String name) {
         long timer = System.currentTimeMillis();
         namedTimerEntries.put(name, timer);
-
-        log(timer, TIMER_START + name);
-
+        entries.add(new TrackingEntry(timer, "TIMER_START{" + name + "}"));
         return timer;
     }
 
     /**
-     * Logs an entry with the message set to the name of the timer and the
-     * number of milliseconds elapsed since the timer start.
+     * Log a timer entry, including start, end and elapsed time.
      */
     public void logTimer(String name) {
         if (namedTimerEntries.containsKey(name)) {
@@ -242,19 +243,30 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         }
     }
 
+    /**
+     * Log a timer entry, including start, end and elapsed time.
+     */
     public void logTimer(String name, String format, Object... args) {
         if (namedTimerEntries.containsKey(name)) {
             logTimerInternal(name, MessageFormat.format(format, args), namedTimerEntries.get(name));
         }
     }
     
-    private void logTimerInternal(String name, String msg, long timer) {
-        final long currentTime = System.currentTimeMillis();
-        String info = name;
+    /**
+     * Log a timer entry, including start, end and elapsed time using TIMER_END_FORMAT
+     */
+    private void logTimerInternal(String name, String msg, long startTime) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("TIMER_END{");
+        sb.append(System.currentTimeMillis() - startTime);
+        sb.append(',');
+        sb.append(name);
+        sb.append('}');
         if(msg != null) {
-            info += "|" + msg;
+            sb.append(' ');
+            sb.append(msg);
         }
-        log(currentTime, TIMER_END + info + "|" + TIMER_ELAPSED + "=" + (currentTime - timer) + " msec");
+        entries.add(new TrackingEntry(sb.toString()));
     }
     
     public void done() {

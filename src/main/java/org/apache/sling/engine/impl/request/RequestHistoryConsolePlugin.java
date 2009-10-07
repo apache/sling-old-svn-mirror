@@ -244,11 +244,28 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
       final Iterator<String> it = r.getRequestProgressTracker().getMessages();
       pw.print("<pre>");
       while (it.hasNext()) {
-        pw.print(it.next());
+        pw.print(escape(it.next()));
       }
       pw.println("</pre></td></tr>");
     }
     pw.println("</tbody></table>");
+  }
+  
+  private static String escape(String str) {
+      final StringBuffer sb = new StringBuffer();
+      for(int i=0; i < str.length(); i++) {
+          final char c = str.charAt(i);
+          if(c == '<') {
+              sb.append("&lt;");
+          } else if (c == '>') {
+              sb.append("&gt;");
+          } else if (c == '&') {
+              sb.append("&amp;");
+          } else {
+              sb.append(c);
+          }
+      }
+      return sb.toString();
   }
   
   private String getRequestLabel(int index) {
