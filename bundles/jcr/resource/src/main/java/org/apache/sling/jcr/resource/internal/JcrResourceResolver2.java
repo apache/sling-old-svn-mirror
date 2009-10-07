@@ -231,10 +231,19 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
+            final String resourcePath = ensureAbsPath(realPathList[0]);
             log.debug(
                 "resolve: Path {} does not resolve, returning NonExistingResource at {}",
-                absPath, realPathList[0]);
-            res = new NonExistingResource(this, ensureAbsPath(realPathList[0]));
+                   absPath, resourcePath);
+
+            res = new NonExistingResource(this, resourcePath);
+            // SLING-864: if the path contains a dot we assume this to be
+            // the start for any selectors, extension, suffix, which may be
+            // used for further request processing.
+            int index = resourcePath.indexOf('.');
+            if (index != -1) {
+                res.getResourceMetadata().setResolutionPathInfo(resourcePath.substring(index));
+            }
         } else {
             log.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
