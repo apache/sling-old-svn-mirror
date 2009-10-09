@@ -128,7 +128,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
      * @throws ScriptEvaluationException
      */
     public Object call(SlingBindings props, String method, Object... args) {
-        final String scriptName = getScriptResource().getPath();
+        final String scriptName = scriptResource.getPath();
 
         Bindings bindings = null;
         Reader reader = null;
@@ -302,7 +302,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     public String getServletInfo() {
-        return "Script " + getScriptResource().getPath();
+        return "Script " + scriptResource.getPath();
     }
 
     public void destroy() {
@@ -327,17 +327,17 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     public String getServletName() {
-        return getScriptResource().getPath();
+        return scriptResource.getPath();
     }
 
     // ---------- internal -----------------------------------------------------
 
     private Reader getScriptReader() throws IOException {
 
-        InputStream input = getScriptResource().adaptTo(InputStream.class);
+        InputStream input = scriptResource.adaptTo(InputStream.class);
         if (input == null) {
             throw new IOException("Cannot get a stream to the script resource "
-                + getScriptResource());
+                + scriptResource);
         }
 
         // Now know how to get the input stream, we still have to decide
@@ -345,7 +345,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         // UTF-8, which is a default in many places in JCR. Secondarily
         // we try to get a jcr:encoding property besides the data property
         // to provide a possible encoding
-        ResourceMetadata meta = getScriptResource().getResourceMetadata();
+        ResourceMetadata meta = scriptResource.getResourceMetadata();
         String encoding = meta.getCharacterEncoding();
         if (encoding == null) {
             encoding = "UTF-8";
@@ -522,7 +522,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     private String getLoggerName() {
-        String name = getScriptResource().getPath();
+        String name = scriptResource.getPath();
         name = name.substring(1);       // cut-off leading slash
         name = name.replace('.', '$');  // extension separator as part of name
         name = name.replace('/', '.');  // hierarchy defined by dot
