@@ -108,7 +108,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         final long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 1);
+        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 3);
         assertEquals("Updating snapshot bundle with same digest must not generate any OSGi tasks",
                 nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
         
@@ -116,10 +116,11 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"));
-        // update also generates a start task, as the bundle was started before
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+        // update also generates a start task, as the bundle was started before, and a framework refresh
+        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 3);
         
         // And no more OSGi tasks after that
+        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 3);
         assertNoOsgiTasks("At end of test");
     }
 
