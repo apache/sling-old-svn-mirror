@@ -20,6 +20,7 @@ package org.apache.sling.adapter;
 
 import org.apache.sling.adapter.internal.AdapterManagerImpl;
 import org.apache.sling.api.adapter.Adaptable;
+import org.apache.sling.api.adapter.AdapterManager;
 
 /**
  * The <code>SlingAdaptable</code> class is an (abstract) default
@@ -34,7 +35,8 @@ import org.apache.sling.api.adapter.Adaptable;
 public abstract class SlingAdaptable implements Adaptable {
 
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return AdapterManagerImpl.getInstance().getAdapter(this, type);
+        final AdapterManager mgr = AdapterManagerImpl.getInstance();
+        return (mgr == null ? null : mgr.getAdapter(this, type));
     }
 
 }
