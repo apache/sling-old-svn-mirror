@@ -86,7 +86,6 @@
           <module>extensions/dojo-sling</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
-          <module>extensions/jcrinstall</module>
           <module>extensions/i18n</module>
           <module>extensions/obr</module>
           <module>extensions/rewriter</module>
