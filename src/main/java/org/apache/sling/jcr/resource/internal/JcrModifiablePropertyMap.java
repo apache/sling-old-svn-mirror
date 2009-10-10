@@ -67,7 +67,8 @@ public class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
-    public Object put(String key, Object value) {
+    public Object put(String aKey, Object value) {
+        final String key = checkKey(aKey);
         if ( key == null || key.indexOf('/') != -1 ) {
             throw new IllegalArgumentException("Invalid key: " + key);
         }
@@ -107,7 +108,11 @@ public class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#remove(java.lang.Object)
      */
-    public Object remove(Object key) {
+    public Object remove(Object aKey) {
+        if ( aKey == null ) {
+            return null;
+        }
+        final String key = checkKey(aKey.toString());
         readFully();
         final Object oldValue = this.cache.remove(key);
         this.valueCache.remove(key);
