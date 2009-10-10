@@ -251,6 +251,16 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         search(vm.values().iterator(), "value");
     }
 
+    public void testDotSlash() throws Exception {
+        final String prop = "myProp";
+        final String value = "value";
+        this.rootNode.setProperty(prop, value);
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertEquals(value, vm.get(prop));
+        assertEquals(value, vm.get("./" + prop));
+        assertTrue(vm.containsKey("./" + prop));
+    }
+
     protected void search(Iterator<?> i, Object value) {
         boolean found = false;
         while ( !found && i.hasNext() ) {
