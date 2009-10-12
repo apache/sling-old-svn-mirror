@@ -24,7 +24,6 @@ import java.net.URLClassLoader;
 import java.util.Enumeration;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.apache.jackrabbit.classloader.DynamicRepositoryClassLoader;
 import org.slf4j.Logger;
@@ -36,21 +35,18 @@ import org.slf4j.LoggerFactory;
 class RepositoryClassLoaderFacade extends URLClassLoader {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
+    private final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
 
     private static final URL[] NO_URLS = new URL[0];
 
-    private RepositoryClassLoaderProviderImpl classLoaderProvider;
+    private DynamicClassLoaderProviderImpl classLoaderProvider;
     private ClassLoader parent;
-    private String sessionOwner;
-    private Session session;
     private String[] classPath;
     private DynamicRepositoryClassLoader delegate;
 
     public RepositoryClassLoaderFacade(
-            RepositoryClassLoaderProviderImpl classLoaderProvider,
+            DynamicClassLoaderProviderImpl classLoaderProvider,
             ClassLoader parent,
-            String sessionOwner,
             String[] classPath) {
 
         // no parent class loader, we delegate to repository class loaders
@@ -59,26 +55,6 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
         this.classLoaderProvider = classLoaderProvider;
         this.parent = parent;
         this.classPath = classPath;
-        this.sessionOwner = sessionOwner;
-    }
-
-    public void addPath(String path) {
-        // create new class path
-        String[] newClassPath = new String[this.classPath.length+1];
-        System.arraycopy(this.classPath, 0, newClassPath, 0, this.classPath.length);
-        newClassPath[this.classPath.length] = path;
-        this.classPath = newClassPath;
-
-        // destroy the delegate and have a new one created
-        if (this.delegate != null) {
-            DynamicRepositoryClassLoader oldLoader = this.delegate;
-            this.delegate = null;
-            oldLoader.destroy();
-        }
-    }
-
-    public String[] getClassPath() {
-        return this.classPath.clone();
     }
 
     @Override
@@ -117,54 +93,25 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
         }
     }
 
-    //---------- Reference counting support -----------------------------------
-
-    /* package */ void destroy() {
+    void destroy() {
         if (this.delegate != null) {
             this.delegate.destroy();
             this.delegate = null;
-        }
-
-        if (this.session != null) {
-            this.session.logout();
-            this.session = null;
         }
     }
 
     //---------- internal -----------------------------------------------------
 
-    private Session getSession() throws RepositoryException {
-        // check current session
-        if (this.session != null) {
-            if (this.session.isLive()) {
-                return this.session;
-            }
+    private synchronized DynamicRepositoryClassLoader getDelegateClassLoader() throws RepositoryException {
+        if ( this.delegate == null ) {
+            this.delegate = new DynamicRepositoryClassLoader( this.classLoaderProvider.getReadSession(), this.classPath, this.parent);
 
-            // drop delegate
-            if (this.delegate != null) {
-                this.delegate.destroy();
-                this.delegate = null;
-            }
-
-            // current session is not live anymore, drop
-            this.session.logout();
-            this.session = null;
-        }
-
-        // no session currently, acquire and return
-        this.session = this.classLoaderProvider.getSession(this.sessionOwner);
-        return this.session;
-    }
-
-    private DynamicRepositoryClassLoader getDelegateClassLoader() throws RepositoryException {
-        if (this.delegate != null) {
-            if (this.delegate.isDirty()) {
-                this.delegate = this.delegate.reinstantiate(this.getSession(), this.parent);
-            }
         } else {
-            this.delegate = new DynamicRepositoryClassLoader(this.getSession(), this.classPath, this.parent);
-        }
+            if (this.delegate.isDirty()) {
+                this.delegate = this.delegate.reinstantiate(this.classLoaderProvider.getReadSession(), this.parent);
+            }
 
+        }
         return this.delegate;
     }
 

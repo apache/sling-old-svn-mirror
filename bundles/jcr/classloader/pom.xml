@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -59,14 +59,14 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Export-Package>
-                            org.apache.sling.jcr.classloader;version=${pom.version},
-                            org.apache.jackrabbit.classloader;
-                            org.apache.jackrabbit.net;version=1.4
+                            org.apache.sling.jcr.classloader;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.classloader.internal.*,
                             org.apache.jackrabbit;
+                            org.apache.jackrabbit.classloader;
                             org.apache.jackrabbit.name;
+                            org.apache.jackrabbit.net;
                             org.apache.jackrabbit.util;split-package:=merge-first
                         </Private-Package>
                     </instructions>
@@ -88,31 +88,38 @@
         </plugins>
     </reporting>
     <dependencies>
+       <dependency>
+           <groupId>javax.jcr</groupId>
+           <artifactId>jcr</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
             <version>2.0.2-incubator</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
             <version>0.9.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
             <version>2.1.0-incubator</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-classloader</artifactId>
-            <version>1.4.1</version>
+            <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>1.4.2</version>
+            <version>1.6.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -127,13 +134,14 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.2.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
     </dependencies>
