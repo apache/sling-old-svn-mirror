@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * The <code>ClassLoaderFacade</code> is a facade
@@ -33,8 +36,15 @@ import java.util.Enumeration;
  */
 public class ClassLoaderFacade extends ClassLoader {
 
+    /** The logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
+    /** Dynamic class loader manager which manages the dynamic class loader providers for this facade. */
     private final DynamicClassLoaderManagerImpl manager;
 
+    /**
+     * Constructor
+     */
     public ClassLoaderFacade(final DynamicClassLoaderManagerImpl manager) {
         this.manager = manager;
     }
@@ -49,9 +59,13 @@ public class ClassLoaderFacade extends ClassLoader {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
-                final URL u = cl.getResource(name);
-                if ( u != null ) {
-                    return u;
+                try {
+                    final URL u = cl.getResource(name);
+                    if ( u != null ) {
+                        return u;
+                    }
+                } catch (Throwable t) {
+                    logger.error("Exception while querying class loader " + cl + " for resource " + name, t);
                 }
             }
         }
@@ -68,9 +82,13 @@ public class ClassLoaderFacade extends ClassLoader {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
-                final Enumeration<URL> e = cl.getResources(name);
-                if ( e != null && e.hasMoreElements() ) {
-                    return e;
+                try {
+                    final Enumeration<URL> e = cl.getResources(name);
+                    if ( e != null && e.hasMoreElements() ) {
+                        return e;
+                    }
+                } catch (Throwable t) {
+                    logger.error("Exception while querying class loader " + cl + " for resources " + name, t);
                 }
             }
         }
@@ -79,7 +97,7 @@ public class ClassLoaderFacade extends ClassLoader {
 
     @Override
     protected synchronized Class<?> loadClass(String name, boolean resolve)
-            throws ClassNotFoundException {
+    throws ClassNotFoundException {
 
         if ( !this.manager.isActive() ) {
             throw new RuntimeException("Dynamic class loader has already been deactivated.");
@@ -90,8 +108,10 @@ public class ClassLoaderFacade extends ClassLoader {
                 try {
                     final Class<?> c = cl.loadClass(name);
                     return c;
-                } catch (Exception cnfe) {
+                } catch (ClassNotFoundException cnfe) {
                     // we just ignore this and try the next class loader
+                } catch (Throwable t) {
+                    logger.error("Exception while trying to load class " + name + " from class loader " + cl, t);
                 }
             }
         }
