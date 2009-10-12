@@ -25,7 +25,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * This is the default implementation of the dynamic class loader
@@ -33,7 +32,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 public class DynamicClassLoaderManagerImpl
     extends ServiceTracker
-    implements DynamicClassLoaderManager, ServiceTrackerCustomizer {
+    implements DynamicClassLoaderManager {
 
     /** The package admin class loader. */
     private final PackageAdminClassLoader pckAdminCL;
@@ -41,17 +40,14 @@ public class DynamicClassLoaderManagerImpl
     /** The dynamic class loader. */
     private final ClassLoaderFacade facade;
 
-    /** The bundle context. */
-    private final BundleContext context;
-
     /** The cached chain of class loaders. */
     private ClassLoader[] cache;
 
-    /** Needs the cache an update? */
-    private boolean updateCache = false;
+    /** Is this still active? */
+    private volatile boolean active = true;
 
-    /** Is this service still active? */
-    private boolean active = true;
+    /** Tracking count */
+    private volatile int trackingCount = -1;
 
     /**
      * Create a new service instance
@@ -64,45 +60,34 @@ public class DynamicClassLoaderManagerImpl
             final ClassLoader parent,
             final DynamicClassLoaderManagerFactory factory) {
         super(ctx, DynamicClassLoaderProvider.class.getName(), null);
-        this.context = ctx;
         this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent, factory);
         this.cache = new ClassLoader[] {this.pckAdminCL};
         this.open();
         this.facade = new ClassLoaderFacade(this);
     }
 
-    public Object addingService(ServiceReference reference) {
-        this.updateCache = true;
-        return this.context.getService(reference);
-    }
-
-    public void modifiedService(ServiceReference reference, Object service) {
-        // as the ranking property has changed we have to update the cache
-        this.updateCache = true;
-    }
-
-    public void removedService(ServiceReference reference, Object service) {
-        this.context.ungetService(reference);
-        this.updateCache = true;
-    }
-
     private synchronized void updateCache() {
-        if ( this.updateCache ) {
+        if ( this.trackingCount < this.getTrackingCount() ) {
             final ServiceReference[] refs = this.getServiceReferences();
-            final ClassLoader[] loaders = new ClassLoader[1 + refs.length];
-            Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
-            int index = 0;
-            for(final ServiceReference ref : refs) {
-                final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
-                if ( provider != null ) {
-                    loaders[index] = provider.getClassLoader(this.pckAdminCL);
+            final ClassLoader[] loaders;
+            if ( refs == null || refs.length == 0 ) {
+                loaders = new ClassLoader[] {this.pckAdminCL};
+            } else {
+                loaders = new ClassLoader[1 + refs.length];
+                Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
+                int index = 0;
+                for(final ServiceReference ref : refs) {
+                    final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
+                    if ( provider != null ) {
+                        loaders[index] = provider.getClassLoader(this.pckAdminCL);
+                    }
+                    index++;
                 }
-                index++;
+                loaders[index] = this.pckAdminCL;
             }
-            loaders[index] = this.pckAdminCL;
             // and now use new array
             this.cache = loaders;
-            this.updateCache = false;
+            this.trackingCount = this.getTrackingCount();
         }
     }
 
@@ -135,7 +120,7 @@ public class DynamicClassLoaderManagerImpl
      * @return The list of class loaders.
      */
     public ClassLoader[] getDynamicClassLoaders() {
-        if ( this.updateCache ) {
+        if ( this.trackingCount < this.getTrackingCount() ) {
             updateCache();
         }
         return this.cache;
