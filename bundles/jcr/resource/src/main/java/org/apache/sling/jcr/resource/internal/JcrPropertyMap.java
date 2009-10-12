@@ -102,7 +102,10 @@ public class JcrPropertyMap implements ValueMap {
     // ---------- ValueMap
 
     protected String checkKey(final String key) {
-        if ( key != null && key.startsWith("./") ) {
+        if ( key == null ) {
+            throw new NullPointerException("Key must not be null.");
+        }
+        if ( key.startsWith("./") ) {
             return key.substring(2);
         }
         return key;
@@ -113,9 +116,6 @@ public class JcrPropertyMap implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey, final Class<T> type) {
-        if ( aKey == null ) {
-            return null;
-        }
         final String key = checkKey(aKey);
         if (type == null) {
             return (T) get(key);
@@ -136,9 +136,6 @@ public class JcrPropertyMap implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(final String aKey,final T defaultValue) {
-        if ( aKey == null ) {
-            return null;
-        }
         final String key = checkKey(aKey);
         if (defaultValue == null) {
             return (T) get(key);
@@ -162,9 +159,6 @@ public class JcrPropertyMap implements ValueMap {
      * @see java.util.Map#get(java.lang.Object)
      */
     public Object get(final Object aKey) {
-        if ( aKey == null ) {
-            return null;
-        }
         final String key = checkKey(aKey.toString());
         CacheEntry entry = cache.get(key);
         if (entry == null) {
