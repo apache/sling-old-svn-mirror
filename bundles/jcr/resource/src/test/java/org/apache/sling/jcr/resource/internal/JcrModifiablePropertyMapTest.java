@@ -144,7 +144,7 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
         try {
             pvm.put(null, "something");
             fail("Put with null key");
-        } catch (IllegalArgumentException iae) {}
+        } catch (NullPointerException iae) {}
         try {
             pvm.put("something", null);
             fail("Put with null value");
