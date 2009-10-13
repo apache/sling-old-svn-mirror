@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.osgi.framework.Constants;
@@ -28,7 +29,9 @@ import org.osgi.framework.Version;
  * 	name, config PID, etc.) in sorted sets, and this comparator is used
  *  to sort the resources in the sets.
  */
-class RegisteredResourceComparator implements Comparator<RegisteredResource >{
+class RegisteredResourceComparator implements Comparator<RegisteredResource>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public int compare(RegisteredResource a, RegisteredResource b) {
     	final boolean aBundle = a.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
@@ -59,8 +62,8 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource >{
         
         // Then by version
         if(result == 0) {
-            final Version va = (Version)a.getAttributes().get(Constants.BUNDLE_VERSION);
-            final Version vb = (Version)b.getAttributes().get(Constants.BUNDLE_VERSION);
+            final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
+            final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
             isSnapshot = va!= null && va.toString().contains(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER);
             if(va != null && vb != null) {
                 // higher version has more priority, must come first so invert comparison

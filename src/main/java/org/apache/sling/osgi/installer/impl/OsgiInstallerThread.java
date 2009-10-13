@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -58,8 +58,8 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     private boolean retriesScheduled;
     
     /** Group our RegisteredResource by OSGi entity */ 
-    private Map<String, SortedSet<RegisteredResource>>registeredResources = 
-        new HashMap<String, SortedSet<RegisteredResource>>();
+    private final HashMap<String, SortedSet<RegisteredResource>> registeredResources;
+    private final PersistentResourceList persistentList;
     
     private final BundleTaskCreator bundleTaskCreator = new BundleTaskCreator();
     private final ConfigTaskCreator configTaskCreator = new ConfigTaskCreator();
@@ -67,6 +67,9 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     OsgiInstallerThread(OsgiInstallerContext ctx) {
         setName(getClass().getSimpleName());
         this.ctx = ctx;
+        final File f = ctx.getBundleContext().getDataFile("RegisteredResourceList.ser");
+        persistentList = new PersistentResourceList(ctx,f);
+        registeredResources = persistentList.getData();
     }
 
     void deactivate() {
@@ -106,7 +109,12 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             	}
             	
             	retriesScheduled = false;
-                executeTasks();
+                if(executeTasks() > 0) {
+                    if(ctx.getLogService() != null) {
+                        ctx.getLogService().log(LogService.LOG_DEBUG, "Tasks have been executed, saving persistentList");
+                    }
+                    persistentList.save();
+                }
                 
                 // Some integration tests depend on this delay, make sure to
                 // rerun/adapt them if changing this value
@@ -329,17 +337,20 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         }
     }
     
-    private void executeTasks() throws Exception {
+    private int executeTasks() throws Exception {
+        int counter = 0;
         while(!tasks.isEmpty()) {
             OsgiInstallerTask t = null;
             synchronized (tasks) {
                 t = tasks.first();
             }
             t.execute(ctx);
+            counter++;
             synchronized (tasks) {
                 tasks.remove(t);
             }
         }
+        return counter;
     }
     
     private void cleanupInstallableResources() {

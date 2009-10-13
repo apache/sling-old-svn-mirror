@@ -60,7 +60,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         boolean snapshot = false;
         if(b != null) {
         	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
-        	final Version newVersion = (Version)resource.getAttributes().get(Constants.BUNDLE_VERSION);
+        	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
         	snapshot = ctx.isSnapshot(newVersion);
         	if(currentVersion.equals(newVersion) && !snapshot) {
         		if(ctx.getLogService() != null) {

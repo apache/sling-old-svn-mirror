@@ -20,18 +20,19 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 
 /** Mock RegisteredResource that simulates a bundle */
-public class MockBundleResource implements RegisteredResource {
+public class MockBundleResource implements RegisteredResource, Serializable {
 
-	private final Map<String, Object> attributes = new HashMap<String, Object>();
+    private static final long serialVersionUID = 1L;
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private boolean installable = true;
 	private final String digest;
 	private final int priority;
@@ -44,7 +45,7 @@ public class MockBundleResource implements RegisteredResource {
     
 	MockBundleResource(String symbolicName, String version, int priority) {
 		attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
-		attributes.put(Constants.BUNDLE_VERSION, new Version(version));
+		attributes.put(Constants.BUNDLE_VERSION, version);
 		digest = symbolicName + "." + version;
 		this.priority = priority;
 		serialNumber = getNextSerialNumber();
@@ -52,7 +53,7 @@ public class MockBundleResource implements RegisteredResource {
 	
     MockBundleResource(String symbolicName, String version, int priority, String digest) {
         attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
-        attributes.put(Constants.BUNDLE_VERSION, new Version(version));
+        attributes.put(Constants.BUNDLE_VERSION, version);
         this.digest = digest;
         this.priority = priority;
         serialNumber = getNextSerialNumber();
