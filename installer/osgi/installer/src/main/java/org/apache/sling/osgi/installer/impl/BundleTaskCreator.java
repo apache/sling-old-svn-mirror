@@ -87,7 +87,7 @@ class BundleTaskCreator {
 			
 		} else {
 			final BundleInfo info = getBundleInfo(ctx, toActivate);
-			final Version newVersion = (Version)toActivate.getAttributes().get(Constants.BUNDLE_VERSION);
+			final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
 			if(info == null) {
 			    // bundle is not installed yet: install and save digest to avoid
 			    // unnecessary updates

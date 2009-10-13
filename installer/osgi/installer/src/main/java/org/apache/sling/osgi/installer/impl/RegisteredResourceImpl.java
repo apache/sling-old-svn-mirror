@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -43,14 +44,14 @@ import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
  *  it locally to avoid holding up to classes or data from our 
  *  clients, in case those disappear while we're installing stuff. 
  */
-public class RegisteredResourceImpl implements RegisteredResource { 
+public class RegisteredResourceImpl implements RegisteredResource, Serializable { 
+    private static final long serialVersionUID = 1L;
 	private final String url;
 	private final String urlScheme;
 	private final String digest;
@@ -303,7 +304,7 @@ public class RegisteredResourceImpl implements RegisteredResource {
     	
         if(m != null) {
             attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
-            attributes.put(Constants.BUNDLE_VERSION, new Version(v));
+            attributes.put(Constants.BUNDLE_VERSION, v.toString());
         }
     }
     

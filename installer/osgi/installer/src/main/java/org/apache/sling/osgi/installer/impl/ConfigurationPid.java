@@ -18,13 +18,16 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.Serializable;
+
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar
  *      o.a.s.foo.bar-a.cfg -> pid = o.a.s.foo.bar, factory pid = a 
  */
-public class ConfigurationPid {
+public class ConfigurationPid implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final String configPid;
     private final String factoryPid;
 
