@@ -14,23 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.rewriter.impl;
+package org.apache.sling.rewriter.impl.components;
 
-import org.apache.sling.rewriter.Serializer;
-import org.apache.sling.rewriter.SerializerFactory;
 
 /**
- * This sax serializer serializes xhtml-
+ * This sax serializer serializes html-
  * @scr.component metatype="no"
  * @scr.service
- * @scr.property name="pipeline.type" value="xhtml-serializer"
+ * @scr.property name="pipeline.type" value="html-serializer"
  */
-public class XHtmlSerializerFactory implements SerializerFactory {
+public class HtmlSerializerFactory extends AbstractTraxSerializerFactory {
 
-    /**
-     * @see org.apache.sling.rewriter.SerializerFactory#createSerializer()
-     */
-    public Serializer createSerializer() {
-        return new XHTMLSerializer();
+    @Override
+    protected String getOutputFormat() {
+        return "html";
     }
+
 }
