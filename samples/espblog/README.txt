@@ -28,24 +28,14 @@ To verify that the bundle is correctly installed:
 2) The console at http://localhost:8888/system/console/bundles must 
     list the bundle named "Sling - ESP blog sample" as active.    
 
-You also need to set "allow anonymous access" to false in the 
-SlingAuthenticator config, at
-
-  http://localhost:8888/system/console/configMgr/org.apache.sling.engine.impl.auth.SlingAuthenticator
-
 HOW TO TEST
 -----------
-Once "allow anonymous access" is set to false, requesting
+Start by logging in at http://localhost:8888/?sling:authRequestLogin=true,
+using username=admin and password=admin (TODO: there should be a link for
+that on the sling index.html page).
 
-  http://localhost:8888/
-
-should redirect to the Sling login form at /system/sling/login.
-
-Use username=admin password=admin to login, after which
-
-  http://localhost:8888/
-
-Should redirect to the "Welcome to the Sling Launchpad" index.html page.
+Once logged in, this should display the "Welcome to the Sling Launchpad"
+index.html page.
 
 Then, http://localhost:8888/content/espblog/*.html should display the "Sling ESP
 blog sample" page, with the Home/Admin/New Post/... menu.
