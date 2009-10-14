@@ -55,6 +55,9 @@ public abstract class AbstractTraxSerializerFactory implements SerializerFactory
     private boolean needsNamespacesAsAttributes;
 
     protected abstract String getOutputFormat();
+    protected abstract String getDoctypePublic();
+    protected abstract String getDoctypeSystem();
+
     /**
      * @see org.apache.sling.rewriter.SerializerFactory#createSerializer()
      */
@@ -72,7 +75,7 @@ public abstract class AbstractTraxSerializerFactory implements SerializerFactory
         } else {
             ch = tHandler;
         }
-        return new TraxSerializer(tHandler, ch, getOutputFormat());
+        return new TraxSerializer(tHandler, ch, getOutputFormat(), getDoctypePublic(), getDoctypeSystem());
     }
 
     protected void activate(final ComponentContext ctx) {
