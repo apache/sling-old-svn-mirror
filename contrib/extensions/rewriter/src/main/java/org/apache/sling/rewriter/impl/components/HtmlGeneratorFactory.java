@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.rewriter.impl;
+package org.apache.sling.rewriter.impl.components;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
