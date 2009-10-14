@@ -29,4 +29,12 @@ public class XHtmlSerializerFactory extends AbstractTraxSerializerFactory {
     protected String getOutputFormat() {
         return "xhtml";
     }
+
+    protected String getDoctypePublic() {
+        return "-//W3C//DTD XHTML 1.0 Strict//EN";
+    }
+
+    protected String getDoctypeSystem() {
+        return "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd";
+    }
 }

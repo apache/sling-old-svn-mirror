@@ -51,12 +51,16 @@ public class TraxSerializer implements Serializer, LexicalHandler {
     private final LexicalHandler lexicalHandler;
 
     public TraxSerializer(final TransformerHandler transformerHandler,
-                                  final ContentHandler handler,
-                                  final String outputFormat) {
+                          final ContentHandler handler,
+                          final String outputFormat,
+                          final String doctypePublic,
+                          final String doctypeSystem) {
         this.contentHandler = handler;
         this.lexicalHandler = (LexicalHandler)handler;
         this.transformerHandler = transformerHandler;
         this.format.put(OutputKeys.METHOD, outputFormat);
+        this.format.put(OutputKeys.DOCTYPE_PUBLIC, doctypePublic);
+        this.format.put(OutputKeys.DOCTYPE_SYSTEM, doctypeSystem);
     }
 
     /**
@@ -68,21 +72,22 @@ public class TraxSerializer implements Serializer, LexicalHandler {
         if ( this.transformerHandler == null ) {
             throw new IOException("Transformer handler could not be instantiated.");
         }
-
-        if (!this.format.containsKey(OutputKeys.ENCODING)) {
+        if ( context.getResponse().getCharacterEncoding() != null ) {
+            this.format.put(OutputKeys.ENCODING, context.getResponse().getCharacterEncoding());
+        } else {
             this.format.put(OutputKeys.ENCODING, DEFAULT_ENCODING);
         }
 
-        String cdataSectionElements = config.getConfiguration().get("cdata-section-elements", String.class);
-        String dtPublic = config.getConfiguration().get("doctype-public", String.class);
-        String dtSystem = config.getConfiguration().get("doctype-system", String.class);
-        String encoding = config.getConfiguration().get("encoding", String.class);
-        String indent = config.getConfiguration().get("indent", String.class);
-        String mediaType = config.getConfiguration().get("media-type", String.class);
-        String method = config.getConfiguration().get("method", String.class);
-        String omitXMLDeclaration = config.getConfiguration().get("omit-xml-declaration", String.class);
-        String standAlone = config.getConfiguration().get("standalone", String.class);
-        String version = config.getConfiguration().get("version", String.class);
+        final String cdataSectionElements = config.getConfiguration().get("cdata-section-elements", String.class);
+        final String dtPublic = config.getConfiguration().get("doctype-public", String.class);
+        final String dtSystem = config.getConfiguration().get("doctype-system", String.class);
+        final String encoding = config.getConfiguration().get("encoding", String.class);
+        final String indent = config.getConfiguration().get("indent", String.class);
+        final String mediaType = config.getConfiguration().get("media-type", String.class);
+        final String method = config.getConfiguration().get("method", String.class);
+        final String omitXMLDeclaration = config.getConfiguration().get("omit-xml-declaration", String.class);
+        final String standAlone = config.getConfiguration().get("standalone", String.class);
+        final String version = config.getConfiguration().get("version", String.class);
 
         if (cdataSectionElements != null) {
             format.put(OutputKeys.CDATA_SECTION_ELEMENTS, cdataSectionElements);

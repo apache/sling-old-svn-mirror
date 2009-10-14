@@ -30,4 +30,11 @@ public class HtmlSerializerFactory extends AbstractTraxSerializerFactory {
         return "html";
     }
 
+    protected String getDoctypePublic() {
+        return "-//W3C//DTD HTML 4.01 Transitional//EN";
+    }
+
+    protected String getDoctypeSystem() {
+        return "http://www.w3.org/TR/html4/loose.dtd";
+    }
 }

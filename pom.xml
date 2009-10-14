@@ -65,8 +65,7 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.rewriter.impl,
-                            org.apache.cocoon.components.serializers.encoding,
-                            org.apache.cocoon.components.serializers.util
+                            org.apache.sling.rewriter.impl.components
                         </Private-Package>
                     </instructions>
                 </configuration>
