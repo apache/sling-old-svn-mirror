@@ -31,18 +31,19 @@ import java.util.TreeSet;
 
 import org.osgi.service.log.LogService;
 
-/** Store bundle digests in a file, to avoid re-installing
- *  snapshots needlessly when restarting.
+/** Store the digests and version numbers of installed bundles
+ *  in a file, to keep track of what we installed.
  */
-class BundleDigestsStorage {
+class PersistentBundleInfo {
     private Properties digests = new Properties();
     private final File dataFile;
     private final OsgiInstallerContext ctx;
+    private static final String VERSION_PREFIX = "V:";
     
     /** Load the list from supplied file, which is also
      *  used by purgeAndSave to save our data
      */
-    BundleDigestsStorage(OsgiInstallerContext ctx, File dataFile) throws IOException {
+    PersistentBundleInfo(OsgiInstallerContext ctx, File dataFile) throws IOException {
         this.ctx = ctx;
         this.dataFile = dataFile;
         InputStream is = null;
@@ -64,14 +65,15 @@ class BundleDigestsStorage {
         }
     }
     
-    /** Remove digests which do not belong to installed bundles,
+    /** Remove data which do not belongs to installed bundles,
      *  and save our data
      */
     void purgeAndSave(TreeSet<String> installedBundlesSymbolicNames) throws IOException {
         final List<String> toRemove = new ArrayList<String>();
         for(Object o : digests.keySet()) {
             final String key = (String)o;
-            if(!installedBundlesSymbolicNames.contains(key)) {
+            if(!installedBundlesSymbolicNames.contains(key) 
+                    && !installedBundlesSymbolicNames.contains(key.substring(VERSION_PREFIX.length()))) {
                 toRemove.add(key);
             }
         }
@@ -96,12 +98,18 @@ class BundleDigestsStorage {
     }
     
     /** Store a bundle digest - not persisted until purgeAndSave is called */
-    void putDigest(String bundleSymbolicName, String digest) {
+    void putInfo(String bundleSymbolicName, String digest, String installedVersion) {
         digests.setProperty(bundleSymbolicName, digest);
+        digests.setProperty(VERSION_PREFIX + bundleSymbolicName, installedVersion);
     }
     
     /** Retrieve digest, null if not found */
     String getDigest(String bundleSymbolicName) {
         return digests.getProperty(bundleSymbolicName);
+    }
+    
+    /** Retrieve installed version, null if not found */
+    String getInstalledVersion(String bundleSymbolicName) {
+        return digests.getProperty(VERSION_PREFIX + bundleSymbolicName);
     }
 }

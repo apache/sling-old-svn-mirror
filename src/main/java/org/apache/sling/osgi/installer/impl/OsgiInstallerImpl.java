@@ -43,7 +43,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
     private final ServiceTracker logServiceTracker;
     private final OsgiInstallerThread installerThread;
     private long [] counters = new long[COUNTERS_SIZE];
-    private BundleDigestsStorage bundleDigestsStorage;  
+    private PersistentBundleInfo bundleDigestsStorage;  
     
     public OsgiInstallerImpl(final BundleContext bc,
                               final PackageAdmin pa,
@@ -52,7 +52,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         this.bundleContext = bc;
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
-        bundleDigestsStorage = new BundleDigestsStorage(this, bc.getDataFile("bundle-digests.properties"));
+        bundleDigestsStorage = new PersistentBundleInfo(this, bc.getDataFile("bundle-digests.properties"));
         
         installerThread = new OsgiInstallerThread(this);
         installerThread.setDaemon(true);
@@ -180,6 +180,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
     }
 
     public void saveBundleDigest(Bundle b, String digest) throws IOException {
-        bundleDigestsStorage.putDigest(b.getSymbolicName(), digest);
+        bundleDigestsStorage.putInfo(b.getSymbolicName(), digest, "");
     }
  }
