@@ -60,6 +60,13 @@ public class BundleStartTask extends OsgiInstallerTask {
 		final LogService log = ctx.getLogService();
 		boolean needToRetry = false;
 		
+        if(bundleId == 0) {
+            if(log != null) {
+                log.log(LogService.LOG_DEBUG, "Bundle 0 is the framework bundle, ignoring request to start it");
+            }
+            return;
+        }
+        
 		if(b == null) {
 			if(log != null) {
 				log.log(LogService.LOG_INFO, "Cannot start bundle, id not found:" + bundleId);
