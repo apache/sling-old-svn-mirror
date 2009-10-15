@@ -46,19 +46,20 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
             throws ServletException, IOException {
         this.current++;
 
+        // the previous filter may have wrapped non-Sling request and response
+        // wrappers (e.g. WebCastellum does this), so we have to make
+        // sure the request and response are Sling types again
+        SlingHttpServletRequest slingRequest = toSlingRequest(request);
+        SlingHttpServletResponse slingResponse = toSlingResponse(response);
+
         if (this.current < this.filters.length) {
 
             // continue filtering with the next filter
             Filter filter = this.filters[this.current];
-            trackFilter(request, filter);
-            filter.doFilter(request, response, this);
+            trackFilter(slingRequest, filter);
+            filter.doFilter(slingRequest, slingResponse, this);
 
         } else {
-
-            // end of chain, a filter may have wrapped a plain ServletRequest
-            // and we must ensure it is a Sling request again
-            SlingHttpServletRequest slingRequest = toSlingRequest(request);
-            SlingHttpServletResponse slingResponse = toSlingResponse(response);
 
             this.render(slingRequest, slingResponse);
 
