@@ -30,7 +30,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     private final Map<String, BundleInfo> fakeBundleInfo = new HashMap<String, BundleInfo>();
     
     void addBundleInfo(String symbolicName, String version, int state) {
-        fakeBundleInfo.put(symbolicName, new BundleInfo(new Version(version), state));
+        fakeBundleInfo.put(symbolicName, new BundleInfo(symbolicName, new Version(version), state));
     }
     
     @Override

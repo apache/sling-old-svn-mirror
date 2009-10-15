@@ -39,7 +39,7 @@ public class PersistentResourceListTest {
     private final static String FAKE = "fakebundle.";
     
     @Test
-    public void testFileNotFound() {
+    public void testFileNotFound() throws IOException {
         File f = new File("NONEXISTENT");
         PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
         assertNotNull(p.getData());
@@ -61,7 +61,7 @@ public class PersistentResourceListTest {
     }
     
     @Test
-    public void testTestData() {
+    public void testTestData() throws IOException {
         File f = new File("NONEXISTENT");
         PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
         assertNotNull(p.getData());
