@@ -79,6 +79,7 @@ public class RemovedResourceDetectionTest extends OsgiInstallerTestBase {
         final List<InstallableResource> data = new ArrayList<InstallableResource>();
         data.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
         installer.registerResources(data, URL_SCHEME);
+        sleep(500);
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After installer restart", symbolicNameB, "1.0", Bundle.ACTIVE);
         assertNull("Bundle not in second list should be removed", findBundle(symbolicNameA));

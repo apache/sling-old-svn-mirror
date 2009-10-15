@@ -1,0 +1,84 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.sling.osgi.installer.it;
+
+import static org.junit.Assert.assertNull;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.Bundle;
+
+/** Test the second SLING-1106 scenario: if a bundle is updated
+ * 	via the BundleContext, the installer should not downgrade it
+ * 	back to its own version.
+ */
+@RunWith(JUnit4TestRunner.class)
+public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
+    @org.ops4j.pax.exam.junit.Configuration
+    public static Option[] configuration() {
+        return defaultConfiguration();
+    }
+    
+    @Before
+    public void setUp() {
+        setupInstaller();
+    }
+    
+    @After
+    public void tearDown() {
+        super.tearDown();
+    }
+ 
+	@Test
+	public void testContextUpdate() throws Exception {
+		
+		// Install V1.0 via installer
+        final String symbolicName = "osgi-installer-testbundle";
+        assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
+        resetCounters();
+        installer.addResource(getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digest0"));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        final Bundle b = assertBundle("After initial install", symbolicName, "1.0", Bundle.ACTIVE);
+        
+        // Update to 1.1, directly via bundle context
+        final InputStream is = new FileInputStream(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"));
+        try {
+        	b.update(is);
+        } finally {
+        	is.close();
+        }
+        assertBundle("After direct update", symbolicName, "1.1", Bundle.ACTIVE);
+        
+        // Install another bundle (to trigger installer queue activity), wait
+        // for installer to be idle and check version
+        resetCounters();
+        installer.addResource(getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        assertBundle("-snap bundle install", "osgi-installer-snapshot-test", null, Bundle.ACTIVE);
+        assertBundle("After installing another bundle", symbolicName, "1.1", Bundle.ACTIVE);
+	}
+}

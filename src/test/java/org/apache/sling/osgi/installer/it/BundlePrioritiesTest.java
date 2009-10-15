@@ -61,8 +61,7 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-            // wait for two tasks: install and start
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("Initial install", symbolicName, null, Bundle.ACTIVE);
         }
 
@@ -76,8 +75,7 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest3", highPriority));
-            // wait for two tasks: update and restart
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         }
         
         assertNoOsgiTasks("At end of test");
