@@ -21,20 +21,27 @@ package org.apache.sling.osgi.installer.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
+import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
 public class BundleTaskCreatorTest {
 	public static final String SN = "TestSymbolicName";
-	private final OsgiInstallerContext ctx = new MockOsgiInstallerContext();
+	private MockOsgiInstallerContext ctx;
 	
-	private SortedSet<OsgiInstallerTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) {
+	@Before
+	public void setUp() throws IOException {
+	    ctx = new MockOsgiInstallerContext();
+	}
+	
+	private SortedSet<OsgiInstallerTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) throws IOException {
 		final SortedSet<RegisteredResource> s = OsgiInstallerThread.createRegisteredResourcesEntry();
 		for(RegisteredResource r : resources) {
 			s.add(r);
@@ -46,7 +53,7 @@ public class BundleTaskCreatorTest {
 	}
 	
 	@Test 
-	public void testSingleBundleNew() {
+	public void testSingleBundleNew() throws IOException {
 		final RegisteredResource [] r = {
 				new MockBundleResource(SN, "1.0")
 		};
@@ -57,7 +64,7 @@ public class BundleTaskCreatorTest {
 	}
 
 	@Test
-    public void testSingleBundleAlreadyInstalled() {
+    public void testSingleBundleAlreadyInstalled() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.0")
         };
@@ -78,7 +85,7 @@ public class BundleTaskCreatorTest {
     }
 	
     @Test 
-    public void testBundleUpgrade() {
+    public void testBundleUpgrade() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.1")
         };
@@ -93,7 +100,7 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testBundleUpgradeBothRegistered() {
+    public void testBundleUpgradeBothRegistered() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.1"),
                 new MockBundleResource(SN, "1.0")
@@ -109,7 +116,7 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testBundleUpgradeBothRegisteredReversed() {
+    public void testBundleUpgradeBothRegisteredReversed() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.0"),
                 new MockBundleResource(SN, "1.1")
@@ -125,7 +132,7 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testBundleUpgradeSnapshot() {
+    public void testBundleUpgradeSnapshot() throws IOException {
         // Need to use OSGi-compliant version number, in bundles
         // bnd and other tools generate correct numbers.
         final String v = "2.0.7.SNAPSHOT";
@@ -143,7 +150,7 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testBundleRemoveSingle() {
+    public void testBundleRemoveSingle() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.0")
         };
@@ -159,7 +166,7 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testBundleRemoveMultiple() {
+    public void testBundleRemoveMultiple() throws IOException {
         final RegisteredResource [] r = {
                 new MockBundleResource(SN, "1.0"),
                 new MockBundleResource(SN, "1.1"),
@@ -179,10 +186,10 @@ public class BundleTaskCreatorTest {
     }
     
     @Test 
-    public void testDowngradeOfRemovedResource() {
+    public void testDowngradeOfRemovedResource() throws IOException {
         final RegisteredResource [] r = {
-                new MockBundleResource(SN, "1.0"),
-                new MockBundleResource(SN, "1.1"),
+                new MockBundleResource(SN, "1.0.0"),
+                new MockBundleResource(SN, "1.1.0"),
         };
         
         // Simulate V1.1 installed but resource is gone -> downgrade to 1.0
@@ -190,7 +197,8 @@ public class BundleTaskCreatorTest {
         
        {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
-            c.addBundleInfo(SN, "1.1", Bundle.ACTIVE);
+            c.addBundleInfo(SN, "1.1.0", Bundle.ACTIVE);
+            ctx.saveInstalledBundleInfo(SN, "fakedigest", "1.1.0");
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
             assertEquals("Expected one task", 1, s.size());
             assertTrue("Expected a BundleUpdateTask", s.first() instanceof BundleUpdateTask);
@@ -198,5 +206,4 @@ public class BundleTaskCreatorTest {
             assertEquals("Update should be to V1.0", r[0], t.getResource());
         }
     }
-    
 }

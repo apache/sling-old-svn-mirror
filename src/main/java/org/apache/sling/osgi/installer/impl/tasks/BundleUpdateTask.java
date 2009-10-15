@@ -58,25 +58,23 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
-        if(b != null) {
-        	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
-        	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
-        	snapshot = ctx.isSnapshot(newVersion);
-        	if(currentVersion.equals(newVersion) && !snapshot) {
-        		if(ctx.getLogService() != null) {
-            		ctx.getLogService().log(
-            				LogService.LOG_DEBUG, 
-            				"Same version is already installed, and not a snapshot, ignoring update:" + resource);
-        		}
-        		return;
-        	}
-        }
+    	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
+    	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
+    	snapshot = ctx.isSnapshot(newVersion);
+    	if(currentVersion.equals(newVersion) && !snapshot) {
+    		if(ctx.getLogService() != null) {
+        		ctx.getLogService().log(
+        				LogService.LOG_DEBUG, 
+        				"Same version is already installed, and not a snapshot, ignoring update:" + resource);
+    		}
+    		return;
+    	}
         
         // If snapshot and ready to update, cancel if digest didn't change - as the list
         // of RegisteredResources is not saved, this might not have been detected earlier,
         // if the snapshot was installed and the installer was later restarted
-        if( (b != null) && snapshot) {
-            final String oldDigest = ctx.getBundleDigest(b);
+        if(snapshot) {
+            final String oldDigest = ctx.getInstalledBundleDigest(b);
             if(resource.getDigest().equals(oldDigest)) {
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(
@@ -95,7 +93,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         }
         b.stop();
         b.update(resource.getInputStream());
-        ctx.saveBundleDigest(b, resource.getDigest());
+        ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
         if(ctx.getLogService() != null) {
             ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());

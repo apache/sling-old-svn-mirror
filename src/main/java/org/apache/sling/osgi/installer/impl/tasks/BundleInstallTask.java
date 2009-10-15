@@ -23,6 +23,8 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 /** Install a bundle supplied as a RegisteredResource.
  *  Creates a BundleStartTask to start the bundle */
@@ -41,7 +43,8 @@ public class BundleInstallTask extends OsgiInstallerTask {
     
     public void execute(OsgiInstallerContext ctx) throws Exception {
         final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream());
-        ctx.saveBundleDigest(b, resource.getDigest());
+        final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
+        ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         logExecution(ctx);
         ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);

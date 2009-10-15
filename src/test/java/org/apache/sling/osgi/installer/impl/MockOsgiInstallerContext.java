@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.osgi.framework.Bundle;
@@ -29,6 +30,14 @@ import org.osgi.service.packageadmin.PackageAdmin;
 
 public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
+    private final PersistentBundleInfo persistentBundleInfo;
+    
+    public MockOsgiInstallerContext() throws IOException {
+        final File f = File.createTempFile(MockOsgiInstallerContext.class.getSimpleName(), ".data");
+        f.deleteOnExit();
+        persistentBundleInfo = new PersistentBundleInfo(this, f);
+    }
+    
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
 	}
 
@@ -65,10 +74,19 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 		return v.toString().indexOf(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
 
-    public String getBundleDigest(Bundle b) throws IOException {
-        return null;
+    public String getInstalledBundleDigest(Bundle b) throws IOException {
+        return persistentBundleInfo.getDigest(b.getSymbolicName());
     }
 
-    public void saveBundleDigest(Bundle b, String digest) throws IOException {
+    public String getInstalledBundleVersion(String symbolicName) throws IOException {
+        return persistentBundleInfo.getInstalledVersion(symbolicName);
+    }
+
+    public void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException {
+        saveInstalledBundleInfo(b.getSymbolicName(), digest, version);
+    }
+    
+    public void saveInstalledBundleInfo(String symbolicName, String digest, String version) throws IOException {
+        persistentBundleInfo.putInfo(symbolicName, digest, version);
     }
 }

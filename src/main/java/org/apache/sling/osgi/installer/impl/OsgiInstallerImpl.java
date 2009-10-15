@@ -172,14 +172,21 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
 
-    public String getBundleDigest(Bundle b) throws IOException {
+    public String getInstalledBundleDigest(Bundle b) throws IOException {
         if(bundleDigestsStorage == null) {
             return null;
         }
         return bundleDigestsStorage.getDigest(b.getSymbolicName());
     }
 
-    public void saveBundleDigest(Bundle b, String digest) throws IOException {
-        bundleDigestsStorage.putInfo(b.getSymbolicName(), digest, "");
+    public String getInstalledBundleVersion(String symbolicName) throws IOException {
+        if(bundleDigestsStorage == null) {
+            return null;
+        }
+        return bundleDigestsStorage.getInstalledVersion(symbolicName);
+    }
+
+    public void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException {
+        bundleDigestsStorage.putInfo(b.getSymbolicName(), digest, version);
     }
  }

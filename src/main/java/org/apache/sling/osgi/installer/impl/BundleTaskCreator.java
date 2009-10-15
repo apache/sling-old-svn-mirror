@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
@@ -42,15 +43,18 @@ class BundleTaskCreator {
     /** Holds the bundle info that we need, makes it easier to test
      *  without an OSGi framework */ 
     static class BundleInfo {
+        final String symbolicName;
         final Version version;
         final int state;
         
-        BundleInfo(Version version, int state) {
+        BundleInfo(String symbolicName, Version version, int state) {
+            this.symbolicName = symbolicName;
             this.version = version;
             this.state = state;
         }
         
         BundleInfo(Bundle b) {
+            this.symbolicName = b.getSymbolicName();
             this.version = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
             this.state = b.getState();
         }
@@ -61,7 +65,7 @@ class BundleTaskCreator {
 	 *  has desired state == active, and generates the appropriate OSGi tasks to
 	 *  reach this state. 
 	 */
-	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
+	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) throws IOException {
 		
 		// Find the bundle that must be active: the resources collection is ordered according
 		// to priorities, so we just need to find the first one that is installable
@@ -95,10 +99,27 @@ class BundleTaskCreator {
 				digestToSave = toActivate.getDigest();
 			} else {
 			    final int compare = info.version.compareTo(newVersion); 
-			    if(compare != 0) {
-	                // installed but different version. Can be a later version if 
-			        // the newer version resource was removed, in case we downgrade
-			        toUpdate = toActivate;
+                if(compare < 0) {
+                    // installed version is lower -> update
+                    toUpdate = toActivate;
+                } else if(compare > 0) {
+	                // installed version is higher -> downgrade only if
+                    // we installed that version
+                    final String installedVersion = ctx.getInstalledBundleVersion(info.symbolicName);
+                    if(info.version.toString().equals(installedVersion)) {
+                        toUpdate = toActivate;
+                        if(ctx.getLogService() != null) {
+                            ctx.getLogService().log(LogService.LOG_INFO, 
+                                    "Bundle " + info.symbolicName + " " + installedVersion 
+                                    + " was installed by this module, downgrading to " + newVersion);
+                        }
+                    } else {
+                        if(ctx.getLogService() != null) {
+                            ctx.getLogService().log(LogService.LOG_INFO, 
+                                    "Bundle " + info.symbolicName + " " + installedVersion 
+                                    + " was not installed by this module, leaving as is");
+                        }
+                    }
 			    } else if(compare == 0 && ctx.isSnapshot(newVersion)){
 			        // installed, same version but SNAPSHOT
                     toUpdate = toActivate;

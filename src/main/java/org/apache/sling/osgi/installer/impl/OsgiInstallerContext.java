@@ -46,11 +46,16 @@ public interface OsgiInstallerContext {
 	 */
 	void addTaskToNextCycle(OsgiInstallerTask t);
 	
-	/** Store a bundle's digest, keyed by symbolic ID + version */
-	void saveBundleDigest(Bundle b, String digest) throws IOException;
+	/** Store a bundle's digest and installed version, keyed by symbolic ID */
+	void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException;
 	
-	/** Retrieve a bundle's digest that was stored by storeBundleDigest 
+	/** Retrieve a bundle's digest that was stored by saveInstalledBundleInfo  
 	 *  @return null if no digest was stored   
 	 * */
-	String getBundleDigest(Bundle b) throws IOException;
+	String getInstalledBundleDigest(Bundle b) throws IOException;
+	
+    /** Retrieve a bundle's version that was stored by saveInstalledBundleInfo  
+     *  @return null if no version was stored   
+     * */
+    String getInstalledBundleVersion(String symbolicName) throws IOException;
 }
