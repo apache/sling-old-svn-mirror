@@ -92,6 +92,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     public JcrResourceResolver2(JcrResourceProviderEntry rootProvider,
             JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
+        
         this.rootProvider = rootProvider;
         this.factory = factory;
         this.resourceMapper = resourceMapper;
