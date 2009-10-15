@@ -31,12 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>LoginServlet</code> lets the Authenticator
- * do the login.
- * 
+ * The <code>LoginServlet</code> lets the Authenticator do the login.
+ *
  * @scr.component metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="HTTP Header Login Servlet"
+ * @scr.property name="service.description" value="Authenticator Login Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.methods" values.0="GET" values.1="POST"
  */
@@ -51,14 +50,35 @@ public class LoginServlet extends SlingAllMethodsServlet {
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private Authenticator authenticator;
 
-    /** The servlet is registered on this path, and the authenticator allows
-     *  any requests to that path, without authentication
-     *  @scr.property name="sling.servlet.paths" */
+    /**
+     * The servlet is registered on this path, and the authenticator allows any
+     * requests to that path, without authentication
+     *
+     * @scr.property name="sling.servlet.paths"
+     */
     public static final String LOGIN_SERVLET_PATH = "/system/sling/login";
 
     @Override
-    protected void doGet(SlingHttpServletRequest request,
+    protected void service(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
+
+        // if the request is logged in and the resource is not set (such
+        // as when requesting /system/sling/login from the browser with the
+        // browser sending credentials) or the resource is set to the login
+        // servlet as a result of authenticating after providing credentials
+        // through the login servlet), redirect to root now assuming we are
+        // authenticated.
+        if (request.getAuthType() != null) {
+            final String resourcePath = request.getParameter("resource");
+            if (isSelf(resourcePath)) {
+                String redirectTarget = request.getContextPath() + "/";
+                log.warn(
+                    "doGet: Redirecting to {} to prevent login loop for resource {}",
+                    redirectTarget, resourcePath);
+                response.sendRedirect(redirectTarget);
+                return;
+            }
+        }
 
         Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
@@ -72,17 +92,25 @@ public class LoginServlet extends SlingAllMethodsServlet {
                 log.error("doGet: No AuthenticationHandler to login registered");
             }
         } else {
-            log.error("doGet: Authenticator service missing, cannot request authentication");
+            log.error("doGet: Authenticator service missing, cannot login");
         }
 
         // fall back to forbid access
         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Cannot login");
     }
 
-    @Override
-    protected void doPost(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
-        response.sendRedirect(request.getRequestURI());
-    }
+    private boolean isSelf(final String resourcePath) {
+        // no resource, assume self
+        if (resourcePath == null) {
+            return true;
+        }
 
+        // login servlet is addressed
+        if (resourcePath.startsWith(LOGIN_SERVLET_PATH)) {
+            return true;
+        }
+
+        // not a prefix
+        return false;
+    }
 }
