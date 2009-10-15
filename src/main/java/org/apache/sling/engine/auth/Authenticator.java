@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
  * This interface is not intended to be implemented by applications but may be
  * used to initiate the authentication process form a request processing servlet
  * or script.
- * 
+ *
  * @since 2.0.4
  */
 public interface Authenticator {
@@ -49,13 +49,34 @@ public interface Authenticator {
      * <p>
      * After this method has finished, request processing should be terminated
      * and the response be considered committed and finished.
-     * 
+     *
      * @param request The object representing the client request.
      * @param response The object representing the response to the client.
      * @throws NoAuthenticationHandlerException If no authentication handler
      *             claims responsibility to authenticate the request.
      * @throws IllegalStateException If the response has already been committed.
      */
-    public void login(HttpServletRequest request, HttpServletResponse response);
+    void login(HttpServletRequest request, HttpServletResponse response);
 
+    /**
+     * Finds an {@link AuthenticationHandler2} for the given request and call
+     * its
+     * {@link AuthenticationHandler2#dropAuthentication(HttpServletRequest, HttpServletResponse)}
+     * method to drop authentication credentials for the client to logout from
+     * Sling.
+     * <p>
+     * This method must be called on an uncommitted response since the
+     * implementation may want to reset the response to restart the
+     * authentication process with a clean response. If the response is already
+     * committed an <code>IllegalStateException</code> is thrown.
+     * <p>
+     * After this method has finished, request processing should be terminated
+     * and the response be considered committed and finished.
+     *
+     * @param request The object representing the client request.
+     * @param response The object representing the response to the client.
+     * @throws IllegalStateException If the response has already been committed.
+     * @since 2.1
+     */
+    void logout(HttpServletRequest request, HttpServletResponse response);
 }

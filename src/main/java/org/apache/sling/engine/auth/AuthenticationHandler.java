@@ -31,11 +31,18 @@ import javax.servlet.http.HttpServletResponse;
 public interface AuthenticationHandler {
 
     /**
+     * The name under which an implementation of this interface must be
+     * registered to be used as an authentication handler.
+     * @since 2.1
+     */
+    static final String SERVICE_NAME = "org.apache.sling.engine.auth.AuthenticationHandler";
+
+    /**
      * An authentication handler is associated with url paths. If the handler is
      * not configured with a path, it is regarded as inactive. If the handler
      * should be used for all requests, the path should be '/'.
      */
-    String PATH_PROPERTY = "path";
+    static final String PATH_PROPERTY = "path";
 
     /**
      * Extracts credential data from the request if at all contained.
@@ -71,7 +78,7 @@ public interface AuthenticationHandler {
      * attribute. If the service is registered with multiple path values, the
      * value of the <code>path</code> request attribute may be used to implement
      * specific handling.
-     * 
+     *
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -100,7 +107,7 @@ public interface AuthenticationHandler {
      * attribute. If the service is registered with multiple path values, the
      * value of the <code>path</code> request attribute may be used to implement
      * specific handling.
-     * 
+     *
      * @param request The request object.
      * @param response The response object to which to send the request.
      * @return <code>true</code> if the handler is able to end an authentication
