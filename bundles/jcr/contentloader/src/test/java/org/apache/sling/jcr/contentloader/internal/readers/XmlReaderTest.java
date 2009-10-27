@@ -22,28 +22,81 @@ import junit.framework.TestCase;
 import org.apache.sling.jcr.contentloader.internal.ContentCreator;
 
 import javax.jcr.RepositoryException;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
-/**
- * 	Test the XmlReader with an XSLT transform
- */
 public class XmlReaderTest extends TestCase {
 
+    private XmlReader reader;
+    private MockContentCreator creator;
+
+    /**
+     * 	Test the XmlReader with an XSLT transform.
+     */
     public void testXmlReader() throws Exception {
-        XmlReader reader = new XmlReader();
         File file = new File("src/test/resources/reader/sample.xml");
         final URL testdata  = file.toURI().toURL();
-        final MockContentCreator creator = new MockContentCreator();
         reader.parse(testdata, creator);
         assertEquals("Did not create expected number of nodes", 1, creator.size());
     }
 
+    /**
+     * Test inclusion of binary files.
+     */
+    public void testCreateFile() throws Exception {
+        File input = new File("src/test/resources/reader/filesample.xml");
+        final URL testdata = input.toURI().toURL();
+        reader.parse(testdata, creator);
+        assertEquals("Did not create expected number of files", 2, creator.filesCreated.size());
+        MockContentCreator.FileDescription file = creator.filesCreated.get(0);
+        try {
+            file.data.available();
+            TestCase.fail("Did not close inputstream");
+        } catch (IOException ignore) {
+            // Expected
+        }
+        assertEquals("mimeType mismatch", "application/test", file.mimeType);
+        assertEquals("lastModified mismatch", XmlReader.FileDescription.DATE_FORMAT.parse("1977-06-01T07:00:00+0100"), new Date(file.lastModified));
+        assertEquals("Could not read file", "This is a test file.", file.content);
+
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        reader = new XmlReader();
+        creator = new MockContentCreator();
+    }
+
     @SuppressWarnings("serial")
 	private static class MockContentCreator extends ArrayList<String> implements ContentCreator {
+
+        public static class FileDescription {
+            public String name;
+            public InputStream data;
+            public String mimeType;
+            public long lastModified;
+            public String content;
+
+            public FileDescription(String name, InputStream data, String mimeType, long lastModified) throws IOException {
+                this.name = name;
+                this.data = data;
+                this.mimeType = mimeType;
+                this.lastModified = lastModified;
+                BufferedReader reader = new BufferedReader(new InputStreamReader(data));
+                this.content = reader.readLine();
+                reader.close();
+            }
+        }
+
+        public List<FileDescription> filesCreated = new ArrayList<FileDescription>();
 
 		public MockContentCreator() {
         }
@@ -68,6 +121,11 @@ public class XmlReaderTest extends TestCase {
         }
 
         public void createFileAndResourceNode(String name, InputStream data, String mimeType, long lastModified) throws RepositoryException {
+            try {
+                this.filesCreated.add(new FileDescription(name, data, mimeType, lastModified));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public boolean switchCurrentNode(String subPath, String newNodeType) throws RepositoryException {
