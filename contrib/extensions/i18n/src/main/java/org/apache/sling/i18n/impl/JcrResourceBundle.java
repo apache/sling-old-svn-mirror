@@ -42,11 +42,23 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final String PROP_BASENAME = "sling:basename";
 
-    private static final String QUERY_BASE = "//element(*,mix:language)[@jcr:language='%s'%s]/*";
+    /**
+     * Search the tree below a mix:language node matching a given language...
+     */
+    private static final String QUERY_BASE =
+        "//element(*,mix:language)[@jcr:language='%s'%s]//*";
 
-    private static final String QUERY_LOAD_FULLY = QUERY_BASE + "/(@"
-        + PROP_KEY + "|@" + PROP_VALUE + ")";
+    /**
+     * ... and find all nodes with a sling:message property set
+     * (typically with mixin sling:Message).
+     */
+    private static final String QUERY_LOAD_FULLY = QUERY_BASE
+        + "[@" + PROP_VALUE + "]/@" + PROP_VALUE;
 
+    /**
+     * ... or find a node with the message (sling:message property) for
+     * a given key (sling:key property).
+     */
     private static final String QUERY_LOAD_RESOURCE = QUERY_BASE + "[@"
         + PROP_KEY + "='%s']/@" + PROP_VALUE;
 
