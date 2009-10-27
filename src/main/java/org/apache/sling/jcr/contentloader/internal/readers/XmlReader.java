@@ -25,12 +25,18 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -52,7 +58,7 @@ import org.xmlpull.v1.XmlPullParserException;
 /**
  * This reader reads an xml file defining the content. The xml format should have this
  * format:
- * 
+ *
  * <pre>
  * &lt;node&gt;
  *   &lt;name&gt;the name of the node&lt;/name&gt;
@@ -81,6 +87,9 @@ import org.xmlpull.v1.XmlPullParserException;
  *   &lt;/nodes&gt;
  * &lt;/node&gt;
  * </pre>
+ *
+ * If you want to include a binary file in your loaded content, you may specify it using a
+ * {@link org.apache.sling.jcr.contentloader.internal.readers.XmlReader.FileDescription <code>&lt;nt:file&gt;</code>} element.
  */
 public class XmlReader implements ContentReader {
 
@@ -113,6 +122,9 @@ public class XmlReader implements ContentReader {
 
     private static final String HREF_ATTRIBUTE = "href";
 
+    private static final String ELEM_FILE_NAMESPACE = "http://www.jcp.org/jcr/nt/1.0";
+    private static final String ELEM_FILE_NAME = "file";
+
     public static final ImportProvider PROVIDER = new ImportProvider() {
         private XmlReader xmlReader;
 
@@ -131,6 +143,12 @@ public class XmlReader implements ContentReader {
 
     XmlReader() {
         this.xmlParser = new KXmlParser();
+        try {
+            // Make namespace-aware
+            this.xmlParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+        } catch (XmlPullParserException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // ---------- XML content access -------------------------------------------
@@ -165,6 +183,7 @@ public class XmlReader implements ContentReader {
 
         NodeDescription.SHARED.clear();
         PropertyDescription.SHARED.clear();
+        FileDescription.SHARED.clear();
 
         NodeDescription currentNode = null;
         PropertyDescription currentProperty = null;
@@ -200,6 +219,22 @@ public class XmlReader implements ContentReader {
                 } else if (ELEM_NODE.equals(currentElement)) {
                     currentNode = NodeDescription.create(currentNode, creator);
                     currentNode = NodeDescription.SHARED;
+                } else if (ELEM_FILE_NAME.equals(currentElement) && ELEM_FILE_NAMESPACE.equals(this.xmlParser.getNamespace())) {
+                    int attributeCount = this.xmlParser.getAttributeCount();
+                    if (attributeCount < 2 || attributeCount > 3) {
+                        throw new IOException("File element must have these attributes: url, mimeType and lastModified");
+                    }
+                    try {
+                        AttributeMap attributes = AttributeMap.getInstance();
+                        attributes.setValues(xmlParser);
+                        FileDescription.SHARED.setBaseLocation(xmlLocation);
+                        FileDescription.SHARED.setValues(attributes);
+                        attributes.clear();
+                    } catch (ParseException e) {
+                        throw new IOException("Error parsing file description", e);
+                    }
+                    FileDescription.SHARED.create(creator);
+                    FileDescription.SHARED.clear();
                 }
 
             } else if (eventType == XmlPullParser.END_TAG) {
@@ -243,7 +278,6 @@ public class XmlReader implements ContentReader {
                     }
                     currentNode.addMixinType(content);
                 }
-
             } else if (eventType == XmlPullParser.TEXT || eventType == XmlPullParser.CDSECT) {
                 contentBuffer.append(this.xmlParser.getText());
             }
@@ -454,5 +488,104 @@ public class XmlReader implements ContentReader {
             return this.attributes.get(key);
         }
 
+    }
+
+    /**
+     * Represents a reference to a file that is to be loaded into the repository. The file is referenced by an
+     * XML element named <code>&lt;nt:file&gt;</code>, with the attributes <code>src</code>,
+     * <code>mimeType</code> and <code>lastModified</code>. <br/><br/>Example:
+     * <pre>
+     * &lt;nt:file src="../../image.png" mimeType="image/png" lastModified="1977-06-01T07:00:00+0100" /&gt;
+     * </pre>
+     * The date format for <code>lastModified</code> is <code>yyyy-MM-dd'T'HH:mm:ssZ</code>.
+     * The <code>lastModified</code> attribute is optional. If missing, it will be set to the current time.
+     */
+    protected static final class FileDescription {
+
+        private URL url;
+        private String mimeType;
+        private URL baseLocation;
+        private Long lastModified;
+
+        public static FileDescription SHARED = new FileDescription();
+        private static final String SRC_ATTRIBUTE = "src";
+        private static final String MIME_TYPE_ATTRIBUTE = "mimeType";
+        private static final String LAST_MODIFIED_ATTRIBUTE = "lastModified";
+        public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+        static {
+            DATE_FORMAT.setLenient(true);
+        }
+
+        public void setValues(AttributeMap attributes) throws MalformedURLException, ParseException {
+            Set<String> attributeNames = attributes.keySet();
+            for (String name : attributeNames) {
+                String value = attributes.get(name);
+                if (name.equals(SRC_ATTRIBUTE)) {
+                    url = new URL(baseLocation, value);
+                } else if (name.equals(MIME_TYPE_ATTRIBUTE)) {
+                    mimeType = value;
+                } else if (name.equals(LAST_MODIFIED_ATTRIBUTE)) {
+                    lastModified = DATE_FORMAT.parse(value).getTime();
+                }
+            }
+        }
+
+        public void create(ContentCreator creator) throws RepositoryException, IOException {
+            String[] parts = url.getPath().split("/");
+            String name = parts[parts.length - 1];
+            InputStream stream = url.openStream();
+            creator.createFileAndResourceNode(name, stream, mimeType, lastModified != null ? lastModified : Calendar.getInstance().getTimeInMillis());
+            closeStream(stream);
+            creator.finishNode();
+            creator.finishNode();
+            this.clear();
+        }
+
+        public URL getUrl() {
+            return url;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public Long getLastModified() {
+            return lastModified;
+        }
+
+        public void clear() {
+            this.url = null;
+            this.mimeType = null;
+            this.lastModified = null;
+        }
+
+        public void setBaseLocation(URL xmlLocation) {
+            this.baseLocation = xmlLocation;
+        }
+    }
+
+    /**
+     * Utility class for dealing with attributes from KXmlParser.
+     */
+    protected static class AttributeMap extends HashMap<String, String> {
+
+        private static final AttributeMap instance = new AttributeMap();
+
+        public static AttributeMap getInstance() {
+            return instance;
+        }
+
+        /**
+         * Puts values in an <code>AttributeMap</code> by extracting attributes from the <code>xmlParser</code>.
+         * @param xmlParser <code>xmlParser</code> to extract attributes from. The parser must be
+         * in {@link org.xmlpull.v1.XmlPullParser#START_TAG} state.
+         */
+        public void setValues(KXmlParser xmlParser) {
+            final int count = xmlParser.getAttributeCount();
+            for (int i = 0; i < count; i++) {
+                this.put(xmlParser.getAttributeName(i), xmlParser.getAttributeValue(i));
+            }
+        }
     }
 }
