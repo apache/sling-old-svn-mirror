@@ -44,7 +44,7 @@ public class EntryTagHandler extends AbstractAbderaHandler {
         Entry entry = getEntry();
         if (draft) entry.setDraft(draft);
         if (edited != null) entry.setEdited(edited);
-        if (id != null) entry.setId(UrlEncoding.encode(id));
+        if (id != null) entry.setId(id);
         if (published != null) entry.setPublished(published);
         if (updated != null) entry.setUpdated(updated);
 
