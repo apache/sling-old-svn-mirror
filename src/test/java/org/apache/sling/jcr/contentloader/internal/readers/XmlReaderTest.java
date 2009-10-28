@@ -69,6 +69,18 @@ public class XmlReaderTest extends TestCase {
 
     }
 
+    public void testUseOSLastModified() throws RepositoryException, IOException {
+        File input = new File("src/test/resources/reader/datefallbacksample.xml");
+        final URL testdata = input.toURI().toURL();
+        reader.parse(testdata, creator);
+        File file = new File("src/test/resources/reader/testfile.txt");
+        long originalLastModified = file.lastModified();
+        assertEquals("Did not create expected number of files", 1, creator.filesCreated.size());
+        MockContentCreator.FileDescription fileDescription = creator.filesCreated.get(0);
+        assertEquals("Did not pick up last modified date from file", originalLastModified, fileDescription.lastModified);
+
+    }
+
     protected void setUp() throws Exception {
         super.setUp();
         reader = new XmlReader();

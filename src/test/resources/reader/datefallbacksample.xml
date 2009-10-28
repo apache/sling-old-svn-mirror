@@ -1,0 +1,20 @@
+<node xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
+    <name>nodeName</name>
+    <primaryNodeType>type</primaryNodeType>
+    <mixinNodeTypes>
+        <mixinNodeType>mixtype1</mixinNodeType>
+        <mixinNodeType>mixtype2</mixinNodeType>
+    </mixinNodeTypes>
+    <properties>
+        <property>
+            <name>propName</name>
+            <value>propValue</value>
+            <type>String</type>
+        </property>
+        <!-- more properties -->
+    </properties>
+    <nodes>
+        <!-- child nodes -->
+        <nt:file src="testfile.txt" mimeType="application/test"/>
+    </nodes>
+</node>
