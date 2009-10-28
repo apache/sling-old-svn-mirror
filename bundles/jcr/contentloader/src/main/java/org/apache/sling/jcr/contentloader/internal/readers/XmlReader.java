@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.File;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -498,7 +500,8 @@ public class XmlReader implements ContentReader {
      * &lt;nt:file src="../../image.png" mimeType="image/png" lastModified="1977-06-01T07:00:00+0100" /&gt;
      * </pre>
      * The date format for <code>lastModified</code> is <code>yyyy-MM-dd'T'HH:mm:ssZ</code>.
-     * The <code>lastModified</code> attribute is optional. If missing, it will be set to the current time.
+     * The <code>lastModified</code> attribute is optional. If missing, the last modified date reported by the
+     * filesystem will be used.
      */
     protected static final class FileDescription {
 
@@ -535,7 +538,15 @@ public class XmlReader implements ContentReader {
             String[] parts = url.getPath().split("/");
             String name = parts[parts.length - 1];
             InputStream stream = url.openStream();
-            creator.createFileAndResourceNode(name, stream, mimeType, lastModified != null ? lastModified : Calendar.getInstance().getTimeInMillis());
+            if (lastModified == null) {
+                try {
+                    lastModified = new File(url.toURI()).lastModified();
+                } catch (Throwable ignore) {
+                    // Could not get lastModified from file system, so we'll use current date
+                    lastModified = Calendar.getInstance().getTimeInMillis();
+                }
+            }
+            creator.createFileAndResourceNode(name, stream, mimeType, lastModified);
             closeStream(stream);
             creator.finishNode();
             creator.finishNode();
