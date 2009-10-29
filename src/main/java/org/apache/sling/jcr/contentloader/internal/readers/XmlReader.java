@@ -233,7 +233,9 @@ public class XmlReader implements ContentReader {
                         FileDescription.SHARED.setValues(attributes);
                         attributes.clear();
                     } catch (ParseException e) {
-                        throw new IOException("Error parsing file description", e);
+                        IOException ioe = new IOException("Error parsing file description");
+                        ioe.initCause(e);
+                        throw ioe;
                     }
                     FileDescription.SHARED.create(creator);
                     FileDescription.SHARED.clear();
