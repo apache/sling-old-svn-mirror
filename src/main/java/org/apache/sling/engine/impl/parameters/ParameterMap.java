@@ -68,16 +68,22 @@ class ParameterMap extends HashMap<String, RequestParameter[]> implements
         super.put(name, parameters);
     }
 
+    //---------- String parameter support
+
+    String getStringValue(final String name) {
+        final RequestParameter param = getValue(name);
+        return (param != null) ? param.getString() : null;
+    }
+
+    String[] getStringValues(final String name) {
+        return toStringArray(getValues(name));
+    }
+
     Map<String, String[]> getStringParameterMap() {
         if (this.stringParameterMap == null) {
             Map<String, String[]> pm = new HashMap<String, String[]>();
             for (Map.Entry<String, RequestParameter[]> ppmEntry : entrySet()) {
-                RequestParameter[] pps = ppmEntry.getValue();
-                String[] ps = new String[pps.length];
-                for (int i = 0; i < pps.length; i++) {
-                    ps[i] = pps[i].getString();
-                }
-                pm.put(ppmEntry.getKey(), ps);
+                pm.put(ppmEntry.getKey(), toStringArray(ppmEntry.getValue()));
             }
             this.stringParameterMap = Collections.unmodifiableMap(pm);
         }
@@ -124,5 +130,19 @@ class ParameterMap extends HashMap<String, RequestParameter[]> implements
     @Override
     public RequestParameter[] remove(Object key) {
         throw new UnsupportedOperationException("remove");
+    }
+
+    //---------- internal
+
+    private static String[] toStringArray(final RequestParameter[] params) {
+        if (params == null) {
+            return null;
+        }
+
+        final String[] ps = new String[params.length];
+        for (int i = 0; i < params.length; i++) {
+            ps[i] = params[i].getString();
+        }
+        return ps;
     }
 }

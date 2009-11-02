@@ -82,12 +82,11 @@ public class ParameterSupport {
     }
 
     public String getParameter(String name) {
-        RequestParameter param = this.getRequestParameter(name);
-        return (param != null) ? param.getString() : null;
+        return getRequestParameterMapInternal().getStringValue(name);
     }
 
     public String[] getParameterValues(String name) {
-        return this.getParameterMap().get(name);
+        return getRequestParameterMapInternal().getStringValues(name);
     }
 
     public Map<String, String[]> getParameterMap() {
