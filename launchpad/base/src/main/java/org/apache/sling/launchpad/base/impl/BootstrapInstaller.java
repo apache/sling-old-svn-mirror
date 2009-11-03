@@ -536,9 +536,7 @@ class BootstrapInstaller implements BundleActivator {
     private Manifest getManifest(File jar) {
         try {
             InputStream ins = new FileInputStream(jar);
-            if (ins != null) {
-                return getManifest(ins);
-            }
+            return getManifest(ins);
         } catch (FileNotFoundException e) {
             logger.log(Logger.LOG_WARNING, "Could not get inputstream from file ("+jar+"):"+e);
             //throw new IllegalArgumentException("Could not get inputstream from file ("+jar+"):"+e, e);
