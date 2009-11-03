@@ -27,8 +27,7 @@ import javax.jcr.RepositoryException;
 public interface AuthenticationPlugin {
 
     /**
-     * {@see org.apache.jackrabbit.core.security.authentication.Authentication#
-     * authenticate}
+     * @see org.apache.jackrabbit.core.security.authentication.Authentication#authenticate
      */
     public abstract boolean authenticate(Credentials credentials)
             throws RepositoryException;
