@@ -462,7 +462,6 @@ public class Loader {
                             PathEntry configuration)
     throws RepositoryException {
         final String resourcePath = resourceUrl.getPath().toLowerCase();
-        InputStream ins = null;
         try {
             // special treatment for system view imports
             if (resourcePath.endsWith(EXT_JCR_XML)) {
@@ -489,13 +488,6 @@ public class Loader {
             throw re;
         } catch (Throwable t) {
             throw new RepositoryException(t.getMessage(), t);
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                }
-            }
         }
     }
 

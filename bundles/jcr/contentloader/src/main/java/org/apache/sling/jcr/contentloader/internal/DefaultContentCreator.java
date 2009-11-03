@@ -98,12 +98,12 @@ public class DefaultContentCreator implements ContentCreator {
      * A one time use seed to randomize the user location.
      */
     private static final long INSTANCE_SEED = System.currentTimeMillis();
-   
+
     /**
      * The number of levels folder used to store a user, could be a configuration option.
      */
     private static final int STORAGE_LEVELS = 3;
-   
+
     /**
      * Constructor.
      * @param jcrContentHelper Helper class to get the mime type of a file
@@ -642,7 +642,7 @@ public class DefaultContentCreator implements ContentCreator {
 
 		final Node parentNode = this.parentNodeStack.peek();
 		Session session = parentNode.getSession();
-		
+
         UserManager userManager = AccessControlUtil.getUserManager(session);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable == null) {
@@ -660,9 +660,8 @@ public class DefaultContentCreator implements ContentCreator {
                 throw new RepositoryException(
                         "A user already exists with the requested name: "
                             + name);
-        	} else {
-        		//group already exists so just update it below        		
-        	}
+            }
+    		//group already exists so just update it below
         }
         //update the group members
         if (members != null) {
@@ -691,7 +690,7 @@ public class DefaultContentCreator implements ContentCreator {
 			Map<String, Object> extraProperties) throws RepositoryException {
 		final Node parentNode = this.parentNodeStack.peek();
 		Session session = parentNode.getSession();
-		
+
         UserManager userManager = AccessControlUtil.getUserManager(session);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable == null) {
@@ -712,9 +711,8 @@ public class DefaultContentCreator implements ContentCreator {
                 throw new RepositoryException(
                         "A group already exists with the requested name: "
                             + name);
-        	} else {
-        		//user already exists so just update it below        		
-        	}
+            }
+    		//user already exists so just update it below
         }
         if (extraProperties != null) {
         	ValueFactory valueFactory = session.getValueFactory();
@@ -725,7 +723,7 @@ public class DefaultContentCreator implements ContentCreator {
 			}
         }
 	}
-	
+
 	/**
 	 * @param item
 	 * @return a parent path fragment for the item.
@@ -744,7 +742,7 @@ public class DefaultContentCreator implements ContentCreator {
 			throw new RepositoryException("Unable to hash the path.", e);
 		}
 	}
-	
+
 
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createAce(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
@@ -754,7 +752,7 @@ public class DefaultContentCreator implements ContentCreator {
 			throws RepositoryException {
 		final Node parentNode = this.parentNodeStack.peek();
 		Session session = parentNode.getSession();
-		
+
 		UserManager userManager = AccessControlUtil.getUserManager(session);
 		Authorizable authorizable = userManager.getAuthorizable(principalId);
 		if (authorizable == null) {
@@ -762,7 +760,7 @@ public class DefaultContentCreator implements ContentCreator {
 		}
 
 		String resourcePath = parentNode.getPath();
-		
+
 		AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
 		AccessControlList updatedAcl = null;
 		AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
@@ -784,10 +782,10 @@ public class DefaultContentCreator implements ContentCreator {
 		if (deniedPrivilegeNames != null) {
 			postedPrivilegeNames.addAll(Arrays.asList(deniedPrivilegeNames));
 		}
-			
+
 		List<Privilege> preserveGrantedPrivileges = new ArrayList<Privilege>();
 		List<Privilege> preserveDeniedPrivileges = new ArrayList<Privilege>();
-			
+
 		//keep track of the existing Aces for the target principal
 		AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
 		List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
@@ -818,7 +816,7 @@ public class DefaultContentCreator implements ContentCreator {
 				updatedAcl.removeAccessControlEntry(ace);
 			}
 		}
-			
+
 		//add a fresh ACE with the granted privileges
 		List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
 		for (String name : grantedPrivilegeNames) {
@@ -830,7 +828,7 @@ public class DefaultContentCreator implements ContentCreator {
 		}
 		//add the privileges that should be preserved
 		grantedPrivilegeList.addAll(preserveGrantedPrivileges);
-			
+
 		if (grantedPrivilegeList.size() > 0) {
 			Principal principal = authorizable.getPrincipal();
 			updatedAcl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
@@ -857,5 +855,5 @@ public class DefaultContentCreator implements ContentCreator {
 		}
 
 		accessControlManager.setPolicy(resourcePath, updatedAcl);
-	}	
+	}
 }
