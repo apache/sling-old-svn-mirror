@@ -54,16 +54,16 @@ public class EventUtilTest {
     @Test public void testDistributeFlag() {
         final Event distributableEvent = EventUtil.createDistributableEvent("some/topic", null);
         assertTrue(EventUtil.shouldDistribute(distributableEvent));
-        final Event nonDistributableEvent = new Event("another/topic", (Dictionary)null);
+        final Event nonDistributableEvent = new Event("another/topic", (Dictionary<String, Object>)null);
         assertFalse(EventUtil.shouldDistribute(nonDistributableEvent));
     }
 
     @Test public void testLocalFlag() {
-        final Event localEvent = new Event("local/event", (Dictionary)null);
+        final Event localEvent = new Event("local/event", (Dictionary<String, Object>)null);
         assertTrue(EventUtil.isLocal(localEvent));
         final Properties props = new Properties();
         props.put(EventUtil.PROPERTY_APPLICATION, "application1");
-        final Event remoteEvent = new Event("remote/event", props);
+        final Event remoteEvent = new Event("remote/event", (Dictionary<Object, Object>)props);
         assertFalse(EventUtil.isLocal(remoteEvent));
     }
 
