@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
  * extracting credentials from the request.
  * <p>
  * Authentication handlers implementing this interface should still be
- * registered with the {@link AuthenticationHandler#SERVICE authentication
+ * registered with the {@link AuthenticationHandler#SERVICE_NAME authentication
  * handler service name}. Internally, the
  * {@link Authenticator#logout(HttpServletRequest, HttpServletResponse)} method
  * will identify the authentication handler appropriately.

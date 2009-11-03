@@ -121,19 +121,19 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     }
 
     //---------- Adaptable interface
-    
+
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         AdapterManager adapterManager = getRequestData().getAdapterManager();
         if (adapterManager != null) {
             return adapterManager.getAdapter(this, type);
         }
-        
+
         // no adapter manager, nothing to adapt to
         return null;
     }
-    
+
     //---------- SlingHttpServletResponse interface
-    
+
     @Override
     public void flushBuffer() throws IOException {
         getRequestData().getContentData().flushBuffer();
@@ -430,6 +430,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
      *            of potentially existing header values. Otherwise the new value
      *            replaces any existing values.
      */
+    @SuppressWarnings("unchecked")
     private void registerHeader(String name, String value, boolean add) {
         // ensure the headers map
         if (this.headers == null) {
