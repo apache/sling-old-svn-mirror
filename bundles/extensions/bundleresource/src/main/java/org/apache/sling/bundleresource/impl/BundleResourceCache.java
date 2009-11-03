@@ -100,7 +100,7 @@ class BundleResourceCache {
     /**
      * Creates a new instance of this class providing access to the entries in
      * the given <code>bundle</code>.
-     * 
+     *
      * @param bundle
      */
     BundleResourceCache(Bundle bundle) {
@@ -127,7 +127,7 @@ class BundleResourceCache {
      * <p>
      * This method is backed by the <code>Bundle.getEntry(String)</code>
      * method.
-     * 
+     *
      * @param path The path to the bundle entry to return
      * @return The URL to access the bundle entry or <code>null</code> if the
      *         bundle does not contain the request entry.
@@ -155,7 +155,7 @@ class BundleResourceCache {
      * This method is backed by the <code>Bundle.getEntryPaths(String)</code>
      * method but returns an <code>Iterator<String></code> instead of an
      * <code>Enumeration</code> of strings.
-     * 
+     *
      * @param parentPath The path to the parent entry whose child entries are to
      *            be returned.
      * @return An <code>Iterator<String></code> providing the paths of
@@ -244,7 +244,7 @@ class BundleResourceCache {
 
         /**
          * Creates a new instance of this size limited map.
-         * 
+         *
          * @param limit The maximum number of entries in this map. If this value
          *            is less than or equal to zero, the default size of
          *            {@link #DEFAULT_LIMIT} is used.
@@ -260,13 +260,6 @@ class BundleResourceCache {
             }
 
             this.limit = limit;
-        }
-
-        /**
-         * Returns the maximum number of entries to be stored in this map.
-         */
-        int getLimit() {
-            return limit;
         }
 
         /**
