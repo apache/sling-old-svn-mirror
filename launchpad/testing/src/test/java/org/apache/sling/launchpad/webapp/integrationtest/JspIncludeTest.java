@@ -17,15 +17,14 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
+
 
 
 /** Test the {link ScriptHelper#include) functionality */
@@ -78,7 +77,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         props.remove("testMaxCalls");
         props.put("testInfiniteLoop","true");
         nodeUrlC = testClient.createNode(url, props);
-        
+
         // Node D is used for the "force resource type" test
         forcedResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
         props.remove("testInfiniteLoop");
@@ -137,13 +136,13 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue(
             "Response contains infinite loop error message",
             content.contains("org.apache.sling.api.request.RecursionTooDeepException"));
-        
+
         // TODO: SLING-515, status is 500 when running the tests as part of the maven build
         // but 200 if running tests against a separate instance started with mvn jetty:run
         // final int status = get.getStatusCode();
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
-    
+
     public void testMaxCallsDetection() throws IOException {
         // Node F has a property that causes over 1000 includes
         // Sling must indicate the problem in its response

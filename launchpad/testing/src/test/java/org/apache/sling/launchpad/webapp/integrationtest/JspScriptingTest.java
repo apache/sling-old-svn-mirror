@@ -16,7 +16,6 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test JSP scripting

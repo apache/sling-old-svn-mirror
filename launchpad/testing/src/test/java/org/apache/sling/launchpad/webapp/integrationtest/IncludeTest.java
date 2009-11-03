@@ -17,7 +17,6 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
