@@ -18,7 +18,6 @@
  */
 package org.apache.sling.commons.log.internal.slf4j;
 
-import java.awt.image.ImagingOpException;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -31,7 +30,7 @@ public class PrivilegedWriter extends FilterWriter {
     PrivilegedWriter(Writer delegatee) {
         super(delegatee);
     }
-    
+
     @Override
     public void close() throws IOException {
         try {
