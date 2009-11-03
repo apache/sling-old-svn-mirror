@@ -18,18 +18,9 @@
  */
 package org.apache.sling.extensions.threaddump.internal;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.ConfigurationPrinter;
 
 class BaseThreadDumper {
 
@@ -49,7 +40,7 @@ class BaseThreadDumper {
 
         return false;
     }
-    
+
     void printThreads(PrintWriter pw, boolean withStackTrace) {
         // first get the root thread group
         ThreadGroup rootGroup = getRootThreadGroup();
@@ -73,7 +64,7 @@ class BaseThreadDumper {
         }
         return rootGroup;
     }
-    
+
     private void printThreadGroup(PrintWriter pw, ThreadGroup group, boolean withStackTrace) {
         if (group != null) {
             StringBuffer info = new StringBuffer();

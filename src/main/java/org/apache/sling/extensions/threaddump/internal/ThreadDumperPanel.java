@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Locale;
 
 import javax.servlet.Servlet;
