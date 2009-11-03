@@ -46,15 +46,15 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-/** Generates HTML code for JST templates */ 
+/** Generates HTML code for JST templates */
 class HtmlCodeGenerator {
     private final List<String> libraryScripts = new LinkedList<String>();
     private final HtmlContentRenderer htmlRenderer;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // TODO should be configurable or synced with the actual location
     public final static String SLING_JS_PATH = "/system/sling.js";
-    
+
     /** Property names to use to build the page title, in order of preference */
     public final static String [] TITLE_PROPERTY_NAMES = {
         "title",
@@ -66,21 +66,21 @@ class HtmlCodeGenerator {
         libraryScripts.add(SLING_JS_PATH);
         htmlRenderer = new HtmlContentRenderer();
     }
-    
-    /** Generate HTML code for the given request and script path */ 
-    void generateHtml(SlingHttpServletRequest request, String scriptPath, 
-            InputStream scriptStream, PrintWriter output) 
+
+    /** Generate HTML code for the given request and script path */
+    void generateHtml(SlingHttpServletRequest request, String scriptPath,
+            InputStream scriptStream, PrintWriter output)
     throws RepositoryException, JSONException, ScriptException, IOException {
-        
+
         // access our data (need a Node)
         final Resource r = request.getResource();
         final Node n = r.adaptTo(Node.class);
         final String pageTitle = getTitle(r, n);
-        
-        // Parse script using the NekoHTML permissive HTML parser 
+
+        // Parse script using the NekoHTML permissive HTML parser
         final DOMParser parser = new DOMParser();
         try {
-            parser.setFeature("http://xml.org/sax/features/namespaces", false);  
+            parser.setFeature("http://xml.org/sax/features/namespaces", false);
             parser.setProperty("http://cyberneko.org/html/properties/names/elems", "lower");
             parser.setProperty("http://cyberneko.org/html/properties/names/attrs", "lower");
             parser.parse(new InputSource(scriptStream));
@@ -90,7 +90,7 @@ class HtmlCodeGenerator {
             throw se;
         }
         final Document template = parser.getDocument();
-        
+
         // compute default rendering
         final StringWriter defaultRendering = new StringWriter();
         if(n!=null) {
@@ -98,7 +98,7 @@ class HtmlCodeGenerator {
             htmlRenderer.render(pw, r, n, pageTitle);
             pw.flush();
         }
-        
+
         // compute currentNode values in JSON format
         final StringWriter jsonData = new StringWriter();
         if(n != null) {
@@ -106,15 +106,11 @@ class HtmlCodeGenerator {
             final JsonItemWriter j = new JsonItemWriter(null);
             final int maxRecursionLevels = 1;
             pw.print("var currentNode=");
-            if(n!=null) {
-                j.dump(n, pw, maxRecursionLevels);
-            } else {
-                pw.print("{}");
-            }
+            j.dump(n, pw, maxRecursionLevels);
             pw.print(";");
             pw.flush();
         }
-        
+
         // run XSLT transform on script, passing parameter
         // for our computed values
         final String xslt = "/xslt/script-transform.xsl";
@@ -133,26 +129,26 @@ class HtmlCodeGenerator {
             final Result result = new StreamResult(output);
             final DOMSource source = new DOMSource(template);
             t.transform(source, result);
-            
+
         } catch (Exception e) {
             final ScriptException se = new ScriptException("Error in XSLT transform for " + scriptPath);
             se.initCause(e);
             throw se;
-            
+
         } finally {
             xslTransform.close();
         }
     }
-    
+
     /** Return the full path to supplied resource */
     static String fullPath (SlingHttpServletRequest request, String path) {
         return SlingRequestPaths.getContextPath(request) + SlingRequestPaths.getServletPath(request) + path;
     }
-    
-    /** Return the title to use for the generated page */ 
+
+    /** Return the title to use for the generated page */
     protected String getTitle(Resource r, Node n) {
         String title = null;
-        
+
         if(n != null) {
             for(String name : TITLE_PROPERTY_NAMES) {
                 try {
@@ -162,20 +158,20 @@ class HtmlCodeGenerator {
                             title = s;
                             break;
                         }
-                    } 
+                    }
                 } catch(RepositoryException re) {
                     log.warn("RepositoryException in getTitle()", re);
                 }
             }
         }
-        
+
         if(title == null) {
             title = r.getPath();
             if(title.startsWith("/")) {
                 title = title.substring(1);
             }
         }
-        
+
         return title;
     }
 }
