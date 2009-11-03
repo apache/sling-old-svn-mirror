@@ -60,9 +60,6 @@ public class LogConfigManager implements ILoggerFactory {
     // There is no ReferenceQueue handling currently for removed loggers
     private final Map<String, SoftReference<SlingLogger>> loggersByCategory;
 
-    // the logger used by this instance
-    private final Logger log;
-
     // the default logger configuration set up by the constructor and managed
     // by the global logger configuration
     private final SlingLoggerConfig defaultLoggerConfig;
@@ -123,9 +120,6 @@ public class LogConfigManager implements ILoggerFactory {
             SlingLoggerLevel.INFO, defaultWriter);
         configByPid.put(LogManager.PID, defaultLoggerConfig);
         configByCategory.put(ROOT, defaultLoggerConfig);
-
-        // get me my logger
-        log = getLogger(getClass().getName());
     }
 
     /**
