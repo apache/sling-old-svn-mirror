@@ -49,8 +49,6 @@ public class SlingLoggerTest extends TestCase {
 
     private SlingLogger logger;
 
-    private Method delegateeSetter;
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();
