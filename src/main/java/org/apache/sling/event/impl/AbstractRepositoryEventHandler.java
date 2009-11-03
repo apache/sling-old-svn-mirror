@@ -155,7 +155,7 @@ public abstract class AbstractRepositoryEventHandler
         // stop background threads by putting empty objects into the queue
         this.running = false;
         try {
-            this.writeQueue.put(new Event("some", (Dictionary)null));
+            this.writeQueue.put(new Event("some", (Dictionary<String, Object>)null));
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
