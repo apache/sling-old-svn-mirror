@@ -230,7 +230,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * Sets the value of the indexed property.
      * <p>
      * For the special property <code>properties</code> the
-     * {@link #setProperties(ManagedHashMap)} method is called to insert all
+     * {@link #setProperties(ManageableMap)} method is called to insert all
      * elements of the <code>value</code> which must be a <code>Map</code>
      * into this map.
      *
