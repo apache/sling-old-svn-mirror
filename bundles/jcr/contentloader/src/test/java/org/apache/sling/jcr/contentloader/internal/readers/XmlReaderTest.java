@@ -18,10 +18,6 @@
  */
 package org.apache.sling.jcr.contentloader.internal.readers;
 
-import junit.framework.TestCase;
-import org.apache.sling.jcr.contentloader.internal.ContentCreator;
-
-import javax.jcr.RepositoryException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +28,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import javax.jcr.RepositoryException;
+
+import junit.framework.TestCase;
+
+import org.apache.sling.jcr.contentloader.internal.ContentCreator;
 
 public class XmlReaderTest extends TestCase {
 
@@ -91,14 +93,12 @@ public class XmlReaderTest extends TestCase {
 	private static class MockContentCreator extends ArrayList<String> implements ContentCreator {
 
         public static class FileDescription {
-            public String name;
             public InputStream data;
             public String mimeType;
             public long lastModified;
             public String content;
 
-            public FileDescription(String name, InputStream data, String mimeType, long lastModified) throws IOException {
-                this.name = name;
+            public FileDescription(InputStream data, String mimeType, long lastModified) throws IOException {
                 this.data = data;
                 this.mimeType = mimeType;
                 this.lastModified = lastModified;
@@ -134,7 +134,7 @@ public class XmlReaderTest extends TestCase {
 
         public void createFileAndResourceNode(String name, InputStream data, String mimeType, long lastModified) throws RepositoryException {
             try {
-                this.filesCreated.add(new FileDescription(name, data, mimeType, lastModified));
+                this.filesCreated.add(new FileDescription( data, mimeType, lastModified));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -143,7 +143,7 @@ public class XmlReaderTest extends TestCase {
         public boolean switchCurrentNode(String subPath, String newNodeType) throws RepositoryException {
             return true;
         }
-        
+
 		public void createAce(String principal,
 				String[] grantedPrivileges, String[] deniedPrivileges)
 				throws RepositoryException {
