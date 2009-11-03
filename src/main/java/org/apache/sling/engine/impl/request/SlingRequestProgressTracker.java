@@ -97,22 +97,22 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * @see #dumpText(PrintWriter)
      */
     private static final String DUMP_FORMAT = "%1$7d (%2$tF %2$tT) %3$s%n";
-    
+
     /**
      * The name of the timer tracking the processing time of the complete
      * process.
      */
     private static final String REQUEST_PROCESSING_TIMER = "Request Processing";
-    
+
     /** Prefix for log messages */
     private static final String LOG_PREFIX = "LOG ";
-    
+
     /** Prefix for comment messages */
     private static final String COMMENT_PREFIX = "COMMENT ";
-    
+
     /** TIMER_END format explanation */
     private static final String TIMER_END_FORMAT = "{<elapsed msec>,<timer name>} <optional message>";
-    
+
     /**
      * The system time at creation of this instance or the last {@link #reset()}.
      */
@@ -128,7 +128,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * start of the respective timer.
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
-    
+
     private boolean done;
 
     /**
@@ -144,7 +144,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      */
     public void reset() {
         done = false;
-        
+
         // remove all entries
         entries.clear();
         namedTimerEntries.clear();
@@ -203,28 +203,18 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     }
 
     /**
-     * Creates an entry with the given time, entry tag and message. This is a
-     * private method, as for users of this API time stamps are managed by this
-     * class. For internal uses the timestamp may be generated outside of this
-     * method.
-     */
-    private void log(long timeStamp, String message) {
-        entries.add(new TrackingEntry(timeStamp, message));
-    }
-
-    /**
      * Starts a named timer. If a timer of the same name already exists, it is
      * reset to the current time.
      */
     public void startTimer(String name) {
         startTimerInternal(name);
     }
-    
+
     /**
      * Start the named timer and returns the start time in milliseconds.
      * Logs a message with format
      * <pre>
-     * TIMER_START{<name>} <optional message> 
+     * TIMER_START{<name>} <optional message>
      * </pre>
      */
     private long startTimerInternal(String name) {
@@ -251,7 +241,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
             logTimerInternal(name, MessageFormat.format(format, args), namedTimerEntries.get(name));
         }
     }
-    
+
     /**
      * Log a timer entry, including start, end and elapsed time using TIMER_END_FORMAT
      */
@@ -268,7 +258,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         }
         entries.add(new TrackingEntry(sb.toString()));
     }
-    
+
     public void done() {
         if(done) return;
         logTimer(REQUEST_PROCESSING_TIMER, REQUEST_PROCESSING_TIMER);
