@@ -85,7 +85,7 @@ class ControlListener implements Runnable {
      * <code>[ host ":" ] port</code>. If the parameter is empty or
      * <code>null</code> it defaults to <i>localhost:63000</i>. If the host name
      * is missing it defaults to <i>localhost</i>.
-     * 
+     *
      * @param slingMain The Main class reference. This is only required if this
      *            instance is used for the server side to listen for remote stop
      *            commands. Otherwise this argument may be <code>null</code>.
@@ -177,11 +177,9 @@ class ControlListener implements Runnable {
         } catch (IOException ioe) {
             Main.error("Failure reading from client", ioe);
         } finally {
-            if (server != null) {
-                try {
-                    server.close();
-                } catch (IOException ignore) {
-                }
+            try {
+                server.close();
+            } catch (IOException ignore) {
             }
         }
     }
