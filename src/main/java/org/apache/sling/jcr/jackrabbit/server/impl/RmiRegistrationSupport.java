@@ -38,7 +38,7 @@ import org.osgi.service.log.LogService;
  * <p>
  * Note: Currently only registries in this Java VM are supported. In the future
  * support for external registries may be added.
- * 
+ *
  * @scr.component immediate="true" label="%rmi.name"
  *                description="%rmi.description"
  *                name="org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport"
@@ -203,10 +203,6 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
 
         public String getRmiName() {
             return this.rmiName;
-        }
-
-        public Remote getRmiRepository() {
-            return this.rmiRepository;
         }
 
         public String getRmiURL() {

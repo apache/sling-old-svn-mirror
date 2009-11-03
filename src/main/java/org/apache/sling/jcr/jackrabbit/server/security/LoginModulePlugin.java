@@ -31,7 +31,7 @@ import javax.security.auth.login.LoginException;
 /**
  * Provide login module functionality that extends
  * {@link org.apache.jackrabbit.core.security.authentication.DefaultLoginModule}
- * for a specific type of {@link java.jcr.Credentials}. Does not rely explicitly
+ * for a specific type of {@link javax.jcr.Credentials}. Does not rely explicitly
  * on any classes from org.apache.jackrabbit.core.*
  */
 public interface LoginModulePlugin {
@@ -49,9 +49,8 @@ public interface LoginModulePlugin {
      * {@link org.apache.sling.engine.auth.AuthenticationHandler} object can set
      * properties on these credentials at creation time that this class can use
      * to make this determination
-     * 
+     *
      * @param credentials
-     * @return
      */
     public abstract boolean canHandle(Credentials credentials);
 
@@ -67,28 +66,28 @@ public interface LoginModulePlugin {
      * PluggableLoginModule that can handle these Credentials can provide a
      * Principal, the Principal will be provided by
      * {@link org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getPrincipal}
-     * 
+     *
      * @return an instance of the Principal associated with these Credentials
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getPrincipal
      */
     public Principal getPrincipal(Credentials credentials);
-    
+
     /**
-     * Enables to add additional {@link Principal} objects, such as groups or 
-     * roles, to the {@link Subject}. 
-     * 
+     * Enables to add additional {@link Principal} objects, such as groups or
+     * roles, to the {@link Subject}.
+     *
      * @param principals original collection of principals
      */
     @SuppressWarnings("unchecked")
     public void addPrincipals(Set principals);
-    
+
     /**
      * Return a PluggableAuthentication object that can authenticate the give
      * Principal and Credentials. If null is returned, and no other
      * PluggableLoginModule that can handle these Credentials can provide a
      * PluggableAuthentication instance, the authentication will be handled by
      * {@link org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getAuthentication}
-     * 
+     *
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getAuthentication
      * @return An instance of PluggableAuthentication, or null
      */
@@ -97,14 +96,14 @@ public interface LoginModulePlugin {
 
     /**
      * Returns a code indicating either the status of the impersonation attempt,
-     * or {@link IMPERSONATION_DEFAULT} if the impersonation should be handled
+     * or {@link #IMPERSONATION_DEFAULT} if the impersonation should be handled
      * by
      * {@link org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#impersonate}
      * .
-     * 
+     *
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#impersonate
-     * @return one of {@link IMPERSONATION_DEFAULT},
-     *         {@link IMPERSONATION_SUCCESS} or {@link IMPERSONATION_FAILED}
+     * @return one of {@link #IMPERSONATION_DEFAULT},
+     *         {@link #IMPERSONATION_SUCCESS} or {@link #IMPERSONATION_FAILED}
      */
     public int impersonate(Principal principal, Credentials credentials)
             throws RepositoryException, FailedLoginException;
