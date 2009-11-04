@@ -23,7 +23,6 @@ import javax.jcr.Session;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2;
-import org.osgi.framework.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,14 +62,14 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     }
 
     @Override
-    public boolean addResourceProvider(String prefix, ResourceProvider provider, ServiceReference serviceReference) {
-        return delegatee.addResourceProvider(prefix, provider, serviceReference);
+    public boolean addResourceProvider(String prefix, ResourceProvider provider, Comparable<?> comparable) {
+        return delegatee.addResourceProvider(prefix, provider, comparable);
     }
 
     @Override
     public boolean removeResourceProvider(String prefix,
-            ResourceProvider provider, ServiceReference serviceReference) {
-        return delegatee.removeResourceProvider(prefix, provider, serviceReference);
+            ResourceProvider provider, Comparable<?> comparable) {
+        return delegatee.removeResourceProvider(prefix, provider, comparable);
     }
 
     /**

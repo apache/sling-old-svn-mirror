@@ -23,7 +23,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,7 +253,7 @@ public class ResourceProviderEntry2 implements
      *         subtree below this entry. Otherwise <code>false</code> is
      *         returned.
      */
-    public boolean addResourceProvider(String prefix, ResourceProvider provider, ServiceReference serviceReference) {
+    public boolean addResourceProvider(String prefix, ResourceProvider provider, Comparable<?> comparable) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
             List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
@@ -267,7 +266,7 @@ public class ResourceProviderEntry2 implements
                 entryPath.get(i).put(elements[i], rpe2);
                 entryPath.add(rpe2);
             }
-            return entryPath.get(elements.length).addInternalProvider(new WrappedResourceProvider(provider, serviceReference));
+            return entryPath.get(elements.length).addInternalProvider(new WrappedResourceProvider(provider, comparable));
 
         }
     }
@@ -308,14 +307,14 @@ public class ResourceProviderEntry2 implements
     }
 
     public boolean removeResourceProvider(String prefix,
-            ResourceProvider resourceProvider, ServiceReference serviceReference) {
+            ResourceProvider resourceProvider, Comparable<?> comparable) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
             List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
             populateProviderPath(entryPath, elements);
             if (entryPath.size() == elements.length) {
                 // the last element is a perfect match;
-                return entryPath.get(entryPath.size()-1).removeInternalProvider(new WrappedResourceProvider(resourceProvider, serviceReference));
+                return entryPath.get(entryPath.size()-1).removeInternalProvider(new WrappedResourceProvider(resourceProvider, comparable));
             }
             return false;
         }
@@ -370,40 +369,26 @@ public class ResourceProviderEntry2 implements
      * @return
      */
     private WrappedResourceProvider[] conditionalSort(Set<WrappedResourceProvider> set) {
-        //
-        // convert to a list so we can selectively sort. We can't guarantee that
-        // all
-        // ResourceProviders implement Comparable so can't use a TreeSet.
-        // However, using a set in the first instance ensures that no one relies
-        // on the add
-        // order.
 
-        List<ResourceProvider> providerList = new ArrayList<ResourceProvider>(
+        List<WrappedResourceProvider> providerList = new ArrayList<WrappedResourceProvider>(
                 set);
-        // ResourceProviders that need to get into the list ahead of others must
-        // implement
-        // the comparable interface. Ones that don't implement the comparable
-        // interface get
-        // placed in a group in the center ordered by the way they were added.
-        // eg high-priority ..... non conflicting .... explicitly low priority
-        // In general if a ResourceProvider will only ever respond with non null
-        // to paths
-        // that no other resource provider will respond with non null its non
-        // conflicting and
-        // so does not require special treatment (eg no Comparable required)
 
-        Collections.sort(providerList, new Comparator<ResourceProvider>() {
+        Collections.sort(providerList, new Comparator<WrappedResourceProvider>() {
 
             @SuppressWarnings("unchecked")
-            public int compare(ResourceProvider o1, ResourceProvider o2) {
-                if (o1 instanceof Comparable) {
-                    Comparable c1 = (Comparable) o1;
-                    return c1.compareTo(o2);
-                } else if (o2 instanceof Comparable) {
-                    Comparable c2 = (Comparable) o2;
-                    return c2.compareTo(o1) * (-1);
+            public int compare(WrappedResourceProvider o1, WrappedResourceProvider o2) {
+                Comparable c1 = o1.getComparable();
+                Comparable c2 = o2.getComparable();
+                if ( c1 == null && c2 == null ) {
+                  return 0;
+                } 
+                if ( c1 == null ) {
+                  return -1;
                 }
-                return 0;
+                if ( c2 == null ) {
+                  return 1;
+                }
+                return c1.compareTo(c2);
             }
         });
 

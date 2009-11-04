@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal.helper;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.osgi.framework.ServiceReference;
 
 import java.util.Iterator;
 
@@ -32,12 +31,12 @@ import javax.servlet.http.HttpServletRequest;
 public class WrappedResourceProvider  implements ResourceProvider {
 
   private ResourceProvider resourceProvider;
-  private ServiceReference serviceReference;
+  private Comparable<?> serviceReference;
 
   /**
    * 
    */
-  public WrappedResourceProvider(ResourceProvider resourceProvider, ServiceReference serviceReference) {
+  public WrappedResourceProvider(ResourceProvider resourceProvider, Comparable<?> serviceReference) {
     this.resourceProvider = resourceProvider;
     this.serviceReference = serviceReference;
   }
@@ -67,7 +66,7 @@ public class WrappedResourceProvider  implements ResourceProvider {
   /**
    * @return
    */
-  public ServiceReference getServiceReference() {
+  public Comparable<?> getComparable() {
     return serviceReference;
   }
   
