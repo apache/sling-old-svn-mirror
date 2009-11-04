@@ -65,6 +65,8 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
     protected AccessManagerFactoryTracker accessManagerFactoryTracker;
     private Session session;
     private Subject subject;
+    // only warn once, then only warn on debug level.
+    private static int pluginWarning = 0;
 
     public PluggableDefaultAccessManager() {
     }
@@ -154,7 +156,12 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
         if (this.accessManagerPlugin == null) {
             AccessManagerPluginFactory factory = this.accessManagerFactoryTracker.getFactory(this);
             if (factory == null) {
-                log.warn("No pluggable AccessManager available, falling back to DefaultAccessManager");
+                if ( pluginWarning  == 0 ) {
+                    pluginWarning++;
+                    log.warn("No pluggable AccessManager available, falling back to DefaultAccessManager");
+                } else {
+                    log.debug("No pluggable AccessManager available, falling back to DefaultAccessManager");                    
+                }
                 return false;
 
             } else {
