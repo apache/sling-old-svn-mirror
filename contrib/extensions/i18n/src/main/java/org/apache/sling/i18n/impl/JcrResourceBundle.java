@@ -29,10 +29,15 @@ import java.util.ResourceBundle;
 
 import javax.jcr.query.Query;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JcrResourceBundle extends ResourceBundle {
+    
+    private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
     private static final String JCR_PATH = "jcr:path";
 
@@ -46,21 +51,22 @@ public class JcrResourceBundle extends ResourceBundle {
      * Search the tree below a mix:language node matching a given language...
      */
     private static final String QUERY_BASE =
-        "//element(*,mix:language)[@jcr:language='%s'%s]//*";
+        "//element(*,mix:language)[@jcr:language='%s'%s]//element(*,sling:Message)";
 
     /**
      * ... and find all nodes with a sling:message property set
      * (typically with mixin sling:Message).
      */
     private static final String QUERY_LOAD_FULLY = QUERY_BASE
-        + "[@" + PROP_VALUE + "]/@" + PROP_VALUE;
+        + "[@" + PROP_VALUE + "]/(@" + PROP_KEY + "|@" + PROP_VALUE + ")";
 
     /**
      * ... or find a node with the message (sling:message property) for
-     * a given key (sling:key property).
+     * a given key (sling:key property). Also find nodes without sling:key
+     * property and examine their node name.
      */
     private static final String QUERY_LOAD_RESOURCE = QUERY_BASE + "[@"
-        + PROP_KEY + "='%s']/@" + PROP_VALUE;
+        + PROP_KEY + "='%s' or not(@" + PROP_KEY + ")]/(@" + PROP_KEY + "|@" + PROP_VALUE + ")";
 
     private final ResourceResolver resourceResolver;
 
@@ -120,8 +126,12 @@ public class JcrResourceBundle extends ResourceBundle {
     private void loadFully() {
         if (!fullyLoaded) {
 
+            final String fullLoadQuery = getFullLoadQuery();
+            if (log.isDebugEnabled()) {
+                log.debug("Executing full load query {}", fullLoadQuery);
+            }
             Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
-                getFullLoadQuery(), Query.XPATH);
+                fullLoadQuery, Query.XPATH);
 
             String[] path = getSearchPath();
 
@@ -162,9 +172,12 @@ public class JcrResourceBundle extends ResourceBundle {
     }
 
     private Object loadResource(String key) {
-        // query for the resource
-        Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
-            getResourceQuery(key), Query.XPATH);
+        final String resourceQuery = getResourceQuery(key);
+        if (log.isDebugEnabled()) {
+            log.debug("Executing resource query {}", resourceQuery);
+        }
+        Iterator<Map<String, Object>> bundles = resourceResolver
+                .queryResources(resourceQuery, Query.XPATH);
         if (bundles.hasNext()) {
 
             String[] path = getSearchPath();
@@ -175,6 +188,13 @@ public class JcrResourceBundle extends ResourceBundle {
             while (bundles.hasNext() && currentWeight > 0) {
                 Map<String, Object> resource = bundles.next();
                 String jcrPath = (String) resource.get(JCR_PATH);
+                
+                // skip resources without sling:key and non-matching nodename
+                if (resource.get(PROP_KEY) == null) {
+                    if (!key.equals(Text.getName(jcrPath))) {
+                        continue;
+                    }
+                }
 
                 for (int i = 0; i < currentWeight; i++) {
                     if (jcrPath.startsWith(path[i])) {
@@ -190,8 +210,10 @@ public class JcrResourceBundle extends ResourceBundle {
                     currentValue = resource;
                 }
             }
-
-            return currentValue.get(PROP_VALUE);
+            
+            if (currentValue != null) {
+                return currentValue.get(PROP_VALUE);
+            }
         }
 
         return null;
