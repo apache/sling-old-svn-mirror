@@ -76,19 +76,19 @@ public class AccessManagerFactoryTracker extends ServiceTracker {
 
     @Override
     public void modifiedService(ServiceReference serviceReference, Object o) {
-        log.info("AccessManager service modified.");
+        log.debug("AccessManager service modified.");
         super.modifiedService(serviceReference, o);
         this.factory = (AccessManagerPluginFactory) o;
     }
 
     public AccessManagerPluginFactory getFactory(PluggableDefaultAccessManager consumer) {
-        log.info("Registering PluggableDefaultAccessManager instance");
+        log.debug("Registering PluggableDefaultAccessManager instance");
         this.consumers.add(consumer);
         return factory;
     }
 
     public void unregister(PluggableDefaultAccessManager consumer) {
-        log.info("Unregistering PluggableDefaultAccessManager instance");
+        log.debug("Unregistering PluggableDefaultAccessManager instance");
         this.consumers.remove(consumer);
     }
 }
