@@ -32,7 +32,6 @@ import javax.jcr.Session;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
-import org.apache.jackrabbit.name.Path.RootElement;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -483,7 +482,7 @@ public class JcrResourceResolverFactoryImpl implements
                         }
 
                         rootProviderEntry.addResourceProvider(root,
-                            provider);
+                            provider, reference);
 
                         log.debug("bindResourceProvider: {}={} ({})",
                             new Object[] { root, provider, serviceName });
@@ -529,7 +528,7 @@ public class JcrResourceResolverFactoryImpl implements
                     // TODO: Do not remove this path, if another resource
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
-                    rootProviderEntry.removeResourceProvider(root, provider);
+                    rootProviderEntry.removeResourceProvider(root, provider, reference);
 
                     log.debug("unbindResourceProvider: root={} ({})", root,
                         serviceName);

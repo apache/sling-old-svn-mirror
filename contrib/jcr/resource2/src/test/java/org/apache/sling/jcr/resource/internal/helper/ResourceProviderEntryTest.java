@@ -26,12 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.SyntheticResource;
 
 public class ResourceProviderEntryTest extends TestCase {
 
@@ -65,7 +63,7 @@ public class ResourceProviderEntryTest extends TestCase {
     public void testAdd1Provider() {
         String firstPath = "/rootel";
         ResourceProvider first = new TestResourceProvider(firstPath);
-        root.addResourceProvider(firstPath, first);
+        root.addResourceProvider(firstPath, first, null);
         
 
         assertEquals(root, root.getResource(null, "/"));
@@ -88,9 +86,9 @@ public class ResourceProviderEntryTest extends TestCase {
         ResourceProvider second = new TestResourceProvider(secondPath);
         ResourceProvider third = new TestResourceProvider(thirdPath);
 
-        root.addResourceProvider(firstPath, first);
-        root.addResourceProvider(secondPath, second);
-        root.addResourceProvider(thirdPath, third);
+        root.addResourceProvider(firstPath, first, null);
+        root.addResourceProvider(secondPath, second, null);
+        root.addResourceProvider(thirdPath, third, null);
 
         
 
@@ -115,9 +113,9 @@ public class ResourceProviderEntryTest extends TestCase {
         ResourceProvider second = new TestResourceProvider(secondPath);
         ResourceProvider third = new TestResourceProvider(thirdPath);
 
-        root.addResourceProvider(thirdPath, third);
-        root.addResourceProvider(secondPath, second);
-        root.addResourceProvider(firstPath, first);
+        root.addResourceProvider(thirdPath, third, null);
+        root.addResourceProvider(secondPath, second, null);
+        root.addResourceProvider(firstPath, first, null);
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel"));
@@ -140,15 +138,15 @@ public class ResourceProviderEntryTest extends TestCase {
         ResourceProvider second = new TestResourceProvider(secondPath);
         ResourceProvider third = new TestResourceProvider(thirdPath);
 
-        root.addResourceProvider(firstPath, first);
-        root.addResourceProvider(secondPath, second);
-        root.addResourceProvider(thirdPath, third);
+        root.addResourceProvider(firstPath, first, null);
+        root.addResourceProvider(secondPath, second, null);
+        root.addResourceProvider(thirdPath, third, null);
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel/html.js"));
         assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
 
-        root.removeResourceProvider(firstPath, first);
+        root.removeResourceProvider(firstPath, first, null);
         
 
         assertEquals(rootProvider, root.getResource(null, "/"));
@@ -156,7 +154,7 @@ public class ResourceProviderEntryTest extends TestCase {
         assertEquals(rootProvider, root.getResource(null, "/rootel/html.js"));
         assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
 
-        root.addResourceProvider(firstPath, first);
+        root.addResourceProvider(firstPath, first, null);
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel/html.js"));

@@ -23,6 +23,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class ResourceProviderEntry2 implements
 
     // the resource provider kept in this entry supporting resources at and
     // below the path of this entry.
-    private ResourceProvider[] providers = new ResourceProvider[0];
+    private WrappedResourceProvider[] providers = new WrappedResourceProvider[0];
 
     private long ttime = 0L;
 
@@ -91,7 +92,7 @@ public class ResourceProviderEntry2 implements
      * @param provider
      *            The resource provider to encapsulate by this entry.
      */
-    public ResourceProviderEntry2(String path, ResourceProvider[] provider) {
+    public ResourceProviderEntry2(String path, ResourceProvider[] providerList) {
         if (path.endsWith("/")) {
             this.path = path.substring(0, path.length() - 1);
             this.prefix = path;
@@ -99,7 +100,16 @@ public class ResourceProviderEntry2 implements
             this.path = path;
             this.prefix = path + "/";
         }
-        this.providers = provider;
+        if ( providerList != null ) {
+          providers = new WrappedResourceProvider[providerList.length];
+          for ( int i = 0; i < providerList.length; i++ ) {
+            if ( providerList[i] instanceof WrappedResourceProvider ) {
+              providers[i] = (WrappedResourceProvider) providerList[i];
+            } else {
+              providers[i] = new WrappedResourceProvider(providerList[i], null);
+            }
+          }
+        }
         
         // this will consume slightly more memory but ensures read is fast.
         storageMap.setFast(true);
@@ -244,7 +254,7 @@ public class ResourceProviderEntry2 implements
      *         subtree below this entry. Otherwise <code>false</code> is
      *         returned.
      */
-    public boolean addResourceProvider(String prefix, ResourceProvider provider) {
+    public boolean addResourceProvider(String prefix, ResourceProvider provider, ServiceReference serviceReference) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
             List<ResourceProviderEntry2> entryPath = getResourceProviderPath(elements);
@@ -259,7 +269,7 @@ public class ResourceProviderEntry2 implements
                 entryPath.get(i).put(elements[i], rpe2);
                 entryPath.add(rpe2);
             }
-            return entryPath.get(elements.length).addInternalProvider(provider);
+            return entryPath.get(elements.length).addInternalProvider(new WrappedResourceProvider(provider, serviceReference));
 
         }
     }
@@ -300,13 +310,13 @@ public class ResourceProviderEntry2 implements
     }
 
     public boolean removeResourceProvider(String prefix,
-            ResourceProvider provider) {
+            ResourceProvider resourceProvider, ServiceReference serviceReference) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
             List<ResourceProviderEntry2> entryPath = getResourceProviderPath(elements);
             if (entryPath.size() == elements.length) {
                 // the first element is a perfect match;
-                return entryPath.get(0).removeInternalProvider(provider);
+                return entryPath.get(0).removeInternalProvider(new WrappedResourceProvider(resourceProvider, serviceReference));
             }
             return false;
         }
@@ -325,10 +335,10 @@ public class ResourceProviderEntry2 implements
      * 
      * @param provider
      */
-    private boolean addInternalProvider(ResourceProvider provider) {
+    private boolean addInternalProvider(WrappedResourceProvider provider) {
         synchronized (providers) {
             int before = providers.length;
-            Set<ResourceProvider> set = new HashSet<ResourceProvider>();
+            Set<WrappedResourceProvider> set = new HashSet<WrappedResourceProvider>();
             if (providers != null) {
                 set.addAll(Arrays.asList(providers));
             }
@@ -343,10 +353,10 @@ public class ResourceProviderEntry2 implements
      * @param provider
      * @return
      */
-    private boolean removeInternalProvider(ResourceProvider provider) {
+    private boolean removeInternalProvider(WrappedResourceProvider provider) {
         synchronized (providers) {
             int before = providers.length;
-            Set<ResourceProvider> set = new HashSet<ResourceProvider>();
+            Set<WrappedResourceProvider> set = new HashSet<WrappedResourceProvider>();
             if (providers != null) {
                 set.addAll(Arrays.asList(providers));
             }
@@ -360,7 +370,7 @@ public class ResourceProviderEntry2 implements
      * @param set
      * @return
      */
-    private ResourceProvider[] conditionalSort(Set<ResourceProvider> set) {
+    private WrappedResourceProvider[] conditionalSort(Set<WrappedResourceProvider> set) {
         //
         // convert to a list so we can selectively sort. We can't guarantee that
         // all
@@ -398,7 +408,7 @@ public class ResourceProviderEntry2 implements
             }
         });
 
-        return set.toArray(new ResourceProvider[set.size()]);
+        return set.toArray(new WrappedResourceProvider[set.size()]);
     }
 
     /**
