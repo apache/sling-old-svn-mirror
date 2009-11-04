@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6</version>
+        <version>8-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -127,14 +127,11 @@
                                 </manifest>
                             </archive>
                             <classifier>webapp</classifier>
-                            <packagingExcludes>
-                                WEB-INF/classes/*,
-                                WEB-INF/classes/META-INF/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/app/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/app/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/impl/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/webapp/**
-                            </packagingExcludes>
+                            <packagingIncludes>
+                                META-INF/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/webapp/**
+                            </packagingIncludes>
                             <!-- ensure the legalize stuff is in the war -->
                             <webResources>
                                 <webResource>
@@ -169,12 +166,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <version>2.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
