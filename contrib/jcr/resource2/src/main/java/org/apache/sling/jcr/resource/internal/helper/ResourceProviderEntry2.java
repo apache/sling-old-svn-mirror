@@ -257,11 +257,9 @@ public class ResourceProviderEntry2 implements
     public boolean addResourceProvider(String prefix, ResourceProvider provider, ServiceReference serviceReference) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry2> entryPath = getResourceProviderPath(elements);
-            entryPath.add(this); // add this to the end
-            // I want to add to the end, but remember the list of entries starts
-            // with the root.
-            Collections.reverse(entryPath);
+            List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
+            entryPath.add(this); // add this the start so if the list is empty we have a position to add to
+            populateProviderPath(entryPath, elements);
             for (int i = entryPath.size() - 1; i < elements.length; i++) {
                 String stubPrefix = elements[i];
                 ResourceProviderEntry2 rpe2 = new ResourceProviderEntry2(
@@ -313,10 +311,11 @@ public class ResourceProviderEntry2 implements
             ResourceProvider resourceProvider, ServiceReference serviceReference) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry2> entryPath = getResourceProviderPath(elements);
+            List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
+            populateProviderPath(entryPath, elements);
             if (entryPath.size() == elements.length) {
-                // the first element is a perfect match;
-                return entryPath.get(0).removeInternalProvider(new WrappedResourceProvider(resourceProvider, serviceReference));
+                // the last element is a perfect match;
+                return entryPath.get(entryPath.size()-1).removeInternalProvider(new WrappedResourceProvider(resourceProvider, serviceReference));
             }
             return false;
         }
@@ -419,10 +418,9 @@ public class ResourceProviderEntry2 implements
      *            the full path
      * @return a reverse order list of ProviderEntries to the path.
      */
-    private List<ResourceProviderEntry2> getResourceProviderPath(
-            String[] elements) {
+    private void populateProviderPath(
+        List<ResourceProviderEntry2> providerEntryPath, String[] elements) {
         ResourceProviderEntry2 base = this;
-        List<ResourceProviderEntry2> providerEntryPath = new ArrayList<ResourceProviderEntry2>();
         if (elements != null) {
             for (String element : elements) {
                 if (element != null) {
@@ -434,9 +432,7 @@ public class ResourceProviderEntry2 implements
                     }
                 }
             }
-            Collections.reverse(providerEntryPath);
         }
-        return providerEntryPath;
     }
 
 
@@ -460,15 +456,14 @@ public class ResourceProviderEntry2 implements
                 LOGGER.debug("Not absolute {} :{}",fullPath,(System.currentTimeMillis() - start));
                 return null; // fullpath must be absolute
             }
-            String[] elements = split(fullPath, '/'); // should use something
-            // more efficient here.
-            List<ResourceProviderEntry2> list = getResourceProviderPath(elements);
+            String[] elements = split(fullPath, '/'); 
+            
+            List<ResourceProviderEntry2> list = new ArrayList<ResourceProviderEntry2>();
+            populateProviderPath(list, elements);
             // the path is in reverse order end first
 
-            int i = 0;
-            for (ResourceProviderEntry2 rpe : list) {
-                ResourceProvider[] rps = rpe.getResourceProviders();
-                int j = 0;
+            for(int i = list.size()-1; i >= 0; i--) {
+                ResourceProvider[] rps = list.get(i).getResourceProviders();
                 for (ResourceProvider rp : rps) {
 
                     Resource resource = rp.getResource(resourceResolver,
@@ -479,16 +474,14 @@ public class ResourceProviderEntry2 implements
                                 fullPath, rp, Arrays.toString(rps)});
                         return resource;
                     }
-                    j++;
                 }
-                i++;
             }
             // query: /libs/sling/servlet/default
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default 
-            // and there will be no resource provider at the end (element 0)
+            // and there will be no resource provider at the end
             if (list.size() > 0 && list.size() == elements.length ) {
-                if ( list.get(0).getResourceProviders().length == 0 ) {
+                if ( list.get(list.size()-1).getResourceProviders().length == 0 ) {
                     nsynthetic++;
                     LOGGER.debug("Resolved Synthetic {}", fullPath);
                     return new SyntheticResource(resourceResolver,
@@ -499,7 +492,6 @@ public class ResourceProviderEntry2 implements
 
             // resolve against this one
             ResourceProvider[] rps = getResourceProviders();
-            int j = 0;
             for (ResourceProvider rp : rps) {
                 Resource resource = rp.getResource(resourceResolver, fullPath);
                 if (resource != null) {
@@ -507,7 +499,6 @@ public class ResourceProviderEntry2 implements
                     LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
                     return resource;
                 }
-                j++;
             }
 
 
