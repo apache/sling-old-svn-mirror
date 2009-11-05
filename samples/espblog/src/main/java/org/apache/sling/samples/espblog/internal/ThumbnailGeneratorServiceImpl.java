@@ -40,7 +40,6 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.samples.espblog.ThumbnailGeneratorService;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,33 +47,32 @@ import org.slf4j.LoggerFactory;
 /**
  * Observe the espblog content for changes, and generate
  * thumbnails when images are added.
- * 
- * @scr.service
+ *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Sling ESP blog sample thumbnails generator"
  * @scr.property name="service.vendor" value="Apache Software Foundation"
- * 
+ *
  */
-public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService, EventListener {
+public class ThumbnailGeneratorServiceImpl implements EventListener {
 
     private Session session;
     private ObservationManager observationManager;
-    
+
 	/** @scr.reference */
 	private SlingRepository repository;
-	
+
     /** @scr.property value="/content/espblog" */
     private static final String CONTENT_PATH_PROPERTY = "content.path";
 
 	private static final Logger log = LoggerFactory
 			.getLogger(ThumbnailGeneratorServiceImpl.class);
-	
+
 	private Map<String, String> supportedMimeTypes = new HashMap<String, String>();
 
 	protected void activate(ComponentContext context)  throws Exception {
 	    supportedMimeTypes.put("image/jpeg", ".jpg");
         supportedMimeTypes.put("image/png", ".png");
-        
+
         String contentPath = (String)context.getProperties().get(CONTENT_PATH_PROPERTY);
 
 		session = repository.loginAdministrative(null);
@@ -84,7 +82,7 @@ public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService,
 			observationManager.addEventListener(this, Event.NODE_ADDED, contentPath, true, null, types, false);
 		}
 	}
-	
+
     protected void deactivate(ComponentContext componentContext) throws RepositoryException {
         if(observationManager != null) {
             observationManager.removeEventListener(this);
@@ -114,33 +112,33 @@ public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService,
     private String getMimeType(Node n) throws RepositoryException {
 	    String result = null;
 		final String mimeType = n.getProperty("jcr:mimeType").getString();
-		
+
 		for(String key : supportedMimeTypes.keySet()) {
 		    if(mimeType!=null && mimeType.startsWith(key)) {
 		        result = key;
 		        break;
 		    }
 		}
-		
+
 		if(result == null) {
 			log.info("Node {} rejected, unsupported mime-type {}", n.getPath(), mimeType);
 		}
-		
+
 		if(n.getName().startsWith(".")) {
 			log.info("Node {} rejected, name starts with '.'", n.getPath(), mimeType);
 			result = null;
 		}
-		
+
 		return result;
 	}
-	
+
 	private void processNewNode(Node addedNode) throws Exception {
 	    final String mimeType = getMimeType(addedNode);
 		if (mimeType == null) {
 			return;
 		}
-		final String suffix = supportedMimeTypes.get(mimeType); 
-		
+		final String suffix = supportedMimeTypes.get(mimeType);
+
 		// Scale to a temp file for simplicity
 		log.info("Creating thumbnails for node {}", addedNode.getPath());
 		final int [] widths = { 50, 100, 250 };
@@ -148,29 +146,29 @@ public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService,
 		    createThumbnail(addedNode, width, mimeType, suffix);
 		}
 	}
-	
+
 	private void createThumbnail(Node image, int scalePercent, String mimeType, String suffix) throws Exception {
         final File tmp = File.createTempFile(getClass().getSimpleName(), suffix);
         try {
             scale(image.getProperty("jcr:data").getStream(), scalePercent, new FileOutputStream(tmp), suffix);
-            
+
             // Create thumbnail node and set the mandatory properties
             Node thumbnailFolder = getThumbnailFolder(image);
             Node thumbnail = thumbnailFolder.addNode(image.getParent().getName() + "_" + scalePercent + suffix, "nt:file");
             Node contentNode = thumbnail.addNode("jcr:content", "nt:resource");
             contentNode.setProperty("jcr:data", new FileInputStream(tmp));
-            contentNode.setProperty("jcr:lastModified", Calendar.getInstance());    
+            contentNode.setProperty("jcr:lastModified", Calendar.getInstance());
             contentNode.setProperty("jcr:mimeType", mimeType);
 
             session.save();
-            
+
             log.info("Created thumbnail " + contentNode.getPath());
         } finally {
             if(tmp != null) {
                 tmp.delete();
             }
         }
-	    
+
 	}
 
 	private Node getThumbnailFolder(Node addedNode) throws Exception {
@@ -189,7 +187,7 @@ public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService,
 		if(inputStream == null) {
 			throw new IOException("InputStream is null");
 		}
-		
+
         final BufferedImage src = ImageIO.read(inputStream);
 		if(src == null) {
 		    final StringBuffer sb = new StringBuffer();
@@ -199,9 +197,9 @@ public class ThumbnailGeneratorServiceImpl implements ThumbnailGeneratorService,
 		    }
 			throw new IOException("Unable to read image, registered formats: " + sb);
 		}
-		
+
         final double scale = (double)width / src.getWidth();
-        
+
 		int destWidth = width;
 		int destHeight = new Double(src.getHeight() * scale).intValue();
 		log.debug("Generating thumbnail, w={}, h={}", destWidth, destHeight);
