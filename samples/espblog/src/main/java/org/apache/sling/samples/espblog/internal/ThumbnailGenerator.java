@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="Apache Software Foundation"
  *
  */
-public class ThumbnailGeneratorServiceImpl implements EventListener {
+public class ThumbnailGenerator implements EventListener {
 
     private Session session;
     private ObservationManager observationManager;
@@ -65,7 +65,7 @@ public class ThumbnailGeneratorServiceImpl implements EventListener {
     private static final String CONTENT_PATH_PROPERTY = "content.path";
 
 	private static final Logger log = LoggerFactory
-			.getLogger(ThumbnailGeneratorServiceImpl.class);
+			.getLogger(ThumbnailGenerator.class);
 
 	private Map<String, String> supportedMimeTypes = new HashMap<String, String>();
 
