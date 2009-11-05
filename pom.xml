@@ -76,6 +76,7 @@
         <module>bundles/commons/osgi</module>
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
+        <module>bundles/commons/slingtest</module>
         <module>bundles/commons/threads</module>
         
         <!-- The Sling Engine -->
