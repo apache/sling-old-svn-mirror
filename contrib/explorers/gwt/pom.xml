@@ -16,9 +16,9 @@
     <name>Apache Sling Explorer</name>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/explorers/gwt</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/explorers/gwt</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/explorer/gwt</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/explorers/gwt</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/explorers/gwt</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/explorer/gwt</url>
     </scm>
     
     <properties>

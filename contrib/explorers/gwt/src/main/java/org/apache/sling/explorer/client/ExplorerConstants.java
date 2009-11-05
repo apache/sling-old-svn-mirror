@@ -23,36 +23,36 @@ import com.google.gwt.i18n.client.Constants;
 
 
 public interface ExplorerConstants extends Constants {
-	
-	
+
+
   public static final String CONTENT_ROOT = "/";
   public static final String JSON_TREE_REQUEST_EXTENSION = ".explorer.tree-node.json";
-  
+
   public static final String JSON_CHILDREN_REQUEST_EXTENSION = ".explorer.children.json";
   public static final String PROPERTY = "property";
   public static final String RESOURCE = "resource";
-  
-  public static final String SLING_HOMEPAGE = "http://incubator.apache.org/sling";
+
+  public static final String SLING_HOMEPAGE = "http://sling.apache.org";
   public static final String SLING_DOCUMENTATION = SLING_HOMEPAGE + "/documentation";
-   
-  
+
+
   /**
-   * Descriptions to translate 
+   * Descriptions to translate
    * (see the ExplorerConstants.properties & associted files)
-   * 
+   *
    */
-  String mainTitle(); 
-  
+  String mainTitle();
+
   String mainSubTitle();
-  
+
   String slingHomePage();
-  
-  String rootItemDescription(); 
-  
-  String propertiesDescripton(); 
-  
+
+  String rootItemDescription();
+
+  String propertiesDescripton();
+
   String subResourcesDescription();
-  
-  
- 
+
+
+
 }

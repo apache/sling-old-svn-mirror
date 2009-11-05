@@ -1,16 +1,7 @@
 Apache Sling Explorer
 
-This bundle provides the Sling Explorer Application to manage all sling resources. 
+This bundle provides the Sling Explorer Application to manage all Sling resources. 
 
-Disclaimer
-==========
-Apache Sling is an effort undergoing incubation at The Apache Software Foundation (ASF),
-sponsored by the Apache Jackrabbit PMC. Incubation is required of all newly accepted
-projects until a further review indicates that the infrastructure, communications,
-and decision making process have stabilized in a manner consistent with other
-successful ASF projects. While incubation status is not necessarily a reflection of
-the completeness or stability of the code, it does indicate that the project has yet
-to be fully endorsed by the ASF.
 
 Getting Started
 ===============
@@ -56,7 +47,7 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/explorers/gwt
+    svn checkout http://svn.apache.org/repos/asf/sling/trunk/contrib/explorers/gwt
 
 See the Subversion documentation for other source control features.
 
