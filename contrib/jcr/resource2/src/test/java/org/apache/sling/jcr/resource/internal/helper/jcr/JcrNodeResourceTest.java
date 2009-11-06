@@ -30,8 +30,8 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
@@ -140,7 +140,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
         jnr = new JcrNodeResource(resourceResolver, node, null, null);
         assertEquals(typeName, jnr.getResourceType());
-        assertEquals(superTypeName, JcrResourceUtil.getResourceSuperType(jnr));
+        assertEquals(superTypeName, ResourceUtil.findResourceSuperType(jnr));
 
         // overwrite super type with direct property
         String otherSuperTypeName = "othersupertype";
@@ -234,15 +234,5 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(TEST_MODIFIED, rm.getModificationTime());
         assertEquals(TEST_TYPE, rm.getContentType());
         assertEquals(TEST_ENCODING, rm.getCharacterEncoding());
-    }
-
-    private void assertProperty(Object expected, Object actual) {
-        if (expected != null) {
-            assertNotNull(actual);
-
-            assertEquals(expected, actual);
-        } else {
-            assertNull(actual);
-        }
     }
 }

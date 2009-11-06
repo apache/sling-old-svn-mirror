@@ -223,8 +223,7 @@ public class JcrResourceResolverFactoryImpl implements
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry, getJcrResourceTypeProviders(),
-            this.getDynamicClassLoader());
-        
+            this.getDynamicClassLoader());        
 
         return new JcrResourceResolver2(sessionRoot, this, mapEntries);
     }

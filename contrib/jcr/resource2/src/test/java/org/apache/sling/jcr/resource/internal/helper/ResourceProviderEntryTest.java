@@ -147,7 +147,6 @@ public class ResourceProviderEntryTest extends TestCase {
         assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
 
         root.removeResourceProvider(firstPath, first, null);
-        
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(rootProvider, root.getResource(null, "/rootel/sddsf/sdfsdf/html.js"));
@@ -158,7 +157,7 @@ public class ResourceProviderEntryTest extends TestCase {
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel/html.js"));
-        assertEquals(second,root.getResource(null, "/rootel/child/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
     }
 
     protected void assertEquals(ResourceProvider resProvider, Resource res) {
