@@ -1,5 +1,5 @@
 /*
- * Licensed to the Sakai Foundation (SF) under one
+ * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership. The SF licenses this file
@@ -92,6 +92,15 @@ public class WrappedResourceProvider  implements ResourceProvider {
     }
     return super.equals(obj);
   }
-
+  
+    /**
+     * {@inheritDoc}
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return resourceProvider.toString();
+    }
 
 }

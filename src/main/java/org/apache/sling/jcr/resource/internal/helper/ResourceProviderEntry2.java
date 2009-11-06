@@ -149,6 +149,8 @@ public class ResourceProviderEntry2 implements
             private Map<String, Resource> delayed;
 
             private Set<String> visited;
+            
+            private String iteratorPath;
 
             private Iterator<Resource> delayedIter;
 
@@ -166,6 +168,7 @@ public class ResourceProviderEntry2 implements
                 
                 LOGGER.debug(" Provider Set for path {} {} ",path,Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
 
+                this.iteratorPath = path;
                 providers = providersSet.iterator();
                 delayed = new HashMap<String, Resource>();
                 visited = new HashSet<String>();
@@ -183,7 +186,7 @@ public class ResourceProviderEntry2 implements
 
                 Resource result = nextResource;
                 nextResource = seek();
-                LOGGER.debug("  Child Resoruce {} ", result.getPath());
+                LOGGER.debug("  Child Resoruce [{}] [{}] ", iteratorPath, result.getPath());
                 return result;
             }
 
@@ -203,7 +206,6 @@ public class ResourceProviderEntry2 implements
                     if (resources != null && resources.hasNext()) {
                         Resource res = resources.next();
                         String resPath = res.getPath();
-                        LOGGER.debug("      resource {} ", res.getPath());
 
                         if (visited.contains(resPath)) {
 
@@ -224,6 +226,11 @@ public class ResourceProviderEntry2 implements
                             // we use this concrete, unvisited resource but
                             // mark it as visited
                             visited.add(resPath);
+                            // also remove it from delayed if it was there.
+                            if ( delayed.containsKey(resPath) ) {
+                                delayed.remove(resPath);
+                            }
+                            LOGGER.debug("      resource {} {}", resPath, res.getClass());
                             return res;
 
                         }
@@ -239,7 +246,7 @@ public class ResourceProviderEntry2 implements
                 }
                 Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
                 if ( res != null ) {
-                    LOGGER.debug("   D  resource {} ", res.getPath());
+                    LOGGER.info("   D  resource {} {}", res.getPath(), res.getClass());
                 }
                 return res;
             }
@@ -461,6 +468,18 @@ public class ResourceProviderEntry2 implements
                     }
                 }
             }
+            
+            // resolve against this one
+            ResourceProvider[] rps = getResourceProviders();
+            for (ResourceProvider rp : rps) {
+                Resource resource = rp.getResource(resourceResolver, fullPath);
+                if (resource != null) {
+                    nreal++;
+                    LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
+                    return resource;
+                }
+            }
+            
             // query: /libs/sling/servlet/default
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default 
@@ -475,16 +494,6 @@ public class ResourceProviderEntry2 implements
                 }
             }
 
-            // resolve against this one
-            ResourceProvider[] rps = getResourceProviders();
-            for (ResourceProvider rp : rps) {
-                Resource resource = rp.getResource(resourceResolver, fullPath);
-                if (resource != null) {
-                    nreal++;
-                    LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
-                    return resource;
-                }
-            }
 
 
             LOGGER.debug("Resource null {} ", fullPath);
