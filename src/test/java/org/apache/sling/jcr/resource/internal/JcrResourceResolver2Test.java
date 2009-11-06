@@ -144,6 +144,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         super.tearDown();
     }
 
+    @SuppressWarnings("deprecation")
     public void testBasicAPIAssumptions() throws Exception {
 
         // null resource is accessing /, which exists of course
@@ -195,7 +196,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         final HttpServletRequest req2 = new ResourceResolverTestRequest(null);
         final Resource res2 = resResolver.resolve(req2);
         assertNotNull("Expecting resource if resolution fails", res2);
-        assertTrue("Resource must not be NonExistingResource",
+        assertTrue("Resource must not be NonExistingResource was ",
             !(res2 instanceof NonExistingResource));
         assertEquals("Path must be the the root path", "/", res2.getPath());
     }
