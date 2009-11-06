@@ -91,7 +91,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     private final MapEntries resourceMapper;
 
     public JcrResourceResolver2(JcrResourceProviderEntry rootProvider,
-            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {        
+            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
         this.rootProvider = rootProvider;
         this.factory = factory;
         this.resourceMapper = resourceMapper;

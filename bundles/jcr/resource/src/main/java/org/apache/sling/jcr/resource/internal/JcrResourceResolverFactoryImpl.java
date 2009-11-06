@@ -42,8 +42,7 @@ import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntryException;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -194,7 +193,7 @@ public class JcrResourceResolverFactoryImpl implements
     // the search path for ResourceResolver.getResource(String)
     private String[] searchPath;
 
-    private ResourceProviderEntry rootProviderEntry;
+    private ResourceProviderEntry2 rootProviderEntry;
 
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
@@ -211,7 +210,8 @@ public class JcrResourceResolverFactoryImpl implements
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public JcrResourceResolverFactoryImpl() {
-        this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
+        this.rootProviderEntry = new ResourceProviderEntry2("/", null);
+
     }
 
     // ---------- JcrResourceResolverFactory -----------------------------------
@@ -223,7 +223,7 @@ public class JcrResourceResolverFactoryImpl implements
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry, getJcrResourceTypeProviders(),
-            this.getDynamicClassLoader());
+            this.getDynamicClassLoader());        
 
         return new JcrResourceResolver2(sessionRoot, this, mapEntries);
     }
@@ -288,7 +288,7 @@ public class JcrResourceResolverFactoryImpl implements
      *
      * @return Our rootProviderEntry
      */
-    protected ResourceProviderEntry getRootProviderEntry() {
+    protected ResourceProviderEntry2 getRootProviderEntry() {
         return rootProviderEntry;
     }
 
@@ -480,23 +480,16 @@ public class JcrResourceResolverFactoryImpl implements
                             root = root.substring(0, root.length() - 1);
                         }
 
-                        try {
-                            rootProviderEntry.addResourceProvider(root,
-                                provider);
+                        rootProviderEntry.addResourceProvider(root,
+                            provider, reference);
 
-                            log.debug("bindResourceProvider: {}={} ({})",
-                                new Object[] { root, provider, serviceName });
-                            if ( localEA != null ) {
-                                final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                                props.put(SlingConstants.PROPERTY_PATH, root);
-                                localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
-                                        props));
-                            }
-                        } catch (ResourceProviderEntryException rpee) {
-                            log.error(
-                                "bindResourceProvider: Cannot register ResourceProvider {} for {}: ResourceProvider {} is already registered",
-                                new Object[] { provider, root,
-                                    rpee.getExisting().getResourceProvider() });
+                        log.debug("bindResourceProvider: {}={} ({})",
+                            new Object[] { root, provider, serviceName });
+                        if ( localEA != null ) {
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                            props.put(SlingConstants.PROPERTY_PATH, root);
+                            localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
+                                    props));
                         }
                     }
                 }
@@ -520,6 +513,10 @@ public class JcrResourceResolverFactoryImpl implements
             // synchronized insertion of new resource providers into
             // the tree to not inadvertently loose an entry
             synchronized (this) {
+               if ( componentContext != null ) {
+                ResourceProvider provider = (ResourceProvider) componentContext.locateService(
+                   "ResourceProvider", reference);
+                   
 
                 for (String root : roots) {
                     // cut off trailing slash
@@ -530,7 +527,7 @@ public class JcrResourceResolverFactoryImpl implements
                     // TODO: Do not remove this path, if another resource
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
-                    rootProviderEntry.removeResourceProvider(root);
+                    rootProviderEntry.removeResourceProvider(root, provider, reference);
 
                     log.debug("unbindResourceProvider: root={} ({})", root,
                         serviceName);
@@ -541,6 +538,7 @@ public class JcrResourceResolverFactoryImpl implements
                                 props));
                     }
                 }
+               }
             }
         }
 
@@ -625,5 +623,13 @@ public class JcrResourceResolverFactoryImpl implements
         }
 
         return null;
+    }
+    
+    
+    public void run() {
+        String stat = rootProviderEntry.getResolutionStats();
+        if ( stat != null ) {
+            log.info(stat);   
+        }
     }
 }
