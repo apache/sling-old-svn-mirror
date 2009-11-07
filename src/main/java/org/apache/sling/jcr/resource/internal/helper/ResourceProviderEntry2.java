@@ -319,7 +319,7 @@ public class ResourceProviderEntry2 implements
             String[] elements = split(prefix, '/');
             List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
             populateProviderPath(entryPath, elements);
-            if (entryPath.size() == elements.length) {
+            if (entryPath.size() > 0 && entryPath.size() == elements.length) {
                 // the last element is a perfect match;
                 return entryPath.get(entryPath.size()-1).removeInternalProvider(new WrappedResourceProvider(resourceProvider, comparable));
             }
