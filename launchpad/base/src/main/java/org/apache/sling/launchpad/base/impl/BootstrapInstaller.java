@@ -607,6 +607,15 @@ class BootstrapInstaller implements BundleActivator {
             Constants.BUNDLE_VERSION);
         Version installedVersion = Version.parseVersion(installedVersionProp);
 
+        // if the new version and the current version are the same, reinstall if
+        // the version is a snapshot
+        if (newVersion.equals(installedVersion)
+            && installedVersionProp.endsWith("SNAPSHOT")) {
+            logger.log(Logger.LOG_INFO, "Forcing upgrade of SNAPSHOT bundle: "
+                + installedBundle.getSymbolicName());
+            return false;
+        }
+
         return newVersion.compareTo(installedVersion) <= 0;
     }
 
