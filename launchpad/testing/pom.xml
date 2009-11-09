@@ -194,7 +194,8 @@
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.launchpad.base</artifactId>
-                                    <version>2.0.4-incubator</version>
+                                    <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
+                                    <version>2.0.5-SNAPSHOT</version>
                                 </artifactItem>
                             </artifactItems>
                             <stripVersion>true</stripVersion>
@@ -450,6 +451,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
+            <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
             <version>2.0.5-SNAPSHOT</version>
             <classifier>webapp</classifier>
             <type>war</type>
