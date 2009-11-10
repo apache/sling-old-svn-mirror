@@ -74,7 +74,7 @@ public class LauncherClassLoader extends URLClassLoader {
     private final Set<String> launcherPackages;
 
     LauncherClassLoader(File launcherJar) throws MalformedURLException {
-        super(new URL[] { launcherJar.toURL() },
+        super(new URL[] { launcherJar.toURI().toURL() },
             LauncherClassLoader.class.getClassLoader());
 
         Set<String> collectedPackages = new HashSet<String>();
@@ -171,7 +171,7 @@ public class LauncherClassLoader extends URLClassLoader {
      * <p>
      * Example: Called for <i>org.osgi.framework.Bundle</i> this method returns
      * <i>org.osgi.framework</i>.
-     * 
+     *
      * @param name The fully qualified name of the class or resource to check
      * @param separator The separator for package segments
      */
@@ -183,7 +183,7 @@ public class LauncherClassLoader extends URLClassLoader {
     /**
      * Returns <code>true</code> if the launcher JAR file provides the package
      * to which the named class or resource belongs.
-     * 
+     *
      * @param name The fully qualified name of the class or resource to check
      * @param separator The separator for package segments
      */

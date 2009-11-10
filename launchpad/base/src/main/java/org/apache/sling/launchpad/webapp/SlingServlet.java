@@ -45,7 +45,7 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
  * <p>
  * This class goes into the secondary artifact with the classifier <i>webapp</i>
  * to be used as the main servlet to be registered in the servlet container.
- * 
+ *
  * @see <a href="http://cwiki.apache.org/SLING/the-sling-launchpad.html">The
  *      Sling Launchpad</a>
  */
@@ -60,6 +60,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private static final int MAX_START_FAILURES = 20;
 
     private String slingHome;
+
+    private Loader loader;
 
     private Servlet sling;
 
@@ -149,6 +151,11 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         if (sling != null) {
             sling.destroy();
         }
+
+        // clear fields
+        slingHome = null;
+        loader = null;
+        sling = null;
     }
 
     // ---------- Notifiable interface
@@ -183,7 +190,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * If an <code>InputStream</code> was provided, this has been copied to a
      * temporary file, which will be used in place of the existing launcher jar
      * file.
-     * 
+     *
      * @param updateFile The temporary file to replace the existing launcher jar
      *            file. If <code>null</code> the existing launcher jar will be
      *            used again.
@@ -196,6 +203,9 @@ public class SlingServlet extends GenericServlet implements Notifiable {
                 sling = null;
             }
         }
+
+        // ensure we have a VM as clean as possible
+        loader.cleanupVM();
 
         if (updateFile == null) {
 
@@ -243,6 +253,14 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * {@link #init()} to install the launcher jar and actually start sling.
      */
     private void startSling() {
+
+        try {
+            this.loader = new Loader(slingHome);
+        } catch (IllegalArgumentException iae) {
+            startupFailure(null, iae);
+            return;
+        }
+
         try {
             URL launcherJar = getServletContext().getResource(
                 SharedConstants.DEFAULT_SLING_LAUNCHER_JAR);
@@ -278,27 +296,26 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         if (launcherJar != null) {
             try {
                 log("Checking launcher JAR in " + slingHome);
-                if (Loader.installLauncherJar(launcherJar, slingHome)) {
+                if (loader.installLauncherJar(launcherJar)) {
                     log("Installed or Updated launcher JAR file from " + launcherJar);
                 } else {
                     log("Existing launcher JAR file is already up to date");
                 }
             } catch (IOException ioe) {
-                log("Failed installing " + launcherJar, ioe);
+                startupFailure("Failed installing " + launcherJar, ioe);
+                return;
             }
         } else {
             log("No Launcher JAR to install");
         }
 
-        Object object = Loader.loadLauncher(
-            SharedConstants.DEFAULT_SLING_SERVLET, slingHome);
+        Object object = null;
         try {
             log("Loading launcher class "
                 + SharedConstants.DEFAULT_SLING_SERVLET);
-            object = Loader.loadLauncher(SharedConstants.DEFAULT_SLING_SERVLET,
-                slingHome);
+            object = loader.loadLauncher(SharedConstants.DEFAULT_SLING_SERVLET);
         } catch (IllegalArgumentException iae) {
-            log("Cannot load Launcher Servlet "
+            startupFailure("Cannot load Launcher Servlet "
                 + SharedConstants.DEFAULT_SLING_SERVLET, iae);
             return;
         }
@@ -319,13 +336,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
                 this.startFailureCounter = 0;
                 log("Startup completed");
             } catch (ServletException se) {
-                Throwable cause = se.getCause();
-                if (cause == null) {
-                    cause = se;
-                }
-
-                log("Failed to start Sling in " + slingHome, cause);
-                startFailureCounter++;
+                startupFailure(null, se);
             }
         }
 
@@ -349,7 +360,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * does not provide the Servlet API 2.5
      * <code>ServletContext.getContextPath()</code> method and the
      * <code>request</code> parameter is <code>null</code>.
-     * 
+     *
      * @param args The command line arguments
      * @return The value to use for sling.home or <code>null</code> if the value
      *         cannot be retrieved.
@@ -417,4 +428,25 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         return prefix + contextPath.replace('/', '_');
     }
 
+    private void startupFailure(String message, Throwable cause) {
+
+        // ensure message
+        if (message == null) {
+            message = "Failed to start Sling in " + slingHome;
+        }
+
+        // unwrap to get the real cause
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+
+        // log it now and increase the failure counter
+        log(message, cause);
+        startFailureCounter++;
+
+        // ensure the startingSling fields is not set
+        synchronized (this) {
+            startingSling = null;
+        }
+    }
 }

@@ -51,7 +51,7 @@ public class Main extends Thread implements Notifiable {
     // The name of the environment variable to consult to find out
     // about sling.home
     private static final String ENV_SLING_HOME = "SLING_HOME";
-    
+
     public static void main(String[] args) {
         new Main(args);
     }
@@ -59,6 +59,8 @@ public class Main extends Thread implements Notifiable {
     private final Map<String, String> commandLineArgs;
 
     private final String slingHome;
+
+    private final Loader loader;
 
     private Launcher sling;
 
@@ -71,13 +73,28 @@ public class Main extends Thread implements Notifiable {
 
         // support usage first
         doHelp();
-        
+
         // check for control commands (might exit)
         doControlCommand();
-        
+
         // sling.home from the command line or system properties, else default
         this.slingHome = getSlingHome(commandLineArgs);
-        info("Starting Sling in " + slingHome, null);
+        File slingHomeFile = new File(slingHome);
+        if (slingHomeFile.isAbsolute()) {
+            info("Starting Sling in " + slingHome, null);
+        } else {
+            info("Starting Sling in " + slingHome + " ("
+                + slingHomeFile.getAbsolutePath() + ")", null);
+        }
+
+        // The Loader helper
+        Loader loaderTmp = null;
+        try {
+            loaderTmp = new Loader(slingHome);
+        } catch (IllegalArgumentException iae) {
+            startupFailure(iae.getMessage(), null);
+        }
+        this.loader = loaderTmp;
 
         Runtime.getRuntime().addShutdownHook(this);
 
@@ -104,7 +121,7 @@ public class Main extends Thread implements Notifiable {
             sling.stop();
         }
     }
-    
+
     // ---------- Notifiable interface
 
     /**
@@ -148,6 +165,13 @@ public class Main extends Thread implements Notifiable {
      *            used again.
      */
     public void updated(File updateFile) {
+
+        // clear the reference to the framework
+        sling = null;
+
+        // ensure we have a VM as clean as possible
+        loader.cleanupVM();
+
         if (updateFile == null) {
 
             info("Restarting Framework and Sling", null);
@@ -186,30 +210,28 @@ public class Main extends Thread implements Notifiable {
         if (launcherJar != null) {
             try {
                 info("Checking launcher JAR in " + slingHome, null);
-                if (Loader.installLauncherJar(launcherJar, slingHome)) {
+                if (loader.installLauncherJar(launcherJar)) {
                     info("Installed or Updated launcher JAR file from "
                         + launcherJar, null);
                 } else {
                     info("Existing launcher JAR file already up to date", null);
                 }
             } catch (IOException ioe) {
-                error("Failed installing " + launcherJar, ioe);
+                startupFailure("Failed installing " + launcherJar, ioe);
             }
         } else {
             info("No Launcher JAR to install", null);
         }
 
-        Object object;
+        Object object = null;
         try {
             info(
                 "Loading launcher class " + SharedConstants.DEFAULT_SLING_MAIN,
                 null);
-            object = Loader.loadLauncher(SharedConstants.DEFAULT_SLING_MAIN,
-                slingHome);
+            object = loader.loadLauncher(SharedConstants.DEFAULT_SLING_MAIN);
         } catch (IllegalArgumentException iae) {
-            error("Failed loading Sling class "
+            startupFailure("Failed loading Sling class "
                 + SharedConstants.DEFAULT_SLING_MAIN, iae);
-            return;
         }
 
         if (object instanceof Launcher) {
@@ -246,9 +268,9 @@ public class Main extends Thread implements Notifiable {
      * <tr><td>-y -z</td><td>y -> y, z -> z</td></tr>
      * <tr><td>-y x - -z a</td><td>y -> x, -z -> -z, a -> a</td></tr>
      * </table>
-     * 
+     *
      * @param args The command line to parse
-     * 
+     *
      * @return The map of command line options and their values
      */
     static Map<String, String> parseCommandLine(String[] args) {
@@ -256,7 +278,7 @@ public class Main extends Thread implements Notifiable {
         boolean readUnparsed = false;
         for (int argc = 0; args != null && argc < args.length; argc++) {
             String arg = args[argc];
-            
+
             if (readUnparsed) {
                 commandLine.put(arg, arg);
             } else if (arg.startsWith("-")) {
@@ -283,7 +305,7 @@ public class Main extends Thread implements Notifiable {
         }
         return commandLine;
     }
-    
+
     /**
      * Define the sling.home parameter implementing the algorithme defined on
      * the wiki page to find the setting according to this algorithm:
@@ -302,34 +324,40 @@ public class Main extends Thread implements Notifiable {
 
         String slingHome = commandLine.get("c");
         if (slingHome != null) {
-            
+
             source = "command line";
 
         } else {
-            
+
             slingHome = System.getProperty(SharedConstants.SLING_HOME);
             if (slingHome != null) {
-                
+
                 source = "system property sling.home";
-                
+
             } else {
-                
+
                 slingHome = System.getenv(ENV_SLING_HOME);
                 if (slingHome != null) {
-                    
+
                     source = "environment variable SLING_HOME";
-                    
+
                 } else {
-                    
+
                     source = "default";
                     slingHome = SharedConstants.SLING_HOME_DEFAULT;
-                    
+
                 }
             }
         }
 
         info("Setting sling.home=" + slingHome + " (" + source + ")", null);
         return slingHome;
+    }
+
+    private void startupFailure(String message, Throwable cause) {
+        error("Launcher JAR access failure: " + message, cause);
+        error("Shutting Down", null);
+        System.exit(1);
     }
 
     // ---------- logging
@@ -383,7 +411,7 @@ public class Main extends Thread implements Notifiable {
             System.out.println("usage: "
                 + Main.class.getName()
                 + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
-    
+
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Sling (uses -j)");
             System.out.println("    start         check whether Sling is running (uses-j)");
@@ -394,11 +422,11 @@ public class Main extends Thread implements Notifiable {
             System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
             System.out.println("    -p port       the port to listen to (default 8080)");
             System.out.println("    -h            prints this usage message");
-    
+
             System.exit(0);
         }
     }
-    
+
     private void doControlCommand() {
         String commandSocketSpec = commandLineArgs.remove("j");
         if ("j".equals(commandSocketSpec)) {
