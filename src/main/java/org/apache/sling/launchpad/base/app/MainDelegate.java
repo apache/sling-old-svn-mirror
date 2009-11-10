@@ -158,7 +158,7 @@ public class MainDelegate implements Launcher {
 
         try {
             ResourceProvider resProvider = new ClassLoaderResourceProvider(
-                MainDelegate.class.getClassLoader());
+                getClass().getClassLoader());
 
             // creating the instance launches the framework and we are done here
             // ..
