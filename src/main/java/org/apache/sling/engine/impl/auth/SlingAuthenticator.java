@@ -254,15 +254,8 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
         }
 
         // select path used for authentication handler selection
-        final Object loginPathO = request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        String path = (loginPathO instanceof String)
-                ? (String) loginPathO
-                : request.getPathInfo();
-        if (path == null || path.length() == 0) {
-            path = "/";
-        }
-
-        AuthenticationHandlerHolder[] handlerInfos = findApplicableAuthenticationHandlers(request);
+        final AuthenticationHandlerHolder[] handlerInfos = findApplicableAuthenticationHandlers(request);
+        final String path = getHandlerSelectionPath(request);
         boolean done = false;
         for (int i = 0; !done && i < handlerInfos.length; i++) {
             if ( path.startsWith(handlerInfos[i].path) ) {
@@ -304,9 +297,10 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
             throw new IllegalStateException("Response already committed");
         }
 
-        AuthenticationHandlerHolder[] handlerInfos = findApplicableAuthenticationHandlers(request);
+        final AuthenticationHandlerHolder[] handlerInfos = findApplicableAuthenticationHandlers(request);
+        final String path = getHandlerSelectionPath(request);
         for (int i = 0; i < handlerInfos.length; i++) {
-            if (request.getPathInfo().startsWith(handlerInfos[i].path)) {
+            if (path.startsWith(handlerInfos[i].path)) {
                 log.debug("logout: dropping authentication using handler: {}",
                     handlerInfos[i]);
 
@@ -693,5 +687,29 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
 
         // return the session
         return session;
+    }
+
+    /**
+     * Returns the path to be used to select the authentication handler to login
+     * or logout with.
+     * <p>
+     * This method uses the {@link Authenticator#LOGIN_RESOURCE} request
+     * attribute. If this attribute is not set (or is not a string), the request
+     * path info is used. If this is not set either, or is the empty string, "/"
+     * is returned.
+     *
+     * @param request The request providing the request attribute or path info.
+     * @return The path as set by the request attribute or the path info or "/"
+     *         if neither is set.
+     */
+    private String getHandlerSelectionPath(HttpServletRequest request) {
+        final Object loginPathO = request.getAttribute(Authenticator.LOGIN_RESOURCE);
+        String path = (loginPathO instanceof String)
+                ? (String) loginPathO
+                : request.getPathInfo();
+        if (path == null || path.length() == 0) {
+            path = "/";
+        }
+        return path;
     }
 }

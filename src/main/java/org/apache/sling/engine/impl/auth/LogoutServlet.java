@@ -58,9 +58,13 @@ public class LogoutServlet extends SlingAllMethodsServlet {
     protected void service(SlingHttpServletRequest request,
             SlingHttpServletResponse response) {
 
-        Authenticator authenticator = this.authenticator;
+        final Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
             try {
+                final String resourcePath = request.getParameter("resource");
+                request.setAttribute(Authenticator.LOGIN_RESOURCE,
+                    (resourcePath != null) ? resourcePath : "/");
+
                 authenticator.logout(request, response);
                 return;
             } catch (IllegalStateException ise) {
