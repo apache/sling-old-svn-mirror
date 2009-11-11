@@ -19,8 +19,8 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -212,12 +212,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
         String path = response.getPath();
         if (!session.itemExists(path)) {
-            
+
             deepGetOrCreateNode(session, path, reqProperties, changes);
             response.setCreateRequest(true);
-            
+
         } else {
-            
+
             String[] mixins = getMixinTypes(reqProperties, path);
             if (mixins != null) {
 
@@ -235,7 +235,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                             node.removeMixin(mixinName);
                         }
                     }
-                    
+
                     // add new mixins
                     for (String mixin : newMixins) {
                         node.addMixin(mixin);
@@ -382,21 +382,21 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         for (RequestProperty property : reqProperties.values()) {
 
             if (property.isDelete() && session.itemExists(property.getPath())) {
-            
+
                 if (property.getName().equals("jcr:mixinTypes")) {
-                    
+
                     // clear all mixins
                     Node parent = (Node) session.getItem(property.getParentPath());
                     for (NodeType mixin : parent.getMixinNodeTypes()) {
                         parent.removeMixin(mixin.getName());
                     }
-                    
+
                 } else {
-                    
+
                     session.getItem(property.getPath()).remove();
-                    
+
                 }
-                
+
                 changes.add(Modification.onDeleted(property.getPath()));
             }
         }
@@ -447,7 +447,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         boolean requireItemPrefix = requireItemPathPrefix(request);
 
         // walk the request parameters and collect the properties
-        Map<String, RequestProperty> reqProperties = new HashMap<String, RequestProperty>();
+        LinkedHashMap<String, RequestProperty> reqProperties = new LinkedHashMap<String, RequestProperty>();
         for (Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
