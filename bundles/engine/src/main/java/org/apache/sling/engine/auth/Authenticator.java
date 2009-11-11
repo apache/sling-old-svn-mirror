@@ -37,6 +37,22 @@ import javax.servlet.http.HttpServletResponse;
 public interface Authenticator {
 
     /**
+     * Name of the request attribute used by the
+     * {@link #login(HttpServletRequest, HttpServletResponse)} method to select
+     * an {@link AuthenticationHandler} to call. If this request attribute is
+     * not set or is the empty string, the request path info (
+     * <code>HttpServletRequest.getPathInfo()</code>) method is used to get the
+     * path.
+     * <p>
+     * This request attribute can be used by frontend servlets/scripts which
+     * call into {@link #login(HttpServletRequest, HttpServletResponse)} on
+     * behalf of users.
+     *
+     * @since 2.1
+     */
+    static final String LOGIN_RESOURCE = "resource";
+
+    /**
      * Finds an {@link AuthenticationHandler} for the given request and call its
      * {@link AuthenticationHandler#requestAuthentication(HttpServletRequest, HttpServletResponse)}
      * method to initiate an authentication process with the client to login to
