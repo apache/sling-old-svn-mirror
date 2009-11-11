@@ -21,7 +21,7 @@ package org.apache.sling.engine.impl.parameters;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.sling.api.request.RequestParameter;
@@ -96,7 +96,7 @@ class Util {
         }
 
         // map for rename parameters due to encoding fixes
-        Map<String, String> renameMap = new HashMap<String, String>();
+        LinkedHashMap<String, String> renameMap = new LinkedHashMap<String, String>();
 
         // convert the map of lists to a map of arrays
         for (Map.Entry<String, RequestParameter[]> paramEntry : parameterMap.entrySet()) {
