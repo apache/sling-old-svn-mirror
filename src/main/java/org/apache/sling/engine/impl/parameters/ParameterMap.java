@@ -19,7 +19,7 @@
 package org.apache.sling.engine.impl.parameters;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.sling.api.request.RequestParameter;
@@ -28,7 +28,7 @@ import org.apache.sling.api.request.RequestParameterMap;
 /**
  * The <code>ParameterMap</code> TODO
  */
-class ParameterMap extends HashMap<String, RequestParameter[]> implements
+class ParameterMap extends LinkedHashMap<String, RequestParameter[]> implements
         RequestParameterMap {
 
     private Map<String, String[]> stringParameterMap;
@@ -81,7 +81,7 @@ class ParameterMap extends HashMap<String, RequestParameter[]> implements
 
     Map<String, String[]> getStringParameterMap() {
         if (this.stringParameterMap == null) {
-            Map<String, String[]> pm = new HashMap<String, String[]>();
+            LinkedHashMap<String, String[]> pm = new LinkedHashMap<String, String[]>();
             for (Map.Entry<String, RequestParameter[]> ppmEntry : entrySet()) {
                 pm.put(ppmEntry.getKey(), toStringArray(ppmEntry.getValue()));
             }
