@@ -536,6 +536,8 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
             // if no handler can request authentication information.
             log.info("authenticate: Unable to authenticate: {}",
                 reason.getMessage());
+            log.debug("authenticate", reason);
+
             login(request, response);
 
         } else {
