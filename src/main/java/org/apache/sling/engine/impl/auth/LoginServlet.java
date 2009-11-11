@@ -62,6 +62,8 @@ public class LoginServlet extends SlingAllMethodsServlet {
     protected void service(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
 
+        final String resourcePath = request.getParameter(Authenticator.LOGIN_RESOURCE);
+
         // if the request is logged in and the resource is not set (such
         // as when requesting /system/sling/login from the browser with the
         // browser sending credentials) or the resource is set to the login
@@ -69,7 +71,6 @@ public class LoginServlet extends SlingAllMethodsServlet {
         // through the login servlet), redirect to root now assuming we are
         // authenticated.
         if (request.getAuthType() != null) {
-            final String resourcePath = request.getParameter("resource");
             if (isSelf(resourcePath)) {
                 String redirectTarget = request.getContextPath() + "/";
                 log.warn(
@@ -83,16 +84,29 @@ public class LoginServlet extends SlingAllMethodsServlet {
         Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
             try {
+
+                // set the login resource to select the authenticator
+                request.setAttribute(Authenticator.LOGIN_RESOURCE,
+                    (resourcePath != null) ? resourcePath : "/");
+
                 authenticator.login(request, response);
                 return;
+
             } catch (IllegalStateException ise) {
+
                 log.error("doGet: Response already committed, cannot login");
                 return;
+
             } catch (NoAuthenticationHandlerException nahe) {
+
                 log.error("doGet: No AuthenticationHandler to login registered");
+
             }
+
         } else {
+
             log.error("doGet: Authenticator service missing, cannot login");
+
         }
 
         // fall back to forbid access

@@ -253,10 +253,19 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
             throw new IllegalStateException("Response already committed");
         }
 
+        // select path used for authentication handler selection
+        final Object loginPathO = request.getAttribute(Authenticator.LOGIN_RESOURCE);
+        String path = (loginPathO instanceof String)
+                ? (String) loginPathO
+                : request.getPathInfo();
+        if (path == null || path.length() == 0) {
+            path = "/";
+        }
+
         AuthenticationHandlerHolder[] handlerInfos = findApplicableAuthenticationHandlers(request);
         boolean done = false;
         for (int i = 0; !done && i < handlerInfos.length; i++) {
-            if ( request.getPathInfo().startsWith(handlerInfos[i].path) ) {
+            if ( path.startsWith(handlerInfos[i].path) ) {
                 log.debug(
                     "login: requesting authentication using handler: {}",
                     handlerInfos[i]);
