@@ -166,8 +166,9 @@ public class ResourceProviderEntry2 implements
                 Set<ResourceProvider> providersSet = new LinkedHashSet<ResourceProvider>();
                 getResourceProviders(path, providersSet);
                 
-                LOGGER.debug(" Provider Set for path {} {} ",path,Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
-
+                if ( LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(" Provider Set for path {} {} ",path,Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
+                }
                 this.iteratorPath = path;
                 providers = providersSet.iterator();
                 delayed = new HashMap<String, Resource>();
@@ -347,6 +348,7 @@ public class ResourceProviderEntry2 implements
             if (providers != null) {
                 set.addAll(Arrays.asList(providers));
             }
+            LOGGER.debug("Adding provider {} at {} ",provider,path);
             set.add(provider);
             providers = conditionalSort(set);
             return providers.length > before;
@@ -525,17 +527,27 @@ public class ResourceProviderEntry2 implements
         for (String element : elements ) {
             if ( base.containsKey(element)) {
                 base = base.get(element);
+                if ( LOGGER.isDebugEnabled() ) {
+                    LOGGER.debug("Loading from {}  {} ", element, base.getResourceProviders().length );
+                }
+                for ( ResourceProvider rp : base.getResourceProviders() ) {
+                    LOGGER.debug("Adding {} for {} ",rp,path);
+                    providers.add(rp);
+                }
             } else {
+                LOGGER.debug("No container for {} ", element );
                 base = null;
                 break;
             }
         }
         // the path has been exausted and there is a subtree to be collected, so go and collect it.
         if ( base != null ) {
+            LOGGER.debug("Loading All below {} ", base.path );
             getResourceProviders(base, providers);
         }
         // add in providers at this node in the tree, ie the root provider
         for ( ResourceProvider rp : getResourceProviders() ) {
+            LOGGER.debug("Loading All at {} ", path );
             providers.add(rp);
         }
 
