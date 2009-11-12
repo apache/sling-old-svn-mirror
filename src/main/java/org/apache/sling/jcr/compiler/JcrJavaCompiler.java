@@ -23,7 +23,12 @@ import org.apache.sling.commons.compiler.ErrorHandler;
  * repository and writes the generated class files to the repository.
  */
 public interface JcrJavaCompiler {
-    
+
     boolean compile(String[] srcFiles, String outputDir, ErrorHandler errorHandler,
-            boolean generateDebug, String javaVersion) throws Exception;
+                    boolean generateDebug, String javaVersion) throws Exception;
+
+    boolean compile(String[] srcFiles, String outputDir,
+                           ErrorHandler errorHandler, boolean generateDebug,
+                           String javaVersion, ClassLoader complementaryClassLoader)
+            throws Exception;
 }
