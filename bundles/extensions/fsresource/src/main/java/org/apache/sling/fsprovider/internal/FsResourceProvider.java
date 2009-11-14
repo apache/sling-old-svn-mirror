@@ -20,8 +20,8 @@ package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
@@ -32,7 +32,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>FsResourceProvider</code> is a resource provider which maps
@@ -48,7 +47,7 @@ import org.osgi.service.component.ComponentContext;
  * @scr.component name="org.apache.sling.fsprovider.internal.FsResourceProvider"
  *                label="%resource.resolver.name"
  *                description="%resource.resolver.description"
- *                factory="org.apache.sling.fsprovider.internal.FsResourceProviderFactory"
+ *                configurationFactory="true"
  * @scr.service
  * @scr.property name="service.description" value="Sling Filesystem Resource
  *               Provider"
@@ -184,8 +183,7 @@ public class FsResourceProvider implements ResourceProvider {
 
     // ---------- SCR Integration
 
-    protected void activate(ComponentContext context) {
-        Dictionary<?, ?> props = context.getProperties();
+    protected void activate(BundleContext bundleContext, Map<?, ?> props) {
 
         String providerRoot = (String) props.get(ROOTS);
         if (providerRoot == null || providerRoot.length() == 0) {
@@ -200,11 +198,10 @@ public class FsResourceProvider implements ResourceProvider {
 
         this.providerRoot = providerRoot;
         this.providerRootPrefix = providerRoot.concat("/");
-        this.providerFile = getProviderFile(providerFileName,
-            context.getBundleContext());
+        this.providerFile = getProviderFile(providerFileName, bundleContext);
     }
 
-    protected void deactivate(ComponentContext context) {
+    protected void deactivate() {
         this.providerRoot = null;
         this.providerRootPrefix = null;
         this.providerFile = null;
