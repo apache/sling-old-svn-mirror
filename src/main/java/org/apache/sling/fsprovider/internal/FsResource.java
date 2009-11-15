@@ -38,6 +38,26 @@ import org.slf4j.LoggerFactory;
  */
 public class FsResource extends SlingAdaptable implements Resource {
 
+
+    /**
+     * The common resource super type for files and folders mapped into the
+     * resource tree by the {@link FsResourceProvider} (value is
+     * "sling/fs/resource").
+     */
+    private static final String RESOURCE_TYPE_ROOT = "sling/fs/resource";
+
+    /**
+     * The resource type for file system files mapped into the resource tree by
+     * the {@link FsResourceProvider} (value is "sling/fs/file").
+     */
+    private static final String RESOURCE_TYPE_FILE = "sling/fs/file";
+
+    /**
+     * The resource type for file system folders mapped into the resource tree
+     * by the {@link FsResourceProvider} (value is "sling/fs/folder").
+     */
+    private static final String RESOURCE_TYPE_FOLDER = "sling/fs/folder";
+
     // default log, assigned on demand
     private Logger log;
 
@@ -58,7 +78,7 @@ public class FsResource extends SlingAdaptable implements Resource {
 
     /**
      * Creates an instance of this Filesystem resource.
-     * 
+     *
      * @param resolver The owning resource resolver
      * @param resourcePath The resource path in the resource tree
      * @param file The wrapped file
@@ -103,7 +123,7 @@ public class FsResource extends SlingAdaptable implements Resource {
      * Returns {@link FsProviderConstants#RESOURCE_TYPE_ROOT}
      */
     public String getResourceSuperType() {
-        return FsProviderConstants.RESOURCE_TYPE_ROOT;
+        return RESOURCE_TYPE_ROOT;
     }
 
     /**
@@ -114,8 +134,8 @@ public class FsResource extends SlingAdaptable implements Resource {
     public String getResourceType() {
         if (resourceType == null) {
             resourceType = file.isFile()
-                    ? FsProviderConstants.RESOURCE_TYPE_FILE
-                    : FsProviderConstants.RESOURCE_TYPE_FOLDER;
+                    ? RESOURCE_TYPE_FILE
+                    : RESOURCE_TYPE_FOLDER;
         }
 
         return resourceType;
