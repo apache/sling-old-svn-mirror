@@ -38,25 +38,17 @@ import org.slf4j.LoggerFactory;
  */
 public class FsResource extends SlingAdaptable implements Resource {
 
-
-    /**
-     * The common resource super type for files and folders mapped into the
-     * resource tree by the {@link FsResourceProvider} (value is
-     * "sling/fs/resource").
-     */
-    private static final String RESOURCE_TYPE_ROOT = "sling/fs/resource";
-
     /**
      * The resource type for file system files mapped into the resource tree by
-     * the {@link FsResourceProvider} (value is "sling/fs/file").
+     * the {@link FsResourceProvider} (value is "nt:file").
      */
-    private static final String RESOURCE_TYPE_FILE = "sling/fs/file";
+    private static final String RESOURCE_TYPE_FILE = "nt:file";
 
     /**
      * The resource type for file system folders mapped into the resource tree
-     * by the {@link FsResourceProvider} (value is "sling/fs/folder").
+     * by the {@link FsResourceProvider} (value is "nt:folder").
      */
-    private static final String RESOURCE_TYPE_FOLDER = "sling/fs/folder";
+    private static final String RESOURCE_TYPE_FOLDER = "nt:folder";
 
     // default log, assigned on demand
     private Logger log;
@@ -123,7 +115,7 @@ public class FsResource extends SlingAdaptable implements Resource {
      * Returns {@link FsProviderConstants#RESOURCE_TYPE_ROOT}
      */
     public String getResourceSuperType() {
-        return RESOURCE_TYPE_ROOT;
+        return null;
     }
 
     /**
