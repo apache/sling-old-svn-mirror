@@ -43,6 +43,9 @@ public class DynamicClassLoaderManagerImpl
     /** The cached chain of class loaders. */
     private ClassLoader[] cache;
 
+    /** The cached chain of dynamic class loader providers. */
+    private DynamicClassLoaderProvider[] providerCache;
+
     /** Is this still active? */
     private volatile boolean active = true;
 
@@ -62,6 +65,7 @@ public class DynamicClassLoaderManagerImpl
         super(ctx, DynamicClassLoaderProvider.class.getName(), null);
         this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent, factory);
         this.cache = new ClassLoader[] {this.pckAdminCL};
+        this.providerCache = new DynamicClassLoaderProvider[0];
         this.open();
         this.facade = new ClassLoaderFacade(this);
     }
@@ -70,10 +74,13 @@ public class DynamicClassLoaderManagerImpl
         if ( this.trackingCount < this.getTrackingCount() ) {
             final ServiceReference[] refs = this.getServiceReferences();
             final ClassLoader[] loaders;
+            final DynamicClassLoaderProvider[] providers;
             if ( refs == null || refs.length == 0 ) {
                 loaders = new ClassLoader[] {this.pckAdminCL};
+                providers = new DynamicClassLoaderProvider[0];
             } else {
                 loaders = new ClassLoader[1 + refs.length];
+                providers = new DynamicClassLoaderProvider[refs.length];
                 Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
                 int index = 0;
                 for(final ServiceReference ref : refs) {
@@ -85,9 +92,26 @@ public class DynamicClassLoaderManagerImpl
                 }
                 loaders[index] = this.pckAdminCL;
             }
+            // release old class loaders
+            this.releaseProviders();
+
             // and now use new array
             this.cache = loaders;
+            this.providerCache = providers;
             this.trackingCount = this.getTrackingCount();
+        }
+    }
+
+    /**
+     * Free used class loader providers
+     */
+    private void releaseProviders() {
+        if ( this.providerCache != null ) {
+            for(int i=0; i<this.providerCache.length; i++) {
+                if ( this.cache[i] != null ) {
+                    this.providerCache[i].release(this.cache[i]);
+                }
+            }
         }
     }
 
@@ -95,8 +119,11 @@ public class DynamicClassLoaderManagerImpl
      * Deactivate this service.
      */
     public void deactivate() {
+        this.releaseProviders();
         this.active = false;
         this.close();
+        this.providerCache = null;
+        this.cache = null;
     }
 
     /**
