@@ -87,8 +87,6 @@ public class DynamicClassLoaderProviderImpl
 
     private String[] classPath;
 
-    private RepositoryClassLoaderFacade facade;
-
     /** @scr.reference policy="dynamic" */
     private MimeTypeService mimeTypeService;
 
@@ -116,14 +114,19 @@ public class DynamicClassLoaderProviderImpl
      * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader(ClassLoader)
      */
     public ClassLoader getClassLoader(final ClassLoader parent) {
-        if ( this.facade == null ) {
-            this.facade = new RepositoryClassLoaderFacade(this, parent, this.getClassPaths());
-        }
-
-        return this.facade;
+        return new RepositoryClassLoaderFacade(this, parent, this.getClassPaths());
     }
 
+    /**
+     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#release(java.lang.ClassLoader)
+     */
+    public void release(ClassLoader classLoader) {
+        if ( classLoader instanceof RepositoryClassLoaderFacade ) {
+            ((RepositoryClassLoaderFacade)classLoader).destroy();
+        }
+    }
     //---------- SCR Integration ----------------------------------------------
+
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
@@ -415,10 +418,6 @@ public class DynamicClassLoaderProviderImpl
      * @param componentContext
      */
     protected void deactivate(final ComponentContext componentContext) {
-        if ( this.facade != null) {
-            this.facade.destroy();
-            this.facade = null;
-        }
         if ( this.readSession != null ) {
             this.readSession.logout();
             this.readSession = null;
