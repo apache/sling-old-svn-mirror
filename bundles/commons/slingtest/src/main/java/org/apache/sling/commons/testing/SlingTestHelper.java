@@ -27,9 +27,9 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.adapter.internal.AdapterManagerTestHelper;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.testing.sling.AdapterManagerTestHelper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
