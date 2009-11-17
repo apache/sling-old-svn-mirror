@@ -19,6 +19,8 @@
 package org.apache.sling.i18n.impl;
 
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -26,11 +28,18 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
+import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.testing.SlingTestHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,28 +47,123 @@ import org.slf4j.LoggerFactory;
  * Tests the {@link JcrResourceBundle} class.
  */
 public class JcrResourceBundleTest extends RepositoryTestBase {
-    
+
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundleTest.class);
 
     protected ResourceResolver resolver;
-    
+
     public void setUp() throws Exception {
         super.setUp();
-        
+
         cleanRepository();
-        
-        SlingTestHelper.registerSlingNodeTypes(getSession());
+
         RepositoryUtil.registerNodeType(getSession(), getClass()
                 .getResourceAsStream("/SLING-INF/nodetypes/jcrlanguage.cnd"));
         RepositoryUtil.registerNodeType(getSession(), getClass()
                 .getResourceAsStream("/SLING-INF/nodetypes/message.cnd"));
 
-        resolver = SlingTestHelper.getResourceResolver(getRepository(),
-                getSession());
-        
+        resolver = new ResourceResolver() {
+
+            public Iterator<Resource> findResources(String query,
+                    String language) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource getResource(Resource base, String path) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource getResource(String path) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String[] getSearchPath() {
+                return new String[] {"/apps/", "/libs/"};
+            }
+
+            public Iterator<Resource> listChildren(Resource parent) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String map(HttpServletRequest request, String resourcePath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String map(String resourcePath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Iterator<Map<String, Object>> queryResources(String query,
+                    String language) {
+                try {
+                    final Query q = getSession().getWorkspace().getQueryManager().createQuery(query, language);
+                    final QueryResult result = q.execute();
+                    final String[] colNames = result.getColumnNames();
+                    final RowIterator rows = result.getRows();
+                    return new Iterator<Map<String, Object>>() {
+                        public boolean hasNext() {
+                            return rows.hasNext();
+                        };
+
+                        public Map<String, Object> next() {
+                            Map<String, Object> row = new HashMap<String, Object>();
+                            try {
+                                Value[] values = rows.nextRow().getValues();
+                                for (int i = 0; i < values.length; i++) {
+                                    Value v = values[i];
+                                    if (v != null) {
+                                        row.put(colNames[i],
+                                            JcrResourceUtil.toJavaObject(values[i]));
+                                    }
+                                }
+                            } catch (RepositoryException re) {
+                                // ignore
+                            }
+                            return row;
+                        }
+
+                        public void remove() {
+                            throw new UnsupportedOperationException("remove");
+                        }
+                    };
+                } catch (NamingException ne) {
+                    return null;
+                } catch (RepositoryException re) {
+                    return null;
+                }
+            }
+
+            public Resource resolve(HttpServletRequest request, String absPath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource resolve(HttpServletRequest request) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource resolve(String absPath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+        };
+
         createTestContent();
     }
-    
+
     public void cleanRepository() throws Exception {
         NodeIterator nodes = getSession().getRootNode().getNodes();
         while (nodes.hasNext()) {
@@ -74,9 +178,9 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         getSession().save();
     }
-    
+
     // ---------------------------------------------------------------< test data helper >
-    
+
     /**
      * Helper class for creating test data in a generic way.
      */
@@ -85,16 +189,16 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         public String message;
         public boolean useNodeName;
         public String path;
-        
+
         public Message(String path, String key, String message, boolean useNodeName) {
             this.path = path;
             this.key = key;
             this.message = message;
             this.useNodeName = useNodeName;
         }
-        
+
         private static int nodeNameCounter = 0;
-        
+
         public void add(Node languageNode) throws RepositoryException {
             Node node = languageNode;
             String[] pathElements = path.split("/");
@@ -113,19 +217,19 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             node.setProperty("sling:message", message);
         }
     }
-    
+
     // test data to add to the repository (use linked hash map for insertion order)
     public static final Map<String, Message> MESSAGES_DE = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_EN = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_DE_APPS = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_DE_BASENAME = new LinkedHashMap<String, Message>();
-    
+
     public static void add(Map<String, Message> map, Message msg) {
         map.put(msg.key, msg);
     }
-    
+
     public static final Message PARENT_MSG = new Message("", "untranslated", "means: not translated", false);
-    
+
     // create test data
     static {
         // 1. direct child node of language node, using sling:key
@@ -136,7 +240,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         add(MESSAGES_DE, new Message("f", "fork", "Gabel", false));
         // 4. nested node, using nodename
         add(MESSAGES_DE, new Message("s/p/o", "spoon", "Lšffel", true));
-        
+
         // 5. not present in DE
         add(MESSAGES_DE, PARENT_MSG);
 
@@ -150,10 +254,10 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             add(MESSAGES_DE_BASENAME, new Message(msg.path, msg.key, "BASENAME", msg.useNodeName));
         }
     }
-    
+
     public void createTestContent() throws Exception {
         Node i18n = getSession().getRootNode().addNode("libs", "nt:unstructured").addNode("i18n", "nt:unstructured");
-        
+
         // some DE content
         Node de = i18n.addNode("de", "nt:folder");
         de.addMixin("mix:language");
@@ -162,7 +266,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             msg.add(de);
         }
         getSession().save();
-        
+
         // some EN content (for parent bundling)
         Node en = i18n.addNode("en", "nt:folder");
         en.addMixin("mix:language");
@@ -171,32 +275,30 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             msg.add(en);
         }
         getSession().save();
-        
-        //SlingTestHelper.printJCR(getSession());
     }
-    
+
     // ---------------------------------------------------------------< tests >
-    
+
     public void test_getString() {
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         for (Message msg : MESSAGES_DE.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
     }
-    
+
     public void test_getObject() {
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         for (Message msg : MESSAGES_DE.values()) {
             assertEquals(msg.message, (String) bundle.getObject(msg.key));
         }
     }
-    
+
     public void test_handle_missing_key() {
         // test if key is returned if no entry found in repo
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         assertEquals("missing", bundle.getString("missing"));
     }
-    
+
     public void test_getKeys() {
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         Enumeration<String> keys = bundle.getKeys();
@@ -208,13 +310,13 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         assertEquals(MESSAGES_DE.size(), counter);
     }
-    
+
     public void test_bundle_parenting() {
         // set parent of resource bundle, test if passed through
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         JcrResourceBundle parentBundle = new JcrResourceBundle(new Locale("en"), null, resolver);
         bundle.setParent(parentBundle);
-        
+
         assertEquals(PARENT_MSG.message, bundle.getObject(PARENT_MSG.key));
     }
 
@@ -228,13 +330,13 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             msg.add(de);
         }
         getSession().save();
-        
+
         // test getString
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         for (Message msg : MESSAGES_DE_APPS.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
-        
+
         // test getKeys
         Enumeration<String> keys = bundle.getKeys();
         int counter = 0;
@@ -245,7 +347,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         assertEquals(MESSAGES_DE.size(), counter);
     }
-    
+
 
     public void test_basename() throws Exception {
         // create another de lib with a basename set
@@ -258,13 +360,13 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             msg.add(de);
         }
         getSession().save();
-        
+
         // test getString
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), "FOO", resolver);
         for (Message msg : MESSAGES_DE_BASENAME.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
-        
+
         // test getKeys
         Enumeration<String> keys = bundle.getKeys();
         int counter = 0;
