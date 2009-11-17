@@ -29,6 +29,7 @@ import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentContext;
 
 
 /**
@@ -50,7 +51,9 @@ public class AdapterManagerTestHelper {
             adapterMgr = new AdapterManagerImpl();
 
             mockContext = new MockComponentContext(new MockBundle(14));
-            adapterMgr.activate(mockContext);
+            try {
+                adapterMgr.getClass().getMethod("activate", ComponentContext.class).invoke(adapterMgr, mockContext);
+            } catch (Exception ignore ) {}
         }
     }
 
@@ -64,7 +67,9 @@ public class AdapterManagerTestHelper {
         ref.setProperty(Constants.SERVICE_ID, 1L);
         ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, adaptableClasses);
         ref.setProperty(AdapterFactory.ADAPTER_CLASSES, adapterClasses);
-        adapterMgr.bindAdapterFactory(ref);
+        try {
+            adapterMgr.getClass().getMethod("bindAdapterFactory", ServiceReference.class).invoke(adapterMgr, ref);
+        } catch (Exception ignore ) {}
 
         registeredFactories.add(ref);
     }
@@ -72,7 +77,9 @@ public class AdapterManagerTestHelper {
     public static void resetAdapterFactories() {
         if (adapterMgr != null) {
             for (ServiceReference ref : registeredFactories) {
-                adapterMgr.unbindAdapterFactory(ref);
+                try {
+                    adapterMgr.getClass().getMethod("unbindAdapterFactory", ServiceReference.class).invoke(adapterMgr, ref);
+                } catch (Exception ignore ) {}
             }
         }
     }
