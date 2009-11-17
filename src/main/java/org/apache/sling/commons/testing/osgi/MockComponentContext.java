@@ -19,6 +19,8 @@
 package org.apache.sling.commons.testing.osgi;
 
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.Servlet;
@@ -37,10 +39,21 @@ public class MockComponentContext implements ComponentContext {
 
     private Servlet servlet;
 
+    private Map<ServiceReference, Object> services = new HashMap<ServiceReference, Object>();
+
+    public MockComponentContext(MockBundle bundle) {
+        mockBundleContext = new MockBundleContext(bundle);
+    }
+
     public MockComponentContext(MockBundle bundle, Servlet servlet) {
         mockBundleContext = new MockBundleContext(bundle);
         this.servlet = servlet;
     }
+
+    public void addService(ServiceReference reference, Object service) {
+        services.put(reference, service);
+    }
+
 
     public void setProperty(Object key, Object value) {
         // noinspection unchecked
@@ -59,7 +72,7 @@ public class MockComponentContext implements ComponentContext {
             return this.servlet;
         }
 
-        return null;
+        return services.get(reference);
     }
 
     public BundleContext getBundleContext() {
