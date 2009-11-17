@@ -59,6 +59,13 @@ public class FSClassLoaderProvider
         }
     }
 
+    /**
+     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#release(java.lang.ClassLoader)
+     */
+    public void release(ClassLoader classLoader) {
+        // nothing to do here
+    }
+
     //---------- SCR Integration ----------------------------------------------
 
     /**
