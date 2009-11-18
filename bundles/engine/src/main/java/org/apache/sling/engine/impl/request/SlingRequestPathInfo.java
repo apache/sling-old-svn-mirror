@@ -126,6 +126,10 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             // replacement selectors
             String selectors = options.getReplaceSelectors();
             if (selectors != null) {
+                // if we get the empty string, all original selectors will be removed
+                if ( selectors.length() == 0 ) {
+                    selectors = null;
+                }
                 needCreate = true;
             } else {
                 selectors = getSelectorString();
