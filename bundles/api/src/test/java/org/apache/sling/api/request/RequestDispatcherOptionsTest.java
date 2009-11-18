@@ -81,5 +81,4 @@ public class RequestDispatcherOptionsTest extends TestCase {
         assertEquals("Expected option found (" + result + ")", "xyz",
             result.getReplaceSelectors());
     }
-
 }

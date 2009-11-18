@@ -48,7 +48,8 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
 
     /**
      * When dispatching, replace {@link RequestPathInfo} selectors by the value
-     * provided by this option.
+     * provided by this option. If this value contains an empty string, all
+     * original selectors are removed.
      */
     public static final String OPT_REPLACE_SELECTORS = "replaceSelectors";
 
@@ -146,6 +147,8 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Sets the {@link #OPT_REPLACE_SELECTORS} option to the given
      * <code>replaceSelectors</code> if not <code>null</code>.
+     * If this value contains an empty string, all
+     * original selectors are removed.
      */
     public void setReplaceSelectors(String replaceSelectors) {
         if (replaceSelectors != null) {
