@@ -18,11 +18,11 @@ package org.apache.sling.engine.impl.request;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.engine.impl.request.SlingRequestPathInfo;
 
 /** Test the SlingRequestPathInfo class */
 public class SlingRequestPathInfoTest extends TestCase {
@@ -248,6 +248,39 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("json", p.getExtension());
         assertNull("Suffix is null",p.getSuffix());
         assertNull("Selectors are null",p.getSelectorString());
+    }
+
+
+    public void testMerge() {
+        SlingRequestPathInfo p = new SlingRequestPathInfo(new MockResource(
+                "/some/path", ".s1.s2.ext"));
+        assertEquals("s1.s2", p.getSelectorString());
+        assertEquals("ext", p.getExtension());
+
+        // test to replace selectors with a new one
+        RequestDispatcherOptions o = new RequestDispatcherOptions();
+        o.setReplaceSelectors("a");
+        RequestPathInfo result = p.merge(o);
+        assertEquals("a", result.getSelectorString());
+        assertEquals("ext", result.getExtension());
+
+        // test to replace selector with the empty string
+        o.setReplaceSelectors("");
+        result = p.merge(o);
+        assertEquals(null, result.getSelectorString());
+        assertEquals("ext", result.getExtension());
+
+        // now add a selector
+        o.setAddSelectors("b");
+        result = p.merge(o);
+        assertEquals("b", result.getSelectorString());
+        assertEquals("ext", result.getExtension());
+
+        // replace ext
+        o.setReplaceSuffix("html");
+        result = p.merge(o);
+        assertEquals("b", result.getSelectorString());
+        assertEquals("html", result.getSuffix());
     }
 
     static class MockResource implements Resource {
