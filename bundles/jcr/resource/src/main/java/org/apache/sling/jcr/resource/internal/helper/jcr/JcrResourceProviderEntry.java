@@ -18,20 +18,20 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 5672648586247261128L;
 
@@ -74,14 +74,14 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#put(java.lang.String,
      *      org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2)
      */
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#get(java.lang.String)
      */
     @Override
@@ -95,7 +95,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#values()
      */
     @Override
@@ -108,7 +108,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#containsKey(java.lang.String)
      */
     @Override
@@ -118,8 +118,8 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
      * {@inheritDoc}
-     * 
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#getResourceProviders()
+     *
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#getResourceProviders()
      */
     @Override
     public ResourceProvider[] getResourceProviders() {
@@ -149,7 +149,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#toString()
      */
     @Override
