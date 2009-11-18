@@ -18,14 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal.helper;
 
-import org.apache.commons.collections.FastTreeMap;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.SyntheticResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,6 +32,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.collections.FastTreeMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The <code>ResourceProviderEntry</code> class represents a node in the tree of
  * resource providers spanned by the root paths of the provider resources.
@@ -51,10 +51,10 @@ public class ResourceProviderEntry2 implements
         Comparable<ResourceProviderEntry2> {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 7420631325909144862L;
-    
+
     private static Logger LOGGER = LoggerFactory.getLogger(ResourceProviderEntry2.class);
 
     // the path to resources provided by the resource provider of this
@@ -85,10 +85,10 @@ public class ResourceProviderEntry2 implements
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider,
      * and a number of inital child entries.
-     * 
+     *
      * @param path
      *            The relative path supported by the provider
-     * @param provider
+     * @param providerList
      *            The resource provider to encapsulate by this entry.
      */
     public ResourceProviderEntry2(String path, ResourceProvider[] providerList) {
@@ -109,7 +109,7 @@ public class ResourceProviderEntry2 implements
             }
           }
         }
-        
+
         // this will consume slightly more memory but ensures read is fast.
         storageMap.setFast(true);
     }
@@ -125,7 +125,7 @@ public class ResourceProviderEntry2 implements
      * Returns the resource with the given path or <code>null</code> if neither
      * the resource provider of this entry nor the resource provider of any of
      * the child entries can provide the resource.
-     * 
+     *
      * @param path
      *            The path to the resource to return.
      * @return The resource for the path or <code>null</code> if no resource can
@@ -149,7 +149,7 @@ public class ResourceProviderEntry2 implements
             private Map<String, Resource> delayed;
 
             private Set<String> visited;
-            
+
             private String iteratorPath;
 
             private Iterator<Resource> delayedIter;
@@ -165,7 +165,7 @@ public class ResourceProviderEntry2 implements
                 // for each resource provider
                 Set<ResourceProvider> providersSet = new LinkedHashSet<ResourceProvider>();
                 getResourceProviders(path, providersSet);
-                
+
                 if ( LOGGER.isDebugEnabled()) {
                     LOGGER.debug(" Provider Set for path {} {} ",path,Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
                 }
@@ -256,7 +256,7 @@ public class ResourceProviderEntry2 implements
 
     /**
      * Adds the given resource provider into the tree for the given prefix.
-     * 
+     *
      * @return <code>true</code> if the provider could be entered into the
      *         subtree below this entry. Otherwise <code>false</code> is
      *         returned.
@@ -281,34 +281,18 @@ public class ResourceProviderEntry2 implements
 
 
     //------------------ Map methods, here so that we can delegate 2 maps together
-    /**
-     * @param string
-     * @param rpe2
-     */
     public void put(String key, ResourceProviderEntry2 value) {
         storageMap.put(key,value);
     }
-    
-    /**
-     * @param element
-     * @return
-     */
+
     public boolean containsKey(String key) {
         return storageMap.containsKey(key);
     }
 
-
-    /**
-     * @param element
-     * @return
-     */
     public ResourceProviderEntry2 get(String key) {
         return (ResourceProviderEntry2) storageMap.get(key);
     }
 
-    /**
-     * @return
-     */
     @SuppressWarnings("unchecked")
     public Collection<ResourceProviderEntry2> values() {
         return storageMap.values();
@@ -338,7 +322,7 @@ public class ResourceProviderEntry2 implements
 
     /**
      * Adds a list of providers to this entry.
-     * 
+     *
      * @param provider
      */
     private boolean addInternalProvider(WrappedResourceProvider provider) {
@@ -390,7 +374,7 @@ public class ResourceProviderEntry2 implements
                 Comparable c2 = o2.getComparable();
                 if ( c1 == null && c2 == null ) {
                   return 0;
-                } 
+                }
                 if ( c1 == null ) {
                   return -1;
                 }
@@ -407,10 +391,9 @@ public class ResourceProviderEntry2 implements
     /**
      * Get a of ResourceProvidersEntries leading to the fullPath in reverse
      * order.
-     * 
+     *
      * @param fullPath
      *            the full path
-     * @return a reverse order list of ProviderEntries to the path.
      */
     private void populateProviderPath(
         List<ResourceProviderEntry2> providerEntryPath, String[] elements) {
@@ -432,7 +415,7 @@ public class ResourceProviderEntry2 implements
 
     /**
      * Resolve a resource from a path into a Resource
-     * 
+     *
      * @param resolver
      *            the ResourceResolver.
      * @param fullPath
@@ -450,8 +433,8 @@ public class ResourceProviderEntry2 implements
                 LOGGER.debug("Not absolute {} :{}",fullPath,(System.currentTimeMillis() - start));
                 return null; // fullpath must be absolute
             }
-            String[] elements = split(fullPath, '/'); 
-            
+            String[] elements = split(fullPath, '/');
+
             List<ResourceProviderEntry2> list = new ArrayList<ResourceProviderEntry2>();
             populateProviderPath(list, elements);
             // the path is in reverse order end first
@@ -470,7 +453,7 @@ public class ResourceProviderEntry2 implements
                     }
                 }
             }
-            
+
             // resolve against this one
             ResourceProvider[] rps = getResourceProviders();
             for (ResourceProvider rp : rps) {
@@ -481,10 +464,10 @@ public class ResourceProviderEntry2 implements
                     return resource;
                 }
             }
-            
+
             // query: /libs/sling/servlet/default
             // resource Provider: libs/sling/servlet/default/GET.servlet
-            // list will match libs, sling, servlet, default 
+            // list will match libs, sling, servlet, default
             // and there will be no resource provider at the end
             if (list.size() > 0 && list.size() == elements.length ) {
                 if ( list.get(list.size()-1).getResourceProviders().length == 0 ) {
@@ -513,7 +496,7 @@ public class ResourceProviderEntry2 implements
     /**
      * Returns all resource providers which provider resources whose prefix is
      * the given path.
-     * 
+     *
      * @param path
      *            The prefix path to match the resource provider roots against
      * @param providers
@@ -614,9 +597,6 @@ public class ResourceProviderEntry2 implements
         return e;
     }
 
-    /**
-     * @return
-     */
     public String getResolutionStats() {
         long tot = nreal + nsynthetic + nmiss;
         if (tot == 0) {
@@ -636,7 +616,7 @@ public class ResourceProviderEntry2 implements
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see java.util.AbstractMap#toString()
      */
     @Override
