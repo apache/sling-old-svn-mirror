@@ -68,7 +68,7 @@ public class RepositoryUtil {
 
     /**
      * Start a new repository
-     * 
+     *
      * @throws RepositoryException when it is not possible to start the
      *             repository.
      * @throws NamingException
@@ -85,7 +85,7 @@ public class RepositoryUtil {
 
         File configFile = new File(HOME_DIR, CONFIG_FILE);
         configFile.getParentFile().mkdirs();
-        
+
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(configFile);
@@ -123,7 +123,7 @@ public class RepositoryUtil {
 
     /**
      * Stop a repository.
-     * 
+     *
      * @throws NamingException when it is not possible to stop the repository
      * @throws NamingException
      */
@@ -134,7 +134,7 @@ public class RepositoryUtil {
 
     /**
      * Get a repository
-     * 
+     *
      * @return a JCR repository reference
      * @throws NamingException when it is not possible to get the repository.
      *             Before calling this method, the repository has to be
@@ -158,7 +158,7 @@ public class RepositoryUtil {
      * <p>
      * This method is not synchronized. It is up to the calling method to
      * prevent paralell execution.
-     * 
+     *
      * @param session The <code>Session</code> providing the node type manager
      *            through which the node type is to be registered.
      * @param source The <code>InputStream</code> from which the CND file is
@@ -197,6 +197,16 @@ public class RepositoryUtil {
         }
 
         return false;
+    }
+
+    public static void registerSlingNodeTypes(Session adminSession) throws IOException, RepositoryException {
+        final Class<RepositoryUtil> clazz = RepositoryUtil.class;
+        registerNodeType(adminSession,
+                clazz.getResourceAsStream("/SLING-INF/nodetypes/folder.cnd"));
+        RepositoryUtil.registerNodeType(adminSession,
+                clazz.getResourceAsStream("/SLING-INF/nodetypes/resource.cnd"));
+        RepositoryUtil.registerNodeType(adminSession,
+                clazz.getResourceAsStream("/SLING-INF/nodetypes/vanitypath.cnd"));
     }
 
     public static final class RepositoryWrapper implements SlingRepository {
