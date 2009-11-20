@@ -68,19 +68,19 @@ public class FactoryCache {
     private static final String PROPERTY_RESOURCE_TYPES = "pipeline.resourceTypes";
 
     /** The logger. */
-    protected static final Logger LOGGER = LoggerFactory.getLogger(FactoryCache.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FactoryCache.class);
 
     /** The tracker for generator factories. */
-    protected final HashingServiceTrackerCustomizer<GeneratorFactory> generatorTracker;
+    private final HashingServiceTrackerCustomizer<GeneratorFactory> generatorTracker;
 
     /** The tracker for serializers factories. */
-    protected final HashingServiceTrackerCustomizer<SerializerFactory> serializerTracker;
+    private final HashingServiceTrackerCustomizer<SerializerFactory> serializerTracker;
 
     /** The tracker for transformer factories. */
-    protected final TransformerFactoryServiceTracker<TransformerFactory> transformerTracker;
+    private final TransformerFactoryServiceTracker<TransformerFactory> transformerTracker;
 
     /** The tracker for processor factories. */
-    protected final HashingServiceTrackerCustomizer<ProcessorFactory> processorTracker;
+    private final HashingServiceTrackerCustomizer<ProcessorFactory> processorTracker;
 
     public FactoryCache(final BundleContext context)
     throws InvalidSyntaxException {
@@ -190,7 +190,7 @@ public class FactoryCache {
      * @param factories The transformer factories
      * @return The transformer instances
      */
-    protected Transformer[][] createTransformers(final TransformerFactory[][] factories) {
+    private Transformer[][] createTransformers(final TransformerFactory[][] factories) {
         if ( factories == EMPTY_DOUBLE_ARRAY ) {
             return FactoryCache.EMPTY_DOUBLE_ARRAY;
         }
@@ -219,7 +219,7 @@ public class FactoryCache {
     /**
      * This service tracker stores all services into a hash map.
      */
-    protected static class HashingServiceTrackerCustomizer<T> extends ServiceTracker {
+    private static class HashingServiceTrackerCustomizer<T> extends ServiceTracker {
 
         /** The services hashed by their name property. */
         private final Map<String, T> services = new ConcurrentHashMap<String, T>();
@@ -268,7 +268,7 @@ public class FactoryCache {
         }
     }
 
-    protected static final class TransformerFactoryServiceTracker<T> extends HashingServiceTrackerCustomizer<T> {
+    private static final class TransformerFactoryServiceTracker<T> extends HashingServiceTrackerCustomizer<T> {
 
         private String getMode(final ServiceReference ref) {
             final String mode = (String) ref.getProperty(PROPERTY_MODE);
@@ -292,13 +292,6 @@ public class FactoryCache {
 
         public TransformerFactoryServiceTracker(final BundleContext bc, final String serviceClassName) {
             super(bc, serviceClassName);
-        }
-
-        /**
-         * Is this cache still valid?
-         */
-        public boolean isCacheValid() {
-            return this.cacheIsValid;
         }
 
         /**
@@ -417,7 +410,7 @@ public class FactoryCache {
     /**
      * Comparator for service references.
      */
-    protected static final class ServiceReferenceComparator implements Comparator<ServiceReference> {
+    private static final class ServiceReferenceComparator implements Comparator<ServiceReference> {
         public static ServiceReferenceComparator INSTANCE = new ServiceReferenceComparator();
 
         public int compare(ServiceReference o1, ServiceReference o2) {
@@ -425,7 +418,7 @@ public class FactoryCache {
         }
     }
 
-    protected static final class TransformerFactoryEntry {
+    private static final class TransformerFactoryEntry {
         public final TransformerFactory factory;
 
         private final ProcessorConfiguration configuration;
