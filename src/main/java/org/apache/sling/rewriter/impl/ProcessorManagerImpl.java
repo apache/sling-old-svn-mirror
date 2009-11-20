@@ -130,7 +130,6 @@ public class ProcessorManagerImpl implements ProcessorManager {
 
         this.initProcessors();
 
-        this.addDefaultProcessors();
         this.factoryCache.start();
     }
 
@@ -140,24 +139,6 @@ public class ProcessorManagerImpl implements ProcessorManager {
     protected FactoryCache getFactoryCache(BundleContext bc)
     throws InvalidSyntaxException {
         return new FactoryCache(bc);
-    }
-
-    /**
-     * Add the default configurations.
-     */
-    protected void addDefaultProcessors() {
-        // add default pipeline for html
-        this.addProcessor("*", "", new ProcessorConfigurationImpl(
-                new String[] {MIME_TYPE_HTML}, // content types
-                null, // paths,
-                new String[] {"html"}, // extensions
-                null, // resource types
-                -1,   // order
-                new ProcessingComponentConfigurationImpl("html-generator", null), // generator config
-                null, // transformer config
-                new ProcessingComponentConfigurationImpl("html-serializer", null), // serializer config
-                true  // process error response
-                ));
     }
 
     /**
