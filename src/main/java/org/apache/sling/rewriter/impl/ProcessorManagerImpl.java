@@ -102,7 +102,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     protected void activate(final ComponentContext ctx)
     throws RepositoryException, InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
-        this.factoryCache = this.getFactoryCache(this.bundleContext);
+        this.factoryCache = new FactoryCache(this.bundleContext);
         this.adminSession = this.repository.loginAdministrative(null);
 
         // create array of search paths for actions and constraints
@@ -131,14 +131,6 @@ public class ProcessorManagerImpl implements ProcessorManager {
         this.initProcessors();
 
         this.factoryCache.start();
-    }
-
-    /**
-     * Get the factory cache
-     */
-    protected FactoryCache getFactoryCache(BundleContext bc)
-    throws InvalidSyntaxException {
-        return new FactoryCache(bc);
     }
 
     /**
