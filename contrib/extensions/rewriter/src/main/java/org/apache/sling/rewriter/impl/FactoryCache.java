@@ -264,6 +264,7 @@ public class FactoryCache {
             final String type = this.getType(reference);
             if ( type != null ) {
                 this.services.remove(type);
+                this.context.ungetService(reference);
             }
         }
     }
