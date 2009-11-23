@@ -16,6 +16,7 @@
  */
 package org.apache.sling.rewriter.impl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,6 +96,8 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     private final boolean processErrorResponse;
 
+    private final String descString;
+
     /**
      * This is the constructor for a pipeline
      */
@@ -120,6 +123,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         this.isValid = true;
         this.isPipeline = true;
         this.processErrorResponse = processErrorResponse;
+        this.descString = this.buildDescString();
     }
 
     /**
@@ -169,6 +173,59 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         } else {
             this.isValid = (this.processorConfig != null);
         }
+        this.descString = this.buildDescString();
+    }
+
+    private String buildDescString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("ProcessorConfiguration: {");
+        if ( this.contentTypes != null ) {
+            sb.append("contentTypes=");
+            sb.append(Arrays.toString(this.contentTypes));
+            sb.append(',');
+        }
+        if ( this.resourceTypes != null ) {
+            sb.append("resourceTypes=");
+            sb.append(Arrays.toString(this.resourceTypes));
+            sb.append(", ");
+        }
+        if ( this.paths != null ) {
+            sb.append("paths=");
+            sb.append(Arrays.toString(this.paths));
+            sb.append(", ");
+        }
+        if ( this.extensions != null ) {
+            sb.append("extensions=");
+            sb.append(Arrays.toString(this.extensions));
+            sb.append(", ");
+        }
+        sb.append("order=");
+        sb.append(this.order);
+        sb.append(", active=");
+        sb.append(this.isActive);
+        sb.append(", valid=");
+        sb.append(this.isValid);
+        sb.append(", processErrorResponse=");
+        sb.append(this.processErrorResponse);
+        if ( this.isPipeline ) {
+            sb.append(", pipeline=(generator=");
+            sb.append(this.generatorConfiguration);
+            sb.append(", transformers=(");
+            for(int i=0; i<this.transformerConfigurations.length; i++) {
+                if ( i > 0 ) {
+                    sb.append(", ");
+                }
+                sb.append(this.transformerConfigurations[i]);
+            }
+            sb.append(", serializer=");
+            sb.append(this.serializerConfiguration);
+            sb.append(')');
+        } else {
+            sb.append(", config=");
+            sb.append(this.processorConfig);
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     protected ProcessingComponentConfiguration getComponentConfig(final Resource configResource,
@@ -362,5 +419,10 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
             return "{pipeline}";
         }
         return this.processorConfig.getType();
+    }
+
+    @Override
+    public String toString() {
+        return this.descString;
     }
 }

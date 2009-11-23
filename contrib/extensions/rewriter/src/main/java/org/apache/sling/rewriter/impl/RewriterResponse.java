@@ -167,7 +167,7 @@ class RewriterResponse
             final ProcessorConfiguration config = i.next();
             if ( config.match(processorContext) ) {
                 found = this.processorManager.getProcessor(config, processorContext);
-                this.request.getRequestProgressTracker().log("Found processor for post processing {0}", found);
+                this.request.getRequestProgressTracker().log("Found processor for post processing {0}", config);
             }
         }
         return found;
