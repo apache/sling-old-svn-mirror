@@ -200,4 +200,9 @@ public class ValueMapDecorator implements ValueMap {
     public Set<Entry<String, Object>> entrySet() {
         return base.entrySet();
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + " : " + this.base.toString();
+    }
 }
