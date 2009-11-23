@@ -40,6 +40,8 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
     /** The configuration map. */
     private final ValueMap configuration;
 
+    private final String descText;
+
     /**
      * Create a new configuration.
      * @param type The type of the component.
@@ -48,6 +50,17 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
     public ProcessingComponentConfigurationImpl(final String type, final Map<String, Object> config) {
         this.type = type;
         this.configuration = (config == null ? EMPTY_CONFIG : new ValueMapDecorator(config));
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Config(type=");
+        sb.append(this.type);
+        sb.append(", config=");
+        if ( config == null ) {
+            sb.append("{}");
+        } else {
+            sb.append(config);
+        }
+        sb.append(")");
+        this.descText = sb.toString();
     }
 
     /**
@@ -63,4 +76,10 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
     public String getType() {
         return this.type;
     }
+
+    @Override
+    public String toString() {
+        return this.descText;
+    }
+
 }
