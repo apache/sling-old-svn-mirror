@@ -42,7 +42,7 @@ import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -193,7 +193,7 @@ public class JcrResourceResolverFactoryImpl implements
     // the search path for ResourceResolver.getResource(String)
     private String[] searchPath;
 
-    private ResourceProviderEntry2 rootProviderEntry;
+    private ResourceProviderEntry rootProviderEntry;
 
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
@@ -210,7 +210,7 @@ public class JcrResourceResolverFactoryImpl implements
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public JcrResourceResolverFactoryImpl() {
-        this.rootProviderEntry = new ResourceProviderEntry2("/", null);
+        this.rootProviderEntry = new ResourceProviderEntry("/", null);
 
     }
 
@@ -225,7 +225,7 @@ public class JcrResourceResolverFactoryImpl implements
             session, rootProviderEntry, getJcrResourceTypeProviders(),
             this.getDynamicClassLoader());        
 
-        return new JcrResourceResolver2(sessionRoot, this, mapEntries);
+        return new JcrResourceResolver(sessionRoot, this, mapEntries);
     }
 
     protected JcrResourceTypeProvider[] getJcrResourceTypeProviders() {
@@ -288,7 +288,7 @@ public class JcrResourceResolverFactoryImpl implements
      *
      * @return Our rootProviderEntry
      */
-    protected ResourceProviderEntry2 getRootProviderEntry() {
+    protected ResourceProviderEntry getRootProviderEntry() {
         return rootProviderEntry;
     }
 

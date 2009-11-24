@@ -26,23 +26,23 @@ import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
-public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
+public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     /**
      *
      */
     private static final long serialVersionUID = 5672648586247261128L;
 
-    private final ResourceProviderEntry2 delegatee;
+    private final ResourceProviderEntry delegatee;
 
     private final Session session;
 
     private final JcrResourceTypeProvider[] resourceTypeProviders;
 
     public JcrResourceProviderEntry(Session session,
-            ResourceProviderEntry2 delegatee,
+            ResourceProviderEntry delegatee,
             JcrResourceTypeProvider[] resourceTypeProviders,
             final ClassLoader dynamicClassLoader) {
         super("/", new ResourceProvider[] { new JcrResourceProvider(session,
@@ -82,11 +82,11 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     /**
      * {@inheritDoc}
      *
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#get(java.lang.String)
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#get(java.lang.String)
      */
     @Override
-    public ResourceProviderEntry2 get(String key) {
-        ResourceProviderEntry2 rpe = super.get(key);
+    public ResourceProviderEntry get(String key) {
+        ResourceProviderEntry rpe = super.get(key);
         if (rpe == null) {
             rpe = delegatee.get(key);
         }
@@ -96,11 +96,11 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     /**
      * {@inheritDoc}
      *
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#values()
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#values()
      */
     @Override
-    public Collection<ResourceProviderEntry2> values() {
-        List<ResourceProviderEntry2> list = new ArrayList<ResourceProviderEntry2>(
+    public Collection<ResourceProviderEntry> values() {
+        List<ResourceProviderEntry> list = new ArrayList<ResourceProviderEntry>(
                 super.values());
         list.addAll(delegatee.values());
         return list;
@@ -109,7 +109,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     /**
      * {@inheritDoc}
      *
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#containsKey(java.lang.String)
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#containsKey(java.lang.String)
      */
     @Override
     public boolean containsKey(String key) {
@@ -119,7 +119,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     /**
      * {@inheritDoc}
      *
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#getResourceProviders()
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#getResourceProviders()
      */
     @Override
     public ResourceProvider[] getResourceProviders() {
@@ -150,7 +150,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry2 {
     /**
      * {@inheritDoc}
      *
-     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry2#toString()
+     * @see org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry#toString()
      */
     @Override
     public String toString() {

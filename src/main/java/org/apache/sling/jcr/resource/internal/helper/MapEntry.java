@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolver2;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 
 /**
  * The <code>MapEntry</code> class represents a mapping entry in the mapping
@@ -130,15 +130,15 @@ public class MapEntry implements Comparable<MapEntry> {
             url = fixUriPath(url);
 
             String redirect = props.get(
-                JcrResourceResolver2.PROP_REDIRECT_EXTERNAL, String.class);
+                JcrResourceResolver.PROP_REDIRECT_EXTERNAL, String.class);
             if (redirect != null) {
                 int status = props.get(
-                    JcrResourceResolver2.PROP_REDIRECT_EXTERNAL_STATUS, 302);
+                    JcrResourceResolver.PROP_REDIRECT_EXTERNAL_STATUS, 302);
                 return new MapEntry(url, status, trailingSlash, redirect);
             }
 
             String[] internalRedirect = props.get(
-                JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
+                JcrResourceResolver.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
                 return new MapEntry(url, -1, trailingSlash, internalRedirect);
             }
@@ -152,7 +152,7 @@ public class MapEntry implements Comparable<MapEntry> {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
             String redirect = props.get(
-                JcrResourceResolver2.PROP_REDIRECT_EXTERNAL, String.class);
+                JcrResourceResolver.PROP_REDIRECT_EXTERNAL, String.class);
             if (redirect != null) {
                 // ignoring external redirects for mapping
                 return null;
@@ -166,7 +166,7 @@ public class MapEntry implements Comparable<MapEntry> {
             }
 
             String[] internalRedirect = props.get(
-                JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
+                JcrResourceResolver.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
 
                 int status = -1;
