@@ -47,7 +47,7 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 
-public class JcrResourceResolver2Test extends RepositoryTestBase {
+public class JcrResourceResolverTest extends RepositoryTestBase {
 
     private String rootPath;
 
@@ -263,7 +263,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         HttpServletRequest request = new ResourceResolverTestRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
-        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_EXTERNAL,
+        localhost443.setProperty(JcrResourceResolver.PROP_REDIRECT_EXTERNAL,
             "http://localhost");
         session.save();
 
@@ -282,7 +282,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         HttpServletRequest request = new ResourceResolverTestRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
-        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        localhost443.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "http://localhost");
         session.save();
 
@@ -304,9 +304,9 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("_playground_designground_",
             "sling:Mapping");
-        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
+        toContent.setProperty(JcrResourceResolver.PROP_REG_EXP,
             "(playground|designground)");
-        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        toContent.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/$1");
         session.save();
 
@@ -330,8 +330,8 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("virtual", "sling:Mapping");
-        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP, "virtual$");
-        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        toContent.setProperty(JcrResourceResolver.PROP_REG_EXP, "virtual$");
+        toContent.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/virtual.html");
         session.save();
 
@@ -365,13 +365,13 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         // map anything
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
-        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        localhost443.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content");
 
         // map only ../virtual
         Node toContent = localhost443.addNode("virtual", "sling:Mapping");
-        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP, "virtual$");
-        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        toContent.setProperty(JcrResourceResolver.PROP_REG_EXP, "virtual$");
+        toContent.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/virtual.html");
         session.save();
 
@@ -395,7 +395,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             "virtual.host.com", -1, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.80", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/virtual");
         session.save();
 
@@ -432,11 +432,11 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             hostDE + ".80", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             contentDE);
         virtualhost80 = mapRoot.getNode("map/http").addNode(hostEN + ".80",
             "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             contentEN);
         session.save();
 
@@ -502,11 +502,11 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             hostDE + ".80", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/");
         virtualhost80 = mapRoot.getNode("map/http").addNode(hostEN + ".80",
             "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/");
         session.save();
 
@@ -597,7 +597,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             "virtual.host.com", 8080, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.8080", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/virtual");
         session.save();
 
@@ -629,7 +629,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             "virtual.host.com", 8080, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.8080", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/");
         session.save();
 
@@ -661,7 +661,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             "virtual.host.com", -1, rootPath);
         Node virtualhost443 = mapRoot.getNode("map/https").addNode(
             "virtual.host.com.443", "sling:Mapping");
-        virtualhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost443.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             "/content/virtual");
         session.save();
 
@@ -693,7 +693,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         Node virtualhost4443 = mapRoot.getNode("map/https").addNode(
             "virtual.host.com.4443", "sling:Mapping");
         virtualhost4443.setProperty(
-            JcrResourceResolver2.PROP_REDIRECT_INTERNAL, "/content/virtual");
+            JcrResourceResolver.PROP_REDIRECT_INTERNAL, "/content/virtual");
         session.save();
 
         Thread.sleep(1000L);
@@ -722,7 +722,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
     public void testResolveResourceAlias() throws Exception {
         // define an alias for the rootPath
         String alias = "testAlias";
-        rootNode.setProperty(JcrResourceResolver2.PROP_ALIAS, alias);
+        rootNode.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
         session.save();
 
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -762,7 +762,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         // define an alias for the rootPath in the jcr:content child node
         String alias = "testAlias";
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
-        content.setProperty(JcrResourceResolver2.PROP_ALIAS, alias);
+        content.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
         session.save();
 
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -907,7 +907,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             mapHost + ".80", "sling:Mapping");
-        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
             mapRootPath);
         session.save();
 
@@ -1274,7 +1274,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
     public void test_resolve_with_sling_alias() throws Exception {
 
         Node child = rootNode.addNode("child");
-        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
         session.save();
 
         // expect kind due to alias and no parent due to mapping
@@ -1296,7 +1296,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
-        grandchild.setProperty(JcrResourceResolver2.PROP_ALIAS, "enkel");
+        grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
         session.save();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -1320,7 +1320,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         final String selExt = ".html";
 
         Node child = rootNode.addNode("child");
-        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
         session.save();
 
         // expect kind due to alias and no parent due to mapping
@@ -1341,7 +1341,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
-        grandchild.setProperty(JcrResourceResolver2.PROP_ALIAS, "enkel");
+        grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
         session.save();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -1365,7 +1365,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         final String selExt = ".sel1.sel2.html";
 
         Node child = rootNode.addNode("child");
-        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
         session.save();
 
         // expect kind due to alias and no parent due to mapping
@@ -1385,7 +1385,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
-        grandchild.setProperty(JcrResourceResolver2.PROP_ALIAS, "enkel");
+        grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
         session.save();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -1409,7 +1409,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         final String selExt = ".html/some/suffx.pdf";
 
         Node child = rootNode.addNode("child");
-        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
         session.save();
 
         // expect kind due to alias and no parent due to mapping
