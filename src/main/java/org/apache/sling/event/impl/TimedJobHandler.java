@@ -57,7 +57,7 @@ import org.osgi.service.event.EventAdmin;
 /**
  * An event handler for timed events.
  *
- * @scr.component metatype="no"
+ * @scr.component metatype="no" immediate="true"
  * @scr.service interface="TimedEventStatusProvider"
  * @scr.property name="event.topics" valueRefs="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"

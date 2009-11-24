@@ -37,7 +37,7 @@ import org.osgi.service.event.EventAdmin;
 
 /**
  * This event handler distributes events across an application cluster.
- * @scr.component inherit="true" label="%dist.events.name" description="%dist.events.description"
+ * @scr.component label="%dist.events.name" description="%dist.events.description" immediate="true"
  * @scr.property name="event.topics" value="*" private="true"
  * @scr.property name="event.filter" value="(event.distribute=*)" private="true"
  * @scr.property name="repository.path" value="/var/eventing/distribution" private="true"
