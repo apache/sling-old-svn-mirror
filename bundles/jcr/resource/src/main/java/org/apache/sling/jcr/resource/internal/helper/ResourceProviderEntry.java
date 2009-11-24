@@ -47,15 +47,15 @@ import org.slf4j.LoggerFactory;
  * This class is comparable to itself to help keep the child entries list sorted
  * by their prefix.
  */
-public class ResourceProviderEntry2 implements
-        Comparable<ResourceProviderEntry2> {
+public class ResourceProviderEntry implements
+        Comparable<ResourceProviderEntry> {
 
     /**
      *
      */
     private static final long serialVersionUID = 7420631325909144862L;
 
-    private static Logger LOGGER = LoggerFactory.getLogger(ResourceProviderEntry2.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(ResourceProviderEntry.class);
 
     // the path to resources provided by the resource provider of this
     // entry. this path is relative to the path of the parent resource
@@ -91,7 +91,7 @@ public class ResourceProviderEntry2 implements
      * @param providerList
      *            The resource provider to encapsulate by this entry.
      */
-    public ResourceProviderEntry2(String path, ResourceProvider[] providerList) {
+    public ResourceProviderEntry(String path, ResourceProvider[] providerList) {
         if (path.endsWith("/")) {
             this.path = path.substring(0, path.length() - 1);
             this.prefix = path;
@@ -264,12 +264,12 @@ public class ResourceProviderEntry2 implements
     public boolean addResourceProvider(String prefix, ResourceProvider provider, Comparable<?> comparable) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
+            List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
             entryPath.add(this); // add this the start so if the list is empty we have a position to add to
             populateProviderPath(entryPath, elements);
             for (int i = entryPath.size() - 1; i < elements.length; i++) {
                 String stubPrefix = elements[i];
-                ResourceProviderEntry2 rpe2 = new ResourceProviderEntry2(
+                ResourceProviderEntry rpe2 = new ResourceProviderEntry(
                         stubPrefix, new ResourceProvider[0]);
                 entryPath.get(i).put(elements[i], rpe2);
                 entryPath.add(rpe2);
@@ -281,7 +281,7 @@ public class ResourceProviderEntry2 implements
 
 
     //------------------ Map methods, here so that we can delegate 2 maps together
-    public void put(String key, ResourceProviderEntry2 value) {
+    public void put(String key, ResourceProviderEntry value) {
         storageMap.put(key,value);
     }
 
@@ -289,12 +289,12 @@ public class ResourceProviderEntry2 implements
         return storageMap.containsKey(key);
     }
 
-    public ResourceProviderEntry2 get(String key) {
-        return (ResourceProviderEntry2) storageMap.get(key);
+    public ResourceProviderEntry get(String key) {
+        return (ResourceProviderEntry) storageMap.get(key);
     }
 
     @SuppressWarnings("unchecked")
-    public Collection<ResourceProviderEntry2> values() {
+    public Collection<ResourceProviderEntry> values() {
         return storageMap.values();
     }
 
@@ -302,7 +302,7 @@ public class ResourceProviderEntry2 implements
             ResourceProvider resourceProvider, Comparable<?> comparable) {
         synchronized (this) {
             String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry2> entryPath = new ArrayList<ResourceProviderEntry2>();
+            List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
             populateProviderPath(entryPath, elements);
             if (entryPath.size() > 0 && entryPath.size() == elements.length) {
                 // the last element is a perfect match;
@@ -314,7 +314,7 @@ public class ResourceProviderEntry2 implements
 
     // ---------- Comparable<ResourceProviderEntry> interface ------------------
 
-    public int compareTo(ResourceProviderEntry2 o) {
+    public int compareTo(ResourceProviderEntry o) {
         return prefix.compareTo(o.prefix);
     }
 
@@ -396,8 +396,8 @@ public class ResourceProviderEntry2 implements
      *            the full path
      */
     private void populateProviderPath(
-        List<ResourceProviderEntry2> providerEntryPath, String[] elements) {
-        ResourceProviderEntry2 base = this;
+        List<ResourceProviderEntry> providerEntryPath, String[] elements) {
+        ResourceProviderEntry base = this;
         if (elements != null) {
             for (String element : elements) {
                 if (element != null) {
@@ -435,7 +435,7 @@ public class ResourceProviderEntry2 implements
             }
             String[] elements = split(fullPath, '/');
 
-            List<ResourceProviderEntry2> list = new ArrayList<ResourceProviderEntry2>();
+            List<ResourceProviderEntry> list = new ArrayList<ResourceProviderEntry>();
             populateProviderPath(list, elements);
             // the path is in reverse order end first
 
@@ -506,7 +506,7 @@ public class ResourceProviderEntry2 implements
     private void getResourceProviders(String path,
             Set<ResourceProvider> providers) {
         String[] elements = split(path, '/');
-        ResourceProviderEntry2 base = this;
+        ResourceProviderEntry base = this;
         for (String element : elements ) {
             if ( base.containsKey(element)) {
                 base = base.get(element);
@@ -540,11 +540,11 @@ public class ResourceProviderEntry2 implements
      * @param base
      * @param providers2
      */
-    private void getResourceProviders(ResourceProviderEntry2 entry,
+    private void getResourceProviders(ResourceProviderEntry entry,
             Set<ResourceProvider> providers) {
         // recurse down the tree
         LOGGER.debug(" Gathering For {} ",entry.prefix);
-        for ( ResourceProviderEntry2 e : entry.values() ) {
+        for ( ResourceProviderEntry e : entry.values() ) {
             getResourceProviders(e, providers);
         }
         // add in providers at this node in the tree.

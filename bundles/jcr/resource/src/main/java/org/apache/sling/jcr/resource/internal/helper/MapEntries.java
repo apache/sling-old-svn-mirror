@@ -42,7 +42,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolver2;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class MapEntries implements EventListener {
 
     private JcrResourceResolverFactoryImpl factory;
 
-    private JcrResourceResolver2 resolver;
+    private JcrResourceResolver resolver;
 
     private Session session;
 
@@ -85,7 +85,7 @@ public class MapEntries implements EventListener {
             SlingRepository repository) throws RepositoryException {
         this.factory = factory;
         this.session = repository.loginAdministrative(null);
-        this.resolver = (JcrResourceResolver2) factory.getResourceResolver(session);
+        this.resolver = (JcrResourceResolver) factory.getResourceResolver(session);
 
         init();
 
@@ -227,7 +227,7 @@ public class MapEntries implements EventListener {
 
     // ---------- internal
 
-    private void loadResolverMap(JcrResourceResolver2 resolver,
+    private void loadResolverMap(JcrResourceResolver resolver,
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries) {
         // the standard map configuration
@@ -237,7 +237,7 @@ public class MapEntries implements EventListener {
         }
     }
 
-    private void gather(JcrResourceResolver2 resolver,
+    private void gather(JcrResourceResolver resolver,
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
         // scheme list
@@ -246,7 +246,7 @@ public class MapEntries implements EventListener {
             Resource child = children.next();
 
             String name = resolver.getProperty(child,
-                JcrResourceResolver2.PROP_REG_EXP);
+                JcrResourceResolver.PROP_REG_EXP);
             boolean trailingSlash = false;
             if (name == null) {
                 name = ResourceUtil.getName(child).concat("/");
@@ -287,7 +287,7 @@ public class MapEntries implements EventListener {
         }
     }
 
-    private void loadVanityPaths(JcrResourceResolver2 resolver,
+    private void loadVanityPaths(JcrResourceResolver resolver,
             List<MapEntry> entries) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name

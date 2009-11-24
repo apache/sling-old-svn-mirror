@@ -56,7 +56,7 @@ import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JcrResourceResolver2 extends SlingAdaptable implements
+public class JcrResourceResolver extends SlingAdaptable implements
         ResourceResolver {
 
     private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
@@ -90,7 +90,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private final MapEntries resourceMapper;
 
-    public JcrResourceResolver2(JcrResourceProviderEntry rootProvider,
+    public JcrResourceResolver(JcrResourceProviderEntry rootProvider,
             JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
         this.rootProvider = rootProvider;
         this.factory = factory;
