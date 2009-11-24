@@ -24,7 +24,7 @@ then
  wget $CHECK_SSL \
   -nv -r -np "--reject=html,txt" "--follow-tags=" \
   -P "${DOWNLOAD}/${STAGING}" -nH "--cut-dirs=3" --ignore-length \
-  "http://repository.apache.org/content/repositories/sling-staging-${STAGING}/org/apache/sling/"
+  "http://repository.apache.org/content/repositories/orgapachesling-${STAGING}/org/apache/sling/"
 
 else
  echo "################################################################################"
