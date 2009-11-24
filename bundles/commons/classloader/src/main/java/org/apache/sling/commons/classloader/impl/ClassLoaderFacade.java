@@ -20,11 +20,13 @@ package org.apache.sling.commons.classloader.impl;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * The <code>ClassLoaderFacade</code> is a facade
@@ -54,7 +56,8 @@ public class ClassLoaderFacade extends ClassLoader {
      */
     public URL getResource(String name) {
         if ( !this.manager.isActive() ) {
-            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+            logger.error("Dynamic class loader has already been deactivated.");
+            return null;
         }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
@@ -72,35 +75,41 @@ public class ClassLoaderFacade extends ClassLoader {
         return null;
     }
 
+    private final List<URL> EMPTY_LIST = Collections.emptyList();
+
     /**
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
     public Enumeration<URL> getResources(String name) throws IOException {
         if ( !this.manager.isActive() ) {
-            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+            logger.error("Dynamic class loader has already been deactivated.");
+            return Collections.enumeration(EMPTY_LIST);
         }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
+        final List<URL> resources = new ArrayList<URL>();
         for(final ClassLoader cl : loaders) {
             if ( cl != null ) {
                 try {
                     final Enumeration<URL> e = cl.getResources(name);
                     if ( e != null && e.hasMoreElements() ) {
-                        return e;
+                        resources.addAll(Collections.list(e));
                     }
                 } catch (Throwable t) {
                     logger.error("Exception while querying class loader " + cl + " for resources " + name, t);
                 }
             }
         }
-        return null;
+        return Collections.enumeration(resources);
     }
 
-    @Override
+    /**
+     * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
+     */
     protected synchronized Class<?> loadClass(String name, boolean resolve)
     throws ClassNotFoundException {
-
         if ( !this.manager.isActive() ) {
-            throw new RuntimeException("Dynamic class loader has already been deactivated.");
+            logger.error("Dynamic class loader has already been deactivated.");
+            throw new ClassNotFoundException("Class not found: " + name);
         }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
