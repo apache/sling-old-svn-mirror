@@ -109,7 +109,7 @@ public class ClassLoaderFacade extends ClassLoader {
     throws ClassNotFoundException {
         if ( !this.manager.isActive() ) {
             logger.error("Dynamic class loader has already been deactivated.");
-            throw new ClassNotFoundException("Class not found: " + name);
+            throw new ClassNotFoundException(name);
         }
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
@@ -124,6 +124,6 @@ public class ClassLoaderFacade extends ClassLoader {
                 }
             }
         }
-        throw new ClassNotFoundException("Class not found: " + name);
+        throw new ClassNotFoundException(name);
     }
 }
