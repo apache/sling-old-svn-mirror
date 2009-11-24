@@ -247,7 +247,7 @@ public class ResourceProviderEntry2 implements
                 }
                 Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
                 if ( res != null ) {
-                    LOGGER.info("   D  resource {} {}", res.getPath(), res.getClass());
+                    LOGGER.debug("   D  resource {} {}", res.getPath(), res.getClass());
                 }
                 return res;
             }
