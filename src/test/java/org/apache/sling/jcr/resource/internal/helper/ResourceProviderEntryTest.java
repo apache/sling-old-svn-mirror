@@ -35,14 +35,14 @@ public class ResourceProviderEntryTest extends TestCase {
 
     private ResourceProvider rootProvider;
 
-    private ResourceProviderEntry2 root;
+    private ResourceProviderEntry root;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         rootProvider = new TestResourceProvider("/");
-        root = new ResourceProviderEntry2("/", new ResourceProvider[]{ rootProvider});
+        root = new ResourceProviderEntry("/", new ResourceProvider[]{ rootProvider});
     }
 
     @Override
@@ -64,7 +64,7 @@ public class ResourceProviderEntryTest extends TestCase {
         String firstPath = "/rootel";
         ResourceProvider first = new TestResourceProvider(firstPath);
         root.addResourceProvider(firstPath, first, null);
-        
+
 
         assertEquals(root, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel"));
@@ -90,7 +90,7 @@ public class ResourceProviderEntryTest extends TestCase {
         root.addResourceProvider(secondPath, second, null);
         root.addResourceProvider(thirdPath, third, null);
 
-        
+
 
         assertEquals(rootProvider, root.getResource(null, "/"));
         assertEquals(first, root.getResource(null, "/rootel"));
@@ -164,7 +164,7 @@ public class ResourceProviderEntryTest extends TestCase {
         assertEquals(resProvider, res.getResourceResolver());
     }
 
-    protected void assertEquals(ResourceProviderEntry2 resProviderEntry,
+    protected void assertEquals(ResourceProviderEntry resProviderEntry,
             Resource res) {
         ResourceProvider[] resourceProviders = resProviderEntry.getResourceProviders();
         for ( ResourceProvider rp : resourceProviders ) {
@@ -196,10 +196,6 @@ public class ResourceProviderEntryTest extends TestCase {
             return new TestResource(path, this);
         }
 
-        public String[] getRoots() {
-            return roots;
-        }
-
         public Iterator<Resource> listChildren(Resource parent) {
             return null;
         }
@@ -224,7 +220,7 @@ public class ResourceProviderEntryTest extends TestCase {
         public String map(HttpServletRequest request, String resourcePath) {
             return null;
         }
-        
+
         public String map(String resourcePath) {
             return null;
         }
@@ -237,7 +233,7 @@ public class ResourceProviderEntryTest extends TestCase {
         public Resource resolve(HttpServletRequest request, String absPath) {
             return null;
         }
-        
+
         public Resource resolve(HttpServletRequest request) {
             return null;
         }
@@ -249,7 +245,7 @@ public class ResourceProviderEntryTest extends TestCase {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
-        
+
         /**
          * {@inheritDoc}
          * @see java.lang.Object#toString()
@@ -291,7 +287,7 @@ public class ResourceProviderEntryTest extends TestCase {
         public String getResourceSuperType() {
             return null;
         }
-        
+
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }

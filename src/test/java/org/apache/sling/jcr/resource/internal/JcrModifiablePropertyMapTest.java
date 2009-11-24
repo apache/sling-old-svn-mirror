@@ -127,6 +127,7 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
         pvm.put("something", strings);
 
         // check if we get the list again
+        @SuppressWarnings("unchecked")
         final List<String> strings2 = (List<String>) pvm.get("something");
         assertEquals(strings, strings2);
 
@@ -134,6 +135,7 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
 
         final PersistableValueMap pvm2 = new JcrModifiablePropertyMap(this.rootNode);
         // check if we get the list again
+        @SuppressWarnings("unchecked")
         final List<String> strings3 = (List<String>) pvm2.get("something", Serializable.class);
         assertEquals(strings, strings3);
 
