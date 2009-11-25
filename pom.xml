@@ -54,19 +54,13 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            !sun.io,*
-                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.commons.html
                         </Export-Package>
                         <Private-Package>
-                            !org.cyberneko.dtd.ant,
                             org.apache.sling.commons.html.impl,
-                            org.cyberneko.*,
-                            org.apache.xerces.parsers.*,org.apache.xerces.xni.parser.*,
-                            org.apache.html.dom, org.apache.wml, org.apache.xerces.*,
-                            org.apache.wml.dom, org.apache.xml.serialize, org.apache.xml.resolver.*
+                            org.ccil.cowan.tagsoup,
+                            org.ccil.cowan.tagsoup.jaxp
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -89,29 +83,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.3.04</version> 
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>nekohtml</groupId>
-            <artifactId>nekohtml</artifactId>
-            <version>0.9.5</version>
-        </dependency>
-        <dependency>
-            <groupId>nekohtml</groupId>
-            <artifactId>nekodtd</artifactId>
-            <version>0.1.11</version>    
-        </dependency>
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.8.1</version>
-        </dependency>
-        <dependency>
-            <groupId>xml-resolver</groupId>
-            <artifactId>xml-resolver</artifactId>
+            <groupId>org.ccil.cowan.tagsoup</groupId>
+            <artifactId>tagsoup</artifactId>
             <version>1.2</version>
         </dependency>
     </dependencies>
