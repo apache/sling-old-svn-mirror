@@ -35,6 +35,7 @@ class ResolutionTestBase extends HttpTestBase {
    
   public static final String EXT_SERVLET_SUFFIX = "testservices.servlets.ExtensionServlet";
   public static final String SEL_SERVLET_SUFFIX = "testservices.servlets.SelectorServlet";
+  public static final String WAR_SEL_SERVLET_SUFFIX = "testservices.war.servlets.SelectorServlet";
   public static final String PREFIX_0_SERVLET_SUFFIX = "testservices.servlets.PrefixServletZero";
   public static final String PREFIX_M1_SERVLET_SUFFIX = "testservices.servlets.PrefixServletMinusOne";
   public static final String PUT_SERVLET_SUFFIX = "testservices.servlets.PutMethodServlet";
