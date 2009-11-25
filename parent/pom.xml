@@ -332,7 +332,7 @@ setting is not correct.
                             <dependency>
                                 <groupId>org.apache.apache.resources</groupId>
                                 <artifactId>apache-source-release-assembly-descriptor</artifactId>
-                                <version>1.0.1</version>
+                                <version>1.0.2</version>
                             </dependency>
                             <dependency>
                                 <!-- NOTE: The fix for PLXUTILS-120 is crucial for the new assembly descriptor -->
