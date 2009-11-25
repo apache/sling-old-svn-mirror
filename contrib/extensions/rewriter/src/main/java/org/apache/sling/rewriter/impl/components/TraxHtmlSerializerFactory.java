@@ -18,23 +18,23 @@ package org.apache.sling.rewriter.impl.components;
 
 
 /**
- * This sax serializer serializes xhtml-
+ * This sax serializer serializes html-
  * @scr.component metatype="no"
  * @scr.service
- * @scr.property name="pipeline.type" value="xhtml-serializer"
+ * @scr.property name="pipeline.type" value="trax-html-serializer"
  */
-public class XHtmlSerializerFactory extends AbstractTraxSerializerFactory {
+public class TraxHtmlSerializerFactory extends AbstractTraxSerializerFactory {
 
     @Override
     protected String getOutputFormat() {
-        return "xhtml";
+        return "html";
     }
 
     protected String getDoctypePublic() {
-        return "-//W3C//DTD XHTML 1.0 Strict//EN";
+        return "-//W3C//DTD HTML 4.01 Transitional//EN";
     }
 
     protected String getDoctypeSystem() {
-        return "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd";
+        return "http://www.w3.org/TR/html4/loose.dtd";
     }
 }
