@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.sling.commons.html.HtmlParser;
+import org.ccil.cowan.tagsoup.Parser;
 import org.w3c.dom.Document;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.ext.LexicalHandler;
 
 /**
  * @scr.component metatype="false"
@@ -38,13 +41,42 @@ public class HtmlParserImpl implements HtmlParser {
      */
     public void parse(InputStream stream, String encoding, ContentHandler ch)
     throws SAXException {
-        NekohtmlSaxParser.parse(stream, encoding, ch);
+        final Parser parser = new Parser();
+        if ( ch instanceof LexicalHandler ) {
+            parser.setProperty("http://xml.org/sax/properties/lexical-handler", ch);
+        }
+        parser.setContentHandler(ch);
+        final InputSource source = new InputSource(stream);
+        source.setEncoding(encoding);
+        try {
+            parser.parse(source);
+        } catch (IOException ioe) {
+            throw new SAXException(ioe);
+        }
     }
 
     /**
      * @see org.apache.sling.commons.html.HtmlParser#parse(java.lang.String, java.io.InputStream, java.lang.String)
      */
     public Document parse(String systemId, InputStream stream, String encoding) throws IOException {
-        return NekohtmlDomParser.parse(systemId, stream, encoding);
+        final Parser parser = new Parser();
+
+        final DOMBuilder builder = new DOMBuilder();
+
+        final InputSource source = new InputSource(stream);
+        source.setEncoding(encoding);
+        source.setSystemId(systemId);
+
+        try {
+            parser.setProperty("http://xml.org/sax/properties/lexical-handler", builder);
+            parser.setContentHandler(builder);
+            parser.parse(source);
+        } catch (SAXException se) {
+            if ( se.getCause() instanceof IOException ) {
+                throw (IOException) se.getCause();
+            }
+            throw (IOException) new IOException("Unable to parse xml.").initCause(se);
+        }
+        return builder.getDocument();
     }
 }
