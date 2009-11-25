@@ -221,10 +221,16 @@ public class Sling implements BundleActivator {
         // ensure execution environment
         this.setExecutionEnvironment(props);
 
+        // prepare bootstrap installer and ensure the framework only goes into
+        // level 1 in the first place
+        final BootstrapInstaller bi = new BootstrapInstaller(logger,
+            resourceProvider, props);
+        props.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "1");
+
         // the custom activator list just contains this servlet
         List<BundleActivator> activators = new ArrayList<BundleActivator>();
         activators.add(this);
-        activators.add(new BootstrapInstaller(logger, resourceProvider));
+        activators.add(bi);
 
         // create the framework and start it
         Map<String, Object> felixProps = new HashMap<String, Object>(props);
