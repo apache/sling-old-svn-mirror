@@ -66,18 +66,18 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      * location of Bundles installed by this class is the name (without the
      * path) of the resource from which the Bundle was installed.
      */
-    static final String SCHEME = "slinginstall:";
+    private static final String SCHEME = "slinginstall:";
 
     /**
      * The root location in which the bundles are looked up for installation
      * (value is "resources/").
      */
-    static final String PATH_RESOURCES = "resources/";
+    private static final String PATH_RESOURCES = "resources/";
 
     /**
      * The path of startup bundles in the sling home
      */
-    static final String PATH_STARTUP = "startup/";
+    private static final String PATH_STARTUP = "startup/";
 
     /**
      * The location of the core Bundles (value is "resources/corebundles").
@@ -96,22 +96,27 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     static final String PATH_BUNDLES = PATH_RESOURCES + "bundles";
 
     /**
+     * The possible file extensions for a bundle archive file.
+     */
+    private static final String[] BUNDLE_EXTENSIONS = { ".jar", ".war" };
+
+    /**
      * The start level to be assigned to bundles found in the (old style)
      * {@link #PATH_CORE_BUNDLES resources/corebundles} location (value is 1).
      */
-    static final int STARTLEVEL_CORE_BUNDLES = 1;
+    private static final int STARTLEVEL_CORE_BUNDLES = 1;
 
     /**
      * The start level to be assigned to bundles found in the (old style)
      * {@link #PATH_BUNDLES resources/bundles} location (value is 0).
      */
-    static final int STARTLEVEL_BUNDLES = 0;
+    private static final int STARTLEVEL_BUNDLES = 0;
 
     /**
      * The marker start level indicating the location of the bundle cannot be
      * resolved to a valid start level (value is -1).
      */
-    static final int STARTLEVEL_NONE = -1;
+    private static final int STARTLEVEL_NONE = -1;
 
     /** The data file which works as a marker to detect the first startup. */
     private static final String DATA_FILE = "bootstrapinstaller.ser";
@@ -123,7 +128,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     private final Logger logger;
 
     /**
-     * The {@link ResourceProvider} used to access the Bundle jar files to
+     * The {@link ResourceProvider} used to access the Bundle files to
      * install.
      */
     private final ResourceProvider resourceProvider;
@@ -394,9 +399,9 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         while (res.hasNext()) {
             // path to the next resource
             String path = res.next();
-            // we only deal with jars
-            if (path.endsWith(".jar")) {
-                // try to access the JAR file, ignore if not possible
+
+            if (isBundle(path)) {
+                // try to access the bundle file, ignore if not possible
                 InputStream ins = resourceProvider.getResourceAsStream(path);
                 if (ins == null) {
                     continue;
@@ -411,9 +416,9 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
 
                 // copy over the bundle based on the startlevel
                 String bundleFileName = extractFileName(path);
-                File bundleJar = new File(startUpLevelDir, bundleFileName);
+                File bundleFile = new File(startUpLevelDir, bundleFileName);
                 try {
-                    copyStreamToFile(ins, bundleJar);
+                    copyStreamToFile(ins, bundleFile);
                 } catch (IOException e) {
                     // should this fail here or just log a warning?
                     throw new RuntimeException("Failure copying file from "
@@ -422,6 +427,21 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
                 }
             }
         }
+    }
+
+    /**
+     * Determine if a path could be a bundle based on its extension.
+     *
+     * @param path the path to the file
+     * @return true if the path could be a bundle
+     */
+    static boolean isBundle(String path) {
+        for (String extension : BUNDLE_EXTENSIONS) {
+            if (path.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -450,15 +470,15 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     }
 
     /**
-     * Install the Bundles from JAR files found in startup directory under the
+     * Install the Bundles from files found in startup directory under the
      * level directories, this will only install bundles which are new or updated
      * and will skip over them otherwise
      *
      * @param context The <code>BundleContext</code> used to install the new Bundles.
      * @param currentBundles The currently installed Bundles indexed by their
      *            Bundle location.
-     * @param parent The path to the location in which to look for JAR files to
-     *            install. Only resources whose name ends with <em>.jar</em> are
+     * @param parent The path to the location in which to look for bundle files to
+     *            install. Only resources whose name ends with one of the known bundle extensions are
      *            considered for installation.
      * @param installed The list of Bundles installed by this method. Each
      *            Bundle successfully installed is added to this list.
@@ -490,9 +510,9 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
                 }
 
                 // iterate through all files in the startlevel dir
-                File[] jarFiles = levelDir.listFiles(JAR_FILE_FILTER);
-                for (File bundleJar : jarFiles) {
-                    requireRestart |= installBundle(bundleJar, startLevel,
+                File[] bundleFiles = levelDir.listFiles(BUNDLE_FILE_FILTER);
+                for (File bundleFile : bundleFiles) {
+                    requireRestart |= installBundle(bundleFile, startLevel,
                         context, currentBundles, installed, startLevelService);
                 }
             }
@@ -846,7 +866,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         for (File levelDir : directories) {
 
             // iterate through all files in the startlevel dir
-            File[] jarFiles = levelDir.listFiles(JAR_FILE_FILTER);
+            File[] jarFiles = levelDir.listFiles(BUNDLE_FILE_FILTER);
             for (File bundleJar : jarFiles) {
                 if (bundleJar.lastModified() > selfStamp) {
                     selfStamp = bundleJar.lastModified();
@@ -871,11 +891,11 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     };
 
     /**
-     * Simple jar file filter
+     * Simple bundle file filter
      */
-    private static final FileFilter JAR_FILE_FILTER = new FileFilter() {
+    private static final FileFilter BUNDLE_FILE_FILTER = new FileFilter() {
         public boolean accept(File f) {
-            return f.isFile() && f.getName().endsWith(".jar");
+            return f.isFile() && isBundle(f.getName());
         }
     };
 
