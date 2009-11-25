@@ -87,6 +87,7 @@ public class DynamicClassLoaderManagerImpl
                     final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
                     if ( provider != null ) {
                         loaders[index] = provider.getClassLoader(this.pckAdminCL);
+                        providers[index] = provider;
                     }
                     index++;
                 }
