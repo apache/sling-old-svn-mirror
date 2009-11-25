@@ -60,6 +60,9 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
+                        <Import-Package>
+                            org.apache.cocoon.components.serializers.util;resolution:=optional,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.rewriter
                         </Export-Package>
@@ -93,9 +96,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.cocoon</groupId>
+            <artifactId>cocoon-serializers-charsets</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.html</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
