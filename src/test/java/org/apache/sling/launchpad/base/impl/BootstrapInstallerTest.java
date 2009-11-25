@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.jar.Manifest;
 
 import org.junit.Test;
@@ -192,7 +193,7 @@ public class BootstrapInstallerTest {
      */
     @Test
     public void testGetManifestInputStream() {
-        BootstrapInstaller bsi = new BootstrapInstaller(null, null);
+        BootstrapInstaller bsi = new BootstrapInstaller(null, null, new HashMap<String, String>());
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
             "holaworld.jar");
         Manifest m = bsi.getManifest(is);
@@ -211,7 +212,7 @@ public class BootstrapInstallerTest {
      */
     @Test
     public void testGetBundleSymbolicName() {
-        BootstrapInstaller bsi = new BootstrapInstaller(null, null);
+        BootstrapInstaller bsi = new BootstrapInstaller(null, null, new HashMap<String, String>());
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
             "holaworld.jar");
         Manifest m = bsi.getManifest(is);
