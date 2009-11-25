@@ -154,6 +154,7 @@
             <modules>
                 <module>launchpad/testing</module>
                 <module>launchpad/test-services</module>
+                <module>launchpad/test-services-war</module>
             </modules>
         </profile>
       <!-- Profile for including samples -->
