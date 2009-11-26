@@ -83,7 +83,7 @@
                                         WARNING, this version is declared twice in this pom 
                                         make sure to keep both declarations in sync!
                                      -->
-                                     <version>2.0.5-SNAPSHOT</version>
+                                     <version>2.1.1-SNAPSHOT</version>
                                 </artifactItem>
                             </artifactItems>
                             <stripVersion>true</stripVersion>
@@ -181,7 +181,7 @@
                 WARNING, this version is declared twice in this pom 
                 make sure to keep both declarations in sync!
             -->
-            <version>2.0.5-SNAPSHOT</version>
+            <version>2.1.1-SNAPSHOT</version>
             <classifier>app</classifier>
             <scope>provided</scope>
         </dependency>

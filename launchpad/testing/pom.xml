@@ -195,7 +195,7 @@
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.launchpad.base</artifactId>
                                     <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
-                                    <version>2.0.5-SNAPSHOT</version>
+                                    <version>2.1.1-SNAPSHOT</version>
                                 </artifactItem>
                             </artifactItems>
                             <stripVersion>true</stripVersion>
@@ -452,7 +452,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
             <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
-            <version>2.0.5-SNAPSHOT</version>
+            <version>2.1.1-SNAPSHOT</version>
             <classifier>webapp</classifier>
             <type>war</type>
             <scope>runtime</scope>
