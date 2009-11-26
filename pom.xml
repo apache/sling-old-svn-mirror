@@ -55,7 +55,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.html
+                            org.apache.sling.commons.html;version=1.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.html.impl,
