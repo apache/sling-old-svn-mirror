@@ -37,6 +37,7 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launchpad.base.impl.bootstrapcommands.BootstrapCommandFile;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -127,6 +128,11 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     private static final String DATA_FILE = "bootstrapinstaller.ser";
 
     /**
+     * The name of the bootstrap commands file
+     */
+    private static final String BOOTSTRAP_CMD_FILENAME = "sling_bootstrap.txt";
+
+    /**
      * The {@link Logger} use for logging messages during installation and
      * startup.
      */
@@ -193,6 +199,10 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         String slingHome = context.getProperty(SharedConstants.SLING_HOME);
         File slingStartupDir = getSlingStartupDir(slingHome);
 
+        // execute bootstrap commands, if needed
+        BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
+        cmd.execute(context);
+
         if (!isAlreadyInstalled(context, slingStartupDir)) {
             // only run the deployment package stuff and war/jar copies when this war/jar is new/changed
 
@@ -243,7 +253,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
 
                 // done with copying at this point
             }
-
+            
             // get the set of all existing (installed) bundles by symbolic name
             Bundle[] bundles = context.getBundles();
             Map<String, Bundle> bySymbolicName = new HashMap<String, Bundle>();
