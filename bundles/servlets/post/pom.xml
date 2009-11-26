@@ -64,7 +64,7 @@
                             /system/sling.js
                         </Sling-Bundle-Resources>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline=org/apache/jackrabbit/util/ISO8601.class
+                            jackrabbit-jcr-commons;inline=org/apache/jackrabbit/util/ISO8601.class|org/apache/jackrabbit/util/Text.class
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
