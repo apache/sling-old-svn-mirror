@@ -57,7 +57,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.jcr.compiler;version=${pom.version}
+                            org.apache.sling.jcr.compiler;version=1.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.compiler.impl
@@ -72,7 +72,7 @@
 	    <dependency>
 	      <groupId>org.apache.sling</groupId>
 	      <artifactId>org.apache.sling.commons.compiler</artifactId>
-	      <version>0.9.0-SNAPSHOT</version>
+	      <version>1.0.0</version>
 	      <scope>provided</scope>
 	    </dependency>
 	    <dependency>
