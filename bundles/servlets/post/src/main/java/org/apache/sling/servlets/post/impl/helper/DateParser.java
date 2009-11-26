@@ -16,7 +16,6 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,6 +27,7 @@ import java.util.Locale;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class DateParser {
     /**
      * lits of formats
      */
-    private final List<DateFormat> formats = new LinkedList<DateFormat>();
+    private final List<CalendarParserSupport> formats = new LinkedList<CalendarParserSupport>();
 
     /**
      * Registers a format string to the list of internally checked ones.
@@ -54,15 +54,13 @@ public class DateParser {
      * @throws IllegalArgumentException if the format is not valid.
      */
     public void register(String format) {
-        register(new SimpleDateFormat(format, Locale.US));
-    }
-
-    /**
-     * Registers a date format to the list of internally checked ones.
-     * @param format date format
-     */
-    public void register(DateFormat format) {
-        formats.add(format);
+        final CalendarParserSupport parser;
+        if (Iso8601ParserSupport.FORMAT_MARKER.equalsIgnoreCase(format)) {
+            parser = new Iso8601ParserSupport();
+        } else {
+            parser = new SimpleDateFormatParserSupport(format);
+        }
+        formats.add(parser);
     }
 
     /**
@@ -75,14 +73,13 @@ public class DateParser {
      * @return calendar representation of the source or <code>null</code>
      */
     public synchronized Calendar parse(String source) {
-        for (DateFormat fmt: formats) {
+        for (CalendarParserSupport fmt : formats) {
             try {
-                Date d = fmt.parse(source);
+                final Calendar c = fmt.parse(source);
                 if (log.isDebugEnabled()) {
-                    log.debug("Parsed " + source + " using " + fmt + " into " + d);
+                    log.debug("Parsed " + source + " using " + fmt + " into "
+                        + c);
                 }
-                Calendar c = Calendar.getInstance();
-                c.setTime(d);
                 return c;
             } catch (ParseException e) {
                 if (log.isDebugEnabled()) {
@@ -112,7 +109,7 @@ public class DateParser {
         }
         return ret;
     }
-    
+
     /**
      * Parses the given source strings and returns the respective jcr date value
      * instances. If no format matches for any of the sources
@@ -135,4 +132,58 @@ public class DateParser {
         }
         return ret;
     }
+
+    private static interface CalendarParserSupport {
+        Calendar parse(String dateTime) throws ParseException;
+    }
+
+    private static class SimpleDateFormatParserSupport implements CalendarParserSupport {
+        private final SimpleDateFormat dateFormat;
+
+        SimpleDateFormatParserSupport(String format) {
+            this.dateFormat = new SimpleDateFormat(format, Locale.US);
+        }
+
+        public Calendar parse(String dateTime) throws ParseException {
+            final Date d;
+            synchronized (dateFormat) {
+                d = dateFormat.parse(dateTime);
+            }
+
+            final Calendar c = Calendar.getInstance();
+            c.setTime(d);
+
+            return c;
+        }
+
+        @Override
+        public String toString() {
+            return "SimpleDateFormat:" + dateFormat.toPattern();
+        }
+    }
+
+    private static class Iso8601ParserSupport implements CalendarParserSupport {
+
+        static final String FORMAT_MARKER = "ISO8601";
+
+        public Calendar parse(String dateTime) throws ParseException {
+            try {
+                final Calendar c = ISO8601.parse(dateTime);
+                if (c == null) {
+                    throw new ParseException(dateTime
+                        + " cannot be parsed as ISO8601 formatted date string",
+                        0);
+                }
+                return c;
+            } catch (Exception e) {
+                throw new ParseException(e.getMessage(), 0);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "ISO8601 Parser";
+        }
+    }
+
 }
