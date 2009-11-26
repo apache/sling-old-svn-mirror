@@ -101,6 +101,11 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     private static final String[] BUNDLE_EXTENSIONS = { ".jar", ".war" };
 
     /**
+     * The header which contains the bundle's last modified date.
+     */
+    static final String BND_LAST_MODIFIED_HEADER = "Bnd-LastModified";
+
+    /**
      * The start level to be assigned to bundles found in the (old style)
      * {@link #PATH_CORE_BUNDLES resources/corebundles} location (value is 1).
      */
@@ -760,13 +765,63 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         // if the new version and the current version are the same, reinstall if
         // the version is a snapshot
         if (newVersion.equals(installedVersion)
-            && installedVersionProp.endsWith("SNAPSHOT")) {
+            && installedVersionProp.endsWith("SNAPSHOT")
+            && isNewerSnapshot(installedBundle, manifest)) {
             logger.log(Logger.LOG_INFO, "Forcing upgrade of SNAPSHOT bundle: "
                 + installedBundle.getSymbolicName());
             return false;
         }
 
         return newVersion.compareTo(installedVersion) <= 0;
+    }
+
+    /**
+     * Determine if the bundle containing the passed manfiest is a newer
+     * SNAPSHOT than the already-installed bundle.
+     *
+     * @param installedBundle the already-installed bundle
+     * @param manifest the manifest of the to-be-installed bundle
+     * @return true if the to-be-installed bundle is newer or if the comparison
+     *         fails for some reason
+     */
+    private boolean isNewerSnapshot(Bundle installedBundle, Manifest manifest) {
+        String installedDate = (String) installedBundle.getHeaders().get(
+            BND_LAST_MODIFIED_HEADER);
+        String toBeInstalledDate = manifest.getMainAttributes().getValue(
+            BND_LAST_MODIFIED_HEADER);
+        if (installedDate == null) {
+            logger.log(Logger.LOG_DEBUG, String.format(
+                "Currently installed bundle %s doesn't have a %s header",
+                installedBundle.getSymbolicName(), BND_LAST_MODIFIED_HEADER));
+            return true;
+        }
+        if (toBeInstalledDate == null) {
+            logger.log(Logger.LOG_DEBUG, String.format(
+                "Candidate bundle %s doesn't have a %s header",
+                installedBundle.getSymbolicName(), BND_LAST_MODIFIED_HEADER));
+            return true;
+        }
+
+        long installedTime, toBeInstalledTime = 0;
+        try {
+            installedTime = Long.valueOf(installedDate);
+        } catch (NumberFormatException e) {
+            logger.log(Logger.LOG_DEBUG, String.format(
+                "%s header of currently installed bundle %s isn't parseable.",
+                BND_LAST_MODIFIED_HEADER, installedBundle.getSymbolicName()));
+            return true;
+        }
+        try {
+            toBeInstalledTime = Long.valueOf(toBeInstalledDate);
+        } catch (NumberFormatException e) {
+            logger.log(Logger.LOG_DEBUG, String.format(
+                "%s header of candidate bundle %s isn't parseable.",
+                BND_LAST_MODIFIED_HEADER, installedBundle.getSymbolicName()));
+            return true;
+        }
+
+        return toBeInstalledTime > installedTime;
+
     }
 
     // ---------- Bundle Installation marker file
