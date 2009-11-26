@@ -59,10 +59,12 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  *
  * Use this as the default servlet for POST requests for Sling
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default" private="true"
- * @scr.property name="sling.servlet.methods" value="POST" private="true"
  * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
+ *
+ *
+ * @scr.property name="sling.servlet.paths"
+ *          values.0="sling/servlet/default/POST"
+ *          private="true"
  *
  * Get all SlingPostProcessors
  * @scr.reference name="postProcessor"
@@ -84,9 +86,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     /**
      * @scr.property values.0="EEE MMM dd yyyy HH:mm:ss 'GMT'Z"
-     *               values.1="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-     *               values.2="yyyy-MM-dd'T'HH:mm:ss" values.3="yyyy-MM-dd"
-     *               values.4="dd.MM.yyyy HH:mm:ss" values.5="dd.MM.yyyy"
+     *               values.1="ISO8601"
+     *               values.2="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+     *               values.3="yyyy-MM-dd'T'HH:mm:ss" values.4="yyyy-MM-dd"
+     *               values.5="dd.MM.yyyy HH:mm:ss" values.6="dd.MM.yyyy"
      */
     private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 
@@ -308,7 +311,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         dateParser = new DateParser();
         String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
         for (String dateFormat : dateFormats) {
-            dateParser.register(dateFormat);
+            try {
+                dateParser.register(dateFormat);
+            } catch (Throwable t) {
+                log.warn(
+                    "activate: Ignoring format {} because it is invalid: {}",
+                    dateFormat, t);
+            }
         }
     }
 
