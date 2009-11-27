@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6</version>
+        <version>7</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -164,11 +164,11 @@
                                             sling,jcr,jackrabbit
                                         </Bundle-Category>
                                         <Bundle-Activator>
-                                            org.apache.sling.jcr.jackrabbit.server.Activator
+                                            org.apache.sling.jcr.jackrabbit.server.impl.Activator
                                         </Bundle-Activator>
                                         <Export-Package>
-                                        	org.apache.sling.jcr.jackrabbit.server.security.*,
-                                            org.apache.jackrabbit.core.security.principal
+                                        	org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
+                                            org.apache.jackrabbit.core.security.principal;version=1.6.0
                                         </Export-Package>
                                         <Private-Package>
                                             org.apache.sling.jcr.jackrabbit.server.impl.*
@@ -199,6 +199,9 @@
                                             poi, poi-scratchpad,
                                             nekohtml, xercesImpl
                                         </Embed-Dependency>
+                                        <_removeheaders>
+                                            Embed-Dependency,Private-Package,Include-Resource
+                                        </_removeheaders>
                                     </instructions>
                                 </configuration>
                             </execution>
@@ -241,7 +244,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <version>1.5.0</version>
+            <version>1.6.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -249,16 +252,16 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-text-extractors</artifactId>
-            <version>1.5.0</version>
+            <version>1.6.0</version>
         </dependency>
         
         <!-- OSGi Libraries -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
     </dependencies>
