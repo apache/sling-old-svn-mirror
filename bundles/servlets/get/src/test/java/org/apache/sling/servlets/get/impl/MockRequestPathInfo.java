@@ -28,10 +28,17 @@ class MockRequestPathInfo implements RequestPathInfo {
 
     private final String suffix;
 
+    private final String path;
+
     public MockRequestPathInfo(String selectors, String extension, String suffix) {
+        this(selectors, extension ,suffix, null);
+    }
+
+    public MockRequestPathInfo(String selectors, String extension, String suffix, String path) {
         this.selectors = selectors;
         this.extension = extension;
         this.suffix = suffix;
+        this.path = path;
     }
 
     public String getExtension() {
@@ -39,7 +46,7 @@ class MockRequestPathInfo implements RequestPathInfo {
     }
 
     public String getResourcePath() {
-        return null;
+        return path;
     }
 
     public String getSelectorString() {

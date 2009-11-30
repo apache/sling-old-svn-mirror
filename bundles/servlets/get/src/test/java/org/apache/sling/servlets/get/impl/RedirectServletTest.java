@@ -21,7 +21,6 @@ package org.apache.sling.servlets.get.impl;
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.servlets.get.impl.RedirectServlet;
 
 public class RedirectServletTest extends TestCase {
 
@@ -240,5 +239,16 @@ public class RedirectServletTest extends TestCase {
         SlingHttpServletRequest request = new MockSlingHttpServletRequest(
             basePath, selectors, extension, suffix, queryString);
         return RedirectServlet.toRedirectPath(targetPath, request);
+    }
+
+    public void testEmptyPath() {
+        SlingHttpServletRequest request = new MockSlingHttpServletRequest(
+                "/", null, null, null, null, "");
+        String path = RedirectServlet.toRedirectPath("/index.html", request);
+        assertEquals("/webapp/index.html", path);
+        request = new MockSlingHttpServletRequest(
+                "/", null, null, null, null, "/");
+        path = RedirectServlet.toRedirectPath("/index.html", request);
+        assertEquals("index.html", path);
     }
 }
