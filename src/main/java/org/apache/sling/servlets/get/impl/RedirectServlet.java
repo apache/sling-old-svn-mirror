@@ -146,7 +146,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             postFix = null;
         }
 
-        String basePath = request.getResource().getPath();
+        String basePath = rpi.getResourcePath();
 
         // make sure the target path is absolute
         if (!targetPath.startsWith("/")) {
@@ -163,7 +163,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         StringBuffer pathBuf = new StringBuffer();
 
-        makeRelative(pathBuf, basePath, targetPath);
+        makeRelative(pathBuf, basePath, targetPath, request);
 
         if (postFix != null) {
             pathBuf.append(postFix);
@@ -181,8 +181,17 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
      * this relative path into pathBuffer.
      */
     private static void makeRelative(StringBuffer pathBuffer, String base,
-            String target) {
-
+            String target, SlingHttpServletRequest request) {
+        if ( base == null || base.length() == 0 ) {
+            final String ctxPath = request.getContextPath();
+            pathBuffer.append(ctxPath);
+            if ( ctxPath.endsWith("/") ) {
+                pathBuffer.append(target.substring(1));
+            } else {
+                pathBuffer.append(target);
+            }
+            return;
+        }
         // pseudo entry to correctly calculate the relative path
         if (base.endsWith("/")) {
             base = base.concat(String.valueOf(Character.MAX_VALUE));

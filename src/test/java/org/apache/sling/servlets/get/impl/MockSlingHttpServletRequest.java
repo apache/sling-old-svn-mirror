@@ -56,7 +56,15 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
             String extension, String suffix, String queryString) {
         this.resource = new SyntheticResource(null, resourcePath, null);
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
-            suffix);
+            suffix, resourcePath);
+        this.queryString = queryString;
+    }
+
+    public MockSlingHttpServletRequest(String resourcePath, String selectors,
+            String extension, String suffix, String queryString, String requestPath) {
+        this.resource = new SyntheticResource(null, resourcePath, null);
+        this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
+            suffix, requestPath);
         this.queryString = queryString;
     }
 
@@ -127,7 +135,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getContextPath() {
-        return null;
+        return "/webapp";
     }
 
     public Cookie[] getCookies() {
