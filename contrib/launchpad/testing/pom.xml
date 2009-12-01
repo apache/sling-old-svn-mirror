@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6</version>
+        <version>8</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -502,7 +502,7 @@
 
         <!-- JCR Install - needs to be in a profile -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
+            <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <scope>test</scope>
         </dependency>
