@@ -18,11 +18,9 @@ package org.apache.sling.jackrabbit.usermanager.impl.resource;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,8 +44,13 @@ import org.slf4j.LoggerFactory;
 public class AuthorizableValueMap implements ValueMap {
     private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
 
-    private Set<String> hiddenProperties = new HashSet<String>(
-        Arrays.asList(new String[] { "rep:password", "jcr:uuid" }));
+    /**
+     * Principal Name property of the Authorizable. This has been returned
+     * before Jackrabbit 1.6 as part of the Authorizable properties but is
+     * now removed from the set. We add this to the properties again to be
+     * able to convey this data to the request.
+     */
+    private static final String REP_PRINCIPAL_NAME = "rep:principalName";
 
     private boolean fullyRead;
 
@@ -138,14 +141,18 @@ public class AuthorizableValueMap implements ValueMap {
             return null;
         }
 
-        if (hiddenProperties.contains(key)) {
-            return null;
-        }
-
         try {
-            if (authorizable.hasProperty(key)) {
-                Value[] property = authorizable.getProperty(key);
-                Object value = valuesToJavaObject(property);
+            final Object value;
+            if (REP_PRINCIPAL_NAME.equals(key)) {
+                value = authorizable.getPrincipal().getName();
+            } else  if (authorizable.hasProperty(key)) {
+                final Value[] property = authorizable.getProperty(key);
+                value = valuesToJavaObject(property);
+            } else {
+                value = null;
+            }
+
+            if (value != null) {
                 cache.put(key, value);
                 return value;
             }
@@ -179,17 +186,19 @@ public class AuthorizableValueMap implements ValueMap {
                 Iterator pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
                     String key = (String) pi.next();
-
-                    if (hiddenProperties.contains(key)) {
-                        continue; // skip it.
-                    }
-
                     if (!cache.containsKey(key)) {
                         Value[] property = authorizable.getProperty(key);
                         Object value = valuesToJavaObject(property);
                         cache.put(key, value);
                     }
                 }
+
+                // add principal name
+                if (!cache.containsKey(REP_PRINCIPAL_NAME)) {
+                    cache.put(REP_PRINCIPAL_NAME,
+                        authorizable.getPrincipal().getName());
+                }
+
                 fullyRead = true;
             } catch (RepositoryException re) {
                 // TODO: log !!
