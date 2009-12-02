@@ -194,6 +194,9 @@ public class RequestLogger {
                 REQUEST_LOG_ENTRY_FORMAT, requestLogName, requestLogType);
             this.requestLogExit = this.createRequestLoggerService(bundleContext, false,
                 REQUEST_LOG_EXIT_FORMAT, requestLogName, requestLogType);
+            
+            this.bindRequestLoggerService(this.requestLogEntry);
+            this.bindRequestLoggerService(this.requestLogExit);
         }
 
         // prepare the access logger if a name is configured and the
@@ -207,12 +210,9 @@ public class RequestLogger {
 
             this.accessLog = this.createRequestLoggerService(bundleContext, false,
                 ACCESS_LOG_FORMAT, accessLogName, accessLogType);
-        }
 
-        // finally have the loggers added to the respective lists for later use
-        this.bindRequestLoggerService(this.requestLogEntry);
-        this.bindRequestLoggerService(this.requestLogExit);
-        this.bindRequestLoggerService(this.accessLog);
+            this.bindRequestLoggerService(this.accessLog);
+        }
     }
 
     /**
