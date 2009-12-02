@@ -44,14 +44,6 @@ import org.slf4j.LoggerFactory;
 public class AuthorizableValueMap implements ValueMap {
     private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
 
-    /**
-     * Principal Name property of the Authorizable. This has been returned
-     * before Jackrabbit 1.6 as part of the Authorizable properties but is
-     * now removed from the set. We add this to the properties again to be
-     * able to convey this data to the request.
-     */
-    private static final String REP_PRINCIPAL_NAME = "rep:principalName";
-
     private boolean fullyRead;
 
     private final Map<String, Object> cache;
@@ -142,17 +134,9 @@ public class AuthorizableValueMap implements ValueMap {
         }
 
         try {
-            final Object value;
-            if (REP_PRINCIPAL_NAME.equals(key)) {
-                value = authorizable.getPrincipal().getName();
-            } else  if (authorizable.hasProperty(key)) {
+            if (authorizable.hasProperty(key)) {
                 final Value[] property = authorizable.getProperty(key);
-                value = valuesToJavaObject(property);
-            } else {
-                value = null;
-            }
-
-            if (value != null) {
+                final Object value = valuesToJavaObject(property);
                 cache.put(key, value);
                 return value;
             }
@@ -191,12 +175,6 @@ public class AuthorizableValueMap implements ValueMap {
                         Object value = valuesToJavaObject(property);
                         cache.put(key, value);
                     }
-                }
-
-                // add principal name
-                if (!cache.containsKey(REP_PRINCIPAL_NAME)) {
-                    cache.put(REP_PRINCIPAL_NAME,
-                        authorizable.getPrincipal().getName());
                 }
 
                 fullyRead = true;
