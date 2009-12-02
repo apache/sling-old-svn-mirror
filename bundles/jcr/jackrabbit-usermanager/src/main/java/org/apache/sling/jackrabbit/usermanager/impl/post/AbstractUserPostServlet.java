@@ -33,7 +33,7 @@ public abstract class AbstractUserPostServlet extends
     /**
      * To be used for the encryption. E.g. for passwords in
      * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
-     * 
+     *
      * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
      */
     private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
@@ -64,17 +64,28 @@ public abstract class AbstractUserPostServlet extends
 
     /**
      * Digest the given password using the configured digest algorithm
-     * 
+     *
      * @param pwd the value to digest
      * @return the digested value
      * @throws IllegalArgumentException
      */
     protected String digestPassword(String pwd) throws IllegalArgumentException {
+        return digestPassword(pwd, passwordDigestAlgoritm);
+    }
+
+    /**
+     * Digest the given password using the given digest algorithm
+     *
+     * @param pwd the value to digest
+     * @param digest the digest algorithm to use for digesting
+     * @return the digested value
+     * @throws IllegalArgumentException
+     */
+    protected String digestPassword(String pwd, String digest) throws IllegalArgumentException {
         try {
             StringBuffer password = new StringBuffer();
-            password.append("{").append(passwordDigestAlgoritm).append("}");
-            password.append(Text.digest(passwordDigestAlgoritm,
-                pwd.getBytes("UTF-8")));
+            password.append("{").append(digest).append("}");
+            password.append(Text.digest(digest, pwd.getBytes("UTF-8")));
             return password.toString();
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e.toString());

@@ -16,12 +16,13 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
+import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-
+import javax.jcr.SimpleCredentials;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -125,17 +126,10 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
                 "New Password does not match the confirmation password");
         }
 
-        try {
-            String digestedOldPwd = digestPassword(oldPwd);
-            Value[] pwdProperty = ((User) authorizable).getProperty("rep:password");
-            if (pwdProperty != null && pwdProperty.length > 0) {
-                String repPasswordValue = pwdProperty[0].getString();
-                if (!digestedOldPwd.equals(repPasswordValue)) {
-                    // submitted oldPwd value is not correct.
-                    throw new RepositoryException("Old Password does not match");
-                }
-            }
+        // verify old password
+        checkPassword(authorizable, oldPwd);
 
+        try {
             ((User) authorizable).changePassword(digestPassword(newPwd));
 
             changes.add(Modification.onModified(resource.getPath()
@@ -143,5 +137,34 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to change user password.", re);
         }
+    }
+
+    private void checkPassword(Authorizable authorizable, String oldPassword)
+            throws RepositoryException {
+        Credentials oldCreds = ((User) authorizable).getCredentials();
+        if (oldCreds instanceof SimpleCredentials) {
+            char[] oldCredsPwd = ((SimpleCredentials) oldCreds).getPassword();
+            if (oldPassword.equals(String.valueOf(oldCredsPwd))) {
+                return;
+            }
+        } else {
+            try {
+                // CryptSimpleCredentials.matches(SimpleCredentials credentials)
+                Class<?> oldCredsClass = oldCreds.getClass();
+                Method matcher = oldCredsClass.getMethod("matches",
+                    SimpleCredentials.class);
+                SimpleCredentials newCreds = new SimpleCredentials(
+                    authorizable.getPrincipal().getName(),
+                    oldPassword.toCharArray());
+                boolean match = (Boolean) matcher.invoke(oldCreds, newCreds);
+                if (match) {
+                    return;
+                }
+            } catch (Throwable t) {
+                // failure here, fall back to password check failure below
+            }
+        }
+
+        throw new RepositoryException("Old Password does not match");
     }
 }
