@@ -34,7 +34,7 @@ import org.apache.sling.commons.json.JSONObject;
 public class CreateGroupTest extends AbstractUserManagerTest {
 
 	String testGroupId = null;
-	
+
 	@Override
 	protected void tearDown() throws Exception {
 		if (testGroupId != null) {
@@ -53,15 +53,16 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 		testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
+		postParams.add(new NameValuePair("marker", testGroupId));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
+
 		//fetch the group profile json to verify the settings
 		String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".json";
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
-		assertEquals(testGroupId, jsonObj.getString("rep:principalName"));
+		assertEquals(testGroupId, jsonObj.getString("marker"));
 	}
 
 	public void testCreateGroupMissingGroupId() throws IOException {
@@ -78,17 +79,18 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
+
 		//post the same info again, should fail
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
-	
+
 	public void testCreateGroupWithExtraProperties() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
+		postParams.add(new NameValuePair("marker", testGroupId));
 		postParams.add(new NameValuePair("displayName", "My Test Group"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org"));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
@@ -99,8 +101,8 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
-		assertEquals(testGroupId, jsonObj.getString("rep:principalName"));
+		assertEquals(testGroupId, jsonObj.getString("marker"));
 		assertEquals("My Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org", jsonObj.getString("url"));
-	}		
+	}
 }

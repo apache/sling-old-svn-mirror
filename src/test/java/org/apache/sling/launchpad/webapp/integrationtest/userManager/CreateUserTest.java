@@ -34,7 +34,7 @@ import org.apache.sling.commons.json.JSONObject;
 public class CreateUserTest extends AbstractUserManagerTest {
 
 	String testUserId = null;
-	
+
 	@Override
 	protected void tearDown() throws Exception {
 		if (testUserId != null) {
@@ -56,21 +56,22 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	 */
 	public void testCreateUser() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
-        
+
 		testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
+		postParams.add(new NameValuePair("marker", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
+
 		//fetch the user profile json to verify the settings
 		String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
-		assertEquals(testUserId, jsonObj.getString("rep:principalName"));
+		assertEquals(testUserId, jsonObj.getString("marker"));
 		assertFalse(jsonObj.has(":name"));
 		assertFalse(jsonObj.has("pwd"));
 		assertFalse(jsonObj.has("pwdConfirm"));
@@ -112,11 +113,11 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
+
 		//post the same info again, should fail
 		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
-	
+
 	/*
 	<form action="/system/userManager/user.create.html" method="POST">
 	   <div>Name: <input type="text" name=":name" value="testUser" /></div>
@@ -133,6 +134,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
+		postParams.add(new NameValuePair("marker", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 		postParams.add(new NameValuePair("displayName", "My Test User"));
@@ -145,11 +147,11 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
-		assertEquals(testUserId, jsonObj.getString("rep:principalName"));
+		assertEquals(testUserId, jsonObj.getString("marker"));
 		assertEquals("My Test User", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org", jsonObj.getString("url"));
 		assertFalse(jsonObj.has(":name"));
 		assertFalse(jsonObj.has("pwd"));
 		assertFalse(jsonObj.has("pwdConfirm"));
-	}		
+	}
 }
