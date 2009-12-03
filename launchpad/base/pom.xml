@@ -37,6 +37,10 @@
         by the various launchpad modules..
     </description>
 
+    <properties>
+        <felix.httpservice.version>2.0.4</felix.httpservice.version>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/base</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/base</developerConnection>
@@ -72,9 +76,7 @@
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Embed-Dependency>
                             org.apache.felix.framework;inline=org/**|META-INF/**,
-                            org.osgi.compendium;inline=org/osgi/service/http/**,
-                            servlet-api;inline=javax/servlet/**,
-                            servlet;inline=org/eclipse/**
+                            org.apache.felix.http.proxy;inline=org/apache/**
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -181,9 +183,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.equinox.http</groupId>
-            <artifactId>servlet</artifactId>
-            <version>1.0.0-v20070606</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.proxy</artifactId>
+            <version>${felix.httpservice.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

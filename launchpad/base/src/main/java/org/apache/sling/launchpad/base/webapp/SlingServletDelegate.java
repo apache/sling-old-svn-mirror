@@ -37,13 +37,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.framework.Logger;
+import org.apache.felix.http.proxy.ProxyServlet;
 import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
 import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
-import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
@@ -199,10 +199,10 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             Logger logger = new ServletContextLogger(getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
                 getServletContext());
-            tmpSling = new SlingBridge(notifiable, logger, rp, props);
+            tmpSling = new SlingBridge(notifiable, logger, rp, props, getServletContext());
 
             // set up the OSGi HttpService proxy servlet
-            tmpDelegatee = new HttpServiceServlet();
+            tmpDelegatee = new ProxyServlet();
             tmpDelegatee.init(getServletConfig());
 
             // set the fields only if the SlingServletDelegate has no been destroyed

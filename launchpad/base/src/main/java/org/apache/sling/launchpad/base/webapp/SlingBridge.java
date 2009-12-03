@@ -18,12 +18,13 @@ package org.apache.sling.launchpad.base.webapp;
 
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Notifiable;
-import org.eclipse.equinox.http.servlet.internal.Activator;
-import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
 /**
@@ -33,32 +34,12 @@ import org.osgi.framework.BundleException;
  */
 public class SlingBridge extends Sling {
 
-    // The Equinox Http Service activator
-    private BundleActivator httpServiceActivator;
-
     public SlingBridge(Notifiable notifiable, Logger logger,
-            ResourceProvider resourceProvider, Map<String, String> propOverwrite)
+            ResourceProvider resourceProvider, Map<String, String> propOverwrite,
+            ServletContext servletContext)
             throws BundleException {
         super(notifiable, logger, resourceProvider, propOverwrite);
-    }
-
-    @Override
-    protected void doStartBundle() throws Exception {
-        // activate the HttpService
-        this.httpServiceActivator = new Activator();
-        this.httpServiceActivator.start(this.getBundleContext());
-    }
-
-    @Override
-    protected void doStopBundle() {
-        if (this.httpServiceActivator != null) {
-            try {
-                this.httpServiceActivator.stop(this.getBundleContext());
-            } catch (Exception e) {
-                logger.log(Logger.LOG_ERROR,
-                    "Unexpected problem stopping HttpService", e);
-            }
-            this.httpServiceActivator = null;
-        }
+        
+        servletContext.setAttribute(BundleContext.class.getName(), getBundleContext());
     }
 }
