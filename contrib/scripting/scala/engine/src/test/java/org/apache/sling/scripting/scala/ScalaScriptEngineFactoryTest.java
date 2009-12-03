@@ -46,7 +46,7 @@ public class ScalaScriptEngineFactoryTest extends TestCase {
 
     public void testScriptEngineFactoryLanguageVersion() {
         String version = new ScalaScriptEngineFactory().getLanguageVersion();
-        assertEquals("2.7.3", version);
+        assertEquals("2.7.7", version);
     }
 
 }

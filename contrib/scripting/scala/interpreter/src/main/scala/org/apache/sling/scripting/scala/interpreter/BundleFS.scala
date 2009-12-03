@@ -16,6 +16,7 @@
  */
 import scala.tools.nsc.io.AbstractFile
 import java.io.{File, InputStream, OutputStream, IOException}
+import java.util.NoSuchElementException
 import java.net.URL
 import org.osgi.framework.Bundle
 import org.apache.sling.scripting.scala.Utils.{valueOrElse, nullOrElse}
@@ -94,20 +95,49 @@ object BundleFS {
       def elements: Iterator[AbstractFile] = {
         new Iterator[AbstractFile]() {
           val dirs = bundle.getEntryPaths(fullName)
-          def hasNext = dirs.hasMoreElements
-          def next = {
-            val entry = dirs.nextElement.asInstanceOf[String]
-            var entryUrl = bundle.getResource("/" + entry)
+          var nextEntry = prefetch()
+          
+          def hasNext() = {
+            if (nextEntry == null)
+              nextEntry = prefetch()
+           
+            nextEntry != null
+          }
+          
+          def next() = {
+            if (hasNext()) {
+                val entry = nextEntry
+                nextEntry = null
+                entry
+            }
+            else {
+              throw new NoSuchElementException()
+            }
+          }
+          
+          private def prefetch() = {
+            if (dirs.hasMoreElements) {
+              val entry = dirs.nextElement.asInstanceOf[String]
+              var entryUrl = bundle.getResource("/" + entry)
 
-            // Bundle.getResource seems to be inconsistent with respect to requiring
-            // a trailing slash
-            if (entryUrl == null) 
-              entryUrl = bundle.getResource("/" + removeTralingSlash(entry))
-            
-            if (entry.endsWith(".class"))
-              new FileEntry(entryUrl, DirEntry.this)
-            else
-              new DirEntry(entryUrl, DirEntry.this)
+              // Bundle.getResource seems to be inconsistent with respect to requiring
+              // a trailing slash
+              if (entryUrl == null) 
+                entryUrl = bundle.getResource("/" + removeTralingSlash(entry))
+                
+              // If still null OSGi wont let use load that resource for some reason
+              if (entryUrl == null) {
+                null
+              }
+              else {
+                if (entry.endsWith(".class"))
+                  new FileEntry(entryUrl, DirEntry.this)
+                else
+                  new DirEntry(entryUrl, DirEntry.this)
+              }
+            }
+            else 
+              null
           }
           
           private def removeTralingSlash(s: String): String = 

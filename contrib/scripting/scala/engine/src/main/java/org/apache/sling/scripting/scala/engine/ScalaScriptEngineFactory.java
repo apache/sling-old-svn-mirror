@@ -61,7 +61,7 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
     public final static String[] SCALA_SCRIPT_EXTENSIONS = {"scala", "scs"};
     public final static String SCALA_MIME_TYPE = "application/x-scala";
     public final static String SHORT_NAME = "scala";
-    public final static String VERSION = "2.7.3";
+    public final static String VERSION = "2.7.7";
 
     /**
      * @scr.property
@@ -163,7 +163,7 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
             if (url == null) {
                 url = bundles[k].getResource("");
             }
-            
+
             if (url != null) { // FIXME: log null values
                 if ("file".equals(url.getProtocol())) {
                     try {
@@ -195,7 +195,7 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
         	}
         }
     }
-    
+
     private Node deepCreateNode(String path, Session session, String nodeType) throws RepositoryException {
     	Node result = null;
     	if(session.itemExists(path)) {
