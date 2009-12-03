@@ -32,6 +32,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * the authorization steps based on the Authorization header of the HTTP
  * request. This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
- * 
+ *
  * @scr.component immediate="false" label="%auth.http.name"
  *                description="%auth.http.description"
  * @scr.property name="service.description"
@@ -62,7 +63,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
      * method if no credentials are present in the request (value is
      * "sling:authRequestLogin").
-     * 
+     *
      * @see #authenticate(HttpServletRequest, HttpServletResponse)
      */
     static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
@@ -131,7 +132,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * the request may be for an included servlet, in which case the values for
      * some URI specific values are contained in javax.servlet.include.* request
      * attributes.
-     * 
+     *
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -162,7 +163,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
 
     /**
      * Sends back the form to log into the system.
-     * 
+     *
      * @param request The request object
      * @param response The response object to which to send the request
      * @return <code>true</code> is always returned by this handler
@@ -176,30 +177,55 @@ public class AuthorizationHeaderAuthenticationHandler implements
 
             // reset the response
             response.reset();
-            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("Cache-Control", "no-cache");
 
-            String form = getLoginForm();
+            if (isLoginRequested(request)) {
 
-            if (form != null) {
-
-                form = replaceVariables(form, "@@contextPath@@",
-                    request.getContextPath(), "/");
-                form = replaceVariables(form, "@@authType@@",
-                    request.getAuthType(), "");
-                form = replaceVariables(form, "@@user@@",
-                    request.getRemoteUser(), "");
-
-                response.setContentType("text/html");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print(form);
+                // this is the ajax request for authentication which failed, we
+                // send back a 403/FORBIDDEN here to indicate failure
+                // Resoning:
+                //  - using 401 would technically be correct but the browsers
+                //    intercept these even for ajax requests. so sending 403
+                //    indicates wrong credentials but allows processing without
+                //    browser intervention
+                //  - setting status only instead of using sendError prevents
+                //    any error handling scripts from kicking in (and
+                //    potentially modifying the result)
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
             } else {
-                
-                // have no form, so just send 401/UNATHORIZED for simple login
-                sendUnauthorized(response);
-                
+
+                response.setStatus(HttpServletResponse.SC_OK);
+
+                String form = getLoginForm();
+
+                if (form != null) {
+
+                    form = replaceVariables(
+                        form,
+                        "@@loggedIn@@",
+                        String.valueOf(request.getAttribute(HttpContext.AUTHENTICATION_TYPE) != null),
+                        "false");
+                    form = replaceVariables(form, "@@contextPath@@",
+                        request.getContextPath(), "/");
+                    form = replaceVariables(form, "@@authType@@",
+                        request.getAuthType(), "");
+                    form = replaceVariables(form, "@@user@@",
+                        request.getRemoteUser(), "");
+
+                    response.setContentType("text/html");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().print(form);
+
+                } else {
+
+                    // have no form, so just send 401/UNATHORIZED for simple login
+                    sendUnauthorized(response);
+
+                }
+
             }
-            
+
         } else {
 
             log.error("requestAuthentication: Response is committed, cannot request authentication");
@@ -207,6 +233,14 @@ public class AuthorizationHeaderAuthenticationHandler implements
         }
 
         return true;
+    }
+
+    /**
+     * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set in
+     * the request.
+     */
+    private boolean isLoginRequested(HttpServletRequest request) {
+        return request.getParameter(REQUEST_LOGIN_PARAMETER) != null;
     }
 
     /**
@@ -220,7 +254,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * <code>false</code> is returned if the request parameter is not set, if
      * the response is already committed or if an error occurred sending the
      * status response. The latter two situations are logged as errors.
-     * 
+     *
      * @param request The request object
      * @param response The response object to which to send the request
      * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
@@ -232,7 +266,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
         // presume 401/UNAUTHORIZED has not been sent
         boolean authenticationForced = false;
 
-        if (request.getParameter(REQUEST_LOGIN_PARAMETER) != null) {
+        if (isLoginRequested(request)) {
 
             if (!response.isCommitted()) {
 
@@ -243,25 +277,25 @@ public class AuthorizationHeaderAuthenticationHandler implements
                 log.error("forceAuthentication: Response is committed, cannot request authentication");
 
             }
-            
+
         } else {
-            
+
             log.debug(
                 "forceAuthentication: Not forcing authentication because request parameter {} is not set",
                 REQUEST_LOGIN_PARAMETER);
-            
+
         }
 
         // true if 401/UNAUTHORIZED has been sent, false otherwise
         return authenticationForced;
     }
-    
+
     /**
      * Sends status <code>401</code> (Unauthorized) with a
      * <code>WWW-Authenticate</code> requesting standard HTTP header
      * authentication with the <code>Basic</code> scheme and the configured
      * realm name.
-     * 
+     *
      * @param response The response object to which to send the request
      * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
      *         been sent.
@@ -406,12 +440,12 @@ public class AuthorizationHeaderAuthenticationHandler implements
                     }
 
                 }
-                
+
             } else {
-                
+
                 log.error("getLoginForm: Cannot access login form template at "
                     + LOGIN_FORM_TEMPLATE);
-                
+
             }
         }
 
@@ -422,7 +456,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * Replaces all occurrences in the <code>template</code> of the
      * <code>key</code> (a regular expression) by the <code>value</code> or
      * <code>defaultValue</code>.
-     * 
+     *
      * @param template The template to replace occurences of key
      * @param key The regular expression of the key to replace
      * @param value The replacement value

@@ -58,7 +58,7 @@ table {
 <script>
   // fix the display of login/logout
   function onLoad() {
-      if ('@@authType@@') {
+      if (@@loggedIn@@) {
           document.getElementById("logout").style.display = "block";
       } else {
           document.getElementById("login").style.display = "block";
@@ -99,15 +99,24 @@ table {
         xmlhttp.abort();
       }
 
+      // send a synchronous request
       xmlhttp.open('POST', '@@contextPath@@?sling:authRequestLogin=1', false, user, pass);
       xmlhttp.send('');
+
+      // success if everything went smoothly      
+      return xmlhttp.status == 200;
   }
-          
+   
   function loginuser() {
     var user = document.forms['login'].usr.value;
     var pass = document.forms['login'].pwd.value;
-    sendRequest(user, pass);
-    document.location = document.location
+    if (sendRequest(user, pass)) {
+        document.location = document.location;
+    } else {
+        alert("Wrong user name or password. Try again!");
+        sendRequest('__failed_login_user__', 'null');
+    }
+
     return false;
   }
 
@@ -122,7 +131,7 @@ table {
           document.execCommand('ClearAuthenticationCache');
   
       } catch (e) {
-          sendRequest('__forced_logout_user__', 'null');
+        sendRequest('__forced_logout_user__', 'null');
       }
   
       document.location = document.location
@@ -148,7 +157,7 @@ table {
   </tr>
   <tr>
     <td colspan='2' align='center'><input type='submit'
-      value='Login' onClick='loginuser();' /></td>
+      value='Login' /></td>
   </tr>
 </table>
 </form>
