@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Dictionary;
 
 import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
@@ -59,6 +60,11 @@ public class AuthorizationHeaderAuthenticationHandler implements
     public static final String PAR_REALM_NAME = "auth.http.realm";
 
     /**
+     * @scr.property valueRef="DEFAULT_FORM_LOGIN" type="Boolean"
+     */
+    private static final String PAR_FORM_LOGIN = "auth.http.form";
+
+    /**
      * The request parameter causing a 401/UNAUTHORIZED status to be sent back
      * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
      * method if no credentials are present in the request (value is
@@ -84,12 +90,16 @@ public class AuthorizationHeaderAuthenticationHandler implements
 
     private static final String DEFAULT_REALM = "Sling (Development)";
 
+    private static final boolean DEFAULT_FORM_LOGIN = true;
+
     private static final String LOGIN_FORM_TEMPLATE = "LoginFormTemplate.html";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String realm = DEFAULT_REALM;
+
+    private boolean isFormLogin = DEFAULT_FORM_LOGIN;
 
     private String loginFormTemplate;
 
@@ -195,11 +205,11 @@ public class AuthorizationHeaderAuthenticationHandler implements
 
             } else {
 
-                response.setStatus(HttpServletResponse.SC_OK);
-
                 String form = getLoginForm();
 
                 if (form != null) {
+
+                    response.setStatus(HttpServletResponse.SC_OK);
 
                     form = replaceVariables(
                         form,
@@ -225,6 +235,9 @@ public class AuthorizationHeaderAuthenticationHandler implements
                 }
 
             }
+
+            // ensure the response is sent to the client
+            response.flushBuffer();
 
         } else {
 
@@ -318,7 +331,8 @@ public class AuthorizationHeaderAuthenticationHandler implements
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext componentContext) {
-        String newRealm = (String) componentContext.getProperties().get(
+        Dictionary<?, ?> props = componentContext.getProperties();
+        String newRealm = (String) props.get(
             PAR_REALM_NAME);
         if (newRealm == null || newRealm.length() == 0) {
             newRealm = DEFAULT_REALM;
@@ -326,6 +340,15 @@ public class AuthorizationHeaderAuthenticationHandler implements
         if (!newRealm.equals(this.realm)) {
             log.info("Setting new realm name {} (was {})", newRealm, this.realm);
             this.realm = newRealm;
+        }
+
+        Object doForm = props.get(PAR_FORM_LOGIN);
+        if (doForm == null) {
+            this.isFormLogin = DEFAULT_FORM_LOGIN;
+        } else if (doForm instanceof Boolean) {
+            this.isFormLogin = ((Boolean) doForm).booleanValue();
+        } else {
+            this.isFormLogin = Boolean.parseBoolean(String.valueOf(doForm));
         }
     }
 
@@ -411,6 +434,11 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * cannot be read. Failure to read the template is logged.
      */
     private String getLoginForm() {
+        // login form is disabled, return nothing
+        if (!isFormLogin) {
+            return null;
+        }
+
         if (loginFormTemplate == null) {
             InputStream ins = getClass().getResourceAsStream(
                 LOGIN_FORM_TEMPLATE);
