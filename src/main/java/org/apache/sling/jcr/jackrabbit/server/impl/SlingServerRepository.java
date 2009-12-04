@@ -40,8 +40,8 @@ import org.osgi.service.log.LogService;
  * The <code>SlingServerRepository</code> TODO
  *
  * @scr.component label="%repository.name" description="%repository.description"
- *          factory="org.apache.sling.jcr.jackrabbit.server.SlingServerRepositoryFactory"
  *          name="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository"
+ *          configurationFactory="true" configuration-policy="require"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
@@ -81,14 +81,14 @@ public class SlingServerRepository extends AbstractSlingRepository
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
     //---------- Repository Management ----------------------------------------
-    
+
     @Override
     protected Repository acquireRepository() {
         Repository repository = super.acquireRepository();
         if (repository != null) {
             return repository;
         }
-        
+
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
@@ -100,7 +100,7 @@ public class SlingServerRepository extends AbstractSlingRepository
             String derbyLog = home + "/derby.log";
             System.setProperty("derby.stream.error.file", derbyLog);
         }
-        
+
         InputStream ins = null;
         try {
 
@@ -117,15 +117,15 @@ public class SlingServerRepository extends AbstractSlingRepository
 
             RepositoryConfig crc = RepositoryConfig.create(ins, home);
             return RepositoryImpl.create(crc);
-            
+
         } catch (IOException ioe) {
-            
+
             log(LogService.LOG_ERROR,
                 "acquireRepository: IO problem starting repository from "
                     + configURLObj + " in " + home, ioe);
-            
+
         } catch (RepositoryException re) {
-            
+
             log(LogService.LOG_ERROR,
                 "acquireRepository: Repository problem starting repository from "
                     + configURLObj + " in " + home, re);
@@ -138,17 +138,17 @@ public class SlingServerRepository extends AbstractSlingRepository
                 }
             }
         }
-        
+
         // got no repository ....
         return null;
     }
-    
+
     @Override
     protected void disposeRepository(Repository repository) {
         super.disposeRepository(repository);
 
         if (repository instanceof RepositoryImpl) {
-            
+
             try {
                 ((RepositoryImpl) repository).shutdown();
             } catch (Throwable t) {
@@ -156,13 +156,13 @@ public class SlingServerRepository extends AbstractSlingRepository
                     "deactivate: Unexpected problem shutting down repository",
                     t);
             }
-            
+
         } else {
             log(LogService.LOG_INFO,
                 "Repository is not a RepositoryImpl, nothing to do");
         }
     }
-    
+
     //---------- Helper -------------------------------------------------------
 
     public static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException {
