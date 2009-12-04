@@ -114,7 +114,13 @@ public class JcrResourceResolverWebConsolePlugin extends
         titleHtml(
             pw,
             "Configuration Test",
-            "To test the configuration, enter an URL or a resource path into the field and click 'Resolve' to resolve the URL or click 'Map' to map the resource path");
+            "To test the configuration, enter an URL or a resource path into " +
+            "the field and click 'Resolve' to resolve the URL or click 'Map' " +
+            "to map the resource path. To simulate a map call that takes the " +
+            "current request into account, provide a full URL whose " +
+            "scheme/host/port prefix will then be used as the request " +
+            "information. The path passed to map will always be the path part " +
+            "of the URL.");
 
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>Test</td>");
@@ -180,7 +186,11 @@ public class JcrResourceResolverWebConsolePlugin extends
                 // map or resolve as instructed
                 Object result;
                 if ("Map".equals(request.getParameter(ATTR_SUBMIT))) {
-                    result = resolver.map(helper, helper.getPathInfo());
+                    if (helper.getRemoteHost() == null) {
+                        result = resolver.map(helper.getPathInfo());
+                    } else {
+                        result = resolver.map(helper, helper.getPathInfo());
+                    }
                 } else {
                     result = resolver.resolve(helper, helper.getPathInfo());
                 }
