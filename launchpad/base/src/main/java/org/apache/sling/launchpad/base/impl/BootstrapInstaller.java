@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -253,7 +254,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
 
                 // done with copying at this point
             }
-            
+
             // get the set of all existing (installed) bundles by symbolic name
             Bundle[] bundles = context.getBundles();
             Map<String, Bundle> bySymbolicName = new HashMap<String, Bundle>();
@@ -653,7 +654,9 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         // start all bundles
         for (Bundle bundle : bundles) {
             try {
-                bundle.start();
+                if (!isFragment(bundle)) {
+                    bundle.start();
+                }
             } catch (BundleException be) {
                 logger.log(Logger.LOG_ERROR, "Bundle "
                     + bundle.getSymbolicName() + " could not be started", be);
@@ -783,6 +786,15 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         }
 
         return newVersion.compareTo(installedVersion) <= 0;
+    }
+
+    /**
+     * Returns <code>true</code> if the bundle must be assumed to be a fragment
+     * according to its <code>Fragment-Host</code> header.
+     */
+    private static boolean isFragment(Bundle bundle) {
+        Dictionary<?, ?> headerMap = bundle.getHeaders();
+        return headerMap.get(Constants.FRAGMENT_HOST) != null;
     }
 
     /**
