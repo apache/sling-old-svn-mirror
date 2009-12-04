@@ -34,7 +34,6 @@ import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 
 /**
  * The <code>Main</code> class is a simple Java Application which interprests
@@ -93,11 +92,6 @@ public class MainDelegate implements Launcher {
 
     /** The default port on which the HTTP service listens. */
     private static final String DEFAULT_PORT = "8080";
-
-    /**
-     * The property value to export the Servlet API 2.5 from the system bundle.
-     */
-    private static final String SERVLET_API_EXPORT = "javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.5";
 
     private Notifiable notifiable;
 
@@ -174,16 +168,6 @@ public class MainDelegate implements Launcher {
                     if (commandLine != null) {
                         properties.putAll(commandLine);
                     }
-
-                    // add Servlet API to the system bundle exports
-                    String sysExport = properties.get(Constants.FRAMEWORK_SYSTEMPACKAGES);
-                    if (sysExport == null) {
-                        sysExport = SERVLET_API_EXPORT;
-                    } else {
-                        sysExport += "," + SERVLET_API_EXPORT;
-                    }
-                    properties.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
-                        sysExport);
                 }
             };
 
