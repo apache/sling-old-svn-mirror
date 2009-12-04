@@ -83,6 +83,26 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- Launcher Felix HttpService Bridge -->
+                    <execution>
+                        <id>copy-felix-httpservice-bridge</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>org.apache.felix.http.bridge</includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/felix-bridge
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
@@ -132,14 +152,21 @@
                             <packagingIncludes>
                                 META-INF/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/webapp/**
+                                WEB-INF/classes/org/apache/sling/launchpad/webapp/**,
+                                WEB-INF/resources/**
                             </packagingIncludes>
-                            <!-- ensure the legalize stuff is in the war -->
                             <webResources>
+                                <!-- ensure the legalize stuff is in the war -->
                                 <webResource>
                                     <targetPath />
                                     <filtering>false</filtering>
                                     <directory>${project.build.directory}/maven-shared-archive-resources</directory>
+                                </webResource>
+                                <!-- ensure the Felix HttpService bundle is in the war -->
+                                <webResource>
+                                    <targetPath>/WEB-INF/resources/bundles/0</targetPath>
+                                    <filtering>false</filtering>
+                                    <directory>${project.build.directory}/felix-bridge</directory>
                                 </webResource>
                             </webResources>
                         </configuration>
@@ -185,6 +212,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
+            <version>${felix.httpservice.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.bridge</artifactId>
             <version>${felix.httpservice.version}</version>
             <scope>provided</scope>
         </dependency>
