@@ -26,6 +26,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -39,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for all the POST servlets for the AccessManager operations 
+ * Base class for all the POST servlets for the AccessManager operations
  */
 public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
 	private static final long serialVersionUID = -5918670409789895333L;
@@ -48,7 +52,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
-   
+
 	/* (non-Javadoc)
 	 * @see org.apache.sling.api.servlets.SlingAllMethodsServlet#doPost(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
 	 */
@@ -76,12 +80,12 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         final List<Modification> changes = new ArrayList<Modification>();
-       
+
         try {
             handleOperation(request, htmlResponse, changes);
-           
+
             //TODO: maybe handle SlingAuthorizablePostProcessor handlers here
-           
+
             // set changes on html response
             for(Modification change : changes) {
                 switch ( change.getType() ) {
@@ -93,7 +97,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
                     case ORDER : htmlResponse.onChange("ordered", change.getSource(), change.getDestination()); break;
                 }
             }
-           
+
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -115,7 +119,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
                     e.getMessage(), e);
             }
         }
-       
+
         // check for redirect URL if processing succeeded
         if (htmlResponse.isSuccessful()) {
             String redirect = getRedirectUrl(request, htmlResponse);
@@ -138,8 +142,8 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
 	 */
 	abstract protected void handleOperation(SlingHttpServletRequest request,
 			HtmlResponse htmlResponse, List<Modification> changes) throws RepositoryException;
-	
-	
+
+
     /**
      * compute redirect URL (SLING-126)
      *
@@ -213,7 +217,7 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
             SlingPostConstants.RP_STATUS);
         return true;
     }
-	
+
 	// ------ These methods were copied from AbstractSlingPostOperation ------
 
     /**
@@ -250,5 +254,50 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
 
         return ret.toString();
     }
-   
+
+    /**
+     * Returns an <code>AccessControlList</code> to edit for the node at the
+     * given <code>resourcePath</code>.
+     *
+     * @param accessControlManager The manager providing access control lists
+     * @param resourcePath The node path for which to return an access control
+     *            list
+     * @param mayCreate <code>true</code> if an access control list should be
+     *            created if the node does not have one yet.
+     * @return The <code>AccessControlList</code> to modify to control access to
+     *         the node.
+     * @throws RepositoryException If the access control manager does not
+     *             provide a <code>AccessControlPolicy</code> which is an
+     *             <code>AccessControlList</code>.
+     */
+    protected AccessControlList getAccessControlList(
+            final AccessControlManager accessControlManager,
+            final String resourcePath, final boolean mayCreate)
+            throws RepositoryException {
+
+        // check for an existing access control list to edit
+        AccessControlPolicy[] policies = accessControlManager.getPolicies(resourcePath);
+        for (AccessControlPolicy policy : policies) {
+            if (policy instanceof AccessControlList) {
+                return (AccessControlList) policy;
+            }
+        }
+
+        // no existing access control list, try to create if allowed
+        if (mayCreate) {
+            AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
+            while (applicablePolicies.hasNext()) {
+                AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
+                if (policy instanceof AccessControlList) {
+                    return (AccessControlList) policy;
+                }
+            }
+        }
+
+        // neither an existing nor a create AccessControlList is available, fail
+        throw new RepositoryException(
+            "Unable to find or create an access control policy to update for "
+                + resourcePath);
+
+    }
 }

@@ -28,8 +28,6 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -132,8 +130,8 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
     			throw new ResourceNotFoundException("Resource is not a JCR Node");
     		}
     	}
-		
-		
+
+
 		List<String> grantedPrivilegeNames = new ArrayList<String>();
 		List<String> deniedPrivilegeNames = new ArrayList<String>();
 		Enumeration parameterNames = request.getParameterNames();
@@ -158,18 +156,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 
 		try {
 			AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
-			AccessControlList updatedAcl = null;
-			AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
-			while (applicablePolicies.hasNext()) {
-				AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
-				if (policy instanceof AccessControlList) {
-					updatedAcl = (AccessControlList)policy;
-					break;
-				}
-			}
-			if (updatedAcl == null) {
-				throw new RepositoryException("Unable to find an access conrol policy to update.");
-			}
+			AccessControlList updatedAcl = getAccessControlList(accessControlManager, resourcePath, true);
 
 			StringBuilder oldPrivileges = null;
 			StringBuilder newPrivileges = null;
@@ -187,7 +174,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 						log.debug("Found Existing ACE for principal {0} on resource: ", new Object[] {principalId, resourcePath});
 					}
 					oldAces.add(ace);
-					
+
 					if (log.isDebugEnabled()) {
 						//collect the information for debug logging
 						boolean isAllow = AccessControlUtil.isAllow(ace);
@@ -213,7 +200,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 					updatedAcl.removeAccessControlEntry(ace);
 				}
 			}
-			
+
 			//add a fresh ACE with the granted privileges
 			List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
 			for (String name : grantedPrivilegeNames) {
@@ -222,7 +209,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 				}
 				Privilege privilege = accessControlManager.privilegeFromName(name);
 				grantedPrivilegeList.add(privilege);
-					
+
 				if (log.isDebugEnabled()) {
 					if (newPrivileges.length() > 0) {
 						newPrivileges.append(", "); //separate entries by commas
