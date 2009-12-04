@@ -29,8 +29,6 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -86,7 +84,7 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet {
 	protected void handleOperation(SlingHttpServletRequest request,
 			HtmlResponse htmlResponse, List<Modification> changes)
 			throws RepositoryException {
-		
+
         String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
         if (applyTo == null) {
 			throw new RepositoryException("principalIds were not sumitted.");
@@ -103,31 +101,20 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet {
         			throw new ResourceNotFoundException("Resource is not a JCR Node");
         		}
         	}
-        	
+
     		Session session = request.getResourceResolver().adaptTo(Session.class);
     		if (session == null) {
     			throw new RepositoryException("JCR Session not found");
     		}
-        	
+
     		//load the principalIds array into a set for quick lookup below
 			Set<String> pidSet = new HashSet<String>();
 			pidSet.addAll(Arrays.asList(applyTo));
-			
+
 			try {
 				AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
-				AccessControlList updatedAcl = null;
-				AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
-				while (applicablePolicies.hasNext()) {
-					AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
-					if (policy instanceof AccessControlList) {
-						updatedAcl = (AccessControlList)policy;
-						break;
-					}
-				}
-				if (updatedAcl == null) {
-					throw new RepositoryException("Unable to find an access control policy to update.");
-				}
-				
+				AccessControlList updatedAcl = getAccessControlList(accessControlManager, resourcePath, false);
+
 				//keep track of the existing Aces for the target principal
 				AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
 				List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
@@ -143,7 +130,7 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet {
 						updatedAcl.removeAccessControlEntry(ace);
 					}
 				}
-				
+
 				//apply the changed policy
 				accessControlManager.setPolicy(resourcePath, updatedAcl);
 			} catch (RepositoryException re) {
