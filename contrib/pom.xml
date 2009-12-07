@@ -102,6 +102,8 @@
           <module>scripting/ruby</module>
           <module>scripting/scala/engine</module>
           <module>scripting/scala/interpreter</module>
+          <module>scripting/scala/samples/hello-world</module>
+          <module>scripting/scala/samples/forum</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
           <module>launchpad/jcrapp</module>
@@ -117,7 +119,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>launchpad/testing</module>
+                <module>launchpad/testing</module> 
             </modules>
         </profile>
     </profiles>
