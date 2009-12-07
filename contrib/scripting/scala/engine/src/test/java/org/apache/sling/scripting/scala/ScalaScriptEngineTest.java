@@ -44,7 +44,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
     }
 
     public void testEvalString() throws ScriptException, InvocationTargetException {
-        String code = "package a { object Testi { print(1 + 2)}}";
+        String code = "package a { class Testi(vars: TestiVars) { print(1 + 2)}}";
         assertEquals("3", evalScala(code));
     }
 
@@ -70,7 +70,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
             // expected
         }
     }
-    
+
     public void testDefaultPackage() {
         String code = "package a { object Testi { print(1 + 2)}}";
         try {
@@ -91,7 +91,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
 
     public void testNodeAccess() throws RepositoryException, NamingException, ScriptException, InvocationTargetException {
         Node n = getTestRootNode();
-        String code = "package a { import Testi_Bindings._; object Testi { print(n.getPath)}}";
+        String code = "package a { class Testi(vars: TestiVars) { import vars._; print(n.getPath)}}";
         ScalaBindings bindings = new ScalaBindings();
         bindings.put("n", n, Node.class);
         assertEquals(n.getPath(), evalScala(code, bindings));
@@ -108,12 +108,12 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
 
         AbstractFile src = srcDir.fileNamed("Testi");
         PrintWriter writer = new PrintWriter(src.output());
-        writer.print("package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}");
+        writer.print("package a { class Testi(vars: TestiVars) { import vars._; print(msg + \": \" + time)}}");
         writer.close();
 
         evalScala(SCRIPT_NAME, src, bindings);
     }
-    
+
     protected String createScriptName() {
         return SCRIPT_NAME;
     }

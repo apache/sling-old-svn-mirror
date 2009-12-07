@@ -108,8 +108,8 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
    */
   @throws(classOf[InterpreterException])
   protected def preProcess(name: String, code: String, bindings: Bindings): String = {
-    def bind(a: (String, Argument[_])) =
-      "lazy val " + a._1 + " = bindings.getValue(\"" + a._1 + "\").asInstanceOf[" + a._2.getType.getName + "]"
+    def bind(arg: (String, Argument[_])) =
+      "lazy val " + arg._1 + " = bindings.getValue(\"" + arg._1 + "\").asInstanceOf[" + arg._2.getType.getName + "]"
 
     val compounds = packetize(name)
 
@@ -121,18 +121,16 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
 
     code + NL + 
     packageDeclaration + " {" + NL + 
-    "  object " + className + "_Bindings { " + NL +
-    "    var bindings: org.apache.sling.scripting.scala.interpreter.Bindings = null" + NL + 
-         bindings.map(bind).mkString("", NL, NL) +
+    "  class " + className + "Vars(bindings: org.apache.sling.scripting.scala.interpreter.Bindings) { " + NL +
+         bindings.map(bind).mkString(NL) + NL + 
     "  } " + NL + 
     "  object " + className + "Runner {" + NL +
     "    def main(bindings: org.apache.sling.scripting.scala.interpreter.Bindings," + NL +
     "             stdIn: java.io.InputStream," + NL +
     "             stdOut: java.io.OutputStream) {" + NL +
-           className + "_Bindings.bindings = bindings" + NL +  
     "      Console.withIn(stdIn) {" + NL +
     "        Console.withOut(stdOut) {" + NL +
-               className + NL +
+    "          new " + className + "(new " + className + "Vars(bindings))" + NL +
     "          stdOut.flush" + NL +
     "        }" + NL +
     "      }" + NL +

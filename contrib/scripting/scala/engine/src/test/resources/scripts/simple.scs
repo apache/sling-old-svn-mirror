@@ -1,7 +1,5 @@
 package a {
-  import Testi_Bindings._
-  
-  object Testi {
+  class Testi(vars: TestiVars) {
     print(1 + 2)
   }
 }

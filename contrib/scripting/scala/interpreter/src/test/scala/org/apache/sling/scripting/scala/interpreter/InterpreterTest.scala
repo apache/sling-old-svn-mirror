@@ -74,7 +74,7 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
-    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"
 
     val out = new java.io.ByteArrayOutputStream
@@ -97,7 +97,7 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
-    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"
     
     val src = srcDir.fileNamed("Testi")
@@ -125,7 +125,7 @@ class InterpreterTest extends TestCase {
     bindings.put("msg", "Hello world", classOf[String])
     bindings.put("time", time, classOf[java.util.Date])
 
-    val code = "package a { import Testi_Bindings._; object Testi { print(msg + \": \" + time)}}"
+    val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"
                                        
     val src = srcDir.fileNamed("Testi")
