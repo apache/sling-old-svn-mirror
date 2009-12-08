@@ -27,127 +27,139 @@ public class RedirectServletTest extends TestCase {
     public void testSameParent() {
         String base = "/a";
         String target = "/b";
-        assertEquals("b", toRedirect(base, target));
+        assertEquals("/b", toRedirect(base, target));
 
         base = "/";
         target = "/a";
-        assertEquals("a", toRedirect(base, target));
+        assertEquals("/a", toRedirect(base, target));
 
         base = "/a/b/c";
         target = "/a/b/d";
-        assertEquals("d", toRedirect(base, target));
+        assertEquals("/a/b/d", toRedirect(base, target));
     }
 
     public void testTrailingSlash() {
         String base = "/a/b/c/";
         String target = "/a/b/c.html";
-        assertEquals("../c.html", toRedirect(base, target));
+        assertEquals("/a/b/c.html", toRedirect(base, target));
     }
 
     public void testCommonAncestor() {
         String base = "/a/b/c/d";
         String target = "/a/b/x/y";
-        assertEquals("../x/y", toRedirect(base, target));
+        assertEquals("/a/b/x/y", toRedirect(base, target));
     }
 
     public void testChild() {
         String base = "/a.html";
         String target = "/a/b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/a/b.html", toRedirect(base, target));
 
         base = "/a";
         target = "/a/b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/a/b.html", toRedirect(base, target));
 
         base = "/a";
         target = "/a/b";
-        assertEquals("a/b", toRedirect(base, target));
+        assertEquals("/a/b", toRedirect(base, target));
 
         base = "/a.html";
         target = "/a/b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/a/b/c.html", toRedirect(base, target));
 
         base = "/a";
         target = "/a/b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/a/b/c.html", toRedirect(base, target));
 
         base = "/a";
         target = "/a/b/c";
-        assertEquals("a/b/c", toRedirect(base, target));
+        assertEquals("/a/b/c", toRedirect(base, target));
     }
 
     public void testChildNonRoot() {
         String base = "/x/a.html";
         String target = "/x/a/b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/x/a/b.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "/x/a/b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/x/a/b.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "/x/a/b";
-        assertEquals("a/b", toRedirect(base, target));
+        assertEquals("/x/a/b", toRedirect(base, target));
 
         base = "/x/a.html";
         target = "/x/a/b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/x/a/b/c.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "/x/a/b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/x/a/b/c.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "/x/a/b/c";
-        assertEquals("a/b/c", toRedirect(base, target));
+        assertEquals("/x/a/b/c", toRedirect(base, target));
     }
 
     public void testChildRelative() {
         String base = "/a";
         String target = "b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/a/b.html", toRedirect(base, target));
 
         base = "/a";
         target = "b";
-        assertEquals("a/b", toRedirect(base, target));
+        assertEquals("/a/b", toRedirect(base, target));
 
         base = "/a";
         target = "b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/a/b/c.html", toRedirect(base, target));
 
         base = "/a";
         target = "b/c";
-        assertEquals("a/b/c", toRedirect(base, target));
+        assertEquals("/a/b/c", toRedirect(base, target));
     }
 
     public void testChildNonRootRelative() {
         String base = "/x/a";
         String target = "b.html";
-        assertEquals("a/b.html", toRedirect(base, target));
+        assertEquals("/x/a/b.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "b";
-        assertEquals("a/b", toRedirect(base, target));
+        assertEquals("/x/a/b", toRedirect(base, target));
 
         base = "/x/a";
         target = "b/c.html";
-        assertEquals("a/b/c.html", toRedirect(base, target));
+        assertEquals("/x/a/b/c.html", toRedirect(base, target));
 
         base = "/x/a";
         target = "b/c";
-        assertEquals("a/b/c", toRedirect(base, target));
+        assertEquals("/x/a/b/c", toRedirect(base, target));
     }
 
     public void testUnCommon() {
         String base = "/a/b/c/d";
         String target = "/w/x/y/z";
-        assertEquals("../../../w/x/y/z", toRedirect(base, target));
+        assertEquals("/w/x/y/z", toRedirect(base, target));
+    }
+
+    public void testSibbling() {
+        String base = "/a/b";
+        String target0 = "../y/z";
+        assertEquals("/a/y/z", toRedirect(base, target0));
+
+        String target1 = "../../y/z";
+        assertEquals("/y/z", toRedirect(base, target1));
+
+        String target2 = "../../../y/z";
+        assertEquals(base + "/" + target2, toRedirect(base, target2));
     }
 
     public void testSelectorsEtc() {
         String base = "/a/b/c";
         String target = "/a/b/d";
-        String expected = "d";
+        String expected = "/a/b/d";
 
         String selectors = null;
         String extension = null;
@@ -181,8 +193,8 @@ public class RedirectServletTest extends TestCase {
         extension = "html";
         suffix = "/suffix.pdf";
         queryString = null;
-        assertEquals("../" + expected, base, selectors, extension, suffix,
-            queryString, target);
+        assertEquals(expected, base, selectors, extension, suffix, queryString,
+            target);
 
         selectors = null;
         extension = "html";
@@ -195,15 +207,15 @@ public class RedirectServletTest extends TestCase {
         extension = "html";
         suffix = "/suffix.pdf";
         queryString = "xy=1";
-        assertEquals("../" + expected, base, selectors, extension, suffix,
-            queryString, target);
+        assertEquals(expected, base, selectors, extension, suffix, queryString,
+            target);
 
         selectors = "print.a4";
         extension = "html";
         suffix = "/suffix.pdf";
         queryString = "xy=1";
-        assertEquals("../" + expected, base, selectors, extension, suffix,
-            queryString, target);
+        assertEquals(expected, base, selectors, extension, suffix, queryString,
+            target);
     }
 
     private void assertEquals(String expected, String basePath,
@@ -242,13 +254,13 @@ public class RedirectServletTest extends TestCase {
     }
 
     public void testEmptyPath() {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest(
-                "/", null, null, null, null, "");
+        SlingHttpServletRequest request = new MockSlingHttpServletRequest("/",
+            null, null, null, null, "", "/webapp");
         String path = RedirectServlet.toRedirectPath("/index.html", request);
         assertEquals("/webapp/index.html", path);
-        request = new MockSlingHttpServletRequest(
-                "/", null, null, null, null, "/");
+        request = new MockSlingHttpServletRequest("/", null, null, null, null,
+            "/", "/webapp");
         path = RedirectServlet.toRedirectPath("/index.html", request);
-        assertEquals("index.html", path);
+        assertEquals("/webapp/index.html", path);
     }
 }
