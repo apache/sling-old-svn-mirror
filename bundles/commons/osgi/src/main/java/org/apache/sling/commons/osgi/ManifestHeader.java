@@ -51,7 +51,7 @@ public class ManifestHeader {
         String getAttributeValue(String name);
 
         String getDirectiveValue(String name);
-}
+    }
 
     /** The entries for this header. */
     private Entry[] entries = new Entry[0];
