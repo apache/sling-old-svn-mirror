@@ -48,24 +48,28 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private final String queryString;
 
+    private final ResourceResolver resourceResolver = new MockResourceResolver();
+
+    private final String contextPath;
+
     MockSlingHttpServletRequest() {
         this(null, null, null, null, null);
     }
 
     public MockSlingHttpServletRequest(String resourcePath, String selectors,
             String extension, String suffix, String queryString) {
-        this.resource = new SyntheticResource(null, resourcePath, null);
-        this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
-            suffix, resourcePath);
-        this.queryString = queryString;
+        this(resourcePath, selectors, extension, suffix, queryString,
+            resourcePath, "");
     }
 
     public MockSlingHttpServletRequest(String resourcePath, String selectors,
-            String extension, String suffix, String queryString, String requestPath) {
+            String extension, String suffix, String queryString,
+            String requestPath, String contextPath) {
         this.resource = new SyntheticResource(null, resourcePath, null);
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
             suffix, requestPath);
         this.queryString = queryString;
+        this.contextPath = contextPath;
     }
 
     public Cookie getCookie(String name) {
@@ -119,7 +123,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public ResourceResolver getResourceResolver() {
-        return null;
+        return resourceResolver;
     }
 
     public String getResponseContentType() {
@@ -135,7 +139,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getContextPath() {
-        return "/webapp";
+        return contextPath;
     }
 
     public Cookie[] getCookies() {

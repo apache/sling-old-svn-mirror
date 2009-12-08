@@ -28,36 +28,35 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to
- * resources of type <code>sling:redirect</code>. This servlet tries to
- * get the redirect target by
+ * resources of type <code>sling:redirect</code>. This servlet tries to get the
+ * redirect target by
  * <ul>
- * <li>first adapting the resource to a {@link ValueMap} and trying
- * to get the property <code>sling:target</code>.</li>
+ * <li>first adapting the resource to a {@link ValueMap} and trying to get the
+ * property <code>sling:target</code>.</li>
  * <li>The second attempt is to access the resource <code>sling:target</code>
  * below the requested resource and attapt this to a string.</li>
  * <p>
  * If there is no value found for <code>sling:target</code> a 404 (NOT FOUND)
- * status is
- * sent by this servlet. Otherwise a 302 (FOUND, temporary redirect) status is
- * sent where the target is the relative URL from the current resource to the
- * target resource. Selectors, extension, suffix and query string are also
- * appended to the redirect URL.
+ * status is sent by this servlet. Otherwise a 302 (FOUND, temporary redirect)
+ * status is sent where the target is the relative URL from the current resource
+ * to the target resource. Selectors, extension, suffix and query string are
+ * also appended to the redirect URL.
  *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- *
  * @scr.property name="service.description" value="Request Redirect Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
  * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"
  * @scr.property name="sling.servlet.methods" value="GET"
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
+ * @scr.property name="sling.servlet.prefix" value="-1" type="Integer"
+ *               private="true"
  */
 public class RedirectServlet extends SlingSafeMethodsServlet {
 
@@ -82,13 +81,13 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         // convert resource to a value map
         final Resource rsrc = request.getResource();
         final ValueMap valueMap = rsrc.adaptTo(ValueMap.class);
-        if ( valueMap != null ) {
+        if (valueMap != null) {
             targetPath = valueMap.get(TARGET_PROP, String.class);
         }
-        if ( targetPath == null ) {
+        if (targetPath == null) {
             // old behaviour
             final Resource targetResource = request.getResourceResolver().getResource(
-                    rsrc, TARGET_PROP);
+                rsrc, TARGET_PROP);
             if (targetResource == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Missing target for redirection");
@@ -102,8 +101,10 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         // if we got a target path, make it external and redirect to it
         if (targetPath != null) {
-            // make path relative and append selectors, extension etc.
-            targetPath = toRedirectPath(targetPath, request);
+            if (!isUrl(targetPath)) {
+                // make path relative and append selectors, extension etc.
+                targetPath = toRedirectPath(targetPath, request);
+            }
 
             // and redirect there ...
             response.sendRedirect(targetPath);
@@ -123,98 +124,50 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
      */
     protected static String toRedirectPath(String targetPath,
             SlingHttpServletRequest request) {
-        // first check for an absolute path
-        final int protocolIndex = targetPath.indexOf(":/");
-        final int queryIndex = targetPath.indexOf('?');
-        if (  protocolIndex > -1 && (queryIndex == -1 || queryIndex > protocolIndex) ) {
-            return targetPath;
-        }
 
-        String postFix;
-        RequestPathInfo rpi = request.getRequestPathInfo();
-        if (rpi.getExtension() != null) {
-            StringBuffer postfixBuf = new StringBuffer();
-            if (rpi.getSelectorString() != null) {
-                postfixBuf.append('.').append(rpi.getSelectorString());
-            }
-            postfixBuf.append('.').append(rpi.getExtension());
-            if (rpi.getSuffix() != null) {
-                postfixBuf.append(rpi.getSuffix());
-            }
-            postFix = postfixBuf.toString();
-        } else {
-            postFix = null;
-        }
+        // if the target path is an URL, do nothing and return it unmodified
+        final RequestPathInfo rpi = request.getRequestPathInfo();
 
-        String basePath = rpi.getResourcePath();
 
         // make sure the target path is absolute
-        if (!targetPath.startsWith("/")) {
-            if (!basePath.endsWith("/")) {
-                targetPath = "/".concat(targetPath);
+        final String rawAbsPath;
+        if (targetPath.startsWith("/")) {
+            rawAbsPath = targetPath;
+        } else {
+            rawAbsPath = request.getResource().getPath() + "/" + targetPath;
+        }
+
+        final StringBuilder target = new StringBuilder();
+
+        // and ensure the path is normalized, us unnormalized if not possible
+        final String absPath = ResourceUtil.normalize(rawAbsPath);
+        if (absPath == null) {
+            target.append(rawAbsPath);
+        } else {
+            target.append(absPath);
+        }
+
+        // append current selectors, extension and suffix
+        if (rpi.getExtension() != null) {
+
+            if (rpi.getSelectorString() != null) {
+                target.append('.').append(rpi.getSelectorString());
             }
-            targetPath = basePath.concat(targetPath);
+
+            target.append('.').append(rpi.getExtension());
+
+            if (rpi.getSuffix() != null) {
+                target.append(rpi.getSuffix());
+            }
         }
 
-        // append optional selectors etc.to the base path
-        if (postFix != null) {
-            basePath = basePath.concat(postFix);
-        }
-
-        StringBuffer pathBuf = new StringBuffer();
-
-        makeRelative(pathBuf, basePath, targetPath, request);
-
-        if (postFix != null) {
-            pathBuf.append(postFix);
-        }
-
+        // append current querystring
         if (request.getQueryString() != null) {
-            pathBuf.append('?').append(request.getQueryString());
+            target.append('?').append(request.getQueryString());
         }
 
-        return pathBuf.toString();
-    }
-
-    /**
-     * Converts the absolute path target into a path relative to base and stores
-     * this relative path into pathBuffer.
-     */
-    private static void makeRelative(StringBuffer pathBuffer, String base,
-            String target, SlingHttpServletRequest request) {
-        if ( base == null || base.length() == 0 ) {
-            final String ctxPath = request.getContextPath();
-            pathBuffer.append(ctxPath);
-            if ( ctxPath.endsWith("/") ) {
-                pathBuffer.append(target.substring(1));
-            } else {
-                pathBuffer.append(target);
-            }
-            return;
-        }
-        // pseudo entry to correctly calculate the relative path
-        if (base.endsWith("/")) {
-            base = base.concat(String.valueOf(Character.MAX_VALUE));
-        }
-
-        String[] bParts = base.substring(1).split("/");
-        String[] tParts = target.substring(1).split("/");
-
-        // find first non-matching part
-        int off;
-        for (off = 0; off < (bParts.length - 1) && off < tParts.length
-            && bParts[off].equals(tParts[off]); off++);
-
-        for (int i = bParts.length - off; i > 1; i--) {
-            pathBuffer.append("../");
-        }
-
-        for (int i = off; i < tParts.length; i++) {
-            if (i > off) {
-                pathBuffer.append('/');
-            }
-            pathBuffer.append(tParts[i]);
-        }
+        // return the mapped full path
+        return request.getResourceResolver().map(request, target.toString());
     }
 
     private Servlet getJsonRendererServlet() {
@@ -228,5 +181,19 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             jsonRendererServlet = jrs;
         }
         return jsonRendererServlet;
+    }
+
+    /**
+     * Returns <code>true</code> if the path is potentially an URL. This
+     * simplistic check looks for a ":/" string in the path assuming that this
+     * is a separator to separate the scheme from the scheme-specific part. If
+     * the separator occurs after a query separator ("?"), though, it is not
+     * assumed to be a scheme-separator.
+     */
+    private static boolean isUrl(final String path) {
+        final int protocolIndex = path.indexOf(":/");
+        final int queryIndex = path.indexOf('?');
+        return protocolIndex > -1
+            && (queryIndex == -1 || queryIndex > protocolIndex);
     }
 }
