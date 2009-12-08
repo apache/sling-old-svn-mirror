@@ -225,8 +225,20 @@ public class OsgiUtil {
         return defaultArray;
     }
 
+    /**
+     * Create an osgi event with the given topic and properties.
+     * If a bundle parameter is provided the symbolic name is added
+     * as a property.
+     * If a service parameter is provided, information about the service
+     * is added to the properties.
+     * @param sourceBundle Optional source bundle
+     * @param sourceService Optional source service
+     * @param topic The event topic.
+     * @param props A non-null map of properties for the event.
+     * @return The OSGi event.
+     */
     public static Event createEvent(Bundle sourceBundle,
-            ServiceReference sourceService, String eventName,
+            ServiceReference sourceService, String topic,
             Map<String, Object> props) {
 
         // get a private copy of the properties
@@ -259,7 +271,7 @@ public class OsgiUtil {
             new Long(System.currentTimeMillis()));
 
         // create the event
-        return new Event(eventName, table);
+        return new Event(topic, table);
     }
 
 }
