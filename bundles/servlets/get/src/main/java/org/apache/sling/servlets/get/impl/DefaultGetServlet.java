@@ -221,14 +221,17 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         if (rendererServlet == null) {
             request.getRequestProgressTracker().log(
                 "No renderer for extension " + ext);
-            final boolean isIncluded = request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null;
             // if this is an included request, sendError() would fail
-            // as the response is already committed, in this case we throw an exception
-            if ( isIncluded ) {
-                throw new ServletException("No renderer found for extension " + ext 
-                        + " while including " + request.getResource());
+            // as the response is already committed, in this case we just
+            // do nothing (but log an error message)
+            if (response.isCommitted()
+                || request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null) {
+                logger.error(
+                    "No renderer for extension {}, cannot render resource {}",
+                    ext, request.getResource());
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
             }
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
