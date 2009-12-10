@@ -32,6 +32,8 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>DefaultHeadServlet</code> class implements default support for the
@@ -55,6 +57,9 @@ public class DefaultHeadServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 7416222678552027044L;
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Override
     protected void doHead(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
@@ -62,8 +67,17 @@ public class DefaultHeadServlet extends SlingSafeMethodsServlet {
 
         // don't do nothing if the request has already been committed
         // or this servlet is called for a servlet include
-        if (response.isCommitted()
-            || request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null) {
+        if (response.isCommitted()) {
+            // committed response cannot be redirected
+            log.warn("DefaultHeadServlet: Ignoring request because response is committed");
+            request.getRequestProgressTracker().log(
+                "DefaultHeadServlet: Ignoring request because response is committed");
+            return;
+        } else if (request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null) {
+            // included request will not redirect
+            log.warn("DefaultHeadServlet: Ignoring request because request is included");
+            request.getRequestProgressTracker().log(
+                "DefaultHeadServlet: Ignoring request because request is included");
             return;
         }
 
