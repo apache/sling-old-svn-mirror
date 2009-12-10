@@ -24,6 +24,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
@@ -32,6 +33,8 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to
@@ -63,6 +66,9 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     /** The name of the target property */
     public static final String TARGET_PROP = "sling:target";
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private Servlet jsonRendererServlet;
 
     @Override
@@ -73,6 +79,17 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         // handle json export of the redirect node
         if (JsonRendererServlet.EXT_JSON.equals(request.getRequestPathInfo().getExtension())) {
             getJsonRendererServlet().service(request, response);
+            return;
+        }
+
+        // check for redirectability
+        if (response.isCommitted()) {
+            // committed response cannot be redirected
+            log.warn("doGet: Response is already committed, not redirecting");
+            return;
+        } else if (request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null) {
+            // included request will not redirect
+            log.warn("doGet: Servlet is included, not redirecting");
             return;
         }
 
@@ -127,7 +144,6 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         // if the target path is an URL, do nothing and return it unmodified
         final RequestPathInfo rpi = request.getRequestPathInfo();
-
 
         // make sure the target path is absolute
         final String rawAbsPath;
