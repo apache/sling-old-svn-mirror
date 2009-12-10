@@ -32,6 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -41,6 +42,8 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>StreamRendererServlet</code> streams the current resource to the
@@ -54,6 +57,9 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     public static final String EXT_RES = "res";
 
     private static final long serialVersionUID = -1L;
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private boolean index;
 
@@ -69,11 +75,21 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             SlingHttpServletResponse response) throws ServletException,
             IOException {
 
+        // whether this servlet is called as of a request include
+        final boolean included = request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null;
+
         // ensure no extension or "res"
         String ext = request.getRequestPathInfo().getExtension();
         if (ext != null && !ext.equals(EXT_RES)) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                "No default renderer found for extension='" + ext + "'");
+            request.getRequestProgressTracker().log(
+                "StreamRendererServlet does not support for extension " + ext);
+            if (included || response.isCommitted()) {
+                log.error(
+                    "StreamRendererServlet does not support for extension {}",
+                    ext);
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            }
             return;
         }
 
@@ -84,54 +100,62 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         // trailing slash on url means directory listing
         if ("/".equals(request.getRequestPathInfo().getSuffix())) {
-            renderDirectory(request, response);
+            renderDirectory(request, response, included);
             return;
         }
 
         // check the last modification time and If-Modified-Since header
-        ResourceMetadata meta = resource.getResourceMetadata();
-        long modifTime = meta.getModificationTime();
-        if (unmodified(request, modifTime)) {
-            response.setStatus(SC_NOT_MODIFIED);
-            return;
+        if (!included) {
+            ResourceMetadata meta = resource.getResourceMetadata();
+            long modifTime = meta.getModificationTime();
+            if (unmodified(request, modifTime)) {
+                response.setStatus(SC_NOT_MODIFIED);
+                return;
+            }
         }
 
         // fall back to plain text rendering if the resource has no stream
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
-            
-            streamResource(resource, stream, response);
-            
+
+            streamResource(resource, stream, included, response);
+
         } else {
-            
+
             // the resource is the root, do not redirect, immediately index
             if ("/".equals(resource.getPath())) {
-                
-                renderDirectory(request, response);
-                
+
+                renderDirectory(request, response, included);
+
+            } else if (included || response.isCommitted() ) {
+
+                // request is included or committed, not redirecting
+                request.getRequestProgressTracker().log(
+                    "StreamRendererServlet: Not redirecting with trailing slash, response is committed or request included");
+                log.warn("StreamRendererServlet: Not redirecting with trailing slash, response is committed or request included");
+
             } else {
-                
+
                 // redirect to this with trailing slash to render the index
                 String url = request.getResourceResolver().map(request,
                     resource.getPath())
                     + "/";
                 response.sendRedirect(url);
-                
+
             }
         }
     }
 
     /**
      * Returns <code>true</code> if the request has a
-     * <code>If-Modified-Since</code> header whose date value is later than
-     * the last modification time given as <code>modifTime</code>.
-     * 
+     * <code>If-Modified-Since</code> header whose date value is later than the
+     * last modification time given as <code>modifTime</code>.
+     *
      * @param request The <code>ComponentRequest</code> checked for the
      *            <code>If-Modified-Since</code> header.
      * @param modifTime The last modification time to compare the header to.
-     * @return <code>true</code> if the <code>modifTime</code> is less than
-     *         or equal to the time of the <code>If-Modified-Since</code>
-     *         header.
+     * @return <code>true</code> if the <code>modifTime</code> is less than or
+     *         equal to the time of the <code>If-Modified-Since</code> header.
      */
     private boolean unmodified(HttpServletRequest request, long modifTime) {
         if (modifTime > 0) {
@@ -144,43 +168,46 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         return false;
     }
 
-    private void streamResource(Resource resource, InputStream stream,
-            SlingHttpServletResponse response) throws IOException {
+    private void streamResource(final Resource resource,
+            final InputStream stream, final boolean included,
+            final SlingHttpServletResponse response) throws IOException {
         // finally stream the resource
         try {
 
-            ResourceMetadata meta = resource.getResourceMetadata();
-            long modifTime = meta.getModificationTime();
-
-            if (modifTime > 0) {
-                response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
-            }
-
-            final String defaultContentType = "application/octet-stream";
-            String contentType = meta.getContentType();
-            if (contentType == null || defaultContentType.equals(contentType)) {
-                // if repository doesn't provide a content-type, or
-                // provides the
-                // default one,
-                // try to do better using our servlet context
-                final String ct = getServletContext().getMimeType(
-                    resource.getPath());
-                if (ct != null) {
-                    contentType = ct;
+            // set various response headers, unless the request is included
+            if (!included) {
+                final ResourceMetadata meta = resource.getResourceMetadata();
+                final long modifTime = meta.getModificationTime();
+                if (modifTime > 0) {
+                    response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
                 }
-            }
-            if (contentType != null) {
-                response.setContentType(contentType);
-            }
 
-            String encoding = meta.getCharacterEncoding();
-            if (encoding != null) {
-                response.setCharacterEncoding(encoding);
-            }
+                final String defaultContentType = "application/octet-stream";
+                String contentType = meta.getContentType();
+                if (contentType == null || defaultContentType.equals(contentType)) {
+                    // if repository doesn't provide a content-type, or
+                    // provides the
+                    // default one,
+                    // try to do better using our servlet context
+                    final String ct = getServletContext().getMimeType(
+                        resource.getPath());
+                    if (ct != null) {
+                        contentType = ct;
+                    }
+                }
+                if (contentType != null) {
+                    response.setContentType(contentType);
+                }
 
-            long length = meta.getContentLength();
-            if (length > 0 && length < Integer.MAX_VALUE) {
-                response.setContentLength((int) length);
+                String encoding = meta.getCharacterEncoding();
+                if (encoding != null) {
+                    response.setCharacterEncoding(encoding);
+                }
+
+                long length = meta.getContentLength();
+                if (length > 0 && length < Integer.MAX_VALUE) {
+                    response.setContentLength((int) length);
+                }
             }
 
             OutputStream out = response.getOutputStream();
@@ -199,10 +226,18 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             }
         }
     }
-    
-    private void renderDirectory(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws ServletException,
-            IOException {
+
+    private void renderDirectory(final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response, final boolean included)
+            throws ServletException, IOException {
+
+        // request is included or committed, not rendering index
+        if (included || response.isCommitted()) {
+            request.getRequestProgressTracker().log(
+                "StreamRendererServlet: Not rendering index, response is committed or request included");
+            log.warn("StreamRendererServlet: Not rendering index, response is committed or request included");
+            return;
+        }
 
         Resource resource = request.getResource();
         ResourceResolver resolver = request.getResourceResolver();
@@ -224,26 +259,27 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 } else {
                     dispatcher = request.getRequestDispatcher(fileRes, rdo);
                 }
-                
+
                 dispatcher.include(request, response);
                 return;
             }
         }
 
         if (index) {
-//            RequestDispatcherOptions rdo = new RequestDispatcherOptions();
-//            rdo.setReplaceSelectors("sling.index");
-//            request.getRequestDispatcher(resource, rdo).include(request, response);
+            // RequestDispatcherOptions rdo = new RequestDispatcherOptions();
+            // rdo.setReplaceSelectors("sling.index");
+            // request.getRequestDispatcher(resource, rdo).include(request,
+            // response);
             renderIndex(resource, response);
         } else {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
         }
 
     }
-    
+
     private void renderIndex(Resource resource,
             SlingHttpServletResponse response) throws IOException {
-        
+
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
 
