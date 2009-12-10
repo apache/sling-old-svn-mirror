@@ -85,11 +85,15 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         // check for redirectability
         if (response.isCommitted()) {
             // committed response cannot be redirected
-            log.warn("doGet: Response is already committed, not redirecting");
+            log.warn("RedirectServlet: Response is already committed, not redirecting");
+            request.getRequestProgressTracker().log(
+                "RedirectServlet: Response is already committed, not redirecting");
             return;
         } else if (request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null) {
             // included request will not redirect
-            log.warn("doGet: Servlet is included, not redirecting");
+            log.warn("RedirectServlet: Servlet is included, not redirecting");
+            request.getRequestProgressTracker().log(
+                "RedirectServlet: Servlet is included, not redirecting");
             return;
         }
 
