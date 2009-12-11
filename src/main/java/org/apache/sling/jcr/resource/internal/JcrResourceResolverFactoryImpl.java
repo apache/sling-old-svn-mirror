@@ -143,6 +143,11 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
+    /**
+     * @scr.property valueRef="MapEntries.DEFAULT_MAP_ROOT"
+     */
+    private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -193,6 +198,9 @@ public class JcrResourceResolverFactoryImpl implements
     // the search path for ResourceResolver.getResource(String)
     private String[] searchPath;
 
+    // the root location of the /etc/map entries
+    private String mapRoot;
+
     private ResourceProviderEntry rootProviderEntry;
 
     // whether to mangle paths with namespaces or not
@@ -223,7 +231,7 @@ public class JcrResourceResolverFactoryImpl implements
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry, getJcrResourceTypeProviders(),
-            this.getDynamicClassLoader());        
+            this.getDynamicClassLoader());
 
         return new JcrResourceResolver(sessionRoot, this, mapEntries);
     }
@@ -275,6 +283,10 @@ public class JcrResourceResolverFactoryImpl implements
     boolean isMangleNamespacePrefixes() {
         return mangleNamespacePrefixes;
 
+    }
+
+    public String getMapRoot() {
+        return mapRoot;
     }
 
     MapEntries getMapEntries() {
@@ -353,6 +365,10 @@ public class JcrResourceResolverFactoryImpl implements
         // namespace mangling
         mangleNamespacePrefixes = OsgiUtil.toBoolean(
             properties.get(PROP_MANGLE_NAMESPACES), false);
+
+        // the root of the resolver mappings
+        mapRoot = OsgiUtil.toString(properties.get(PROP_MAP_LOCATION),
+            MapEntries.DEFAULT_MAP_ROOT);
 
         // bind resource providers not bound yet
         for (ServiceReference reference : delayedResourceProviders) {
@@ -516,7 +532,7 @@ public class JcrResourceResolverFactoryImpl implements
                if ( componentContext != null ) {
                 ResourceProvider provider = (ResourceProvider) componentContext.locateService(
                    "ResourceProvider", reference);
-                   
+
 
                 for (String root : roots) {
                     // cut off trailing slash
@@ -624,12 +640,12 @@ public class JcrResourceResolverFactoryImpl implements
 
         return null;
     }
-    
-    
+
+
     public void run() {
         String stat = rootProviderEntry.getResolutionStats();
         if ( stat != null ) {
-            log.info(stat);   
+            log.info(stat);
         }
     }
 }
