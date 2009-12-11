@@ -336,17 +336,30 @@ public class Loader {
                                  final Node parent,
                                  final List<String> createdNodes)
     throws RepositoryException {
-
-        @SuppressWarnings("unchecked")
-        Enumeration<String> entries = bundle.getEntryPaths(path);
-        if (entries == null) {
-            log.info("install: No initial content entries at {}", path);
-            return;
-        }
         //  init content creator
         this.contentCreator.init(configuration, this.defaultImportProviders, createdNodes);
 
         final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
+
+        @SuppressWarnings("unchecked")
+        Enumeration<String> entries = bundle.getEntryPaths(path);
+        if (entries == null) {
+            // check for single content
+            final URL u = bundle.getEntry(path);
+            if ( u == null ) {
+                log.info("install: No initial content entries at {} in bundle {}", path, bundle.getSymbolicName());
+                return;
+            }
+            // we have a single file content, let's check if this has an import provider extension
+            for (String ext : this.contentCreator.getImportProviders().keySet()) {
+                if ( path.endsWith(ext) ) {
+
+                }
+            }
+            handleFile(path, bundle, processedEntries, configuration, parent, createdNodes);
+            return;
+        }
+
         // potential root node import/extension
         URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path);
         if (rootNodeDescriptor != null) {
@@ -356,7 +369,7 @@ public class Loader {
 
         while (entries.hasMoreElements()) {
             final String entry = entries.nextElement();
-            log.debug("Processing initial content entry {}", entry);
+            log.debug("Processing initial content entry {} in bundle {}", entry, bundle.getSymbolicName());
             if (entry.endsWith("/")) {
 
                 // dir, check for node descriptor , else create dir
@@ -392,55 +405,76 @@ public class Loader {
                 }
 
             } else {
-
                 // file => create file
-                final URL file = bundle.getEntry(entry);
-                if (processedEntries.containsKey(file)) {
-                    // this is a consumed node descriptor
-                    continue;
-                }
-                final String name = getName(entry);
+                handleFile(entry, bundle, processedEntries, configuration, parent, createdNodes);
+            }
+        }
+    }
 
-                // file, check for node descriptor , else create dir
-                URL nodeDescriptor = null;
-                for (String ext : this.contentCreator.getImportProviders().keySet()) {
-                    nodeDescriptor = bundle.getEntry(entry + ext);
-                    if (nodeDescriptor != null) {
-                        break;
-                    }
-                }
+    /**
+     * Handle a file entry.
+     * @param entry
+     * @param file   The url to the content file.
+     * @param bundle
+     * @param processedEntries
+     * @param configuration
+     * @param parent
+     * @param createdNodes
+     * @throws RepositoryException
+     */
+    private void handleFile(final String entry,
+                            final Bundle bundle,
+                            final Map<URL, Node> processedEntries,
+                            final PathEntry configuration,
+                            final Node parent,
+                            final List<String> createdNodes)
+    throws RepositoryException {
+        final URL file = bundle.getEntry(entry);
+        final String name = getName(entry);
 
-                // install if it is a descriptor
-                boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
+        if (processedEntries.containsKey(file)) {
+            // this is a consumed node descriptor
+            return;
+        }
 
-                Node node = null;
-                if (foundProvider) {
-                    if ((node = createNode(parent, name, file, configuration)) != null) {
-                        processedEntries.put(file, node);
-                    }
-                }
+        // check for node descriptor
+        URL nodeDescriptor = null;
+        for (String ext : this.contentCreator.getImportProviders().keySet()) {
+            nodeDescriptor = bundle.getEntry(entry + ext);
+            if (nodeDescriptor != null) {
+                break;
+            }
+        }
 
-                // otherwise just place as file
-                if ( node == null ) {
-                    try {
-                        createFile(configuration, parent, file, createdNodes);
-                        node = parent.getNode(name);
-                    } catch (IOException ioe) {
-                        log.warn("Cannot create file node for {}", file, ioe);
-                    }
-                }
-                // if we have a descriptor, which has not been processed yet,
-                // process it
-                if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
-                    try {
-                        this.contentCreator.setIgnoreOverwriteFlag(true);
-                        node = createNode(parent, name, nodeDescriptor,
-                                          configuration);
-                        processedEntries.put(nodeDescriptor, node);
-                    } finally {
-                        this.contentCreator.setIgnoreOverwriteFlag(false);
-                    }
-                }
+        // install if it is a descriptor
+        boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
+
+        Node node = null;
+        if (foundProvider) {
+            if ((node = createNode(parent, name, file, configuration)) != null) {
+                processedEntries.put(file, node);
+            }
+        }
+
+        // otherwise just place as file
+        if ( node == null ) {
+            try {
+                createFile(configuration, parent, file, createdNodes);
+                node = parent.getNode(name);
+            } catch (IOException ioe) {
+                log.warn("Cannot create file node for {}", file, ioe);
+            }
+        }
+        // if we have a descriptor, which has not been processed yet,
+        // process it
+        if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
+            try {
+                this.contentCreator.setIgnoreOverwriteFlag(true);
+                node = createNode(parent, name, nodeDescriptor,
+                                  configuration);
+                processedEntries.put(nodeDescriptor, node);
+            } finally {
+                this.contentCreator.setIgnoreOverwriteFlag(false);
             }
         }
     }
@@ -545,7 +579,7 @@ public class Loader {
     }
 
     /**
-     * Gets and decods the name part of the <code>path</code>. The name is
+     * Gets and decodes the name part of the <code>path</code>. The name is
      * the part of the path after the last slash (or the complete path if no
      * slash is contained). To support names containing unsupported characters
      * such as colon (<code>:</code>), names may be URL encoded (see
