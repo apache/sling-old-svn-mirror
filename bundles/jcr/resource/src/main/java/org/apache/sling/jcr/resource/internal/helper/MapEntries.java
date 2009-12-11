@@ -51,11 +51,9 @@ public class MapEntries implements EventListener {
 
     public static MapEntries EMPTY = new MapEntries();
 
+    public static final String DEFAULT_MAP_ROOT = "/etc/map";
+
     private static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
-
-    private static final String MAP_ROOT = "/etc/map";
-
-    private static final String MAP_ROOT_PREFIX = MAP_ROOT + "/";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -65,6 +63,10 @@ public class MapEntries implements EventListener {
     private JcrResourceResolver resolver;
 
     private Session session;
+
+    private final String mapRoot;
+
+    private final String mapRootPrefix;
 
     private List<MapEntry> resolveMaps;
 
@@ -76,6 +78,8 @@ public class MapEntries implements EventListener {
         session = null; // not needed
         factory = null;
         resolver = null;
+        mapRoot = DEFAULT_MAP_ROOT;
+        mapRootPrefix = mapRoot + "/";
 
         resolveMaps = Collections.<MapEntry> emptyList();
         mapMaps = Collections.<MapEntry> emptyList();
@@ -86,6 +90,8 @@ public class MapEntries implements EventListener {
         this.factory = factory;
         this.session = repository.loginAdministrative(null);
         this.resolver = (JcrResourceResolver) factory.getResourceResolver(session);
+        this.mapRoot = factory.getMapRoot();
+        this.mapRootPrefix = this.mapRoot + "/";
 
         init();
 
@@ -200,8 +206,8 @@ public class MapEntries implements EventListener {
             Event event = events.nextEvent();
             try {
                 String path = event.getPath();
-                handleEvent = MAP_ROOT.equals(path)
-                    || path.startsWith(MAP_ROOT_PREFIX)
+                handleEvent = mapRoot.equals(path)
+                    || path.startsWith(mapRootPrefix)
                     || path.endsWith("/sling:vanityPath")
                     || path.endsWith("/sling:vanityOrder")
                     || path.endsWith("/sling:redirect");
@@ -231,7 +237,7 @@ public class MapEntries implements EventListener {
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries) {
         // the standard map configuration
-        Resource res = resolver.getResource(MAP_ROOT);
+        Resource res = resolver.getResource(mapRoot);
         if (res != null) {
             gather(resolver, resolveEntries, mapEntries, res, "");
         }
