@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -88,6 +89,7 @@ import org.apache.sling.jcr.contentloader.internal.ImportProvider;
  */
 public class JsonReader implements ContentReader {
 
+    private static final Pattern jsonDate = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}[-+]{1}[0-9]{2}[:]{0,1}[0-9]{2}$");
     private static final String REFERENCE = "jcr:reference:";
     private static final String PATH = "jcr:path:";
 
@@ -233,6 +235,7 @@ public class JsonReader implements ContentReader {
         } else if (object instanceof String) {
             if (name.startsWith(REFERENCE)) return PropertyType.REFERENCE;
             if (name.startsWith(PATH)) return PropertyType.PATH;
+            if (jsonDate.matcher((String) object).matches()) return PropertyType.DATE;
         }
 
         // fall back to default

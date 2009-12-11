@@ -144,6 +144,17 @@ public class JsonReaderTest {
         this.parse(json);
     }
 
+    @org.junit.Test public void testPropertiesSingleDateValue() throws Exception {
+        String json = "{ \"p1\": \"2009-09-24T16:32:57.948-07:00\"}";
+
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null); inSequence(mySequence);
+            allowing(creator).createProperty("p1", PropertyType.DATE, "2009-09-24T16:32:57.948-07:00"); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
     @org.junit.Test public void testPropertiesTwoSingleValue() throws Exception {
         String json = "{ \"p1\": \"v1\", \"p2\": \"v2\"}";
 
@@ -162,6 +173,17 @@ public class JsonReaderTest {
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
             allowing(creator).createProperty("p1", PropertyType.STRING, new String[] {"v1"}); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
+
+    @org.junit.Test public void testPropertiesMultiDateValue() throws Exception {
+        String json = "{ \"p1\": [\"2009-09-24T16:32:57.948-07:00\"]}";
+
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null); inSequence(mySequence);
+            allowing(creator).createProperty("p1", PropertyType.DATE, new String[] {"2009-09-24T16:32:57.948-07:00"}); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
