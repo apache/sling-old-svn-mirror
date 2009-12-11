@@ -109,6 +109,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mangeNamespacePrefixesField.setAccessible(true);
         mangeNamespacePrefixesField.set(resFac, true);
 
+        // setup mapping root
+        Field mapRootField = resFac.getClass().getDeclaredField("mapRoot");
+        mapRootField.setAccessible(true);
+        mapRootField.set(resFac, "/etc/map");
+
         Field mapEntriesField = resFac.getClass().getDeclaredField("mapEntries");
         mapEntriesField.setAccessible(true);
         mapEntries = new MapEntries(resFac, getRepository());
