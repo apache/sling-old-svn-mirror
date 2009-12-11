@@ -38,6 +38,12 @@
         through the /META-INF/webconsole.properties.
     </description>
         
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/webconsolebranding</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/webconsolebranding</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/webconsolebranding</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
