@@ -81,6 +81,12 @@
 
         <!-- Dependencies for Start Level 5 -->
         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.webconsolebranding</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
             <version>2.0.2</version>
@@ -397,7 +403,7 @@
                                 </goals>
                                 <configuration>
                                     <includeArtifactIds>
-                                        org.apache.felix.webconsole,org.apache.felix.bundlerepository,org.apache.sling.extensions.threaddump,org.apache.sling.commons.classloader
+                                        org.apache.sling.extensions.webconsolebranding,org.apache.felix.webconsole,org.apache.felix.bundlerepository,org.apache.sling.extensions.threaddump,org.apache.sling.commons.classloader
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
