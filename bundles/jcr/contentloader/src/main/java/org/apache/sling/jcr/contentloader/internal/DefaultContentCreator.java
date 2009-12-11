@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -35,6 +37,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -64,6 +67,9 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 public class DefaultContentCreator implements ContentCreator {
 
 	private PathEntry configuration;
+
+    private final Pattern jsonDatePattern = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}[-+]{1}[0-9]{2}[:]{0,1}[0-9]{2}$");
+    private final SimpleDateFormat jsonDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     private final Stack<Node> parentNodeStack = new Stack<Node>();
 
@@ -318,6 +324,14 @@ public class DefaultContentCreator implements ContentCreator {
                     this.versionables.add(node);
                 }
             }
+        } else if ( propertyType == PropertyType.DATE ) {
+            try {
+              node.setProperty(name, parseDateString(value) );
+            }
+            catch (ParseException e) {
+              // Fall back to default behaviour if this fails
+              node.setProperty(name, value, propertyType);
+            }
         } else {
             node.setProperty(name, value, propertyType);
         }
@@ -351,6 +365,24 @@ public class DefaultContentCreator implements ContentCreator {
             if (!hasAll) {
                 delayedMultipleReferences.put(propPath, uuidOrPaths);
             }
+        } else if ( propertyType == PropertyType.DATE ) {
+            try {
+              // This modification is to remove the colon in the JSON Timezone
+              ValueFactory valueFactory = node.getSession().getValueFactory();
+              Value[] jcrValues = new Value[values.length];
+
+              for (int i = 0; i < values.length; i++) {
+                jcrValues[i] = valueFactory.createValue( parseDateString( values[i] ) );
+              }
+
+              node.setProperty(name, jcrValues, propertyType);
+            }
+            catch (ParseException e) {
+              // If this failes, fallback to the default
+              jcrContentHelper.log.warn("Could not create dates for property, fallingback to defaults", e);
+              node.setProperty(name, values, propertyType);
+            }
+
         } else {
             node.setProperty(name, values, propertyType);
         }
@@ -561,6 +593,24 @@ public class DefaultContentCreator implements ContentCreator {
         return (item.isNode()) ? (Node) item : null;
     }
 
+    private Calendar parseDateString(String value) throws ParseException {
+      if (jsonDatePattern.matcher(value).matches()) {
+        String modifiedJsonDate = value;
+
+        // This modification is to remove the colon in the JSON Timezone
+        // to match the Java Version
+        if (value.lastIndexOf(":") == 26) {
+          modifiedJsonDate = value.substring(0, 26) + value.substring(27);
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime( jsonDateFormat.parse( modifiedJsonDate ) );
+
+        return cal;
+      }
+
+      return null;
+    }
 
     /**
      * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createFileAndResourceNode(java.lang.String, java.io.InputStream, java.lang.String, long)
