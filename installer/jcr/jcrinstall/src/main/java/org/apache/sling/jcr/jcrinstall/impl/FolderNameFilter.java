@@ -99,14 +99,19 @@ class FolderNameFilter {
     int getPriority(final String path) {
     	int result = 0;
     	
-        // If path contains dots, remove suffixes starting with
-        // dots until path matches regexp, and accept if all suffixes
+        // If path contains dots after the last /, remove suffixes 
+    	// starting with dots until path matches regexp, and accept 
+    	// if all suffixes
         // are included in our list of runmodes
         final char DOT = '.';
         
-        if(path.indexOf(DOT) > 0) {
+        String prefix = path;
+        final int lastSlash = prefix.lastIndexOf('/');
+        if(lastSlash > 0) {
+        	prefix = prefix.substring(lastSlash);
+        }
+        if(prefix.indexOf(DOT) > 0) {
             int pos = 0;
-            String prefix = path;
             final List<String> modes = new LinkedList<String>();
             while( (pos = prefix.lastIndexOf(DOT)) >= 0) {
                 modes.add(prefix.substring(pos + 1));
