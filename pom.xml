@@ -23,7 +23,7 @@
     <parent>
         <artifactId>sling</artifactId>
         <groupId>org.apache.sling</groupId>
-        <version>5-incubator</version>
+        <version>8</version>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -46,9 +46,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-DocURL>
-                            ...branding_URL...
-                        </Bundle-DocURL>
                         <Fragment-Host>
                             org.apache.felix.webconsole
                         </Fragment-Host>
