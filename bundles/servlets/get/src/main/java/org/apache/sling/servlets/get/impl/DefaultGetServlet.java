@@ -230,7 +230,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                     "No renderer for extension {}, cannot render resource {}",
                     ext, request.getResource());
             } else {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
             return;
         }

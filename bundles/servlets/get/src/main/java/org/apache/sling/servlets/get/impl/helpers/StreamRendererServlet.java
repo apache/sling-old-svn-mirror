@@ -88,7 +88,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                     "StreamRendererServlet does not support for extension {}",
                     ext);
             } else {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
             return;
         }
@@ -266,10 +266,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         }
 
         if (index) {
-            // RequestDispatcherOptions rdo = new RequestDispatcherOptions();
-            // rdo.setReplaceSelectors("sling.index");
-            // request.getRequestDispatcher(resource, rdo).include(request,
-            // response);
             renderIndex(resource, response);
         } else {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
