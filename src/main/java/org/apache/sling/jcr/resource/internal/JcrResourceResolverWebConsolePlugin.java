@@ -111,6 +111,28 @@ public class JcrResourceResolverWebConsolePlugin extends
 
         MapEntries mapEntries = resolverFactory.getMapEntries();
 
+        titleHtml(pw, "Configuration", null);
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content'>Resource Search Path</td>");
+        pw.print("<td class='content' colspan='2'>");
+        pw.print(Arrays.asList(resolverFactory.getSearchPath()).toString());
+        pw.print("</td>");
+        pw.println("</tr>");
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content'>Namespace Mangling</td>");
+        pw.print("<td class='content' colspan='2'>");
+        pw.print(resolverFactory.isMangleNamespacePrefixes() ? "Enabled" : "Disabled");
+        pw.print("</td>");
+        pw.println("</tr>");
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content'>Mapping Location</td>");
+        pw.print("<td class='content' colspan='2'>");
+        pw.print(resolverFactory.getMapRoot());
+        pw.print("</td>");
+        pw.println("</tr>");
+
+        separatorHtml(pw);
+
         titleHtml(
             pw,
             "Configuration Test",
@@ -143,7 +165,7 @@ public class JcrResourceResolverWebConsolePlugin extends
             pw.println("</tr>");
         }
 
-        separator(pw);
+        separatorHtml(pw);
 
         dumpMapHtml(
             pw,
@@ -151,7 +173,7 @@ public class JcrResourceResolverWebConsolePlugin extends
             "Lists the entries used by the ResourceResolver.resolve methods to map URLs to Resources",
             mapEntries.getResolveMaps());
 
-        separator(pw);
+        separatorHtml(pw);
 
         dumpMapHtml(
             pw,
@@ -225,7 +247,7 @@ public class JcrResourceResolverWebConsolePlugin extends
             "Resolver Map Entries",
             mapEntries.getResolveMaps());
 
-        separator(pw);
+         separatorText(pw);
 
         dumpMapText(
             pw,
@@ -283,6 +305,12 @@ public class JcrResourceResolverWebConsolePlugin extends
         }
     }
 
+    private void separatorHtml(PrintWriter pw) {
+        pw.println("<tr class='content'>");
+        pw.println("<td class='content' colspan='3'>&nbsp;</td>");
+        pw.println("</tr>");
+    }
+
     private void dumpMapText(PrintWriter pw, String title,
             Collection<MapEntry> list) {
 
@@ -300,10 +328,8 @@ public class JcrResourceResolverWebConsolePlugin extends
         }
     }
 
-    private void separator(PrintWriter pw) {
-        pw.println("<tr class='content'>");
-        pw.println("<td class='content' colspan='3'>&nbsp;</td>");
-        pw.println("</tr>");
+    private void separatorText(PrintWriter pw) {
+        pw.println();
     }
 
     private static class ResolverRequest extends HttpServletRequestWrapper {
