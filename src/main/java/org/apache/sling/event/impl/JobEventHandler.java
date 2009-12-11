@@ -355,12 +355,6 @@ public class JobEventHandler
             }
             if ( event != null && this.running ) {
                 logger.debug("Persisting job {}", event);
-                try {
-                    this.writerSession.refresh(false);
-                } catch (RepositoryException re) {
-                    // we just ignore this
-                    this.ignoreException(re);
-                }
                 final EventInfo info = new EventInfo();
                 info.event = event;
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
@@ -371,48 +365,58 @@ public class JobEventHandler
                 // need locking
                 if ( jobId == null ) {
                     try {
-                        final Node eventNode = this.writeEvent(event, nodePath);
-                        info.nodePath = eventNode.getPath();
+                        synchronized ( this.writeLock ) {
+                            final Node eventNode = this.writeEvent(event, nodePath);
+                            info.nodePath = eventNode.getPath();
+                        }
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
                         this.logger.error("Exception during writing new job '" + EventUtil.toString(event) + "' to repository at " + nodePath, re);
                     }
                 } else {
-                    try {
-                        // let's first search for an existing node with the same id
-                        final Node parentNode = this.ensureRepositoryPath();
-                        Node foundNode = null;
-                        if ( parentNode.hasNode(nodePath) ) {
-                            foundNode = parentNode.getNode(nodePath);
+                    synchronized ( this.writeLock ) {
+                        try {
+                            this.writerSession.refresh(false);
+                        } catch (RepositoryException re) {
+                            // we just ignore this
+                            this.ignoreException(re);
                         }
-                        if ( foundNode != null ) {
-                            // if the node is locked, someone else was quicker
-                            // and we don't have to process this job
-                            if ( !foundNode.isLocked() ) {
-                                // node is already in repository, so if not finished we just use it
-                                // otherwise it has already been processed
-                                try {
-                                    if ( !foundNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED) ) {
-                                        info.nodePath = foundNode.getPath();
+                        try {
+                            // let's first search for an existing node with the same id
+                            final Node parentNode = this.ensureRepositoryPath();
+                            Node foundNode = null;
+                            if ( parentNode.hasNode(nodePath) ) {
+                                foundNode = parentNode.getNode(nodePath);
+                            }
+                            if ( foundNode != null ) {
+                                // if the node is locked, someone else was quicker
+                                // and we don't have to process this job
+                                if ( !foundNode.isLocked() ) {
+                                    // node is already in repository, so if not finished we just use it
+                                    // otherwise it has already been processed
+                                    try {
+                                        if ( !foundNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED) ) {
+                                            info.nodePath = foundNode.getPath();
+                                        }
+                                    } catch (RepositoryException re) {
+                                        // if anything goes wrong, it means that (hopefully) someone
+                                        // else is processing this node
                                     }
-                                } catch (RepositoryException re) {
-                                    // if anything goes wrong, it means that (hopefully) someone
-                                    // else is processing this node
+                                }
+                            } else {
+                                // We now write the event into the repository
+                                try {
+                                    final Node eventNode = this.writeEvent(event, nodePath);
+                                    info.nodePath = eventNode.getPath();
+                                } catch (ItemExistsException iee) {
+                                    // someone else did already write this node in the meantime
+                                    // nothing to do for us
                                 }
                             }
-                        } else {
-                            // We now write the event into the repository
-                            try {
-                                final Node eventNode = this.writeEvent(event, nodePath);
-                                info.nodePath = eventNode.getPath();
-                            } catch (ItemExistsException iee) {
-                                // someone else did already write this node in the meantime
-                                // nothing to do for us
-                            }
+                        } catch (RepositoryException re ) {
+                            // something went wrong, so let's log it
+                            this.logger.error("Exception during writing new job '" + event + "' to repository at " + nodePath, re);
                         }
-                    } catch (RepositoryException re ) {
-                        // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + event + "' to repository at " + nodePath, re);
                     }
                 }
                 // if we were able to write the event into the repository
