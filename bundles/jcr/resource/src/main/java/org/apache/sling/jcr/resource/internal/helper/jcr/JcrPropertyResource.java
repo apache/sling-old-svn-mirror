@@ -163,12 +163,12 @@ public class JcrPropertyResource extends JcrItemResource {
             }
 
         } catch (ValueFormatException vfe) {
-            log.info("adaptTo: Problem accessing the property value of {}: {}",
+            log.debug("adaptTo: Problem accessing the property value of {}: {}",
                 getPath(), vfe.getMessage());
             log.debug("adaptTo: Cause", vfe);
 
         } catch (RepositoryException re) {
-            log.info("adaptTo: Problem accessing the property " + getPath(), re);
+            log.debug("adaptTo: Problem accessing the property " + getPath(), re);
         }
 
         // try to use adapter factories
