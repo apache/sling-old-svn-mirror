@@ -130,12 +130,12 @@ public class JcrNodeResource extends JcrItemResource {
                 return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
-                log.info(
+                log.debug(
                     "adaptTo(PersistableValueMap): Cannot set properties on {}",
                     this);
             } catch (RepositoryException e) {
                 // some other problem, cannot adapt
-                log.info(
+                log.debug(
                     "adaptTo(PersistableValueMap): Unexpected problem for {}",
                     this);
             }
@@ -272,7 +272,7 @@ public class JcrNodeResource extends JcrItemResource {
                 try {
                     metadata.setModificationTime(prop.getLong());
                 } catch(ValueFormatException vfe) {
-                    log.info("Property {} cannot be converted to a long, ignored ({})",
+                    log.debug("Property {} cannot be converted to a long, ignored ({})",
                             prop.getPath(), vfe);
                 }
             }
