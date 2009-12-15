@@ -33,9 +33,13 @@ class LocalFileRegisteredResource extends RegisteredResourceImpl {
 	}
 	
 	@Override
-	protected File getDataFile(BundleContext ctx) throws IOException {
+	protected File getDataFile(BundleContext ctx) {
 		if(storage == null) {
-			storage = File.createTempFile(getClass().getName(), "test");
+	        try {
+	            storage = File.createTempFile(getClass().getName(), "test");
+	        } catch(IOException ioe) {
+	            throw new Error("IOException on file creation", ioe);
+	        }
 			storage.deleteOnExit();
 		}
 		return storage;
