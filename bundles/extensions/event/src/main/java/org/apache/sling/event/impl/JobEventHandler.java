@@ -477,11 +477,13 @@ public class JobEventHandler
             }
 
             if ( info != null && this.running ) {
+                logger.debug("Processing new job {}", info.event);
                 // check for local only jobs and remove them from the queue if they're meant
                 // for another application node
                 final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
                 if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
                     && appId != null && !this.applicationId.equals(appId) ) {
+                    logger.debug("Discarding job {} : local job for a different application node.", info.event);
                     info = null;
                 }
 
@@ -489,6 +491,7 @@ public class JobEventHandler
                 if ( info != null && info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
                     final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
                     synchronized ( this.jobQueues ) {
+                        logger.debug("Queuing job {} into queue {}.", info.event, queueName);
                         BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
                         if ( jobQueue == null ) {
                             final JobBlockingQueue jq = new JobBlockingQueue();
@@ -636,6 +639,7 @@ public class JobEventHandler
         boolean putback = false;
         boolean wait = false;
         synchronized (this.backgroundLock) {
+            logger.debug("Executing job {}.", info.event);
             try {
                 this.backgroundSession.refresh(false);
                 // check if the node still exists
@@ -662,6 +666,7 @@ public class JobEventHandler
                     } else {
                         // check number of parallel jobs for main queue
                         if ( jobQueue == null && this.parallelJobCount >= this.maximumParallelJobs ) {
+                            logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", info.event, this.maximumParallelJobs);
                             process = false;
                             wait = true;
                         }
@@ -715,6 +720,7 @@ public class JobEventHandler
         // if this is the main queue and we have reached the max number of parallel jobs
         // we wait a little bit before continuing
         if ( wait ) {
+            logger.debug("Sleeping for {} seconds.", sleepTime);
             try {
                 Thread.sleep(sleepTime * 1000);
             } catch (InterruptedException ie) {
@@ -724,6 +730,7 @@ public class JobEventHandler
         }
         // if we have to put back the job, we do it now
         if ( putback ) {
+            logger.debug("Putting job {} back into the queue.", info.event);
             final EventInfo eInfo = info;
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
@@ -903,6 +910,7 @@ public class JobEventHandler
         final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null
                                            || event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+        logger.debug("Starting job {}", event);
         boolean unlock = true;
         try {
             if ( isMainQueue && parallelProcessing ) {
