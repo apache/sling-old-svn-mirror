@@ -77,7 +77,7 @@ public class RegisteredResourceTest {
             final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, "some digest"));
             assertEquals(".jar URL creates a BUNDLE resource", 
                     RegisteredResource.ResourceType.BUNDLE, r.getResourceType());
-            final InputStream rs = r.getInputStream();
+            final InputStream rs = r.getInputStream(null);
             assertNotNull("BUNDLE resource provides an InputStream", rs);
             rs.close();
             assertNull("BUNDLE resource does not provide a Dictionary", r.getDictionary());
@@ -89,7 +89,7 @@ public class RegisteredResourceTest {
             final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.properties", s, "digest1"));
             assertEquals(".properties URL creates a CONFIG resource", 
                     RegisteredResource.ResourceType.CONFIG, r.getResourceType());
-            final InputStream rs = r.getInputStream();
+            final InputStream rs = r.getInputStream(null);
             assertNull("CONFIG resource does not provide an InputStream", rs);
             final Dictionary<String, Object> d = r.getDictionary();
             assertNotNull("CONFIG resource provides a Dictionary", d);
@@ -104,7 +104,7 @@ public class RegisteredResourceTest {
             final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1", data));
             assertEquals("No-extension URL with Dictionary creates a CONFIG resource", 
                     RegisteredResource.ResourceType.CONFIG, r.getResourceType());
-            final InputStream rs = r.getInputStream();
+            final InputStream rs = r.getInputStream(null);
             assertNull("CONFIG resource does not provide an InputStream", rs);
             final Dictionary<String, Object> d = r.getDictionary();
             assertNotNull("CONFIG resource provides a Dictionary", d);

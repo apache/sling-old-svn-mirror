@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
+
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
  *  it locally to avoid holding up to classes or data from our 
@@ -40,9 +42,9 @@ public interface RegisteredResource {
 	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
 	public static final String ENTITY_CONFIG_PREFIX = "config:";
 	
-	void cleanup();
+	void cleanup(BundleContext bc);
 	String getURL();
-	InputStream getInputStream() throws IOException;
+	InputStream getInputStream(BundleContext bc) throws IOException;
 	Dictionary<String, Object> getDictionary();
 	String getDigest();
 	String getUrl();

@@ -51,16 +51,15 @@ import org.osgi.framework.Constants;
  *  clients, in case those disappear while we're installing stuff. 
  */
 public class RegisteredResourceImpl implements RegisteredResource, Serializable { 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 	private final String url;
 	private final String urlScheme;
 	private final String digest;
-	private final File dataFile;
 	private final String entity;
 	private final Dictionary<String, Object> dictionary;
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
-	private static long fileNumber;
 	private boolean installable = true;
+	private final boolean hasDataFile;
 	private final int priority;
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
@@ -98,10 +97,10 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                     throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
                 }
                 dictionary = null;
-                dataFile = getDataFile(ctx);
-                copyToLocalStorage(input.getInputStream(), dataFile);
+                copyToLocalStorage(input.getInputStream(), getDataFile(ctx));
+                hasDataFile = true;
                 digest = input.getDigest();
-                setAttributesFromManifest();
+                setAttributesFromManifest(ctx);
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME); 
                 if(name == null) {
                     // not a bundle - use "jar" entity to make it easier to find out
@@ -110,7 +109,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                     entity = ENTITY_BUNDLE_PREFIX + name;
                 }
     		} else {
-                dataFile = null;
+                hasDataFile = false;
                 final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
                 entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
                 attributes.put(CONFIG_PID_ATTRIBUTE, pid);
@@ -140,16 +139,14 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
 	}
 	
-	protected File getDataFile(BundleContext ctx) throws IOException {
-		String filename = null;
-		synchronized (getClass()) {
-			filename = getClass().getSimpleName() + "." + fileNumber++;
-		}
+	protected File getDataFile(BundleContext ctx) {
+		final String filename = getClass().getSimpleName() + "." + serialNumber;
 		return ctx.getDataFile(filename);
 	}
 	
-	public void cleanup() {
-		if(dataFile != null && dataFile.exists()) {
+	public void cleanup(BundleContext bc) {
+	    final File dataFile = getDataFile(bc);
+		if(dataFile.exists()) {
 			dataFile.delete();
 		}
 	}
@@ -158,11 +155,14 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		return url;
 	}
 	
-	public InputStream getInputStream() throws IOException {
-		if(dataFile == null) {
-			return null;
-		}
-		return new BufferedInputStream(new FileInputStream(dataFile));
+	public InputStream getInputStream(BundleContext bc) throws IOException {
+	    if(hasDataFile) {
+	        final File dataFile = getDataFile(bc);
+	        if(dataFile.exists()) {
+	            return new BufferedInputStream(new FileInputStream(dataFile));
+	        }
+	    }
+        return  null;
 	}
 	
 	public Dictionary<String, Object> getDictionary() {
@@ -286,8 +286,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         return result;
     }
     
-    private void setAttributesFromManifest() throws IOException {
-    	final Manifest m = getManifest(getInputStream());
+    private void setAttributesFromManifest(BundleContext bc) throws IOException {
+    	final Manifest m = getManifest(getInputStream(bc));
     	if(m == null) {
             throw new IOException("Cannot get manifest of bundle resource");
     	}
