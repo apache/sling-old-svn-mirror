@@ -905,7 +905,7 @@ public class JobEventHandler
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         boolean unlock = true;
         try {
-            if ( isMainQueue && !parallelProcessing ) {
+            if ( isMainQueue && parallelProcessing ) {
                 this.parallelJobCount++;
             }
             final String nodePath = eventNode.getPath();
@@ -934,7 +934,7 @@ public class JobEventHandler
             this.logger.error("Exception during job processing.", re);
         } finally {
             if ( unlock ) {
-                if ( isMainQueue && !parallelProcessing ) {
+                if ( isMainQueue && parallelProcessing ) {
                     this.parallelJobCount--;
                 }
                 if ( !parallelProcessing ) {
