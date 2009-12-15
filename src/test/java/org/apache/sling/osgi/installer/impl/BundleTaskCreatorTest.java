@@ -151,8 +151,9 @@ public class BundleTaskCreatorTest {
     
     @Test 
     public void testBundleRemoveSingle() throws IOException {
+        final String version = "1.0";
         final RegisteredResource [] r = {
-                new MockBundleResource(SN, "1.0")
+                new MockBundleResource(SN, version)
         };
         r[0].setInstallable(false);
         
@@ -160,7 +161,15 @@ public class BundleTaskCreatorTest {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
             c.addBundleInfo(SN, "1.0", Bundle.ACTIVE);
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected one task", 1, s.size());
+            assertEquals("Expected no tasks, bundle was not installed by us", 0, s.size());
+        }
+        
+        {
+            ctx.saveInstalledBundleInfo(SN, r[0].getDigest(), version);
+            final MockBundleTaskCreator c = new MockBundleTaskCreator();
+            c.addBundleInfo(SN, "1.0", Bundle.ACTIVE);
+            final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
+            assertEquals("Expected one task, as we installed that bundle", 1, s.size());
             assertTrue("Expected a BundleRemoveTask", s.first() instanceof BundleRemoveTask);
         }
     }
@@ -180,7 +189,15 @@ public class BundleTaskCreatorTest {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
             c.addBundleInfo(SN, "1.1", Bundle.ACTIVE);
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected one task", 1, s.size());
+            assertEquals("Expected no tasks, bundle was not installed by us", 0, s.size());
+        }
+        
+        {
+            final MockBundleTaskCreator c = new MockBundleTaskCreator();
+            c.addBundleInfo(SN, "1.1", Bundle.ACTIVE);
+            ctx.saveInstalledBundleInfo(SN, r[1].getDigest(), "1.1");
+            final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
+            assertEquals("Expected one task, as we installed that bundle", 1, s.size());
             assertTrue("Expected a BundleRemoveTask", s.first() instanceof BundleRemoveTask);
         }
     }
