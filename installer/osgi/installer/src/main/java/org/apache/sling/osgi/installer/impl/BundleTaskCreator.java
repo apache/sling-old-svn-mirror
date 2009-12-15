@@ -85,8 +85,17 @@ class BundleTaskCreator {
 		
 		if(toActivate == null) {
 		    // None of our resources are installable, remove corresponding bundle if present
+		    // and if we installed it
 		    if(getBundleInfo(ctx, resources.first()) != null) {
-	            tasks.add(new BundleRemoveTask(resources.first()));
+		        if(ctx.getInstalledBundleVersion(symbolicName) == null) {
+                    if(ctx.getLogService() != null) {
+                        ctx.getLogService().log(LogService.LOG_INFO, 
+                                "Bundle " + symbolicName 
+                                + " was not installed by this module, not removed");
+                    }
+		        } else {
+		            tasks.add(new BundleRemoveTask(resources.first()));
+		        }
 	        }
 			
 		} else {
@@ -117,7 +126,7 @@ class BundleTaskCreator {
                         if(ctx.getLogService() != null) {
                             ctx.getLogService().log(LogService.LOG_INFO, 
                                     "Bundle " + info.symbolicName + " " + installedVersion 
-                                    + " was not installed by this module, leaving as is");
+                                    + " was not installed by this module, not downgraded");
                         }
                     }
 			    } else if(compare == 0 && ctx.isSnapshot(newVersion)){
