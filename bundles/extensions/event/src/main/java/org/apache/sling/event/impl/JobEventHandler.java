@@ -147,7 +147,7 @@ public class JobEventHandler
     /** The map of events we're currently processing. */
     private final Map<String, StartedJobInfo> processingEventsList = new HashMap<String, StartedJobInfo>();
 
-    public static ThreadPool JOB_THREAD_POOL;
+    public static volatile ThreadPool JOB_THREAD_POOL;
 
     /** Sync lock */
     private final Object writeLock = new Object();
