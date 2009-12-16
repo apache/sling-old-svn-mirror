@@ -21,10 +21,10 @@ import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
@@ -46,8 +46,9 @@ public class DeleteOperation extends AbstractSlingPostOperation {
             Resource resource = request.getResource();
             Item item = resource.adaptTo(Item.class);
             if (item == null) {
-                throw new ResourceNotFoundException("Missing source "
-                    + resource + " for delete");
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                    "Missing source " + resource + " for delete");
+                return;
             }
 
             item.remove();

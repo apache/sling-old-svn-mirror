@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
@@ -102,8 +101,9 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             // ensure we have an item underlying the request's resource
             Item item = resource.adaptTo(Item.class);
             if (item == null) {
-                throw new ResourceNotFoundException("Missing source "
-                    + resource + " for " + getOperationName());
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                    "Missing source " + resource + " for " + getOperationName());
+                return;
             }
 
             String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
