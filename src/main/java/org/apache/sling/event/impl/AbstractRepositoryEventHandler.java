@@ -319,7 +319,7 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void ignoreException(Exception e) {
         if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignore exception " + e.getMessage(), e);
+            this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
     }
 

@@ -137,7 +137,8 @@ public class JobEventHandler
     /** We remove everything which is older than 5 min by default. */
     private int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
 
-    /** The scheduler for rescheduling jobs. @scr.reference */
+    /** The scheduler for rescheduling jobs.
+     * @scr.reference */
     private Scheduler scheduler;
 
     /** Our component context. */
@@ -456,6 +457,9 @@ public class JobEventHandler
         // load unprocessed jobs from repository
         if ( this.running ) {
             this.loadJobs();
+            logger.info("Apache Sling Job Event Handler started.");
+            logger.debug("Job Handler Configuration: (sleepTime={}secs,maxJobRetries={},waitForAck={}ms,maximumParallelJobs={},cleanupPeriod={}min)",
+                    new Object[] {sleepTime, maxJobRetries,waitForAckMs,maximumParallelJobs,cleanupPeriod});
         } else {
             final ComponentContext ctx = this.componentContext;
             // deactivate
@@ -720,7 +724,7 @@ public class JobEventHandler
         // if this is the main queue and we have reached the max number of parallel jobs
         // we wait a little bit before continuing
         if ( wait ) {
-            logger.debug("Sleeping for {} seconds.", sleepTime);
+            logger.debug("Sleeping for {} seconds as the maximum number of parallel threads is reached.", sleepTime);
             try {
                 Thread.sleep(sleepTime * 1000);
             } catch (InterruptedException ie) {
