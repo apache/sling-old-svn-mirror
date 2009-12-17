@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<metatype:MetaData
+    xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0"
+    localization="metatype">
+
+    <metatype:OCD
+        id="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory"
+        name="%factory.config.name"
+        description="%factory.config.description">
+        <metatype:AD id="name"
+            type="String" name="%name.name"
+            description="%name.description" required="true"/>
+        <metatype:AD id="minPoolSize"
+            type="Integer" default="5" name="%minPoolSize.name"
+            description="%minPoolSize.description"/>
+        <metatype:AD id="maxPoolSize"
+            type="Integer" default="5" name="%queueSize.name"
+            description="%maxPoolSize.description" />
+        <metatype:AD id="queueSize"
+            type="Integer" default="-1" name="%queueSize.name"
+            description="%queueSize.description" />
+        <metatype:AD id="keepAliveTime"
+            type="Long" default="60000" name="%keepAliveTime.name"
+            description="%keepAliveTime.description" />
+        <metatype:AD id="blockPolicy"
+            type="String" default="RUN" name="%blockPolicy.name"
+            description="%blockPolicy.description">
+            <metatype:Option value="ABORT" label="Abort" />
+            <metatype:Option value="DISCARD" label="Discard" />
+            <metatype:Option value="DISCARDOLDEST" label="Discard Oldest" />
+            <metatype:Option value="RUN" label="Run" />
+        </metatype:AD>
+        <metatype:AD id="shutdownGraceful"
+            type="Boolean" default="false" name="%shutdownGraceful.name"
+            description="%shutdownGraceful.description" />
+        <metatype:AD id="daemon"
+            type="Integer" default="-1" name="%daemon.name"
+            description="%daemon.description" />
+        <metatype:AD id="shutdownWaitTime"
+            type="Boolean" default="false" name="%shutdownWaitTime.name"
+            description="%shutdownWaitTime.description" />
+        <metatype:AD id="priority"
+            type="String" default="NORM" name="%priority.name"
+            description="%priority.description" >
+            <metatype:Option value="NORM" label="Norm" />
+            <metatype:Option value="MIN" label="Min" />
+            <metatype:Option value="MAX" label="Max" />
+        </metatype:AD>
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory"
+        factoryPid="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory">
+        <metatype:Object
+            ocdref="org.apache.sling.commons.threads.impl.DefaultThreadPool.factory" />
+    </metatype:Designate>
+</metatype:MetaData>

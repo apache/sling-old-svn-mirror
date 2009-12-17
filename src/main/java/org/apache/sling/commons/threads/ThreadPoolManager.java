@@ -20,7 +20,6 @@ package org.apache.sling.commons.threads;
 /**
  * The <cod>ThreadPoolManager</code> manages thread pools.
  *
- * @version $Id$
  */
 public interface ThreadPoolManager {
 
@@ -28,29 +27,27 @@ public interface ThreadPoolManager {
     String DEFAULT_THREADPOOL_NAME = "default";
 
     /**
-     * Add a new pool.
-     * If a pool with the same name already exists, the new pool is not added
-     * and false is returned.
-     * @param pool The pool.
-     * @return True if the pool could be added, false otherwise.
-     */
-    boolean add(ThreadPool pool);
-
-    /**
      * Get a thread pool.
-     * If there is no thread pool with the given name, the default thread
-     * pool is returned.
+     * If there is no thread pool with the given name, a new thread pool with
+     * the default configuration is created and returned.
+     * A thread pool must be released when not used anymore with the
+     * {@link #release(ThreadPool)} method.
      * @param name The name of the thread pool or null for the default pool.
+     * @return A thread pool.
      */
     ThreadPool get(String name);
 
     /**
-     * Create a new thread pool.
-     * If a pool with the same name already exists, no new pool is created
-     * and <code>null</code> is returned.
-     * @param name Name must not be null.
+     * Create a new thread pool with this configuration.
+     * A thread pool must be released when not used anymore with the
+     * {@link #release(ThreadPool)} method.
      * @param config The thread pool configuration.
+     * @return A new thread pool.
      */
-    ThreadPool create(String name,
-                      ThreadPoolConfig config);
+    ThreadPool create(ThreadPoolConfig config);
+
+    /**
+     * Release the thread pool again.
+     */
+    void release(ThreadPool pool);
 }

@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -35,8 +36,6 @@ import org.slf4j.LoggerFactory;
 /**
  * The DefaultThreadPool class implements the {@link ThreadPool} interface.
  * Instances of this class are managed by the {@link ThreadPoolManager}.
- *
- * @version $Id$
  */
 public class DefaultThreadPool
     implements ThreadPool {
@@ -50,7 +49,7 @@ public class DefaultThreadPool
     /** The executor. */
     protected ThreadPoolExecutor executor;
 
-    protected final ThreadPoolConfig configuration;
+    protected final ModifiableThreadPoolConfig configuration;
 
     /**
      * Create a new thread pool.
@@ -58,9 +57,7 @@ public class DefaultThreadPool
      *               is used
      */
     public DefaultThreadPool(final String name,
-                             ThreadPoolConfig origConfig) {
-        this.logger.info("ThreadPool [{}] initializing ...", name);
-
+                             final ThreadPoolConfig origConfig) {
         // name
         if ( name != null ) {
             this.name = name;
@@ -68,13 +65,15 @@ public class DefaultThreadPool
             this.name = DefaultThreadPoolManager.DEFAULT_THREADPOOL_NAME;
         }
 
-        this.configuration = new ThreadPoolConfig(origConfig);
+        this.logger.info("Initializing thread pool [{}]  ...", this.name);
+
+        this.configuration = new ModifiableThreadPoolConfig(origConfig);
 
         // factory
         final ThreadFactory delegateThreadFactory;
         if (this.configuration.getFactory() == null) {
-            logger.warn("No ThreadFactory is configured. Will use JVM default thread factory."
-                + ExtendedThreadFactory.class.getName());
+            logger.debug("Thread pool [{}] ; No ThreadFactory is configured. Will use JVM default thread factory: {}",
+                    this.name, ExtendedThreadFactory.class.getName());
             delegateThreadFactory = Executors.defaultThreadFactory();
         } else {
             delegateThreadFactory = this.configuration.getFactory();
@@ -82,7 +81,7 @@ public class DefaultThreadPool
         // Min pool size
         if (this.configuration.getMinPoolSize() < 1) {
             this.configuration.setMinPoolSize(1);
-            this.logger.warn("min-pool-size < 1 for pool \"" + name + "\". Set to 1");
+            this.logger.warn("min-pool-size < 1 for pool \"" + this.name + "\". Set to 1");
         }
         // Max pool size
         if ( this.configuration.getMaxPoolSize() < 0 ) {
@@ -95,7 +94,7 @@ public class DefaultThreadPool
         // Keep alive time
         if (this.configuration.getKeepAliveTime() < 0) {
             this.configuration.setKeepAliveTime(1000);
-            this.logger.warn("keep-alive-time-ms < 0 for pool \"" + name + "\". Set to 1000");
+            this.logger.warn("keep-alive-time-ms < 0 for pool \"" + this.name + "\". Set to 1000");
         }
 
         // Queue
@@ -132,8 +131,7 @@ public class DefaultThreadPool
                 queue,
                 threadFactory,
                 handler);
-        this.configuration.makeReadOnly();
-        this.logger.info("ThreadPool [{}] initialized.", name);
+        this.logger.info("Thread pool [{}] initialized.", name);
     }
 
     /**
@@ -173,9 +171,10 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.sling.commons.threads.ThreadPool#shutdown()
+     * Shut down the threadpool.
      */
     public void shutdown() {
+        this.logger.info("Shutting down thread pool [{}] ...", name);
         if ( this.executor != null ) {
             if (this.configuration.isShutdownGraceful()) {
                 this.executor.shutdown();
@@ -186,16 +185,17 @@ public class DefaultThreadPool
             try {
                 if (this.configuration.getShutdownWaitTimeMs() > 0) {
                     if (!this.executor.awaitTermination(this.configuration.getShutdownWaitTimeMs(), TimeUnit.MILLISECONDS)) {
-                        logger.warn("running commands have not terminated within "
+                        logger.warn("Running commands have not terminated within "
                             + this.configuration.getShutdownWaitTimeMs()
                             + "ms. Will shut them down by interruption");
                         this.executor.shutdownNow();
                     }
                 }
             } catch (final InterruptedException ie) {
-                this.logger.error("Cannot shutdown ThreadPool", ie);
+                this.logger.error("Cannot shutdown thread pool [" + this.name + "]", ie);
             }
             this.executor = null;
         }
+        this.logger.info("Thread pool [{}] is shut down.", this.name);
     }
 }

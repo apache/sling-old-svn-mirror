@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <name>Apache Sling Thread Support</name>
     <description>
@@ -54,8 +54,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>
+                            org.apache.sling.commons.threads.impl.Activator
+                        </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.commons.threads;version=${pom.version}
+                            org.apache.sling.commons.threads;version=3.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.threads.impl
@@ -79,6 +82,10 @@
         </plugins>
     </reporting>
     <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>

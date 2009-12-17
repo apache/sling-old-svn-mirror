@@ -17,10 +17,8 @@
 package org.apache.sling.commons.threads;
 
 /**
- * The ThreadPool interface allows to start runnables by
+ * The thread pool interface allows to start runnables by
  * getting threads from a managed pool.
- *
- * @version $Id$
  */
 public interface ThreadPool {
 
@@ -36,9 +34,7 @@ public interface ThreadPool {
     String getName();
 
     /**
-     * Shut down the thread pool.
+     * The thread pool configuration.
      */
-    void shutdown();
-
     ThreadPoolConfig getConfiguration();
 }
