@@ -25,7 +25,6 @@ import org.apache.sling.commons.threads.ThreadPoolConfig;
  * This class is responsible to create new Thread instances.
  * It's a very basic implementation.
  *
- * @version $Id$
  */
 public final class ExtendedThreadFactory implements ThreadFactory {
 

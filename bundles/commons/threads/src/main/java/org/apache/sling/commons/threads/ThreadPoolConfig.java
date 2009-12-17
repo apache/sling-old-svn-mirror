@@ -19,11 +19,9 @@ package org.apache.sling.commons.threads;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * The ThreadPool configuration.
- *
- * @version $Id$
+ * The thread pool configuration.
  */
-public final class ThreadPoolConfig {
+public interface ThreadPoolConfig {
 
     /** The thread pool policies. */
     public enum ThreadPoolPolicy {
@@ -39,164 +37,65 @@ public final class ThreadPoolConfig {
         MAX
     };
 
-    /** The min pool size. */
-    private int minPoolSize = 5;
-
-    /** The max pool size. */
-    private int maxPoolSize = 5;
-
-    /** The queue size */
-    private int queueSize = -1;
-
-    /** The keep alive time. */
-    private long  keepAliveTime = 60000L;
-
-    /** The thread pool policy. Default is RUN. */
-    private ThreadPoolPolicy blockPolicy = ThreadPoolPolicy.RUN;
-
-    private  boolean shutdownGraceful = false;
-
-    private  int shutdownWaitTimeMs = -1;
-
-    private  ThreadFactory factory;
-
-    private  ThreadPriority   priority = ThreadPriority.NORM;
-
-    private  boolean isDaemon = false;
-
-    /** Can this configuration still be changed? */
-    private boolean isWritable = true;
+    /**
+     * Return the minimum pool size.
+     * @return The minimum pool size.
+     */
+    int getMinPoolSize();
 
     /**
-     * Create a new default configuration.
+     * Return the maximum pool size
+     * @return The maximum pool size.
      */
-    public ThreadPoolConfig() {
-        // nothing to do
-    }
+    int getMaxPoolSize();
 
     /**
-     * Clone an existing configuration
-     * @param copy The config to clone
+     * Return the queue size.
+     * @return The queue size.
      */
-    public ThreadPoolConfig(ThreadPoolConfig copy) {
-        this.minPoolSize = copy.minPoolSize;
-        this.maxPoolSize = copy.maxPoolSize;
-        this.queueSize = copy.queueSize;
-        this.keepAliveTime = copy.keepAliveTime;
-        this.blockPolicy = copy.blockPolicy;
-        this.shutdownGraceful = copy.shutdownGraceful;
-        this.shutdownWaitTimeMs = copy.shutdownWaitTimeMs;
-        this.factory = copy.factory;
-        this.priority = copy.priority;
-        this.isDaemon = copy.isDaemon;
-    }
-
-    protected void checkWritable() {
-        if ( !isWritable ) {
-            throw new IllegalStateException("ThreadPoolConfig is read-only.");
-        }
-    }
+    int getQueueSize();
 
     /**
-     * Make the configuration read-only.
+     * Return the keep alive time.
+     * @return The keep alive time.
      */
-    public void makeReadOnly() {
-        this.isWritable = false;
-    }
+    long getKeepAliveTime();
 
-    public int getMinPoolSize() {
-        return minPoolSize;
-    }
+    /**
+     * Return the block policy.
+     * @return The block policy.
+     */
+    ThreadPoolPolicy getBlockPolicy();
 
-    public void setMinPoolSize(int minPoolSize) {
-        this.checkWritable();
-        this.minPoolSize = minPoolSize;
-    }
+    /**
+     * Should this pool shutdown graceful.
+     * @return <code>true</code> if the pool should shutdown graceful.
+     */
+    boolean isShutdownGraceful();
 
-    public int getMaxPoolSize() {
-        return maxPoolSize;
-    }
+    /**
+     * Return the shutdown wait time in ms. A value below 1 means
+     * no waiting at shutdown.
+     * @return The shutdown wait time in ms.
+     */
+    int getShutdownWaitTimeMs();
 
-    public void setMaxPoolSize(int maxPoolSize) {
-        this.checkWritable();
-        this.maxPoolSize = maxPoolSize;
-    }
+    /**
+     * Return the thread pool factory. A value of null means the
+     * default jvm thread pool factory is used.
+     * @return The thread pool factory or <code>null</code>
+     */
+    ThreadFactory getFactory();
 
-    public int getQueueSize() {
-        return queueSize;
-    }
+    /**
+     * Return the priority for the threads.
+     * @return The priority for the threads.
+     */
+    ThreadPriority getPriority();
 
-    public void setQueueSize(int queueSize) {
-        this.checkWritable();
-        this.queueSize = queueSize;
-    }
-
-    public long getKeepAliveTime() {
-        return keepAliveTime;
-    }
-
-    public void setKeepAliveTime(long keepAliveTime) {
-        this.checkWritable();
-        this.keepAliveTime = keepAliveTime;
-    }
-
-    public ThreadPoolPolicy getBlockPolicy() {
-        return blockPolicy;
-    }
-
-    public void setBlockPolicy(ThreadPoolPolicy blockPolicy) {
-        this.checkWritable();
-        this.blockPolicy = blockPolicy;
-        if ( blockPolicy == null ) {
-            throw new IllegalArgumentException("Policy must not be null.");
-        }
-    }
-
-    public boolean isShutdownGraceful() {
-        return shutdownGraceful;
-    }
-
-    public void setShutdownGraceful(boolean shutdownGraceful) {
-        this.checkWritable();
-        this.shutdownGraceful = shutdownGraceful;
-    }
-
-    public int getShutdownWaitTimeMs() {
-        return shutdownWaitTimeMs;
-    }
-
-    public void setShutdownWaitTimeMs(int shutdownWaitTimeMs) {
-        this.checkWritable();
-        this.shutdownWaitTimeMs = shutdownWaitTimeMs;
-    }
-
-    public ThreadFactory getFactory() {
-        return factory;
-    }
-
-    public void setFactory(ThreadFactory factory) {
-        this.checkWritable();
-        this.factory = factory;
-    }
-
-    public ThreadPriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(ThreadPriority priority) {
-        this.checkWritable();
-        if ( priority == null ) {
-            throw new IllegalArgumentException("Priority must not be null.");
-        }
-        this.priority = priority;
-    }
-
-    public boolean isDaemon() {
-        return isDaemon;
-    }
-
-    public void setDaemon(boolean isDaemon) {
-        this.checkWritable();
-        this.isDaemon = isDaemon;
-    }
+    /**
+     * Return if daemon threads should be created.
+     * @return <code>true</code> if daemon threads should be created.
+     */
+    boolean isDaemon();
 }
