@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.ThreadPool;
@@ -59,17 +60,12 @@ public class EventingThreadPool implements ThreadPool {
         if ( this.threadPoolManager == null ) {
             throw new Exception("No ThreadPoolManager found.");
         }
-        final ThreadPoolConfig config = new ThreadPoolConfig();
+        final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
         config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MIN_POOL_SIZE), DEFAULT_MIN_POOL_SIZE));
         config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
         config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUEL_SIZE), DEFAULT_QUEUE_SIZE));
         config.setShutdownGraceful(true);
-        threadPoolManager.create(EventHelper.THREAD_POOL_NAME, config);
-
-        this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
-        if ( this.threadPool == null ) {
-            throw new Exception("No thread pool with name " + EventHelper.THREAD_POOL_NAME + " found.");
-        }
+        this.threadPool = threadPoolManager.create(config);
     }
 
     /**
@@ -77,7 +73,7 @@ public class EventingThreadPool implements ThreadPool {
      * @param context
      */
     protected void deactivate(final ComponentContext context) {
-        this.threadPool = null;
+        this.threadPoolManager.release(this.threadPool);
     }
 
     /**
@@ -99,12 +95,5 @@ public class EventingThreadPool implements ThreadPool {
      */
     public String getName() {
         return threadPool.getName();
-    }
-
-    /**
-     * @see org.apache.sling.commons.threads.ThreadPool#shutdown()
-     */
-    public void shutdown() {
-        threadPool.shutdown();
     }
 }

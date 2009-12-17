@@ -247,6 +247,7 @@ public abstract class EventUtil {
                 notify = false;
             }
         }
+        LoggerFactory.getLogger(EventUtil.class).info("Send ack for {}", job.hashCode());
         final boolean notifyResult = notify;
 
         final Runnable task = new Runnable() {
@@ -256,6 +257,7 @@ public abstract class EventUtil {
              */
             public void run() {
                 boolean result = false;
+                LoggerFactory.getLogger(EventUtil.class).info("Processing {}", job.hashCode());
                 try {
                     result = processor.process(job);
                 } catch (Throwable t) {
