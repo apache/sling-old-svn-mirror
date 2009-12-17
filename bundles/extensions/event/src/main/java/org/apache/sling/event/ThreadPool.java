@@ -21,8 +21,6 @@ package org.apache.sling.event;
  * The eventing uses a service registered as this interface.
  * The default implementation is a configurable pool registered with
  * commons threads.
- *
- * @version $Id$
  */
 public interface ThreadPool extends org.apache.sling.commons.threads.ThreadPool {
 
