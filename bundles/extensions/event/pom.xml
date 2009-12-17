@@ -67,7 +67,7 @@
                             slingevent=http://sling.apache.org/jcr/event/1.0
                         </Sling-Namespaces>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*"
+                            jackrabbit-jcr-commons
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
