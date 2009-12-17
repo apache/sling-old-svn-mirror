@@ -61,8 +61,6 @@ public class QuartzScheduler implements Scheduler {
 
     protected static final String DEFAULT_QUARTZ_JOB_GROUP = "Sling";
 
-    protected static final String THREAD_POOL_NAME = "SLING_SCHEDULER";
-
     protected static final String PREFIX = "Apache Sling Quartz Scheduler ";
 
     protected static final String QUARTZ_SCHEDULER_NAME = "ApacheSling";
@@ -93,6 +91,8 @@ public class QuartzScheduler implements Scheduler {
 
     /** @scr.reference */
     protected ThreadPoolManager threadPoolManager;
+
+    protected ThreadPool threadPool;
 
     /**
      * Activate this component.
@@ -147,8 +147,8 @@ public class QuartzScheduler implements Scheduler {
             s = factory.getScheduler();
         } else {
             // create the pool
-            final ThreadPool pool = tpm.get(THREAD_POOL_NAME);
-            final QuartzThreadPool quartzPool = new QuartzThreadPool(pool);
+            this.threadPool = tpm.get(null);
+            final QuartzThreadPool quartzPool = new QuartzThreadPool(this.threadPool);
 
             final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
             // unique run id
@@ -181,6 +181,11 @@ public class QuartzScheduler implements Scheduler {
      * @param s The scheduler.
      */
     protected void dispose(final org.quartz.Scheduler s) {
+        final ThreadPoolManager tpm = this.threadPoolManager;
+        if ( tpm != null && this.threadPool != null ) {
+            tpm.release(this.threadPool);
+            this.threadPool = null;
+        }
         if ( s != null ) {
             try {
                 s.shutdown();
