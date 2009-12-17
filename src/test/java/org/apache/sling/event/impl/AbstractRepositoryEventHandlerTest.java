@@ -32,6 +32,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.ThreadPool;
@@ -162,15 +163,11 @@ public abstract class AbstractRepositoryEventHandlerTest {
         }
 
         public String getName() {
-            return EventHelper.THREAD_POOL_NAME;
-        }
-
-        public void shutdown() {
-            // nothing to do
+            return "default";
         }
 
         public ThreadPoolConfig getConfiguration() {
-            return new ThreadPoolConfig();
+            return new ModifiableThreadPoolConfig();
         }
 
     }

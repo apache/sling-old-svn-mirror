@@ -935,7 +935,9 @@ public class JobEventHandler
                 // we need async delivery, otherwise we might create a deadlock
                 // as this method runs inside a synchronized block and the finishedJob
                 // method as well!
+                logger.info("Posting event {}", jobEvent.hashCode());
                 localEA.postEvent(jobEvent);
+                logger.info("Posted event {}", jobEvent.hashCode());
                 // do not unlock if sending was successful
                 unlock = false;
             } else {

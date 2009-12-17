@@ -51,9 +51,6 @@ import org.osgi.service.event.Event;
  */
 public abstract class EventHelper {
 
-    /** The name of the thread pool for the eventing stuff. */
-    public static final String THREAD_POOL_NAME = "SLING_EVENTING";
-
     /** The namespace prefix. */
     public static final String EVENT_PREFIX = "slingevent:";
 
