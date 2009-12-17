@@ -58,8 +58,8 @@ public class CreateNodeTest extends HttpTestBase {
         getContent(urlOfNewNode + ".xml", CONTENT_TYPE_XML);
 
         // And extensions for which we have no renderer fail
-        assertHttpStatus(urlOfNewNode + ".pdf", 403);
-        assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 403);
+        assertHttpStatus(urlOfNewNode + ".pdf", 404);
+        assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 404);
     }
 
     public void testCreateNodeMultipart() throws IOException {
