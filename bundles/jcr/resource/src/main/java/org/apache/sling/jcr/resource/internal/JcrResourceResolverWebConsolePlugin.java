@@ -20,8 +20,6 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -34,6 +32,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -337,9 +337,9 @@ public class JcrResourceResolverWebConsolePlugin extends
         private final URI uri;
 
         public ResolverRequest(HttpServletRequest request, String uriString)
-                throws URISyntaxException {
+                throws URIException {
             super(request);
-            uri = new URI(uriString);
+            uri = new URI(uriString, false);
         }
 
         @Override
@@ -349,7 +349,11 @@ public class JcrResourceResolverWebConsolePlugin extends
 
         @Override
         public String getServerName() {
-            return uri.getHost();
+            try {
+                return uri.getHost();
+            } catch (URIException ue) {
+                return null;
+            }
         }
 
         @Override
@@ -359,7 +363,11 @@ public class JcrResourceResolverWebConsolePlugin extends
 
         @Override
         public String getPathInfo() {
-            return uri.getPath();
+            try {
+                return uri.getPath();
+            } catch (URIException ue) {
+                return "";
+            }
         }
     }
 
