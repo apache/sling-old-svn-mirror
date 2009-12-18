@@ -69,7 +69,8 @@
                         <!-- Include URL support from Jackrabbit -->
                         <Embed-Dependency>
                             jackrabbit-classloader;inline="org/apache/jackrabbit/net/**|org/apache/jackrabbit/classloader/Util.*",
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*"
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*",
+                            commons-httpclient;inline="org/apache/commons/httpclient/HttpClientError.*|org/apache/commons/httpclient/HttpException.*|org/apache/commons/httpclient/URI*|org/apache/commons/httpclient/util/EncodingUtil.*"
                         </Embed-Dependency>
 
                         <Sling-Namespaces>
@@ -141,15 +142,16 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!--
-            VirtualURL BidiMap, to be removed once JcrResourceResolver
-            is removed and completely replaced by JcrResourceResolver2
-        -->
         <dependency>
            <groupId>commons-collections</groupId>
            <artifactId>commons-collections</artifactId>
            <version>3.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -178,7 +180,7 @@
             <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
-
+        
         <!-- Testing -->
         <dependency>
             <groupId>org.apache.sling</groupId>

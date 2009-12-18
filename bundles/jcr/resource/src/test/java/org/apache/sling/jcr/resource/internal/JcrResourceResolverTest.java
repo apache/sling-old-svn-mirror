@@ -903,7 +903,57 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
     }
+    
+    public void testMapURLEscaping() throws Exception {
 
+        final String mapHostInternal = "internal.host.com";
+        final String mapRootInternal = "/content/internal";
+        
+        Node internalRedirect = mapRoot.getNode("map/http").addNode(
+            mapHostInternal + ".80", "sling:Mapping");
+        internalRedirect.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            mapRootInternal);
+        session.save();
+
+        Thread.sleep(1000L);
+
+        final String path = "/sample with spaces";
+        final String escapedPath = "/sample%20with%20spaces";
+        
+        // ---------------------------------------------------------------------
+        // internal redirect
+
+        // a) test map(String)
+        // => return full URL, escaped
+        String mapped = resResolver.map(mapRootInternal + path);
+        assertEquals("http://" + mapHostInternal + escapedPath, mapped);
+
+        // b) test map(HttpServletRequest, String) with "localhost"
+        // => return full URL, escaped
+        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath), mapRootInternal + path);
+        assertEquals("http://" + mapHostInternal + escapedPath, mapped);
+
+        // c) test map(HttpServletRequest, String) with "internal.host.com"
+        // => only return path, escaped, because request host/port matches (cut off host part)
+        mapped = resResolver.map(new ResourceResolverTestRequest(null, mapHostInternal, -1, rootPath), mapRootInternal + path);
+        assertEquals(escapedPath, mapped);
+        
+        // ---------------------------------------------------------------------
+        // no mapping config
+        // => return only escaped path
+        
+        final String unmappedRoot = "/unmappedRoot";
+
+        // a) test map(String)
+        mapped = resResolver.map(unmappedRoot + path);
+        assertEquals(unmappedRoot + escapedPath, mapped);
+
+        // b) test map(HttpServletRequest, String)
+        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath), unmappedRoot + path);
+        assertEquals(unmappedRoot + escapedPath, mapped);
+
+    }
+    
     public void testMapNamespaceMangling() throws Exception {
 
         final String mapHost = "virtual.host.com";
