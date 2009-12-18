@@ -36,6 +36,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.httpclient.URIException;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -375,51 +376,33 @@ public class JcrResourceResolver extends SlingAdaptable implements
             mappedPath = resourcePath;
         }
 
-        if (mappedPathIsUrl) {
-            // TODO: Consider mangling the path but not the scheme and
-            // esp. the host:port part
+        // [scheme:][//authority][path][?query][#fragment]
+        try {
+            // use commons-httpclient's URI instead of java.net.URI, as it can
+            // actually accept *unescaped* URIs, such as the "mappedPath" and
+            // return them in proper escaped form, including the path, via toString()
+            org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(mappedPath, false);
 
-            // [scheme:][//authority][path][?query][#fragment]
-            try {
-                URI uri = new URI(mappedPath);
+            // 1. mangle the namespaces in the path
+            String path = mangleNamespaces(uri.getPath());
 
-                // mangle the namespaces in the path
-                String path = mangleNamespaces(uri.getPath());
-
-                // prepend servlet context path if we have a request
-                if (request != null && request.getContextPath() != null
-                    && request.getContextPath().length() > 0) {
-                    path = request.getContextPath().concat(path);
-                }
-
-                // reconstruct the uri with the modified path
-                mappedPath = new URI(uri.getScheme(), uri.getAuthority(), path,
-                    uri.getQuery(), uri.getFragment()).toString();
-            } catch (URISyntaxException use) {
-                log.warn("map: Unable to mangle namespaces for " + mappedPath
-                    + " returning unmangled", use);
-            }
-
-            log.debug("map: Returning URL {} as mapping for path {}",
-                mappedPath, resourcePath);
-
-        } else {
-
-            // mangle the namespaces
-            mappedPath = mangleNamespaces(mappedPath);
-
-            // prepend servlet context path if we have a request
+            // 2. prepend servlet context path if we have a request
             if (request != null && request.getContextPath() != null
                 && request.getContextPath().length() > 0) {
-                mappedPath = request.getContextPath().concat(mappedPath);
+                path = request.getContextPath().concat(path);
             }
+            // update the path part of the URI
+            uri.setPath(path);
 
-            log.debug(
-                "map: Returning path {} (after mangling, incl. context) for {}",
-                mappedPath, resourcePath);
-
+            mappedPath = uri.toString();
+        } catch (URIException e) {
+            log.warn("map: Unable to mangle namespaces for " + mappedPath
+                    + " returning unmangled", e);
         }
 
+        log.debug("map: Returning URL {} as mapping for path {}",
+            mappedPath, resourcePath);
+        
         // reappend fragment and/or query
         if (fragmentQuery != null) {
             mappedPath = mappedPath.concat(fragmentQuery);
