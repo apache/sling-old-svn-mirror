@@ -158,9 +158,10 @@ public class DefaultThreadPool
         }
         if ( runnable != null ) {
             if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Executing runnable: {}, pool={}, corePoolSize={}, maxPoolSize={}, queueSize={}",
+                this.logger.debug("Executing runnable: {}, pool={}, active={}, corePoolSize={}, maxPoolSize={}, queueSize={}",
                         new Object[] {runnable,
                                       this.name,
+                                      this.executor.getActiveCount(),
                                       this.executor.getCorePoolSize(),
                                       this.executor.getMaximumPoolSize(),
                                       this.executor.getQueue().size()});
