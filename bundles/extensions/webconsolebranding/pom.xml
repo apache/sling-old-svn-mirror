@@ -31,7 +31,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Branding plugin for the Apache Felix Web Console</name>
+    <name>Apache Sling Web Console Branding</name>
     <description>
         Apache Sling branding for the Apache Felix Web Console. This fragment
         attaches to the org.apache.felix.webconsole bundle to provide branding
