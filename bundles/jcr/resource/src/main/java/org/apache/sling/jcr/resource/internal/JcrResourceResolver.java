@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,7 +34,6 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.URIException;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -51,6 +48,8 @@ import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
+import org.apache.sling.jcr.resource.internal.helper.URI;
+import org.apache.sling.jcr.resource.internal.helper.URIException;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
@@ -178,7 +177,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // otherwise the mapped path is an URI and we have to try to
             // resolve that URI now, using the URI's path as the real path
             try {
-                URI uri = new URI(mappedPath[0]);
+                URI uri = new URI(mappedPath[0], false);
                 requestPath = getMapPath(uri.getScheme(), uri.getHost(),
                     uri.getPort(), uri.getPath());
                 realPathList = new String[] { uri.getPath() };
@@ -186,7 +185,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 log.debug(
                     "resolve: Mapped path is an URL, using new request path {}",
                     requestPath);
-            } catch (URISyntaxException use) {
+            } catch (URIException use) {
                 // TODO: log and fail
                 throw new ResourceNotFoundException(absPath);
             }
@@ -381,7 +380,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // use commons-httpclient's URI instead of java.net.URI, as it can
             // actually accept *unescaped* URIs, such as the "mappedPath" and
             // return them in proper escaped form, including the path, via toString()
-            org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(mappedPath, false);
+            URI uri = new URI(mappedPath, false);
 
             // 1. mangle the namespaces in the path
             String path = mangleNamespaces(uri.getPath());
@@ -402,7 +401,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
         log.debug("map: Returning URL {} as mapping for path {}",
             mappedPath, resourcePath);
-        
+
         // reappend fragment and/or query
         if (fragmentQuery != null) {
             mappedPath = mappedPath.concat(fragmentQuery);
