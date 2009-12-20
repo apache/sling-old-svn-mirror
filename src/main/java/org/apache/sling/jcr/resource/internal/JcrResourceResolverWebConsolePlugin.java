@@ -32,14 +32,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
+import org.apache.sling.jcr.resource.internal.helper.URI;
+import org.apache.sling.jcr.resource.internal.helper.URIException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
