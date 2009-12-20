@@ -322,9 +322,15 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
             // build path from segment names
             StringBuilder buf = new StringBuilder();
-            while (!names.isEmpty()) {
+
+            // construct the path from the segments (or root if none)
+            if (names.isEmpty()) {
                 buf.append('/');
-                buf.append(names.removeLast());
+            } else {
+                while (!names.isEmpty()) {
+                    buf.append('/');
+                    buf.append(names.removeLast());
+                }
             }
 
             // reappend the resolutionPathInfo
