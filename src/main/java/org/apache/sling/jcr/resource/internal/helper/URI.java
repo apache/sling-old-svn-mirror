@@ -29,6 +29,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Locale;
 
+import org.apache.commons.codec.DecoderException;
 import org.apache.sling.api.SlingException;
 
 /**
@@ -2296,9 +2297,8 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
             next = original.indexOf(']', from);
             if (next == -1) {
                 throw new URIException(URIException.PARSING, "IPv6reference");
-            } else {
-                next++;
             }
+            next++;
             // In IPv6reference, '[', ']' should be excluded
             _host = (escaped)
                     ? original.substring(from, next).toCharArray()
@@ -2865,9 +2865,8 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     public String getHost() throws URIException {
         if (_host != null) {
             return decode(_host, getProtocolCharset());
-        } else {
-            return null;
         }
+        return null;
     }
 
     // --------------------------------------------------------------- The port
@@ -3563,9 +3562,8 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
             int slashIndex = normalized.lastIndexOf('/', index - 1);
             if (slashIndex >= 0) {
                 break;
-            } else {
-                normalized = normalized.substring(index + 3);
             }
+            normalized = normalized.substring(index + 3);
         }
         if (normalized.endsWith("/..")) {
             int slashIndex = normalized.lastIndexOf('/',
@@ -3720,7 +3718,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
     /**
      * Compare this URI to another object.
      *
-     * @param obj the object to be compared.
+     * @param another the object to be compared.
      * @return 0, if it's same, -1, if failed, first being compared with in the
      *         authority component
      * @throws ClassCastException not URI argument
@@ -4081,8 +4079,6 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      * specified charset is not supported, default system encoding is used.
      *
      * @param data the byte array to be encoded
-     * @param offset the index of the first byte to encode
-     * @param length the number of bytes to encode
      * @param charset the desired character encoding
      * @return The result of the conversion.
      * @since 3.0
