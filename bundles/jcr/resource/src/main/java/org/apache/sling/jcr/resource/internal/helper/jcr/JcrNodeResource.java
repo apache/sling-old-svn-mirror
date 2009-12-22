@@ -45,10 +45,10 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
+import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
-import org.apache.sling.jcr.resource.internal.JcrModifiablePropertyMap;
-import org.apache.sling.jcr.resource.internal.JcrPropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +121,7 @@ public class JcrNodeResource extends JcrItemResource {
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
-            return (Type) new JcrPropertyMap(getNode()); // unchecked cast
+            return (Type) new JcrPropertyMap(getNode(), this.dynamicClassLoader); // unchecked cast
         } else if (type == PersistableValueMap.class) {
             // check write
             try {

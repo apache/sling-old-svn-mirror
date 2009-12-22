@@ -29,6 +29,8 @@ import javax.jcr.Node;
 
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
+import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {

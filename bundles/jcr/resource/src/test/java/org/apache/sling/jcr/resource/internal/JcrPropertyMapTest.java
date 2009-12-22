@@ -31,6 +31,7 @@ import javax.jcr.ValueFactory;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.jcr.resource.JcrPropertyMap;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
