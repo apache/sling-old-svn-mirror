@@ -29,7 +29,6 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Locale;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.sling.api.SlingException;
 
 /**
@@ -4170,7 +4169,7 @@ public class URI implements Cloneable, Comparable<URI>, Serializable {
      *
      * @param bytes array of URL safe characters
      * @return array of original bytes
-     * @throws DecoderException Thrown if URL decoding is unsuccessful
+     * @throws URIException Thrown if URL decoding is unsuccessful
      */
     private static final byte[] decodeUrl(byte[] bytes) {
         if (bytes == null) {
