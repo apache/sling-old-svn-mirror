@@ -66,12 +66,11 @@
                         </Bundle-DocURL>
                         <Private-Package>
                             <!-- External (app, webapp) components -->
-                            !org.apache.sling.launchpad.app.*,
                             !org.apache.sling.launchpad.base.shared.*,
-                            !org.apache.sling.launchpad.webapp.*,
-                            *
+                            org.apache.sling.launchpad.base.*
                         </Private-Package>
                         <Import-Package>!*</Import-Package>
+                        <Export-Package>!*</Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Embed-Dependency>
                             org.apache.felix.framework;inline=org/**|META-INF/**,
