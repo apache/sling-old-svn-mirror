@@ -87,7 +87,7 @@ public abstract class EventUtil {
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
     /** The property to set to put the jobs into a separate job queue. This property
-     * spcifies the name of the job queue. If the job queue does not exists yet
+     * spEcifies the name of the job queue. If the job queue does not exists yet
      * a new queue is created.
      * If a job queue is used, the jobs are never executed in parallel from this queue!
      */
