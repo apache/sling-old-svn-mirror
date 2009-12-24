@@ -20,6 +20,7 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.text.ParseException;
@@ -57,7 +58,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 
 /**
@@ -780,7 +780,7 @@ public class DefaultContentCreator implements ContentCreator {
 	 */
 	protected String hashPath(String item) throws RepositoryException {
 		try {
-			String hash = Text.digest("sha1", INSTANCE_SEED + item, "UTF-8");
+			String hash = digest("sha1", (INSTANCE_SEED + item).getBytes("UTF-8"));
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < STORAGE_LEVELS; i++) {
 				sb.append(hash, i * 2, (i * 2) + 2).append("/");
@@ -906,4 +906,33 @@ public class DefaultContentCreator implements ContentCreator {
 
 		accessControlManager.setPolicy(resourcePath, updatedAcl);
 	}
+
+	/**
+     * used for the md5
+     */
+    private static final char[] hexTable = "0123456789abcdef".toCharArray();
+
+    /**
+     * Digest the plain string using the given algorithm.
+     *
+     * @param algorithm The alogrithm for the digest. This algorithm must be
+     *                  supported by the MessageDigest class.
+     * @param data      the data to digest with the given algorithm
+     * @return The digested plain text String represented as Hex digits.
+     * @throws java.security.NoSuchAlgorithmException if the desired algorithm is not supported by
+     *                                  the MessageDigest class.
+     */
+    public static String digest(String algorithm, byte[] data)
+            throws NoSuchAlgorithmException {
+
+        MessageDigest md = MessageDigest.getInstance(algorithm);
+        byte[] digest = md.digest(data);
+        StringBuffer res = new StringBuffer(digest.length * 2);
+        for (int i = 0; i < digest.length; i++) {
+            byte b = digest[i];
+            res.append(hexTable[(b >> 4) & 15]);
+            res.append(hexTable[b & 15]);
+        }
+        return res.toString();
+    }
 }
