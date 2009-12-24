@@ -94,8 +94,15 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
    * @param name  Full qualified class name
    * @return  The compounds consisting of the (sub)-packates followed by the class name
    */
-  protected def packetize(name: String): List[String] =
-    name.split('.').toList
+  protected def packetize(name: String): List[String] = name.split('.').toList
+  
+  /**
+   * Utility method for mangling fully quallfied class names into a valid Scala
+   * identifier. 
+   * @param name Full qualified class name
+   * @return  A valid Scala identifier
+   */
+  protected def mangle(name: String) = packetize(name).mkString("_") 
 
   /**
    * Pre processor for wrapping the script such that it becomes a valid Scala source entity
@@ -108,8 +115,21 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
    */
   @throws(classOf[InterpreterException])
   protected def preProcess(name: String, code: String, bindings: Bindings): String = {
-    def bind(arg: (String, Argument[_])) =
-      "lazy val " + arg._1 + " = bindings.getValue(\"" + arg._1 + "\").asInstanceOf[" + arg._2.getType.getName + "]"
+    def bind(arg: (String, AnyRef)) = {
+      val views = bindings.getViews(arg._2.getClass)
+      val className = views.head.getName
+      val implicits = 
+        for {
+          view <- views.tail
+          intfName = view.getName
+          methName = mangle(className) + "2" + mangle(intfName)  
+        }
+        yield 
+          "    implicit def " + methName + "(x: " + className + "): " + intfName + " = x.asInstanceOf[" +  intfName + "]"
+      
+      "    lazy val " + arg._1 + " = bindings.getValue(\"" + arg._1 + "\").asInstanceOf[" + className + "]" + NL +
+      implicits.mkString(NL)
+    }
 
     val compounds = packetize(name)
 

@@ -14,90 +14,96 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.collection.Map
-import scala.collection.mutable.HashMap
+import scala.collection._
 
 package org.apache.sling.scripting.scala.interpreter {
 
 /**
- * An argument consists of a value and its type
+ * Bindings of names to Values
  */
-trait Argument[T <: AnyRef] {
+trait Bindings extends Map[String, AnyRef] {
 
   /**
-   * @returns  the value of this argument
-   */
-  def getValue: T
-
-  /**
-   * @returns  the type of this argument
-   */
-  def getType: Class[T]
-}
-
-/**
- * Bindings of names to {@link Argument}s
- */
-trait Bindings extends Map[String, Argument[_]] {
-
-  /**
-   * Associate an argument with a name
+   * Associate a value with a name
    * @param name
-   * @param argument
-   * @returns  The argument which was previously associated with the
+   * @param value
+   * @returns  The value which was previously associated with the
    *   given name or null if none.
    */
-  def put(name: String, argument: Argument[_]): Argument[_]
+  def putValue(name: String, value: AnyRef): AnyRef
 
   /**
-   * Associate an argument with a name
-   * @param  name
-   * @param  value  the value of the {@link Argument}
-   * @param  tyqe the type of the {@link Argument}
-   */
-  def put[T <: AnyRef](name: String, value: T, tyqe: Class[T]): Argument[_] =
-    put(name, new Argument[T] {
-      def getValue: T = value
-      def getType: Class[T] = tyqe
-    })
-
-  /**
-   * @returns  the value of the {@link Argument} associated with the given name
+   * @returns  the value associated with the given name
    * @param name
    */
   def getValue(name: String): AnyRef =
     get(name) match {
-      case Some(a) => a.getValue
-      case None => null
-    }
-
-  /**
-   * @returns  the type of the {@link Argument} associated with the given name
-   * @param name
-   */
-  def getType(name: String): Class[_] =
-    get(name) match {
-      case Some(a) => a.getClass
-      case None => null
-    }
-}
-
-/**
- * HashMap based default implementation of {@link Bindings}.
- */
-class ScalaBindings extends Bindings {
-  private val bindings = new HashMap[String, Argument[_]]
-
-  def size: Int = bindings.size
-  def get(name: String): Option[Argument[_]] = bindings.get(name)
-  def elements: Iterator[(String, Argument[_])] = bindings.elements
-
-  def put(name: String, argument: Argument[_]): Argument[_] =
-    bindings.put(name, argument) match {
       case Some(a) => a
       case None => null
     }
+  
+  def getViews(clazz: Class[_]) = {
+    def findLeastAccessibleClass(clazz: Class[_]): Class[_] = {
+      if   (accessible(clazz)) clazz
+      else findLeastAccessibleClass(clazz.getSuperclass)
+    }
+    
+    def getInterfacesUpTo(clazz: Class[_], bound: Class[_]) = {
+      def getInterfacesUpTo(intfs: mutable.Set[Class[_]], clazz: Class[_], bound: Class[_]): mutable.Set[Class[_]] = 
+        if (clazz == bound) intfs
+        else getInterfacesUpTo(intfs ++ clazz.getInterfaces, clazz.getSuperclass, bound)
+      
+      getInterfacesUpTo(mutable.Set.empty, clazz, bound)
+    }
+
+    def accessible(clazz: Class[_]) = {
+      try {
+        Class.forName(clazz.getName)
+        true
+      } 
+      catch { case _ => false }
+    }
+    
+    val l = findLeastAccessibleClass(clazz) 
+    var o = getInterfacesUpTo(clazz, l) 
+    var v = Set.empty ++ o
+    
+    while (!v.isEmpty) {
+      val w = v.find(_ => true).get
+      val p = w.getInterfaces.filter(accessible)
+      o = o -- p
+      v = v - w ++ p
+    }
+    
+    l::o.toList
+  } 
+}
+
+/**
+ * Default implementation of {@link Bindings} backed by a mutable Map
+ */
+private class BindingsWrapper(map: mutable.Map[String, AnyRef]) extends Bindings {
+  def size: Int = map.size
+  def get(name: String) = map.get(name)
+  def elements: Iterator[(String, AnyRef)] = map.elements
+  
+  def putValue(name: String, value: AnyRef) = 
+    map.put(name, value) match {
+      case Some(a) => a
+      case None => null
+    }
+  
+}
+
+object Bindings {
+  import _root_.scala.collection.jcl.Conversions.convertMap
+  
+  def apply(): Bindings = new BindingsWrapper(new mutable.HashMap)
+  def apply(map: mutable.Map[String, AnyRef]): Bindings = new BindingsWrapper(map)
+  def apply(map: java.util.Map[String, AnyRef]): Bindings = new BindingsWrapper(map)
 }
 
 }
+
+
 

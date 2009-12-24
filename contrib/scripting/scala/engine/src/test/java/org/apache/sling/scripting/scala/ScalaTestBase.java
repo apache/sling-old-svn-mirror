@@ -31,9 +31,9 @@ import javax.script.ScriptException;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.scripting.scala.engine.BacklogReporter;
 import org.apache.sling.scripting.scala.interpreter.Bindings;
+import org.apache.sling.scripting.scala.interpreter.Bindings$;
 import org.apache.sling.scripting.scala.interpreter.InterpreterException;
 import org.apache.sling.scripting.scala.interpreter.JcrFS;
-import org.apache.sling.scripting.scala.interpreter.ScalaBindings;
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter;
 import org.apache.sling.scripting.scala.interpreter.JcrFS.JcrNode;
 
@@ -91,7 +91,7 @@ public class ScalaTestBase extends RepositoryTestBase {
     }
 
     protected String evalScala(String code) throws ScriptException {
-        Bindings bindings = new ScalaBindings();
+        Bindings bindings = Bindings$.MODULE$.apply();
         return evalScala(createScriptName(), code, bindings);
     }
 
@@ -127,7 +127,7 @@ public class ScalaTestBase extends RepositoryTestBase {
         return evalScala(scriptName, code, bindings);
     }
 
-    protected String evalScala(String name, AbstractFile src, ScalaBindings bindings) throws ScriptException {
+    protected String evalScala(String name, AbstractFile src, Bindings bindings) throws ScriptException {
         try {
             interpreterOut.reset();
             Reporter result = interpreter.interprete(name, src, bindings, null, interpreterOut);

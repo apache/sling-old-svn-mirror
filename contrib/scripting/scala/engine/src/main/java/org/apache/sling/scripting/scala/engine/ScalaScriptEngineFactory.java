@@ -42,6 +42,7 @@ import org.apache.sling.scripting.scala.interpreter.JcrFS;
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.tools.nsc.Settings;
@@ -56,6 +57,8 @@ import scala.tools.nsc.io.PlainFile;
  * @scr.service
  */
 public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
+    private static final Logger log = LoggerFactory.getLogger(ScalaScriptEngineFactory.class);
+
     private static final String PATH_SEPARATOR = System.getProperty("path.separator");
 
     public final static String[] SCALA_SCRIPT_EXTENSIONS = {"scala", "scs"};
@@ -164,7 +167,7 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
                 url = bundles[k].getResource("");
             }
 
-            if (url != null) { // FIXME: log null values
+            if (url != null) {
                 if ("file".equals(url.getProtocol())) {
                     try {
                         bundleFs[k] = new PlainFile(new File(url.toURI()));
@@ -176,6 +179,9 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
                 else {
                     bundleFs[k] = BundleFS.create(bundles[k]);
                 }
+            }
+            else {
+                log.warn("Cannot retreive resources from Bundle {}. Skipping.", bundles[k].getSymbolicName());
             }
         }
         return bundleFs;

@@ -51,11 +51,14 @@ class html(vars: htmlVars) {
   
   import vars._
   
+  val node: Node = currentNode
+  
   println {
     <html>
-      <h1>{ "Hello " + currentNode("title") }</h1>
+      <h1>{ "Hello " + node("title") }</h1>
       Today is { Calendar.getInstance.getTime } <br />
-      My path is { currentNode.path } 
+      My path is { node.path } <br />
+      : { resource.adaptTo(classOf[javax.jcr.Node]).getProperty("title").getValue().getString() } <br />
       { Tree(currentNode).render }
     </html>  
   }

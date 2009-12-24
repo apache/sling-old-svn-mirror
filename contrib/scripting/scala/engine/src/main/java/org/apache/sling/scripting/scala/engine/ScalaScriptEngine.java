@@ -21,10 +21,8 @@ import static org.apache.sling.scripting.scala.engine.ExceptionHelper.initCause;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -36,15 +34,14 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
+import org.apache.sling.scripting.scala.interpreter.Bindings;
+import org.apache.sling.scripting.scala.interpreter.Bindings$;
 import org.apache.sling.scripting.scala.interpreter.JcrFS;
-import org.apache.sling.scripting.scala.interpreter.ScalaBindings;
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter;
 import org.apache.sling.scripting.scala.interpreter.JcrFS.JcrNode;
 import org.slf4j.Logger;
@@ -74,8 +71,7 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
                 throw new IllegalArgumentException("Bindings does not contain script helper object");
             }
 
-            TypeHints typeHints = new TypeHints(bindings);
-            final ScalaBindings scalaBindings = new ScalaBindings();
+            final Bindings scalaBindings = Bindings$.MODULE$.apply();
             for (String name : bindings.keySet()) {
                 if (name == null) {
                     log.debug("Bindings contain null key. skipping");
@@ -87,40 +83,28 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
                     log.debug("{} has null value. skipping", name);
                     continue;
                 }
-                Class<?> typeHint = typeHints.getType(name);
-                if (typeHint == null) {
-                    log.debug("{} has no type hint. skipping");
-                    continue;
-                }
 
-                scalaBindings.put(makeIdentifier(name), value, typeHint);
+                scalaBindings.putValue(makeIdentifier(name), value);
             }
 
             final JcrNode script = getScriptSource(scriptHelper);
             final long scriptMod = script.lastModified();
             final String scriptName = getScriptName(scriptHelper);
 
-            Boolean outDated = readLocked(new Callable<Boolean>() {
-                public Boolean call() throws Exception {
-                    return isOutDated(scriptMod, scriptName);
+            // xxx: Scripts need to be compiled everytime.
+            // The preamble for injecting the bindings into the script
+            // dependes on the actual types of the bindings. So effectively
+            // there is a specific script generated for each type of bindings.
+            Reporter result = writeLocked(new Callable<Reporter>() {
+                public Reporter call() throws Exception {
+                    return interpreter.compile(scriptName, script, scalaBindings);
                 }
             });
-
-            if (outDated) {
-                Reporter result = writeLocked(new Callable<Reporter>() {
-                    public Reporter call() throws Exception {
-                        return isOutDated(scriptMod, scriptName)
-                            ? interpreter.compile(scriptName, script, scalaBindings)
-                            : null;
-                    }
-                });
-
-                if (result != null && result.hasErrors()) {
-                    throw new ScriptException(result.toString());
-                }
+            if (result != null && result.hasErrors()) {
+                throw new ScriptException(result.toString());
             }
 
-            Reporter result = readLocked(new Callable<Reporter>() {
+            result = readLocked(new Callable<Reporter>() {
                 public Reporter call() throws Exception {
                     OutputStream outputStream = getOutputStream(context);
                     Reporter result = interpreter.execute(scriptName, scalaBindings, getInputStream(context),
@@ -329,68 +313,6 @@ public class ScalaScriptEngine extends AbstractSlingScriptEngine {
                 writer.write(b);
             }
         };
-    }
-
-    @SuppressWarnings("serial")
-    private static class TypeHints extends HashMap<String, Class<?>> {
-        public static final Class<SlingHttpServletRequest> REQUEST_TYPE = SlingHttpServletRequest.class;
-        public static final Class<SlingHttpServletResponse> RESPONSE_TYPE = SlingHttpServletResponse.class;
-        public static final Class<Reader> READER_TYPE = Reader.class;
-        public static final Class<SlingScriptHelper> SLING_TYPE = SlingScriptHelper.class;
-        public static final Class<Resource> RESOURCE_TYPE = Resource.class;
-        public static final Class<PrintWriter> OUT_TYPE = PrintWriter.class;
-        public static final Class<Boolean> FLUSH_TYPE = Boolean.class;
-        public static final Class<Logger> LOG_TYPE = Logger.class;
-        public static final Class<Node> NODE_TYPE = Node.class;
-
-        private static final java.util.Map<String, Class<?>> TYPES = new HashMap<String, Class<?>>() {{
-            put(SlingBindings.REQUEST, REQUEST_TYPE);
-            put(SlingBindings.RESPONSE, RESPONSE_TYPE);
-            put(SlingBindings.READER, READER_TYPE);
-            put(SlingBindings.SLING, SLING_TYPE);
-            put(SlingBindings.RESOURCE, RESOURCE_TYPE);
-            put(SlingBindings.OUT, OUT_TYPE);
-            put(SlingBindings.FLUSH, FLUSH_TYPE);
-            put(SlingBindings.LOG, LOG_TYPE);
-            put("currentNode", NODE_TYPE);
-        }};
-
-        public TypeHints(SlingBindings bindings) {
-            super();
-            for (Object name : bindings.keySet()) {
-                setType((String) name, TYPES.get(name));
-            }
-        }
-
-        public void setType(String name, Class<?> type) {
-            if (type != null) {
-                put(name, type);
-            }
-        }
-
-        public Class<?> getType(String name) {
-            Class<?> c = get(name);
-            return c == null ? Object.class : c;
-        }
-
-        /**
-         * Compile time assertion enforcing type safety
-         */
-        @SuppressWarnings("unused")
-        private static class CompileTimeAssertion {
-            static {
-                SlingBindings b = new SlingBindings();
-                b.setRequest(REQUEST_TYPE.cast(null));
-                b.setResponse(RESPONSE_TYPE.cast(null));
-                b.setReader(READER_TYPE.cast(null));
-                b.setSling(SLING_TYPE.cast(null));
-                b.setResource(RESOURCE_TYPE.cast(null));
-                b.setOut(OUT_TYPE.cast(null));
-                b.setFlush(FLUSH_TYPE.cast(null));
-                b.setLog(LOG_TYPE.cast(null));
-            }
-        }
-
     }
 
 }

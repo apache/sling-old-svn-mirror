@@ -28,9 +28,10 @@ import javax.jcr.RepositoryException;
 import javax.naming.NamingException;
 import javax.script.ScriptException;
 
+import org.apache.sling.scripting.scala.interpreter.Bindings;
+import org.apache.sling.scripting.scala.interpreter.Bindings$;
 import org.apache.sling.scripting.scala.interpreter.InterpreterException;
 import org.apache.sling.scripting.scala.interpreter.JcrFS;
-import org.apache.sling.scripting.scala.interpreter.ScalaBindings;
 import org.apache.sling.scripting.scala.interpreter.JcrFS.JcrNode;
 
 import scala.tools.nsc.io.AbstractFile;
@@ -74,7 +75,7 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
     public void testDefaultPackage() {
         String code = "package a { object Testi { print(1 + 2)}}";
         try {
-            evalScala("Testi", code, new ScalaBindings());
+            evalScala("Testi", code, Bindings$.MODULE$.apply());
         }
         catch (ScriptException e) {
             Throwable cause = e.getCause();
@@ -92,8 +93,8 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
     public void testNodeAccess() throws RepositoryException, NamingException, ScriptException, InvocationTargetException {
         Node n = getTestRootNode();
         String code = "package a { class Testi(vars: TestiVars) { import vars._; print(n.getPath)}}";
-        ScalaBindings bindings = new ScalaBindings();
-        bindings.put("n", n, Node.class);
+        Bindings bindings = Bindings$.MODULE$.apply();
+        bindings.putValue("n", n);
         assertEquals(n.getPath(), evalScala(code, bindings));
     }
 
@@ -101,10 +102,10 @@ public class ScalaScriptEngineTest extends ScalaTestBase {
         JcrNode appDir = JcrFS.create(getAppNode());
         AbstractFile srcDir = appDir.subdirectoryNamed("srcdir");
 
-        ScalaBindings bindings = new ScalaBindings();
+        Bindings bindings = Bindings$.MODULE$.apply();
         Date time = Calendar.getInstance().getTime();
-        bindings.put("msg", "Hello world", String.class);
-        bindings.put("time", time, Date.class);
+        bindings.putValue("msg", "Hello world");
+        bindings.putValue("time", time);
 
         AbstractFile src = srcDir.fileNamed("Testi");
         PrintWriter writer = new PrintWriter(src.output());

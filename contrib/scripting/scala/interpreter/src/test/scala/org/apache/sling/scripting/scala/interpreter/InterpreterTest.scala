@@ -19,10 +19,11 @@ import junit.framework.Assert.{assertEquals, assertFalse}
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.PlainFile
 import scala.tools.nsc.reporters.ConsoleReporter
-import org.apache.sling.scripting.scala.Utils.valueOrElse
 import java.io.PrintWriter
 import javax.jcr.{Session, Repository, Node, SimpleCredentials}
+import org.apache.sling.scripting.scala.Utils.valueOrElse
 import org.apache.jackrabbit.core.{TransientRepository}
+import org.apache.sling.scripting.scala.interpreter.Bindings
 
 package org.apache.sling.scripting.scala.interpreter {
 
@@ -69,10 +70,10 @@ class InterpreterTest extends TestCase {
     val outdir = new PlainFile(new java.io.File("."))
     val interpreter = new ScalaInterpreter(settings, reporter(settings), outdir)
 
-    val bindings = new ScalaBindings
+    val bindings = Bindings()
     val time = java.util.Calendar.getInstance.getTime
-    bindings.put("msg", "Hello world", classOf[String])
-    bindings.put("time", time, classOf[java.util.Date])
+    bindings.putValue("msg", "Hello world")
+    bindings.putValue("time", time)
 
     val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"
@@ -92,10 +93,10 @@ class InterpreterTest extends TestCase {
     val srcDir = appDir.subdirectoryNamed("srcdir")
     val interpreter = new ScalaInterpreter(settings, reporter(settings), outDir)
 
-    val bindings = new ScalaBindings
+    val bindings = Bindings()
     val time = java.util.Calendar.getInstance.getTime
-    bindings.put("msg", "Hello world", classOf[String])
-    bindings.put("time", time, classOf[java.util.Date])
+    bindings.putValue("msg", "Hello world")
+    bindings.putValue("time", time)
 
     val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"
@@ -120,10 +121,10 @@ class InterpreterTest extends TestCase {
     val srcDir = appDir.subdirectoryNamed("srcdir")
     val interpreter = new ScalaInterpreter(settings, reporter(settings), outDir)
 
-    val bindings = new ScalaBindings
+    val bindings = Bindings()
     val time = java.util.Calendar.getInstance.getTime
-    bindings.put("msg", "Hello world", classOf[String])
-    bindings.put("time", time, classOf[java.util.Date])
+    bindings.putValue("msg", "Hello world")
+    bindings.putValue("time", time)
 
     val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
     val name = "a.Testi"

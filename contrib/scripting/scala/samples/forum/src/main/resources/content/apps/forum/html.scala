@@ -208,8 +208,11 @@ object ThreadOverview {
 
 class html(vars: htmlVars) {
   import java.util.Calendar
-  import vars._
+  import javax.jcr.Node
   import utils.RichJCR._
+  import vars._
+  
+  val node: Node = currentNode
     
   println {
     <html>
@@ -218,13 +221,13 @@ class html(vars: htmlVars) {
       </head>
       <body>
         <div id="Header">
-          Welcome to the { currentNode("name") } forum  
+          Welcome to the { node("name") } forum  
           &mdash; { Calendar.getInstance.getTime } 
         </div>
         { SearchBox.render(request) }
         <div id="Content">
           { ThreadNewForm.render }
-          { ThreadOverview.render(currentNode) }
+          { ThreadOverview.render(node) }
         </div>
       </body>
     </html>  

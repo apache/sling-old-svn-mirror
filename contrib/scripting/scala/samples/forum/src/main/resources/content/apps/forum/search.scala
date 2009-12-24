@@ -37,6 +37,8 @@ class search(vars: searchVars) {
       <div id={ threadUUID + node.uuid + "content" }></div>
     </p></li>
   }
+  
+  val node: Node = currentNode
 
   println {
     <html>
@@ -111,7 +113,7 @@ class search(vars: searchVars) {
 
        <div id="Content">
        {
-         val result = SearchBox.query(currentNode.session, request)
+         val result = SearchBox.query(node.session, request)
          <h1>search results for query { request.getParameter("qt") }, hits: { result.getSize() } </h1>
          <ul>
          { result map searchDetail }
