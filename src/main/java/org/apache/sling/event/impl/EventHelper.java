@@ -99,7 +99,7 @@ public abstract class EventHelper {
      * @return The filtered node name.
      */
     public static String filter(final String nodeName) {
-        final StringBuffer sb  = new StringBuffer();
+        final StringBuilder sb  = new StringBuilder();
         char lastAdded = 0;
 
         for(int i=0; i < nodeName.length(); i++) {
@@ -163,7 +163,7 @@ public abstract class EventHelper {
     throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance(algorithm);
         byte[] digest = md.digest(data);
-        StringBuffer res = new StringBuffer(digest.length * 2);
+        StringBuilder res = new StringBuilder(digest.length * 2);
         for (int i = 0; i < digest.length; i++) {
             byte b = digest[i];
             res.append(hexTable[(b >> 4) & 15]);

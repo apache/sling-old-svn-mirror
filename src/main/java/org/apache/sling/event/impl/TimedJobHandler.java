@@ -506,7 +506,7 @@ public class TimedJobHandler
     protected void loadEvents() {
         try {
             final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
-            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            final StringBuilder buffer = new StringBuilder("/jcr:root");
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
@@ -671,7 +671,7 @@ public class TimedJobHandler
         try {
             s = this.createSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
-            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            final StringBuilder buffer = new StringBuilder("/jcr:root");
             buffer.append(this.repositoryPath);
             if ( topic != null ) {
                 buffer.append('/');
