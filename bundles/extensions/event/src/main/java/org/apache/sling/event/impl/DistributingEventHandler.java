@@ -80,7 +80,7 @@ public class DistributingEventHandler
         deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
         final String dateString = ISO8601.format(deleteBefore);
 
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
+        final StringBuilder buffer = new StringBuilder("/jcr:root");
         buffer.append(this.repositoryPath);
         buffer.append("//element(*, ");
         buffer.append(getEventNodeType());
