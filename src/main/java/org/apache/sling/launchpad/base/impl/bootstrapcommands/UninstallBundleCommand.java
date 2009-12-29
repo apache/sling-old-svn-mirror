@@ -23,11 +23,11 @@ import org.apache.felix.framework.util.VersionRange;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-/** A Command that uninstalls a bundle, see 
+/** A Command that uninstalls a bundle, see
  *  {@link UninstallBundleCommandTest} for examples
  */
 class UninstallBundleCommand implements Command {
-    
+
     public static String CMD_PREFIX = "uninstall ";
     private final String bundleSymbolicName;
     private final VersionRange versionRange;
@@ -37,28 +37,28 @@ class UninstallBundleCommand implements Command {
         bundleSymbolicName = null;
         versionRange = null;
     }
-    
+
     /** Used to create an actual command */
     private UninstallBundleCommand(String bundleSymbolicName, String versionRangeStr) {
         this.bundleSymbolicName = bundleSymbolicName;
-        
+
         // If versionRangeStr is not a range, make it strict
         if(!versionRangeStr.contains(",")) {
             versionRangeStr = "[" + versionRangeStr + "," + versionRangeStr + "]";
         }
         this.versionRange = VersionRange.parse(versionRangeStr);
     }
-    
+
     public void execute(Logger logger, BundleContext ctx) throws Exception {
         // Uninstall all instances of our bundle within our version range
         for(Bundle b : ctx.getBundles()) {
             if(b.getSymbolicName().equals(bundleSymbolicName)) {
                 if(versionRange.isInRange(b.getVersion())) {
-                    logger.log(Logger.LOG_INFO, 
+                    logger.log(Logger.LOG_INFO,
                             this + ": uninstalling bundle version " + b.getVersion());
                     b.uninstall();
                 } else {
-                    logger.log(Logger.LOG_INFO, 
+                    logger.log(Logger.LOG_INFO,
                             this + ": bundle version (" + b.getVersion()+ " not in range, ignored");
                 }
             }
@@ -70,13 +70,12 @@ class UninstallBundleCommand implements Command {
             final String [] s = commandLine.split(" ");
             if(s.length == 3) {
                 return new UninstallBundleCommand(s[1].trim(), s[2].trim());
-            } else {
-                throw new Command.ParseException("Syntax error: '" + commandLine + "'");
             }
+            throw new Command.ParseException("Syntax error: '" + commandLine + "'");
         }
         return null;
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " " + bundleSymbolicName + " " + versionRange;

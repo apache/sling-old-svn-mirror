@@ -76,10 +76,6 @@ public class Loader {
      * @param launcherClassName The fully qualified name of a class implementing
      *            the Launcher interface. This class must have a public
      *            constructor taking no arguments.
-     * @param slingHome The value to be used as ${slingHome}. This may be null
-     *            in which case the sling folder in the current working
-     *            directory is assumed. If this name is empty, the current
-     *            working directory is assumed to be used as ${slingHome}.
      * @return the Launcher instance loaded from the newly created classloader
      * @throws NullPointerException if launcherClassName is null
      * @throws IllegalArgumentException if the launcherClassName cannot be
@@ -127,8 +123,6 @@ public class Loader {
      * <p>
      * This method must be called when the notifier is called.
      *
-     * @param slingHome The home directory of Sling. This is used to ensure the
-     *            launcher jar file is not open anymore (as much as possible).
      */
     public void cleanupVM() {
 
