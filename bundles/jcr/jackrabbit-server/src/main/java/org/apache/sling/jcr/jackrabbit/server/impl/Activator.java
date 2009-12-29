@@ -69,13 +69,13 @@ public class Activator implements BundleActivator, ServiceListener {
     // the service tracker used by the PluggableDefaultLoginModule
     // this field is only set on the first call to getLoginModules()
     private static ServiceTracker loginModuleTracker;
-    
+
     // the tracking count when the moduleCache has been filled
     private static int lastTrackingCount = -1;
-    
+
     // the cache of login module services
     private static LoginModulePlugin[] moduleCache;
-    
+
     // empty list of login modules if there are none registered
     private static LoginModulePlugin[] EMPTY = new LoginModulePlugin[0];
 
@@ -85,10 +85,10 @@ public class Activator implements BundleActivator, ServiceListener {
 
     protected String getRepositoryName() {
     	String repoName = bundleContext.getProperty("sling.repository.name");
-    	if (repoName != null)
-    		return repoName; // the repository name is set
-    	else
-    		return "jackrabbit";
+    	if (repoName != null) {
+            return repoName; // the repository name is set
+    	}
+		return "jackrabbit";
     }
 
     public void start(BundleContext context) {
@@ -98,7 +98,7 @@ public class Activator implements BundleActivator, ServiceListener {
         // ensure the module cache is not set right now, this may
         // (theoretically) be non-null after the last bundle stop
         moduleCache = null;
-        
+
         // check the name of the default context, nothing to do if none
         slingContext = context.getProperty(SLING_CONTEXT_DEFAULT);
         if (slingContext == null) {
@@ -131,7 +131,7 @@ public class Activator implements BundleActivator, ServiceListener {
     }
 
     public void stop(BundleContext arg0) {
-        
+
         /*
          * when stopping Derby (which is used by Jackrabbit by default) a
          * derby.antiGC thread keeps running which prevents this bundle from
@@ -146,7 +146,7 @@ public class Activator implements BundleActivator, ServiceListener {
         } catch (Throwable t) {
             // exception is always thrown
         }
-        
+
         // drop module cache
         moduleCache = null;
 
@@ -160,7 +160,7 @@ public class Activator implements BundleActivator, ServiceListener {
             accessManagerFactoryTracker.close();
             accessManagerFactoryTracker = null;
         }
-        
+
         // clear the bundle context field
         bundleContext = null;
     }
@@ -179,7 +179,7 @@ public class Activator implements BundleActivator, ServiceListener {
     }
 
     // ---------- LoginModule tracker for PluggableDefaultLoginModule
-    
+
     private static BundleContext getBundleContext() {
         return bundleContext;
     }
@@ -197,7 +197,7 @@ public class Activator implements BundleActivator, ServiceListener {
             return moduleCache;
         }
         // invariant: moduleCache is null or modules have changed
-        
+
         // tracker may be null if moduleCache is null
         if (loginModuleTracker == null) {
             loginModuleTracker = new ServiceTracker(getBundleContext(),
@@ -250,15 +250,15 @@ public class Activator implements BundleActivator, ServiceListener {
             Hashtable<String, String> defaultConfig = new Hashtable<String, String>();
             final String overrideUrl = bundleContext.getProperty(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
             if(overrideUrl != null && overrideUrl.length() > 0) {
-                // Ignore other parameters if override URL (SLING-254) is set 
+                // Ignore other parameters if override URL (SLING-254) is set
                 defaultConfig.put(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY, overrideUrl);
-                log.info(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl + 
+                log.info(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl +
                     ", using it to create the default configuration");
-                
+
             } else {
-               initDefaultConfig(defaultConfig, bundleContext); 
+               initDefaultConfig(defaultConfig, bundleContext);
             }
-            
+
             // create the factory and set the properties
             Configuration config = ca.createFactoryConfiguration(SERVER_REPOSITORY_FACTORY_PID);
             config.update(defaultConfig);
@@ -273,12 +273,12 @@ public class Activator implements BundleActivator, ServiceListener {
             bundleContext.ungetService(ref);
         }
     }
-    
+
     private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
         File homeDir = getHomeDir(bundleContext);
         if (homeDir == null)
         	return;
-       
+
         File configFile = getConfigFile(bundleContext, homeDir);
 
         // default config values
@@ -290,21 +290,21 @@ public class Activator implements BundleActivator, ServiceListener {
         props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
             this.getRepositoryName());
     }
-    
+
     private File getHomeDir(BundleContext bundleContext) throws IOException {
     	File homeDir;
-    	
+
     	String repoHomePath = bundleContext.getProperty("sling.repository.home");
     	String slingHomePath = bundleContext.getProperty("sling.home");
-    	
-    	if (repoHomePath != null) {     		
+
+    	if (repoHomePath != null) {
          	homeDir = new File(repoHomePath, getRepositoryName());
         } else if (slingHomePath != null) {
     		homeDir = new File(slingHomePath, getRepositoryName());
     	} else {
     		homeDir = new File(getRepositoryName());
-    	} 
-    	
+    	}
+
     	// make sure jackrabbit home exists
         log.info("Creating default config for Jackrabbit in " + homeDir);
         if (!homeDir.isDirectory()) {
@@ -313,14 +313,14 @@ public class Activator implements BundleActivator, ServiceListener {
                     + homeDir + ", failed creating default configuration");
                 return null;
             }
-        }	
-    	
+        }
+
     	return homeDir;
     }
-    
+
     private File getConfigFile(BundleContext bundleContext, File homeDir) throws IOException {
     	File configFile;
-    	
+
     	String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
     	if (repoConfigFileUrl != null) {
     		// the repository config file is set
@@ -331,13 +331,13 @@ public class Activator implements BundleActivator, ServiceListener {
 				// this not an url, trying with "file:"
 				configFileUrl = new URL("file:///" + repoConfigFileUrl);
 			}
-    		
+
     		// local support only
     		configFile = new File(configFileUrl.getFile());
     		if (configFile.canRead())
     			return configFile;
     	}
-    	
+
         // ensure the configuration file (inside the home Dir !)
         configFile = new File(homeDir, "repository.xml");
         SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
