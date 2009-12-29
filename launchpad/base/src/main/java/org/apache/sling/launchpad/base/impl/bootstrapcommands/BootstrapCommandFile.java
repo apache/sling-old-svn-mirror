@@ -34,24 +34,24 @@ import org.osgi.framework.BundleContext;
 public class BootstrapCommandFile {
     /** Name of file used to store our execution timestamp */
     public static final String DATA_FILENAME = BootstrapCommandFile.class.getSimpleName() + "_timestamp.txt";
-    
+
     /** Prefix for comments in command files */
     public static final String COMMENT_PREFIX = "#";
-    
+
     private final File commandFile;
     private final Logger logger;
-    
+
     private static final List<Command> commandPrototypes = new ArrayList<Command>();
     static {
         commandPrototypes.add(new UninstallBundleCommand());
     }
-    
+
     /** Will load our commands from specified file, if found */
     public BootstrapCommandFile(Logger logger, File cmdFile) {
         this.logger = logger;
         this.commandFile = cmdFile;
     }
-    
+
     /** True if we have a command file that needs to be executed, based on its
      *  file timestamp and stored timstamp
      */
@@ -66,21 +66,21 @@ public class BootstrapCommandFile {
                 logger.log(Logger.LOG_INFO, "IOException reading timestamp", ioe);
             }
             if(cmdTs > lastExecution) {
-                logger.log(Logger.LOG_INFO, 
-                        "Command file timestamp > stored timestamp, need to execute commands (" 
+                logger.log(Logger.LOG_INFO,
+                        "Command file timestamp > stored timestamp, need to execute commands ("
                         + commandFile.getAbsolutePath() + ")");
                 result = true;
             }
         }
         if(!result) {
-            logger.log(Logger.LOG_INFO, 
-                    "Command file absent or older than last execution timestamp, nothing to execute (" 
+            logger.log(Logger.LOG_INFO,
+                    "Command file absent or older than last execution timestamp, nothing to execute ("
                     + commandFile.getAbsolutePath() + ")");
         }
         return result;
     }
-    
-    /** Execute commands if needed, and store execution timestamp 
+
+    /** Execute commands if needed, and store execution timestamp
      *  @return number of commands executed */
     public int execute(BundleContext ctx) throws IOException {
         int count = 0;
@@ -107,7 +107,7 @@ public class BootstrapCommandFile {
                     }
                 }
             }
-            
+
             try {
                 storeTimestamp(ctx);
             } catch(IOException ioe) {
@@ -116,7 +116,7 @@ public class BootstrapCommandFile {
         }
         return count;
     }
-    
+
     /** Parse commands from supplied input stream.
      *  Does not close the stream */
     List<Command> parse(InputStream is) throws IOException {
@@ -133,11 +133,10 @@ public class BootstrapCommandFile {
                         break;
                     }
                 }
-                if(toAdd == null) {
+                if (toAdd == null) {
                     throw new Command.ParseException("Invalid command '" + line + "'");
-                } else {
-                    result.add(toAdd);
                 }
+                result.add(toAdd);
             }
         }
         return result;
@@ -147,7 +146,7 @@ public class BootstrapCommandFile {
     private File getTimestampFile(BundleContext ctx) {
         return ctx.getDataFile(DATA_FILENAME);
     }
-    
+
     /** Return our stored timestamp */
     private long loadTimestamp(BundleContext ctx) throws IOException {
         long result = 0;
@@ -169,7 +168,7 @@ public class BootstrapCommandFile {
         }
         return result;
     }
-    
+
     private void storeTimestamp(BundleContext ctx) throws IOException {
         final File f = getTimestampFile(ctx);
         FileOutputStream fos = null;
