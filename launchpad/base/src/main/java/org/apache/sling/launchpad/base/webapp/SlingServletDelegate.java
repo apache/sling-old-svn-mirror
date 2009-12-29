@@ -45,7 +45,6 @@ import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
