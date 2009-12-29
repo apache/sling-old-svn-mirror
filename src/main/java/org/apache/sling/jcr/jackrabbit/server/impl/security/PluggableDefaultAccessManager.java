@@ -17,6 +17,12 @@
 
 package org.apache.sling.jcr.jackrabbit.server.impl.security;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.security.auth.Subject;
+
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
@@ -26,19 +32,13 @@ import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.AccessManagerPlugin;
-import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.WorkspaceAccessManagerPlugin;
-import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.AccessManagerPluginFactory;
-import org.apache.sling.jcr.jackrabbit.server.impl.Activator;
 import org.apache.sling.jcr.jackrabbit.server.impl.AccessManagerFactoryTracker;
+import org.apache.sling.jcr.jackrabbit.server.impl.Activator;
+import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.AccessManagerPlugin;
+import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.AccessManagerPluginFactory;
+import org.apache.sling.jcr.jackrabbit.server.security.accessmanager.WorkspaceAccessManagerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.security.auth.Subject;
 
 /**
  * Allows to plugin a custom <code>AccessManager</code> as an OSGi bundle:
@@ -123,9 +123,8 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
     public boolean isGranted(Path absPath, int permissions) throws RepositoryException {
         if (this.sanityCheck()) {
             return this.accessManagerPlugin.isGranted(namePathResolver.getJCRPath(absPath), permissions);
-        } else {
-            return super.isGranted(absPath, permissions);
         }
+        return super.isGranted(absPath, permissions);
     }
 
     public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
@@ -135,9 +134,8 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
     public boolean canRead(Path itemPath) throws RepositoryException {
         if (this.sanityCheck()) {
             return this.accessManagerPlugin.canRead(namePathResolver.getJCRPath(itemPath));
-        } else {
-            return super.canRead(itemPath);
         }
+        return super.canRead(itemPath);
     }
 
     public boolean canAccess(String workspaceName) throws RepositoryException {
@@ -147,9 +145,8 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
         }
         if (plugin != null) {
             return plugin.canAccess(workspaceName);
-        } else {
-            return super.canAccess(workspaceName);
         }
+        return super.canAccess(workspaceName);
     }
 
     private boolean sanityCheck() throws RepositoryException {
@@ -160,17 +157,16 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
                     pluginWarning++;
                     log.warn("No pluggable AccessManager available, falling back to DefaultAccessManager");
                 } else {
-                    log.debug("No pluggable AccessManager available, falling back to DefaultAccessManager");                    
+                    log.debug("No pluggable AccessManager available, falling back to DefaultAccessManager");
                 }
                 return false;
 
-            } else {
-                this.accessManagerPlugin = factory.getAccessManager();
-                try {
-                    this.accessManagerPlugin.init(this.subject, this.session);
-                } catch (Exception e) {
-                    throw new RepositoryException(e);
-                }
+            }
+            this.accessManagerPlugin = factory.getAccessManager();
+            try {
+                this.accessManagerPlugin.init(this.subject, this.session);
+            } catch (Exception e) {
+                throw new RepositoryException(e);
             }
         }
         return true;
