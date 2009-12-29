@@ -73,124 +73,124 @@ public class OpenIDAuthenticationHandler implements
      * @scr.property valueRef="DEFAULT_LOGIN_FORM"
      */
     public static final String PROP_LOGIN_FORM = "openid.login.form";
-    
+
     public static final String DEFAULT_LOGIN_FORM = "/system/sling/openid/loginform.html";
 
-    
+
     /**
      * @scr.property valueRef="DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD"
      */
     public static final String PROP_LOGIN_IDENTIFIER_FORM_FIELD = "openid.login.identifier";
-    
+
     public static final String DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD = RelyingParty.DEFAULT_IDENTIFIER_PARAMETER;
 
-    
+
     /**
      * @scr.property valueRef="DEFAULT_ORIGINAL_URL_ON_SUCCESS" type="Boolean"
      */
     public static final String PROP_ORIGINAL_URL_ON_SUCCESS = "openid.original.url.onsuccess";
-    
+
     public static final boolean DEFAULT_ORIGINAL_URL_ON_SUCCESS = true;
 
-    
+
     /**
      * @scr.property valueRef="DEFAULT_AUTH_SUCCESS_URL"
      */
     public static final String PROP_AUTH_SUCCESS_URL = "openid.login.success";
-    
+
     public static final String DEFAULT_AUTH_SUCCESS_URL = "/system/sling/openid/authsuccess.html";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_AUTH_FAIL_URL"
      */
     public static final String PROP_AUTH_FAIL_URL = "openid.login.fail";
-    
+
     public static final String DEFAULT_AUTH_FAIL_URL = "/system/sling/openid/authfail.html";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_LOGOUT_URL"
      */
     public static final String PROP_LOGOUT_URL = "openid.logout";
-    
+
     public static final String DEFAULT_LOGOUT_URL = "/system/sling/openid/logout.html";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_EXTERNAL_URL_PREFIX"
      */
     public static final String PROP_EXTERNAL_URL_PREFIX = "openid.external.url.prefix";
-    
+
     public static final String DEFAULT_EXTERNAL_URL_PREFIX = "http://my.external.sling.com";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_OPENID_USERS_PASSWORD"
      */
     public static final String PROP_OPENID_USERS_PASSWORD = "openid.users.password";
-    
+
     public static final String DEFAULT_OPENID_USERS_PASSWORD = "changeme";
-    
+
 
     /**
      * @scr.property valueRef="DEFAULT_ANONYMOUS_AUTH_RESOURCES" type="Boolean"
      */
     public static final String PROP_ANONYMOUS_AUTH_RESOURCES = "openid.anon.auth.resources";
-    
+
     public static final boolean DEFAULT_ANONYMOUS_AUTH_RESOURCES = true;
 
-    
+
     /**
      * @scr.property valueRef="DEFAULT_USE_COOKIE" type="Boolean"
      */
     public static final String PROP_USE_COOKIE = "openid.use.cookie";
-    
+
     public static final boolean DEFAULT_USE_COOKIE = false;
 
-    
+
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_DOMAIN"
      */
     public static final String PROP_COOKIE_DOMAIN = "openid.cookie.domain";
-    
+
     public static final String DEFAULT_COOKIE_DOMAIN = ".sling.com";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_NAME"
      */
     public static final String PROP_COOKIE_NAME = "openid.cookie.name";
-    
+
     public static final String DEFAULT_COOKIE_NAME = "sling.openid";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_PATH"
      */
     public static final String PROP_COOKIE_PATH = "openid.cookie.path";
-    
+
     public static final String DEFAULT_COOKIE_PATH = "/";
-    
-    
+
+
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_SECRET_KEY"
      */
     public static final String PROP_COOKIE_SECRET_KEY = "openid.cookie.secret.key";
-    
+
     public static final String DEFAULT_COOKIE_SECRET_KEY = "secret";
-    
-        
+
+
     static final String SLASH = "/";
-    
+
     private ComponentContext context;
-    
+
     private String loginForm;
     private String authSuccessUrl;
     private String authFailUrl;
     private String logoutUrl;
     private boolean accessAuthPageAnon;
-    
+
     private boolean redirectToOriginalUrl;
     private String externalUrlPrefix;
     private boolean useCookie;
@@ -198,10 +198,10 @@ public class OpenIDAuthenticationHandler implements
     private String cookieName;
     private String cookiePath;
     private String identifierParam;
-	
+
 	private RelyingParty relyingParty;
-	
-	
+
+
     public OpenIDAuthenticationHandler() {
         log.info("OpenIDAuthenticationHandler created");
     }
@@ -277,14 +277,14 @@ public class OpenIDAuthenticationHandler implements
 
         // if the response is already committed, we have a problem !!
         if (!response.isCommitted()) {
-        	
+
         	// If we're here & we have a valid authenticated user
         	// probably we failed the repository login (no repo user
         	// configured for the authenticated principal)
         	OpenIdUser user = (OpenIdUser)request.getAttribute(OpenIDConstants.OPEN_ID_USER_ATTRIBUTE);
         	if(user != null && user.isAuthenticated()) {
         		request.getSession().setAttribute(
-        				OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, 
+        				OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
         				OpenIDConstants.OpenIDFailure.REPOSITORY);
         	}
 
@@ -292,11 +292,11 @@ public class OpenIDAuthenticationHandler implements
         	// so it makes sense to remove any existing login
         	relyingParty.invalidate(request, response);
 
-        	// original URL is set only if it doesn't already exist        	
+        	// original URL is set only if it doesn't already exist
         	if(request.getSession().getAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE) == null) {
         		String originalUrl = request.getRequestURI() +
         			(request.getQueryString() != null ? "?" + request.getQueryString() : "");
-        		
+
         		// handle corner case where login form requested directly
         		if(!originalUrl.equals(loginForm)) {
         			request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, originalUrl);
@@ -310,34 +310,33 @@ public class OpenIDAuthenticationHandler implements
         return true;
     }
 
-    protected AuthenticationInfo handleAuthFailure(OpenIDFailure failure, HttpServletRequest request, HttpServletResponse response) 
+    protected AuthenticationInfo handleAuthFailure(OpenIDFailure failure, HttpServletRequest request, HttpServletResponse response)
     	throws IOException {
 
     	request.getSession().setAttribute(OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, failure);
-		
+
 		if(authFailUrl != null && !"".equals(authFailUrl)) {
 			response.sendRedirect(authFailUrl);
 			return AuthenticationInfo.DOING_AUTH;
-		} else {
-			return null;
-		}
+        }
+		return null;
     }
-    
-    protected AuthenticationInfo handleLogout(HttpServletRequest request, HttpServletResponse response) 
+
+    protected AuthenticationInfo handleLogout(HttpServletRequest request, HttpServletResponse response)
     	throws IOException {
 		String redirectUrl = null;
-		
+
 		if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
 			redirectUrl = request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER);
 		} else {
 			redirectUrl = logoutUrl;
 		}
-		
+
 		// fallback
 		if(redirectUrl == null) {
 			redirectUrl = "/";
 		}
-		
+
 		response.sendRedirect(redirectUrl);
 		return AuthenticationInfo.DOING_AUTH;
     }
@@ -346,64 +345,64 @@ public class OpenIDAuthenticationHandler implements
 
     protected void activate(ComponentContext componentContext) {
     	context = componentContext;
-    	
+
     	loginForm = OsgiUtil.toString(
-         		context.getProperties().get(PROP_LOGIN_FORM), 
+         		context.getProperties().get(PROP_LOGIN_FORM),
          		DEFAULT_LOGIN_FORM);
-    	
+
     	authSuccessUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_AUTH_SUCCESS_URL), 
+         		context.getProperties().get(PROP_AUTH_SUCCESS_URL),
          		DEFAULT_AUTH_SUCCESS_URL);
-    	
+
     	authFailUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_AUTH_FAIL_URL), 
+         		context.getProperties().get(PROP_AUTH_FAIL_URL),
          		DEFAULT_AUTH_FAIL_URL);
-    	
+
     	logoutUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_LOGOUT_URL), 
+         		context.getProperties().get(PROP_LOGOUT_URL),
          		DEFAULT_LOGOUT_URL);
-    	
+
     	redirectToOriginalUrl = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_ORIGINAL_URL_ON_SUCCESS), 
+         		context.getProperties().get(PROP_ORIGINAL_URL_ON_SUCCESS),
          		DEFAULT_ORIGINAL_URL_ON_SUCCESS);
-    	
+
     	accessAuthPageAnon = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_ANONYMOUS_AUTH_RESOURCES), 
+         		context.getProperties().get(PROP_ANONYMOUS_AUTH_RESOURCES),
          		DEFAULT_ANONYMOUS_AUTH_RESOURCES);
-    	
+
     	externalUrlPrefix = OsgiUtil.toString(
     			context.getProperties().get(PROP_EXTERNAL_URL_PREFIX),
     			DEFAULT_EXTERNAL_URL_PREFIX);
-    	
+
     	// DYU OpenID properties
     	useCookie = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_USE_COOKIE), 
+         		context.getProperties().get(PROP_USE_COOKIE),
          		DEFAULT_USE_COOKIE);
-    	
+
     	cookieDomain = OsgiUtil.toString(
     			context.getProperties().get(PROP_COOKIE_DOMAIN),
     			DEFAULT_COOKIE_DOMAIN);
-    	
+
     	cookieName = OsgiUtil.toString(
     			context.getProperties().get(PROP_COOKIE_NAME),
     			DEFAULT_COOKIE_NAME);
-    	
+
     	cookiePath = OsgiUtil.toString(
     			context.getProperties().get(PROP_COOKIE_PATH),
     			DEFAULT_COOKIE_PATH);
-    	
+
     	identifierParam = OsgiUtil.toString(
-        		context.getProperties().get(PROP_LOGIN_IDENTIFIER_FORM_FIELD), 
+        		context.getProperties().get(PROP_LOGIN_IDENTIFIER_FORM_FIELD),
         		DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD);
-        
+
     	String cookieSecret = OsgiUtil.toString(
     			context.getProperties().get(PROP_COOKIE_SECRET_KEY),
     			DEFAULT_COOKIE_SECRET_KEY);
-    	
+
         Properties openIdProps = new Properties();
-        
+
         openIdProps.setProperty("openid.identifier.parameter", identifierParam);
-        
+
         if(useCookie) {
         	openIdProps.setProperty("openid.user.manager", CookieBasedUserManager.class.getName());
         	openIdProps.setProperty("openid.user.manager.cookie.name", cookieName);
@@ -411,7 +410,7 @@ public class OpenIDAuthenticationHandler implements
         	openIdProps.setProperty("openid.user.manager.cookie.domain", cookieDomain);
         	openIdProps.setProperty("openid.user.manager.cookie.security.secret_key", cookieSecret);
         }
-        
+
 		relyingParty = RelyingParty.newInstance(openIdProps);
     }
 
@@ -420,13 +419,13 @@ public class OpenIDAuthenticationHandler implements
     protected AuthenticationInfo extractAuthentication(
             HttpServletRequest request, HttpServletResponse response) {
 
-    	
+
     	OpenIdUser user = null;
-    	
+
         try
         {
             user = relyingParty.discover(request);
-            
+
             // Authentication timeout
             if(user == null && RelyingParty.isAuthResponse(request))
             {
@@ -434,7 +433,7 @@ public class OpenIDAuthenticationHandler implements
                 response.sendRedirect(request.getRequestURI());
                 return AuthenticationInfo.DOING_AUTH;
             }
-            
+
 	    	if(request.getPathInfo() != null) {
 	    		String requestPath = request.getPathInfo();
 	    		if(requestPath != null) {
@@ -442,44 +441,44 @@ public class OpenIDAuthenticationHandler implements
 	    				relyingParty.invalidate(request, response);
     					user = null;
     					return handleLogout(request, response);
-	    			} 
+	    			}
 	    			// handle (possibly)anon auth resources
-	    			else if (loginForm.equals(requestPath) || 
+	    			else if (loginForm.equals(requestPath) ||
 	    					authFailUrl.equals(requestPath) ||
 	    					logoutUrl.equals(requestPath)) {
-	    				
+
 	    				if (loginForm.equals(requestPath)) {
 		    				// can force a login with Allow Anonymous enabled, by requesting
 		    				// login form directly.  Checking this parameter allows us
 		    				// to redirect user somewhere useful if login is successful
 		    				if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
-		    					request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, 
+		    					request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
 		    							request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER));
 		    				}
-		    				
+
 		    				moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, 
+		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
 		    						OpenIDConstants.OpenIDFailure.class,
 		    						request);
-		    				
+
 		    				moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, 
+		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
 		    						String.class,
 		    						request);
-		    				
+
 	    				} else if (authFailUrl.equals(requestPath)) {
 	    					// move the failure reason attribute from session to request
 	    					moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, 
+		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
 		    						OpenIDConstants.OpenIDFailure.class,
 		    						request);
-	    					
+
 	    					moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, 
+		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
 		    						String.class,
 		    						request);
 	    				}
-	    				
+
 	    				if(accessAuthPageAnon) {
 	    					// Causes anonymous login
 	    					// but does not respect SlingAuthenticator allowAnonymous
@@ -488,7 +487,7 @@ public class OpenIDAuthenticationHandler implements
 	    			}
 	    		}
 	    	}
-        	
+
             if(user != null) {
 	            if(user.isAuthenticated()) {
 	                // user already authenticated
@@ -497,22 +496,21 @@ public class OpenIDAuthenticationHandler implements
 	            } else if(user.isAssociated()) {
 	            	if(RelyingParty.isAuthResponse(request)) {
 		            	if(relyingParty.verifyAuth(user, request, response)) {
-		                    // authenticated                    
+		                    // authenticated
 		                    response.sendRedirect(request.getRequestURI());
 		                    return AuthenticationInfo.DOING_AUTH;
-		                } else {
-		                    // failed verification
-		                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.VERIFICATION, request, response);
-		    				if(authInfo != null) {
-		    					return authInfo;
-		    				}
-		                }
+                        }
+	                    // failed verification
+	                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.VERIFICATION, request, response);
+	    				if(authInfo != null) {
+	    					return authInfo;
+	    				}
 		            } else {
 		            	// Assume a cancel or some other non-successful response from provider
 		            	// failed verification
 		            	relyingParty.invalidate(request, response);
 		            	user = null;
-		            	
+
 	                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.AUTHENTICATION, request, response);
 	    				if(authInfo != null) {
 	    					return authInfo;
@@ -520,10 +518,10 @@ public class OpenIDAuthenticationHandler implements
 		            }
 	            } else {
 		            // associate and authenticate user
-		            StringBuffer url = null; 
+		            StringBuffer url = null;
 		            String trustRoot = null;
 		            String returnTo = null;
-		            
+
 		            if(externalUrlPrefix != null && !"".equals(externalUrlPrefix.trim())) {
 		            	url = new StringBuffer(externalUrlPrefix).append(request.getRequestURI());
 		            	trustRoot = externalUrlPrefix;
@@ -531,48 +529,48 @@ public class OpenIDAuthenticationHandler implements
 		            	url = request.getRequestURL();
 		            	trustRoot = url.substring(0, url.indexOf(SLASH, 9));
 		            }
-		            
+
 	            	String realm = url.substring(0, url.lastIndexOf(SLASH));
-	            	
+
 		            if(redirectToOriginalUrl) {
-		            	returnTo = url.toString();        
+		            	returnTo = url.toString();
 		            } else {
 		            	request.setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, request.getRequestURI());
 		            	returnTo =  authSuccessUrl;
 		    		}
-		            
-		            if(relyingParty.associateAndAuthenticate(user, request, response, trustRoot, realm, 
+
+		            if(relyingParty.associateAndAuthenticate(user, request, response, trustRoot, realm,
 		                    returnTo)) {
-		                // user is associated and then redirected to his openid provider for authentication                
+		                // user is associated and then redirected to his openid provider for authentication
 		                return AuthenticationInfo.DOING_AUTH;
-		            } else {
-		            	// failed association or auth request generation
-	                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.ASSOCIATION, request, response);
-	    				if(authInfo != null) {
-	    					return authInfo;
-	    				}
-		            }
+                    }
+	            	// failed association or auth request generation
+                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.ASSOCIATION, request, response);
+    				if(authInfo != null) {
+    					return authInfo;
+    				}
 	            }
             }
         } catch(Exception e) {
         	log.error("Error processing OpenID request", e);
         }
-    	
+
     	return null;
     }
-    
+
+    @SuppressWarnings("unchecked")
     private <T> T removeAttributeFromSession(String attrName, Class<T> type, HttpServletRequest request) {
     	T attr = (T)request.getSession().getAttribute(attrName);
 		request.getSession().removeAttribute(attrName);
 		return attr;
     }
-    
+
     private <T> T moveAttributeFromSessionToRequest(String attrName, Class<T> type, HttpServletRequest request) {
 		T attr = removeAttributeFromSession(attrName, type, request);
 		request.setAttribute(attrName, attr);
 		return attr;
     }
-    
+
     private AuthenticationInfo getAuthInfoFromUser(OpenIdUser user) {
     	String jcrId = OpenIDUserUtil.getPrincipalName(user.getIdentity());
 
@@ -592,7 +590,8 @@ public class OpenIDAuthenticationHandler implements
 		return false;
 	}
 
-	public void doInit(CallbackHandler callbackHandler, Session session,
+	@SuppressWarnings("unchecked")
+    public void doInit(CallbackHandler callbackHandler, Session session,
 			Map options) throws LoginException {
 		return;
 	}
@@ -612,7 +611,7 @@ public class OpenIDAuthenticationHandler implements
 		}
 		return null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
     public void addPrincipals(Set principals) {
         // Nothing to do
