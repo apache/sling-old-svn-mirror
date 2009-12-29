@@ -112,15 +112,15 @@ public class FsResource extends SlingAdaptable implements Resource {
     }
 
     /**
-     * Returns {@link FsProviderConstants#RESOURCE_TYPE_ROOT}
+     * Returns <code>null</code>}
      */
     public String getResourceSuperType() {
         return null;
     }
 
     /**
-     * Returns {@link FsProviderConstants#RESOURCE_TYPE_FILE} if this resource
-     * wraps a file. Otherwise {@link FsProviderConstants#RESOURCE_TYPE_FOLDER}
+     * Returns {@link #RESOURCE_TYPE_FILE} if this resource
+     * wraps a file. Otherwise {@link #RESOURCE_TYPE_FOLDER}
      * is returned.
      */
     public String getResourceType() {
