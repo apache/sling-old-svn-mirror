@@ -18,29 +18,29 @@
  */
 package org.apache.sling.explorer.client.sling;
 
-public class SessionInfo 
-{
-	private String user = "Not Connected"; 
+public class SessionInfo {
+
+	private String user = "Not Connected";
 	private String workspace =  "Default";
 
-	
 	public SessionInfo(String user, String workspace) {
 		this.user = user;
 		this.workspace = workspace;
 	}
-	
+
 	public String getUser() {
 		return user;
 	}
+
 	public void setUser(String user) {
 		this.user = user;
 	}
+
 	public String getWorkspace() {
 		return workspace;
 	}
+
 	public void setWorkspace(String workspace) {
 		this.workspace = workspace;
-	} 
-	
-	
+	}
 }

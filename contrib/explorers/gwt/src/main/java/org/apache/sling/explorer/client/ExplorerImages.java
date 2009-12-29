@@ -26,10 +26,6 @@ import com.google.gwt.user.client.ui.ImageBundle;
  */
 public interface ExplorerImages extends ImageBundle {
 
-
 	@Resource("org/apache/sling/explorer/Sling.png")
 	AbstractImagePrototype explorerLogo();
-	
-	
-	 
 }

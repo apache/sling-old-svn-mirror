@@ -24,35 +24,30 @@ import com.google.gwt.i18n.client.Constants;
 
 public interface ExplorerConstants extends Constants {
 
+    String CONTENT_ROOT = "/";
+    String JSON_TREE_REQUEST_EXTENSION = ".explorer.tree-node.json";
 
-  public static final String CONTENT_ROOT = "/";
-  public static final String JSON_TREE_REQUEST_EXTENSION = ".explorer.tree-node.json";
+    String JSON_CHILDREN_REQUEST_EXTENSION = ".explorer.children.json";
+    String PROPERTY = "property";
+    String RESOURCE = "resource";
 
-  public static final String JSON_CHILDREN_REQUEST_EXTENSION = ".explorer.children.json";
-  public static final String PROPERTY = "property";
-  public static final String RESOURCE = "resource";
+    String SLING_HOMEPAGE = "http://sling.apache.org";
+    String SLING_DOCUMENTATION = SLING_HOMEPAGE + "/documentation";
 
-  public static final String SLING_HOMEPAGE = "http://sling.apache.org";
-  public static final String SLING_DOCUMENTATION = SLING_HOMEPAGE + "/documentation";
+    /**
+     * Descriptions to translate
+     * (see the ExplorerConstants.properties & associted files)
+     *
+     */
+    String mainTitle();
 
+    String mainSubTitle();
 
-  /**
-   * Descriptions to translate
-   * (see the ExplorerConstants.properties & associted files)
-   *
-   */
-  String mainTitle();
+    String slingHomePage();
 
-  String mainSubTitle();
+    String rootItemDescription();
 
-  String slingHomePage();
+    String propertiesDescripton();
 
-  String rootItemDescription();
-
-  String propertiesDescripton();
-
-  String subResourcesDescription();
-
-
-
+    String subResourcesDescription();
 }

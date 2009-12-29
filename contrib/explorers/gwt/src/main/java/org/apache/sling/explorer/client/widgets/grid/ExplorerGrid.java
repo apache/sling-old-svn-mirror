@@ -18,30 +18,27 @@
  */
 package org.apache.sling.explorer.client.widgets.grid;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * 
+ *
  * Reusable Grid that can be used in the Sling Explorer
- * 
+ *
  * Right now, the Grid is based on the GWT FlexTable widget
- * 
- * 
+ *
+ *
  */
 public class ExplorerGrid extends FlexTable {
 
-	
 	public ExplorerGrid() {
 		super();
 		setStyleName("application-FlexTable");
-		getRowFormatter().addStyleName(0, "application-FlexTable-ColumnLabel");	
-		
-	}
+		getRowFormatter().addStyleName(0, "application-FlexTable-ColumnLabel");
 
+	}
 
 	public void addRow(Integer rowIndex, Object[] cellObjects) {
 
@@ -49,13 +46,13 @@ public class ExplorerGrid extends FlexTable {
 		for (int cell = 0; cell < cellObjects.length; cell++) {
 			Widget widget = createCellWidget(cellObjects[cell]);
 			setWidget(rowIndex, cell, widget);
-			
+
 			if (cell==0)
 			   getCellFormatter().addStyleName(rowIndex, cell,"application-FlexTable-Cell-first");
 			else
 			   getCellFormatter().addStyleName(rowIndex, cell,"application-FlexTable-Cell");
-			
-			
+
+
 			if ((rowIndex % 2) != 0) {
 				rf.addStyleName(rowIndex, "application-FlexTable-OddRow");
 			} else {
@@ -63,16 +60,14 @@ public class ExplorerGrid extends FlexTable {
 			}
 		}
 	}
-	
-	public void AddHeader(Object[] cellObjects)
-	{
+
+	public void AddHeader(Object[] cellObjects) {
 		for (int cell = 0; cell < cellObjects.length; cell++) {
 			Widget widget = createCellWidget(cellObjects[cell]);
 			setWidget(0, cell, widget);
 			getCellFormatter().addStyleName(0, cell,"application-FlexTable-ColumnLabelCell");
 		}
 	}
-
 
 	private Widget createCellWidget(Object cellObject) {
 		Widget widget = null;
@@ -84,5 +79,4 @@ public class ExplorerGrid extends FlexTable {
 
 		return widget;
 	}
-
 }

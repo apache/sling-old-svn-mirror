@@ -18,10 +18,7 @@
  */
 package org.apache.sling.explorer.client.widgets.tree.resource;
 
-
-
 import org.apache.sling.explorer.client.ExplorerConstants;
-import org.apache.sling.explorer.client.sling.SessionInfo;
 import org.apache.sling.explorer.client.widgets.grid.resource.ResourceGrids;
 
 import com.google.gwt.core.client.GWT;
@@ -45,20 +42,20 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 public class ResourceTree extends Tree {
 
-	private TreeItem root;	
-	private ResourceGrids properties; 
-	private ExplorerConstants constants; 
-	
+	private TreeItem root;
+	private ResourceGrids properties;
+	private ExplorerConstants constants;
+
 	public ResourceTree(ResourceGrids properties) {
 		this();
 		this.properties = properties;
 		// Create the constants
 	    constants = (ExplorerConstants) GWT.create(ExplorerConstants.class);
 	}
-	
+
 	public ResourceTree() {
 		super();
-		
+
 		// Add an open handler to have a lazy loading treeview
 		addOpenHandler(new OpenHandler<TreeItem>() {
 		      public void onOpen(OpenEvent<TreeItem> event) {
@@ -72,11 +69,11 @@ public class ResourceTree extends Tree {
 						item.getChild(0).remove();
 
 					}
-		          
+
 
 		        }
 		      });
-		
+
 		// Add a selection handler to refresh the property & resource grids
 		addSelectionHandler(new SelectionHandler<TreeItem> (){
 
@@ -85,38 +82,29 @@ public class ResourceTree extends Tree {
 				Node node = (Node) event.getSelectedItem().getUserObject();
 				if (properties != null)
 					properties.populate(node.id);
-				
-			}
-			
-				
-		});
 
-	
+			}
+
+
+		});
 	}
 
 	public void populate() {
-		
 		root = new TreeItem(constants.rootItemDescription());
-	
 //		try {
-//           
+//
 //            SessionInfo info = (SessionInfo)   Class.forName("org.apache.sling.explorer.client.sling.SessionInfo").newInstance();
-//					    
+//
 //            root = new TreeItem(info.getUser());
 //        }
 //        catch(Exception ex) {
 //            return;
 //        }
-		
-		
 		addItem(root);
-		
 		this.loadChildren(root, URL.encode(ExplorerConstants.CONTENT_ROOT + ExplorerConstants.JSON_TREE_REQUEST_EXTENSION));
-		
-		if (properties != null)
-			properties.populate(ExplorerConstants.CONTENT_ROOT );
-		
-		
+		if (properties != null) {
+            properties.populate(ExplorerConstants.CONTENT_ROOT );
+		}
 	}
 
 	private void loadChildren(final TreeItem treeItem, final String url) {
@@ -136,8 +124,8 @@ public class ResourceTree extends Tree {
 	 * This class is used as a request callback object for receiving the json
 	 * structure provided by Sling. The json structure contains the node
 	 * children that we have to display in the tree
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	private class JsonTreeRequestCallback implements RequestCallback {
 		private TreeItem treeItem;
@@ -203,7 +191,7 @@ public class ResourceTree extends Tree {
 	/**
 	 * User object used for the treeview items. It contains information on the
 	 * associated node
-	 * 
+	 *
 	 */
 	private class Node {
 
@@ -229,9 +217,5 @@ public class ResourceTree extends Tree {
 		public boolean isLeaf() {
 			return leaf;
 		}
-
 	}
-	
-
-
 }

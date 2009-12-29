@@ -33,41 +33,38 @@ import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.HTML;
 
-public class Sling 
-{
-	public static String SESSION_INFO_URL = "/system/sling/info.sessionInfo.json";
-	private static String USER_ID = "userID"; 
+public class Sling {
+
+    public static String SESSION_INFO_URL = "/system/sling/info.sessionInfo.json";
+	private static String USER_ID = "userID";
 	private static String WORKSPACE = "workspace";
-	
 
-
-	public void retrieveSessionInfo(HTML sessionInfoUI)
-	{
+	public void retrieveSessionInfo(HTML sessionInfoUI) {
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, SESSION_INFO_URL);
 
 		try {
 			builder.sendRequest(null, new JsonTreeRequestCallback(sessionInfoUI));
 			GWT.log("send request end", null);
-			 
+
 		} catch (RequestException e) {
-			
+
 			GWT.log("Couldn't retrieve User Information", e);
-			
+
 		}
 	}
-	
+
 	/**
 	 * This class is used as a request callback object for receiving the json
 	 * structure provided by Sling. The json structure contains information on the current session
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	private class JsonTreeRequestCallback implements RequestCallback {
-		
-		HTML sessionInfoUI; 
-		
+
+		HTML sessionInfoUI;
+
 		public JsonTreeRequestCallback(HTML sessionInfoUI) {
-			this.sessionInfoUI = sessionInfoUI; 
+			this.sessionInfoUI = sessionInfoUI;
 		}
 
 		public void onError(Request request, Throwable exception) {
@@ -85,7 +82,7 @@ public class Sling
 		}
 
 		private SessionInfo getSessionInfo(Response response) {
-			
+
 			try {
 				// parse the response text into JSON
 				JSONValue jsonValue = JSONParser.parse(response.getText());
@@ -94,23 +91,15 @@ public class Sling
 				if (jsonObject != null) {
 					GWT.log("send request get value end", null);
 					return new SessionInfo(jsonObject.get(USER_ID).toString(), jsonObject.get(WORKSPACE).toString());
-					
-				} else {
-					throw new JSONException(
-							"Invalid Json structure when retrieve the Sling nodes");
-				}
+
+                }
+				throw new JSONException(
+						"Invalid Json structure when retrieve the Sling nodes");
 			} catch (JSONException e) {
 				GWT.log("Could not parse JSON", e);
 				throw new JSONException("Invalid Json structure when retrieve the Sling nodes");
-				
+
 			}
 		}
-
-
-	};	
-	
-	
-	
-	
-	
+	};
 }
