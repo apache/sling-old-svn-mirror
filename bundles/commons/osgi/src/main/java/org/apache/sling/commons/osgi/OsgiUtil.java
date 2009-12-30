@@ -260,7 +260,7 @@ public class OsgiUtil {
         // get a private copy of the properties
         Dictionary<String, Object> table = new Hashtable<String, Object>(props);
 
-        // service information of this JcrResourceResolverFactoryImpl service
+        // service information of the provide service reference
         if (sourceService != null) {
             table.put(EventConstants.SERVICE, sourceService);
             table.put(
