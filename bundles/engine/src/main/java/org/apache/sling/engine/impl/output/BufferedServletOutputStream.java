@@ -38,8 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BufferedServletOutputStream extends ServletOutputStream implements Buffer {
 
-    /* default logger */
-    /** default log */
+    /** default logger */
     private static final Logger log = LoggerFactory.getLogger(BufferedServletOutputStream.class);
 
     /** The wrapped <code>ServletOutputStream</code> */
