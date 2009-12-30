@@ -16,7 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="java.util.Map" %><%
 %><%@page import="org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.api.resource.ValueMap"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
