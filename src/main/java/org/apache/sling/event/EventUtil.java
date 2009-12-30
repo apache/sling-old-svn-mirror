@@ -68,7 +68,7 @@ public abstract class EventUtil {
     /** The job topic property. */
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
 
-    /** The property for the unique event id. Value is of type String. */
+    /** The property for the unique event id. Value is of type String (This is optional). */
     public static final String PROPERTY_JOB_ID = "event.job.id";
 
     /** The property to set if a job can be run parallel to any other job. */
@@ -80,14 +80,14 @@ public abstract class EventUtil {
     /** The property to track the retry count for jobs. Value is of type Integer. */
     public static final String PROPERTY_JOB_RETRY_COUNT = "event.job.retrycount";
 
-    /** The property to for setting the maximum number of retries. Value is of type Integer. */
+    /** The property for setting the maximum number of retries. Value is of type Integer. */
     public static final String PROPERTY_JOB_RETRIES = "event.job.retries";
 
     /** The property to set a retry delay. Value is of type Long and specifies milliseconds. */
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
     /** The property to set to put the jobs into a separate job queue. This property
-     * spEcifies the name of the job queue. If the job queue does not exists yet
+     * specifies the name of the job queue. If the job queue does not exists yet
      * a new queue is created.
      * If a job queue is used, the jobs are never executed in parallel from this queue!
      */
