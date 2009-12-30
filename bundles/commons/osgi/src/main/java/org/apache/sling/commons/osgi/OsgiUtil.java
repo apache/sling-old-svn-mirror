@@ -37,11 +37,13 @@ import org.osgi.service.event.EventConstants;
 public class OsgiUtil {
 
     /**
-     * Returns the boolean value of the named service reference property or the
-     * <code>defaultValue</code> if no such service reference property exist.
-     * If the service property is not a <code>Boolean</code> it is converted
+     * Returns the boolean value of the parameter or the
+     * <code>defaultValue</code> if the parameter is <code>null</code>.
+     * If the parameter is not a <code>Boolean</code> it is converted
      * by calling <code>Boolean.valueOf</code> on the string value of the
-     * property.
+     * object.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default boolean value
      */
     public static boolean toBoolean(Object propValue, boolean defaultValue) {
         propValue = toObject(propValue);
@@ -55,8 +57,10 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as a string or the
-     * <code>defaultValue</code> if no such reference property exists.
+     * Returns the parameter as a string or the
+     * <code>defaultValue</code> if the parameter is <code>null</code>.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default string value
      */
     public static String toString(Object propValue, String defaultValue) {
         propValue = toObject(propValue);
@@ -64,10 +68,12 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as a long or the
-     * <code>defaultValue</code> if no such reference property exists or if
-     * the property is not an <code>Integer</code> and cannot be converted to
-     * a <code>Long</code> from the property's string value.
+     * Returns the parameter as a long or the
+     * <code>defaultValue</code> if the parameter is <code>null</code> or if
+     * the parameter is not a <code>Long</code> and cannot be converted to
+     * a <code>Long</code> from the parameter's string value.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default long value
      */
     public static long toLong(Object propValue, long defaultValue) {
         propValue = toObject(propValue);
@@ -85,10 +91,12 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as an integer or the
-     * <code>defaultValue</code> if no such reference property exists or if
-     * the property is not an <code>Integer</code> and cannot be converted to
-     * an <code>Integer</code> from the property's string value.
+     * Returns the parameter as an integer or the
+     * <code>defaultValue</code> if the parameter is <code>null</code> or if
+     * the parameter is not an <code>Integer</code> and cannot be converted to
+     * an <code>Integer</code> from the parameter's string value.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default integer value
      */
     public static int toInteger(Object propValue, int defaultValue) {
         propValue = toObject(propValue);
@@ -106,10 +114,12 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as a double or the
-     * <code>defaultValue</code> if no such reference property exists or if
-     * the property is not an <code>Double</code> and cannot be converted to
-     * an <code>Double</code> from the property's string value.
+     * Returns the parameter as a double or the
+     * <code>defaultValue</code> if the parameter is <code>null</code> or if
+     * the parameter is not a <code>Double</code> and cannot be converted to
+     * a <code>Double</code> from the parameter's string value.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default double value
      *
      * @deprecated since 2.0.4, use {@link #toDouble(Object, double)} instead
      */
@@ -119,10 +129,12 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as a double or the
-     * <code>defaultValue</code> if no such reference property exists or if
-     * the property is not an <code>Double</code> and cannot be converted to
-     * an <code>Double</code> from the property's string value.
+     * Returns the parameter as a double or the
+     * <code>defaultValue</code> if the parameter is <code>null</code> or if
+     * the parameter is not a <code>Double</code> and cannot be converted to
+     * a <code>Double</code> from the parameter's string value.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default double value
      *
      * @since 2.0.4
      */
@@ -142,12 +154,13 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as a single value. If the
-     * property is neither an array nor a <code>java.util.Collection</code> the
-     * property is returned unmodified. If the property is a non-empty array,
+     * Returns the parameter as a single value. If the
+     * parameter is neither an array nor a <code>java.util.Collection</code> the
+     * parameter is returned unmodified. If the parameter is a non-empty array,
      * the first array element is returned. If the property is a non-empty
      * <code>java.util.Collection</code>, the first collection element is returned.
      * Otherwise <code>null</code> is returned.
+     * @param propValue the parameter to convert.
      */
     public static Object toObject(Object propValue) {
         if (propValue == null) {
@@ -164,27 +177,30 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as an array of Strings. If
-     * the property is a scalar value its string value is returned as a single
-     * element array. If the property is an array, the elements are converted to
-     * String objects and returned as an array. If the property is a collection, the
+     * Returns the parameter as an array of Strings. If
+     * the parameter is a scalar value its string value is returned as a single
+     * element array. If the parameter is an array, the elements are converted to
+     * String objects and returned as an array. If the parameter is a collection, the
      * collection elements are converted to String objects and returned as an array.
-     * Otherwise (if the property does not exist) <code>null</code> is
+     * Otherwise (if the parameter is <code>null</code>) <code>null</code> is
      * returned.
+     * @param propValue The object to convert.
      */
     public static String[] toStringArray(Object propValue) {
         return toStringArray(propValue, null);
     }
 
     /**
-     * Returns the named service reference property as an array of Strings. If
-     * the property is a scalar value its string value is returned as a single
-     * element array. If the property is an array, the elements are converted to
-     * String objects and returned as an array. If the property is a collection, the
+     * Returns the parameter as an array of Strings. If
+     * the parameter is a scalar value its string value is returned as a single
+     * element array. If the parameter is an array, the elements are converted to
+     * String objects and returned as an array. If the parameter is a collection, the
      * collection elements are converted to String objects and returned as an array.
-     * Otherwise (if the property does not exist) a provided default value is
+     * Otherwise (if the property is <code>null</code>) a provided default value is
      * returned.
      * @since 2.0.4
+     * @param propValue The object to convert.
+     * @param defaultArray The default array to return.
      */
     public static String[] toStringArray(Object propValue, String[] defaultArray) {
         if (propValue == null) {
