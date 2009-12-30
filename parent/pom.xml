@@ -51,7 +51,7 @@
         <site.javadoc.exclude />
         <organization.logo>http://sling.apache.org/site/media.data/logo.png</organization.logo>
     </properties>
-    
+
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/parent</connection>
@@ -157,7 +157,7 @@
                             <tasks>
                                 <echo>
 ********************** WARNING (SLING-443) **********************************
-On most platforms, building Apache Sling currently requires setting 
+On most platforms, building Apache Sling currently requires setting
 MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
 You might get a "java.lang.OutOfMemoryError: Java heap space" if that
 setting is not correct.
@@ -297,6 +297,11 @@ setting is not correct.
                     <artifactId>apache-rat-plugin</artifactId>
                     <version>0.6</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.groovy.maven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>1.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -371,7 +376,7 @@ setting is not correct.
 	    We should execute this profile manually to make sure that all files in our source code contain proper licenses.
 	    This is very important and should not be skipped in any scenario.  It is very importnt for us to follow ASF policy.
 	    Example:  mvn -P prepare-release install
-	    -->    
+	    -->
         <profile>
             <id>rat</id>
             <build>
@@ -447,7 +452,7 @@ setting is not correct.
         </mailingList>
     </mailingLists>
 
-    <!-- Please visit our website for the current information about the 
+    <!-- Please visit our website for the current information about the
          Apache Sling project team. (see #SLING-1120 why we don't include
          the list here) -->
     <developers>
