@@ -69,6 +69,7 @@
         <module>maven/maven-jcrocm-plugin</module>
         <module>maven/maven-jspc-plugin</module>
         <module>maven/maven-sling-plugin</module>
+        <module>maven/maven-launchpad-plugin</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
@@ -123,6 +124,7 @@
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
+        <module>launchpad/builder</module>
         <module>launchpad/bundles</module>
         <module>launchpad/content</module>
         <module>launchpad/app</module>

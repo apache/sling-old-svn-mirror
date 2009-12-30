@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>8</version>
+        <version>9-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -45,89 +45,19 @@
 
     <build>
         <plugins>
-            <!-- Bundles to list in the installer properties file -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-launchpad-plugin</artifactId>
                 <executions>
-
-                    <!-- Fixed Launcher Classes -->
                     <execution>
-                        <id>inline-launchpad-base</id>
+                        <id>prepare-package</id>
                         <goals>
-                            <goal>unpack-dependencies</goal>
+                            <goal>prepare-package</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.apache.sling.launchpad.base
-                            </includeArtifactIds>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-
-                    <!-- Launcher Jar -->                    
-                    <execution>
-                        <id>copy-launcher-jar</id>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.base</artifactId>
-                                    <!-- 
-                                        WARNING, this version is declared twice in this pom 
-                                        make sure to keep both declarations in sync!
-                                     -->
-                                     <version>2.1.1-SNAPSHOT</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <stripVersion>true</stripVersion>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}/resources
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-
-                    <!-- Launchpad Bundles -->
-                    <execution>
-                        <id>inline-launchpad-bundles</id>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>
-                                org.apache.sling.launchpad.bundles
-                            </includeArtifactIds>
-                            <includes>
-                                resources/**
-                            </includes>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-
-                    <!-- HttpService: Embedded Jetty, started at level 5 -->
-                    <execution>
-                        <id>copy-jetty-bundle</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>
-                                pax-web-service
-                            </includeArtifactIds>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}/resources/bundles/5
-                            </outputDirectory>
+                            <defaultBundleList>
+                                <version>6-SNAPSHOT</version>
+                            </defaultBundleList>
                         </configuration>
                     </execution>
                 </executions>
@@ -177,27 +107,8 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <!-- 
-                WARNING, this version is declared twice in this pom 
-                make sure to keep both declarations in sync!
-            -->
             <version>2.1.1-SNAPSHOT</version>
             <classifier>app</classifier>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.bundles</artifactId>
-            <version>6-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- HttpService: Embedded Jetty -->
-        <dependency>
-            <groupId>org.ops4j.pax.web</groupId>
-            <artifactId>pax-web-service</artifactId>
-            <version>0.6.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

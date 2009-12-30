@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>8</version>
+        <version>9-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -48,7 +48,7 @@
             Jetty default port (override with -D)
         -->
         <http.port>8888</http.port>
-        
+
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
 
@@ -59,28 +59,28 @@
         <test.host>localhost</test.host>
 
         <!--
-            Disable Jetty webapp rescan (override with -D) 
+            Disable Jetty webapp rescan (override with -D)
         -->
         <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
 
-        <!-- 
+        <!--
             Sling home directory when starting with jetty:run
         -->
         <jetty.sling.home>target/sling</jetty.sling.home>
 
-        <!-- 
+        <!--
             Defines which tests are for the "integration-testing" phase
         -->
         <integration.test.code.path>
             **/launchpad/webapp/integrationtest
         </integration.test.code.path>
 
-        <!-- 
+        <!--
             Set this to true to stop mvn once the integration test Jetty instance is
             started. Useful to manually test the integration testing webapp.
         -->
         <integration.test.wait>false</integration.test.wait>
-        
+
         <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
     </properties>
 
@@ -136,7 +136,7 @@
                             <name>sling.home</name>
                             <value>${jetty.sling.home}</value>
                         </systemProperty>
-                        
+
                     </systemProperties>
 
                     <connectors>
@@ -146,7 +146,7 @@
                         </connector>
                     </connectors>
 
-                    <!-- 
+                    <!--
                         Use target/... as the webapp source, as we unpack stuff there from the
                         Sling launcher modules
                     -->
@@ -157,84 +157,42 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-launchpad-plugin</artifactId>
                 <executions>
                     <execution>
-                        <!-- Unpack the sling-app launcher for inclusion in the web app -->
-                        <id>unpack-dependencies</id>
+                        <id>prepare-package</id>
                         <goals>
-                            <goal>unpack-dependencies</goal>
+                            <goal>prepare-package</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.apache.sling.launchpad.bundles
-                            </includeArtifactIds>
-                            <includes>
-                                resources/**
-                            </includes>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles
-                            </outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>
-                                true
-                            </overWriteSnapshots>
-                        </configuration>
-                    </execution>
-                    <!-- Launcher Jar -->                    
-                    <execution>
-                        <id>copy-launcher-jar</id>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.base</artifactId>
-                                    <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
-                                    <version>2.1.1-SNAPSHOT</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <stripVersion>true</stripVersion>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles/resources
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
+                            <defaultBundleList>
+                                <version>6-SNAPSHOT</version>
+                            </defaultBundleList>
 
-                    <execution>
-                        <!-- 
-                        	Copy additional bundles that must be initially installed to
-                            WEB-INF/resources/bundles/N where N = desired
-                            start level 
-                        -->
-                        <id>copy-bundles-dependencies</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>
-                                ${resources.bundles.path}/0
-                            </outputDirectory>
-                            <excludeTransitive>true</excludeTransitive>
-                            <includeArtifactIds>
-                                org.apache.sling.launchpad.test-services,org.apache.sling.launchpad.test-services-war
-                            </includeArtifactIds>
-                            <includeScope>
-                                provided
-                            </includeScope>
+                            <additionalBundles>
+                                <additionalBundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.test-services</artifactId>
+                                    <version>2.0.7-SNAPSHOT</version>
+                                    <startLevel>0</startLevel>
+                                </additionalBundle>
+                                <additionalBundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
+                                    <version>2.0.7-SNAPSHOT</version>
+                                    <type>war</type>
+                                    <startLevel>0</startLevel>
+                                </additionalBundle>
+                            </additionalBundles>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- 
-              Include sling-app launcher classes and resources, but no Sling 
-              bundles (we want to specify our own versions) 
+            <!--
+              Include sling-app launcher classes and resources, but no Sling
+              bundles (we want to specify our own versions)
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -267,12 +225,12 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
-                        <!-- 
+                        <!--
                             WARNING: make sure these URLs are consistent with the
                             cargo-maven2-plugin settings: AFAIK Maven does not
                             expand variables in the <value> element.
                             And WARNING: these properties are duplicated somewhere in this
-                            POM with slightly different values...there must be a better way. 
+                            POM with slightly different values...there must be a better way.
                         -->
                         <property>
                             <name>launchpad.http.server.url</name>
@@ -339,12 +297,12 @@
                                         </include>
                                     </includes>
                                     <systemProperties>
-                                        <!-- 
+                                        <!--
                                             WARNING: make sure these URLs are consistent with the
                                             cargo-maven2-plugin settings: AFAIK Maven does not
                                             expand variables in the <value> element.
                                             And WARNING: these properties are duplicated somewhere in this
-                                            POM with slightly different values...there must be a better way. 
+                                            POM with slightly different values...there must be a better way.
                                         -->
                                         <property>
                                             <name>
@@ -362,7 +320,7 @@
                                                 http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
                                             </value>
                                         </property>
-                                        
+
                                     </systemProperties>
                                 </configuration>
                             </execution>
@@ -404,7 +362,7 @@
                                     <cargo.servlet.port>
                                         ${http.port}
                                     </cargo.servlet.port>
-                                    <!-- 
+                                    <!--
                                         <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
                                     -->
                                 </properties>
@@ -441,30 +399,20 @@
                         </configuration>
                     </plugin>
                 </plugins>
-            </build>    
-        </profile>        
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>
-    
+
         <!--  The basic Sling WebApp -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <!-- WARNING this pom contains two references to launchpad.base, keep them in sync! -->
             <version>2.1.1-SNAPSHOT</version>
             <classifier>webapp</classifier>
             <type>war</type>
             <scope>runtime</scope>
-        </dependency>
-        
-        <!-- The basic Sling Bundles -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.bundles</artifactId>
-            <version>6-SNAPSHOT</version>
-            <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
 
         <!-- JCR Install - needs to be in a profile -->
@@ -492,19 +440,6 @@
             <artifactId>org.apache.sling.servlets.post</artifactId>
             <version>2.0.2-incubator</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.test-services</artifactId>
-            <version>2.0.7-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
-            <version>2.0.7-SNAPSHOT</version>
-            <type>war</type>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
