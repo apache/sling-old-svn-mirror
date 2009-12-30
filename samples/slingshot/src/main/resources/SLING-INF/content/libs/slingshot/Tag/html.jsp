@@ -23,7 +23,7 @@
                 java.util.Iterator"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-    final ValueMap attributes = resource.adaptTo(ValueMap.class);
+    final ValueMap attributes = ResourceUtil.getValueMap(resource);
     final String name = ResourceUtil.getName(resource);
     final ResourceResolver resolver = resource.getResourceResolver();
 %><html>

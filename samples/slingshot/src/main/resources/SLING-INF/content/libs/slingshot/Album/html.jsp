@@ -16,17 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 --%><%@page session="false" %><%
-%><%@page import="java.util.ArrayList,
-                java.util.Iterator,
-                java.util.List,
-                org.apache.sling.api.resource.Resource,
-                org.apache.sling.api.resource.ResourceUtil,
-                org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.sample.slingshot.Constants" %><%
+%><%@page import="org.apache.sling.api.resource.ResourceUtil,
+                org.apache.sling.api.resource.ValueMap" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 
-final ValueMap attributes = resource.adaptTo(ValueMap.class);
+final ValueMap attributes = ResourceUtil.getValueMap(resource);
 final String albumName = attributes.get("jcr:title", ResourceUtil.getName(resource));
 %><html>
   <head>

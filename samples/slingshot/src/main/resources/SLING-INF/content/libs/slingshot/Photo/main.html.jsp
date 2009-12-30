@@ -24,7 +24,7 @@
 %><sling:defineObjects/><%
 %><div class="photo">
 <%
-final ValueMap attr = ResourceUtil.getValueMap(resource);
+    final ValueMap attr = ResourceUtil.getValueMap(resource);
     final String albumName = ResourceUtil.getName(ResourceUtil.getParent(resource));
     final String photoName = attr.get("jcr:title", ResourceUtil.getName(resource));
     final String relPath = resource.getPath();
