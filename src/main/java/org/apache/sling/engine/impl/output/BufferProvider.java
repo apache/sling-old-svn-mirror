@@ -24,7 +24,9 @@ import java.io.PrintWriter;
 import javax.servlet.ServletOutputStream;
 
 /**
- * The <code>BufferProvider</code> TODO
+ * The <code>BufferProvider</code> provides
+ * buffered versions of the servlet output
+ * stream and the print writer.
  */
 public interface BufferProvider {
 
