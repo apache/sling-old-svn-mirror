@@ -107,7 +107,7 @@ class Util {
                     AbstractRequestParameter param = (AbstractRequestParameter) params[i];
 
                     // fix encoding if different
-                    if (!formEncoding.equals(param.getEncoding())) {
+                    if (!formEncoding.equalsIgnoreCase(param.getEncoding())) {
                         param.setEncoding(formEncoding);
 
                         // prepare the parameter for renaming
@@ -133,7 +133,7 @@ class Util {
 
     private static String reencode(String parName, String encoding) {
         // re-encode the parameter to the encoding
-        if (!ENCODING_DIRECT.equals(encoding)) {
+        if (!ENCODING_DIRECT.equalsIgnoreCase(encoding)) {
             try {
                 return new String(parName.getBytes(ENCODING_DIRECT), encoding);
             } catch (UnsupportedEncodingException uee) {
