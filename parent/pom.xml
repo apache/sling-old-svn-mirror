@@ -257,6 +257,9 @@ setting is not correct.
                         <tagBase>
                             https://svn.apache.org/repos/asf/sling/tags
                         </tagBase>
+                        <preparationGoals>
+                            launchpad:check-bundle-list-for-snapshots clean verify
+                        </preparationGoals>
                     </configuration>
                 </plugin>
                 <plugin>
