@@ -98,7 +98,7 @@ public class JSONGroovyBuilderTest extends GroovyTestCase {
 		JSONAssert.assertEquals(expected, actual)
 	}
 
-	void testNonDefaultRootName() {
+	void testNonDefaultRootNameWithObject() {
 		def actual = builder.books {
 			book ([title: "The Definitive Guide to Grails", author: "Graeme Rocher"])
 			book ([title: "Groovy in Action", author: "Dierk Konig"])
@@ -116,6 +116,12 @@ public class JSONGroovyBuilderTest extends GroovyTestCase {
 
 	}
 
+	void testNonDefaultRootNameWithArray() {
+		def actual = builder.values(["json", 1, true])
+		def expected = new JSONObject().put("values", new JSONArray().put("json").put(1).put(true))
+		JSONAssert.assertEquals(expected, actual)
+
+	}
 
 	void testBuildObjectWithList(){
 		def actual = builder.json {
