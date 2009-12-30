@@ -18,7 +18,8 @@
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.api.resource.Resource,
                 org.apache.sling.api.resource.ResourceUtil,
-                org.apache.sling.api.resource.ValueMap" %><%
+                org.apache.sling.api.resource.ValueMap,
+                org.apache.sling.sample.slingshot.Constants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="photo">
@@ -27,9 +28,13 @@ final ValueMap attr = ResourceUtil.getValueMap(resource);
     final String albumName = ResourceUtil.getName(ResourceUtil.getParent(resource));
     final String photoName = attr.get("jcr:title", ResourceUtil.getName(resource));
     final String relPath = resource.getPath();
-    
+    String imagePath = relPath;
+    String previewPath = ResourceUtil.getParent(resource).getPath() + '/' + Constants.FOLDER_NAME_PREVIEW + '/' + ResourceUtil.getName(resource);
+    if ( resource.getResourceResolver().getResource(previewPath) != null ) {
+        imagePath = previewPath;
+    }
 %>
-    <a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><img src="<%=relPath%>" width="100" height="100"/></a><br/>
+    <a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><img src="<%=imagePath%>" width="100" height="100"/></a><br/>
     <p><a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><%= photoName %></a></p>
     <p>Tags:&nbsp;
 <%

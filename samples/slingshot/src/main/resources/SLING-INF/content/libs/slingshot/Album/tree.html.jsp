@@ -23,16 +23,17 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="tree">
-   <div class="albumlist">
+  <div class="albumlist">
     <h2>Contained Albums</h2>
     <%
-     final Iterator<Resource> ri = ResourceUtil.listChildren(resource);
-     while ( ri.hasNext()) {
-         final Resource current = ri.next();
-         if ( ResourceUtil.isA(current, Constants.RESOURCETYPE_FOLDER) ) {
-             %><sling:include resource="<%= current %>" resourceType="slingshot/Album"  replaceSelectors="treeentry"/><%
-         }
-   }
-   %>
+    final Iterator<Resource> ri = ResourceUtil.listChildren(resource);
+    while ( ri.hasNext()) {
+        final Resource current = ri.next();
+        if ( ResourceUtil.isA(current, Constants.RESOURCETYPE_FOLDER) 
+             && Constants.includeAsAlbum(current)) {
+            %><sling:include resource="<%= current %>" resourceType="slingshot/Album"  replaceSelectors="treeentry"/><%
+        }
+    }
+    %>
   </div>
 </div>
