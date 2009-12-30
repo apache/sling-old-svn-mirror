@@ -1,0 +1,574 @@
+#!/bin/sh
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+
+# define a special java home
+#JAVA_HOME=/opt/java/jdk1.6.0
+
+# enable this as default command if no command argument is given
+#SLING_COMMAND=start
+
+# define the port sling listens to.
+#SLING_PORT=8080
+
+# define the interface sling binds to.
+#SLING_INTERFACE=0.0.0.0
+
+# enable if jvm-debugging should be enabled
+#SLING_JVM_DEBUG=socket
+
+# set the max amount of java heap space
+#SLING_JVM_HEAP_MAX=512
+
+# add additional options to the jvm
+#SLING_JVM_OPTS=-enableassertions
+
+# enable starting the engine in foreground
+#SLING_FOREGROUND=y
+
+#---------------------------------------------------------------------
+# Don't edit below here
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# functions
+#---------------------------------------------------------------------
+
+# print the usage info
+usage() {
+cat <<-@@
+$SLING_TITLE Control, version 2.0.0 ($SLING_SVN_ID)
+    usage: `basename $0` [options] {start|stop|restart|status}
+
+Engine Options:
+    --context          the sling context directory, defaults to `dirname $0`
+    --port, -p         the default port to listen to
+    --loglevel, -l     the initial loglevel.
+    --logdir           the log directory for startup.log. defaults to `dirname $0`/logs
+    --log              the startup log file. defaults to `dirname $0`/logs/startup.log
+    --interface, -a    the interfact to bind to (use 0.0.0.0 for any).
+
+Java Options:
+    --javahome         the java home directory. overrides JAVA_HOME env var.
+    --heap-min         the minimum heap in megabytes. defaults to 128
+    --heap-max         the maximum heap in megabytes. defaults to 256
+    --debug, -d [socket|shmem]  
+                       starts jvm in debug mode. default 'socket'
+    --debug-suspended [socket|shmem]  
+                       starts jvm in suspended debug mode. default 'socket'
+    --debug-port       port for debug address. default "30303"
+    --profile [yjp]    start jvm with YourKit Java Profiler
+    --javaopts         additional java options
+    --jaas             use jaas.config. default is disabled
+    --jaas-config      config for jaas. default is etc/jaas.config
+    --verbose-gc       turn on vebose gc
+
+Other options
+    --fg, -D           starts Sling in foreground
+    --bg               starts Sling in background. this is the default.
+    --verbose, -v      be more verbose 
+    --dry              prepare but do not start
+    --help, -h         show this help
+    --max-files        sets the ulimit for max open files before executing the jvm. 
+                       default is 1024
+@@
+}
+
+# init the defaults
+initDefaults() {
+    BASEDIR=`fullpath -d $0`
+	SLING_TITLE="Sling"
+	export SLING_TITLE
+    SLING_SVN_ID='$Rev: 25335 $'
+    export SLING_SVN_ID
+    SLING_CONTEXT="${SLING_CONTEXT:-$BASEDIR}"
+    export SLING_CONTEXT
+    export SLING_PORT
+    export SLING_LOGLEVEL
+     SLING_LOGDIR="${SLING_LOGDIR:-"$BASEDIR/logs"}"
+    export SLING_LOGDIR
+     SLING_LOG="${SLING_LOG:-"$SLING_LOGDIR/startup.log"}"
+    export SLING_LOG
+    SLING_INTERFACE="${SLING_INTERFACE:-$SLING_ADDRESS}"
+    export SLING_INTERFACE
+    SLING_JVM_HEAP_MIN="${SLING_HEAP_MIN:-"128"}"
+    export SLING_JVM_HEAP_MIN
+    SLING_JVM_HEAP_MAX="${SLING_HEAP_MAX:-"256"}"
+    export SLING_JVM_HEAP_MAX
+    export SLING_JVM_JAAS
+    SLING_JVM_JAAS_CONFIG=etc/jaas.config
+    export SLING_JVM_JAAS_CONFIG
+    export SLING_JVM_OPTS
+    export SLING_JVM_VERBOSE_GC
+    export SLING_JVM_DEBUG
+    SLING_JVM_DEBUG_PORT=30303
+    export SLING_JVM_DEBUG_PORT
+    SLING_JVM_DEBUG_SUSPENDED=n
+    export SLING_JVM_DEBUG_SUSPENDED
+    export SLING_JVM_PROFILE
+    export SLING_FOREGROUND
+    export SLING_DRY
+    SLING_COMMAND=${SLING_COMMAND}
+    export SLING_COMMAND
+    export SLING_VERBOSE
+    SLING_MAX_OPEN_FILES="${SLING_MAX_OPEN_FILES:-"1024"}"
+    export SLING_MAX_OPEN_FILES
+}
+
+# echo to stderr and to the log file
+_log() {
+  _level=$1; shift
+  if [ "$use_stderr" = "YES" ] ; then
+    echo "`date '+%d.%m.%Y %H:%M:%S'` *$_level* $*" >&2
+  fi
+  if [ -w "$SLING_LOG" ]; then
+    echo "`date '+%d.%m.%Y %H:%M:%S'` *$_level* $*" >> "$SLING_LOG"
+  fi
+}
+
+# log an error message
+err() {
+    _log "ERROR" $*
+}
+
+# log an warning message
+warn() {
+    _log "WARN " $*
+}
+
+# log an info message
+info() {
+    _log "INFO " $*
+}
+
+# print all relevant variables
+dump() {
+   set | grep SLING 
+}
+
+# calculate the fullpath
+fullpath() {
+    OPWD="$PWD"
+    if [ "$1" = "-d" ]; then
+        cd `dirname $2`
+        echo `pwd -L`
+    else
+        cd `dirname $1`
+        echo `pwd -L`/`basename $1`
+    fi
+    cd $OPWD
+}
+
+# check if verbose level
+verbose() {
+   test -n "$SLING_VERBOSE"  
+}
+
+# print the java version of the $SLING_JVM vm
+javaVersion() {
+    jvm_version=`$SLING_JVM -version 2>&1 | grep "java version"`
+    case "$jvm_version" in
+      "java version \"1.2"*)  echo 1.2;;
+      "java version \"1.3"*)  echo 1.3;;
+      "java version \"1.4"*)  echo 1.4;;
+      "java version \"1.5"*)  echo 1.5;;
+      "java version \"1.6"*)  echo 1.6;;
+      *)                      echo ;;
+    esac
+}
+
+# print the debug info
+printDebug() {
+        if [ "$SLING_JVM_DEBUG" = "socket" ]; then
+            info "attaching debugger on port ${SLING_JVM_DEBUG_PORT}"
+            if [ "${SLING_JVM_DEBUG_SUSPENDED}" = y ]; then
+                info "jvm is suspended! attach debugger to continue."
+            fi
+        fi
+        if [ "$SLING_JVM_DEBUG" = "shmem" ]; then
+            info "attaching debugger using shared memory"
+            if [ "${SLING_JVM_DEBUG_SUSPENDED}" = y ]; then
+                info "jvm is suspended! attach debugger to continue."
+            fi
+        fi
+}
+
+#---------------------------------------------------------------------
+# main program begins here
+#---------------------------------------------------------------------
+
+# parse the arguments
+initDefaults
+while [ -n "$1" ]; do
+    case "$1" in
+        '--context')
+            SLING_CONTEXT=$2
+            shift;;
+        '--port' | '-p')
+            SLING_PORT=$2
+            shift;;
+        '--loglevel' | '-l')
+            SLING_LOGLEVEL=$2
+            shift;;
+        '--logdir')
+            SLING_LOGDIR=$2
+            shift;;
+        '--log')
+            SLING_LOG=$2
+            shift;;
+        '--interface' | '-a')
+            SLING_INTERFACE=$2
+            shift;;
+        '--javahome')
+            JAVA_HOME=$2
+            shift;;
+        '--javaopts')
+            SLING_JVM_OPTS=$2
+            shift;;
+        '--heap-min')
+            SLING_JVM_HEAP_MIN=$2
+            shift;;
+        '--heap-max')
+            SLING_JVM_HEAP_MAX=$2
+            shift;;
+        '--debug' | '-d' | '--debug-suspended')
+            SLING_JVM_DEBUG=socket
+            if [ "$1" == "--debug-suspended" ]; then
+                SLING_JVM_DEBUG_SUSPENDED=y
+            fi
+            if [ "$2" == "socket" -o "$2" == "shmem" ]; then
+                SLING_JVM_DEBUG=$2
+                shift
+            fi;;
+         '--profile')
+            SLING_JVM_PROFILE=yjp
+            if [ "$2" = "yjp" ]; then
+                SLING_JVM_PROFILE=$2
+                shift
+            fi;;
+        '--debug-port')
+            SLING_JVM_DEBUG_PORT=$2
+            shift;;
+        '--debug-suspended')
+            SLING_JVM_DEBUG_SUSPENDED=y
+            ;;
+        '--jaas')
+            SLING_JVM_JAAS=y
+            ;;
+        '--jaas-config')
+            SLING_JVM_JAAS_CONFIG=$2
+            shift;;
+        '--verbose-gc')
+            SLING_JVM_VERBOSE_GC=y
+            ;;
+        '--fg' | '-D')
+            SLING_FOREGROUND=y
+            ;;
+        '--bg')
+            SLING_FOREGROUND=n
+            ;;
+        '--verbose' | '-v')
+            SLING_VERBOSE=y
+            ;;
+        '--max-files')
+            SLING_MAX_OPEN_FILES=$2
+            shift;;
+        '--dry')
+            SLING_DRY=y
+            ;;
+        '--help' | '-h')
+            usage
+            exit ;;
+        'status'|'start'|'psmon'|'terminator'|'bgstart'|'stop'|'restart')
+            SLING_COMMAND=$1
+            ;;
+        *)
+            echo "Invalid option: $1"
+            usage
+            exit;;
+        esac
+    shift
+done
+
+#--------------------------------------------------------------------------------
+if [ ! -d "$SLING_CONTEXT" ] ; then
+	mkdir -p "$SLING_CONTEXT"
+fi
+if [ ! -f "$SLING_CONTEXT/bin/${project.build.finalName}-standalone.jar" ] ; then
+    echo "Bad SLING_CONTEXT: $SLING_CONTEXT (bin/${project.build.finalName}-standalone.jar not found)" >&2
+    exit 4
+fi
+cd "$SLING_CONTEXT"
+
+case "$SLING_COMMAND" in
+  'start')                        # test to be sure we can run, then bg
+                                  # the startup
+    use_stderr="YES"
+
+
+    if [ ! -d "$SLING_LOGDIR" ] ; then
+      mkdir -p "$SLING_LOGDIR" 2>/dev/null || \
+        ( echo "mkdir failed for $SLING_LOGDIR" >&2 ; exit 2 )
+    fi
+    for file in "$SLING_LOG" "$SLING_LOGDIR/sling.pid" "$SLING_LOGDIR/monitor.pid" ; do
+      if [ ! -w "$file" ] ; then
+        touch "$file" 2>/dev/null || \
+          ( "Couldn't create file $file" >&2 ; exit 2 )
+      fi
+    done
+
+    if [ -n "$JAVA_HOME" -a -x "$JAVA_HOME/bin/java" ] ; then
+      SLING_JVM=$JAVA_HOME/bin/java
+    else
+      JAVA_HOME=
+      SLING_JVM="`which java 2>/dev/null`"
+      if [ -z "$SLING_JVM" ] ; then
+        for pfix in "/usr/local" "/opt" "/usr" ; do
+          for jvers in "java" "j2sdk" "j2sdk1.4" "java1.4" \
+                       "j2sdk1.3.1" "java1.3.1" "j2sdk1.3" "java1.3" ; do
+            if [ -x "$pfix/$jvers/bin/java" ] ; then
+              SLING_JVM="$pfix/$jvers/bin/java"
+              break 2
+            fi
+          done
+        done
+        if [ -z "$SLING_JVM" ] ; then
+          err "Unable to locate java, please make sure java is installed and JAVA_HOME set"
+          exit 3
+        fi
+      fi
+    fi
+    
+    # check if already running
+    SLING_PID=`cat "$SLING_LOGDIR/sling.pid" 2> /dev/null`
+    if [ -n "$SLING_PID" ]; then
+        if ps -p $SLING_PID > /dev/null; then
+            err "process $SLING_PID already running. please stop and try again."
+            exit 4
+        else
+            warn "pid file $SLING_LOGDIR/sling.pid present, but process not running. "\
+                 "maybe unclean shutdown ?"
+            rm -f "$SLING_LOGDIR/sling.pid"
+            SLING_PID=
+        fi
+    fi
+    
+    # assemble the startup param
+    SLING_JAVA_VERSION=`javaVersion`
+    if [ -n "$SLING_JVM_JAAS" ]; then
+    	jvmOpts="$jvmOpts -Djava.security.auth.login.config=$SLING_JVM_JAAS_CONFIG"
+    fi
+    if [ -n "$SLING_JVM_VERBOSE_GC" ]; then
+        jvmOpts="$jvmOpts -verbose:gc"
+    fi
+    jvmOpts="$jvmOpts -Xms${SLING_JVM_HEAP_MIN}m"
+    jvmOpts="$jvmOpts -Xmx${SLING_JVM_HEAP_MAX}m"
+    jvmOpts="$jvmOpts -Djava.awt.headless=true"
+
+    if [ -n "$SLING_JVM_DEBUG" ]; then
+        jvmOpts="$jvmOpts -Xdebug -Xnoagent -Djava.compiler=NONE \
+-Xrunjdwp:transport=dt_$SLING_JVM_DEBUG,address=$SLING_JVM_DEBUG_PORT,\
+server=y,suspend=${SLING_JVM_DEBUG_SUSPENDED}"
+    fi
+    if [ "$SLING_JVM_PROFILE" = yjp ]; then
+        if [ $SLING_JAVA_VERSION = "1.4" ]; then
+            jvmOpts="$jvmOpts -Xrunyjpagent"
+        else
+            jvmOpts="$jvmOpts -agentlib:yjpagent"
+        fi
+    fi 
+    jvmOpts="$jvmOpts $SLING_JVM_OPTS"
+
+    # assemble program arguments
+    if [ -n "$SLING_PORT" ]; then
+        slingOpts="$slingOpts -p $SLING_PORT"
+    fi
+    if [ -n "$SLING_INTERFACE" ]; then
+        slingOpts="$slingOpts -a $SLING_INTERFACE"
+    fi
+    if [ -n "$SLING_LOGLEVEL" ]; then
+        slingOpts="$slingOpts -l $SLING_LOGLEVEL"
+    fi
+    if [ -w "$SLING_LOG" ]; then
+        slingOpts="$slingOpts -f -"
+    fi
+
+    # executable string
+    jvmExe="$SLING_JVM $jvmOpts -jar $SLING_CONTEXT/bin/${project.build.finalName}.jar $slingOpts"
+    export jvmExe
+
+    if verbose; then 
+        dump
+        echo ""
+        echo "Execute: $jvmExe"
+        echo ""
+    fi
+    if [ -n "$SLING_DRY" ]; then
+        echo ""
+        echo "--dry specified. not starting engine."
+        exit 0
+    fi
+
+    info "Using JVM found at $SLING_JVM"
+
+    if [ -n "$SLING_FOREGROUND" ]; then
+        ulimit -n $SLING_MAX_OPEN_FILES
+        info "Starting $SLING_TITLE in foreground"
+        info "hit Ctrl-C to stop $SLING_TITLE"
+        printDebug
+        info "-----------------------------------------------------------"
+        $jvmExe | tee -a "$SLING_LOG" 2>&1
+        exit 0 # in case of failure
+    else
+        info "Starting $SLING_TITLE in background..."
+        printDebug
+        $0 psmon &
+        SLING_PID=`cat "$SLING_LOGDIR/sling.pid"`
+        while [ -z "`cat "$SLING_LOGDIR/sling.pid" 2> /dev/null`" ]; do
+            sleep 1
+        done
+        info "Started."
+    fi
+    exit 0
+  ;;
+#---------------------------------------------------------------------
+  'psmon')                        # sets up the process monitor
+    use_stderr="NO"
+    if [ -z "jvmExe" ] ; then
+      usage
+      exit 0
+    fi
+    trap '' 1  # block HUP
+
+    # exit when TERM signal is received
+    trap 'info "$SLING_TITLE shutdown on TERM signal"; rm -f "$SLING_LOGDIR/monitor.pid" "$SLING_LOGDIR/sling.pid";exit 0' 15
+
+    echo $$ > "$SLING_LOGDIR/monitor.pid"
+
+    SHORT_RESTARTS=0
+    SLING_BGSTART=1
+    export SLING_BGSTART
+
+    while [ 0 ] ; do              # forever
+      BEFORE=`date '+%Y%m%d%H%M%S'`
+      $0 terminator | $0 bgstart
+      AFTER=`date '+%Y%m%d%H%M%S'`
+
+      # Check for too many restarts < 10 seconds
+      # Okay that this will not work across the 59-to-0 second boundary
+      # because we are just trying to avoid a fast infinite loop caused
+      # by something like another process already listening on the port
+      # 
+      RUNTIME=`expr $AFTER - $BEFORE`
+      if [ $RUNTIME -lt 10 ] ; then
+        SHORT_RESTARTS=`expr $SHORT_RESTARTS + 1`
+      else
+        SHORT_RESTARTS=0
+      fi
+      if [ $SHORT_RESTARTS -eq 3 ] ; then
+        err "Too many restarts - exiting!"
+        exit 1
+      fi
+    done
+  ;;
+#---------------------------------------------------------------------
+  'terminator')
+    use_stderr="NO"
+    if [ -z "$SLING_BGSTART" ] ; then
+      usage
+      exit
+    fi
+    # send QUIT to sling upon signal
+    trap 'slingpid=`/bin/cat "$SLING_LOGDIR/sling.pid" 2>/dev/null` ; if [ -n "$slingpid" ] ; then /bin/kill $slingpid > /dev/null 2>&1 ; fi; rm -f "$SLING_LOGDIR/terminator.pid"; exit 0' 3 6 15
+
+    echo $$ > "$SLING_LOGDIR/terminator.pid"
+    while [ 0 ] ; do              # forever
+      sleep 5
+    done
+  ;;
+#---------------------------------------------------------------------
+  'bgstart')
+    use_stderr="NO"
+    if [ -z "$SLING_BGSTART" ] ; then
+      usage
+      exit
+    fi
+    ulimit -n $SLING_MAX_OPEN_FILES
+    echo $$ > "$SLING_LOGDIR/sling.pid" 
+    exec $jvmExe >> "$SLING_LOG" 2>&1
+    rm -f "$SLING_LOGDIR/sling.pid" 
+  ;;
+#---------------------------------------------------------------------
+  'stop')
+    use_stderr="YES"
+    termpid=`/bin/cat "$SLING_LOGDIR/terminator.pid" 2>/dev/null`
+    monitorpid=`/bin/cat "$SLING_LOGDIR/monitor.pid" 2>/dev/null`
+    slingpid=`/bin/cat "$SLING_LOGDIR/sling.pid" 2>/dev/null`
+    if [ -z "$termpid$monitorpid$slingpid" ]; then
+        echo "$SLING_TITLE not running."
+        exit 0;
+    fi
+
+    printf "stopping $SLING_TITLE..."
+    if [ -n "$monitorpid" ] ; then
+      /bin/kill $monitorpid > /dev/null 2>&1
+    fi
+    if [ -n "$termpid" ] ; then
+      /bin/kill $termpid > /dev/null 2>&1
+    fi
+
+    COUNTER=0
+    while [ -f "$SLING_LOGDIR/sling.pid" ] && [ $COUNTER -lt 20 ]; do
+        printf "."
+        COUNTER=`expr $COUNTER + 1`
+        sleep 1
+    done
+     # this last one is just in case the terminator already failed
+    slingpid=`/bin/cat "$SLING_LOGDIR/sling.pid" 2>/dev/null`
+    if ps -p $slingpid > /dev/null 2>&1 ; then
+        echo "still running. sending TERM signal to PID $slingpid"
+        /bin/kill $slingpid > /dev/null 2>&1
+    else
+        echo "stopped."
+    fi
+
+    rm -f "$SLING_LOGDIR/monitor.pid" "$SLING_LOGDIR/terminator.pid" \
+        "$SLING_LOGDIR/sling.pid" 
+  ;;
+#---------------------------------------------------------------------
+  'restart')
+    "$0" stop
+    "$0" start
+  ;;
+#---------------------------------------------------------------------
+  'status')
+    slingpid=`/bin/cat "$SLING_LOGDIR/sling.pid" 2>/dev/null`
+    if ps -p $slingpid > /dev/null 2>&1 ; then
+        echo "$SLING_TITLE is running."
+    else
+        echo "$SLING_TITLE is stopped."
+    fi
+  ;;
+#---------------------------------------------------------------------
+  *)
+    usage
+    exit
+  ;;
+esac
+
