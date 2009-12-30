@@ -69,7 +69,7 @@ public class DefaultThreadPoolManager
         this.bundleContext = bc;
         this.configAdminTracker = new ServiceTracker(bc, ConfigurationAdmin.class.getName(), null);
         this.configAdminTracker.open();
-        this.logger.info("Startet Apache Sling Thread Pool Manager: {}", getPid());
+        this.logger.info("Started Apache Sling Thread Pool Manager: {}", getPid());
     }
 
     /**
