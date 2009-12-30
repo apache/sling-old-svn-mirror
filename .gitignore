@@ -1,0 +1,9 @@
+target/
+.project
+.classpath
+.settings/
+/sling/
+derby.log
+*.iml
+*.ipr
+*.iws
