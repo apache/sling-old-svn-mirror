@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventConstants;
 
 
 /**
@@ -1131,6 +1133,9 @@ public class JobEventHandler
         synchronized ( this.processingEventsList ) {
             // if the event is still in the processing list, we confirm the ack
             final Object ack = this.processingEventsList.remove(eventNodePath);
+            if ( ack != null ) {
+                this.sendNotification(EventUtil.TOPIC_JOB_STARTED, job);
+            }
             return ack != null;
         }
 
@@ -1170,7 +1175,12 @@ public class JobEventHandler
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRIES, retries);
                 job = new Event(job.getTopic(), newProperties);
+                this.sendNotification(EventUtil.TOPIC_JOB_CANCELLED, job);
+            } else {
+                this.sendNotification(EventUtil.TOPIC_JOB_FAILED, job);
             }
+        } else {
+            this.sendNotification(EventUtil.TOPIC_JOB_FINISHED, job);
         }
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null
                                         || job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
@@ -1534,6 +1544,18 @@ public class JobEventHandler
         }
     }
 
+    /**
+     * Helper method for sending the notification events.
+     */
+    private void sendNotification(final String topic, final Event job) {
+        final EventAdmin localEA = this.eventAdmin;
+        if ( localEA != null ) {
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(EventUtil.PROPERTY_NOTIFICATION_JOB, job);
+            props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
+            localEA.postEvent(new Event(topic, props));
+        }
+    }
 
     private static final class StartedJobInfo {
         public final Event event;
