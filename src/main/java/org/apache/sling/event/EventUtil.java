@@ -125,6 +125,42 @@ public abstract class EventUtil {
     public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
 
     /**
+     * Notification events for jobs.
+     */
+
+    /** Asynchronous notification event when a job is started.
+     * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
+     * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
+     * timestamp of the event (as a Long).
+     * @since 2.2 */
+    public static final String TOPIC_JOB_STARTED = "org/apache/sling/event/notification/job/START";
+
+    /** Asynchronous notification event when a job is finished.
+     * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
+     * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
+     * timestamp of the event (as a Long).
+     * @since 2.2 */
+    public static final String TOPIC_JOB_FINISHED = "org/apache/sling/event/notification/job/FINISHED";
+
+    /** Asynchronous notification event when a job failed.
+     * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
+     * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
+     * timestamp of the event (as a Long).
+     * @since 2.2 */
+    public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
+
+    /** Asynchronous notification event when a job is cancelled.
+     * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
+     * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
+     * timestamp of the event (as a Long).
+     * @since 2.2 */
+    public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
+
+    /** Property containing the job event.
+     * @since 2.2 */
+    public static final String PROPERTY_NOTIFICATION_JOB = "event.notification.job";
+
+    /**
      * Utility Methods
      */
 
