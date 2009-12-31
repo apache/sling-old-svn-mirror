@@ -76,14 +76,14 @@
             <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
-        	<groupId>org.codehaus.groovy</groupId>
+            <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
             <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-      	    <groupId>org.slf4j</groupId>
-      	    <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -96,8 +96,8 @@
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-      	    <groupId>org.slf4j</groupId>
-      	    <artifactId>slf4j-simple</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
     </dependencies>
 </project>
