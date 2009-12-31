@@ -20,18 +20,18 @@
                   org.apache.sling.api.resource.ValueMap"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
-final ValueMap attributes = ResourceUtil.getValueMap(resource);
-final String photoName = attributes.get("jcr:title", ResourceUtil.getName(resource));
+    final ValueMap attributes = ResourceUtil.getValueMap(resource);
+    final String photoName = attributes.get("jcr:title", ResourceUtil.getName(resource));
 %><html>
   <head>
     <title><%= photoName %></title>
   </head>
   <body>
-<h1><%= photoName %></h1>
-<img src="<%=photoName %>"/>
-<p>Description: <%=attributes.get("jcr:description", "")%></p>
-<p>Location: <%=attributes.get("slingshot:location", "")%></p>
-<p>Tags:&nbsp
+    <h1><%= photoName %></h1>
+    <img src="<%=ResourceUtil.getName(resource) %>"/>
+    <p>Description: <%=attributes.get("jcr:description", "")%></p>
+    <p>Location: <%=attributes.get("slingshot:location", "")%></p>
+    <p>Tags:&nbsp
 <%
     String[] values = attributes.get("slingshot:tags", String[].class);
     if  (values != null ) {
@@ -42,6 +42,6 @@ final String photoName = attributes.get("jcr:title", ResourceUtil.getName(resour
         
     }
 %>
-</p>
-</body>
+    </p>
+  </body>
 </html>

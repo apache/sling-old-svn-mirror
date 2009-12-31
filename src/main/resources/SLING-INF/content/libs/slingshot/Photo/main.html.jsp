@@ -38,14 +38,13 @@
     <p><a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><%= photoName %></a></p>
     <p>Tags:&nbsp;
 <%
-String[] values = attr.get("slingshot:tags", String[].class);
-if  (values != null ) {
-    for(int k=0;k<values.length;k++) {
-        if(k>0) out.write(", ");
-        out.write(values[k]);
+    String[] values = attr.get("slingshot:tags", String[].class);
+    if  (values != null ) {
+        for(int k=0;k<values.length;k++) {
+            if (k>0) out.write(", ");
+            out.write(values[k]);
+        }
     }
-    
-}
 %>
-</p>
+    </p>
 </div>
