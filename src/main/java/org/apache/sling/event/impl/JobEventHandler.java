@@ -1022,10 +1022,9 @@ public class JobEventHandler
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
     public void onEvent(EventIterator iter) {
-        // we create an own session here
+        // we create an own session here - this is done lazy
         Session s = null;
         try {
-            s = this.createSession();
             while ( iter.hasNext() ) {
                 final javax.jcr.observation.Event event = iter.nextEvent();
                 if ( event.getType() == javax.jcr.observation.Event.PROPERTY_CHANGED
@@ -1043,6 +1042,9 @@ public class JobEventHandler
                                 doNotProcess = this.deletedJobs.remove(nodePath);
                             }
                             if ( !doNotProcess ) {
+                                if ( s == null ) {
+                                    s = this.createSession();
+                                }
                                 final Node eventNode = (Node) s.getItem(nodePath);
                                 if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
                                     try {
@@ -1070,8 +1072,6 @@ public class JobEventHandler
                     }
                 }
             }
-        } catch (RepositoryException re) {
-            this.logger.error("Unable to create a session.", re);
         } finally {
             if ( s != null ) {
                 s.logout();
