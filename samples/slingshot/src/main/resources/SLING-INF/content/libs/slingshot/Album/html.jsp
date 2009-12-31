@@ -21,8 +21,8 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 
-final ValueMap attributes = ResourceUtil.getValueMap(resource);
-final String albumName = attributes.get("jcr:title", ResourceUtil.getName(resource));
+    final ValueMap attributes = ResourceUtil.getValueMap(resource);
+    final String albumName = attributes.get("jcr:title", ResourceUtil.getName(resource));
 %><html>
   <head>
     <title>Album <%= albumName %></title>
