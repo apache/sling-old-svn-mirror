@@ -97,6 +97,9 @@ public abstract class AbstractRepositoryEventHandler
      *  Sling settings service. */
     protected SlingSettingsService settingsService;
 
+    /** The root node for writing. */
+    private Node writeRootNode;
+
     public static String APPLICATION_ID;
 
     /**
@@ -164,6 +167,7 @@ public abstract class AbstractRepositoryEventHandler
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
+        this.writeRootNode = null;
     }
 
     /**
@@ -187,9 +191,10 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void startWriterSession() throws RepositoryException {
         this.writerSession = this.createSession();
-        if ( this.repositoryPath != null ) {
-            this.ensureRepositoryPath();
-        }
+        this.writeRootNode = JcrResourceUtil.createPath(this.repositoryPath,
+                EventHelper.NODETYPE_FOLDER,
+                EventHelper.NODETYPE_ORDERED_FOLDER,
+                this.writerSession, true);
     }
 
     /**
@@ -209,23 +214,17 @@ public abstract class AbstractRepositoryEventHandler
     }
 
     /**
-     * Check if the repository path already exists. If not, create it.
-     */
-    protected Node ensureRepositoryPath()
-    throws RepositoryException {
-        final Node node = JcrResourceUtil.createPath(this.repositoryPath,
-                                   EventHelper.NODETYPE_FOLDER,
-                                   EventHelper.NODETYPE_ORDERED_FOLDER,
-                                   this.writerSession, true);
-
-        return node;
-    }
-
-    /**
      * Return the node type for the event.
      */
     protected String getEventNodeType() {
         return EventHelper.EVENT_NODE_TYPE;
+    }
+
+    /**
+     * Get the root node from the writer session.
+     */
+    protected Node getWriterRootNode() {
+        return this.writeRootNode;
     }
 
     /**
@@ -238,7 +237,7 @@ public abstract class AbstractRepositoryEventHandler
     protected Node writeEvent(Event e, String suggestedName)
     throws RepositoryException {
         // create new node with name of topic
-        final Node rootNode = this.ensureRepositoryPath();
+        final Node rootNode = this.getWriterRootNode();
 
         final String nodeType = this.getEventNodeType();
         final String nodeName;

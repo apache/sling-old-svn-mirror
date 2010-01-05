@@ -195,7 +195,7 @@ public class TimedJobHandler
     protected String persistEvent(final Event event, final ScheduleInfo scheduleInfo) {
         try {
             // get parent node
-            final Node parentNode = this.ensureRepositoryPath();
+            final Node parentNode = this.getWriterRootNode();
             final String nodeName = scheduleInfo.jobId;
             // is there already a node?
             final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
