@@ -59,8 +59,13 @@ public class AdapterManagerImpl implements AdapterManager {
      * The singleton instance of this manager. This field is set when the
      * instance is {@link #activate(ComponentContext) activated} and cleared
      * when the instance is {@link #deactivate(ComponentContext) deactivated}.
+     *
+     * This field is set to public to make it easier for testing to provide
+     * an own adapter manager implementation which can be used together
+     * with {@link org.apache.sling.adapter.SlingAdaptable}s. (see SLING-1195).
+     * As this class is private this field is not accessible in an OSGi environment!
      */
-    private static AdapterManager INSTANCE;
+    public static AdapterManager INSTANCE;
 
     /**
      * Returns the instance of this class or <code>null</code> if no activate
