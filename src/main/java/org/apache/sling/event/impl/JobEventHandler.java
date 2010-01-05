@@ -463,7 +463,7 @@ public class JobEventHandler
                         }
                         try {
                             // let's first search for an existing node with the same id
-                            final Node parentNode = this.ensureRepositoryPath();
+                            final Node parentNode = this.getWriterRootNode();
                             Node foundNode = null;
                             if ( parentNode.hasNode(nodePath) ) {
                                 foundNode = parentNode.getNode(nodePath);
