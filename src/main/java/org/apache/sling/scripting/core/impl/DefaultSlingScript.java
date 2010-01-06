@@ -137,9 +137,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             // if we don't have a request resolver we directly return the script resource
             return scriptResource;
         }
-        Resource rsrc = resolver.getResource(this.scriptResource.getPath());
+        Resource rsrc = resolver.getResource(this.scriptName);
         if ( rsrc == null ) {
-            rsrc = new SyntheticResource(resolver, this.scriptResource.getPath(), this.scriptResource.getResourceType());
+            rsrc = new SyntheticResource(resolver, this.scriptName, this.scriptResource.getResourceType());
         }
         return rsrc;
     }
@@ -336,7 +336,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     public String getServletInfo() {
-        return "Script " + scriptResource.getPath();
+        return "Script " + scriptName;
     }
 
     /**
@@ -551,7 +551,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     private String getLoggerName() {
-        String name = scriptResource.getPath();
+        String name = scriptName;
         name = name.substring(1);       // cut-off leading slash
         name = name.replace('.', '$');  // extension separator as part of name
         name = name.replace('/', '.');  // hierarchy defined by dot
