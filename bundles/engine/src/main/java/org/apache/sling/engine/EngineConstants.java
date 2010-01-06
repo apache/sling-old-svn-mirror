@@ -74,12 +74,17 @@ public class EngineConstants {
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
 
     /**
-     * The name of the request attribute set by the
-     * {@link org.apache.sling.engine.impl.auth.SlingAuthenticator}
-     * when authenticating the request user (value is "javax.jcr.Session").
-     * Existence of this attribute in the request, provided it is a JCR Session,
-     * signals that authentication has already taken place. This may be used
-     * when including through the servlet container.
+     * The <code>javax.jcr.Session</code> request attribute used to be set by
+     * the <i>SlingAuthenticator</i> upon successfull authentication. With
+     * the implementation of a separate Commons Authentication bundle, this
+     * request attribute is not supported any longer (though it may currently
+     * still be provided for backwards compatibility).
+     * <p>
+     * Applications using this request attribute have to be modified to call
+     * the <code>SlingHttpServletRequest.getResourceResolver()</code> method
+     * to get the request's resource resolver.
+     *
+     * @deprecated as of bundle version 2.1
      */
     public static final String SESSION = "javax.jcr.Session";
 

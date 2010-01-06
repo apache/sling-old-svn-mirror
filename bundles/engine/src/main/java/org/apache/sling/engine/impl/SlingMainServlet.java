@@ -20,8 +20,6 @@ package org.apache.sling.engine.impl;
 
 import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
-import static org.apache.sling.engine.EngineConstants.SESSION;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.SocketException;
@@ -34,7 +32,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -58,12 +55,11 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.commons.auth.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.SystemStatus;
-import org.apache.sling.engine.impl.auth.MissingRepositoryException;
-import org.apache.sling.engine.impl.auth.SlingAuthenticator;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
@@ -75,7 +71,6 @@ import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -149,9 +144,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private HttpService httpService;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private JcrResourceResolverFactory resourceResolverFactory;
-
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
@@ -169,11 +161,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private SystemStatus systemStatus;
 
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private AuthenticationSupport authenticationSupport;
+
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
-
-    private SlingAuthenticator slingAuthenticator;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -259,23 +252,20 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             requestLogger.logRequestEntry(request, response);
         }
 
-        Session session = null;
         try {
             // check that we have all required services
             String errorMessage = null;
             final String serviceMissingSuffix =  " service missing, cannot service requests";
-            if (getResourceResolverFactory() == null) {
-                errorMessage = "ResourceResolverFactory" + serviceMissingSuffix;
-            } else if (getServletResolver() == null) {
+            if (getServletResolver() == null) {
                 errorMessage = "ServletResolver" + serviceMissingSuffix;
             } else if (mimeTypeService == null) {
                 errorMessage = "MimeTypeService" + serviceMissingSuffix;
             }
 
-            // get JCR Session
-            session = (Session) servletRequest.getAttribute(SESSION);
-            if (session == null) {
-                errorMessage = "Missing JCR Session";
+            // get ResourceResolver (set by AuthenticationSupport)
+            final ResourceResolver resolver = (ResourceResolver) servletRequest.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+            if (resolver == null) {
+                errorMessage = "Missing ResourceResolver";
             }
 
             // system ready?
@@ -301,8 +291,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             }
 
             // initialize the request data - resolve resource and servlet
-            ResourceResolver resolver = getResourceResolverFactory().getResourceResolver(
-                session);
             Resource resource = requestData.initResource(resolver);
             requestData.initServlet(resource);
 
@@ -376,11 +364,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             // dispose any request data
             requestData.dispose();
-
-            // logout the session we have got for this request
-            if (session != null) {
-                session.logout();
-            }
         }
     }
 
@@ -530,14 +513,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         return osgiComponentContext.getBundleContext();
     }
 
-    public SlingAuthenticator getSlingAuthenticator() {
-        return slingAuthenticator;
-    }
-
-    public JcrResourceResolverFactory getResourceResolverFactory() {
-        return resourceResolverFactory;
-    }
-
     public ServletResolver getServletResolver() {
         return servletResolver;
     }
@@ -595,9 +570,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         RequestData.setMaxCallCounter(OsgiUtil.toInteger(
             componentConfig.get(PROP_MAX_CALL_COUNTER),
             RequestData.DEFAULT_MAX_CALL_COUNTER));
-
-        // setup servlet request processing helpers
-        slingAuthenticator = new SlingAuthenticator(bundleContext);
 
         // register the servlet and resources
         try {
@@ -657,12 +629,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         // third unregister and destroy the sling main servlet
         httpService.unregister(SLING_ROOT);
-
-        // fourth dispose off the authenticator
-        if (slingAuthenticator != null) {
-            slingAuthenticator.dispose();
-            slingAuthenticator = null;
-        }
 
         this.osgiComponentContext = null;
 
@@ -797,58 +763,49 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        SlingAuthenticator authenticator = slingAuthenticator;
+        final AuthenticationSupport authenticator = this.authenticationSupport;
         if (authenticator != null) {
-            try {
 
-                // SLING-559: ensure correct parameter handling according to
-                // ParameterSupport
-                request = new HttpServletRequestWrapper(request) {
-                    @Override
-                    public String getParameter(String name) {
-                        return getParameterSupport().getParameter(name);
-                    }
+            // SLING-559: ensure correct parameter handling according to
+            // ParameterSupport
+            request = new HttpServletRequestWrapper(request) {
+                @Override
+                public String getParameter(String name) {
+                    return getParameterSupport().getParameter(name);
+                }
 
-                    @Override
-                    public Map<String, String[]> getParameterMap() {
-                        return getParameterSupport().getParameterMap();
-                    }
+                @Override
+                public Map<String, String[]> getParameterMap() {
+                    return getParameterSupport().getParameterMap();
+                }
 
-                    @Override
-                    public Enumeration<String> getParameterNames() {
-                        return getParameterSupport().getParameterNames();
-                    }
+                @Override
+                public Enumeration<String> getParameterNames() {
+                    return getParameterSupport().getParameterNames();
+                }
 
-                    @Override
-                    public String[] getParameterValues(String name) {
-                        return getParameterSupport().getParameterValues(name);
-                    }
+                @Override
+                public String[] getParameterValues(String name) {
+                    return getParameterSupport().getParameterValues(name);
+                }
 
-                    private ParameterSupport getParameterSupport() {
-                        return ParameterSupport.getInstance(getRequest());
-                    }
-                };
+                private ParameterSupport getParameterSupport() {
+                    return ParameterSupport.getInstance(getRequest());
+                }
+            };
 
-                return authenticator.authenticate(request, response);
-
-            } catch (MissingRepositoryException mre) {
-
-                log.error("handleSecurity: Cannot authenticate request: "
-                    + mre.getMessage());
-                log.debug("handleSecurity: Reason", mre);
-
-                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                    "Cannot handle requests due to missing Repository");
-            }
-
-        } else {
-
-            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                "Sling not ready to serve requests");
+            return authenticator.handleSecurity(request, response);
 
         }
 
-        // fall back to security failure and request termination
+        log.error("handleSecurity: AuthenticationSupport service missing. Cannot authenticate request.");
+
+        // send 503/SERVICE UNAVAILABLE, flush to ensure delivery
+        response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+            "AuthenticationSupport service missing. Cannot authenticate request.");
+        response.flushBuffer();
+
+        // terminate this request now
         return false;
     }
 
