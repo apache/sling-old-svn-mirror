@@ -75,6 +75,7 @@
         <module>bundles/api</module>
 
         <!-- The commons sub project -->
+        <module>bundles/commons/auth</module>
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
