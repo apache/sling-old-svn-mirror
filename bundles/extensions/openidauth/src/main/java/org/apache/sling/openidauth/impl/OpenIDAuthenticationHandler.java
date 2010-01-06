@@ -27,20 +27,18 @@ import java.util.Set;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.auth.spi.AuthenticationHandler;
+import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.engine.auth.AuthenticationHandler;
-import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.apache.sling.openidauth.OpenIDConstants;
-import org.apache.sling.openidauth.OpenIDUserUtil;
 import org.apache.sling.openidauth.OpenIDConstants.OpenIDFailure;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -250,14 +248,7 @@ public class OpenIDAuthenticationHandler implements
      */
     public AuthenticationInfo authenticate(HttpServletRequest request,
             HttpServletResponse response) {
-
-        // extract credentials and return
-        AuthenticationInfo info = this.extractAuthentication(request, response);
-        if (info != null) {
-            return info;
-        }
-
-        return null;
+        return this.extractAuthentication(request, response);
     }
 
     /**
@@ -308,6 +299,22 @@ public class OpenIDAuthenticationHandler implements
         }
 
         return true;
+    }
+
+    /**
+     * Invalidates the request with the Relying Party if a user is actually
+     * available for the request.
+     */
+    public void dropAuthentication(HttpServletRequest request,
+            HttpServletResponse response) {
+        try {
+            final OpenIdUser user = relyingParty.discover(request);
+            if (user != null) {
+                relyingParty.invalidate(request, response);
+            }
+        } catch (Exception e) {
+            log.warn("dropAuthentication: Problem checking whether the user is logged in at all, assuming not logged in and therefore not logging out");
+        }
     }
 
     protected AuthenticationInfo handleAuthFailure(OpenIDFailure failure, HttpServletRequest request, HttpServletResponse response)
@@ -479,11 +486,12 @@ public class OpenIDAuthenticationHandler implements
 		    						request);
 	    				}
 
-	    				if(accessAuthPageAnon) {
-	    					// Causes anonymous login
-	    					// but does not respect SlingAuthenticator allowAnonymous
-	    					return new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE, null);
-	    				}
+                        if (accessAuthPageAnon) {
+                            // Causes anonymous login but does not respect
+                            // SlingAuthenticator allowAnonymous
+                            return new AuthenticationInfo(
+                                OpenIDConstants.OPEN_ID_AUTH_TYPE);
+                        }
 	    			}
 	    		}
 	    	}
@@ -572,17 +580,15 @@ public class OpenIDAuthenticationHandler implements
     }
 
     private AuthenticationInfo getAuthInfoFromUser(OpenIdUser user) {
-    	String jcrId = OpenIDUserUtil.getPrincipalName(user.getIdentity());
-
-    	SimpleCredentials creds = new SimpleCredentials(jcrId,new char[0]);
-    	creds.setAttribute(getClass().getName(), user);
-        return new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE, creds);
+    	final AuthenticationInfo info = new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE);
+        info.setCredentials(new OpenIdCredentials(user));
+        return info;
     }
 
 	public boolean canHandle(Credentials credentials) {
-		if(credentials != null && credentials instanceof SimpleCredentials) {
-			SimpleCredentials sc = (SimpleCredentials)credentials;
-			OpenIdUser user = (OpenIdUser)sc.getAttribute(getClass().getName());
+		if(credentials instanceof OpenIdCredentials) {
+		    OpenIdCredentials creds = (OpenIdCredentials)credentials;
+			OpenIdUser user = creds.getUser();
 			if(user != null) {
 				return user.isAssociated();
 			}
@@ -602,12 +608,12 @@ public class OpenIDAuthenticationHandler implements
 	}
 
 	public Principal getPrincipal(Credentials credentials) {
-		if(credentials != null && credentials instanceof SimpleCredentials) {
-			SimpleCredentials sc = (SimpleCredentials)credentials;
-			OpenIdUser user = (OpenIdUser)sc.getAttribute(getClass().getName());
-			if(user != null) {
-				return new OpenIDPrincipal(user);
-			}
+		if(credentials instanceof OpenIdCredentials) {
+            OpenIdCredentials creds = (OpenIdCredentials) credentials;
+            OpenIdUser user = creds.getUser();
+            if (user != null) {
+                return new OpenIDPrincipal(user);
+            }
 		}
 		return null;
 	}

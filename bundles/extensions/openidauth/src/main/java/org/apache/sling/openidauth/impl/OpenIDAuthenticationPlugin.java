@@ -22,8 +22,6 @@ import java.security.Principal;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
-
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.openidauth.OpenIDUserUtil;
 
@@ -32,20 +30,19 @@ import com.dyuproject.openid.OpenIdUser;
 public class OpenIDAuthenticationPlugin implements AuthenticationPlugin {
 
 	private Principal principal;
-	
+
 	public OpenIDAuthenticationPlugin(Principal p) {
 		this.principal = p;
 	}
-	
+
 	public boolean authenticate(Credentials credentials)
 			throws RepositoryException {
-		if(credentials instanceof SimpleCredentials) {
-			OpenIdUser user = (OpenIdUser)((SimpleCredentials)credentials)
-				.getAttribute(OpenIDAuthenticationHandler.class.getName());
+		if(credentials instanceof OpenIdCredentials) {
+            OpenIdUser user = ((OpenIdCredentials) credentials).getUser();
 			if(user != null) {
 				return principal.getName().equals(
 						OpenIDUserUtil.getPrincipalName(
-								user.getIdentity())) && 
+								user.getIdentity())) &&
 						user.isAuthenticated();
 			}
 		}
