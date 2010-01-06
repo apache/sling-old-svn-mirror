@@ -32,6 +32,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.Session;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -252,6 +253,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             requestLogger.logRequestEntry(request, response);
         }
 
+        ResourceResolver resolver = null;
         try {
             // check that we have all required services
             String errorMessage = null;
@@ -263,7 +265,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             }
 
             // get ResourceResolver (set by AuthenticationSupport)
-            final ResourceResolver resolver = (ResourceResolver) servletRequest.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+            resolver = (ResourceResolver) servletRequest.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
             if (resolver == null) {
                 errorMessage = "Missing ResourceResolver";
             }
@@ -364,6 +366,20 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             // dispose any request data
             requestData.dispose();
+
+            // FIXME: This must be removed
+            // SLING-1270 Temporary solution to ensure session is logged out
+            if (resolver != null) {
+                Session session = resolver.adaptTo(Session.class);
+                if (session != null && session.isLive()) {
+                    try {
+                        session.logout();
+                    } catch (Throwable t) {
+                        // ignore
+                    }
+                }
+            }
+            // END SLING-1270 Temporary solution to ensure session is logged out
         }
     }
 

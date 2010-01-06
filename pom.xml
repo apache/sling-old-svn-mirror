@@ -95,6 +95,12 @@
         </plugins>
     </reporting>
     <dependencies>
+        <!-- Temporary dependency for SLING-1270-->
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+        </dependency>
+        <!-- END Temporary dependency for SLING-1270-->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
