@@ -24,14 +24,13 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Dictionary;
 
-import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.engine.auth.AuthenticationHandler;
-import org.apache.sling.engine.auth.AuthenticationInfo;
+import org.apache.sling.commons.auth.spi.AuthenticationHandler;
+import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpContext;
 import org.slf4j.Logger;
@@ -249,6 +248,16 @@ public class AuthorizationHeaderAuthenticationHandler implements
     }
 
     /**
+     * Poor man's implementation of dropping the authentication: Simply send
+     * a 401/UNAUTHORIZED response causing the client to immediately drop any
+     * cached credentials.
+     */
+    public void dropAuthentication(HttpServletRequest request,
+            HttpServletResponse response) {
+        sendUnauthorized(response);
+    }
+
+    /**
      * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set in
      * the request.
      */
@@ -413,20 +422,22 @@ public class AuthorizationHeaderAuthenticationHandler implements
             return null;
         }
 
-        SimpleCredentials creds;
-        int colIdx = decoded.indexOf(':');
+        final int colIdx = decoded.indexOf(':');
+        final String userId;
+        final char[] password;
         if (colIdx < 0) {
-            creds = new SimpleCredentials(decoded, new char[0]);
+            userId = decoded;
+            password = new char[0];
         } else {
-            creds = new SimpleCredentials(decoded.substring(0, colIdx),
-                decoded.substring(colIdx + 1).toCharArray());
+            userId = decoded.substring(0, colIdx);
+            password = decoded.substring(colIdx + 1).toCharArray();
         }
 
-        if (NOT_LOGGED_IN_USER.equals(creds.getUserID())) {
+        if (NOT_LOGGED_IN_USER.equals(userId)) {
             return null;
         }
 
-        return new AuthenticationInfo(HttpServletRequest.BASIC_AUTH, creds);
+        return new AuthenticationInfo(HttpServletRequest.BASIC_AUTH, userId, password);
     }
 
     /**
