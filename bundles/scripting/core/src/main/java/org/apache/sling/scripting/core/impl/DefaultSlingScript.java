@@ -78,24 +78,55 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 	// resource adapts (null if the resource does not adapt to a node
     private static final String NODE = "currentNode";
 
+    /** The logger. */
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSlingScript.class);
+
+    /** Thread local containing the resource resolver. */
     private static ThreadLocal<ResourceResolver> requestResourceResolver = new ThreadLocal<ResourceResolver>();
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    /** The resource pointing to the script. */
+    private final Resource scriptResource;
 
-    private Resource scriptResource;
+    /** The name of the script (the resource path) */
+    private final String scriptName;
 
-    private ScriptEngine scriptEngine;
+    /** The encoding of the script. */
+    private final String scriptEncoding;
 
+    /** The script engine for this script. */
+    private final ScriptEngine scriptEngine;
+
+    /** The servlet context. */
     private ServletContext servletContext;
 
+    /** The init parameters for this servlet. */
     private Dictionary<String, String> initParameters;
 
+    /** The current bundle context. */
     private final BundleContext bundleContext;
 
+    /**
+     * Constructor
+     * @param bundleContext The bundle context
+     * @param scriptResource The script resource
+     * @param scriptEngine The script engine
+     */
     DefaultSlingScript(BundleContext bundleContext, Resource scriptResource, ScriptEngine scriptEngine) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
         this.bundleContext = bundleContext;
+        this.scriptName = this.scriptResource.getPath();
+        // Now know how to get the input stream, we still have to decide
+        // on the encoding of the stream's data. Primarily we assume it is
+        // UTF-8, which is a default in many places in JCR. Secondarily
+        // we try to get a jcr:encoding property besides the data property
+        // to provide a possible encoding
+        final ResourceMetadata meta = this.scriptResource.getResourceMetadata();
+        String encoding = meta.getCharacterEncoding();
+        if (encoding == null) {
+            encoding = "UTF-8";
+        }
+        this.scriptEncoding = encoding;
     }
 
     // ---------- SlingScript interface ----------------------------------------
@@ -128,12 +159,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
      * @throws ScriptEvaluationException
      */
     public Object call(SlingBindings props, String method, Object... args) {
-        final String scriptName = scriptResource.getPath();
-
         Bindings bindings = null;
         Reader reader = null;
         try {
-            bindings = verifySlingBindings(scriptName, props);
+            bindings = verifySlingBindings(props);
 
             final ScriptContext ctx = new SimpleScriptContext() {
 
@@ -190,7 +219,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 try {
                     ((Invocable)scriptEngine).invokeFunction(method, Arrays.asList(args).toArray());
                 } catch (NoSuchMethodException e) {
-                    throw new ScriptEvaluationException(scriptName, "Method " + method + " not found in script.", e);
+                    throw new ScriptEvaluationException(this.scriptName, "Method " + method + " not found in script.", e);
                 }
             }
             // optionall flush the output channel
@@ -205,12 +234,12 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             return result;
 
         } catch (IOException ioe) {
-            throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
+            throw new ScriptEvaluationException(this.scriptName, ioe.getMessage(),
                 ioe);
 
         } catch (ScriptException se) {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
-            throw new ScriptEvaluationException(scriptName, se.getMessage(),
+            throw new ScriptEvaluationException(this.scriptName, se.getMessage(),
                 cause);
 
         } finally {
@@ -234,26 +263,31 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         }
     }
 
+    /**
+     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
+     */
     public void init(ServletConfig servletConfig) {
         if (servletConfig != null) {
-            Dictionary<String, String> params = new Hashtable<String, String>();
+            final Dictionary<String, String> params = new Hashtable<String, String>();
             for (Enumeration<?> ne = servletConfig.getInitParameterNames(); ne.hasMoreElements();) {
                 String name = String.valueOf(ne.nextElement());
                 String value = servletConfig.getInitParameter(name);
                 params.put(name, value);
             }
-
-            servletContext = servletConfig.getServletContext();
+            this.initParameters = params;
+            this.servletContext = servletConfig.getServletContext();
         }
     }
 
+    /**
+     * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
+     */
     public void service(ServletRequest req, ServletResponse res) {
-
-        SlingHttpServletRequest request = (SlingHttpServletRequest) req;
+        final SlingHttpServletRequest request = (SlingHttpServletRequest) req;
 
         try {
             // prepare the properties for the script
-            SlingBindings props = new SlingBindings();
+            final SlingBindings props = new SlingBindings();
             props.setRequest((SlingHttpServletRequest) req);
             props.setResponse((SlingHttpServletResponse) res);
 
@@ -268,7 +302,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     res.setCharacterEncoding("UTF-8");
                 }
             } else {
-                logger.debug(
+                LOGGER.debug(
                     "service:No response content type defined for request {}.",
                     request.getRequestURI());
             }
@@ -305,6 +339,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         return "Script " + scriptResource.getPath();
     }
 
+    /**
+     * @see javax.servlet.Servlet#destroy()
+     */
     public void destroy() {
         initParameters = null;
         servletContext = null;
@@ -312,49 +349,43 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     // ---------- ServletConfig ------------------------------------------------
 
+    /**
+     * @see javax.servlet.ServletConfig#getInitParameter(java.lang.String)
+     */
     public String getInitParameter(String name) {
-        Dictionary<String, String> params = initParameters;
+        final Dictionary<String, String> params = initParameters;
         return (params != null) ? params.get(name) : null;
     }
 
+    /**
+     * @see javax.servlet.ServletConfig#getInitParameterNames()
+     */
     public Enumeration<String> getInitParameterNames() {
-        Dictionary<String, String> params = initParameters;
+        final Dictionary<String, String> params = initParameters;
         return (params != null) ? params.keys() : null;
     }
 
+    /**
+     * @see javax.servlet.ServletConfig#getServletContext()
+     */
     public ServletContext getServletContext() {
         return servletContext;
     }
 
+    /**
+     * @see javax.servlet.ServletConfig#getServletName()
+     */
     public String getServletName() {
-        return scriptResource.getPath();
+        return this.scriptName;
     }
 
     // ---------- internal -----------------------------------------------------
 
     private Reader getScriptReader() throws IOException {
-
-        InputStream input = scriptResource.adaptTo(InputStream.class);
-        if (input == null) {
-            throw new IOException("Cannot get a stream to the script resource "
-                + scriptResource);
-        }
-
-        // Now know how to get the input stream, we still have to decide
-        // on the encoding of the stream's data. Primarily we assume it is
-        // UTF-8, which is a default in many places in JCR. Secondarily
-        // we try to get a jcr:encoding property besides the data property
-        // to provide a possible encoding
-        ResourceMetadata meta = scriptResource.getResourceMetadata();
-        String encoding = meta.getCharacterEncoding();
-        if (encoding == null) {
-            encoding = "UTF-8";
-        }
-
         // access the value as a stream and return a buffered reader
         // converting the stream data using UTF-8 encoding, which is
         // the default encoding used
-        return new BufferedReader(new InputStreamReader(input, encoding));
+        return new BufferedReader(new InputStreamReader(new LazyInputStream(this.scriptResource), this.scriptEncoding));
     }
 
     private Reader getWrapperReader(final Reader scriptReader, final String method, final Object... args) {
@@ -417,8 +448,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         };
     }
 
-    private Bindings verifySlingBindings(String scriptName,
-            SlingBindings slingBindings) throws IOException {
+    private Bindings verifySlingBindings(SlingBindings slingBindings) throws IOException {
 
     	Bindings bindings = new SimpleBindings();
 
@@ -434,51 +464,51 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 slingObject = new ScriptHelper(this.bundleContext, this);
             }
         } else if (!(slingObject instanceof SlingScriptHelper) ) {
-            throw fail(scriptName, SLING, "Wrong type");
+            throw fail(SLING, "Wrong type");
         }
         final SlingScriptHelper sling = (SlingScriptHelper)slingObject;
         bindings.put(SLING, sling);
 
         if (request != null) {
-            //throw fail(scriptName, REQUEST, "Missing or wrong type");
+            //throw fail(REQUEST, "Missing or wrong type");
 
         	SlingHttpServletResponse response = slingBindings.getResponse();
             if (response == null) {
-                throw fail(scriptName, RESPONSE, "Missing or wrong type");
+                throw fail(RESPONSE, "Missing or wrong type");
             }
 
             Object resourceObject = slingBindings.get(RESOURCE);
             if (resourceObject != null && !(resourceObject instanceof Resource)) {
-                throw fail(scriptName, RESOURCE, "Wrong type");
+                throw fail(RESOURCE, "Wrong type");
             }
 
             Object writerObject = slingBindings.get(OUT);
             if (writerObject != null && !(writerObject instanceof PrintWriter)) {
-                throw fail(scriptName, OUT, "Wrong type");
+                throw fail(OUT, "Wrong type");
             }
 
             // if there is a provided sling script helper, check arguments
             if (slingBindings.get(SLING) != null) {
 
                 if (sling.getRequest() != request) {
-                    throw fail(scriptName, REQUEST,
+                    throw fail(REQUEST,
                         "Not the same as request field of SlingScriptHelper");
                 }
 
                 if (sling.getResponse() != response) {
-                    throw fail(scriptName, RESPONSE,
+                    throw fail(RESPONSE,
                         "Not the same as response field of SlingScriptHelper");
                 }
 
                 if (resourceObject != null
                     && sling.getRequest().getResource() != resourceObject) {
-                    throw fail(scriptName, RESOURCE,
+                    throw fail(RESOURCE,
                         "Not the same as resource of the SlingScriptHelper request");
                 }
 
                 if (writerObject != null
                     && sling.getResponse().getWriter() != writerObject) {
-                    throw fail(scriptName, OUT,
+                    throw fail(OUT,
                         "Not the same as writer of the SlingScriptHelper response");
                 }
             }
@@ -501,7 +531,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         if (logObject == null) {
             logObject = LoggerFactory.getLogger(getLoggerName());
         } else if (!(logObject instanceof Logger)) {
-            throw fail(scriptName, LOG, "Wrong type");
+            throw fail(LOG, "Wrong type");
         }
         bindings.put(LOG, logObject);
 
@@ -515,9 +545,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         return bindings;
     }
 
-    private ScriptEvaluationException fail(String scriptName,
-            String variableName, String message) {
-        return new ScriptEvaluationException(scriptName, variableName + ": "
+    private ScriptEvaluationException fail(String variableName, String message) {
+        return new ScriptEvaluationException(this.scriptName, variableName + ": "
             + message);
     }
 
@@ -542,5 +571,95 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             message = throwable.toString();
         }
         request.getRequestProgressTracker().log("SCRIPT ERROR: {0}", message);
+    }
+
+    /**
+     * Input stream wrapper which acquires the underlying input stream lazily.
+     * This ensures that the input stream is only fetched from the repository
+     * if it is really used by the script engines.
+     */
+    public final static class LazyInputStream extends InputStream {
+
+        /** The script resource which is adapted to an inputm stream. */
+        private final Resource resource;
+
+        /** The input stream created on demand, null if not used */
+        private InputStream delegatee;
+
+        public LazyInputStream(final Resource resource) {
+            this.resource = resource;
+        }
+
+        /**
+         * Closes the input stream if acquired otherwise does nothing.
+         */
+        @Override
+        public void close() throws IOException {
+            if (delegatee != null) {
+                delegatee.close();
+            }
+        }
+
+        @Override
+        public int available() throws IOException {
+            return getStream().available();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return getStream().read();
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return getStream().read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return getStream().read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return getStream().skip(n);
+        }
+
+        @Override
+        public boolean markSupported() {
+            try {
+                return getStream().markSupported();
+            } catch (IOException ioe) {
+                // ignore
+            }
+            return false;
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            try {
+                getStream().mark(readlimit);
+            } catch (IOException ioe) {
+                // ignore
+            }
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            getStream().reset();
+        }
+
+        /** Actually retrieves the input stream from the underlying JCR Value */
+        private InputStream getStream() throws IOException {
+            if (delegatee == null) {
+                delegatee = this.resource.adaptTo(InputStream.class);
+                if (delegatee == null) {
+                    throw new IOException("Cannot get a stream to the script resource "
+                        + this.resource);
+                }
+            }
+            return delegatee;
+        }
+
     }
 }
