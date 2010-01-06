@@ -19,6 +19,7 @@
 package org.apache.sling.commons.auth.spi;
 
 import java.util.HashMap;
+
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 
@@ -114,49 +115,60 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
-     * Creates an instance of this class with the given authentication type and
-     * credentials connecting to the default workspace as if the
-     * {@link #AuthenticationInfo(String, Credentials, String)} method would be
-     * called with a <code>null</code> workspace name.
+     * Creates an instance of this class with just the authentication type. To
+     * effectively use this instance the user Id with optional password and/or
+     * the credentials should be set.
      *
      * @param authType The authentication type, must not be <code>null</code>.
-     * @param credentials The credentials, must not be <code>null</code>.
-     * @throws NullPointerException if <code>authType</code> is
-     *             <code>null</code> .
      */
-    public AuthenticationInfo(final String authType,
-            final Credentials credentials) {
-        this(authType, credentials, null);
+    public AuthenticationInfo(final String authType) {
+        this(authType, null, null, null);
     }
 
     /**
-     * Creates an instance of this class with the given authentication type and
-     * credentials.
+     * Creates an instance of this class authenticating with the given type and
+     * userid.
      *
      * @param authType The authentication type, must not be <code>null</code>.
-     * @param credentials The credentials, must not be <code>null</code>.
-     * @param workspaceName The name of the workspace to connect to, may be
-     *            <code>null</code> to connect to the default workspace.
+     * @param userId The name of the user to authenticate as. This may be
+     *            <code>null</code> for the constructor and later be set.
+     * @param password The password to authenticate with or <code>null</code> if
+     *            no password can be supplied.
      * @throws NullPointerException if <code>authType</code> is
-     *             <code>null</code> .
+     *             <code>null</code>.
      */
-    public AuthenticationInfo(final String authType,
-            final Credentials credentials, final String workspaceName) {
-        if (authType == null) {
-            throw new NullPointerException("authType");
-        }
-
-        super.put(AUTH_TYPE, authType);
-        putIfNotNull(CREDENTIALS, credentials);
-        putIfNotNull(WORKSPACE, workspaceName);
+    public AuthenticationInfo(final String authType, final String userId) {
+        this(authType, userId, null, null);
     }
 
     /**
-     * Creates an instance of this class with the given authentication type and
-     * credentials.
+     * Creates an instance of this class authenticating with the given type and
+     * userid/password connecting to the default workspace as if the
+     * {@link #AuthenticationInfo(String, String, char[], String)} method would
+     * be called with a <code>null</code> workspace name.
      *
      * @param authType The authentication type, must not be <code>null</code>.
-     * @param credentials The credentials, must not be <code>null</code>.
+     * @param userId The name of the user to authenticate as. This may be
+     *            <code>null</code> for the constructor and later be set.
+     * @param password The password to authenticate with or <code>null</code> if
+     *            no password can be supplied.
+     * @throws NullPointerException if <code>authType</code> is
+     *             <code>null</code>.
+     */
+    public AuthenticationInfo(final String authType, final String userId,
+            final char[] password) {
+        this(authType, userId, password, null);
+    }
+
+    /**
+     * Creates an instance of this class authenticating with the given type and
+     * userid/password.
+     *
+     * @param authType The authentication type, must not be <code>null</code>.
+     * @param userId The name of the user to authenticate as. This may be
+     *            <code>null</code> for the constructor and later be set.
+     * @param password The password to authenticate with or <code>null</code> if
+     *            no password can be supplied.
      * @param workspaceName The name of the workspace to connect to, may be
      *            <code>null</code> to connect to the default workspace.
      * @throws NullPointerException if <code>authType</code> is
@@ -172,12 +184,15 @@ public class AuthenticationInfo extends HashMap<String, Object> {
         putIfNotNull(USER, userId);
         putIfNotNull(PASSWORD, password);
         putIfNotNull(WORKSPACE, workspaceName);
+    }
 
-        // also store credentials if the user id is not null/empty
-        if (userId != null && userId.length() > 0) {
-            final char[] pwd = (password == null) ? new char[0] : password;
-            super.put(CREDENTIALS, new SimpleCredentials(userId, pwd));
-        }
+    /**
+     * @param authType The authentication type to set. If this is
+     *            <code>null</code> the current authentication type is not
+     *            replaced.
+     */
+    public void setAuthType(String authType) {
+        putIfNotNull(AUTH_TYPE, authType);
     }
 
     /**
@@ -194,11 +209,27 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
+     * @param user The name of the user to authenticate as. If this is
+     *            <code>null</code> the current user name is not replaced.
+     */
+    public void setUser(String user) {
+        putIfNotNull(USER, user);
+    }
+
+    /**
      * Returns the user name stored as the {@link #USER} property or
      * <code>null</code> if the user is not set in this map.
      */
     public String getUser() {
         return (String) get(USER);
+    }
+
+    /**
+     * @param password The password to authenticate with. If this is
+     *            <code>null</code> the current password is not replaced.
+     */
+    public void setPassword(char[] password) {
+        putIfNotNull(PASSWORD, password);
     }
 
     /**
@@ -210,6 +241,14 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
+     * @param workspaceName The name of the workspace to connect to. If this is
+     *            <code>null</code> the current workspace name is not replaced.
+     */
+    public void setWorkspaceName(String workspaceName) {
+        putIfNotNull(WORKSPACE, workspaceName);
+    }
+
+    /**
      * Returns the workspace name stored as the {@link #WORKSPACE} property or
      * <code>null</code> if the workspace name is not set in this map.
      */
@@ -218,11 +257,40 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
-     * Returns the JCR credentials stored as the {@link #CREDENTIALS} property
-     * or <code>null</code> if the credentials are not set in this map.
+     * @param credentials The <code>Credentials</code> to authenticate with. If
+     *            this is <code>null</code> the currently set credentials are
+     *            not replaced.
+     */
+    public void setCredentials(Credentials credentials) {
+        putIfNotNull(CREDENTIALS, credentials);
+    }
+
+    /**
+     * Returns the JCR credentials stored as the {@link #CREDENTIALS} property.
+     * If the {@link #CREDENTIALS} object is not set but the user ID (
+     * {@link #USER}) is set, <code>SimpleCredentials</code> object is returned
+     * based on that user ID and the (optional) {@link #PASSWORD}. If the userID
+     * is not set, this method returns <code>null</code>.
      */
     public Credentials getCredentials() {
-        return (Credentials) get(CREDENTIALS);
+
+        // return credentials explicitly set
+        final Credentials creds = (Credentials) get(CREDENTIALS);
+        if (creds != null) {
+            return creds;
+        }
+
+        // otherwise try to create SimpleCredentials if the userId is set
+        final String userId = getUser();
+        if (userId != null) {
+            final char[] password = getPassword();
+            return new SimpleCredentials(userId, (password == null)
+                    ? new char[0]
+                    : password);
+        }
+
+        // finally, we cannot create credentials to return
+        return null;
     }
 
     /**
