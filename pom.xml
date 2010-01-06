@@ -56,7 +56,6 @@
                     <instructions>
                         <Export-Package>
                             org.apache.sling.engine;version=2.0.6,
-                            org.apache.sling.engine.auth;version=2.1,
                             org.apache.sling.engine.servlets;version=2.0.6
                         </Export-Package>
                         <Private-Package>
@@ -103,18 +102,19 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.auth</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
             <version>2.0.2-incubator</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.api</artifactId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.0.2-incubator</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.6</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
