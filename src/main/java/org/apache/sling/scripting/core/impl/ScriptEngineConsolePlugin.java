@@ -27,16 +27,15 @@ import java.util.List;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class ScriptEngineConsolePlugin extends AbstractWebConsolePlugin {
+public class ScriptEngineConsolePlugin extends HttpServlet {
 
     private static final String LABEL = "scriptengines";
 
@@ -75,17 +74,7 @@ public class ScriptEngineConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    @Override
-    public String getTitle() {
-        return "Script Engines";
-    }
-
-    @Override
-    protected void renderContent(HttpServletRequest req, HttpServletResponse res)
+    protected void service(HttpServletRequest req, HttpServletResponse res)
             throws IOException {
         PrintWriter pw = res.getWriter();
 
@@ -159,17 +148,16 @@ public class ScriptEngineConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     public void activate(BundleContext context) {
-        super.activate(context);
-
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Web Console Plugin for ScriptEngine implementations");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
-        props.put(WebConsoleConstants.PLUGIN_LABEL, LABEL);
+        props.put("felix.webconsole.label", LABEL);
+        props.put("felix.webconsole.title", "Script Engines");
 
         serviceRegistration = context.registerService(
-            WebConsoleConstants.SERVICE_NAME, this, props);
+            "javax.servlet.Servlet", this, props);
     }
 
     public void deactivate() {
@@ -177,8 +165,5 @@ public class ScriptEngineConsolePlugin extends AbstractWebConsolePlugin {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }
-
-        super.deactivate();
     }
-
 }
