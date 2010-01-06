@@ -57,9 +57,12 @@ public final class EngineAuthenticationHandlerHolder extends
             return AuthenticationInfo.DOING_AUTH;
         }
 
-        return new AuthenticationInfo(engineAuthInfo.getAuthType(),
-            engineAuthInfo.getCredentials(), engineAuthInfo.getWorkspaceName());
+        AuthenticationInfo info = new AuthenticationInfo(
+            engineAuthInfo.getAuthType());
+        info.setCredentials(engineAuthInfo.getCredentials());
+        info.setWorkspaceName(engineAuthInfo.getWorkspaceName());
 
+        return info;
     }
 
     public boolean doRequestAuthentication(HttpServletRequest request,
