@@ -31,19 +31,35 @@ import org.junit.Test;
 public class BundleVersionComparisonTest {
     
     @Test
+    public void testSimpleCompare() {
+        // We want more recent bundles to be "greater" than older ones
+        {
+            final MockBundleVersionInfo a = new MockBundleVersionInfo("a.name", "1.1", 1);
+            final MockBundleVersionInfo b = new MockBundleVersionInfo("a.name", "1.0", 1);
+            assertEquals("a is more recent than b", 1, a.compareTo(b));
+        }
+        {
+            final MockBundleVersionInfo a = new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 2);
+            final MockBundleVersionInfo b = new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 1);
+            assertEquals("SNAPSHOT a is more recent than b", 1, a.compareTo(b));
+        }
+    }
+    
+    @Test
     public void testSortBundles() {
+        // The comparator sorts bundles in ascending order
+        // of their symbolic names and versions
         final MockBundleVersionInfo [] sorted = {
-                new MockBundleVersionInfo("a.name", "1.1", 1),
                 new MockBundleVersionInfo("a.name", "1.0", 1),
-                new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 2),
-                new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 1),
-                new MockBundleVersionInfo("b", "1.1", 1),
-                new MockBundleVersionInfo("b", "1.0.1.SNAPSHOT", 2),
-                new MockBundleVersionInfo("b", "1.0.1.SNAPSHOT", 1),
-                new MockBundleVersionInfo("b", "1.0", 1),
-                new MockBundleVersionInfo("b", "0.9", 1),
+                new MockBundleVersionInfo("a.name", "1.1", 1),
                 new MockBundleVersionInfo("b", "0.8.1", 1),
-                new MockBundleVersionInfo("b", "0.8.0", 1)
+                new MockBundleVersionInfo("b", "0.9", 1),
+                new MockBundleVersionInfo("b", "1.0", 1),
+                new MockBundleVersionInfo("b", "1.0.1.SNAPSHOT", 1),
+                new MockBundleVersionInfo("b", "1.0.1.SNAPSHOT", 2),
+                new MockBundleVersionInfo("b", "1.1", 1),
+                new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 1),
+                new MockBundleVersionInfo("b", "1.2.0.SNAPSHOT", 2),
         };
         
         final List<BundleVersionInfo<?>> list = new ArrayList<BundleVersionInfo<?>>();

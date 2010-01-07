@@ -95,9 +95,6 @@ public abstract class BundleVersionInfo<T> implements Comparable<BundleVersionIn
             } else {
                 result = va.compareTo(vb);
             }
-            
-            // more recent ones must come before older ones
-            result = -result;
         }
         
         // Then, if snapshots, compare modification times, more recent comes first
@@ -109,9 +106,6 @@ public abstract class BundleVersionInfo<T> implements Comparable<BundleVersionIn
             } else if(mb > ma) {
                 result = B_GREATER;
             }
-            
-            // more recent ones must come before older ones
-            result = -result;
         }
         
         return result;
