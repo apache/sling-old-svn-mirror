@@ -23,36 +23,98 @@ import org.osgi.framework.Version;
 /** Provides bundle version information, which can be
  *  extracted from bundle files or Bundle objects.
  */
-public interface BundleVersionInfo<T> {
+public abstract class BundleVersionInfo<T> implements Comparable<BundleVersionInfo<?>> {
+    
+    private static final int A_GREATER = 1; 
+    private static final int B_GREATER = -1;
+    private static final int EQUAL = 0;
+    
     /** Marker used by Maven to identify snapshots */
-    String SNAPSHOT_MARKER = "SNAPSHOT";
+    public static final String SNAPSHOT_MARKER = "SNAPSHOT";
     
     /** Name of the BND attribute that provides the bundle's last modified timestamp */
-    String BND_LAST_MODIFIED = "Bnd-LastModified";
+    public static final String BND_LAST_MODIFIED = "Bnd-LastModified";
     
     /** Value for {@link #getBundleLastModified} if corresponding header
      *  is not present
      */
-    long BND_LAST_MODIFIED_MISSING = -1L;
+    public static final long BND_LAST_MODIFIED_MISSING = -1L;
     
     /** Return the source of information: underlying File or Bundle */
-    T getSource();
+    public abstract T getSource();
     
     /** True if the provided data is a valid bundle */
-    boolean isBundle();
+    public abstract boolean isBundle();
     
     /** Return the bundle symbolic name, null if not available */
-    String getBundleSymbolicName();
+    public abstract String getBundleSymbolicName();
     
     /** Return the bundle version, null if not available */
-    Version getVersion();
+    public abstract Version getVersion();
     
     /** True if the bundle version indicates a snapshot */
-    boolean isSnapshot();
+    public abstract boolean isSnapshot();
     
     /** Return the bundle last modification time, based on the BND_LAST_MODIFIED 
      *  manifest header, if available. This is *not* the Bundle.getLastModified()
      *  value, which refers to actions in the OSGi framework.
      *  @return BND_LAST_MODIFIED_MISSING if header not supplied */
-    long getBundleLastModified();
+    public abstract long getBundleLastModified();
+    
+    
+    /** Compare based on bundle version info, and for snapshots
+     *  based on {@link #getBundleLastModified}
+     */
+    public int compareTo(BundleVersionInfo<?> other) {
+        // Handle null values
+        if(other == null) {
+            throw new IllegalArgumentException("b is null, cannot compare");
+        }
+        
+        // Handle non-bundles: we don't want them!
+        if(!isBundle()) {
+            throw new IllegalArgumentException("Not a bundle, cannot compare: " + this);
+        }
+        if(!other.isBundle()) {
+            throw new IllegalArgumentException("Not a bundle, cannot compare:" + other);
+        }
+        
+        // First compare symbolic names
+        int result = getBundleSymbolicName().compareTo(other.getBundleSymbolicName());
+        
+        // Then compare versions
+        if(result == EQUAL) {
+            final Version va = getVersion();
+            final Version vb = other.getVersion();
+            if(va == null && vb == null) {
+                // result = EQUAL
+            } else if(vb == null) {
+                result = A_GREATER;
+            } else if(va == null) {
+                result = B_GREATER;
+            } else {
+                result = va.compareTo(vb);
+            }
+            
+            // more recent ones must come before older ones
+            result = -result;
+        }
+        
+        // Then, if snapshots, compare modification times, more recent comes first
+        if(result == EQUAL && isSnapshot()) {
+            final long ma = getBundleLastModified();
+            final long mb = other.getBundleLastModified();
+            if(ma > mb) {
+                result = A_GREATER;
+            } else if(mb > ma) {
+                result = B_GREATER;
+            }
+            
+            // more recent ones must come before older ones
+            result = -result;
+        }
+        
+        return result;
+    }
+
 }

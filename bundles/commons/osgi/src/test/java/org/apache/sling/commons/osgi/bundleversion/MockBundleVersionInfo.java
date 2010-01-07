@@ -20,7 +20,7 @@ package org.apache.sling.commons.osgi.bundleversion;
 
 import org.osgi.framework.Version;
 
-class MockBundleVersionInfo implements BundleVersionInfo<String> {
+class MockBundleVersionInfo extends BundleVersionInfo<String> {
 
     private final String source;
     private final String symbolicName;
