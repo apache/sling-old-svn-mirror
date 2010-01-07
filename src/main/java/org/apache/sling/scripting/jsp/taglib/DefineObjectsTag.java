@@ -16,7 +16,6 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
-import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
@@ -87,6 +86,15 @@ public class DefineObjectsTag extends TagSupport {
 
     private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
 
+    static Class<?> JCR_NODE_CLASS;
+    static {
+        try {
+            JCR_NODE_CLASS = DefineObjectsTag.class.getClassLoader().loadClass("javax.jcr.Node");
+        } catch (Exception ignore) {
+            // we just ignore this
+        }
+    }
+
     /**
      * Default constructor.
      */
@@ -117,9 +125,11 @@ public class DefineObjectsTag extends TagSupport {
         pageContext.setAttribute(resourceResolverName, scriptHelper.getRequest().getResourceResolver());
         pageContext.setAttribute(slingName, scriptHelper);
         pageContext.setAttribute(logName, bindings.getLog());
-        final Node node = resource.adaptTo(Node.class);
-        if (node != null) {
-            pageContext.setAttribute(nodeName, node);
+        if ( JCR_NODE_CLASS != null ) {
+            final Object node = resource.adaptTo(JCR_NODE_CLASS);
+            if (node != null) {
+                pageContext.setAttribute(nodeName, node);
+            }
         }
 
         return EVAL_PAGE;
