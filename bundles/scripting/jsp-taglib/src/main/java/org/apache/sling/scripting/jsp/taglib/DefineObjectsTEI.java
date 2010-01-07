@@ -27,7 +27,6 @@ import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SLI
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagData;
 import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.VariableInfo;
@@ -95,7 +94,7 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     private static final String RESOURCE_RESOLVER_CLASS = ResourceResolver.class.getName();
 
-    private static final String NODE_CLASS = Node.class.getName();
+    private static final String NODE_CLASS = "javax.jcr.Node";
 
     private static final String SLING_CLASS = SlingScriptHelper.class.getName();
 
@@ -118,7 +117,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
         addVar(varInfos, data, ATTR_RESOURCE_NAME, DEFAULT_RESOURCE_NAME,
             RESOURCE_CLASS);
-        addVar(varInfos, data, ATTR_NODE_NAME, DEFAULT_NODE_NAME, NODE_CLASS);
+        if ( DefineObjectsTag.JCR_NODE_CLASS != null ) {
+            addVar(varInfos, data, ATTR_NODE_NAME, DEFAULT_NODE_NAME, NODE_CLASS);
+        }
 
         addVar(varInfos, data, ATTR_RESOURCE_RESOLVER_NAME,
             DEFAULT_RESOURCE_RESOLVER_NAME, RESOURCE_RESOLVER_CLASS);
