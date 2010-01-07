@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class BundleVersionComparatorTest {
+public class BundleVersionComparisonTest {
     
     @Test
     public void testSortBundles() {
@@ -52,7 +52,7 @@ public class BundleVersionComparatorTest {
         }
         
         final String firstBeforeSort = list.get(0).toString();
-        Collections.sort(list, new BundleVersionComparator());
+        Collections.sort(list);
         final String newFirstItem = list.get(0).toString();
         assertFalse("First item (" + newFirstItem + ") must have changed during sort", firstBeforeSort.equals(newFirstItem));
         
@@ -67,28 +67,14 @@ public class BundleVersionComparatorTest {
     public void testEqual() {
         final MockBundleVersionInfo a = new MockBundleVersionInfo("a", "1.0", 2);
         final MockBundleVersionInfo b = new MockBundleVersionInfo("a", "1.0", 1);
-        final BundleVersionComparator c = new BundleVersionComparator();
-        assertEquals("Last-modified must not be relevant for non-snapshot bundles", 0, c.compare(a, b));
+        assertEquals("Last-modified must not be relevant for non-snapshot bundles", 0, a.compareTo(b));
     }
     
     public void testExceptionsOnNull() {
         final MockBundleVersionInfo a = new MockBundleVersionInfo("a", "1.0", 2);
-        final BundleVersionComparator c = new BundleVersionComparator();
         
         try {
-            c.compare(a, null);
-            fail("Expected an IllegalArgumentException");
-        } catch(IllegalArgumentException asExpected) {
-        }
-
-        try {
-            c.compare(null, a);
-            fail("Expected an IllegalArgumentException");
-        } catch(IllegalArgumentException asExpected) {
-        }
-
-        try {
-            c.compare(null, null);
+            a.compareTo(null);
             fail("Expected an IllegalArgumentException");
         } catch(IllegalArgumentException asExpected) {
         }
@@ -97,16 +83,15 @@ public class BundleVersionComparatorTest {
     public void testExceptionOnNonBundle() {
         final MockBundleVersionInfo a = new MockBundleVersionInfo("a", "1.0", 2);
         final MockBundleVersionInfo nonBundle = new MockBundleVersionInfo();
-        final BundleVersionComparator c = new BundleVersionComparator();
         
         try {
-            c.compare(a, nonBundle);
+            a.compareTo(nonBundle);
             fail("Expected an IllegalArgumentException");
         } catch(IllegalArgumentException asExpected) {
         }
         
         try {
-            c.compare(nonBundle, a);
+            nonBundle.compareTo(a);
             fail("Expected an IllegalArgumentException");
         } catch(IllegalArgumentException asExpected) {
         }

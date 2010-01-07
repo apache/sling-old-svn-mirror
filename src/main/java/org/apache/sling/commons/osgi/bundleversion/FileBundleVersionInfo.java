@@ -27,7 +27,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 /** BundleVersionInfo based on a bundle jar file */
-public class FileBundleVersionInfo implements BundleVersionInfo<File> {
+public class FileBundleVersionInfo extends BundleVersionInfo<File> {
 
     private final String symbolicName;
     private final Version version;

@@ -23,7 +23,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 /** BundleVersionInfo based on a Bundle object */
-public class BundleBundleVersionInfo implements BundleVersionInfo<Bundle> {
+public class BundleBundleVersionInfo extends BundleVersionInfo<Bundle> {
 
     private Bundle source;
     private final long lastModified;
