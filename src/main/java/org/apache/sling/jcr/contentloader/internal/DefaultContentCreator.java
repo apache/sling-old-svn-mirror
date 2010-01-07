@@ -813,16 +813,24 @@ public class DefaultContentCreator implements ContentCreator {
 
 		AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
 		AccessControlList updatedAcl = null;
-		AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
-		while (applicablePolicies.hasNext()) {
-			AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
-			if (policy instanceof AccessControlList) {
-				updatedAcl = (AccessControlList)policy;
-				break;
-			}
+		AccessControlPolicy[] policies = accessControlManager.getPolicies(resourcePath);
+		for (AccessControlPolicy policy : policies) {
+		  if (policy instanceof AccessControlList) {
+		    updatedAcl = (AccessControlList)policy;
+		    break;
+		  }
 		}
 		if (updatedAcl == null) {
-			throw new RepositoryException("Unable to find an access conrol policy to update.");
+		  AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
+		  while (applicablePolicies.hasNext()) {
+		    AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
+		    if (policy instanceof AccessControlList) {
+		      updatedAcl = (AccessControlList)policy;
+		    }
+		  }
+		}
+		if (updatedAcl == null) {
+			throw new RepositoryException("Unable to find or create an access control policy to update for " + resourcePath);
 		}
 
 		Set<String> postedPrivilegeNames = new HashSet<String>();
@@ -869,12 +877,14 @@ public class DefaultContentCreator implements ContentCreator {
 
 		//add a fresh ACE with the granted privileges
 		List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
-		for (String name : grantedPrivilegeNames) {
-			if (name.length() == 0) {
-				continue; //empty, skip it.
-			}
-			Privilege privilege = accessControlManager.privilegeFromName(name);
-			grantedPrivilegeList.add(privilege);
+		if (grantedPrivilegeNames != null) {
+		  for (String name : grantedPrivilegeNames) {
+			  if (name.length() == 0) {
+				  continue; //empty, skip it.
+			  }
+			  Privilege privilege = accessControlManager.privilegeFromName(name);
+			  grantedPrivilegeList.add(privilege);
+	    }
 		}
 		//add the privileges that should be preserved
 		grantedPrivilegeList.addAll(preserveGrantedPrivileges);
@@ -888,13 +898,14 @@ public class DefaultContentCreator implements ContentCreator {
 		if (!authorizable.isGroup()) {
 			//add a fresh ACE with the denied privileges
 			List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
-			for (String name : deniedPrivilegeNames) {
-				if (name.length() == 0) {
-					continue; //empty, skip it.
-				}
-				Privilege privilege = accessControlManager.privilegeFromName(name);
-				deniedPrivilegeList.add(privilege);
-
+			if (deniedPrivilegeNames != null) {
+			  for (String name : deniedPrivilegeNames) {
+				  if (name.length() == 0) {
+					  continue; //empty, skip it.
+				  }
+				  Privilege privilege = accessControlManager.privilegeFromName(name);
+				  deniedPrivilegeList.add(privilege);
+			  }
 			}
 			//add the privileges that should be preserved
 			deniedPrivilegeList.addAll(preserveDeniedPrivileges);
