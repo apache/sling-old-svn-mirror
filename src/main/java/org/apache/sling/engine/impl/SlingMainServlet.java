@@ -20,6 +20,7 @@ package org.apache.sling.engine.impl;
 
 import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.SocketException;
@@ -681,7 +682,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     }
 
     private void initFilter(ComponentContext osgiContext, ServiceReference ref) {
-        Filter filter = (Filter) osgiContext.locateService(FILTER_NAME, ref);
+        final Filter filter = (Filter) osgiContext.locateService(FILTER_NAME, ref);
+        if ( filter == null ) {
+            return;
+        }
 
         // require a name for the filter
         String filterName = AbstractServiceReferenceConfig.getName(ref);
