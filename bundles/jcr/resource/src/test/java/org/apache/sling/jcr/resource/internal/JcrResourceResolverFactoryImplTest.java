@@ -20,8 +20,13 @@ package org.apache.sling.jcr.resource.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
 import junit.framework.Assert;
 
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -64,7 +69,13 @@ public class JcrResourceResolverFactoryImplTest {
         final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
         this.getMockery().checking(new Expectations() {{
             allowing(componentContext).locateService(with(any(String.class)), with(any(ServiceReference.class)));
-            will(returnValue(null));
+            will(returnValue(new JcrResourceTypeProvider() {
+
+                public String getResourceTypeForNode(Node n) throws RepositoryException {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+            }));
         }});
         assertTrue(factory.jcrResourceTypeProviders.isEmpty());
         factory.componentContext = componentContext;
