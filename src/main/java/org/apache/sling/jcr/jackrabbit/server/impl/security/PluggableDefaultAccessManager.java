@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
@@ -56,10 +55,9 @@ import org.slf4j.LoggerFactory;
  */
 public class PluggableDefaultAccessManager extends DefaultAccessManager {
 
-    /** @scr.reference */ @SuppressWarnings({"UnusedDeclaration"})
+    /** @scr.reference */ 
     private AccessManagerPlugin accessManagerPlugin;
     private NamePathResolver namePathResolver;
-    private HierarchyManager hierarchyManager;
     private static final Logger log = LoggerFactory.getLogger(PluggableDefaultAccessManager.class);
     protected AccessManagerPluginFactory accessManagerFactory;
     protected AccessManagerFactoryTracker accessManagerFactoryTracker;
@@ -88,7 +86,6 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
         this.sanityCheck();
         super.init(context, acProvider, wspAccessMgr);
         this.namePathResolver = context.getNamePathResolver();
-        this.hierarchyManager = context.getHierarchyManager();
         if (this.accessManagerPlugin != null) {
             this.accessManagerPlugin.init(context.getSubject(), context.getSession());
         }
@@ -117,7 +114,7 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
     }
 
     public boolean isGranted(ItemId id, int permissions) throws ItemNotFoundException, RepositoryException {
-        return this.isGranted(this.hierarchyManager.getPath(id), permissions);
+        return super.isGranted(id, permissions);
     }
 
     public boolean isGranted(Path absPath, int permissions) throws RepositoryException {
