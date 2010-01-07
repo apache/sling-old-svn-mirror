@@ -274,7 +274,9 @@ public class AdapterManagerImpl implements AdapterManager {
 
         AdapterFactory factory = (AdapterFactory) context.locateService(
             "AdapterFactory", reference);
-
+        if ( factory == null ) {
+            return;
+        }
         AdapterFactoryDescriptorKey factoryKey = new AdapterFactoryDescriptorKey(
             reference);
         AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(
