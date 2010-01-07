@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.webconsole.internal.webconsole;
+package org.apache.sling.jcr.webconsole.internal;
 
 import java.io.PrintWriter;
 
@@ -48,7 +48,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
     /**
      * Get the title of the configuration status page.
-     * 
+     *
      * @return the title
      */
     public String getTitle() {
@@ -57,7 +57,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
     /**
      * Output a list of namespace prefixes and URIs from the NamespaceRegistry.
-     * 
+     *
      * @param pw a PrintWriter
      */
     public void printConfiguration(PrintWriter pw) {
