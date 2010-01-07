@@ -340,9 +340,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     protected void registerPostOperation(ServiceReference ref) {
     	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
 		SlingPostOperation operation = (SlingPostOperation) this.componentContext.locateService("postOperation", ref);
-    	synchronized (this.postOperations) {
-			this.postOperations.put(operationName, operation);
-    	}
+		if ( operation != null ) {
+	        synchronized (this.postOperations) {
+	            this.postOperations.put(operationName, operation);
+	        }
+		}
     }
 
     protected void unbindPostOperation(ServiceReference ref) {
@@ -387,8 +389,17 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         index = 0;
         for(final ServiceReference current : this.postProcessors) {
             final SlingPostProcessor processor = (SlingPostProcessor) this.componentContext.locateService("postProcessor", current);
-            this.cachedPostProcessors[index] = processor;
-            index++;
+            if ( processor != null ) {
+                this.cachedPostProcessors[index] = processor;
+                index++;
+            }
+        }
+        if ( index < this.cachedPostProcessors.length ) {
+            SlingPostProcessor[] oldArray = this.cachedPostProcessors;
+            this.cachedPostProcessors = new SlingPostProcessor[index];
+            for(int i=0;i<index;i++) {
+                this.cachedPostProcessors[i] = oldArray[i];
+            }
         }
     }
 }
