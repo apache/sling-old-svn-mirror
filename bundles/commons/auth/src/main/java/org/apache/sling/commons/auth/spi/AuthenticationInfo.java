@@ -67,8 +67,8 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * the request is being handled. This property is set by the
      * {@link #AuthenticationInfo(String, String, char[], String)} constructor
      * and may be <code>null</code> if this instance is created by either the
-     * {@link #AuthenticationInfo(String, Credentials)} or
-     * {@link #AuthenticationInfo(String, Credentials, String)} constructors.
+     * {@link #AuthenticationInfo(String, String)} or
+     * {@link #AuthenticationInfo(String, String, char[])} constructors.
      * <p>
      * The type of this property, if present, is <code>String</code>.
      */
@@ -79,8 +79,8 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * behalf the request is being handled. This property is set by the
      * {@link #AuthenticationInfo(String, String, char[], String)} constructor
      * and may be <code>null</code> if this instance is created by either the
-     * {@link #AuthenticationInfo(String, Credentials)} or
-     * {@link #AuthenticationInfo(String, Credentials, String)} constructors.
+     * {@link #AuthenticationInfo(String, String)} or
+     * {@link #AuthenticationInfo(String, String, char[])} constructors.
      * <p>
      * The type of this property, if present, is <code>char[]</code>.
      */
@@ -89,8 +89,8 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     /**
      * The name of the property providing the JCR credentials. These credentials
      * are preset to the credentials given to the
-     * {@link #AuthenticationInfo(String, Credentials)} or
-     * {@link #AuthenticationInfo(String, Credentials, String)} constructors. If
+     * {@link #AuthenticationInfo(String, String)} or
+     * {@link #AuthenticationInfo(String, String, char[])} constructors.
      * the {@link #AuthenticationInfo(String, String, char[], String)}
      * constructor is used the credentials property is set to a JCR
      * <code>SimpleCredentials</code> instance containing the user id and
@@ -132,8 +132,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * @param authType The authentication type, must not be <code>null</code>.
      * @param userId The name of the user to authenticate as. This may be
      *            <code>null</code> for the constructor and later be set.
-     * @param password The password to authenticate with or <code>null</code> if
-     *            no password can be supplied.
      * @throws NullPointerException if <code>authType</code> is
      *             <code>null</code>.
      */

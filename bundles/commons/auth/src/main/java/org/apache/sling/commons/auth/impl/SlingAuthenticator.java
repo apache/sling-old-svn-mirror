@@ -375,10 +375,9 @@ public class SlingAuthenticator implements Authenticator,
 
     /**
      * Logs out the user calling all applicable
-     * {@link org.apache.sling.engine.auth.AuthenticationHandler2}
+     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
      * authentication handlers.
      *
-     * @since 2.1
      */
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
