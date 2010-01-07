@@ -464,10 +464,10 @@ public class QuartzScheduler implements Scheduler {
         // called in the meantime
         final ComponentContext ctx = this.context;
         if ( ctx != null ) {
-            try {
-                final Object job = ctx.locateService(type, ref);
-                if ( ref != null ) {
-                    this.checkJob(job);
+            final Object job = ctx.locateService(type, ref);
+            if ( job != null ) {
+                this.checkJob(job);
+                try {
                     final String name = getServiceIdentifier(ref);
                     final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
                     final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
@@ -479,11 +479,11 @@ public class QuartzScheduler implements Scheduler {
                             this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
                         }
                     }
+                } catch (IllegalStateException e) {
+                    // this can happen if deactivate has been called - therefore ignoring
+                } catch (SchedulerException e) {
+                    // this can happen if deactivate has been called - therefore ignoring
                 }
-            } catch (IllegalStateException e) {
-                // this can happen if deactivate has been called - therefore ignoring
-            } catch (SchedulerException e) {
-                // this can happen if deactivate has been called - therefore ignoring
             }
         }
     }
