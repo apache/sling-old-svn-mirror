@@ -97,6 +97,34 @@
                             </outputDirectory>
                         </configuration>
                     </execution>
+                    <!-- Embed code from osgi.commons -->
+                    <execution>
+                        <id>extract-sling-commons-osgi</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>org.apache.sling.commons.osgi</includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/classes
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Embed osgi Version class from framework-->
+                    <execution>
+                        <id>extract-osgi-framework</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>org.apache.felix.framework</includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/classes
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -123,6 +151,8 @@
                             <includes>
                                 <include>org/apache/sling/launchpad/base/shared/**</include>
                                 <include>org/apache/sling/launchpad/app/**</include>
+                                <include>org/apache/sling/commons/osgi/**</include>
+                                <include>org/osgi/framework/Version*</include>
                                 <include>META-INF/**</include>
                             </includes>
                         </configuration>
@@ -151,6 +181,8 @@
                                 META-INF/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/webapp/**,
+                                WEB-INF/classes/org/apache/sling/commons/osgi/**,
+                                WEB-INF/classes/org/osgi/framework/Version*,
                                 WEB-INF/resources/**
                             </packagingIncludes>
                             <webResources>
@@ -217,6 +249,12 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
             <version>${felix.httpservice.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.0.5-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
