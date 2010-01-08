@@ -47,21 +47,21 @@ final class AuthenticationHandlerHolder extends
         this.handler = handler;
     }
 
-    public AuthenticationInfo doAuthenticate(HttpServletRequest request,
+    public AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
-        return handler.authenticate(request, response);
+        return handler.extractCredentials(request, response);
 
     }
 
-    public boolean doRequestAuthentication(HttpServletRequest request,
+    public boolean doRequestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        return handler.requestAuthentication(request, response);
+        return handler.requestCredentials(request, response);
     }
 
-    public void doDropAuthentication(HttpServletRequest request,
+    public void doDropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        handler.dropAuthentication(request, response);
+        handler.dropCredentials(request, response);
     }
 
     @Override
