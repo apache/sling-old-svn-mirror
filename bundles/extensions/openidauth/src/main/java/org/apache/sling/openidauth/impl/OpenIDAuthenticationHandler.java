@@ -25,11 +25,8 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.jcr.Credentials;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.FailedLoginException;
-import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -246,9 +243,146 @@ public class OpenIDAuthenticationHandler implements
      *         information. In case of DOING_AUTH, the method must have sent a
      *         response indicating that fact to the client.
      */
-    public AuthenticationInfo authenticate(HttpServletRequest request,
+    public AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-        return this.extractAuthentication(request, response);
+
+        OpenIdUser user = null;
+
+        try
+        {
+            user = relyingParty.discover(request);
+
+            // Authentication timeout
+            if(user == null && RelyingParty.isAuthResponse(request))
+            {
+                log.debug("OpenID authentication timeout");
+                response.sendRedirect(request.getRequestURI());
+                return AuthenticationInfo.DOING_AUTH;
+            }
+
+            if(request.getPathInfo() != null) {
+                String requestPath = request.getPathInfo();
+                if(requestPath != null) {
+                    if(OpenIDConstants.LOGOUT_REQUEST_PATH.equals(requestPath)) {
+                        relyingParty.invalidate(request, response);
+                        user = null;
+                        return handleLogout(request, response);
+                    }
+                    // handle (possibly)anon auth resources
+                    else if (loginForm.equals(requestPath) ||
+                            authFailUrl.equals(requestPath) ||
+                            logoutUrl.equals(requestPath)) {
+
+                        if (loginForm.equals(requestPath)) {
+                            // can force a login with Allow Anonymous enabled, by requesting
+                            // login form directly.  Checking this parameter allows us
+                            // to redirect user somewhere useful if login is successful
+                            if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
+                                request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
+                                        request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER));
+                            }
+
+                            moveAttributeFromSessionToRequest(
+                                    OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
+                                    OpenIDConstants.OpenIDFailure.class,
+                                    request);
+
+                            moveAttributeFromSessionToRequest(
+                                    OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
+                                    String.class,
+                                    request);
+
+                        } else if (authFailUrl.equals(requestPath)) {
+                            // move the failure reason attribute from session to request
+                            moveAttributeFromSessionToRequest(
+                                    OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
+                                    OpenIDConstants.OpenIDFailure.class,
+                                    request);
+
+                            moveAttributeFromSessionToRequest(
+                                    OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
+                                    String.class,
+                                    request);
+                        }
+
+                        if (accessAuthPageAnon) {
+                            // Causes anonymous login but does not respect
+                            // SlingAuthenticator allowAnonymous
+                            return new AuthenticationInfo(
+                                OpenIDConstants.OPEN_ID_AUTH_TYPE);
+                        }
+                    }
+                }
+            }
+
+            if(user != null) {
+                if(user.isAuthenticated()) {
+                    // user already authenticated
+                    request.setAttribute(OpenIdUser.ATTR_NAME, user);
+                    return getAuthInfoFromUser(user);
+                } else if(user.isAssociated()) {
+                    if(RelyingParty.isAuthResponse(request)) {
+                        if(relyingParty.verifyAuth(user, request, response)) {
+                            // authenticated
+                            response.sendRedirect(request.getRequestURI());
+                            return AuthenticationInfo.DOING_AUTH;
+                        }
+                        // failed verification
+                        AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.VERIFICATION, request, response);
+                        if(authInfo != null) {
+                            return authInfo;
+                        }
+                    } else {
+                        // Assume a cancel or some other non-successful response from provider
+                        // failed verification
+                        relyingParty.invalidate(request, response);
+                        user = null;
+
+                        AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.AUTHENTICATION, request, response);
+                        if(authInfo != null) {
+                            return authInfo;
+                        }
+                    }
+                } else {
+                    // associate and authenticate user
+                    StringBuffer url = null;
+                    String trustRoot = null;
+                    String returnTo = null;
+
+                    if(externalUrlPrefix != null && !"".equals(externalUrlPrefix.trim())) {
+                        url = new StringBuffer(externalUrlPrefix).append(request.getRequestURI());
+                        trustRoot = externalUrlPrefix;
+                    } else {
+                        url = request.getRequestURL();
+                        trustRoot = url.substring(0, url.indexOf(SLASH, 9));
+                    }
+
+                    String realm = url.substring(0, url.lastIndexOf(SLASH));
+
+                    if(redirectToOriginalUrl) {
+                        returnTo = url.toString();
+                    } else {
+                        request.setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, request.getRequestURI());
+                        returnTo =  authSuccessUrl;
+                    }
+
+                    if(relyingParty.associateAndAuthenticate(user, request, response, trustRoot, realm,
+                            returnTo)) {
+                        // user is associated and then redirected to his openid provider for authentication
+                        return AuthenticationInfo.DOING_AUTH;
+                    }
+                    // failed association or auth request generation
+                    AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.ASSOCIATION, request, response);
+                    if(authInfo != null) {
+                        return authInfo;
+                    }
+                }
+            }
+        } catch(Exception e) {
+            log.error("Error processing OpenID request", e);
+        }
+
+        return null;
     }
 
     /**
@@ -263,7 +397,7 @@ public class OpenIDAuthenticationHandler implements
      * @return <code>true</code> is always returned by this handler
      * @throws IOException if an error occurrs sending back the response.
      */
-    public boolean requestAuthentication(HttpServletRequest request,
+    public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         // if the response is already committed, we have a problem !!
@@ -305,7 +439,7 @@ public class OpenIDAuthenticationHandler implements
      * Invalidates the request with the Relying Party if a user is actually
      * available for the request.
      */
-    public void dropAuthentication(HttpServletRequest request,
+    public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         try {
             final OpenIdUser user = relyingParty.discover(request);
@@ -423,149 +557,6 @@ public class OpenIDAuthenticationHandler implements
 
     // ---------- internal -----------------------------------------------------
 
-    protected AuthenticationInfo extractAuthentication(
-            HttpServletRequest request, HttpServletResponse response) {
-
-
-    	OpenIdUser user = null;
-
-        try
-        {
-            user = relyingParty.discover(request);
-
-            // Authentication timeout
-            if(user == null && RelyingParty.isAuthResponse(request))
-            {
-            	log.debug("OpenID authentication timeout");
-                response.sendRedirect(request.getRequestURI());
-                return AuthenticationInfo.DOING_AUTH;
-            }
-
-	    	if(request.getPathInfo() != null) {
-	    		String requestPath = request.getPathInfo();
-	    		if(requestPath != null) {
-	    			if(OpenIDConstants.LOGOUT_REQUEST_PATH.equals(requestPath)) {
-	    				relyingParty.invalidate(request, response);
-    					user = null;
-    					return handleLogout(request, response);
-	    			}
-	    			// handle (possibly)anon auth resources
-	    			else if (loginForm.equals(requestPath) ||
-	    					authFailUrl.equals(requestPath) ||
-	    					logoutUrl.equals(requestPath)) {
-
-	    				if (loginForm.equals(requestPath)) {
-		    				// can force a login with Allow Anonymous enabled, by requesting
-		    				// login form directly.  Checking this parameter allows us
-		    				// to redirect user somewhere useful if login is successful
-		    				if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
-		    					request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-		    							request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER));
-		    				}
-
-		    				moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
-		    						OpenIDConstants.OpenIDFailure.class,
-		    						request);
-
-		    				moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-		    						String.class,
-		    						request);
-
-	    				} else if (authFailUrl.equals(requestPath)) {
-	    					// move the failure reason attribute from session to request
-	    					moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
-		    						OpenIDConstants.OpenIDFailure.class,
-		    						request);
-
-	    					moveAttributeFromSessionToRequest(
-		    						OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-		    						String.class,
-		    						request);
-	    				}
-
-                        if (accessAuthPageAnon) {
-                            // Causes anonymous login but does not respect
-                            // SlingAuthenticator allowAnonymous
-                            return new AuthenticationInfo(
-                                OpenIDConstants.OPEN_ID_AUTH_TYPE);
-                        }
-	    			}
-	    		}
-	    	}
-
-            if(user != null) {
-	            if(user.isAuthenticated()) {
-	                // user already authenticated
-	                request.setAttribute(OpenIdUser.ATTR_NAME, user);
-	                return getAuthInfoFromUser(user);
-	            } else if(user.isAssociated()) {
-	            	if(RelyingParty.isAuthResponse(request)) {
-		            	if(relyingParty.verifyAuth(user, request, response)) {
-		                    // authenticated
-		                    response.sendRedirect(request.getRequestURI());
-		                    return AuthenticationInfo.DOING_AUTH;
-                        }
-	                    // failed verification
-	                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.VERIFICATION, request, response);
-	    				if(authInfo != null) {
-	    					return authInfo;
-	    				}
-		            } else {
-		            	// Assume a cancel or some other non-successful response from provider
-		            	// failed verification
-		            	relyingParty.invalidate(request, response);
-		            	user = null;
-
-	                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.AUTHENTICATION, request, response);
-	    				if(authInfo != null) {
-	    					return authInfo;
-	    				}
-		            }
-	            } else {
-		            // associate and authenticate user
-		            StringBuffer url = null;
-		            String trustRoot = null;
-		            String returnTo = null;
-
-		            if(externalUrlPrefix != null && !"".equals(externalUrlPrefix.trim())) {
-		            	url = new StringBuffer(externalUrlPrefix).append(request.getRequestURI());
-		            	trustRoot = externalUrlPrefix;
-		            } else {
-		            	url = request.getRequestURL();
-		            	trustRoot = url.substring(0, url.indexOf(SLASH, 9));
-		            }
-
-	            	String realm = url.substring(0, url.lastIndexOf(SLASH));
-
-		            if(redirectToOriginalUrl) {
-		            	returnTo = url.toString();
-		            } else {
-		            	request.setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, request.getRequestURI());
-		            	returnTo =  authSuccessUrl;
-		    		}
-
-		            if(relyingParty.associateAndAuthenticate(user, request, response, trustRoot, realm,
-		                    returnTo)) {
-		                // user is associated and then redirected to his openid provider for authentication
-		                return AuthenticationInfo.DOING_AUTH;
-                    }
-	            	// failed association or auth request generation
-                	AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.ASSOCIATION, request, response);
-    				if(authInfo != null) {
-    					return authInfo;
-    				}
-	            }
-            }
-        } catch(Exception e) {
-        	log.error("Error processing OpenID request", e);
-        }
-
-    	return null;
-    }
-
     @SuppressWarnings("unchecked")
     private <T> T removeAttributeFromSession(String attrName, Class<T> type, HttpServletRequest request) {
     	T attr = (T)request.getSession().getAttribute(attrName);
@@ -598,12 +589,12 @@ public class OpenIDAuthenticationHandler implements
 
 	@SuppressWarnings("unchecked")
     public void doInit(CallbackHandler callbackHandler, Session session,
-			Map options) throws LoginException {
+			Map options) {
 		return;
 	}
 
 	public AuthenticationPlugin getAuthentication(Principal principal,
-			Credentials creds) throws RepositoryException {
+			Credentials creds) {
 		return new OpenIDAuthenticationPlugin(principal);
 	}
 
@@ -623,8 +614,7 @@ public class OpenIDAuthenticationHandler implements
         // Nothing to do
     }
 
-	public int impersonate(Principal principal, Credentials credentials)
-			throws RepositoryException, FailedLoginException {
+	public int impersonate(Principal principal, Credentials credentials) {
 		return LoginModulePlugin.IMPERSONATION_DEFAULT;
 	}
 

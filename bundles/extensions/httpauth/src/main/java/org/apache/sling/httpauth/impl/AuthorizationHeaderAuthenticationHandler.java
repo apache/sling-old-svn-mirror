@@ -152,11 +152,11 @@ public class AuthorizationHeaderAuthenticationHandler implements
      *         information. In case of DOING_AUTH, the method must have sent a
      *         response indicating that fact to the client.
      */
-    public AuthenticationInfo authenticate(HttpServletRequest request,
+    public AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
         // extract credentials and return
-        AuthenticationInfo info = this.extractAuthentication(request);
+        AuthenticationInfo info = this.extractCredentials(request);
         if (info != null) {
             return info;
         }
@@ -178,7 +178,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * @return <code>true</code> is always returned by this handler
      * @throws IOException if an error occurrs sending back the form.
      */
-    public boolean requestAuthentication(HttpServletRequest request,
+    public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         // if the response is already committed, we have a problem !!
@@ -252,7 +252,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * a 401/UNAUTHORIZED response causing the client to immediately drop any
      * cached credentials.
      */
-    public void dropAuthentication(HttpServletRequest request,
+    public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         sendUnauthorized(response);
     }
@@ -366,7 +366,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
     /**
      * Extract the Base64 authentication string from the request
      */
-    protected AuthenticationInfo extractAuthentication(
+    protected AuthenticationInfo extractCredentials(
             HttpServletRequest request) {
 
         // Return immediately if the header is missing
