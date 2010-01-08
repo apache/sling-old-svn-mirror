@@ -54,9 +54,9 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="java.javaEncoding" value="UTF-8"
  * @scr.property name="java.compilerSourceVM" value="1.5"
  * @scr.property name="java.compilerTargetVM" value="1.5"
- * @scr.property name="java.development" value="true"
+ * @scr.property name="java.development" value="true" type="Boolean"
  * @scr.property name="java.modificationTestInterval" value="-1"
- * @scr.property name="java.classdebuginfo" value="true"
+ * @scr.property name="java.classdebuginfo" value="true" type="Boolean"
  */
 public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
