@@ -90,7 +90,12 @@ public class Main extends Thread implements Notifiable {
         // The Loader helper
         Loader loaderTmp = null;
         try {
-            loaderTmp = new Loader(slingHome);
+            loaderTmp = new Loader(slingHome) {
+                @Override
+                protected void info(String msg) {
+                    Main.info(msg, null);
+                }
+            };
         } catch (IllegalArgumentException iae) {
             startupFailure(iae.getMessage(), null);
         }
@@ -209,13 +214,8 @@ public class Main extends Thread implements Notifiable {
     private void startSling(URL launcherJar) {
         if (launcherJar != null) {
             try {
-                info("Checking launcher JAR in " + slingHome, null);
-                if (loader.installLauncherJar(launcherJar)) {
-                    info("Installed or Updated launcher JAR file from "
-                        + launcherJar, null);
-                } else {
-                    info("Existing launcher JAR file already up to date", null);
-                }
+                info("Checking launcher JAR in folder " + slingHome, null);
+                loader.installLauncherJar(launcherJar);
             } catch (IOException ioe) {
                 startupFailure("Failed installing " + launcherJar, ioe);
             }
@@ -225,9 +225,6 @@ public class Main extends Thread implements Notifiable {
 
         Object object = null;
         try {
-            info(
-                "Loading launcher class " + SharedConstants.DEFAULT_SLING_MAIN,
-                null);
             object = loader.loadLauncher(SharedConstants.DEFAULT_SLING_MAIN);
         } catch (IllegalArgumentException iae) {
             startupFailure("Failed loading Sling class "

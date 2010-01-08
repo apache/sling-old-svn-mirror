@@ -49,6 +49,7 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
  * @see <a href="http://cwiki.apache.org/SLING/the-sling-launchpad.html">The
  *      Sling Launchpad</a>
  */
+@SuppressWarnings("serial")
 public class SlingServlet extends GenericServlet implements Notifiable {
 
     /**
@@ -255,7 +256,12 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private void startSling() {
 
         try {
-            this.loader = new Loader(slingHome);
+            this.loader = new Loader(slingHome) {
+                @Override
+                protected void info(String msg) {
+                    log(msg);
+                }
+            };
         } catch (IllegalArgumentException iae) {
             startupFailure(null, iae);
             return;
@@ -296,11 +302,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         if (launcherJar != null) {
             try {
                 log("Checking launcher JAR in " + slingHome);
-                if (loader.installLauncherJar(launcherJar)) {
-                    log("Installed or Updated launcher JAR file from " + launcherJar);
-                } else {
-                    log("Existing launcher JAR file is already up to date");
-                }
+                loader.installLauncherJar(launcherJar);
             } catch (IOException ioe) {
                 startupFailure("Failed installing " + launcherJar, ioe);
                 return;
@@ -311,8 +313,6 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         Object object = null;
         try {
-            log("Loading launcher class "
-                + SharedConstants.DEFAULT_SLING_SERVLET);
             object = loader.loadLauncher(SharedConstants.DEFAULT_SLING_SERVLET);
         } catch (IllegalArgumentException iae) {
             startupFailure("Cannot load Launcher Servlet "

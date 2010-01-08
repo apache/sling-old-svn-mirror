@@ -30,7 +30,14 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.jar.JarFile;
+
+import org.apache.sling.commons.osgi.bundleversion.BundleVersionInfo;
+import org.apache.sling.commons.osgi.bundleversion.FileBundleVersionInfo;
 
 /**
  * The <code>Loader</code> class provides utility methods for the actual
@@ -42,13 +49,6 @@ public class Loader {
      * The Sling home folder set by the constructor
      */
     private final File slingHome;
-
-    /**
-     * The current launcher JAR file in use. Set on-demand by the
-     * {@link #getLauncherJarFile()} method and reset to the installed or
-     * updated launcher JAR file by the {@link #installLauncherJar(URL)} method.
-     */
-    private File launcherJarFile;
 
     /**
      * Creates a loader instance to load from the given Sling home folder.
@@ -85,6 +85,7 @@ public class Loader {
     public Object loadLauncher(String launcherClassName) {
 
         final File launcherJarFile = getLauncherJarFile();
+        info("Loading launcher class " + launcherClassName + " from " + launcherJarFile.getName());
         if (!launcherJarFile.canRead()) {
             throw new IllegalArgumentException("Sling Launcher JAR "
                 + launcherJarFile + " is not accessible");
@@ -137,47 +138,76 @@ public class Loader {
 
     /**
      * Copies the contents of the launcher JAR as indicated by the URL to the
-     * sling home directory and sets the last modification time stamp fo the
-     * file. If the existing file is not older than the contents of the launcher
-     * JAR file, the file is not replaced.
+     * sling home directory. If the existing file is is a more recent bundle version 
+     * than the supplied launcher JAR file, it is is not replaced.
      *
      * @return <code>true</code> if the launcher JAR file has been installed or
-     *         updated. If the launcher JAR is already up to date,
-     *         <code>false</code> is returned.
+     *         updated, <code>false</code> otherwise.
      * @throws IOException If an error occurrs transferring the contents
      */
     public boolean installLauncherJar(URL launcherJar) throws IOException {
         final File currentLauncherJarFile = getLauncherJarFile();
 
-        // check whether we have to overwrite
+        // Copy the new launcher jar to a temporary file, and
+        // extract bundle version info
         final URLConnection launcherJarConn = launcherJar.openConnection();
         launcherJarConn.setUseCaches(false);
-        final long lastModifTime = launcherJarConn.getLastModified();
-        final File newLauncherJarFile;
-        if (currentLauncherJarFile.exists()) {
+        final File tmp = new File(slingHome, "Loader_tmp_" + System.currentTimeMillis() + SharedConstants.LAUNCHER_JAR_REL_PATH);
+        spool(launcherJarConn.getInputStream(), tmp);
+        final FileBundleVersionInfo newVi = new FileBundleVersionInfo(tmp);
+        boolean installNewLauncher = true;
+        
+        try {
+            if(!newVi.isBundle()) {
+                throw new IllegalArgumentException("New launcher jar is not a bundle, cannot get version info:" + launcherJar);
+            }
+            
+            // Compare versions to decide whether to use the existing or new launcher jar
+            if (currentLauncherJarFile.exists()) {
+                final FileBundleVersionInfo currentVi = new FileBundleVersionInfo(currentLauncherJarFile);
+                if(!currentVi.isBundle()) {
+                    throw new IllegalArgumentException("Existing launcher jar is not a bundle, cannot get version info:" 
+                            + currentLauncherJarFile.getAbsolutePath());
+                }
 
-            // nothing to do if there is no update
-            if (lastModifTime <= currentLauncherJarFile.lastModified()) {
-                return false;
+                String info = null;
+                if(currentVi.compareTo(newVi) == 0) {
+                    info = "up to date";
+                    installNewLauncher = false;
+                } else if(currentVi.compareTo(newVi) > 0) {
+                    info = "more recent than ours";
+                    installNewLauncher = false;
+                }
+                
+                if(info != null) {
+                    info("Existing launcher is " + info + ", using it: " 
+                            + getBundleInfo(currentVi) + " (" + currentLauncherJarFile.getName() + ")");
+                }
             }
 
-            // use a new timestamped name for the new version
-            newLauncherJarFile = new File(slingHome,
-                SharedConstants.LAUNCHER_JAR_REL_PATH + "." + lastModifTime);
-
-        } else {
-
-            // create the current file
-            newLauncherJarFile = currentLauncherJarFile;
-
+            if(installNewLauncher) {
+                final File f = new File(tmp.getParentFile(), SharedConstants.LAUNCHER_JAR_REL_PATH + "." + System.currentTimeMillis());
+                tmp.renameTo(f);
+                info("Installing new launcher: " + launcherJar  + ", " + getBundleInfo(newVi) + " (" + f.getName() + ")");
+            }
+        } finally {
+            if(tmp.exists()) {
+                tmp.delete();
+            }
         }
 
-        // store the new launcher JAR and set the last modification time
-        spool(launcherJarConn.getInputStream(), newLauncherJarFile);
-        newLauncherJarFile.setLastModified(lastModifTime);
-        launcherJarFile = newLauncherJarFile;
-
-        return true;
+        return installNewLauncher;
+    }
+    
+    /** Return relevant bundle version info for logging */
+    static String getBundleInfo(BundleVersionInfo<?> v) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(v.getVersion());
+        if(v.isSnapshot()) {
+            sb.append(", Last-Modified:");
+            sb.append(new Date(v.getBundleLastModified()));
+        }
+        return sb.toString();
     }
 
     /**
@@ -190,33 +220,31 @@ public class Loader {
     private void removeOldLauncherJars() {
         final File[] launcherJars = getLauncherJarFiles();
         if (launcherJars != null && launcherJars.length > 0) {
-
-            // start with the first entry being the newest
-            File mostRecentJarFile = launcherJars[0];
-            long mostRecentLastModification = mostRecentJarFile.lastModified();
-            for (int i = 1; i < launcherJars.length; i++) {
-
-                if (mostRecentLastModification < launcherJars[i].lastModified()) {
-                    // if this entry is newer than the fromer newest, remove
-                    // the former file and use this entry as the newest
-                    mostRecentJarFile.delete();
-                    mostRecentJarFile = launcherJars[i];
-                    mostRecentLastModification = mostRecentJarFile.lastModified();
-
-                } else {
-                    // otherwise remove this entry and keep on using the current
-                    launcherJars[i].delete();
+            
+            // Remove all files except current one
+            final File current = getLauncherJarFile();
+            for(File f : launcherJars) {
+                if(f.getAbsolutePath().equals(current.getAbsolutePath())) {
+                    continue;
                 }
-
+                String versionInfo = null;
+                try {
+                    FileBundleVersionInfo vi = new FileBundleVersionInfo(f);
+                    versionInfo = getBundleInfo(vi);
+                } catch(IOException ignored) {
+                }
+                info("Deleting obsolete launcher jar: " + f.getName() + ", " + versionInfo);
+                f.delete();
             }
-            // fact: mostRecentJarFile is the only remaining and the most recent
 
-            // ensure the most recent file has the common name
-            if (!SharedConstants.LAUNCHER_JAR_REL_PATH.equals(mostRecentJarFile.getName())) {
+            // And ensure the current file has the standard launcher name
+            if (!SharedConstants.LAUNCHER_JAR_REL_PATH.equals(current.getName())) {
+                info("Renaming current launcher jar " + current.getName() 
+                        + " to " + SharedConstants.LAUNCHER_JAR_REL_PATH);
                 File launcherFileName = new File(
-                    mostRecentJarFile.getParentFile(),
+                        current.getParentFile(),
                     SharedConstants.LAUNCHER_JAR_REL_PATH);
-                mostRecentJarFile.renameTo(launcherFileName);
+                current.renameTo(launcherFileName);
             }
         }
     }
@@ -261,62 +289,67 @@ public class Loader {
      * found in the sling home folder.
      */
     private File getLauncherJarFile() {
-        if (launcherJarFile == null) {
-            final File[] launcherJars = getLauncherJarFiles();
-            if (launcherJars == null || launcherJars.length == 0) {
+        File result = null;
+        final File[] launcherJars = getLauncherJarFiles();
+        if (launcherJars == null || launcherJars.length == 0) {
 
-                // return a non-existing file naming the desired primary name
-                launcherJarFile = new File(slingHome,
-                    SharedConstants.LAUNCHER_JAR_REL_PATH);
+            // return a non-existing file naming the desired primary name
+            result = new File(slingHome,
+                SharedConstants.LAUNCHER_JAR_REL_PATH);
 
-            } else if (launcherJars.length == 1) {
-
-                // only a single file existing, that's it
-                launcherJarFile = launcherJars[0];
-
-            } else {
-
-                // start with the first entry being the newest
-                File mostRecentJarFile = launcherJars[0];
-                long mostRecentLastModification = mostRecentJarFile.lastModified();
-                for (int i = 1; i < launcherJars.length; i++) {
-
-                    // if this entry is newer than the fromer newest, use this
-                    // entry
-                    // as the newest
-                    if (mostRecentLastModification < launcherJars[i].lastModified()) {
-                        mostRecentJarFile = launcherJars[i];
-                        mostRecentLastModification = mostRecentJarFile.lastModified();
-                    }
-
-                }
-                launcherJarFile = mostRecentJarFile;
-            }
+        } else {
+            // last file is the most recent one, use it
+            result = launcherJars[launcherJars.length - 1];
         }
 
-        return launcherJarFile;
+        return result;
     }
 
     /**
      * Returns all files in the <code>slingHome</code> directory which may be
-     * considered as launcher JAR files. These files all start with the
+     * considered as launcher JAR files, sorted based on their bundle version
+     * information, most recent last. These files all start with the
      * {@link SharedConstants#LAUNCHER_JAR_REL_PATH}. This list may be empty if
      * the launcher JAR file has not been installed yet.
      *
      * @param slingHome The sling home directory where the launcher JAR files
      *            are stored
      * @return The list of candidate launcher JAR files, which may be empty.
-     *         <code>null</code> is returned if an IO error occurrs trying to
+     *         <code>null</code> is returned if an IO error occurs trying to
      *         list the files.
      */
     private File[] getLauncherJarFiles() {
-        return slingHome.listFiles(new FileFilter() {
+        // Get list of files with names starting with our prefix
+        final File[] rawList = slingHome.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
                 return pathname.isFile()
                     && pathname.getName().startsWith(
                         SharedConstants.LAUNCHER_JAR_REL_PATH);
             }
         });
+        
+        // Keep only those which have valid Bundle headers, and
+        // sort them according to the bundle version numbers
+        final List<FileBundleVersionInfo> list = new ArrayList<FileBundleVersionInfo>();
+        for(File f : rawList) {
+            FileBundleVersionInfo fvi = null;
+            try {
+                fvi = new FileBundleVersionInfo(f);
+            } catch(IOException ioe) {
+                // Cannot read bundle info from jar file - should never happen??
+                throw new IllegalStateException("Cannot read bundle information from loader file " + f.getAbsolutePath());
+            }
+            if(fvi.isBundle()) {
+                list.add(fvi);
+            }
+        }
+        Collections.sort(list);
+        final File [] result = new File[list.size()];
+        int i = 0;
+        for(FileBundleVersionInfo fvi : list) {
+            result[i++] = fvi.getSource();
+        }
+        return result;
     }
 
     /**
@@ -362,5 +395,9 @@ public class Loader {
         } catch (Exception e) {
             // better logging here
         }
+    }
+
+    /** Meant to be overridden to display or log info */
+    protected void info(String msg) {
     }
 }
