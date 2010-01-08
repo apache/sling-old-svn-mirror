@@ -39,40 +39,40 @@ public abstract class AbstractAuthenticationHandlerHolder extends PathBasedHolde
         super(fullPath);
     }
 
-    protected abstract AuthenticationInfo doAuthenticate(HttpServletRequest request,
+    protected abstract AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response);
 
-    public final AuthenticationInfo authenticate(HttpServletRequest request,
+    public final AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
         final Object oldPathAttr = setPath(request);
         try {
-            return doAuthenticate(request, response);
+            return doExtractCredentials(request, response);
         } finally {
             resetPath(request, oldPathAttr);
         }
 
     }
 
-    protected abstract boolean doRequestAuthentication(HttpServletRequest request,
+    protected abstract boolean doRequestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 
-    public final boolean requestAuthentication(HttpServletRequest request,
+    public final boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         final Object oldPathAttr = setPath(request);
         try {
-            return doRequestAuthentication(request, response);
+            return doRequestCredentials(request, response);
         } finally {
             resetPath(request, oldPathAttr);
         }
     }
 
-    protected abstract void doDropAuthentication(HttpServletRequest request,
+    protected abstract void doDropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 
-    public final void dropAuthentication(HttpServletRequest request,
+    public final void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        doDropAuthentication(request, response);
+        doDropCredentials(request, response);
     }
 
     private Object setPath(final HttpServletRequest request) {

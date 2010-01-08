@@ -355,7 +355,7 @@ public class SlingAuthenticator implements Authenticator,
                     holder);
 
                 try {
-                    done = holder.requestAuthentication(request, response);
+                    done = holder.requestCredentials(request, response);
                 } catch (IOException ioe) {
                     log.error(
                         "login: Failed sending authentication request through handler "
@@ -395,7 +395,7 @@ public class SlingAuthenticator implements Authenticator,
                     holder);
 
                 try {
-                    holder.dropAuthentication(request, response);
+                    holder.dropCredentials(request, response);
                 } catch (IOException ioe) {
                     log.error(
                         "logout: Failed dropping authentication through handler "
@@ -523,7 +523,7 @@ public class SlingAuthenticator implements Authenticator,
         for (int i = 0; i < local.size(); i++) {
             AbstractAuthenticationHandlerHolder holder = local.get(i);
             if (pathInfo.startsWith(holder.path)) {
-                final AuthenticationInfo authInfo = holder.authenticate(
+                final AuthenticationInfo authInfo = holder.extractCredentials(
                     request, response);
                 if (authInfo != null) {
                     return authInfo;

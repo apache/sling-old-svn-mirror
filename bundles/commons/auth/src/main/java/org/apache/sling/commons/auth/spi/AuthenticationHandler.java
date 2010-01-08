@@ -97,7 +97,7 @@ public interface AuthenticationHandler {
      *         In case of {@link AuthenticationInfo#DOING_AUTH}, the method must
      *         have sent a response indicating that fact to the client.
      */
-    AuthenticationInfo authenticate(HttpServletRequest request,
+    AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response);
 
     /**
@@ -126,7 +126,7 @@ public interface AuthenticationHandler {
      * @throws IOException If an error occurrs sending the authentication
      *             inquiry to the client.
      */
-    boolean requestAuthentication(HttpServletRequest request,
+    boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 
     /**
@@ -138,6 +138,6 @@ public interface AuthenticationHandler {
      * @throws IOException If an error occurrs asking the client to drop any
      *             authentication traces.
      */
-    void dropAuthentication(HttpServletRequest request,
+    void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 }

@@ -46,7 +46,7 @@ public final class EngineAuthenticationHandlerHolder extends
         this.handler = handler;
     }
 
-    public AuthenticationInfo doAuthenticate(HttpServletRequest request,
+    public AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
         org.apache.sling.engine.auth.AuthenticationInfo engineAuthInfo = handler.authenticate(
@@ -65,12 +65,12 @@ public final class EngineAuthenticationHandlerHolder extends
         return info;
     }
 
-    public boolean doRequestAuthentication(HttpServletRequest request,
+    public boolean doRequestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         return handler.requestAuthentication(request, response);
     }
 
-    public void doDropAuthentication(HttpServletRequest request,
+    public void doDropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         // Engine AuthenticationHandler does not have this method
     }
