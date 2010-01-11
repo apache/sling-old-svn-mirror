@@ -103,6 +103,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
         // ensure new node creation
         if (dstParent.hasNode(name)) {
             dstParent.getNode(name).remove();
+            dstParent.save();
         }
 
         // create new node
