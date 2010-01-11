@@ -96,6 +96,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
         }
 
         Iterator<Resource> resources = getApplyToResources(request);
+        Item destItem = null;
         if (resources == null) {
 
             // ensure we have an item underlying the request's resource
@@ -107,7 +108,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             }
 
             String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
-            execute(changes, item, dstParent, dstName);
+            destItem = execute(changes, item, dstParent, dstName);
 
         } else {
 
@@ -129,11 +130,12 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
                     execute(changes, item, dstParent, null);
                 }
             }
+            destItem = session.getItem(dest);
 
         }
 
         // finally apply the ordering parameter
-        orderNode(request, session.getItem(dest), changes);
+        orderNode(request, destItem, changes);
     }
 
     /**
@@ -154,7 +156,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
      * @throws RepositoryException May be thrown if an error occurrs executing
      *             the operation.
      */
-    protected abstract void execute(List<Modification> changes, Item source,
+    protected abstract Item execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException;
 
 }
