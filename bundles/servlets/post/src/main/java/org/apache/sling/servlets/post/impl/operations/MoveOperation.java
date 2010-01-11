@@ -37,7 +37,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected void execute(List<Modification> changes, Item source,
+    protected Item execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException {
 
         if (destName == null) {
@@ -57,6 +57,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
 
         session.move(sourcePath, destPath);
         changes.add(Modification.onMoved(sourcePath, destPath));
+        return session.getItem(destPath);
     }
 
 }

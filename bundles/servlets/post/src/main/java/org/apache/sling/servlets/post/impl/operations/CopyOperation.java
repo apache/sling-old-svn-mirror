@@ -41,14 +41,15 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected void execute(List<Modification> changes, Item source,
+    protected Item execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException {
 
-        copy(source, (Node) source.getSession().getItem(destParent), destName);
+        Item destItem = copy(source, (Node) source.getSession().getItem(destParent), destName);
 
         String dest = destParent + "/" + destName;
         changes.add(Modification.onCopied(source.getPath(), dest));
         log.debug("copy {} to {}", source, dest);
+        return destItem;
     }
 
     /**
@@ -66,12 +67,12 @@ public class CopyOperation extends AbstractCopyMoveOperation {
      * @see #copy(Node, Node, String)
      * @see #copy(Property, Node, String)
      */
-    static void copy(Item src, Node dstParent, String name)
+    static Item copy(Item src, Node dstParent, String name)
             throws RepositoryException {
         if (src.isNode()) {
-            copy((Node) src, dstParent, name);
+            return copy((Node) src, dstParent, name);
         } else {
-            copy((Property) src, dstParent, name);
+            return copy((Property) src, dstParent, name);
         }
     }
 
@@ -92,7 +93,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
      * @throws RepositoryException May be thrown in case of any problem copying
      *             the content.
      */
-    static void copy(Node src, Node dstParent, String name)
+    static Item copy(Node src, Node dstParent, String name)
             throws RepositoryException {
 
         // ensure destination name
@@ -103,7 +104,6 @@ public class CopyOperation extends AbstractCopyMoveOperation {
         // ensure new node creation
         if (dstParent.hasNode(name)) {
             dstParent.getNode(name).remove();
-            dstParent.save();
         }
 
         // create new node
@@ -124,6 +124,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
                 copy(n, dst, null);
             }
         }
+        return dst;
     }
 
     /**
@@ -141,7 +142,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
      * @throws RepositoryException May be thrown in case of any problem copying
      *             the content.
      */
-    static void copy(Property src, Node dstParent, String name)
+    static Item copy(Property src, Node dstParent, String name)
             throws RepositoryException {
         if (!src.getDefinition().isProtected()) {
             if (name == null) {
@@ -154,11 +155,12 @@ public class CopyOperation extends AbstractCopyMoveOperation {
             }
 
             if (src.getDefinition().isMultiple()) {
-                dstParent.setProperty(name, src.getValues());
+                return dstParent.setProperty(name, src.getValues());
             } else {
-                dstParent.setProperty(name, src.getValue());
+                return dstParent.setProperty(name, src.getValue());
             }
         }
+        return null;
     }
 
 }
