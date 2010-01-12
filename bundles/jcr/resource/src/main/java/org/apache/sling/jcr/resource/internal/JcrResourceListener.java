@@ -39,10 +39,15 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The <code>JcrResourceListener</code> listens for JCR observation
+ * events and creates resource events which are sent through the
+ * OSGi event admin.
+ */
 public class JcrResourceListener implements EventListener {
 
     /** Logger */
-    private static final Logger LOGGER = LoggerFactory.getLogger(JcrResourceListener.class);
+    private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
 
     /** The session for observation. */
     private final Session session;
@@ -57,8 +62,17 @@ public class JcrResourceListener implements EventListener {
     private final ResourceResolver resolver;
 
     /** The event admin tracker. */
-    private ServiceTracker eventAdminTracker;
+    private final ServiceTracker eventAdminTracker;
 
+    /**
+     * Constructor.
+     * @param repository The repository to observe.
+     * @param factory    The resource resolver factory.
+     * @param startPath  The observation root path
+     * @param mountPrefix The mount path in the repository
+     * @param eventAdminTracker The service tracker for the event admin.
+     * @throws RepositoryException
+     */
     public JcrResourceListener(final SlingRepository repository,
                                final JcrResourceResolverFactory factory,
                                final String startPath,
@@ -75,11 +89,14 @@ public class JcrResourceListener implements EventListener {
             this.startPath, true, null, null, false);
     }
 
+    /**
+     * Dispose this listener.
+     */
     public void dispose() {
         try {
             this.session.getWorkspace().getObservationManager().removeEventListener(this);
         } catch (RepositoryException e) {
-            LOGGER.warn("Unable to remove session listener: " + this, e);
+            logger.warn("Unable to remove session listener: " + this, e);
         }
         this.session.logout();
     }
@@ -88,6 +105,7 @@ public class JcrResourceListener implements EventListener {
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
     public void onEvent(EventIterator events) {
+        // if the event admin is currently not available, we just skip this
         final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
         if ( localEA == null ) {
             return;
@@ -119,56 +137,45 @@ public class JcrResourceListener implements EventListener {
                     }
                 }
             } catch (RepositoryException e) {
-                LOGGER.error("Error during modification: {}", e.getMessage());
+                logger.error("Error during modification: {}", e.getMessage());
             }
         }
-        // remove is the strongest oberation, therefore remove all removed
+        // remove is the strongest operation, therefore remove all removed
         // paths from changed and added
         addedPaths.removeAll(removedPaths);
         changedPaths.removeAll(removedPaths);
         // add is stronger than changed
         changedPaths.removeAll(addedPaths);
 
-        // send events
-        for(final String path : addedPaths) {
-            final Resource resource = this.resolver.getResource(path);
-            if ( resource != null ) {
-                final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, path);
-                final String resourceType = resource.getResourceType();
-                final String resourceSuperType = resource.getResourceSuperType();
-                if ( resourceType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                }
-                if ( resourceSuperType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
-                }
+        // send events for added and changed
+        sendEvents(addedPaths, SlingConstants.TOPIC_RESOURCE_ADDED, localEA);
+        sendEvents(changedPaths, SlingConstants.TOPIC_RESOURCE_CHANGED, localEA);
 
-                localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_ADDED, properties));
-            }
-        }
-        for(final String path : changedPaths) {
-            final Resource resource = this.resolver.getResource(path);
-            if ( resource != null ) {
-                final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, path);
-                final String resourceType = resource.getResourceType();
-                final String resourceSuperType = resource.getResourceSuperType();
-                if ( resourceType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                }
-                if ( resourceSuperType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
-                }
-
-                localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_CHANGED, properties));
-            }
-        }
+        // send events for removed
         for(final String path : removedPaths) {
             final Dictionary<String, String> properties = new Hashtable<String, String>();
             properties.put(SlingConstants.PROPERTY_PATH, path);
 
             localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
+        }
+    }
+
+    private void sendEvents(final Set<String> paths, final String topic, final EventAdmin localEA) {
+        for(final String path : paths) {
+            final Resource resource = this.resolver.getResource(path);
+            if ( resource != null ) {
+                final Dictionary<String, String> properties = new Hashtable<String, String>();
+                properties.put(SlingConstants.PROPERTY_PATH, path);
+                final String resourceType = resource.getResourceType();
+                if ( resourceType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                }
+                final String resourceSuperType = resource.getResourceSuperType();
+                if ( resourceSuperType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                }
+                localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
+            }
         }
     }
 }
