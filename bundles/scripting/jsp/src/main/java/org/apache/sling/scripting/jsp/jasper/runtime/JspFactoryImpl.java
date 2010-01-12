@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,9 +43,10 @@ public class JspFactoryImpl extends JspFactory {
     private Log log = LogFactory.getLog(JspFactoryImpl.class);
 
     private static final String SPEC_VERSION = "2.1";
-    private static final boolean USE_POOL = 
-        Boolean.valueOf(System.getProperty("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL", "true")).booleanValue();
-    private static final int POOL_SIZE = 
+    private static final boolean USE_POOL = false;
+        //Boolean.valueOf(System.getProperty("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL", "false")).booleanValue();
+
+        private static final int POOL_SIZE =
         Integer.valueOf(System.getProperty("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.POOL_SIZE", "8")).intValue();
 
     private ThreadLocal<PageContextPool> localPool = new ThreadLocal<PageContextPool>();
@@ -56,7 +57,7 @@ public class JspFactoryImpl extends JspFactory {
 
         if( Constants.IS_SECURITY_ENABLED ) {
             PrivilegedGetPageContext dp = new PrivilegedGetPageContext(
-                    (JspFactoryImpl)this, servlet, request, response, errorPageURL,
+                    this, servlet, request, response, errorPageURL,
                     needsSession, bufferSize, autoflush);
             return (PageContext)AccessController.doPrivileged(dp);
         } else {
@@ -71,7 +72,7 @@ public class JspFactoryImpl extends JspFactory {
             return;
         if( Constants.IS_SECURITY_ENABLED ) {
             PrivilegedReleasePageContext dp = new PrivilegedReleasePageContext(
-                    (JspFactoryImpl)this,pc);
+                    this,pc);
             AccessController.doPrivileged(dp);
         } else {
             internalReleasePageContext(pc);
@@ -104,7 +105,7 @@ public class JspFactoryImpl extends JspFactory {
             } else {
                 pc = new PageContextImpl();
             }
-            pc.initialize(servlet, request, response, errorPageURL, 
+            pc.initialize(servlet, request, response, errorPageURL,
                     needsSession, bufferSize, autoflush);
             return pc;
         } catch (Throwable ex) {
