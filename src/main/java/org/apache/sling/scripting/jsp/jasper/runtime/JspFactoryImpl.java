@@ -43,13 +43,6 @@ public class JspFactoryImpl extends JspFactory {
     private Log log = LogFactory.getLog(JspFactoryImpl.class);
 
     private static final String SPEC_VERSION = "2.1";
-    private static final boolean USE_POOL = false;
-        //Boolean.valueOf(System.getProperty("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL", "false")).booleanValue();
-
-        private static final int POOL_SIZE =
-        Integer.valueOf(System.getProperty("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.POOL_SIZE", "8")).intValue();
-
-    private ThreadLocal<PageContextPool> localPool = new ThreadLocal<PageContextPool>();
 
     public PageContext getPageContext(Servlet servlet, ServletRequest request,
             ServletResponse response, String errorPageURL, boolean needsSession,
@@ -91,20 +84,7 @@ public class JspFactoryImpl extends JspFactory {
             ServletResponse response, String errorPageURL, boolean needsSession,
             int bufferSize, boolean autoflush) {
         try {
-            PageContext pc;
-            if (USE_POOL) {
-                PageContextPool pool = localPool.get();
-                if (pool == null) {
-                    pool = new PageContextPool();
-                    localPool.set(pool);
-                }
-                pc = pool.get();
-                if (pc == null) {
-                    pc = new PageContextImpl();
-                }
-            } else {
-                pc = new PageContextImpl();
-            }
+            PageContext pc = new PageContextImpl();
             pc.initialize(servlet, request, response, errorPageURL,
                     needsSession, bufferSize, autoflush);
             return pc;
@@ -117,9 +97,6 @@ public class JspFactoryImpl extends JspFactory {
 
     private void internalReleasePageContext(PageContext pc) {
         pc.release();
-        if (USE_POOL && (pc instanceof PageContextImpl)) {
-            localPool.get().put(pc);
-        }
     }
 
     private class PrivilegedGetPageContext implements PrivilegedAction {
@@ -167,34 +144,6 @@ public class JspFactoryImpl extends JspFactory {
             factory.internalReleasePageContext(pageContext);
             return null;
         }
-    }
-
-    protected final class PageContextPool  {
-
-        private PageContext[] pool;
-
-        private int current = -1;
-
-        public PageContextPool() {
-            this.pool = new PageContext[POOL_SIZE];
-        }
-
-        public void put(PageContext o) {
-            if (current < (POOL_SIZE - 1)) {
-                current++;
-                pool[current] = o;
-            }
-        }
-
-        public PageContext get() {
-            PageContext item = null;
-            if (current >= 0) {
-                item = pool[current];
-                current--;
-            }
-            return item;
-        }
-
     }
 
     public JspApplicationContext getJspApplicationContext(ServletContext context) {
