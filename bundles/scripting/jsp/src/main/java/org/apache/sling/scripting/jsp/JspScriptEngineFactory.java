@@ -191,8 +191,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
         try {
             // prepare some classes
-            prepareJasperClasses();
-
             ioProvider = new SlingIOProvider(classLoaderWriter);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
@@ -301,24 +299,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
     private void ungetClassLoader() {
         this.jspClassLoader = null;
         this.dynamicClassLoaderManager = null;
-    }
-
-    private void prepareJasperClasses() {
-        final String propName = "org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL";
-        final String propValue = System.getProperty(propName);
-        try {
-            // hacky wacky to prevent PageContext pooling !!!
-            System.setProperty(propName, "false");
-            jspClassLoader.loadClass("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl");
-        } catch (Throwable t) {
-            // don't care for now
-        } finally {
-            if (propValue != null) {
-                System.setProperty(propName, propValue);
-            } else {
-                System.clearProperty(propName);
-            }
-        }
     }
 
     // ---------- Internal -----------------------------------------------------
