@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,25 +38,13 @@ public class TagHandlerPool {
     public static String OPTION_MAXSIZE="tagpoolMaxSize";
 
     private Log log = LogFactory.getLog(TagHandlerPool.class);
-    
+
     // index of next available tag handler
     private int current;
     protected AnnotationProcessor annotationProcessor = null;
 
     public static TagHandlerPool getTagHandlerPool( ServletConfig config) {
-        TagHandlerPool result=null;
-
-        String tpClassName=getOption( config, OPTION_TAGPOOL, null);
-        if( tpClassName != null ) {
-            try {
-                Class c=Class.forName( tpClassName );
-                result=(TagHandlerPool)c.newInstance();
-            } catch (Exception e) {
-                e.printStackTrace();
-                result=null;
-            }
-        }
-        if( result==null ) result=new TagHandlerPool();
+        final TagHandlerPool result = new TagHandlerPool();
         result.init(config);
 
         return result;
@@ -77,7 +65,7 @@ public class TagHandlerPool {
         }
         this.handlers = new Tag[maxSize];
         this.current = -1;
-        this.annotationProcessor = 
+        this.annotationProcessor =
             (AnnotationProcessor) config.getServletContext().getAttribute(AnnotationProcessor.class.getName());
     }
 
@@ -95,6 +83,7 @@ public class TagHandlerPool {
      * @param capacity Tag handler pool capacity
      * @deprecated Use static getTagHandlerPool
      */
+    @Deprecated
     public TagHandlerPool(int capacity) {
 	this.handlers = new Tag[capacity];
 	this.current = -1;
@@ -150,7 +139,7 @@ public class TagHandlerPool {
             try {
                 AnnotationHelper.preDestroy(annotationProcessor, handler);
             } catch (Exception e) {
-                log.warn("Error processing preDestroy on tag instance of " 
+                log.warn("Error processing preDestroy on tag instance of "
                         + handler.getClass().getName(), e);
             }
         }
@@ -167,7 +156,7 @@ public class TagHandlerPool {
                 try {
                     AnnotationHelper.preDestroy(annotationProcessor, handlers[i]);
                 } catch (Exception e) {
-                    log.warn("Error processing preDestroy on tag instance of " 
+                    log.warn("Error processing preDestroy on tag instance of "
                             + handlers[i].getClass().getName(), e);
                 }
             }
