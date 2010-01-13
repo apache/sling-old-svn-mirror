@@ -119,7 +119,7 @@ public class ScriptHelper implements SlingScriptHelper {
     public void include(String path, RequestDispatcherOptions options) {
         final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
             path, options);
-        
+
         if (dispatcher != null) {
             try {
                 dispatcher.include(getRequest(), getResponse());
@@ -130,7 +130,7 @@ public class ScriptHelper implements SlingScriptHelper {
             }
         }
     }
-    
+
     /** Forward the request to another resource, using no options */
     public void forward(String path) {
         forward(path, (RequestDispatcherOptions) null);
@@ -166,9 +166,11 @@ public class ScriptHelper implements SlingScriptHelper {
         if (service == null) {
             final ServiceReference ref = this.bundleContext.getServiceReference(type.getName());
             if (ref != null) {
-                this.references.add(ref);
                 service = (ServiceType) this.bundleContext.getService(ref);
-                this.services.put(type.getName(), service);
+                if ( service != null ) {
+                    this.references.add(ref);
+                    this.services.put(type.getName(), service);
+                }
             }
         }
         return service;
