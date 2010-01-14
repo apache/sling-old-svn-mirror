@@ -37,26 +37,33 @@ public class FileBundleVersionInfo extends BundleVersionInfo<File> {
     
     public FileBundleVersionInfo(File bundle) throws IOException {
         source = bundle;
-        final Manifest m = new JarFile(bundle).getManifest();
-        if(m == null) {
-            symbolicName = null;
-            version = null;
-            isSnapshot = false;
-            lastModified = BND_LAST_MODIFIED_MISSING;
-        } else {
-            symbolicName = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-            final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-            version = v == null ? null : new Version(v);
-            isSnapshot = v != null && v.contains(SNAPSHOT_MARKER);
-            final String last = m.getMainAttributes().getValue(BND_LAST_MODIFIED);
-            long lastMod = BND_LAST_MODIFIED_MISSING;
-            if(last != null) {
-                try {
-                    lastMod = Long.parseLong(last);
-                } catch(NumberFormatException ignore) {
+        final JarFile f = new JarFile(bundle);
+        try {
+            final Manifest m = f.getManifest();
+            if(m == null) {
+                symbolicName = null;
+                version = null;
+                isSnapshot = false;
+                lastModified = BND_LAST_MODIFIED_MISSING;
+            } else {
+                symbolicName = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+                version = v == null ? null : new Version(v);
+                isSnapshot = v != null && v.contains(SNAPSHOT_MARKER);
+                final String last = m.getMainAttributes().getValue(BND_LAST_MODIFIED);
+                long lastMod = BND_LAST_MODIFIED_MISSING;
+                if(last != null) {
+                    try {
+                        lastMod = Long.parseLong(last);
+                    } catch(NumberFormatException ignore) {
+                    }
                 }
+                lastModified = lastMod;
             }
-            lastModified = lastMod;
+        } finally {
+            if(f != null) {
+                f.close();
+            }
         }
     }
     
