@@ -187,7 +187,9 @@ public class Loader {
 
             if(installNewLauncher) {
                 final File f = new File(tmp.getParentFile(), SharedConstants.LAUNCHER_JAR_REL_PATH + "." + System.currentTimeMillis());
-                tmp.renameTo(f);
+                if(!tmp.renameTo(f)) {
+                    throw new IllegalStateException("Failed to rename " + tmp.getName() + " to " + f.getName());
+                }
                 info("Installing new launcher: " + launcherJar  + ", " + getBundleInfo(newVi) + " (" + f.getName() + ")");
             }
         } finally {
