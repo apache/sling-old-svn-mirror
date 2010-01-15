@@ -40,6 +40,7 @@ class ResolutionTestBase extends HttpTestBase {
   public static final String PREFIX_M1_SERVLET_SUFFIX = "testservices.servlets.PrefixServletMinusOne";
   public static final String PUT_SERVLET_SUFFIX = "testservices.servlets.PutMethodServlet";
   public static final String REQUEST_URI_OPTING_SERVLET_SUFFIX = "testservices.servlets.RequestUriOptingServlet";
+  public static final String PATHS_SERVLET_SUFFIX = "testservices.servlets.PathsServlet";
   
   protected TestNode testNodeNORT;
   protected TestNode testNodeRT;
