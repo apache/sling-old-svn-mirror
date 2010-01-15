@@ -84,7 +84,7 @@ public class CompilationUnit
             final Reader reader = new BufferedReader(new InputStreamReader(fr, this.options.getJavaEncoding()));
             try {
                 char[] chars = new char[8192];
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 int count;
                 while ((count = reader.read(chars, 0, chars.length)) > 0) {
                     buf.append(chars, 0, count);
@@ -128,7 +128,7 @@ public class CompilationUnit
      * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#findType(char[][])
      */
     public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < compoundTypeName.length; i++) {
             if (i > 0) {
                 result.append(".");
@@ -142,7 +142,7 @@ public class CompilationUnit
      * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#findType(char[], char[][])
      */
     public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < packageName.length; i++) {
             if (i > 0) {
                 result.append(".");
@@ -213,7 +213,7 @@ public class CompilationUnit
      * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#isPackage(char[][], char[])
      */
     public boolean isPackage(char[][] parentPackageName, char[] packageName) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (parentPackageName != null) {
             for (int i = 0; i < parentPackageName.length; i++) {
                 if (i > 0) {
@@ -254,7 +254,7 @@ public class CompilationUnit
                 for (int i = 0; i < classFiles.length; i++) {
                     ClassFile classFile = classFiles[i];
                     char[][] compoundName = classFile.getCompoundName();
-                    StringBuffer className = new StringBuffer();
+                    StringBuilder className = new StringBuilder();
                     for (int j = 0;  j < compoundName.length; j++) {
                         if (j > 0) {
                             className.append(".");
@@ -262,7 +262,7 @@ public class CompilationUnit
                         className.append(compoundName[j]);
                     }
                     byte[] bytes = classFile.getBytes();
-                    final StringBuffer b = new StringBuffer(this.options.getDestinationPath());
+                    final StringBuilder b = new StringBuilder(this.options.getDestinationPath());
                     b.append('/');
                     b.append(className.toString().replace('.', '/'));
                     b.append(".class");

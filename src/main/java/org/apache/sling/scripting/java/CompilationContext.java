@@ -211,7 +211,7 @@ public class CompilationContext {
     protected final static class CompilerException extends ServletException {
 
         public static CompilerException create(List<CompilerError> errors) {
-            final StringBuffer buffer = new StringBuffer();
+            final StringBuilder buffer = new StringBuilder();
             buffer.append("Compilation errors:\n");
             for(final CompilerError e : errors) {
                 buffer.append(e.getFile());
