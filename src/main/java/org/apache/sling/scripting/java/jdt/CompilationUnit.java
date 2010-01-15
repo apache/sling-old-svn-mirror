@@ -197,7 +197,15 @@ public class CompilationUnit
             return false;
         }
         String resourceName = result.replace('.', '/') + ".class";
-        InputStream is = options.getClassLoader().getResourceAsStream(resourceName);
+        if ( resourceName.startsWith("/") ) {
+            resourceName = resourceName.substring(1);
+        }
+        final InputStream is = options.getClassLoader().getResourceAsStream(resourceName);
+        if ( is != null ) {
+            try {
+                is.close();
+            } catch (IOException ignore) {}
+        }
         return is == null;
     }
 
