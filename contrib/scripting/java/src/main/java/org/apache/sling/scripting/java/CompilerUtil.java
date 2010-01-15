@@ -59,8 +59,8 @@ public class CompilerUtil {
      * @return Legal Java identifier corresponding to the given identifier
      */
     public static final String makeJavaIdentifier(String identifier) {
-        StringBuffer modifiedIdentifier =
-            new StringBuffer(identifier.length());
+        StringBuilder modifiedIdentifier =
+            new StringBuilder(identifier.length());
         if (!Character.isJavaIdentifierStart(identifier.charAt(0))) {
             modifiedIdentifier.append('_');
         }
