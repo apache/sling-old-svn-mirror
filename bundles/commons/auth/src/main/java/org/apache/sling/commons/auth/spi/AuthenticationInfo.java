@@ -26,7 +26,7 @@ import javax.jcr.SimpleCredentials;
 /**
  * The <code>AuthenticationInfo</code> conveys any authentication credentials
  * and/or details extracted by the
- * {@link AuthenticationHandler#authenticate(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+ * {@link AuthenticationHandler#extractCredentials(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
  * method from the request.
  * <p>
  * {@link AuthenticationHandler} implementations must return instances of this
@@ -42,7 +42,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
 
     /**
      * A special instance of this class which is returned by the
-     * {@link AuthenticationHandler#authenticate(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+     * {@link AuthenticationHandler#extractCredentials(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
      * method to inform the caller, that a response has been sent to the client
      * to request for credentials.
      * <p>

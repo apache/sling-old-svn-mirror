@@ -26,9 +26,9 @@ import javax.servlet.http.HttpServletResponse;
  * authenticator used by the Sling engine. This service provides a method to
  * find an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler
  * AuthenticationHandler} and call its
- * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestAuthentication(HttpServletRequest, HttpServletResponse)
+ * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)
  * requestAuthentication} or
- * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropAuthentication(HttpServletRequest, HttpServletResponse)
+ * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials(HttpServletRequest, HttpServletResponse)
  * dropAuthentication} methods.
  * <p>
  * This service is used by applications which want to provide functionality to
@@ -93,7 +93,7 @@ public interface Authenticator {
     /**
      * Finds an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
      * for the given request and call its
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestAuthentication(HttpServletRequest, HttpServletResponse)}
+     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
      * method to initiate an authentication process with the client to login to
      * Sling.
      * <p>
@@ -116,7 +116,7 @@ public interface Authenticator {
     /**
      * Finds an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
      * for the given request and call its
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropAuthentication(HttpServletRequest, HttpServletResponse)}
+     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials(HttpServletRequest, HttpServletResponse)}
      * method to drop authentication credentials for the client to logout from
      * Sling.
      * <p>
