@@ -266,6 +266,14 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 // If an object with same sort key is already present, replace with the
                 // new one which might have different attributes
                 if(t.contains(r)) {
+                	for(RegisteredResource rr : t) {
+                		if(t.comparator().compare(rr, r) == 0) {
+                			if(ctx.getLogService()!= null) {
+                				ctx.getLogService().log(LogService.LOG_DEBUG, "Cleanup obsolete " + rr);
+                			}
+                			rr.cleanup(ctx.getBundleContext());
+                		}
+                	}
                     t.remove(r);
                 }
                 t.add(r);
@@ -353,7 +361,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         return counter;
     }
     
-    private void cleanupInstallableResources() {
+    private void cleanupInstallableResources() throws IOException {
         // Cleanup resources that are not marked installable,
         // they have been processed by now
         int resourceCount = 0;
@@ -389,6 +397,9 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         ctx.setCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, resourceCount);
         ctx.setCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, registeredResources.size());
         ctx.incrementCounter(OsgiInstaller.INSTALLER_CYCLES_COUNTER);
+        
+        // List of resources might have changed
+        persistentList.save();
     }
     
     /** If we have any tasks waiting to be retried, schedule their execution */
