@@ -556,7 +556,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // If we get here, anonymous access is not allowed: redirect
         // to the login servlet
-        log.info("getAnonymousSession: Anonymous access not allowed by configuration - redirecting to login");
+        log.info("getAnonymousSession: Anonymous access not allowed by configuration - requesting credentials");
         login(req, res);
 
         // fallback to no session
