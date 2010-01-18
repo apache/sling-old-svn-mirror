@@ -213,22 +213,25 @@ public class CompilationUnit
      * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#isPackage(char[][], char[])
      */
     public boolean isPackage(char[][] parentPackageName, char[] packageName) {
-        StringBuilder result = new StringBuilder();
+        if (Character.isUpperCase(packageName[0])) {
+            return false;
+        }
+        final StringBuilder builder = new StringBuilder();
         if (parentPackageName != null) {
             for (int i = 0; i < parentPackageName.length; i++) {
                 if (i > 0) {
-                    result.append(".");
+                    builder.append(".");
                 }
-                result.append(parentPackageName[i]);
+                builder.append(parentPackageName[i]);
             }
         }
-        String str = new String(packageName);
-        if (Character.isUpperCase(str.charAt(0)) && !isPackage(result.toString())) {
-                return false;
+        if (!isPackage(builder.toString())) {
+            return false;
         }
-        result.append(".");
-        result.append(str);
-        return isPackage(result.toString());
+        builder.append(".");
+        builder.append(packageName);
+
+        return isPackage(builder.toString());
     }
 
     /**
