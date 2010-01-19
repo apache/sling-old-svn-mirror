@@ -792,7 +792,12 @@ public class SlingAuthenticator implements Authenticator,
         if (sudo != null && sudo.length() > 0) {
             final SimpleCredentials creds = new SimpleCredentials(sudo, new char[0]);
             creds.setAttribute(ATTR_IMPERSONATOR, authUser);
-            session = session.impersonate(creds);
+            final Session impersonated = session.impersonate(creds);
+
+            // logout the original session and replace with impersonated
+            // session.
+            session.logout();
+            session = impersonated;
         }
         // invariant: same session or successful impersonation
 
