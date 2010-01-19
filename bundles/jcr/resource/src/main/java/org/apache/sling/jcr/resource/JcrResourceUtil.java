@@ -305,7 +305,6 @@ public class JcrResourceUtil {
                             }
                             if ( autoSave ) node.save();
                         } catch (RepositoryException re) {
-                            re.printStackTrace();
                             // we ignore this as this folder might be created from a different task
                             node.refresh(false);
                         }
