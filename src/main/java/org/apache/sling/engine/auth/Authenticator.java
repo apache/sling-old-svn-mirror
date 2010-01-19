@@ -32,9 +32,11 @@ import javax.servlet.http.HttpServletResponse;
  * used to initiate the authentication process form a request processing servlet
  * or script.
  *
- * @since 2.0.4
+ * @since 2.0.4 This is version of the sling engine module where these classes where
+ *              hosted before.
  * @deprecated use {@link org.apache.sling.commons.auth.Authenticator} instead
  */
+@Deprecated
 public interface Authenticator {
 
     /**

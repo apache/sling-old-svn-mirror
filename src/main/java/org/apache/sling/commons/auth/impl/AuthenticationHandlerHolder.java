@@ -31,7 +31,6 @@ import org.apache.sling.commons.auth.spi.AuthenticationInfo;
  * authentication handler service in the internal data structure of the
  * {@link SlingAuthenticator}.
  *
- * @since 2.1
  */
 final class AuthenticationHandlerHolder extends
         AbstractAuthenticationHandlerHolder {

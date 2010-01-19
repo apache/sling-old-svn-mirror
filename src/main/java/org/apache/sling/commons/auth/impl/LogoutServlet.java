@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.methods" values.0="GET" values.1="POST"
  *
- * @since 2.1
  */
 public class LogoutServlet extends SlingAllMethodsServlet {
 
