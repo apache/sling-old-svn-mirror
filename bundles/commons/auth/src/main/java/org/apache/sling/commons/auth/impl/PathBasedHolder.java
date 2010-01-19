@@ -23,7 +23,6 @@ package org.apache.sling.commons.auth.impl;
  * authentication handler service in the internal data structure of the
  * {@link SlingAuthenticator}.
  *
- * @since 2.1
  */
 public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
 
