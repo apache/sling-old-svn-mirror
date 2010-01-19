@@ -40,10 +40,10 @@ import org.osgi.service.component.ComponentContext;
 class MiscUtil {
 
     static final Mockery mockery = new Mockery();
-    
+
     public static String SEARCH_PATHS [] = { "/libs/", "/apps/" };
     public static String RUN_MODES [] = { "dev", "staging" };
-    
+
     static class MockResourceResolver implements ResourceResolver {
 
         public Iterator<Resource> findResources(String arg0, String arg1) {
@@ -70,6 +70,16 @@ class MiscUtil {
             return null;
         }
 
+        public String map(HttpServletRequest request, String resourcePath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public Resource resolve(HttpServletRequest request, String absPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
         public Iterator<Map<String, Object>> queryResources(String arg0,
                 String arg1) {
             return null;
@@ -87,15 +97,15 @@ class MiscUtil {
             return null;
         }
     }
-    
+
     /** Set a non-public Field */
     static void setField(Object target, String fieldName, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
         final Field f = target.getClass().getDeclaredField(fieldName);
         f.setAccessible(true);
         f.set(target, value);
     }
-    
-    /** Return a JcrInstaller setup for testing */ 
+
+    /** Return a JcrInstaller setup for testing */
     static JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller) throws Exception {
         final JcrInstaller installer = new JcrInstaller();
         setField(installer, "repository", repository);
@@ -105,12 +115,12 @@ class MiscUtil {
         installer.activate(getMockComponentContext());
         return installer;
     }
-    
+
     static ComponentContext getMockComponentContext() {
         // Setup fake ComponentContext to allow JcrInstaller to start
         final ComponentContext cc = mockery.mock(ComponentContext.class);
         final BundleContext bc = mockery.mock(BundleContext.class);
-        
+
         final Dictionary<String, Object> emptyDict = new Hashtable<String, Object>();
         mockery.checking(new Expectations() {{
             allowing(cc).getProperties();
@@ -122,7 +132,7 @@ class MiscUtil {
         }});
         return cc;
     }
-    
+
     static private void waitForCycles(JcrInstaller installer, long initialCycleCount, int expectedCycles, long timeoutMsec) throws Exception {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
         long cycles = 0;
@@ -132,9 +142,9 @@ class MiscUtil {
                 return;
             }
         }
-        throw new Exception("did not get " + expectedCycles + " installer cycles in " + timeoutMsec + " msec, got " + cycles); 
+        throw new Exception("did not get " + expectedCycles + " installer cycles in " + timeoutMsec + " msec, got " + cycles);
     }
-    
+
     /** Get the WatchedFolders of supplied JcrInstaller */
     @SuppressWarnings({ "unchecked"})
     static Collection<WatchedFolder> getWatchedFolders(JcrInstaller installer) throws Exception {
@@ -142,11 +152,11 @@ class MiscUtil {
         f.setAccessible(true);
         return (Collection<WatchedFolder>)f.get(installer);
     }
-    
-    /** Wait long enough for all changes in content to be processed by JcrInstaller */ 
+
+    /** Wait long enough for all changes in content to be processed by JcrInstaller */
     static void waitAfterContentChanges(EventHelper eventHelper, JcrInstaller installer) throws Exception {
         final long startCycles = installer.getCounters()[JcrInstaller.RUN_LOOP_COUNTER];
-        
+
         // First wait for all JCR events to be delivered
         eventHelper.waitForEvents(5000L);
         // RescanTimer causes a SCAN_DELAY_MSEC wait after JCR events are received
@@ -154,7 +164,7 @@ class MiscUtil {
         // And wait for a few JcrInstaller run cycles
         MiscUtil.waitForCycles(installer, startCycles, 2, 10000L);
     }
-    
+
     /** Wait until installer thread exits */
     static void waitForInstallerThread(JcrInstaller installer, long timeoutMsec) throws Exception {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
@@ -163,6 +173,6 @@ class MiscUtil {
                 return;
             }
         }
-        throw new Exception("JcrInstaller thread did not signal its end (timeout=" + timeoutMsec + " msec)"); 
+        throw new Exception("JcrInstaller thread did not signal its end (timeout=" + timeoutMsec + " msec)");
     }
 }
