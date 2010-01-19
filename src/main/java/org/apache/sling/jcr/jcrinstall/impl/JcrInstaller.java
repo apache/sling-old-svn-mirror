@@ -64,19 +64,19 @@ public class JcrInstaller implements EventListener {
 	public static final String URL_SCHEME = "jcrinstall";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	
+
 	/** Counters, used for statistics and testing */
 	private final long [] counters = new long[COUNTERS_COUNT];
 	public static final int SCAN_FOLDERS_COUNTER = 0;
     public static final int UPDATE_FOLDERS_LIST_COUNTER = 1;
     public static final int RUN_LOOP_COUNTER = 2;
     public static final int COUNTERS_COUNT = 3;
-    
-    /**	This class watches the repository for installable resources  
-     * @scr.reference 
+
+    /**	This class watches the repository for installable resources
+     * @scr.reference
      */
     private SlingRepository repository;
-    
+
     /** Additional installation folders are activated based
      *  on the current RunMode. For example, /libs/foo/install.dev
      *  if the current run mode is "dev".
@@ -84,28 +84,28 @@ public class JcrInstaller implements EventListener {
      */
     private RunMode runMode;
 
-    /**	The OsgiInstaller installs resources in the OSGi framework. 
-     * 	@scr.reference 
+    /**	The OsgiInstaller installs resources in the OSGi framework.
+     * 	@scr.reference
      */
     private OsgiInstaller installer;
-    
+
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
 
-    /** ComponentContext property that overrides the folder name regexp 
+    /** ComponentContext property that overrides the folder name regexp
      * 	@scr.property valueRef="DEFAULT_FOLDER_NAME_REGEXP"
      */
     public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
-    
+
     /** Configurable max. path depth for watched folders
      *  @scr.property valueRef="DEFAULT_FOLDER_MAX_DEPTH" type="Integer"
      */
     public static final String PROP_INSTALL_FOLDER_MAX_DEPTH = "sling.jcrinstall.folder.max.depth";
-    
-    /**	Configurable search path, with per-path priorities. 
-     *  We could get it from the ResourceResolver, but introducing a dependency on this just to get those 
+
+    /**	Configurable search path, with per-path priorities.
+     *  We could get it from the ResourceResolver, but introducing a dependency on this just to get those
      *  values is too much for this module that's meant to bootstrap other services.
-     * 
+     *
      * 	@scr.property values.1="/libs:100" values.2="/apps:200"
      */
     public static final String PROP_SEARCH_PATH = "sling.jcrinstall.search.path";
@@ -116,33 +116,33 @@ public class JcrInstaller implements EventListener {
 
     /** Filter for folder names */
     private FolderNameFilter folderNameFilter;
-    
+
     /** List of watched folders */
     private List<WatchedFolder> watchedFolders;
-    
+
     /** Session shared by all WatchedFolder */
     private Session session;
-    
+
     /** The root folders that we watch */
     private String [] roots;
-    
+
     /** Path of newly created root folders */
     private Set<String> newRoots = new HashSet<String>();
-    
+
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(String urlScheme, Node n) throws Exception;
     }
-    
+
     /** Our NodeConverters*/
     private final Collection <NodeConverter> converters = new ArrayList<NodeConverter>();
-    
+
     /** Detect newly created folders that we must watch */
     private final List<RootFolderListener> listeners = new LinkedList<RootFolderListener>();
-    
+
     /** Timer used to call updateFoldersList() */
     private final RescanTimer updateFoldersListTimer = new RescanTimer();
-    
+
     /** Thread that can be cleanly stopped with a flag */
     static int bgThreadCounter;
     class StoppableThread extends Thread {
@@ -153,7 +153,7 @@ public class JcrInstaller implements EventListener {
             }
             setDaemon(true);
         }
-        
+
         @Override
         public final void run() {
             log.info("Background thread {} starting", Thread.currentThread().getName());
@@ -167,16 +167,16 @@ public class JcrInstaller implements EventListener {
     private StoppableThread backgroundThread;
 
     protected void activate(ComponentContext context) throws Exception {
-    	
+
     	log.info("activate()");
-    	
+
     	session = repository.loginAdministrative(repository.getDefaultWorkspace());
     	newRoots.clear();
-    	
+
     	// Setup converters
     	converters.add(new FileNodeConverter());
     	converters.add(new ConfigNodeConverter());
-    	
+
     	// Configurable max depth, system property (via bundle context) overrides default value
     	Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
     	if(obj != null) {
@@ -187,7 +187,7 @@ public class JcrInstaller implements EventListener {
             maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
             log.info("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
     	}
-        
+
     	// Configurable folder regexp, system property overrides default value
     	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp != null) {
@@ -196,7 +196,7 @@ public class JcrInstaller implements EventListener {
     	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
             log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
-    	
+
     	// Setup folder filtering and watching
     	String [] rootsConfig = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
     	if(rootsConfig == null) {
@@ -207,7 +207,7 @@ public class JcrInstaller implements EventListener {
         for (String path : roots) {
             listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
         }
-        
+
     	// Get search paths, and make sure each part starts and ends with a /
         if (roots == null) {
         }
@@ -222,7 +222,7 @@ public class JcrInstaller implements EventListener {
         for(int i = 0; i < roots.length; i++) {
     		log.info("Configured root folder: {}", roots[i]);
     	}
-        
+
         // Watch for DELETE events on the root - that might be one of our root folders
         int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
         boolean isDeep = false;
@@ -231,13 +231,13 @@ public class JcrInstaller implements EventListener {
                 isDeep, null, null, noLocal);
         log.info("Watching for NODE_REMOVED events on / to detect removal of our root folders");
 
-    	
+
     	// Find paths to watch and create WatchedFolders to manage them
     	watchedFolders = new LinkedList<WatchedFolder>();
     	for(String root : roots) {
     		findPathsToWatch(root, watchedFolders);
     	}
-    	
+
     	// Scan watchedFolders and register resources with installer
     	final List<InstallableResource> resources = new LinkedList<InstallableResource>();
     	for(WatchedFolder f : watchedFolders) {
@@ -245,17 +245,17 @@ public class JcrInstaller implements EventListener {
     		log.debug("Startup: {} provides resources {}", f, r.toAdd);
     		resources.addAll(r.toAdd);
     	}
-    	
+
     	log.info("Registering {} resources with OSGi installer: {}", resources.size(), resources);
     	installer.registerResources(resources, URL_SCHEME);
-    	
+
     	if(backgroundThread != null) {
     	    throw new IllegalStateException("Expected backgroundThread to be null in activate()");
     	}
         backgroundThread = new StoppableThread();
         backgroundThread.start();
     }
-    
+
     protected void deactivate(ComponentContext context) {
     	log.info("deactivate()");
 
@@ -268,7 +268,7 @@ public class JcrInstaller implements EventListener {
     	} catch(InterruptedException iex) {
     	    throw new IllegalStateException("backgroundThread.join interrupted after " + timeout + " msec");
     	}
-        
+
         try {
             folderNameFilter = null;
             watchedFolders = null;
@@ -287,7 +287,7 @@ public class JcrInstaller implements EventListener {
             log.warn("Exception in deactivate()", e);
         }
     }
-    
+
     /** Get a property value from the component context or bundle context */
     protected Object getPropertyValue(ComponentContext ctx, String name) {
         Object result = ctx.getBundleContext().getProperty(name);
@@ -325,7 +325,7 @@ public class JcrInstaller implements EventListener {
     void findPathsUnderNode(Node n, List<WatchedFolder> result) throws RepositoryException
     {
         final String path = n.getPath();
-        final int priority = folderNameFilter.getPriority(path); 
+        final int priority = folderNameFilter.getPriority(path);
         if (priority > 0) {
             result.add(new WatchedFolder(session, path, priority, URL_SCHEME, converters));
         }
@@ -333,14 +333,13 @@ public class JcrInstaller implements EventListener {
         if(depth > maxWatchedFolderDepth) {
             log.info("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
             return;
-        } else {
-            final NodeIterator it = n.getNodes();
-            while (it.hasNext()) {
-                findPathsUnderNode(it.nextNode(), result);
-            }
+        }
+        final NodeIterator it = n.getNodes();
+        while (it.hasNext()) {
+            findPathsUnderNode(it.nextNode(), result);
         }
     }
-    
+
     /**
      * Return the relative path for supplied path
      */
@@ -350,7 +349,7 @@ public class JcrInstaller implements EventListener {
         }
         return path;
     }
-    
+
     /** Add WatchedFolder to our list if it doesn't exist yet */
     private void addWatchedFolder(WatchedFolder toAdd) {
         WatchedFolder existing = null;
@@ -365,14 +364,14 @@ public class JcrInstaller implements EventListener {
             toAdd.scheduleScan();
         }
     }
-    
+
     /** Add new folders to watch if any have been detected
      *  @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
-     */ 
+     */
     private List<InstallableResource> updateFoldersList() throws Exception {
     	final List<InstallableResource> result = new LinkedList<InstallableResource>();
-    	
+
     	// If one of our root folders was just created, scan it for folders to watch
     	if(newRoots.size() > 0) {
     	    final Set<String> toScan = new HashSet<String>();
@@ -388,7 +387,7 @@ public class JcrInstaller implements EventListener {
     	        addWatchedFolder(wf);
     	    }
     	}
-    	
+
     	// If changed occured in our watched paths, rescan
         for(RootFolderListener wfc : listeners) {
             final Set<String> changedPaths = wfc.getAndClearPaths();
@@ -402,7 +401,7 @@ public class JcrInstaller implements EventListener {
                 }
             }
         }
-        
+
         // Check all WatchedFolder, in case some were deleted
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
@@ -416,10 +415,10 @@ public class JcrInstaller implements EventListener {
             log.info("Deleting {}, path does not exist anymore", wf);
             watchedFolders.remove(wf);
         }
-        
+
         return result;
     }
-    
+
     public void onEvent(EventIterator it) {
         // Got a DELETE on root - schedule folders rescan if one
         // of our root folders is impacted
@@ -449,7 +448,7 @@ public class JcrInstaller implements EventListener {
     public void runOneCycle() {
         try {
             // Rescan WatchedFolders if needed
-            final boolean scanWf = WatchedFolder.getRescanTimer().expired(); 
+            final boolean scanWf = WatchedFolder.getRescanTimer().expired();
             if(scanWf) {
                 for(WatchedFolder wf : watchedFolders) {
                     if(!wf.needsScan()) {
@@ -485,7 +484,7 @@ public class JcrInstaller implements EventListener {
                 Thread.sleep(RUN_LOOP_DELAY_MSEC);
             } catch(InterruptedException ignore) {
             }
-            
+
         } catch(Exception e) {
             log.warn("Exception in run()", e);
             try {
@@ -495,9 +494,9 @@ public class JcrInstaller implements EventListener {
         }
         counters[RUN_LOOP_COUNTER]++;
     }
-    
+
     long [] getCounters() {
         return counters;
     }
-    
+
 }
