@@ -18,10 +18,11 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import org.junit.Test;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 public class FolderNameFilterTest {
     public static final String DEFAULT_REGEXP =  ".*/install$";
@@ -55,14 +56,14 @@ public class FolderNameFilterTest {
             assertEquals(200, f.getRootPriority("/b/foo"));
     	}
     }
-    
+
     @Test
     public void testNoRunMode() {
         final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(new String[0]));
         assertTrue("Test 1", f.getPriority("/libs/install") > 0);
         assertFalse("Test 2", f.getPriority("/libs/install.bar") > 0);
     }
-    
+
     @Test
     public void testSingleMode() {
         final String [] m = { "dev" };
@@ -75,7 +76,7 @@ public class FolderNameFilterTest {
         assertFalse("Test 6", f.getPriority("/libs/install.dev.bar") > 0);
         assertFalse("Test 7", f.getPriority("/libs/install.bar.dev") > 0);
     }
-    
+
     @Test
     public void testThreeModes() {
         final String [] m = { "dev", "web", "staging" };
@@ -94,36 +95,36 @@ public class FolderNameFilterTest {
         assertFalse("Test 12",f.getPriority("/libs/install.dev.bar") > 0);
         assertFalse("Test 13",f.getPriority("/libs/install.bar.dev") > 0);
     }
-    
+
     @Test
     public void testRootPriorities() {
         final String [] m = { "dev" };
         final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
-    	assertEquals("/libs root", new Integer(100), f.getPriority("/libs/install"));
-    	assertEquals("/apps root", new Integer(200), f.getPriority("/apps/install"));
+    	assertEquals("/libs root", new Integer(100), (Integer)f.getPriority("/libs/install"));
+    	assertEquals("/apps root", new Integer(200), (Integer)f.getPriority("/apps/install"));
     }
-    
+
     @Test
     public void testRunModePriorities() {
         final String [] m = { "dev", "prod", "staging" };
         final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
-    	assertEquals("Matches no runmode", new Integer(100), f.getPriority("/libs/install"));
-    	assertEquals("Matches dev runmode", new Integer(201), f.getPriority("/apps/install.dev"));
-    	assertEquals("Matches staging runmode", new Integer(201), f.getPriority("/apps/install.staging"));
-    	assertEquals("Matches three runmodes (A)", new Integer(203), f.getPriority("/apps/install.dev.staging.prod"));
-    	assertEquals("Matches three runmodes (B)", new Integer(203), f.getPriority("/apps/install.dev.prod.staging"));
-    	assertEquals("Matches three runmodes (C)", new Integer(103), f.getPriority("/libs/install.dev.prod.staging"));
+    	assertEquals("Matches no runmode", new Integer(100), (Integer)f.getPriority("/libs/install"));
+    	assertEquals("Matches dev runmode", new Integer(201), (Integer)f.getPriority("/apps/install.dev"));
+    	assertEquals("Matches staging runmode", new Integer(201), (Integer)f.getPriority("/apps/install.staging"));
+    	assertEquals("Matches three runmodes (A)", new Integer(203), (Integer)f.getPriority("/apps/install.dev.staging.prod"));
+    	assertEquals("Matches three runmodes (B)", new Integer(203), (Integer)f.getPriority("/apps/install.dev.prod.staging"));
+    	assertEquals("Matches three runmodes (C)", new Integer(103), (Integer)f.getPriority("/libs/install.dev.prod.staging"));
     }
-    
+
     @Test
     public void testDotsInPath() {
         final String [] m = { "dev", "prod", "staging" };
         final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
-    	assertEquals("Matches no runmode", new Integer(100), f.getPriority("/libs/foo.bar/install"));
-    	assertEquals("Matches dev runmode", new Integer(201), f.getPriority("/apps/foo.bar/install.dev"));
-    	assertEquals("Matches staging runmode", new Integer(201), f.getPriority("/apps/foo.bar/install.staging"));
-    	assertEquals("Matches three runmodes (A)", new Integer(203), f.getPriority("/apps/foo.bar/install.dev.staging.prod"));
-    	assertEquals("Matches three runmodes (B)", new Integer(203), f.getPriority("/apps/foo.bar/install.dev.prod.staging"));
-    	assertEquals("Matches three runmodes (C)", new Integer(103), f.getPriority("/libs/foo.bar/install.dev.prod.staging"));
+    	assertEquals("Matches no runmode", new Integer(100), (Integer)f.getPriority("/libs/foo.bar/install"));
+    	assertEquals("Matches dev runmode", new Integer(201), (Integer)f.getPriority("/apps/foo.bar/install.dev"));
+    	assertEquals("Matches staging runmode", new Integer(201), (Integer)f.getPriority("/apps/foo.bar/install.staging"));
+    	assertEquals("Matches three runmodes (A)", new Integer(203), (Integer)f.getPriority("/apps/foo.bar/install.dev.staging.prod"));
+    	assertEquals("Matches three runmodes (B)", new Integer(203), (Integer)f.getPriority("/apps/foo.bar/install.dev.prod.staging"));
+    	assertEquals("Matches three runmodes (C)", new Integer(103), (Integer)f.getPriority("/libs/foo.bar/install.dev.prod.staging"));
     }
 }

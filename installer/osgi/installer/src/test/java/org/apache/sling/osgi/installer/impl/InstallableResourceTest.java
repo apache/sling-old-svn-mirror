@@ -18,29 +18,28 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import java.io.ByteArrayInputStream;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 public class InstallableResourceTest {
-    
-    @Test 
+
+    @Test
     public void testDictionaryDigest() {
         final Dictionary<String, Object> d = new Hashtable<String, Object>();
         final InstallableResource r = new InstallableResource("x:url", d);
         assertNotNull("Expected InstallableResource to compute its own digest", r.getDigest());
     }
-    
+
     @org.junit.Test public void testDictionaryDigestFromDictionaries() throws Exception {
         final Hashtable<String, Object> d1 = new Hashtable<String, Object>();
         final Hashtable<String, Object> d2 = new Hashtable<String, Object>();
-        
+
         final String [] keys = { "foo", "bar", "something" };
         for(int i=0 ; i < keys.length; i++) {
             d1.put(keys[i], keys[i] + "." + keys[i]);
@@ -48,12 +47,12 @@ public class InstallableResourceTest {
         for(int i=keys.length - 1 ; i >= 0; i--) {
             d2.put(keys[i], keys[i] + "." + keys[i]);
         }
-        
+
         final InstallableResource r1 = new InstallableResource("test:url1", d1);
         final InstallableResource r2 = new InstallableResource("test:url1", d2);
-        
+
         assertEquals(
-                "Two InstallableResource (Dictionary) with same values but different key orderings must have the same key", 
+                "Two InstallableResource (Dictionary) with same values but different key orderings must have the same key",
                 r1.getDigest(),
                 r2.getDigest()
         );

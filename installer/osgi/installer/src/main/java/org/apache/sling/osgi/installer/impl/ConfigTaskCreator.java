@@ -31,21 +31,21 @@ class ConfigTaskCreator {
 
     /** Store digests of the installed configs, keyed by config pid */
     private final Map<String, String> digests = new HashMap<String, String>();
-    
+
 	/** Create tasks for a set of RegisteredResource that all represent the same config PID.
 	 */
 	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
-		
+
 		// Find the config that must be active: the resources collection is ordered according
 		// to priorities, so we just need to find the first one that is installable
 		RegisteredResource toActivate = null;
 		for(RegisteredResource r : resources) {
-			if(toActivate == null && r.isInstallable()) {
+			if (r.isInstallable()) {
 				toActivate = r;
 				break;
 			}
 		}
-		
+
 		if(toActivate == null) {
 		    // None of our resources are installable, remove corresponding config
 		    // (task simply does nothing if config does not exist)
@@ -57,19 +57,19 @@ class ConfigTaskCreator {
 		    final String previousDigest = digests.get(key);
 		    if(toActivate.getDigest().equals(previousDigest)) {
 		        if(ctx.getLogService() != null) {
-		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + key+ ") already installed, ignored: " + toActivate); 
+		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + key+ ") already installed, ignored: " + toActivate);
 		        }
 		    } else {
 		        tasks.add(new ConfigInstallTask(toActivate));
 		        digests.put(key, toActivate.getDigest());
                 if(ctx.getLogService() != null) {
-                    ctx.getLogService().log(LogService.LOG_DEBUG, 
+                    ctx.getLogService().log(LogService.LOG_DEBUG,
                             "Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
                 }
 		    }
 		}
 	}
-	
+
 	private String getDigestKey(RegisteredResource r) {
         final ConfigurationPid cp = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
         if(cp == null) {
