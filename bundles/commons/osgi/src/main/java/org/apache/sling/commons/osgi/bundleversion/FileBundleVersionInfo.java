@@ -34,7 +34,7 @@ public class FileBundleVersionInfo extends BundleVersionInfo<File> {
     private final boolean isSnapshot;
     private final long lastModified;
     private final File source;
-    
+
     public FileBundleVersionInfo(File bundle) throws IOException {
         source = bundle;
         final JarFile f = new JarFile(bundle);
@@ -61,21 +61,19 @@ public class FileBundleVersionInfo extends BundleVersionInfo<File> {
                 lastModified = lastMod;
             }
         } finally {
-            if(f != null) {
-                f.close();
-            }
+            f.close();
         }
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " " + source.getAbsolutePath();
     }
-    
+
     public boolean isBundle() {
         return symbolicName != null;
     }
-    
+
     public long getBundleLastModified() {
         return lastModified;
     }
