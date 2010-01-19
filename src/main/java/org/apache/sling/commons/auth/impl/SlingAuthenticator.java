@@ -136,6 +136,15 @@ public class SlingAuthenticator implements Authenticator,
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
 
     /**
+     * The name of the session attribute which is set if the session created by
+     * the {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}
+     * method is an impersonated session. The value of this attribute is the
+     * name of the primary user authenticated with the credentials extracted
+     * from the request using the authenitcation handler.
+     */
+    private static final String ATTR_IMPERSONATOR = "impersonator";
+
+    /**
      * The name of the request attribute providing the authenticated JCR
      * Session. This is only provided for backwards compatibility and will be
      * removed in a future release.
@@ -781,7 +790,8 @@ public class SlingAuthenticator implements Authenticator,
         // sudo the session if needed
         final String authUser = session.getUserID();
         if (sudo != null && sudo.length() > 0) {
-            Credentials creds = new SimpleCredentials(sudo, new char[0]);
+            final SimpleCredentials creds = new SimpleCredentials(sudo, new char[0]);
+            creds.setAttribute(ATTR_IMPERSONATOR, authUser);
             session = session.impersonate(creds);
         }
         // invariant: same session or successful impersonation
