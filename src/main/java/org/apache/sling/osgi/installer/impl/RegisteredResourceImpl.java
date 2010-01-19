@@ -47,10 +47,10 @@ import org.osgi.framework.Constants;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
- *  it locally to avoid holding up to classes or data from our 
- *  clients, in case those disappear while we're installing stuff. 
+ *  it locally to avoid holding up to classes or data from our
+ *  clients, in case those disappear while we're installing stuff.
  */
-public class RegisteredResourceImpl implements RegisteredResource, Serializable { 
+public class RegisteredResourceImpl implements RegisteredResource, Serializable {
     private static final long serialVersionUID = 2L;
 	private final String url;
 	private final String urlScheme;
@@ -63,35 +63,35 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	private final int priority;
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
-	
+
     static enum ResourceType {
         BUNDLE,
         CONFIG
     }
-    
+
     private final RegisteredResource.ResourceType resourceType;
-	
+
     public static final String ENTITY_JAR_PREFIX = "jar:";
 	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
 	public static final String ENTITY_CONFIG_PREFIX = "config:";
-	
+
 	/** Create a RegisteredResource from given data. If the data's extension
 	 *  maps to a configuration and the data provides an input stream, it is
-	 *  converted to a Dictionary 
+	 *  converted to a Dictionary
 	 */
 	public RegisteredResourceImpl(BundleContext ctx, InstallableResource input) throws IOException {
-	    
+
 	    try {
     		url = input.getUrl();
     		urlScheme = getUrlScheme(url);
     		resourceType = computeResourceType(input.getExtension());
     		priority = input.getPriority();
     		serialNumber = getNextSerialNumber();
-    		
+
             if(input.getDigest() == null || input.getDigest().length() == 0) {
                 throw new IllegalArgumentException("Missing digest: " + input);
             }
-            
+
     		if(resourceType == RegisteredResource.ResourceType.BUNDLE) {
                 if(input.getInputStream() == null) {
                     throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
@@ -101,7 +101,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 hasDataFile = true;
                 digest = input.getDigest();
                 setAttributesFromManifest(ctx);
-                final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME); 
+                final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if(name == null) {
                     // not a bundle - use "jar" entity to make it easier to find out
                     entity = ENTITY_JAR_PREFIX + input.getUrl();
@@ -117,7 +117,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                     // config provided as a Dictionary
                     dictionary = copy(input.getDictionary());
                 } else {
-                    dictionary = readDictionary(input.getInputStream()); 
+                    dictionary = readDictionary(input.getInputStream());
                 }
                 digest = input.getDigest();
     		}
@@ -127,10 +127,10 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
     		}
     	}
 	}
-	
+
     private static long getNextSerialNumber() {
         synchronized (RegisteredResourceImpl.class) {
-            return serialNumberCounter++; 
+            return serialNumberCounter++;
         }
     }
 
@@ -138,23 +138,23 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	public String toString() {
 	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
 	}
-	
+
 	protected File getDataFile(BundleContext ctx) {
 		final String filename = getClass().getSimpleName() + "." + serialNumber;
 		return ctx.getDataFile(filename);
 	}
-	
+
 	public void cleanup(BundleContext bc) {
 	    final File dataFile = getDataFile(bc);
 		if(dataFile.exists()) {
 			dataFile.delete();
 		}
 	}
-	
+
 	public String getURL() {
 		return url;
 	}
-	
+
 	public InputStream getInputStream(BundleContext bc) throws IOException {
 	    if(hasDataFile) {
 	        final File dataFile = getDataFile(bc);
@@ -164,15 +164,15 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    }
         return  null;
 	}
-	
+
 	public Dictionary<String, Object> getDictionary() {
 		return dictionary;
 	}
-	
+
 	public String getDigest() {
 		return digest;
 	}
-	
+
     /** Copy data to local storage */
 	private void copyToLocalStorage(InputStream data, File f) throws IOException {
 		final OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
@@ -184,14 +184,12 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 			}
 			os.flush();
 		} finally {
-			if(os != null) {
-				os.close();
-			}
+			os.close();
 		}
 	}
-	
+
 	/** Convert InputStream to Dictionary using our extended properties format,
-	 * 	which supports multi-value properties 
+	 * 	which supports multi-value properties
 	 */
 	static Dictionary<String, Object> readDictionary(InputStream is) throws IOException {
 		final Dictionary<String, Object> result = new Hashtable<String, Object>();
@@ -204,7 +202,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         }
         return result;
 	}
-	
+
 	/** Copy given Dictionary, sorting keys */
 	static Dictionary<String, Object> copy(Dictionary<String, Object> d) {
 	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
@@ -219,7 +217,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    }
 	    return result;
 	}
-	
+
 	public String getUrl() {
 	    return url;
 	}
@@ -227,27 +225,26 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
     public RegisteredResource.ResourceType getResourceType() {
         return resourceType;
     }
-    
+
     static RegisteredResource.ResourceType computeResourceType(String extension) {
         if(extension.equals("jar")) {
             return RegisteredResource.ResourceType.BUNDLE;
-        } else {
-            return RegisteredResource.ResourceType.CONFIG;
         }
+        return RegisteredResource.ResourceType.CONFIG;
     }
-    
+
     /** Return the identifier of the OSGi "entity" that this resource
      *  represents, for example "bundle:SID" where SID is the bundle's
-     *  symbolic ID, or "config:PID" where PID is config's PID. 
+     *  symbolic ID, or "config:PID" where PID is config's PID.
      */
     public String getEntityId() {
         return entity;
     }
-    
+
     public Map<String, Object> getAttributes() {
 		return attributes;
 	}
-    
+
 	public boolean isInstallable() {
         return installable;
 	}
@@ -285,29 +282,27 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 
         return result;
     }
-    
+
     private void setAttributesFromManifest(BundleContext bc) throws IOException {
     	final Manifest m = getManifest(getInputStream(bc));
     	if(m == null) {
             throw new IOException("Cannot get manifest of bundle resource");
     	}
-    	
+
     	final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
         if(sn == null) {
             throw new IOException("Manifest does not supply " + Constants.BUNDLE_SYMBOLICNAME);
         }
-    	
+
     	final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
         if(v == null) {
             throw new IOException("Manifest does not supply " + Constants.BUNDLE_VERSION);
         }
-    	
-        if(m != null) {
-            attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
-            attributes.put(Constants.BUNDLE_VERSION, v.toString());
-        }
+
+        attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
+        attributes.put(Constants.BUNDLE_VERSION, v.toString());
     }
-    
+
     static String getUrlScheme(String url) {
         final int pos = url.indexOf(':');
         if(pos <= 0) {
@@ -315,15 +310,15 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         }
         return url.substring(0, pos);
     }
-    
+
     public String getUrlScheme() {
         return urlScheme;
     }
-    
+
     public int getPriority() {
         return priority;
     }
-    
+
     public long getSerialNumber() {
         return serialNumber;
     }

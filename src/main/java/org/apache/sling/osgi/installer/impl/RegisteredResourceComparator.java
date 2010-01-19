@@ -36,7 +36,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
     public int compare(RegisteredResource a, RegisteredResource b) {
     	final boolean aBundle = a.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
     	final boolean bBundle = b.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
-    	
+
         if(aBundle && bBundle) {
             return compareBundles(a, b);
         } else if(!aBundle && !bBundle){
@@ -47,30 +47,28 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
         	return -1;
         }
     }
-    
+
     int compareBundles(RegisteredResource a, RegisteredResource b) {
 
         boolean isSnapshot = false;
         int result = 0;
-        
+
         // Order first by symbolic name
         final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         if(nameA != null && nameB != null) {
             result = nameA.compareTo(nameB);
         }
-        
+
         // Then by version
         if(result == 0) {
             final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
             final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
-            isSnapshot = va!= null && va.toString().contains(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER);
-            if(va != null && vb != null) {
-                // higher version has more priority, must come first so invert comparison
-                result = vb.compareTo(va);
-            }
+            isSnapshot = va.toString().contains(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER);
+            // higher version has more priority, must come first so invert comparison
+            result = vb.compareTo(va);
         }
-        
+
         // Then by priority, higher values first
         if(result == 0) {
             if(a.getPriority() < b.getPriority()) {
@@ -79,7 +77,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
                 result = -1;
             }
         }
-        
+
         if(result == 0 && isSnapshot) {
             // For snapshots, compare serial numbers so that snapshots registered
             // later get priority
@@ -89,20 +87,20 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
                 result = -1;
             }
         }
-        
+
         return result;
     }
-    
+
     int compareConfig(RegisteredResource a, RegisteredResource b) {
         int result = 0;
-        
+
         // First compare by pid
         final ConfigurationPid pA = (ConfigurationPid)a.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
         final ConfigurationPid pB = (ConfigurationPid)b.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
         if(pA != null && pA.getCompositePid() != null && pB != null && pB.getCompositePid() != null) {
             result = pA.getCompositePid().compareTo(pB.getCompositePid());
         }
-        
+
         // Then by priority, higher values first
         if(result == 0) {
             if(a.getPriority() < b.getPriority()) {
@@ -111,7 +109,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
                 result = -1;
             }
         }
-        
+
         return result;
     }
 }
