@@ -677,33 +677,53 @@ public class SlingAuthenticator implements Authenticator,
      *
      * @param response The {@link DeliveryHttpServletResponse} on which to send
      *            back the cookie.
-     * @param name The name of the cookie to send.
-     * @param value The value of cookie.
+     * @param user The name of the user to impersonate as. This will be quoted
+     *            and used as the cookie value.
      * @param maxAge The maximum age of the cookie in seconds. Positive values
      *            are persisted on the browser for the indicated number of
      *            seconds, setting the age to 0 (zero) causes the cookie to be
      *            deleted in the browser and using a negative value defines a
      *            temporary cookie to be deleted when the browser exits.
-     * @param path The cookie path to use. If empty or <code>null</code> the
+     * @param path The cookie path to use. This is intended to be the web
+     *            application's context path. If this is empty or
+     *            <code>null</code> the root path will be used assuming the web
+     *            application is registered at the root context.
+     * @param owner The name of the user originally authenticated in the request
+     *            and who is now impersonating as <i>user</i>.
      */
-    private void sendCookie(HttpServletResponse response, String name,
-            String value, int maxAge, String path) {
+    private void sendSudoCookie(HttpServletResponse response,
+            final String user, final int maxAge, final String path,
+            final String owner) {
 
-        if (path == null || path.length() == 0) {
-            log.debug("sendCookie: Using root path ''/''");
-            path = "/";
+        final String quotedUser;
+        try {
+            quotedUser = quoteCookieValue(user);
+        } catch (IllegalArgumentException iae) {
+            log.error(
+                "sendCookie: Failed to quote value '{}' of cookie {}: {}",
+                new Object[] { user, this.sudoCookieName, iae.getMessage() });
+            return;
         }
 
-        Cookie cookie = new Cookie(name, value);
+        if (quotedUser != null) {
+            Cookie cookie = new Cookie(this.sudoCookieName, quotedUser);
             cookie.setMaxAge(maxAge);
-        cookie.setPath(path);
+            cookie.setPath((path == null || path.length() == 0) ? "/" : path);
+            try {
+                cookie.setComment(owner + " impersonates as " + user);
+            } catch (IllegalArgumentException iae) {
+                // ignore
+            }
+
             response.addCookie(cookie);
 
-        // Tell a potential proxy server that this cookie is uncacheable
+            // Tell a potential proxy server that this request is uncacheable
+            // due to the Set-Cookie header being sent
             if (this.cacheControl) {
                 response.addHeader("Cache-Control", "no-cache=\"Set-Cookie\"");
             }
         }
+    }
 
     /**
      * Handles impersonation based on the request parameter for impersonation
@@ -740,7 +760,7 @@ public class SlingAuthenticator implements Authenticator,
         if (cookies != null) {
             for (int i = 0; currentSudo == null && i < cookies.length; i++) {
                 if (sudoCookieName.equals(cookies[i].getName())) {
-                    currentSudo = cookies[i].getValue();
+                    currentSudo = unquoteCookieValue(cookies[i].getValue());
                 }
             }
         }
@@ -759,6 +779,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // sudo the session if needed
+        final String authUser = session.getUserID();
         if (sudo != null && sudo.length() > 0) {
             Credentials creds = new SimpleCredentials(sudo, new char[0]);
             session = session.impersonate(creds);
@@ -772,16 +793,14 @@ public class SlingAuthenticator implements Authenticator,
                 // active due to cookie setting
 
                 // clear impersonation
-                this.sendCookie(res, this.sudoCookieName, "", 0,
-                    req.getContextPath());
+                this.sendSudoCookie(res, "", 0, req.getContextPath(), authUser);
 
             } else if (currentSudo == null || !currentSudo.equals(sudo)) {
                 // Parameter set to a name. As the cookie is not set yet
                 // or is set to another name, send the cookie with current sudo
 
                 // (re-)set impersonation
-                this.sendCookie(res, this.sudoCookieName, sudo, -1,
-                    req.getContextPath());
+                this.sendSudoCookie(res, sudo, -1, req.getContextPath(), authUser);
             }
         }
 
@@ -813,6 +832,81 @@ public class SlingAuthenticator implements Authenticator,
         return path;
     }
 
+    /**
+     * Ensures the cookie value is properly quoted for transmission to the
+     * client.
+     * <p>
+     * The problem is, that the character set of cookie values is limited by
+     * RFC 2109 defining that a cookie value must be token or quoted-string
+     * according to RFC-2616:
+     * <pre>
+     * token = 1*<any CHAR except CTLs or separators>
+     * separators = "(" | ")" | "<" | ">" | "@"
+     *                | "," | ";" | ":" | "\" | <">
+     *                | "/" | "[" | "]" | "?" | "="
+     *                | "{" | "}" | SP | HT
+     *
+     * quoted-string = ( <"> *(qdtext | quoted-pair ) <"> )
+     * qdtext = <any TEXT except <">>
+     * quoted-pair = "\" CHAR
+     *
+     * @param value The cookie value to quote
+     * @return The quoted cookie value
+     * @throws IllegalArgumentException If the cookie value is <code>null</code>
+     *             or cannot be quoted, primarily because it contains a quote
+     *             sign.
+     */
+    static String quoteCookieValue(final String value) {
+        // method is package private to enable unit testing
+
+        if (value == null) {
+            throw new IllegalArgumentException("Cookie value may not be null");
+        }
+
+        StringBuilder builder = new StringBuilder(value.length() * 2);
+        builder.append('"');
+        for (int i=0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '"') {
+                builder.append("\\\"");
+            } else if (c == 127 || (c < 32 && c != '\t')) {
+                throw new IllegalArgumentException(
+                    "Cookie value may not contain CTL character");
+            } else {
+                builder.append(c);
+            }
+        }
+        builder.append('"');
+
+        return builder.toString();
+    }
+
+    /**
+     * Removes (optional) quotes from a cookie value to get the raw value of
+     * the cookie.
+     *
+     * @param value The cookie value to unquote
+     * @return The unquoted cookie value
+     */
+    static String unquoteCookieValue(final String value) {
+        // method is package private to enable unit testing
+
+        // return value unmodified if null, empty or not starting with a quote
+        if (value == null || value.length() == 0 || value.charAt(0) != '"') {
+            return value;
+        }
+
+        StringBuilder builder = new StringBuilder(value.length());
+        for (int i=1; i < value.length()-1; i++) {
+            char c = value.charAt(i);
+            if (c != '\\') {
+                builder.append(c);
+            }
+        }
+
+        return builder.toString();
+    }
+
     private static class SlingAuthenticatorSession {
 
         static final String ATTR_NAME = "$$org.apache.sling.commons.auth.impl.SlingAuthenticatorSession$$";
@@ -831,7 +925,7 @@ public class SlingAuthenticator implements Authenticator,
                         session.logout();
                     }
                 } catch (Throwable t) {
-                    // TODO: log
+                    // TODO: might log
                 } finally {
                     session = null;
                 }
