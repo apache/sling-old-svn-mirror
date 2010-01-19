@@ -81,13 +81,16 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component name="org.apache.sling.engine.impl.auth.SlingAuthenticator"
  *                label="%auth.name" description="%auth.description"
- *                modified="modified" immediate="true" Register for three
- *                services
+ *                modified="modified" immediate="true"
+ *
+ * Register for three services
  * @scr.service interface="org.apache.sling.commons.auth.AuthenticationSupport"
  * @scr.service interface="org.apache.sling.commons.auth.Authenticator"
  * @scr.service interface="javax.servlet.ServletRequestListener"
+ *
  * @scr.property name="service.description" value="Sling Request Authenticator"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ *
  * @scr.reference name="authHandler"
  *                interface="org.apache.sling.commons.auth.spi.AuthenticationHandler"
  *                policy="dynamic" cardinality="0..n" bind="bindAuthHandler"
@@ -100,10 +103,8 @@ import org.slf4j.LoggerFactory;
 public class SlingAuthenticator implements Authenticator,
         AuthenticationSupport, ServletRequestListener {
 
-    static final String REQUEST_ATTRIBUTE_SESSION = "javax.jcr.Session";
-
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
+    private final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
 
     /**
      * @scr.property valueRef="DEFAULT_IMPERSONATION_COOKIE"
@@ -133,6 +134,16 @@ public class SlingAuthenticator implements Authenticator,
 
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
+
+    /**
+     * The name of the request attribute providing the authenticated JCR
+     * Session. This is only provided for backwards compatibility and will be
+     * removed in a future release.
+     * <p>
+     * <b>DO NOT USE ANY MORE</b>
+     */
+    private static final String REQUEST_ATTRIBUTE_SESSION = "javax.jcr.Session";
+
 
     private static ArrayList<AbstractAuthenticationHandlerHolder> EMPTY_INFO = new ArrayList<AbstractAuthenticationHandlerHolder>();
 
@@ -684,15 +695,15 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         Cookie cookie = new Cookie(name, value);
-        cookie.setMaxAge(maxAge);
+            cookie.setMaxAge(maxAge);
         cookie.setPath(path);
-        response.addCookie(cookie);
+            response.addCookie(cookie);
 
         // Tell a potential proxy server that this cookie is uncacheable
-        if (this.cacheControl) {
-            response.addHeader("Cache-Control", "no-cache=\"Set-Cookie\"");
+            if (this.cacheControl) {
+                response.addHeader("Cache-Control", "no-cache=\"Set-Cookie\"");
+            }
         }
-    }
 
     /**
      * Handles impersonation based on the request parameter for impersonation
