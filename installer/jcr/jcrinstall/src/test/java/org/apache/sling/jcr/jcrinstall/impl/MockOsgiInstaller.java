@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,23 +29,24 @@ import java.util.Set;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 
+
 class MockOsgiInstaller implements OsgiInstaller {
 
     private final long [] counters = new long[OsgiInstaller.COUNTERS_SIZE];
-    
+
     static class InstallableResourceComparator implements Comparator<InstallableResource> {
         public int compare(InstallableResource a, InstallableResource b) {
             return a.getUrl().compareTo(b.getUrl());
         }
-        
+
     }
-    
+
     /** Keep track of our method calls, for verification */
     private final List<String> recordedCalls = new LinkedList<String>();
-    
+
     /** Keep track of registered URLS */
     private final Set<String> urls = new HashSet<String>();
-    
+
     public void addResource(InstallableResource d) {
     	urls.add(d.getUrl());
         recordCall("add", d);
@@ -74,19 +74,19 @@ class MockOsgiInstaller implements OsgiInstaller {
     	urls.remove(d.getUrl());
         recordCall("remove", d);
     }
-    
+
     private synchronized void recordCall(String prefix, InstallableResource r) {
         recordedCalls.add(prefix + ":" + r.getUrl() + ":" + r.getPriority());
     }
-    
+
     synchronized void clearRecordedCalls() {
         recordedCalls.clear();
     }
-    
+
     List<String> getRecordedCalls() {
         return recordedCalls;
     }
-    
+
     boolean isRegistered(String urlScheme, String path) {
     	return urls.contains(urlScheme + ":" + path);
     }
