@@ -21,6 +21,7 @@ package org.apache.sling.commons.auth.impl.engine;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.auth.NoAuthenticationHandlerException;
 import org.apache.sling.engine.auth.Authenticator;
 
 /**
@@ -44,7 +45,13 @@ public class EngineSlingAuthenticator implements Authenticator {
     private org.apache.sling.commons.auth.Authenticator slingAuthenticator;
 
     public void login(HttpServletRequest request, HttpServletResponse response) {
-        slingAuthenticator.login(request, response);
+        try {
+            slingAuthenticator.login(request, response);
+        } catch (NoAuthenticationHandlerException nahe) {
+            final org.apache.sling.engine.auth.NoAuthenticationHandlerException wrapped = new org.apache.sling.engine.auth.NoAuthenticationHandlerException();
+            wrapped.initCause(nahe);
+            throw wrapped;
+        }
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
