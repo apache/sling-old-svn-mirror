@@ -212,12 +212,19 @@ public class DynamicClassLoaderProviderImpl
                     if (parentNode == null) {
                         parentNode = current;
                     }
-                    current = current.addNode(names[i], "nt:folder");
+                    try {
+                        current.addNode(names[i], "nt:folder");
+                        session.save();
+                    } catch (RepositoryException re) {
+                        // we ignore this as this might be a concurrent modification!
+                        session.refresh(false);
+                    }
+                    current = current.getNode(names[i]);
                 }
             }
 
             if (parentNode != null) {
-                parentNode.save();
+                session.save();
                 return true;
             }
 
