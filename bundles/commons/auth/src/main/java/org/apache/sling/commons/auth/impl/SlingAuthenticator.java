@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -753,15 +752,11 @@ public class SlingAuthenticator implements Authenticator,
      * @param session The real {@link Session} to optionally replace with an
      *            impersonated session.
      * @return The impersonated session or the input session.
-     * @throws LoginException thrown by the {@link Session#impersonate} method.
-     * @throws ContentBusException thrown by the {@link Session#impersonate}
-     *             method.
      * @see Session#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
     private Session handleImpersonation(HttpServletRequest req,
-            HttpServletResponse res, Session session) throws LoginException,
-            RepositoryException {
+            HttpServletResponse res, Session session) {
 
         // the current state of impersonation
         String currentSudo = null;
@@ -790,14 +785,28 @@ public class SlingAuthenticator implements Authenticator,
         // sudo the session if needed
         final String authUser = session.getUserID();
         if (sudo != null && sudo.length() > 0) {
-            final SimpleCredentials creds = new SimpleCredentials(sudo, new char[0]);
-            creds.setAttribute(ATTR_IMPERSONATOR, authUser);
-            final Session impersonated = session.impersonate(creds);
+            try {
+                // impersonate setting the respective attribute
+                final SimpleCredentials creds = new SimpleCredentials(sudo,
+                    new char[0]);
+                creds.setAttribute(ATTR_IMPERSONATOR, authUser);
+                final Session impersonated = session.impersonate(creds);
 
-            // logout the original session and replace with impersonated
-            // session.
-            session.logout();
-            session = impersonated;
+                // logout the original session and replace with impersonated
+                // session.
+                session.logout();
+                session = impersonated;
+
+            } catch (RepositoryException re) {
+
+                // log an error message if impersonation fails
+                log.error("handleImpersonation: Failed to impersonate "
+                    + authUser + " as " + sudo + ", processing request as "
+                    + authUser, re);
+
+                // clear sudo to revert impersonation
+                sudo = null;
+            }
         }
         // invariant: same session or successful impersonation
 
