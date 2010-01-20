@@ -34,7 +34,7 @@ public interface AuthenticationHandler {
      * The name under which an implementation of this interface must be
      * registered to be used as an authentication handler.
      */
-    static final String SERVICE_NAME = "org.apache.sling.commons.auth.AuthenticationHandler";
+    static final String SERVICE_NAME = "org.apache.sling.commons.auth.spi.AuthenticationHandler";
 
     /**
      * The name of the service registration property listing one or more URL
