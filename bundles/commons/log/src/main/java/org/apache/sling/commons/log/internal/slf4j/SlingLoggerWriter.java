@@ -189,6 +189,10 @@ class SlingLoggerWriter extends Writer {
         return fileRotator;
     }
 
+    File getFile() {
+        return file;
+    }
+
     // ---------- Writer Overwrite ---------------------------------------------
 
     @Override

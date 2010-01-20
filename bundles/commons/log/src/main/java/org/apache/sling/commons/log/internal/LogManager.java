@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.log.internal.slf4j.LogConfigManager;
+import org.apache.sling.commons.log.internal.slf4j.SlingConfigurationPrinter;
 import org.apache.sling.commons.log.internal.slf4j.SlingLogPanel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -123,6 +124,12 @@ public class LogManager {
             SlingLogPanel.registerPanel(context);
         } catch (Throwable ignore) {
         }
+        // setup the web console configuration printer. This may fail loading
+        // the class if the web console API is not wired
+        try {
+            SlingConfigurationPrinter.registerPrinter(context);
+        } catch (Throwable ignore) {
+        }
     }
 
     void shutdown() {
@@ -131,6 +138,11 @@ public class LogManager {
         // may fail loading the panel class if the Servlet API is not wired
         try {
              SlingLogPanel.unregisterPanel();
+        } catch (Throwable ignore) {
+        }
+        // tear down the web console configuration printer (if created at all).
+        try {
+            SlingConfigurationPrinter.unregisterPrinter();
         } catch (Throwable ignore) {
         }
 
