@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
  * <p>
  * A simple implementation of the <code>HttpContext</code> interface based on
  * this could be (using SCR JavaDoc tags of the Maven SCR Plugin) :
+ *
  * <pre>
  * &#47;** &#64;scr.component *&#47;
  * public class MyHttpContext implements HttpContext {
@@ -79,6 +80,21 @@ public interface AuthenticationSupport {
      * request.
      */
     static final String REQUEST_ATTRIBUTE_RESOLVER = "org.apache.sling.commons.auth.ResourceResolver";
+
+    /**
+     * The name of the request parameter indicating where to redirect to after
+     * successful authentication (and optional impersonation). This parameter is
+     * respected if either anonymous authentication or regular authentication
+     * succeed.
+     * <p>
+     * If authentication fails, either because the credentials are wrong or
+     * because anonymous authentication fails or because anonymous
+     * authentication is not allowed for the request, the parameter is ignored
+     * and the
+     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * method is called to request authentication.
+     */
+    static final String REDIRECT_PARAMETER = "sling.auth.redirect";
 
     /**
      * Handles security on behalf of a custom OSGi Http Service
