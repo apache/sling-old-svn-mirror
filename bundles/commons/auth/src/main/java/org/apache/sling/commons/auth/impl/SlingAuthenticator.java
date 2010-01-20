@@ -571,7 +571,7 @@ public class SlingAuthenticator implements Authenticator,
         // If we get here, anonymous access is not allowed: redirect
         // to the login servlet
         log.info("getAnonymousSession: Anonymous access not allowed by configuration - requesting credentials");
-        login(request, response);
+        doLogin(request, response);
 
         // fallback to no session
         return false;
@@ -627,7 +627,7 @@ public class SlingAuthenticator implements Authenticator,
                 reason.getMessage());
             log.debug("handleLoginFailure", reason);
 
-            login(request, response);
+            doLogin(request, response);
 
         } else {
 
@@ -644,6 +644,37 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
+    }
+
+    /**
+     * Calls the {@link #login(HttpServletRequest, HttpServletResponse)} method
+     * catching declared exceptions of that method and cleanly handling and
+     * logging them. Particularly if no authentication handler is available to
+     * request credentials a 403/FORBIDDEN response is sent back to the client.
+     */
+    private void doLogin(HttpServletRequest request,
+            HttpServletResponse response) {
+
+        try {
+
+            login(request, response);
+
+        } catch (IllegalStateException ise) {
+
+            log.error("doLogin: Cannot login: Response already committed");
+
+        } catch (NoAuthenticationHandlerException nahe) {
+
+            log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
+
+            try {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Cannot login");
+            } catch (IOException ioe) {
+                log.error("doLogin: Failed sending 403 status", ioe);
+            }
+
+        }
     }
 
     /**
