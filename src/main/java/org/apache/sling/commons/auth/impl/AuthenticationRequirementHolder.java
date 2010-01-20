@@ -18,11 +18,14 @@
  */
 package org.apache.sling.commons.auth.impl;
 
-public class AuthenticationRequirementHolder extends PathBasedHolder {
+class AuthenticationRequirementHolder extends PathBasedHolder {
 
     private final boolean requiresAuthentication;
 
-    static AuthenticationRequirementHolder fromConfig(final String config) {
+    private final String source;
+
+    static AuthenticationRequirementHolder fromConfig(final String config,
+            final String source) {
         if (config == null || config.length() == 0) {
             throw new IllegalArgumentException(
                 "Configuration must not be null or empty");
@@ -41,16 +44,21 @@ public class AuthenticationRequirementHolder extends PathBasedHolder {
             path = config;
         }
 
-        return new AuthenticationRequirementHolder(path, required);
+        return new AuthenticationRequirementHolder(path, required, source);
     }
 
-    protected AuthenticationRequirementHolder(final String fullPath,
-            final boolean requiresAuthentication) {
+    AuthenticationRequirementHolder(final String fullPath,
+            final boolean requiresAuthentication, final String source) {
         super(fullPath);
         this.requiresAuthentication = requiresAuthentication;
+        this.source = source;
     }
 
-    public boolean requiresAuthentication() {
+    boolean requiresAuthentication() {
         return requiresAuthentication;
+    }
+
+    String getSource() {
+        return source;
     }
 }

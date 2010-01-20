@@ -73,11 +73,11 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
 
     private void printAuthenticationHandler(PrintWriter pw) {
         pw.println("<tr>");
-        pw.println("<th class='content container' colspan='2'>Registered Authentication Handler</td>");
+        pw.println("<th class='content container' colspan='3'>Registered Authentication Handler</td>");
         pw.println("</tr>");
         pw.println("<tr>");
         pw.println("<th class='content'>Path</td>");
-        pw.println("<th class='content'>Handler</td>");
+        pw.println("<th class='content' colspan='2'>Handler</td>");
         pw.println("</tr>");
 
         ArrayList<AbstractAuthenticationHandlerHolder> holderList = slingAuthenticator.getAuthenticationHandler();
@@ -85,7 +85,7 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
 
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>" + handler.fullPath + "</td>");
-            pw.println("<td class='content'>" + handler + "</td>");
+            pw.println("<td class='content' colspan='2'>" + handler + "</td>");
             pw.println("</tr>");
 
         }
@@ -93,11 +93,12 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
 
     private void printAuthenticationRequirements(PrintWriter pw) {
         pw.println("<tr>");
-        pw.println("<th class='content container' colspan='2'>Authentication Requirement Configuration</td>");
+        pw.println("<th class='content container' colspan='3'>Authentication Requirement Configuration</td>");
         pw.println("</tr>");
         pw.println("<tr>");
         pw.println("<th class='content'>Path</td>");
         pw.println("<th class='content'>Authentication Required</td>");
+        pw.println("<th class='content'>Defining Service (Description or ID)</td>");
         pw.println("</tr>");
 
         ArrayList<AuthenticationRequirementHolder> holderList = slingAuthenticator.getAuthenticationRequirements();
@@ -107,6 +108,7 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
             pw.println("<td class='content'>" + req.fullPath + "</td>");
             pw.println("<td class='content'>"
                 + (req.requiresAuthentication() ? "Yes" : "No") + "</td>");
+            pw.println("<td class='content'>" + req.getSource() + "</td>");
             pw.println("</tr>");
 
         }
