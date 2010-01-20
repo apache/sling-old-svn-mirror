@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -247,24 +248,30 @@ public class HttpTestBase extends TestCase {
     }
 
     /** Verify that given URL returns expectedStatusCode
+     * @return the HttpMethod executed
      * @throws IOException */
-    protected void assertHttpStatus(String urlString, int expectedStatusCode, String assertMessage) throws IOException {
-        final int status = httpClient.executeMethod(new GetMethod(urlString));
+    protected HttpMethod assertHttpStatus(String urlString, int expectedStatusCode, String assertMessage) throws IOException {
+        final GetMethod get = new GetMethod(urlString);
+        final int status = httpClient.executeMethod(get);
         if(assertMessage == null) {
             assertEquals(urlString,expectedStatusCode, status);
         } else {
             assertEquals(assertMessage, expectedStatusCode, status);
         }
+        return get;
     }
 
     /** Verify that given URL returns expectedStatusCode
+     * @return the HttpMethod executed
      * @throws IOException */
-    protected void assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
-        assertHttpStatus(urlString, expectedStatusCode, null);
+    protected HttpMethod assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
+        return assertHttpStatus(urlString, expectedStatusCode, null);
     }
 
-    /** Execute a POST request and check status */
-    protected void assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
+    /** Execute a POST request and check status
+     * @return the HttpMethod executed
+     * @throws IOException */
+    protected HttpMethod assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
@@ -280,6 +287,7 @@ public class HttpTestBase extends TestCase {
         } else {
             assertEquals(assertMessage, expectedStatusCode, status);
         }
+        return post;
     }
 
     /** retrieve the contents of given URL and assert its content type */
