@@ -125,11 +125,11 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
-    /** The default impersonation parameter name */
-    private static final String DEFAULT_IMPERSONATION_PARAMETER = "sudo";
-
     /** The default impersonation cookie name */
     private static final String DEFAULT_IMPERSONATION_COOKIE = "sling.sudo";
+
+    /** The default impersonation parameter name */
+    private static final String DEFAULT_IMPERSONATION_PARAMETER = "sudo";
 
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
@@ -217,7 +217,8 @@ public class SlingAuthenticator implements Authenticator,
             newCookie = DEFAULT_IMPERSONATION_COOKIE;
         }
         if (!newCookie.equals(this.sudoCookieName)) {
-            log.info("Setting new cookie name for impersonation {} (was {})",
+            log.info(
+                "modified: Setting new cookie name for impersonation {} (was {})",
                 newCookie, this.sudoCookieName);
             this.sudoCookieName = newCookie;
         }
@@ -228,7 +229,7 @@ public class SlingAuthenticator implements Authenticator,
         }
         if (!newPar.equals(this.sudoParameterName)) {
             log.info(
-                "Setting new parameter name for impersonation {} (was {})",
+                "modified: Setting new parameter name for impersonation {} (was {})",
                 newPar, this.sudoParameterName);
             this.sudoParameterName = newPar;
         }
@@ -290,12 +291,12 @@ public class SlingAuthenticator implements Authenticator,
         // of a servlet container include inside another Sling request
         Object sessionAttr = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
         if (sessionAttr instanceof ResourceResolver) {
-            log.debug("authenticate: Request already authenticated, nothing to do");
+            log.debug("handleSecurity: Request already authenticated, nothing to do");
             return true;
         } else if (sessionAttr != null) {
             // warn and remove existing non-session
             log.warn(
-                "authenticate: Overwriting existing ResourceResolver attribute ({})",
+                "handleSecurity: Overwriting existing ResourceResolver attribute ({})",
                 sessionAttr);
             request.removeAttribute(REQUEST_ATTRIBUTE_RESOLVER);
         }
@@ -306,35 +307,20 @@ public class SlingAuthenticator implements Authenticator,
         // 3. Check Credentials
         if (authInfo == AuthenticationInfo.DOING_AUTH) {
 
-            log.debug("authenticate: ongoing authentication in the handler");
+            log.debug("handleSecurity: ongoing authentication in the handler");
             return false;
 
         } else if (authInfo == null) {
 
-            log.debug("authenticate: no credentials in the request, anonymous");
+            log.debug("handleSecurity: No credentials in the request, anonymous");
             return getAnonymousSession(request, response);
 
         } else {
-            // try to connect
-            try {
-                log.debug("authenticate: credentials, trying to get a session");
-                Session session = repository.login(authInfo.getCredentials(),
-                    authInfo.getWorkspaceName());
 
-                // handle impersonation
-                session = handleImpersonation(request, response, session);
-                setAttributes(session, authInfo.getAuthType(), request);
+            log.debug("handleSecurity: Trying to get a session for {}",
+                authInfo.getUser());
+            return getSession(request, response, authInfo);
 
-                return true;
-
-            } catch (RepositoryException re) {
-
-                handleLoginFailure(request, response, re);
-
-            }
-
-            // end request
-            return false;
         }
     }
 
@@ -551,32 +537,80 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // no handler found for the request ....
-        log.debug("getCredentials: no handler could extract credentials");
+        log.debug("getAuthenticationInfo: no handler could extract credentials");
         return null;
     }
 
+    /** Try to acquire an Session as indicated by authInfo */
+    private boolean getSession(final HttpServletRequest request,
+            final HttpServletResponse response, final AuthenticationInfo authInfo) {
+
+        // try to connect
+        try {
+            Session session = repository.login(authInfo.getCredentials(),
+                authInfo.getWorkspaceName());
+
+            // handle impersonation
+            session = handleImpersonation(request, response, session);
+
+            // check whether the client asked for redirect after
+            // authentication and/or impersonation
+            if (handleRedirect(request, response)) {
+                return false;
+            }
+
+            // set the attributes for further processing
+            setAttributes(session, authInfo.getAuthType(), request);
+
+            return true;
+
+        } catch (RepositoryException re) {
+
+            handleLoginFailure(request, response, authInfo.getUser(), re);
+
+        }
+
+        // end request
+        return false;
+
+    }
+
     /** Try to acquire an anonymous Session */
-    private boolean getAnonymousSession(HttpServletRequest req,
-            HttpServletResponse res) {
+    private boolean getAnonymousSession(final HttpServletRequest request,
+            final HttpServletResponse response) {
 
         // Get an anonymous session if allowed, or if we are handling
         // a request for the login servlet
-        if (isAnonAllowed(req)) {
+        if (isAnonAllowed(request)) {
+
             try {
+
                 Session session = repository.login();
-                setAttributes(session, null, req);
+
+                // check whether the client asked for redirect after
+                // authentication and/or impersonation
+                if (handleRedirect(request, response)) {
+                    return false;
+                }
+
+                // set the attributes for further processing
+                setAttributes(session, null, request);
+
                 return true;
+
             } catch (RepositoryException re) {
+
                 // cannot login > fail login, do not try to authenticate
-                handleLoginFailure(req, res, re);
+                handleLoginFailure(request, response, "anonymous user", re);
                 return false;
+
             }
         }
 
         // If we get here, anonymous access is not allowed: redirect
         // to the login servlet
         log.info("getAnonymousSession: Anonymous access not allowed by configuration - requesting credentials");
-        login(req, res);
+        login(request, response);
 
         // fallback to no session
         return false;
@@ -607,36 +641,37 @@ public class SlingAuthenticator implements Authenticator,
         return false;
     }
 
-    private void handleLoginFailure(HttpServletRequest request,
-            HttpServletResponse response, Exception reason) {
+    private void handleLoginFailure(final HttpServletRequest request,
+            final HttpServletResponse response, final String user,
+            final Exception reason) {
 
         if (reason instanceof TooManySessionsException) {
 
             // to many users, send a 503 Service Unavailable
-            log.info("authenticate: Too many sessions for user: {}",
+            log.info("handleLoginFailure: Too many sessions for {}: {}", user,
                 reason.getMessage());
 
             try {
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "SlingAuthenticator: Too Many Users");
             } catch (IOException ioe) {
-                log.error("authenticate: Cannot send status 503 to client", ioe);
+                log.error("handleLoginFailure: Cannot send status 503 to client", ioe);
             }
 
         } else if (reason instanceof LoginException) {
 
             // request authentication information and send 403 (Forbidden)
             // if no handler can request authentication information.
-            log.info("authenticate: Unable to authenticate: {}",
+            log.info("handleLoginFailure: Unable to authenticate {}: {}", user,
                 reason.getMessage());
-            log.debug("authenticate", reason);
+            log.debug("handleLoginFailure", reason);
 
             login(request, response);
 
         } else {
 
             // general problem, send a 500 Internal Server Error
-            log.error("authenticate: Unable to authenticate", reason);
+            log.error("handleLoginFailure: Unable to authenticate " + user, reason);
 
             try {
                 response.sendError(
@@ -644,7 +679,7 @@ public class SlingAuthenticator implements Authenticator,
                     "SlingAuthenticator: data access error, reason="
                         + reason.getClass().getSimpleName());
             } catch (IOException ioe) {
-                log.error("authenticate: Cannot send status 500 to client", ioe);
+                log.error("handleLoginFailure: Cannot send status 500 to client", ioe);
             }
         }
 
@@ -675,7 +710,7 @@ public class SlingAuthenticator implements Authenticator,
         request.setAttribute(REQUEST_ATTRIBUTE_SESSION, session);
 
         log.debug(
-            "ResourceResolver stored as request attribute: user={}, workspace={}",
+            "setAttributes: ResourceResolver stored as request attribute: user={}, workspace={}",
             session.getUserID(), session.getWorkspace().getName());
     }
 
@@ -708,7 +743,7 @@ public class SlingAuthenticator implements Authenticator,
             quotedUser = quoteCookieValue(user);
         } catch (IllegalArgumentException iae) {
             log.error(
-                "sendCookie: Failed to quote value '{}' of cookie {}: {}",
+                "sendSudoCookie: Failed to quote value '{}' of cookie {}: {}",
                 new Object[] { user, this.sudoCookieName, iae.getMessage() });
             return;
         }
@@ -830,6 +865,58 @@ public class SlingAuthenticator implements Authenticator,
 
         // return the session
         return session;
+    }
+
+    /**
+     * Handles an optional request for a redirect after successful
+     * authentication and <code>true</code> if the request has been redirected.
+     * <p>
+     * If sending the redirect response fails due to some IO problems, the
+     * request is still terminated but an error message is logged indicating the
+     * problem.
+     *
+     * @return <code>true</code> if redirect was requested. Otherwise
+     *         <code>false</code> is returned. Note, that <code>true</code> is
+     *         returned regardless of whether sending the redirect response
+     *         succeeded or not.
+     */
+    private boolean handleRedirect(final HttpServletRequest request,
+            final HttpServletResponse response) {
+
+        final String redirect = request.getParameter(REDIRECT_PARAMETER);
+        if (redirect != null) {
+
+            // find the redirect target
+            final String target;
+            if ("true".equalsIgnoreCase(redirect) || redirect.length() == 0) {
+                // redirect to the same path
+                target = request.getRequestURI();
+
+            } else if (redirect.startsWith("/")) {
+                // absolute target (in the servlet context)
+                target = request.getContextPath() + redirect;
+
+            } else {
+                // redirect relative to the current request
+                target = redirect;
+
+            }
+
+            // and redirect ensuring the response is sent to the client
+            try {
+                response.sendRedirect(target);
+            } catch (Exception e) {
+                // expected: IOException and IllegalStateException
+                log.error("handleRedirect: Failed to send redirect to "
+                    + target + ", aborting request without redirect", e);
+            }
+
+            // consider the request done
+            return true;
+        }
+
+        // no redirect requested
+        return false;
     }
 
     /**
