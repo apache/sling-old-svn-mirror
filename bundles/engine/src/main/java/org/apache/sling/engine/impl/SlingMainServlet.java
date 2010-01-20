@@ -125,6 +125,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
      */
     private static String FILTER_NAME = "Filter";
 
+    /**
+     * The service property used by Felix's HttpService whiteboard implementation.
+     */
+    private static String FELIX_WHITEBOARD_PATTERN_PROPERTY = "pattern";
+
     private SlingServletContext slingServletContext;
 
     private ComponentContext osgiComponentContext;
@@ -682,6 +687,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     }
 
     private void initFilter(ComponentContext osgiContext, ServiceReference ref) {
+        // Check if filter will be registered by Felix HttpService Whiteboard
+        if (ref.getProperty(FELIX_WHITEBOARD_PATTERN_PROPERTY) != null) {
+            return;
+        }
+
         final Filter filter = (Filter) osgiContext.locateService(FILTER_NAME, ref);
         if ( filter == null ) {
             return;
@@ -741,7 +751,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         Object scope = ref.getProperty("filter.scope");
         if ("component".equals(scope)) {
             return innerFilterChain;
+        } else if ("request".equals(scope)) {
+            return requestFilterChain;
         }
+
+        log.warn(String.format("A Filter (Service ID %s) has been registered without a filter.scope property.", ref.getProperty(Constants.SERVICE_ID)));
 
         // global filter by default
         return requestFilterChain;
