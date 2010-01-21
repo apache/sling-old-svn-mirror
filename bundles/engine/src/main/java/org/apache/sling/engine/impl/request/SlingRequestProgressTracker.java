@@ -154,6 +154,9 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         entries.add(new TrackingEntry(COMMENT_PREFIX + "timer_end format is " + TIMER_END_FORMAT));
     }
 
+    /**
+     * @see org.apache.sling.api.request.RequestProgressTracker#getMessages()
+     */
     public Iterator<String> getMessages() {
         return new Iterator<String>() {
             private final Iterator<TrackingEntry> entryIter = entries.iterator();
@@ -181,14 +184,16 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * Dumps the process timer entries to the given writer, one entry per line.
      * See the class comments for the rough format of each message line.
      */
-    public void dump(PrintWriter writer) {
+    public void dump(final PrintWriter writer) {
         logTimer(REQUEST_PROCESSING_TIMER,
             "Dumping SlingRequestProgressTracker Entries");
 
-        Iterator<String> messages = getMessages();
+        final StringBuilder sb = new StringBuilder();
+        final Iterator<String> messages = getMessages();
         while (messages.hasNext()) {
-            writer.print(messages.next());
+            sb.append(messages.next());
         }
+        writer.print(sb.toString());
     }
 
     /** Creates an entry with the given message. */
