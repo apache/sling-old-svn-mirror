@@ -81,6 +81,8 @@ public class ResourceProviderEntry implements
 
     private FastTreeMap storageMap = new FastTreeMap();
 
+    private Collection<ResourceProviderEntry> storageMapValues = new ArrayList<ResourceProviderEntry>();
+
     /**
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider,
@@ -112,6 +114,7 @@ public class ResourceProviderEntry implements
 
         // this will consume slightly more memory but ensures read is fast.
         storageMap.setFast(true);
+        
     }
 
     /**
@@ -281,8 +284,11 @@ public class ResourceProviderEntry implements
 
 
     //------------------ Map methods, here so that we can delegate 2 maps together
+    @SuppressWarnings("unchecked")
     public void put(String key, ResourceProviderEntry value) {
         storageMap.put(key,value);
+        // get a thread safe copy, the ArrayList constructor does a toArray which is thread safe.
+        storageMapValues = new ArrayList<ResourceProviderEntry>(storageMap.values());
     }
 
     public boolean containsKey(String key) {
@@ -293,9 +299,8 @@ public class ResourceProviderEntry implements
         return (ResourceProviderEntry) storageMap.get(key);
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<ResourceProviderEntry> values() {
-        return storageMap.values();
+        return storageMapValues;
     }
 
     public boolean removeResourceProvider(String prefix,
