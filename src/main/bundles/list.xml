@@ -125,7 +125,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.8</version>
+            <version>2.0.9-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -140,7 +140,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.7-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.codehaus.groovy</groupId>
