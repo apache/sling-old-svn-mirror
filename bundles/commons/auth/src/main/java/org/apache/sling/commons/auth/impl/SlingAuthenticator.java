@@ -301,9 +301,9 @@ public class SlingAuthenticator implements Authenticator,
      * yet.
      * <p>
      *
-     * @param req The request object containing the information for the
+     * @param request The request object containing the information for the
      *            authentication.
-     * @param res The response object which may be used to send the information
+     * @param response The response object which may be used to send the information
      *            on the request failure to the user.
      */
     public boolean handleSecurity(HttpServletRequest request,
