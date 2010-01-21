@@ -144,12 +144,22 @@ public class FsResource extends SlingAdaptable implements Resource {
 
             return (AdapterType) file;
 
-        } else if (type == InputStream.class && file.canRead()) {
+        } else if (type == InputStream.class) {
 
-            try {
-                return (AdapterType) new FileInputStream(file);
-            } catch (IOException ioe) {
-                getLog().info("Cannot open a stream on the file " + file, ioe);
+            if (!file.isDirectory() && file.canRead()) {
+
+                try {
+                    return (AdapterType) new FileInputStream(file);
+                } catch (IOException ioe) {
+                    getLog().info(
+                        "adaptTo: Cannot open a stream on the file " + file,
+                        ioe);
+                }
+
+            } else {
+
+                getLog().debug("adaptTo: File {} is not a readable file", file);
+
             }
 
         } else if (type == URL.class) {
@@ -158,8 +168,10 @@ public class FsResource extends SlingAdaptable implements Resource {
                 return (AdapterType) file.toURI().toURL();
             } catch (MalformedURLException mue) {
                 getLog().info(
-                    "Cannot convert the file path " + file + " to an URL", mue);
+                    "adaptTo: Cannot convert the file path " + file
+                        + " to an URL", mue);
             }
+
         }
 
         return super.adaptTo(type);
