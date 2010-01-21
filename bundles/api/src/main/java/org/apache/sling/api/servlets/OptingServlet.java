@@ -35,11 +35,11 @@ public interface OptingServlet extends Servlet {
      * willing to handle the request. If <code>false</code> is returned, the
      * request will be ignored by this servlet, and may be handled by other
      * servlets.
-     * 
+     *
      * @param request The request to examine
      * @return <code>true</code> if this servlet will handle the request,
      *         <code>false</code> otherwise
      */
-    public boolean accepts(SlingHttpServletRequest request);
+    boolean accepts(SlingHttpServletRequest request);
 
 }

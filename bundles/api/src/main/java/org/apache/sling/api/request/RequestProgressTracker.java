@@ -80,33 +80,33 @@ import java.util.Iterator;
 public interface RequestProgressTracker {
 
     /** Creates an entry with the given message */
-    public void log(String message);
+     void log(String message);
 
     /**
      * Creates an entry with a message constructed from the given
      * <code>MessageFormat</code> format evaluated using the given formatting
      * arguments.
      */
-    public void log(String format, Object... args);
+    void log(String format, Object... args);
 
     /**
      * Starts a named timer. If a timer of the same name already exists, it is
      * reset to the current time.
      */
-    public void startTimer(String timerName);
+    void startTimer(String timerName);
 
     /**
      * Logs an entry with the message set to the name of the timer and the
      * number of milliseconds elapsed since the timer start.
      */
-    public void logTimer(String timerName);
+    void logTimer(String timerName);
 
     /**
      * Logs an entry with the message constructed from the given
      * <code>MessageFormat</code> pattern evaluated using the given arguments
      * and the number of milliseconds elapsed since the timer start.
      */
-    public void logTimer(String timerName, String format, Object... args);
+    void logTimer(String timerName, String format, Object... args);
 
     /**
      * Returns an <code>Iterator</code> of tracking entries.
@@ -117,11 +117,11 @@ public interface RequestProgressTracker {
     /**
      * Dumps the process timer entries to the given writer, one entry per line.
      */
-    public void dump(PrintWriter writer);
-    
+    void dump(PrintWriter writer);
+
     /**
      *  Call this when done processing the request - all calls except the first
-     *  one are ignored 
+     *  one are ignored
      */
-    public void done();
+    void done();
 }

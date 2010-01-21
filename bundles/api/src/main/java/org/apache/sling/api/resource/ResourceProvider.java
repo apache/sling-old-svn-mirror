@@ -40,13 +40,13 @@ public interface ResourceProvider {
      * interface as services (value is
      * "org.apache.sling.api.resource.ResourceProvider").
      */
-    static final String SERVICE_NAME = ResourceProvider.class.getName();
+    String SERVICE_NAME = ResourceProvider.class.getName();
 
     /**
      * The name of the service registration property containing the root paths
      * of the resources provided by this provider (value is "provider.roots").
      */
-    static final String ROOTS = "provider.roots";
+    String ROOTS = "provider.roots";
 
     /**
      * The resource type be set on resources returned by the
@@ -56,7 +56,7 @@ public interface ResourceProvider {
      *
      * @see #listChildren(Resource)
      */
-    static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
+    String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
 
     /**
      * Returns a resource from this resource provider or <code>null</code> if
