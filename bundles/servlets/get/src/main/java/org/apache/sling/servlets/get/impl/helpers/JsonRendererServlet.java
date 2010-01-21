@@ -18,16 +18,19 @@ package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 
+import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,15 +46,15 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_JSON = "json";
 
-    private final JsonResourceWriter itemWriter;
-
     /** Recursion level selector that means "all levels" */
     public static final String INFINITY = "infinity";
 
     public static final String TIDY = "tidy";
 
-    public JsonRendererServlet() {
-        itemWriter = new JsonResourceWriter(null);
+    private long maximumResults;
+
+    public JsonRendererServlet(long maximumResults) {
+        this.maximumResults = maximumResults;
     }
 
     @Override
@@ -87,9 +90,45 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         resp.setContentType(req.getResponseContentType());
         resp.setCharacterEncoding("UTF-8");
 
-        // do the dump
+        // We check the tree to see if the nr of nodes isn't bigger than the allowed nr.
+        boolean allowDump = true;
+        long allowedLevel = 0;
+        boolean tidy = isTidy(req);
+        ResourceTraversor traversor = null;
         try {
-            itemWriter.dump(r, resp.getWriter(), maxRecursionLevels, isTidy(req));
+            traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
+            traversor.check();
+        } catch (RecursionTooDeepException e) {
+            allowDump = false;
+            allowedLevel = Integer.parseInt(e.getMessage()); // this is to avoid depending on a SNAPSHOT version of the SLing API. 
+        } catch (RepositoryException e) {
+            reportException(e);
+        } catch (JSONException e) {
+            reportException(e);
+        }
+        try {
+            // Check if we can dump the resource.
+            if (allowDump) {
+              if (tidy) {
+                resp.getWriter().write(traversor.getJSONObject().toString(2));
+              } else {
+                resp.getWriter().write(traversor.getJSONObject().toString());
+              }
+               
+            } else {
+                // We are not allowed to do the dump.
+                // Send a 300
+                String tidyUrl = (tidy) ? "tidy." : "";
+                resp.setStatus(HttpServletResponse.SC_MULTIPLE_CHOICES);
+                JSONWriter writer = new JSONWriter(resp.getWriter());
+                writer.array();
+                while (allowedLevel >= 0) {
+                  writer.value(r.getResourceMetadata().getResolutionPath() + "." + tidyUrl + allowedLevel + ".json");
+                  allowedLevel--;
+                }
+                writer.endArray();
+                return;
+            }
         } catch (JSONException je) {
             reportException(je);
         }
@@ -114,3 +153,4 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         throw new SlingException(e.toString(), e);
     }
 }
+

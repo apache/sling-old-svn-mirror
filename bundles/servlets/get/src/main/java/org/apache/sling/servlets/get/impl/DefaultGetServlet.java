@@ -99,7 +99,15 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
     private static final String XML_RENDERER_PROPERTY = "enable.xml";
-
+    
+    /** @scr.property valueRef="DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS" type="Integer" */
+    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
+    
+    /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
+    public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
+    
+    private int jsonMaximumResults;
+    
     /** Additional aliases. */
     private String[] aliases;
 
@@ -133,6 +141,8 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             DEFAULT_RENDERER_PROPERTY);
         this.enableXml = OsgiUtil.toBoolean(props.get(XML_RENDERER_PROPERTY),
             DEFAULT_RENDERER_PROPERTY);
+        this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY), 
+            DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS);
     }
 
     protected void deactivate(ComponentContext ctx) {
@@ -161,7 +171,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
         if (enableJson) {
             setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
-                new JsonRendererServlet());
+                new JsonRendererServlet(jsonMaximumResults));
         }
 
         if (enableXml) {

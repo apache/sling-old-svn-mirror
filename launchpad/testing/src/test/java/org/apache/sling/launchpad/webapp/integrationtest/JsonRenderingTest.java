@@ -118,6 +118,27 @@ public class JsonRenderingTest extends HttpTestBase {
         }
 
     }
+    
+    /** Test to see if node.infinity returns 300 when there are too many nodes */
+    public void testRecursiveInfinityTooDeep() throws IOException {
+      final Map<String, String> props = new HashMap<String, String>();
+      for (int i = 0; i < 20;i++) {
+          props.put("a" + i + "/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s", "yes");
+      }
+      final String url = testClient.createNode(postUrl, props);
+      final String json = getContent(url + ".infinity.json",
+          CONTENT_TYPE_JSON, null, 300);
+      System.err.println("Url: " + url + "\npostUrl: " + postUrl);
+      // Get the resource url. (everything after the port)
+      // We skip http://localhost:8888/org.apache.sling.launchpad.testing-6-SNAPSHOT/
+      String resourceUrl = url;
+      for (int i = 4;i>0;i--) {
+        resourceUrl = resourceUrl.substring(resourceUrl.indexOf("/") + 1);
+      }
+      for (int i = 10; i >=0; i--) {
+          assertJavascript("/" + resourceUrl + "." + i + ".json", json, "out.print(data[" + (10 - i) + "])");
+      }
+    }
 
     /** Test the "infinity" recursion level */
     public void testRecursiveInfinity() throws IOException {
