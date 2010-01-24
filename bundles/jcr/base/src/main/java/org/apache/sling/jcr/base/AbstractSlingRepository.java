@@ -140,11 +140,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private String anonUser;
 
-    private char[] anonPass;
-
     private String adminUser;
-
-    private char[] adminPass;
 
     private SessionPoolManager poolManager;
 
@@ -201,8 +197,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     public Session loginAdministrative(String workspace)
             throws RepositoryException {
-        SimpleCredentials sc = new SimpleCredentials(this.adminUser,
-            this.adminPass);
+        Credentials sc = getAdministrativeCredentials(this.adminUser);
         return this.login(sc, workspace);
     }
 
@@ -226,7 +221,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         }
 
         if (credentials == null) {
-            credentials = new SimpleCredentials(this.anonUser, this.anonPass);
+            credentials = getAnonCredentials(this.anonUser);
         }
 
         // check the workspace
@@ -269,6 +264,19 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             throw new RepositoryException(re.getMessage(), re);
         }
     }
+    
+    /**
+     * @param anonUser the user name of the anon user.
+     * @return a Credentials implementation that represents the anon user.
+     */
+    protected abstract Credentials getAnonCredentials(String anonUser);
+    
+    /**
+     * @param adminUser the name of the administrative user.
+     * @return a Credentials implementation that represents the administrative user.
+     */
+    protected abstract Credentials getAdministrativeCredentials(String adminUser);
+
 
     /*
      * (non-Javadoc)
@@ -610,13 +618,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             PROPERTY_DEFAULT_WORKSPACE, null));
         this.anonUser = this.getProperty(properties, PROPERTY_ANONYMOUS_USER,
             DEFAULT_ANONYMOUS_USER);
-        this.anonPass = this.getProperty(properties, PROPERTY_ANONYMOUS_PASS,
-            DEFAULT_ANONYMOUS_PASS).toCharArray();
 
         this.adminUser = this.getProperty(properties, PROPERTY_ADMIN_USER,
             DEFAULT_ADMIN_USER);
-        this.adminPass = this.getProperty(properties, PROPERTY_ADMIN_PASS,
-            DEFAULT_ADMIN_PASS).toCharArray();
 
         setPollTimeActive(getIntProperty(properties, PROPERTY_POLL_ACTIVE));
         setPollTimeInActive(getIntProperty(properties, PROPERTY_POLL_INACTIVE));
@@ -709,8 +713,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         Session tmpSession = null;
         try {
-            SimpleCredentials sc = new SimpleCredentials(this.adminUser,
-                this.adminPass);
+            Credentials sc = getAdministrativeCredentials(this.adminUser);
             tmpSession = this.getRepository().login(sc);
             Workspace defaultWs = tmpSession.getWorkspace();
             if (defaultWs instanceof JackrabbitWorkspace) {
@@ -737,6 +740,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     // ---------- Background operation checking repository availability --------
+
 
     private void setPollTimeActive(int seconds) {
         if (seconds < MIN_POLL) {

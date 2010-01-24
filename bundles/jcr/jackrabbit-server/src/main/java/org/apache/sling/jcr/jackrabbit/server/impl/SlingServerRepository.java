@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.Dictionary;
 
+import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
@@ -33,6 +34,8 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
+import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCredentials;
+import org.apache.sling.jcr.jackrabbit.server.impl.security.AnonCredentials;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
@@ -162,6 +165,9 @@ public class SlingServerRepository extends AbstractSlingRepository
                 "Repository is not a RepositoryImpl, nothing to do");
         }
     }
+    
+    
+    
 
     //---------- Helper -------------------------------------------------------
 
@@ -208,5 +214,23 @@ public class SlingServerRepository extends AbstractSlingRepository
             } catch (IOException ignore) {
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see org.apache.sling.jcr.base.AbstractSlingRepository#getAdministrativeCredentials(java.lang.String)
+     */
+    @Override
+    protected Credentials getAdministrativeCredentials(String adminUser) {
+        return new AdministrativeCredentials(adminUser);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see org.apache.sling.jcr.base.AbstractSlingRepository#getAnonCredentials(java.lang.String)
+     */
+    @Override
+    protected Credentials getAnonCredentials(String anonUser) {
+        return new AnonCredentials(anonUser);
     }
 }
