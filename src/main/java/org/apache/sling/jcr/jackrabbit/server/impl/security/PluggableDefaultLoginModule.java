@@ -53,14 +53,18 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         for (int i = 0; i < modules.length; i++) {
             modules[i].doInit(callbackHandler, session, options);
         }
+        CallbackHandlerWrapper wrappedCallbackHandler = new CallbackHandlerWrapper(subject, callbackHandler);
 
-        super.doInit(callbackHandler, session, options);
+        super.doInit(wrappedCallbackHandler, session, options);
     }
 
     /**
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getPrincipal
      */
     protected Principal getPrincipal(Credentials creds) {
+        if ( creds instanceof TrustedCredentials ) {
+            return ((TrustedCredentials) creds).getPrincipal();
+        }
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
             if (modules[i].canHandle(creds)) {
@@ -93,6 +97,9 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
      */
     protected Authentication getAuthentication(Principal principal,
             Credentials creds) throws RepositoryException {
+        if ( creds instanceof TrustedCredentials ) {
+            return ((TrustedCredentials) creds).getTrustedAuthentication();
+        }
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
             if (modules[i].canHandle(creds)) {
@@ -112,6 +119,12 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
      */
     protected boolean impersonate(Principal principal, Credentials creds)
             throws RepositoryException, FailedLoginException {
+        if ( creds instanceof AdministrativeCredentials ) {
+            return true;
+        }
+        if ( creds instanceof AnonCredentials ) {
+            return false;
+        }
 
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
