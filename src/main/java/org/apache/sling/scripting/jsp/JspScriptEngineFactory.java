@@ -102,8 +102,11 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
+    public static final String[] NAMES = { "jsp", "JSP" };
+
     public JspScriptEngineFactory() {
         setExtensions(SCRIPT_TYPE);
+        setNames(NAMES);
     }
 
     public ScriptEngine getScriptEngine() {
