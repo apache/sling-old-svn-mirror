@@ -12,7 +12,7 @@ import javax.script.Bindings;
 public class ProtectedBindings implements Bindings {
 
     private final Bindings wrapped;
-    private final Set<String> protectedKeys;
+    private final Set<Object> protectedKeys;
 
     public ProtectedBindings(Bindings wrapped) {
         this.wrapped = wrapped;
@@ -24,7 +24,7 @@ public class ProtectedBindings implements Bindings {
      *
      * @throws an IllegalArgumentException if the key is protected
      */
-    public Object put(String key, Object value) {
+    public Object put(Object key, Object value) {
         if (protectedKeys.contains(key)) {
             throw new IllegalArgumentException(String.format("Key %s is protected.", key));
         }
@@ -34,8 +34,8 @@ public class ProtectedBindings implements Bindings {
     /**
      * {@inheritDoc}
      */
-    public void putAll(Map<? extends String, ? extends Object> toMerge) {
-        for (String key : toMerge.keySet()) {
+    public void putAll(Map toMerge) {
+        for (Object key : toMerge.keySet()) {
             if (!protectedKeys.contains(key)) {
                 wrapped.put(key, toMerge.get(key));
             }
@@ -74,7 +74,7 @@ public class ProtectedBindings implements Bindings {
      *
      * @return an unmodifiable Set view of the map
      */
-    public Set<java.util.Map.Entry<String, Object>> entrySet() {
+    public Set<java.util.Map.Entry<Object, Object>> entrySet() {
         return Collections.unmodifiableSet(wrapped.entrySet());
     }
 
@@ -91,7 +91,7 @@ public class ProtectedBindings implements Bindings {
      *
      * @return an unmodifiable Set view of the map's keys
      */
-    public Set<String> keySet() {
+    public Set<Object> keySet() {
         return Collections.unmodifiableSet(wrapped.keySet());
     }
 
