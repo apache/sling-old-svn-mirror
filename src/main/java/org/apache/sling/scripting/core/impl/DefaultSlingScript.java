@@ -35,6 +35,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,7 +67,9 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.core.ScriptHelper;
+import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,16 +117,21 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The current bundle context. */
     private final BundleContext bundleContext;
 
+    /** The ScriptBindingsValuesProviders. */
+    private final Collection<BindingsValuesProvider> bindingsValuesProviders;
+
     /**
      * Constructor
      * @param bundleContext The bundle context
      * @param scriptResource The script resource
      * @param scriptEngine The script engine
      */
-    DefaultSlingScript(BundleContext bundleContext, Resource scriptResource, ScriptEngine scriptEngine) {
+    DefaultSlingScript(BundleContext bundleContext, Resource scriptResource, ScriptEngine scriptEngine,
+            Collection<BindingsValuesProvider> bindingsValuesProviders) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
         this.bundleContext = bundleContext;
+        this.bindingsValuesProviders = bindingsValuesProviders;
         this.scriptName = this.scriptResource.getPath();
         // Now know how to get the input stream, we still have to decide
         // on the encoding of the stream's data. Primarily we assume it is
@@ -550,6 +558,13 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         for (Map.Entry<String, Object> entry : slingBindings.entrySet()) {
             if (!bindings.containsKey(entry.getKey())) {
                 bindings.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (!bindingsValuesProviders.isEmpty()) {
+            ProtectedBindings protectedBindings = new ProtectedBindings(bindings);
+            for (BindingsValuesProvider provider : bindingsValuesProviders) {
+                provider.addBindings(protectedBindings);
             }
         }
 
