@@ -17,8 +17,6 @@
  * under the License.
  */
 
-builder = new org.apache.sling.commons.json.groovy.JSONGroovyBuilder()
-
-out.write builder.json {
+out.write jsonBuilder.json {
     text currentNode.getProperty("text").string
 } as String
