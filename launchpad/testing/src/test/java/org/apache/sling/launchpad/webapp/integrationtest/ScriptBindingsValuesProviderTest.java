@@ -52,7 +52,7 @@ public class ScriptBindingsValuesProviderTest extends RenderingTestBase {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker (" + content + ")",content.contains("ESP template"));
             assertTrue("Content includes test text (" + content + ")", content.contains("Hello World!"));
-            assertFalse("Content doesn't include Groovy-specific test text (" + content + ")", content.contains("Hello World from Groovy!"));
+            assertTrue("Content doesn't include Groovy-specific test text (" + content + ")", content.contains("groovyHelloWorld:undefined"));
         } finally {
             testClient.delete(toDelete);
         }

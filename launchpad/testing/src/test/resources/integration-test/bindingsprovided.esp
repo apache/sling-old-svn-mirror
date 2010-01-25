@@ -22,6 +22,6 @@
 	<body>
 		<h1>ESP template</h1>
 		<p>helloWorld:<%= helloWorld %></p>
-		<p>groovyHelloWorld:<%= groovyHelloWorld %></p>
+		<p>groovyHelloWorld:<%= typeof(groovyHelloWorld) %></p>
 	</body>
 </html>
