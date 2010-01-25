@@ -37,7 +37,6 @@ import org.apache.sling.jcr.classloader.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * The <code>JCRURLConnection</code> is the <code>URLConnection</code>
  * implementation to access the data addressed by a JCR Repository URL.
@@ -194,7 +193,7 @@ public class JCRURLConnection extends URLConnection {
      * atom.
      * <p>
      * Implementations are free to decide, how to define the content type. But
-     * they are required to set the type in the {@link #connect(Ticket)}method.
+     * they are required to set the type in the {@link #connect()}method.
      *
      * @see #getContentType()
      * @see #connect()
@@ -207,7 +206,7 @@ public class JCRURLConnection extends URLConnection {
      * atom.
      * <p>
      * Implementations are free to decide, how to define the content type. But
-     * they are required to set the type in the {@link #connect(Ticket)}method.
+     * they are required to set the type in the {@link #connect()}method.
      *
      * @see #getContentEncoding()
      * @see #connect()
@@ -219,7 +218,7 @@ public class JCRURLConnection extends URLConnection {
      * status information of the base atom.
      * <p>
      * Implementations are free to decide, how to define the content length. But
-     * they are required to set the type in the {@link #connect(Ticket)}method.
+     * they are required to set the type in the {@link #connect()}method.
      *
      * @see #getContentLength()
      * @see #connect()
@@ -231,7 +230,7 @@ public class JCRURLConnection extends URLConnection {
      * <p>
      * Implementations are free to decide, how to define the last modification
      * time. But they are required to set the type in the
-     * {@link #connect(Ticket)}method.
+     * {@link #connect()}method.
      *
      * @see #getLastModified()
      * @see #connect()
@@ -378,7 +377,7 @@ public class JCRURLConnection extends URLConnection {
                 } else {
                     lastModified = 0;
                 }
-                
+
                 if (parent.hasProperty("jcr:mimeType")) {
                     contentType = parent.getProperty("jcr:mimeType").getString();
                 } else {
@@ -389,11 +388,9 @@ public class JCRURLConnection extends URLConnection {
                                 : TEXT_PLAIN;
                     }
                 }
-                
+
                 if (parent.hasProperty("jcr:encoding")) {
                     contentEncoding = parent.getProperty("jcr:encoding").getString();
-                } else {
-                    contentEncoding = null;
                 }
 
                 log.debug(
@@ -567,8 +564,8 @@ public class JCRURLConnection extends URLConnection {
      *
      * @see #connect()
      */
-    public Map getHeaderFields() {
-        Map fieldMap = new HashMap();
+    public Map<String, List<String>> getHeaderFields() {
+        Map<String, List<String>> fieldMap = new HashMap<String, List<String>>();
 
         try {
             connect();
@@ -770,9 +767,9 @@ public class JCRURLConnection extends URLConnection {
     /**
      * Returns an unmodifiable list containing just the given string value.
      */
-    private List toList(String value) {
+    private List<String> toList(String value) {
         String[] values = { value };
-        List valueList = Arrays.asList(values);
+        List<String> valueList = Arrays.asList(values);
         return Collections.unmodifiableList(valueList);
     }
 }
