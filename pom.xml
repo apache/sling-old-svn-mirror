@@ -69,38 +69,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-
-            <!-- SLING-217: Ensure compilation with BSF API in bootclasspath -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>get-bsf3-api</id>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.bsf</groupId>
-                                    <artifactId>bsf-api</artifactId>
-                                    <version>3.0-beta2</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <stripVersion>true</stripVersion>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <!-- Reported to work on Linux, Windows, Mac OSX -->
-                    <compilerArgument>-Xbootclasspath/p:${project.build.directory}/dependency/bsf-api.jar</compilerArgument>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <reporting>
