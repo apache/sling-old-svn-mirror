@@ -58,7 +58,7 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Private-Package>
-                            org.apache.sling.jcr.classloader.internal.*,
+                            org.apache.sling.jcr.classloader.internal.*
                         </Private-Package>
                     </instructions>
                 </configuration>
