@@ -52,6 +52,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,17 +73,12 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="BindingsValuesProvider"
- *                interface="org.apache.sling.scripting.api.BindingsValuesProvider"
- *                cardinality="0..n" policy="dynamic"
  */
-public class SlingScriptAdapterFactory implements AdapterFactory,
-        MimeTypeProvider, BundleListener {
+public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider, BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
-    private static final String ENGINE_FACTORY_SERVICE = "META-INF/services/"
-        + ScriptEngineFactory.class.getName();
+    private static final String ENGINE_FACTORY_SERVICE = "META-INF/services/" + ScriptEngineFactory.class.getName();
 
     private ScriptEngineManager scriptEngineManager;
 
@@ -92,20 +88,30 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
     private BundleContext bundleContext;
 
-    /** The service tracker for the event admin
+    /**
+     * The service tracker for the event admin
      */
     private ServiceTracker eventAdminTracker;
 
+    /**
+     * The service tracker for BindingsValuesProvider impls
+     */
+    private ServiceTracker bindingsValuesProviderTracker;
+
+    /**
+     * The BindingsValuesProvider impls which apply to all languages
+     */
     private Collection<BindingsValuesProvider> genericBindingsValuesProviders;
 
+    /**
+     * The BindingsValuesProvider impls which apply to a specific language
+     */
     private Map<String, Collection<BindingsValuesProvider>> langBindingsValuesProviders;
-
 
     // ---------- AdapterFactory -----------------------------------------------
 
     @SuppressWarnings("unchecked")
-    public <AdapterType> AdapterType getAdapter(Object adaptable,
-            Class<AdapterType> type) {
+    public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
 
         Resource resource = (Resource) adaptable;
         String path = resource.getPath();
@@ -113,17 +119,15 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
         ScriptEngine engine = getScriptEngineManager().getEngineByExtension(ext);
         if (engine != null) {
-            Collection<BindingsValuesProvider> bindingsValuesProviders =
-                getBindingsValuesProviders(engine);
+            Collection<BindingsValuesProvider> bindingsValuesProviders = getBindingsValuesProviders(engine.getFactory());
             // unchecked cast
-            return (AdapterType) new DefaultSlingScript(this.bundleContext,
-                resource, engine, bindingsValuesProviders);
+            return (AdapterType) new DefaultSlingScript(this.bundleContext, resource, engine, bindingsValuesProviders);
         }
 
         return null;
     }
 
-    /* package */ ScriptEngineManager getScriptEngineManager() {
+    /* package */ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
 
             // create (empty) script engine manager
@@ -150,15 +154,10 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
                     final String ext = o.toString();
                     final ScriptEngine e = scriptEngineManager.getEngineByExtension(ext);
                     if (e == null) {
-                        log.warn(
-                            "No ScriptEngine found for extension '{}' that was just registered",
-                            ext);
+                        log.warn("No ScriptEngine found for extension '{}' that was just registered", ext);
                     } else {
-                        log.info(
-                            "Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'",
-                            new Object[] { ext, e.getFactory().getEngineName(),
-                                e.getFactory().getEngineVersion(),
-                                e.getClass().getName() });
+                        log.info("Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'", new Object[] { ext,
+                                e.getFactory().getEngineName(), e.getFactory().getEngineVersion(), e.getClass().getName() });
                     }
                 }
             }
@@ -167,15 +166,13 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<?> registerFactories(SlingScriptEngineManager mgr,
-            Bundle bundle) {
+    private Collection<?> registerFactories(SlingScriptEngineManager mgr, Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
         final SortedSet<String> extensions = new TreeSet<String>();
         try {
             ins = url.openStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                ins));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
             String line;
             while ((line = reader.readLine()) != null) {
                 try {
@@ -200,10 +197,8 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         return extensions;
     }
 
-    private Collection<?> registerFactory(SlingScriptEngineManager mgr,
-            ScriptEngineFactory factory) {
-        log.info("Adding ScriptEngine {}, {} for language {}, {}",
-            new Object[] { factory.getEngineName(), factory.getEngineVersion(),
+    private Collection<?> registerFactory(SlingScriptEngineManager mgr, ScriptEngineFactory factory) {
+        log.info("Adding ScriptEngine {}, {} for language {}, {}", new Object[] { factory.getEngineName(), factory.getEngineVersion(),
                 factory.getLanguageName(), factory.getLanguageVersion() });
 
         mgr.registerScriptEngineFactory(factory);
@@ -214,14 +209,12 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     // ---------- BundleListener interface -------------------------------------
 
     public void bundleChanged(BundleEvent event) {
-        if (event.getType() == BundleEvent.STARTED
-            && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
+        if (event.getType() == BundleEvent.STARTED && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
 
             engineSpiBundles.add(event.getBundle());
             scriptEngineManager = null;
 
-        } else if (event.getType() == BundleEvent.STOPPED
-            && engineSpiBundles.remove(event.getBundle())) {
+        } else if (event.getType() == BundleEvent.STOPPED && engineSpiBundles.remove(event.getBundle())) {
 
             scriptEngineManager = null;
 
@@ -279,28 +272,29 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
+        this.bundleContext = context.getBundleContext();
+
         // setup tracker first as this is used in the bind/unbind methods
-        this.eventAdminTracker = new ServiceTracker(context.getBundleContext(),
-                EventAdmin.class.getName(), null);
+        this.eventAdminTracker = new ServiceTracker(context.getBundleContext(), EventAdmin.class.getName(), null);
         this.eventAdminTracker.open();
 
-        genericBindingsValuesProviders = new HashSet<BindingsValuesProvider>();
-        langBindingsValuesProviders = new HashMap<String, Collection<BindingsValuesProvider>>();
+        this.genericBindingsValuesProviders = new HashSet<BindingsValuesProvider>();
+        this.langBindingsValuesProviders = new HashMap<String, Collection<BindingsValuesProvider>>();
 
-        this.bundleContext = context.getBundleContext();
+        this.bindingsValuesProviderTracker = new ServiceTracker(context.getBundleContext(), BindingsValuesProvider.class.getName(),
+                new BindingsValuesProviderCustomizer());
+        this.bindingsValuesProviderTracker.open();
         this.bundleContext.addBundleListener(this);
 
         Bundle[] bundles = this.bundleContext.getBundles();
         for (Bundle bundle : bundles) {
-            if (bundle.getState() == Bundle.ACTIVE
-                && bundle.getEntry(ENGINE_FACTORY_SERVICE) != null) {
+            if (bundle.getState() == Bundle.ACTIVE && bundle.getEntry(ENGINE_FACTORY_SERVICE) != null) {
                 engineSpiBundles.add(bundle);
             }
         }
 
         try {
-            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(
-                context.getBundleContext(), this);
+            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(context.getBundleContext(), this);
         } catch (Throwable t) {
             // so what ?
         }
@@ -319,15 +313,20 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         engineSpiBundles.clear();
         engineSpiServices.clear();
         scriptEngineManager = null;
-        if ( this.eventAdminTracker != null ) {
+        if (this.eventAdminTracker != null) {
             this.eventAdminTracker.close();
             this.eventAdminTracker = null;
+        }
+        if (this.bindingsValuesProviderTracker != null) {
+            this.bindingsValuesProviderTracker.close();
+            this.bindingsValuesProviderTracker = null;
         }
         this.bundleContext = null;
     }
 
     /**
      * Get the event admin.
+     *
      * @return The event admin or <code>null</code>
      */
     private EventAdmin getEventAdmin() {
@@ -336,12 +335,12 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
     @SuppressWarnings("unchecked")
     private String[] toArray(List list) {
-        return (String[])list.toArray(new String[list.size()]);
+        return (String[]) list.toArray(new String[list.size()]);
     }
 
     private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {
         final EventAdmin localEA = this.getEventAdmin();
-        if ( localEA != null ) {
+        if (localEA != null) {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
@@ -353,60 +352,70 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         }
     }
 
-    private Collection<BindingsValuesProvider> getBindingsValuesProviders(ScriptEngine engine) {
-        String name = (String) engine.get(ScriptEngine.NAME);
+    private Collection<BindingsValuesProvider> getBindingsValuesProviders(ScriptEngineFactory scriptEngineFactory) {
         Set<BindingsValuesProvider> results = new HashSet<BindingsValuesProvider>();
         results.addAll(genericBindingsValuesProviders);
-        Collection<BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
-        if (langProviders != null) {
-            results.addAll(langProviders);
+        for (String name : scriptEngineFactory.getNames()) {
+            Collection<BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
+            if (langProviders != null) {
+                results.addAll(langProviders);
+            }
         }
-        return langProviders;
+        return results;
     }
 
-    protected void bindScriptEngineFactory(
-            ScriptEngineFactory scriptEngineFactory) {
+    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         engineSpiServices.add(scriptEngineFactory);
         scriptEngineManager = null;
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
     }
 
-    protected void unbindScriptEngineFactory(
-            ScriptEngineFactory scriptEngineFactory) {
+    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         engineSpiServices.remove(scriptEngineFactory);
         scriptEngineManager = null;
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
 
-    protected void bindBindingsValuesProvider(ServiceReference ref) {
-        String engineName = (String) ref.getProperty(ScriptEngine.NAME);
-        BindingsValuesProvider service = (BindingsValuesProvider)bundleContext.getService(ref);
-        if (engineName == null) {
-            genericBindingsValuesProviders.add(service);
-        } else {
-            Collection<BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
-            if (langProviders == null) {
-                langProviders = new HashSet<BindingsValuesProvider>();
-                langBindingsValuesProviders.put(engineName, langProviders);
-            }
+    private class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
 
-            langProviders.add(service);
-        }
-    }
+        public Object addingService(ServiceReference ref) {
+            String engineName = (String) ref.getProperty(ScriptEngine.NAME);
+            BindingsValuesProvider service = (BindingsValuesProvider) bundleContext.getService(ref);
+            if (engineName == null) {
+                genericBindingsValuesProviders.add(service);
+            } else {
+                Collection<BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
+                if (langProviders == null) {
+                    langProviders = new HashSet<BindingsValuesProvider>();
+                    langBindingsValuesProviders.put(engineName, langProviders);
+                }
 
-    protected void unbindBindingsValuesProvider(ServiceReference ref) {
-        String engineName = (String) ref.getProperty(ScriptEngine.NAME);
-        BindingsValuesProvider service = (BindingsValuesProvider)bundleContext.getService(ref);
-        if (engineName == null) {
-            genericBindingsValuesProviders.remove(service);
-        } else {
-            Collection<BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
-            if (langProviders != null) {
-                langProviders.remove(service);
+                langProviders.add(service);
+            }
+            return service;
+        }
+
+        public void modifiedService(ServiceReference ref, Object service) {
+            remove((BindingsValuesProvider) service);
+            addingService(ref);
+        }
+
+        public void removedService(ServiceReference ref, Object service) {
+            remove((BindingsValuesProvider) service);
+        }
+
+        private void remove(BindingsValuesProvider service) {
+            if (!genericBindingsValuesProviders.remove(service)) {
+                for (Collection<BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
+                    if (coll.remove(service)) {
+                        return;
+                    }
+                }
             }
         }
+
     }
 
 }
