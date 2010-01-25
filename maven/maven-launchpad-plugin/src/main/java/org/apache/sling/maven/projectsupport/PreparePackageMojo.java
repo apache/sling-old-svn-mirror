@@ -23,7 +23,7 @@ import java.util.Properties;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
@@ -43,6 +43,13 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 	 * @parameter
 	 */
 	private ArtifactDefinition[] additionalBundles;
+
+	/**
+	 * Bundles which should be removed from the project's bundles directory.
+	 *
+	 * @parameter
+	 */
+	private ArtifactDefinition[] bundlesToRemove;
 
 	/**
 	 * If true, install the default bundles.
@@ -97,9 +104,28 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 		}
 		copyAdditionalBundles();
 		copyWebSupportBundle();
+		removeBundles();
 		if (JAR.equals(packaging)) {
 			unpackBaseArtifact();
 		}
+	}
+
+	private void removeBundles() throws MojoExecutionException {
+	    if (bundlesToRemove != null) {
+	        File bundleBaseDir = new File(getOutputDirectory(), String.format(
+	                "%s/%s", baseDestination, bundlesDirectory));
+
+	        for (ArtifactDefinition def : bundlesToRemove) {
+	            DirectoryScanner scanner = new DirectoryScanner();
+	            scanner.setBasedir(bundleBaseDir);
+	            scanner.setIncludes(new String[] { "**/" + def.getArtifactId() + "-*.*"});
+	            scanner.scan();
+	            for (String toRemove : scanner.getIncludedFiles()) {
+	                getLog().info("Deleting " + toRemove);
+	                new File(toRemove).delete();
+	            }
+	        }
+	    }
 	}
 
 	private void copyAdditionalBundles() throws MojoExecutionException {
