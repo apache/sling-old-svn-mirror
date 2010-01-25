@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jcr.jackrabbit.server.impl.security;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
@@ -23,15 +24,21 @@ import java.util.Set;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.jackrabbit.core.security.authentication.Authentication;
+import org.apache.jackrabbit.core.security.authentication.CredentialsCallback;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
 import org.apache.sling.jcr.jackrabbit.server.impl.Activator;
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Extends
@@ -42,6 +49,13 @@ import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
  * {@link org.apache.jackrabbit.core.security.authentication.AbstractLoginModule}
  */
 public class PluggableDefaultLoginModule extends DefaultLoginModule {
+
+    private static final Logger log = LoggerFactory.getLogger(PluggableDefaultLoginModule.class);
+    /**
+     * captured call back hander in use.
+     */
+    private CallbackHandler pluggableCallackHander;
+
 
     /**
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#doInit
@@ -55,12 +69,28 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         }
 
         super.doInit(callbackHandler, session, options);
+        this.pluggableCallackHander = callbackHandler;
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see org.apache.jackrabbit.core.security.authentication.AbstractLoginModule#initialize(javax.security.auth.Subject, javax.security.auth.callback.CallbackHandler, java.util.Map, java.util.Map)
+     */
+    @Override
+    public void initialize(Subject subject, CallbackHandler callbackHandler,
+            Map sharedState, Map options) {
+        CallbackHandlerWrapper wrappedCallbackHandler = new CallbackHandlerWrapper(subject, callbackHandler);
+        
+        super.initialize(subject, wrappedCallbackHandler, sharedState, options);
     }
 
     /**
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getPrincipal
      */
     protected Principal getPrincipal(Credentials creds) {
+        if ( creds instanceof TrustedCredentials ) {
+            return ((TrustedCredentials) creds).getPrincipal();
+        }
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
             if (modules[i].canHandle(creds)) {
@@ -93,6 +123,9 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
      */
     protected Authentication getAuthentication(Principal principal,
             Credentials creds) throws RepositoryException {
+        if ( creds instanceof TrustedCredentials ) {
+            return ((TrustedCredentials) creds).getTrustedAuthentication();
+        }
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
             if (modules[i].canHandle(creds)) {
@@ -112,6 +145,12 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
      */
     protected boolean impersonate(Principal principal, Credentials creds)
             throws RepositoryException, FailedLoginException {
+        if ( creds instanceof AdministrativeCredentials ) {
+            return true;
+        }
+        if ( creds instanceof AnonCredentials ) {
+            return false;
+        }
 
         LoginModulePlugin[] modules = Activator.getLoginModules();
         for (int i = 0; i < modules.length; i++) {
@@ -124,5 +163,29 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         }
 
         return super.impersonate(principal, creds);
+    }
+    
+    
+    /**
+     * Since the AbstractLoginModule getCredentials does not know anything about TrustedCredentials we have to re-try here.
+     */
+    @Override
+    protected Credentials getCredentials() {
+        Credentials creds = super.getCredentials();
+        if ( creds == null ) {
+            CredentialsCallback callback = new CredentialsCallback();
+            try {
+                pluggableCallackHander.handle(new Callback[]{callback});
+                Credentials callbackCreds = callback.getCredentials();
+                if ( callbackCreds instanceof TrustedCredentials ) {
+                    creds = callbackCreds;
+                }
+            } catch (UnsupportedCallbackException e) {
+                log.warn("Credentials-Callback not supported try Name-Callback");
+            } catch (IOException e) {
+                log.error("Credentials-Callback failed: " + e.getMessage() + ": try Name-Callback");
+            }        
+        }
+        return creds;
     }
 }

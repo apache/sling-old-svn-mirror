@@ -23,6 +23,7 @@ import java.net.URL;
 import java.sql.DriverManager;
 import java.util.Hashtable;
 
+import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.osgi.framework.BundleActivator;
@@ -289,6 +290,10 @@ public class Activator implements BundleActivator, ServiceListener {
             homeDir.getPath());
         props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
             this.getRepositoryName());
+
+        // password properties are not used any more, set to a n/a value
+        props.put(AbstractSlingRepository.PROPERTY_ADMIN_PASS, "not-used");
+        props.put(AbstractSlingRepository.PROPERTY_ANONYMOUS_PASS, "not-used");
     }
 
     private File getHomeDir(BundleContext bundleContext) throws IOException {

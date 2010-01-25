@@ -201,8 +201,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     public Session loginAdministrative(String workspace)
             throws RepositoryException {
-        SimpleCredentials sc = new SimpleCredentials(this.adminUser,
-            this.adminPass);
+        Credentials sc = getAdministrativeCredentials(this.adminUser);
         return this.login(sc, workspace);
     }
 
@@ -226,7 +225,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         }
 
         if (credentials == null) {
-            credentials = new SimpleCredentials(this.anonUser, this.anonPass);
+            credentials = getAnonCredentials(this.anonUser);
         }
 
         // check the workspace
@@ -269,6 +268,26 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             throw new RepositoryException(re.getMessage(), re);
         }
     }
+    
+    /**
+     * @param anonUser the user name of the anon user.
+     * @return a Credentials implementation that represents the anon user.
+     */
+    protected Credentials getAnonCredentials(String anonUser) {
+        // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the anon password. SLING-1282
+        return new SimpleCredentials(anonUser, anonPass);
+    }
+    
+    /**
+     * @param adminUser the name of the administrative user.
+     * @return a Credentials implementation that represents the administrative user.
+     */
+    protected Credentials getAdministrativeCredentials(String adminUser){
+        // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the admin password. SLING-1282
+        return new SimpleCredentials(adminUser, adminPass);
+    }
+     
+
 
     /*
      * (non-Javadoc)
@@ -709,8 +728,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         Session tmpSession = null;
         try {
-            SimpleCredentials sc = new SimpleCredentials(this.adminUser,
-                this.adminPass);
+            Credentials sc = getAdministrativeCredentials(this.adminUser);
             tmpSession = this.getRepository().login(sc);
             Workspace defaultWs = tmpSession.getWorkspace();
             if (defaultWs instanceof JackrabbitWorkspace) {
