@@ -53,28 +53,28 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     /**
      * The name of the directory within the output directory into which the base
      * JAR should be installed.
-     * 
+     *
      * @parameter default-value="resources"
      */
     protected String baseDestination;
 
     /**
      * The directory which contains the start-level bundle directories.
-     * 
+     *
      * @parameter default-value="bundles"
      */
     protected String bundlesDirectory;
 
     /**
      * The definition of the defaultBundleList artifact.
-     * 
+     *
      * @parameter
      */
     private ArtifactDefinition defaultBundleList;
 
     /**
      * The definition of the defaultBundles package.
-     * 
+     *
      * @parameter
      */
     private ArtifactDefinition defaultBundles;
@@ -86,7 +86,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * To look up Archiver/UnArchiver implementations
-     * 
+     *
      * @component
      */
     private ArchiverManager archiverManager;
@@ -98,7 +98,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * The Maven project.
-     * 
+     *
      * @parameter expression="${project}"
      * @required
      * @readonly
@@ -107,14 +107,14 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * Used to look up Artifacts in the remote repository.
-     * 
+     *
      * @component
      */
     private ArtifactFactory factory;
 
     /**
      * Location of the local repository.
-     * 
+     *
      * @parameter expression="${localRepository}"
      * @readonly
      * @required
@@ -133,7 +133,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * List of Remote Repositories used by the resolver.
-     * 
+     *
      * @parameter expression="${project.remoteArtifactRepositories}"
      * @readonly
      * @required
@@ -142,7 +142,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * Used to look up Artifacts in the remote repository.
-     * 
+     *
      * @component
      */
     private ArtifactResolver resolver;
@@ -252,7 +252,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         return readBundleList(bundleListFile);
     }
 
-    
+
     protected void outputBundleList(File outputDirectory)
             throws MojoExecutionException {
         try {
@@ -273,30 +273,39 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
                                             bundleListFile), e);
         }
 
-        try {
-            Artifact artifact = getArtifact(defaultBundleList.getGroupId(),
-                    defaultBundleList.getArtifactId(), defaultBundleList
-                            .getVersion(), defaultBundleList.getType(),
-                    defaultBundleList.getClassifier());
-            getLog().info(
-                    "Using bundle list file from "
-                            + artifact.getFile().getAbsolutePath());
-            BundleList bundles = readBundleList(artifact.getFile());
-            copyBundles(bundles, outputDirectory);
-            return;
-        } catch (Exception e) {
-            getLog()
-                    .warn(
-                            "Unable to load bundle list from artifact. Falling back to bundle jar",
-                            e);
+        if (!isCurrentArtifact(defaultBundleList)) {
+            try {
+                Artifact artifact = getArtifact(defaultBundleList.getGroupId(),
+                        defaultBundleList.getArtifactId(), defaultBundleList
+                                .getVersion(), defaultBundleList.getType(),
+                        defaultBundleList.getClassifier());
+                getLog().info(
+                        "Using bundle list file from "
+                                + artifact.getFile().getAbsolutePath());
+                BundleList bundles = readBundleList(artifact.getFile());
+                copyBundles(bundles, outputDirectory);
+                return;
+            } catch (Exception e) {
+                getLog()
+                        .warn(
+                                "Unable to load bundle list from artifact. Falling back to bundle jar",
+                                e);
+            }
         }
 
-        Artifact defaultBundlesArtifact = getArtifact(defaultBundles
-                .getGroupId(), defaultBundles.getArtifactId(), defaultBundles
-                .getVersion(), defaultBundles.getType(), defaultBundles
-                .getClassifier());
-        unpack(defaultBundlesArtifact.getFile(), outputDirectory, null,
-                "META-INF/**");
+        if (!isCurrentArtifact(defaultBundleList)) {
+            Artifact defaultBundlesArtifact = getArtifact(defaultBundles
+                    .getGroupId(), defaultBundles.getArtifactId(),
+                    defaultBundles.getVersion(), defaultBundles.getType(),
+                    defaultBundles.getClassifier());
+            unpack(defaultBundlesArtifact.getFile(), outputDirectory, null,
+                    "META-INF/**");
+        }
+    }
+
+    private boolean isCurrentArtifact(ArtifactDefinition def) {
+        return (def.getGroupId().equals(project.getGroupId()) && def
+                .getArtifactId().equals(project.getArtifactId()));
     }
 
     private void copyBundles(BundleList bundles, File outputDirectory)
