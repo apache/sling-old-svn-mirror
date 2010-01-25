@@ -16,8 +16,10 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.osgi.framework.Bundle;
@@ -40,6 +42,9 @@ public class DynamicClassLoaderManagerFactory
 
     private final Set<Long> usedBundles = Collections.synchronizedSet(new HashSet<Long>());
 
+    /** All created managers. */
+    private final List<DynamicClassLoaderManagerImpl> managers = new ArrayList<DynamicClassLoaderManagerImpl>();
+
     /**
      * Create a new service instance
      * @param ctx The bundle context.
@@ -56,7 +61,12 @@ public class DynamicClassLoaderManagerFactory
      */
     public Object getService(final Bundle bundle,
                              final ServiceRegistration registration) {
-        return new DynamicClassLoaderManagerImpl(this.context, this.pckAdmin, new BundleProxyClassLoader(bundle), this);
+        final DynamicClassLoaderManagerImpl manager =  new DynamicClassLoaderManagerImpl(this.context,
+                this.pckAdmin, new BundleProxyClassLoader(bundle), this);
+        synchronized ( managers ) {
+            managers.add(manager);
+        }
+        return manager;
     }
 
     /**
@@ -66,6 +76,9 @@ public class DynamicClassLoaderManagerFactory
                              final ServiceRegistration registration,
                              final Object service) {
         if ( service != null ) {
+            synchronized ( managers ) {
+                managers.remove(service);
+            }
             ((DynamicClassLoaderManagerImpl)service).deactivate();
         }
     }
@@ -86,5 +99,16 @@ public class DynamicClassLoaderManagerFactory
     public void addUsedBundle(final Bundle bundle) {
         final long id = bundle.getBundleId();
         this.usedBundles.add(id);
+    }
+
+    /**
+     * Clear the negative caches of all registered managers.
+     */
+    public void clearNegativeCaches() {
+        synchronized ( this.managers ) {
+            for(final DynamicClassLoaderManagerImpl manager : this.managers) {
+                manager.clearNegativeCache();
+            }
+        }
     }
 }

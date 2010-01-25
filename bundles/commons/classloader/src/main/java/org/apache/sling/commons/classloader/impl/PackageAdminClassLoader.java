@@ -61,6 +61,13 @@ class PackageAdminClassLoader extends ClassLoader {
     }
 
     /**
+     * Clear the negative cache.
+     */
+    public void clearNegativeCache() {
+        negativeClassCache.clear();
+    }
+
+    /**
      * Find the bundle for a given package.
      * @param pckName The package name.
      * @return The bundle or <code>null</code>

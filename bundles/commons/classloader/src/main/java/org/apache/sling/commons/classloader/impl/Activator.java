@@ -113,6 +113,12 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
         if ( needsUpdate ) {
             this.unregisterManagerFactory();
             this.registerManagerFactory();
+        } else {
+            // if a new bundle has been added (=resolved), we should
+            // clear the negative cache (see SLING-1302)
+            if ( event.getType() == BundleEvent.RESOLVED ) {
+                this.service.clearNegativeCaches();
+            }
         }
     }
 }
