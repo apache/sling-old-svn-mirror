@@ -128,8 +128,6 @@
         <module>launchpad/base</module>
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
-        <module>launchpad/app</module>
-        <module>launchpad/webapp</module>
 
     </modules>
 
