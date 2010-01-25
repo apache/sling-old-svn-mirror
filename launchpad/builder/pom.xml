@@ -21,7 +21,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.launchpad.builder</artifactId>
+    <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>war</packaging>
     <version>6-SNAPSHOT</version>
 
