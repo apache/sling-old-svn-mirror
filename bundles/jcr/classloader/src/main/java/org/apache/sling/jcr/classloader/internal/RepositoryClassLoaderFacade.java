@@ -25,7 +25,6 @@ import java.util.Enumeration;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.classloader.DynamicRepositoryClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
