@@ -29,7 +29,7 @@ import org.codehaus.plexus.util.FileUtils;
 /**
  * Initialize a Sling application project by extracting bundles into the correct
  * locations.
- * 
+ *
  * @goal prepare-package
  * @requiresDependencyResolution test
  * @phase process-sources
@@ -39,14 +39,14 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 
 	/**
 	 * Any additional bundles to include in the project's bundles directory.
-	 * 
+	 *
 	 * @parameter
 	 */
 	private ArtifactDefinition[] additionalBundles;
 
 	/**
 	 * If true, install the default bundles.
-	 * 
+	 *
 	 * @parameter default-value="true"
 	 */
 	private boolean installDefaultBundles;
@@ -55,29 +55,21 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 	 * The output directory for the default bundles in a WAR-packaged project,
 	 * the base JAR (in the subdirectory named in the baseDestination
 	 * parameter), and any additional bundles.
-	 * 
+	 *
 	 * @parameter default-value="${project.build.directory}/launchpad-bundles"
 	 */
 	private File warOutputDirectory;
 
 	/**
-	 * The Maven project.
-	 * 
-	 * @parameter expression="${project}"
-	 * @readonly
-	 */
-	private MavenProject project;
-
-	/**
 	 * The project's packaging type.
-	 * 
+	 *
 	 * @parameter expression="${project.packaging}"
 	 */
 	private String packaging;
 
 	/**
 	 * The definition of the base JAR.
-	 * 
+	 *
 	 * @parameter
 	 */
 	private ArtifactDefinition base;
@@ -85,14 +77,14 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 	/**
 	 * The definition of the package to be included to provide web support for
 	 * JAR-packaged projects (i.e. pax-web).
-	 * 
+	 *
 	 * @parameter
 	 */
 	private ArtifactDefinition jarWebSupport;
 
 	/**
 	 * The project's build output directory (i.e. target/classes).
-	 * 
+	 *
 	 * @parameter expression="${project.build.outputDirectory}"
 	 * @readonly
 	 */
@@ -179,7 +171,7 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 			return buildOutputDirectory;
 		}
 	}
-	
+
 
 
 	protected void initArtifactDefinitions(Properties dependencies) {
@@ -193,7 +185,7 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 		}
 		jarWebSupport.initDefaults(dependencies.getProperty("jarWebSupport"));
 	}
-	
+
 	private void unpackBaseArtifact() throws MojoExecutionException {
 		Artifact artifact = getBaseDependency();
 		if (artifact == null) {
