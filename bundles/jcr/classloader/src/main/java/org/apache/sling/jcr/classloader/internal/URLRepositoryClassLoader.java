@@ -229,7 +229,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
      * @throws ClassNotFoundException If the named class could not be found or
      *      if this class loader has already been destroyed.
      */
-    protected Class findClass(final String name) throws ClassNotFoundException {
+    protected Class<?> findClass(final String name) throws ClassNotFoundException {
 
         if (isDestroyed()) {
             throw new ClassNotFoundException(name + " (Classloader destroyed)");
@@ -238,10 +238,10 @@ public class URLRepositoryClassLoader extends URLClassLoader {
         log.debug("findClass: Try to find class {}", name);
 
         try {
-            return (Class) AccessController
-                .doPrivileged(new PrivilegedExceptionAction() {
+            return AccessController.doPrivileged(
+                new PrivilegedExceptionAction<Class<?>>() {
 
-                    public Object run() throws ClassNotFoundException {
+                    public Class<?> run() throws ClassNotFoundException {
                         return findClassPrivileged(name);
                     }
                 });
@@ -288,15 +288,15 @@ public class URLRepositoryClassLoader extends URLClassLoader {
      *      empty enumeration if no resources are found by this class loader
      *      or if this class loader has already been destroyed.
      */
-    public Enumeration findResources(String name) {
+    public Enumeration<URL> findResources(String name) {
 
         if (isDestroyed()) {
             log.warn("Destroyed class loader cannot find resources");
-            return new Enumeration() {
+            return new Enumeration<URL>() {
                 public boolean hasMoreElements() {
                     return false;
                 }
-                public Object nextElement() {
+                public URL nextElement() {
                     throw new NoSuchElementException("No Entries");
                 }
             };
@@ -304,7 +304,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
 
         log.debug("findResources: Try to find resources for {}", name);
 
-        List list = new LinkedList();
+        List<URL> list = new LinkedList<URL>();
         for (int i=0; i < repository.length; i++) {
             final ClassPathEntry cp = repository[i];
             log.debug("findResources: Trying {}", cp);
@@ -328,8 +328,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
     /**
      * Returns the search path of URLs for loading classes and resources.
      * This includes the original list of URLs specified to the constructor,
-     * along with any URLs subsequently appended by the {@link #addURL(URL)}
-     * and {@link #addHandle(String)} methods.
+     * along with any URLs subsequently appended by the {@link #addURL(URL)}.
      *
      * @return the search path of URLs for loading classes and resources. The
      *      list is empty, if this class loader has already been destroyed.
@@ -341,14 +340,14 @@ public class URLRepositoryClassLoader extends URLClassLoader {
             return new URL[0];
         }
 
-        List urls = new ArrayList();
+        List<URL> urls = new ArrayList<URL>();
         for (int i=0; i < repository.length; i++) {
             URL url = repository[i].toURL();
             if (url != null) {
                 urls.add(url);
             }
         }
-        return (URL[]) urls.toArray(new URL[urls.size()]);
+        return urls.toArray(new URL[urls.size()]);
     }
 
     /**
@@ -423,7 +422,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
      * @throws NullPointerException If this class loader has already been
      *      destroyed.
      */
-    /* package */ Iterator getCachedResources() {
+    /* package */ Iterator<ClassLoaderResource> getCachedResources() {
         return cache.values().iterator();
     }
 
@@ -607,7 +606,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
      * @throws NullPointerException If this class loader has already been
      *      destroyed.
      */
-    private Class findClassPrivileged(String name) throws ClassNotFoundException {
+    private Class<?> findClassPrivileged(String name) throws ClassNotFoundException {
 
         // prepare the name of the class
         final String path = name.replace('.', '/').concat(".class");
@@ -623,7 +622,7 @@ public class URLRepositoryClassLoader extends URLClassLoader {
                     "findClassPrivileged: Loading class from {}, created {}",
                     res, new Date(res.getLastModificationTime()));
 
-                 Class c = defineClass(name, res);
+                 Class<?> c = defineClass(name, res);
                  if (c == null) {
                      log.warn("defineClass returned null for class {}", name);
                      throw new ClassNotFoundException(name);
@@ -703,12 +702,12 @@ public class URLRepositoryClassLoader extends URLClassLoader {
      * @throws ClassFormatError If the class bytes read from the resource are
      *      not a valid class.
      */
-    private Class defineClass(String name, ClassLoaderResource res)
+    private Class<?> defineClass(String name, ClassLoaderResource res)
             throws IOException, RepositoryException {
 
         log.debug("defineClass({}, {})", name, res);
 
-        Class clazz = res.getLoadedClass();
+        Class<?> clazz = res.getLoadedClass();
         if (clazz == null) {
 
             /**

@@ -83,7 +83,7 @@ public class DynamicRepositoryClassLoader
      * @see #onEvent(EventIterator)
      * @see #findClassLoaderResource(String)
      */
-    private Map modTimeCache;
+    private Map<String, ClassLoaderResource> modTimeCache;
 
     /**
      * Flag indicating whether there are loaded classes which have later been
@@ -122,7 +122,7 @@ public class DynamicRepositoryClassLoader
 
         // set fields
         dirty = false;
-        modTimeCache = new HashMap();
+        modTimeCache = new HashMap<String, ClassLoaderResource>();
 
         // register with observation service and path pattern list
         registerModificationListener();
@@ -152,7 +152,7 @@ public class DynamicRepositoryClassLoader
 
         // set the configuration and fields
         dirty = false;
-        modTimeCache = new HashMap();
+        modTimeCache = new HashMap<String, ClassLoaderResource>();
 
         // create a repository from the handles - might get a different one
         setRepository(resetClassPathEntries(old.getRepository()));
@@ -277,8 +277,8 @@ public class DynamicRepositoryClassLoader
         }
 
         // Check whether any class has changed
-        for (Iterator iter = getCachedResources(); iter.hasNext();) {
-            if (expireResource((ClassLoaderResource) iter.next())) {
+        for (Iterator<ClassLoaderResource> iter = getCachedResources(); iter.hasNext();) {
+            if (expireResource(iter.next())) {
                 log.debug("shouldReload: Found expired resource, need reload");
                 return true;
             }
@@ -475,7 +475,7 @@ public class DynamicRepositoryClassLoader
             log.debug(
                 "onEvent: Item {} has been modified, checking with cache", path);
 
-            ClassLoaderResource resource = (ClassLoaderResource) modTimeCache.get(path);
+            ClassLoaderResource resource = modTimeCache.get(path);
             if (resource != null) {
                 log.debug("pageModified: Expiring cache entry {}", resource);
                 expireResource(resource);
