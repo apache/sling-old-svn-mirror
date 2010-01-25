@@ -42,7 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>DynamicClassLoaderProviderImpl</code> TODO
+ * The <code>DynamicClassLoaderProviderImpl</code> provides
+ * a class loader which loads classes from configured paths
+ * in the repository.
+ * In addition it implements {@link ClassLoaderWriter} and
+ * supports writing class files to the repository.
  *
  * @scr.component label="%loader.name"
  *      description="%loader.description"
@@ -147,7 +151,6 @@ public class DynamicClassLoaderProviderImpl
         } catch (RepositoryException re) {
             log.error("Cannot remove " + name, re);
         } finally {
-            checkNode(parentNode, name);
             if ( session != null ) {
                 session.logout();
             }
@@ -189,11 +192,12 @@ public class DynamicClassLoaderProviderImpl
         return false;
     }
 
+    private static final String NT_FOLDER = "nt:folder";
+
     /**
      * Creates a folder hierarchy in the repository.
      */
     private boolean mkdirs(final Session session, String path) {
-        Node parentNode = null;
         try {
             // quick test
             if (session.itemExists(path) && session.getItem(path).isNode()) {
@@ -209,44 +213,44 @@ public class DynamicClassLoaderProviderImpl
                 } else if (current.hasNode(names[i])) {
                     current = current.getNode(names[i]);
                 } else {
-                    if (parentNode == null) {
-                        parentNode = current;
-                    }
+                    final Node parentNode = current;
                     try {
-                        current.addNode(names[i], "nt:folder");
+                        // adding the node could cause an exception
+                        // for example if another thread tries to
+                        // create the node "at the same time"
+                        current = parentNode.addNode(names[i], NT_FOLDER);
                         session.save();
                     } catch (RepositoryException re) {
-                        // we ignore this as this might be a concurrent modification!
+                        // let's first refresh the session
+                        // we don't catch an exception here, because if
+                        // session refresh fails, we might have a serious problem!
                         session.refresh(false);
+                        // let's check if the node is available now
+                        if ( parentNode.hasNode(names[i]) ) {
+                            current = parentNode.getNode(names[i]);
+                        } else {
+                            // we try it one more time to create the node - and fail otherwise
+                            current = parentNode.addNode(names[i], NT_FOLDER);
+                            session.save();
+                        }
                     }
-                    current = current.getNode(names[i]);
                 }
             }
 
-            if (parentNode != null) {
-                session.save();
-                return true;
-            }
+            return true;
 
         } catch (RepositoryException re) {
-            log.error("Cannot create folder path " + path, re);
-        } finally {
-            checkNode(parentNode, path);
+            log.error("Cannot create folder path:" + path, re);
+            // discard changes
+            try {
+                session.refresh(false);
+            } catch (RepositoryException e) {
+                // we simply ignore this
+            }
         }
 
         // false in case of error or no need to create
         return false;
-    }
-
-    private void checkNode(Node node, String path) {
-        if (node != null && node.isModified()) {
-            try {
-                node.refresh(false);
-            } catch (RepositoryException re) {
-                log.error("Cannot refresh node for " + path
-                    + " after failed save", re);
-            }
-        }
     }
 
     private String cleanPath(String path) {
@@ -276,25 +280,31 @@ public class DynamicClassLoaderProviderImpl
             this.fileName = fileName;
         }
 
+        /**
+         * @see java.io.ByteArrayOutputStream#close()
+         */
         public void close() throws IOException {
             super.close();
 
-            Node parentNode = null;
             Session session = null;
             try {
+                // get an own session for writing
                 session = repositoryOutputProvider.getSession();
                 final int lastPos = fileName.lastIndexOf('/');
+                final String path = (lastPos == -1 ? null : fileName.substring(0, lastPos));
+                final String name = (lastPos == -1 ? fileName : fileName.substring(lastPos + 1));
                 if ( lastPos != -1 ) {
-                    repositoryOutputProvider.mkdirs(session, fileName.substring(0, lastPos));
+                    if ( !repositoryOutputProvider.mkdirs(session, path) ) {
+                        throw new IOException("Unable to create path for " + path);
+                    }
                 }
                 Node fileNode = null;
                 Node contentNode = null;
+                Node parentNode = null;
                 if (session.itemExists(fileName)) {
-                    Item item = session.getItem(fileName);
+                    final Item item = session.getItem(fileName);
                     if (item.isNode()) {
-                        Node node = item.isNode()
-                                ? (Node) item
-                                : item.getParent();
+                        final Node node = item.isNode() ? (Node) item : item.getParent();
                         if ("jcr:content".equals(node.getName())) {
                             // replace the content properties of the jcr:content
                             // node
@@ -313,23 +323,20 @@ public class DynamicClassLoaderProviderImpl
                     } else {
                         // replace property with an nt:file node (if possible)
                         parentNode = item.getParent();
-                        String name = item.getName();
-                        fileNode = parentNode.addNode(name, "nt:file");
                         item.remove();
+                        session.save();
+                        fileNode = parentNode.addNode(name, "nt:file");
                     }
                 } else {
-                    int lastSlash = fileName.lastIndexOf('/');
-                    if (lastSlash <= 0) {
+                    if (lastPos <= 0) {
                         parentNode = session.getRootNode();
                     } else {
-                        Item parent = session.getItem(fileName.substring(0,
-                            lastSlash));
+                        Item parent = session.getItem(path);
                         if (!parent.isNode()) {
-                            // TODO: fail
+                            throw new IOException("Parent at " + path + " is not a node.");
                         }
                         parentNode = (Node) parent;
                     }
-                    String name = fileName.substring(lastSlash + 1);
                     fileNode = parentNode.addNode(name, "nt:file");
                 }
 
@@ -345,19 +352,14 @@ public class DynamicClassLoaderProviderImpl
                     mimeType = "application/octet-stream";
                 }
 
-                contentNode.setProperty("jcr:lastModified",
-                    System.currentTimeMillis());
-                contentNode.setProperty("jcr:data", new ByteArrayInputStream(
-                    buf, 0, size()));
+                contentNode.setProperty("jcr:lastModified", System.currentTimeMillis());
+                contentNode.setProperty("jcr:data", new ByteArrayInputStream(buf, 0, size()));
                 contentNode.setProperty("jcr:mimeType", mimeType);
 
-                parentNode.save();
+                session.save();
             } catch (RepositoryException re) {
-                repositoryOutputProvider.log.error("Cannot write file " + fileName, re);
-                throw new IOException("Cannot write file " + fileName
-                    + ", reason: " + re.toString());
+                throw (IOException)new IOException("Cannot write file " + fileName + ", reason: " + re.toString()).initCause(re);
             } finally {
-                repositoryOutputProvider.checkNode(parentNode, fileName);
                 if ( session != null ) {
                     session.logout();
                 }
