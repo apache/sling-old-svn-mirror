@@ -79,20 +79,6 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSlingScript.class);
 
-    // name of the global variable containing the node to which the
-	// resource adapts (null if the resource does not adapt to a node
-    private static final String NODE = "currentNode";
-
-    /** Contains the javax.jcr.Node class if it is available. */
-    private static Class<?> JCR_NODE_CLASS;
-    static {
-        try {
-            JCR_NODE_CLASS = DefaultSlingScript.class.getClassLoader().loadClass("javax.jcr.Node");
-        } catch (Exception ignore) {
-            LOGGER.info("Binding {} is not active as the javax.jcr.Node class is not available.", NODE);
-        }
-    }
-
     /** Thread local containing the resource resolver. */
     private static ThreadLocal<ResourceResolver> requestResourceResolver = new ThreadLocal<ResourceResolver>();
 
@@ -536,14 +522,6 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             bindings.put(RESPONSE, sling.getResponse());
             bindings.put(RESOURCE, sling.getRequest().getResource());
             bindings.put(OUT, sling.getResponse().getWriter());
-
-            // set the current node if the resource is node based
-            if ( JCR_NODE_CLASS != null ) {
-                final Object node = sling.getRequest().getResource().adaptTo(JCR_NODE_CLASS);
-                if (node != null) {
-                    bindings.put(NODE, node);
-                }
-            }
         }
 
         Object logObject = slingBindings.get(LOG);
