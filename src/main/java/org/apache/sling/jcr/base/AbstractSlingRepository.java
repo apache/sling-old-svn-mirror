@@ -140,11 +140,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private String anonUser;
 
-    private char[] anonPass;
-
     private String adminUser;
-
-    private char[] adminPass;
 
     private SessionPoolManager poolManager;
 
@@ -273,20 +269,13 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param anonUser the user name of the anon user.
      * @return a Credentials implementation that represents the anon user.
      */
-    protected Credentials getAnonCredentials(String anonUser) {
-        // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the anon password. SLING-1282
-        return new SimpleCredentials(anonUser, anonPass);
-    }
+    protected abstract Credentials getAnonCredentials(String anonUser);
     
     /**
      * @param adminUser the name of the administrative user.
      * @return a Credentials implementation that represents the administrative user.
      */
-    protected Credentials getAdministrativeCredentials(String adminUser){
-        // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the admin password. SLING-1282
-        return new SimpleCredentials(adminUser, adminPass);
-    }
-     
+    protected abstract Credentials getAdministrativeCredentials(String adminUser);
 
 
     /*
@@ -629,13 +618,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             PROPERTY_DEFAULT_WORKSPACE, null));
         this.anonUser = this.getProperty(properties, PROPERTY_ANONYMOUS_USER,
             DEFAULT_ANONYMOUS_USER);
-        this.anonPass = this.getProperty(properties, PROPERTY_ANONYMOUS_PASS,
-            DEFAULT_ANONYMOUS_PASS).toCharArray();
 
         this.adminUser = this.getProperty(properties, PROPERTY_ADMIN_USER,
             DEFAULT_ADMIN_USER);
-        this.adminPass = this.getProperty(properties, PROPERTY_ADMIN_PASS,
-            DEFAULT_ADMIN_PASS).toCharArray();
 
         setPollTimeActive(getIntProperty(properties, PROPERTY_POLL_ACTIVE));
         setPollTimeInActive(getIntProperty(properties, PROPERTY_POLL_INACTIVE));
@@ -755,6 +740,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     // ---------- Background operation checking repository availability --------
+
 
     private void setPollTimeActive(int seconds) {
         if (seconds < MIN_POLL) {
