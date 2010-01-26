@@ -83,4 +83,17 @@ public class ScriptBindingsValuesProviderTest extends RenderingTestBase {
         }
     }
 
+    public void testJSPProviderEL() throws IOException {
+        final String toDelete = uploadTestScript("bindingsprovided_el.jsp","html.jsp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes JSP marker (" + content + ")",content.contains("bindingsprovided_el.jsp"));
+            assertTrue("Content includes test text (" + content + ")", content.contains("Hello World!"));
+            assertTrue("Content includes JSP-specific test text (" + content + ")", content.contains("Hello World from JSP!"));
+            assertFalse("Content doesn't includes Groovy-specific test text (" + content + ")", content.contains("Hello World from Groovy!"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
 }
