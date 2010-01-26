@@ -69,6 +69,9 @@ public class DynamicClassLoaderProviderImpl
 
     public static final String CLASS_PATH_DEFAULT = "/var/classes";
 
+    /** Node type for packages/folders. */
+    private static final String NT_FOLDER = "nt:folder";
+
     /**
      * @scr.property valueRef="OWNER_DEFAULT"
      */
@@ -89,6 +92,7 @@ public class DynamicClassLoaderProviderImpl
      */
     private SlingRepository repository;
 
+    /** The configured class paths. */
     private String[] classPath;
 
     /** @scr.reference policy="dynamic" */
@@ -97,6 +101,9 @@ public class DynamicClassLoaderProviderImpl
     /** The read session. */
     private Session readSession;
 
+    /**
+     * Return a new session (for writing).
+     */
     Session getSession() throws RepositoryException {
         // get an administrative session for potentiall impersonation
         final Session admin = this.repository.loginAdministrative(null);
@@ -192,12 +199,16 @@ public class DynamicClassLoaderProviderImpl
         return false;
     }
 
-    private static final String NT_FOLDER = "nt:folder";
-
     /**
      * Creates a folder hierarchy in the repository.
+     * We synchronize this method to reduce potential conflics.
+     * Although each write uses its own session it might occur
+     * that more than one session tries to create the same path
+     * (or parent path) at the same time. By synchronizing this
+     * we avoid this situation - however this method is written
+     * in a failsafe manner anyway.
      */
-    private boolean mkdirs(final Session session, String path) {
+    private synchronized boolean mkdirs(final Session session, String path) {
         try {
             // quick test
             if (session.itemExists(path) && session.getItem(path).isNode()) {
@@ -253,6 +264,11 @@ public class DynamicClassLoaderProviderImpl
         return false;
     }
 
+    /**
+     * Helper method to clean the path.
+     * It replaces backslashes with slashes and cuts off trailing spaces.
+     * It uses the first configured class path to access the path.
+     */
     private String cleanPath(String path) {
         // replace backslash by slash
         path = path.replace('\\', '/');
@@ -409,7 +425,7 @@ public class DynamicClassLoaderProviderImpl
 
     /**
      * Activate this component.
-     * @param componentContext
+     * @param componentContext The component context.
      */
     protected void activate(final ComponentContext componentContext) {
         @SuppressWarnings("unchecked")
@@ -424,7 +440,7 @@ public class DynamicClassLoaderProviderImpl
 
     /**
      * Deactivate this component
-     * @param componentContext
+     * @param componentContext The component context.
      */
     protected void deactivate(final ComponentContext componentContext) {
         if ( this.readSession != null ) {
@@ -447,6 +463,9 @@ public class DynamicClassLoaderProviderImpl
         return this.classPath;
     }
 
+    /**
+     * Return the read session.
+     */
     public synchronized Session getReadSession() throws RepositoryException {
         // check current session
         if (this.readSession != null) {
