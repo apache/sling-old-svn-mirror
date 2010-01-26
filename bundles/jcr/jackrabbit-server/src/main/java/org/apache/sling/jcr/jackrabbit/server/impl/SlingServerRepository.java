@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
 
@@ -110,12 +111,30 @@ public class SlingServerRepository extends AbstractSlingRepository
             // check whether the URL is a file path
             File configFile = new File(configURLObj);
             if (configFile.canRead()) {
+
                 ins = new FileInputStream(configFile);
                 log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
+
             } else {
-                URL configURL = new URL(configURLObj);
-                ins = configURL.openStream();
-                log(LogService.LOG_INFO, "Using configuration URL " + configURL);
+
+                try {
+
+                    URL configURL = new URL(configURLObj);
+                    ins = configURL.openStream();
+                    log(LogService.LOG_INFO, "Using configuration URL " + configURL);
+
+                } catch (MalformedURLException mue) {
+
+                    log(LogService.LOG_INFO, "Configuration File "
+                        + configFile.getAbsolutePath()
+                        + " has been lost, trying to recreate");
+
+                    final Bundle bundle = getComponentContext().getBundleContext().getBundle();
+                    SlingServerRepository.copyFile(bundle, "repository.xml", configFile);
+
+                    ins = new FileInputStream(configFile);
+                    log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
+                }
             }
 
             RepositoryConfig crc = RepositoryConfig.create(ins, home);
@@ -165,9 +184,9 @@ public class SlingServerRepository extends AbstractSlingRepository
                 "Repository is not a RepositoryImpl, nothing to do");
         }
     }
-    
-    
-    
+
+
+
 
     //---------- Helper -------------------------------------------------------
 
