@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Collection;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.log.internal.LogManager;
 import org.osgi.service.cm.ConfigurationException;
@@ -95,11 +95,11 @@ public class LogConfigManager implements ILoggerFactory {
      * and logger configuration
      */
     private LogConfigManager() {
-        writerByPid = new HashMap<String, SlingLoggerWriter>();
-        writerByFileName = new HashMap<String, SlingLoggerWriter>();
-        configByPid = new HashMap<String, SlingLoggerConfig>();
-        configByCategory = new HashMap<String, SlingLoggerConfig>();
-        loggersByCategory = new HashMap<String, SoftReference<SlingLogger>>();
+        writerByPid = new ConcurrentHashMap<String, SlingLoggerWriter>();
+        writerByFileName = new ConcurrentHashMap<String, SlingLoggerWriter>();
+        configByPid = new ConcurrentHashMap<String, SlingLoggerConfig>();
+        configByCategory = new ConcurrentHashMap<String, SlingLoggerConfig>();
+        loggersByCategory = new ConcurrentHashMap<String, SoftReference<SlingLogger>>();
 
         // configure the default writer to write to stdout (for now)
         // and register for PID only
