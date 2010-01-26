@@ -55,6 +55,12 @@ public class DefineObjectsTag extends TagSupport {
     public static final String DEFAULT_NODE_NAME = "currentNode";
 
     /**
+     * Default name for the scripting variable referencing the
+     * <code>javax.script.Bindings</code> object (value is "bindings").
+     */
+    public static final String DEFAULT_BINDINGS_NAME = "bindings";
+
+    /**
      * Default name for the scripting variable referencing the log
      * <code>org.slf4j.Logger</code> (value is "log").
      */
@@ -83,6 +89,8 @@ public class DefineObjectsTag extends TagSupport {
     private String slingName = DEFAULT_SLING_NAME;
 
     private String logName = DEFAULT_LOG_NAME;
+
+    private String bindingsName = DEFAULT_BINDINGS_NAME;
 
     private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
 
@@ -125,6 +133,7 @@ public class DefineObjectsTag extends TagSupport {
         pageContext.setAttribute(resourceResolverName, scriptHelper.getRequest().getResourceResolver());
         pageContext.setAttribute(slingName, scriptHelper);
         pageContext.setAttribute(logName, bindings.getLog());
+        pageContext.setAttribute(bindingsName, bindings);
         if ( JCR_NODE_CLASS != null ) {
             final Object node = resource.adaptTo(JCR_NODE_CLASS);
             if (node != null) {
@@ -163,5 +172,9 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setResourceResolverName(String name) {
         this.resourceResolverName = name;
+    }
+
+    public void setBindingsName(String name) {
+        this.bindingsName = name;
     }
 }

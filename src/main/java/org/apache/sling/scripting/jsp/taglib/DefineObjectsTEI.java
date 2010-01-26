@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_BINDINGS_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_LOG_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
@@ -35,6 +36,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.slf4j.Logger;
 
@@ -86,6 +88,12 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_LOG_NAME = "logName";
 
+    /**
+     * The name of the tag attribute used to define the name of the
+     * SlingBindings scripting variable (value is "bindingsName").
+     */
+    public static final String ATTR_BINDINGS_NAME = "bindingsName";
+
     private static final String SLING_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
     private static final String SLING_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
@@ -99,6 +107,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
     private static final String SLING_CLASS = SlingScriptHelper.class.getName();
 
     private static final String LOG_CLASS = Logger.class.getName();
+
+    private static final String BINDINGS_CLASS = SlingBindings.class.getName();
 
     /**
      * Returns an Array of <code>VariableInfo</code> objects describing
@@ -129,6 +139,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
         addVar(varInfos, data, ATTR_LOG_NAME,
                 DEFAULT_LOG_NAME, LOG_CLASS);
+
+        addVar(varInfos, data, ATTR_BINDINGS_NAME,
+                DEFAULT_BINDINGS_NAME, BINDINGS_CLASS);
 
         return varInfos.toArray(new VariableInfo[varInfos.size()]);
 
