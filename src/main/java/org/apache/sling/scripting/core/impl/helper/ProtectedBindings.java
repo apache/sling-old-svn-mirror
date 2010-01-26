@@ -2,6 +2,7 @@ package org.apache.sling.scripting.core.impl.helper;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,7 +15,7 @@ public class ProtectedBindings implements Bindings {
 
     public ProtectedBindings(Bindings wrapped) {
         this.wrapped = wrapped;
-        this.protectedKeys = Collections.unmodifiableSet(wrapped.keySet());
+        this.protectedKeys = new HashSet<String>(wrapped.keySet());
     }
 
     /**
