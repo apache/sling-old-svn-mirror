@@ -323,15 +323,15 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getScheme() {
-        return null;
+        return RedirectServletTest.TEST_SCHEME;
     }
 
     public String getServerName() {
-        return null;
+        return RedirectServletTest.TEST_HOST;
     }
 
     public int getServerPort() {
-        return 0;
+        return RedirectServletTest.TEST_PORT;
     }
 
     public boolean isSecure() {
