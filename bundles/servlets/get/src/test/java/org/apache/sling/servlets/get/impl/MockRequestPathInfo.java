@@ -30,10 +30,6 @@ class MockRequestPathInfo implements RequestPathInfo {
 
     private final String path;
 
-    public MockRequestPathInfo(String selectors, String extension, String suffix) {
-        this(selectors, extension ,suffix, null);
-    }
-
     public MockRequestPathInfo(String selectors, String extension, String suffix, String path) {
         this.selectors = selectors;
         this.extension = extension;

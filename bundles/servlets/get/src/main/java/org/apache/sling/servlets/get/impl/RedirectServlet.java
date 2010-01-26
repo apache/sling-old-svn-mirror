@@ -69,6 +69,9 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     /** The name of the target property */
     public static final String TARGET_PROP = "sling:target";
 
+    /** The name of the redirect status property */
+    public static final String STATUS_PROP = "sling:status";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -76,20 +79,20 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
     /** @scr.property valueRef="DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS" type="Integer" */
     public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
-    
+
     /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
     public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
-    
+
     private int jsonMaximumResults;
-    
+
     protected void activate(ComponentContext ctx) {
       Dictionary<?, ?> props = ctx.getProperties();
-      this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY), 
+      this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY),
           DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS);
       // When the maximumResults get updated, we force a reset for the jsonRendererServlet.
       jsonRendererServlet = getJsonRendererServlet();
     }
-    
+
     @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
@@ -136,18 +139,25 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
             // if the target resource is a path (string), redirect there
             targetPath = targetResource.adaptTo(String.class);
-
         }
 
         // if we got a target path, make it external and redirect to it
         if (targetPath != null) {
             if (!isUrl(targetPath)) {
                 // make path relative and append selectors, extension etc.
+                // this is an absolute URI suitable for the Location header
                 targetPath = toRedirectPath(targetPath, request);
             }
 
-            // and redirect there ...
-            response.sendRedirect(targetPath);
+            final int status = getStatus(valueMap);
+
+            // redirect the client, use our own setup since we might have a
+            // custom response status and we already have converted the target
+            // into an absolute URI.
+            response.reset();
+            response.setStatus(status);
+            response.setHeader("Location", targetPath);
+            response.flushBuffer();
 
             return;
         }
@@ -158,11 +168,38 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     }
 
     /**
-     * Create a relative redirect URL for the targetPath relative to the given
-     * request. The URL is relative to the request's resource and will include
-     * the selectors, extension, suffix and query string of the request.
+     * Returns the response status from the {@link #STATUS_PROP} property in the
+     * value map. If <code>valueMap</code> is <code>null</code>, the property is
+     * not contained in the map or if the value is outside of the value HTTP
+     * response status range of [ 100 .. 999 ], the default status 302/FOUND is
+     * returned.
+     *
+     * @param valueMap The <code>valueMap</code> providing the optional status
+     *            property.
+     * @return The status value as defined above.
      */
-    protected static String toRedirectPath(String targetPath,
+    static int getStatus(final ValueMap valueMap) {
+        if (valueMap != null) {
+            final Integer statusInt = valueMap.get(STATUS_PROP, Integer.class);
+            if (statusInt != null) {
+                int status = statusInt.intValue();
+                if (status >= 100 && status <= 999) {
+                    return status;
+                }
+            }
+        }
+
+        // fall back to default value
+        return HttpServletResponse.SC_FOUND;
+
+    }
+
+    /**
+     * Create an absolute URI suitable for the "Location" response header
+     * including any selectors, extension, suffix and query from the current
+     * request.
+     */
+    static String toRedirectPath(String targetPath,
             SlingHttpServletRequest request) {
 
         // if the target path is an URL, do nothing and return it unmodified
@@ -205,8 +242,47 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             target.append('?').append(request.getQueryString());
         }
 
-        // return the mapped full path
-        return request.getResourceResolver().map(request, target.toString());
+        // return the mapped full path and return if already an absolute URI
+        final String finalTarget = request.getResourceResolver().map(request, target.toString());
+        if (isUrl(finalTarget)) {
+            return finalTarget;
+        }
+
+        // otherwise prepend the current request's information
+        return toAbsoluteUri(request.getScheme(), request.getServerName(),
+            request.getServerPort(), finalTarget);
+    }
+
+    /**
+     * Returns an absolute URI built from the given parameters.
+     *
+     * @param scheme The scheme for the URI to be built.
+     * @param host The name of the host.
+     * @param port The port or -1 to not add a port number to the URI. For
+     *            <code>http</code> and <code>https</code> schemes the port is
+     *            not added if it is the default port.
+     * @param targetPath The path of the resulting URI. This path is expected to
+     *            not be an absolute URI.
+     * @return The absolute URI built from the components.
+     */
+    static String toAbsoluteUri(final String scheme, final String host,
+            final int port, final String targetPath) {
+
+        // 1. scheme and host
+        final StringBuilder absUriBuilder = new StringBuilder();
+        absUriBuilder.append(scheme).append("://").append(host);
+
+        // 2. append the port depending on the scheme and whether the port is
+        // the default or not
+        if (port > 0) {
+            if (!(("http".equals(scheme) && port == 80) || ("https".equals(scheme) && port == 443))) {
+                absUriBuilder.append(':').append(port);
+            }
+        }
+
+        // 3. the actual target path
+        absUriBuilder.append(targetPath);
+        return absUriBuilder.toString();
     }
 
     private Servlet getJsonRendererServlet() {
@@ -224,15 +300,31 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
     /**
      * Returns <code>true</code> if the path is potentially an URL. This
-     * simplistic check looks for a ":/" string in the path assuming that this
-     * is a separator to separate the scheme from the scheme-specific part. If
-     * the separator occurs after a query separator ("?"), though, it is not
-     * assumed to be a scheme-separator.
+     * checks whether the path starts with a scheme followed by a colon
+     * according to <a href="http://www.faqs.org/rfcs/rfc2396.html">RFC-2396</a>:
+     * <pre>
+     *     scheme = alpha *( alpha | digit | "+" | "-" | "." )
+     *     alpha  = [ "A" .. "Z", "a" .. "z" ]
+     *     digit  = [ "0" .. "9" ]
+     * </pre>
      */
     private static boolean isUrl(final String path) {
-        final int protocolIndex = path.indexOf(":/");
-        final int queryIndex = path.indexOf('?');
-        return protocolIndex > -1
-            && (queryIndex == -1 || queryIndex > protocolIndex);
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            if (c == ':') {
+                return true;
+            }
+            if (!((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (i > 0
+                            && ((c >= '0' && c <= '9')
+                                    || c == '.'
+                                    || c == '+'
+                                    || c == '-')))) {
+                break;
+            }
+        }
+        return false;
     }
+
 }
