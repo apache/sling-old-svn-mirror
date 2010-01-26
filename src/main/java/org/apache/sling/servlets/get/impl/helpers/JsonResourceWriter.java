@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Set;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
@@ -102,8 +104,20 @@ public class JsonResourceWriter {
             // no map available, try string
             final String value = resource.adaptTo(String.class);
             if (value != null) {
+
+                // single value property or just plain String resource or...
                 w.key(ResourceUtil.getName(resource));
                 w.value(value);
+
+            } else {
+
+                // Try multi-value "property"
+                final String[] values = resource.adaptTo(String[].class);
+                if (values != null) {
+                    w.key(ResourceUtil.getName(resource));
+                    w.value(new JSONArray(Arrays.asList(values)));
+                }
+
             }
 
         } else {
