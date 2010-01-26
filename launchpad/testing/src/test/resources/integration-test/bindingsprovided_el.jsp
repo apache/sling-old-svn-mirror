@@ -22,7 +22,7 @@
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 <sling:defineObjects/>
 
-<h1>bindingsprovided.jsp</h1>
-<p>helloWorld:<%= bindings.get("helloWorld") %></p>
-<p>jspHelloWorld:<%= bindings.get("jspHelloWorld") %></p>
-<p>groovyHelloWorld:<%= bindings.get("groovyHelloWorld") %></p>
+<h1>bindingsprovided_el.jsp</h1>
+<p>helloWorld:${bindings.helloWorld}</p>
+<p>jspHelloWorld:${bindings.jspHelloWorld}</p>
+<p>groovyHelloWorld:${bindings.groovyHelloWorld}</p>
