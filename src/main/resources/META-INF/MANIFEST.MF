@@ -9,7 +9,7 @@ Export-Package: org.apache.sling.jcr.jackrabbit.server.security;uses:=
  g.apache.commons.collections.iterators,javax.jcr.observation,org.apac
  he.commons.collections.set";version="1.6.0"
 Service-Component: OSGI-INF/serviceComponents.xml
-Bundle-ClassPath: .,jackrabbit-jcr-rmi-1.4.1.jar,jackrabbit-core-1.6.0
+Bundle-ClassPath: .,jackrabbit-jcr-rmi-1.5.0.jar,jackrabbit-core-1.6.0
  .jar,jackrabbit-jcr-commons-1.6.0.jar,jackrabbit-spi-commons-1.6.0.ja
  r,jackrabbit-spi-1.6.0.jar,lucene-core-2.4.1.jar,derby-10.2.1.6.jar,c
  oncurrent-1.3.4.jar,jackrabbit-text-extractors-1.6.0.jar,pdfbox-0.7.3
@@ -28,7 +28,7 @@ Created-By: 1.6.0_13 (Sun Microsystems Inc.)
 DynamicImport-Package: *
 Bundle-Vendor: The Apache Software Foundation
 Bundle-Version: 2.0.5.SNAPSHOT
-Bnd-LastModified: 1259353659272
+Bnd-LastModified: 1264510177332
 Bundle-ManifestVersion: 2
 Bundle-Description: Bundle providing support to embed Jackrabbit Repos
  itory        instances and publish via RMI and/or JNDI
@@ -55,7 +55,7 @@ Import-Package: javax.jcr;version="1.0.0",javax.jcr.lock;version="1.0.
  pi.observation;version="1.6.0",org.apache.jackrabbit.api.security.pri
  ncipal;version="1.6.0",org.apache.jackrabbit.api.security.user;versio
  n="1.6.0",org.apache.sling.jcr.api;version="2.0.2",org.apache.sling.j
- cr.base;version="2.0.2",org.apache.sling.jcr.jackrabbit.server.securi
+ cr.base;version="2.0.5",org.apache.sling.jcr.jackrabbit.server.securi
  ty;version="2.0.4",org.apache.sling.jcr.jackrabbit.server.security.ac
  cessmanager;version="2.0.4",org.osgi.framework;version="1.4.0",org.os
  gi.service.cm;version="1.2.0",org.osgi.service.component;version="1.0
