@@ -154,7 +154,8 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
                     // external redirect
                     log.debug("resolve: Returning external redirect");
-                    return new RedirectResource(this, absPath, mappedPath[0]);
+                    return new RedirectResource(this, absPath, mappedPath[0],
+                        mapEntry.getStatus());
                 }
             }
 

@@ -19,6 +19,8 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
@@ -27,12 +29,22 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public final class RedirectResource extends SyntheticResource {
 
-    final String target;
+    static final String RT_SLING_REDIRECT = "sling:redirect";
+
+    static final String PROP_SLING_TARGET = "sling:target";
+
+    static final String PROP_SLING_STATUS = "sling:status";
+
+    private final Map<String, Object> values;
 
     public RedirectResource(final ResourceResolver resolver, final String path,
-            final String target) {
-        super(resolver, path, "sling:redirect");
-        this.target = target;
+            final String target, final int status) {
+        super(resolver, path, RT_SLING_REDIRECT);
+
+        HashMap<String, Object> props = new HashMap<String, Object>();
+        props.put(PROP_SLING_TARGET, target);
+        props.put(PROP_SLING_STATUS, status);
+        this.values = Collections.unmodifiableMap(props);
     }
 
     /**
@@ -41,8 +53,9 @@ public final class RedirectResource extends SyntheticResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == ValueMap.class) {
-            return (AdapterType) new ValueMapDecorator(
-                Collections.singletonMap("sling:target", (Object) this.target));
+            return (AdapterType) new ValueMapDecorator(values);
+        } else if (type == Map.class) {
+            return (AdapterType) values;
         }
 
         return super.adaptTo(type);
@@ -50,6 +63,6 @@ public final class RedirectResource extends SyntheticResource {
 
     @Override
     public String toString() {
-        return super.toString() + ", target=" + target;
+        return super.toString() + ", values=" + values;
     }
 }
