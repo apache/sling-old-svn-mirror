@@ -26,14 +26,16 @@
     </parent>
 
     <artifactId>org.apache.sling.jcr.classloader</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JCR ClassLoader</name>
     <description>
-        Provides Support for delegate class loaders built dynamically.
-        Delegate class loaders supported are generic ClassLoader, OSGi
-        bundles and repository class loader.
+        This bundle provides a cloassloader for the Apache Sling Commons
+        dynamic classloader. The classloader provided supports loading
+        classes from a JCR repository at configured paths. This bundle
+        also implements a class writer which allows to store compiled
+        classes (like compiled JSPs etc.) in the repository.
     </description>
 
     <scm>
