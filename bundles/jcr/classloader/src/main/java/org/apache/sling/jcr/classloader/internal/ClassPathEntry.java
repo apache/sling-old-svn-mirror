@@ -199,18 +199,6 @@ public final class ClassPathEntry {
     }
 
     /**
-     * Returns a <code>ClassPathEntry</code> with the same configuration as
-     * this <code>ClassPathEntry</code>.
-     * <p>
-     * Becase the <code>DirectoryClassPathEntry</code> class does not have
-     * internal state, this method returns this instance to be used as
-     * the "copy".
-     */
-    ClassPathEntry copy() {
-        return this;
-    }
-
-    /**
      * @see Object#toString()
      */
     public String toString() {
