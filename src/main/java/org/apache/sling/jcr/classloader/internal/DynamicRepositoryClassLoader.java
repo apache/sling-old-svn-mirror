@@ -16,10 +16,24 @@
  */
 package org.apache.sling.jcr.classloader.internal;
 
-import java.util.Arrays;
+import java.beans.Introspector;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
@@ -34,8 +48,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * The <code>DynamicRepositoryClassLoader</code> class extends the
- * {@link org.apache.sling.jcr.classloader.internal.URLRepositoryClassLoader} and provides the
+ * The <code>DynamicRepositoryClassLoader</code> class provides the
  * functionality to load classes and resources from the JCR Repository.
  * Additionally, this class supports the notion of getting 'dirty', which means,
  * that if a resource loaded through this class loader has been modified in the
@@ -50,27 +63,30 @@ import org.slf4j.LoggerFactory;
  * list of path patterns as was used to create the internal class path for the
  * original class loader. The resulting internal class path need not be the
  * same, though.
- * <p>
- * As an additional feature the class loaders provides the functionality for
- * complete reconfiguration of the list of path patterns defined at class loader
- * construction time through the {@link #reconfigure(String[])} method. This
- * reconfiguration replaces the internal class path with a new one built from
- * the new path list and also replaces that path list. Reinstantiating a
- * reconfigured class loader gets a class loader containing the same path list
- * as the original class loader had after reconfiguration. That is the original
- * configuration is lost. While reconfiguration is not able to throw away
- * classes already loaded, it will nevertheless mark the class loader dirty, if
- * any classes have already been loaded through it.
- * <p>
- * This class is not intended to be extended by clients.
  */
-public class DynamicRepositoryClassLoader
-    extends URLRepositoryClassLoader
-    implements EventListener {
+public final class DynamicRepositoryClassLoader
+    extends URLClassLoader implements EventListener {
+
+    /** An empty list of url paths to call superclass constructor */
+    private static final URL[] NULL_PATH = {};
+
+    /**
+     * The special resource representing a resource which could not be
+     * found in the class path.
+     *
+     * @see #cache
+     * @see #findClassLoaderResource(String)
+     */
+    private static final ClassLoaderResource NOT_FOUND_RESOURCE =
+        new ClassLoaderResource(null, "[sentinel]", null) {
+            public boolean isExpired() {
+                return false;
+            }
+        };
+
 
     /** default log category */
-    private final Logger log =
-        LoggerFactory.getLogger(this.getClass().getName());
+    private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
     /**
      * Cache of resources used to check class loader expiry. The map is indexed
@@ -83,21 +99,57 @@ public class DynamicRepositoryClassLoader
      * @see #onEvent(EventIterator)
      * @see #findClassLoaderResource(String)
      */
-    private Map<String, ClassLoaderResource> modTimeCache;
+    private final Map<String, ClassLoaderResource> modTimeCache = new HashMap<String, ClassLoaderResource>();
 
     /**
      * Flag indicating whether there are loaded classes which have later been
      * expired (e.g. invalidated or modified)
      */
-    private boolean dirty;
+    private boolean dirty = false;
+
+    /** The registered event listeners. */
+    private EventListener[] proxyListeners;
 
     /**
-     * The list of repositories added through either the {@link #addURL} or the
-     * {@link #addHandle} method.
+     * The classpath which this classloader searches for class definitions.
+     * Each element of the vector should be either a directory, a .zip
+     * file, or a .jar file.
+     * <p>
+     * It may be empty when only system classes are controlled.
      */
-    private ClassPathEntry[] addedRepositories;
+    private ClassPathEntry[] repository;
 
-    private EventListener[] proxyListeners;
+    /**
+     * The list of paths to use as a classpath.
+     */
+    private String[] paths;
+
+    /**
+     * The <code>Session</code> grants access to the Repository to access the
+     * resources.
+     * <p>
+     * This field is not final such that it may be cleared when the class loader
+     * is destroyed.
+     */
+    private Session session;
+
+    /**
+     * Cache of resources found or not found in the class path. The map is
+     * indexed by resource name and contains mappings to instances of the
+     * {@link ClassLoaderResource} class. If a resource has been tried to be
+     * loaded, which could not be found, the resource is cached with the
+     * special mapping to {@link #NOT_FOUND_RESOURCE}.
+     *
+     * @see #NOT_FOUND_RESOURCE
+     * @see #findClassLoaderResource(String)
+     */
+    private final Map<String, ClassLoaderResource> cache = new HashMap<String, ClassLoaderResource>();
+
+    /**
+     * Flag indicating whether the {@link #destroy()} method has already been
+     * called (<code>true</code>) or not (<code>false</code>)
+     */
+    private boolean destroyed = false;
 
     /**
      * Creates a <code>DynamicRepositoryClassLoader</code> from a list of item
@@ -114,18 +166,29 @@ public class DynamicRepositoryClassLoader
      * @throws NullPointerException if either the session or the handles list
      *      is <code>null</code>.
      */
-    public DynamicRepositoryClassLoader(Session session,
-            String[] classPath, ClassLoader parent) {
-
+    public DynamicRepositoryClassLoader(final Session session,
+                                        final String[] classPath,
+                                        final ClassLoader parent) {
         // initialize the super class with an empty class path
-        super(session, classPath, parent);
+        super(NULL_PATH, parent);
+
+        // check session and handles
+        if (session == null) {
+            throw new NullPointerException("session");
+        }
+        if (classPath == null || classPath.length == 0) {
+            throw new NullPointerException("handles");
+        }
 
         // set fields
-        dirty = false;
-        modTimeCache = new HashMap<String, ClassLoaderResource>();
+        this.session = session;
+        this.paths = classPath;
+
+        // build the class repositories list
+        buildRepository();
 
         // register with observation service and path pattern list
-        registerModificationListener();
+        registerListeners();
 
         log.debug("DynamicRepositoryClassLoader: {} ready", this);
     }
@@ -144,23 +207,25 @@ public class DynamicRepositoryClassLoader
      * @param parent The parent <code>ClassLoader</code>, which may be
      *            <code>null</code>.
      */
-    private DynamicRepositoryClassLoader(Session session,
-            DynamicRepositoryClassLoader old, ClassLoader parent) {
-
+    private DynamicRepositoryClassLoader(final Session session,
+                                         final DynamicRepositoryClassLoader old,
+                                         final ClassLoader parent) {
         // initialize the super class with an empty class path
-        super(session, old.getPaths(), parent);
+        super(NULL_PATH, parent);
 
-        // set the configuration and fields
-        dirty = false;
-        modTimeCache = new HashMap<String, ClassLoaderResource>();
+        // check session and handles
+        if (session == null) {
+            throw new NullPointerException("session");
+        }
+        // set fields
+        this.session = session;
+        this.paths = old.paths;
 
-        // create a repository from the handles - might get a different one
-        setRepository(resetClassPathEntries(old.getRepository()));
-        setAddedRepositories(resetClassPathEntries(old.getAddedRepositories()));
+        repository = old.repository;
         buildRepository();
 
         // register with observation service and path pattern list
-        registerModificationListener();
+        registerListeners();
 
         // finally finalize the old class loader
         old.destroy();
@@ -181,119 +246,450 @@ public class DynamicRepositoryClassLoader
      */
     public void destroy() {
         // we expect to be called only once, so we stop destroyal here
-        if (isDestroyed()) {
+        if (destroyed) {
             log.debug("Instance is already destroyed");
             return;
         }
 
         // remove ourselves as listeners from other places
-        unregisterListener();
+        unregisterListeners();
 
-        addedRepositories = null;
+        // set destroyal guard
+        destroyed = true;
 
-        super.destroy();
+        // clear caches and references
+        repository = null;
+        paths = null;
+        session = null;
+
+        // clear the cache of loaded resources and flush cached class
+        // introspections of the JavaBean framework
+        final Iterator<ClassLoaderResource> ci = cache.values().iterator();
+        while ( ci.hasNext() ) {
+            final ClassLoaderResource res = ci.next();
+            if (res.getLoadedClass() != null) {
+                Introspector.flushFromCaches(res.getLoadedClass());
+                res.setLoadedClass(null);
+            }
+        }
+        cache.clear();
+        modTimeCache.clear();
+    }
+
+    //---------- URLClassLoader overwrites -------------------------------------
+
+    /**
+     * Finds and loads the class with the specified name from the class path.
+     *
+     * @param name the name of the class
+     * @return the resulting class
+     *
+     * @throws ClassNotFoundException If the named class could not be found or
+     *      if this class loader has already been destroyed.
+     */
+    protected Class<?> findClass(final String name) throws ClassNotFoundException {
+
+        if (destroyed) {
+            throw new ClassNotFoundException(name + " (Classloader destroyed)");
+        }
+
+        log.debug("findClass: Try to find class {}", name);
+
+        try {
+            return AccessController.doPrivileged(
+                new PrivilegedExceptionAction<Class<?>>() {
+
+                    public Class<?> run() throws ClassNotFoundException {
+                        return findClassPrivileged(name);
+                    }
+                });
+        } catch (java.security.PrivilegedActionException pae) {
+            throw (ClassNotFoundException) pae.getException();
+        }
+    }
+
+    /**
+     * Finds the resource with the specified name on the search path.
+     *
+     * @param name the name of the resource
+     *
+     * @return a <code>URL</code> for the resource, or <code>null</code>
+     *      if the resource could not be found or if the class loader has
+     *      already been destroyed.
+     */
+    public URL findResource(String name) {
+
+        if (destroyed) {
+            log.warn("Destroyed class loader cannot find a resource");
+            return null;
+        }
+
+        log.debug("findResource: Try to find resource {}", name);
+
+        ClassLoaderResource res = findClassLoaderResource(name);
+        if (res != null) {
+            log.debug("findResource: Getting resource from {}, created {}",
+                res, new Date(res.getLastModificationTime()));
+            return res.getURL();
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns an Enumeration of URLs representing all of the resources
+     * on the search path having the specified name.
+     *
+     * @param name the resource name
+     *
+     * @return an <code>Enumeration</code> of <code>URL</code>s. This is an
+     *      empty enumeration if no resources are found by this class loader
+     *      or if this class loader has already been destroyed.
+     */
+    public Enumeration<URL> findResources(String name) {
+
+        if (destroyed) {
+            log.warn("Destroyed class loader cannot find resources");
+            return new Enumeration<URL>() {
+                public boolean hasMoreElements() {
+                    return false;
+                }
+                public URL nextElement() {
+                    throw new NoSuchElementException("No Entries");
+                }
+            };
+        }
+
+        log.debug("findResources: Try to find resources for {}", name);
+
+        List<URL> list = new LinkedList<URL>();
+        for (int i=0; i < repository.length; i++) {
+            final ClassPathEntry cp = repository[i];
+            log.debug("findResources: Trying {}", cp);
+
+            ClassLoaderResource res = cp.getResource(name);
+            if (res != null) {
+                log.debug("findResources: Adding resource from {}, created {}",
+                    res, new Date(res.getLastModificationTime()));
+                URL url = res.getURL();
+                if (url != null) {
+                    list.add(url);
+                }
+            }
+
+        }
+
+        // return the enumeration on the list
+        return Collections.enumeration(list);
+    }
+
+    /**
+     * Returns the search path of URLs for loading classes and resources.
+     * This includes the original list of URLs specified to the constructor,
+     * along with any URLs subsequently appended by the {@link #addURL(URL)}.
+     *
+     * @return the search path of URLs for loading classes and resources. The
+     *      list is empty, if this class loader has already been destroyed.
+     * @see java.net.URLClassLoader#getURLs()
+     */
+    public URL[] getURLs() {
+        if (destroyed) {
+            log.warn("Destroyed class loader has no URLs any more");
+            return NULL_PATH;
+        }
+
+        List<URL> urls = new ArrayList<URL>();
+        for (int i=0; i < repository.length; i++) {
+            URL url = repository[i].toURL();
+            if (url != null) {
+                urls.add(url);
+            }
+        }
+        return urls.toArray(new URL[urls.size()]);
+    }
+
+    /**
+     * We don't allow to add new urls at runtime.
+     * @see java.net.URLClassLoader#addURL(java.net.URL)
+     */
+    protected void addURL(URL url) {
+        if (destroyed) {
+            log.warn("Cannot add URL to destroyed class loader");
+        } else {
+            log.warn("addURL: {} unable to add URL at runtime, ignored", url);
+        }
+    }
+
+    //---------- Property access ----------------------------------------------
+
+    /**
+     * Removes all entries from the cache of loaded resources, which mark
+     * resources, which have not been found as of yet.
+     *
+     * @throws NullPointerException If this class loader has already been
+     *      destroyed.
+     */
+    private void cleanCache() {
+        final Iterator<ClassLoaderResource> ci = this.cache.values().iterator();
+        while (ci.hasNext()) {
+            if (ci.next() == NOT_FOUND_RESOURCE) {
+                ci.remove();
+            }
+        }
+    }
+
+    //---------- internal ------------------------------------------------------
+
+    /**
+     * Builds the repository list from the list of path patterns and appends
+     * the path entries from any added handles. This method may be used multiple
+     * times, each time replacing the currently defined repository list.
+     *
+     * @throws NullPointerException If this class loader has already been
+     *      destroyed.
+     */
+    private synchronized void buildRepository() {
+        List<ClassPathEntry> newRepository = new ArrayList<ClassPathEntry>(paths.length);
+
+        // build repository from path patterns
+        for (int i=0; i < paths.length; i++) {
+            final String entry = paths[i];
+            ClassPathEntry cp = null;
+
+            // try to find repository based on this path
+            if (repository != null) {
+                for (int j=0; j < repository.length; j++) {
+                    final ClassPathEntry tmp = repository[i];
+                    if (tmp.getPath().equals(entry)) {
+                        cp = tmp;
+                        break;
+                    }
+                }
+            }
+
+            // not found, creating new one
+            if (cp == null) {
+                cp = ClassPathEntry.getInstance(session, entry);
+            }
+
+            if (cp != null) {
+                log.debug("Adding path {}", entry);
+                newRepository.add(cp);
+            } else {
+                log.debug("Cannot get a ClassPathEntry for {}", entry);
+            }
+        }
+
+        // replace old repository with new one
+        ClassPathEntry[] newClassPath = new ClassPathEntry[newRepository.size()];
+        newRepository.toArray(newClassPath);
+        repository = newClassPath;
+
+        // clear un-found resource cache
+        cleanCache();
+    }
+
+    /**
+     * Tries to find the class in the class path from within a
+     * <code>PrivilegedAction</code>. Throws <code>ClassNotFoundException</code>
+     * if no class can be found for the name.
+     *
+     * @param name the name of the class
+     *
+     * @return the resulting class
+     *
+     * @throws ClassNotFoundException if the class could not be found
+     * @throws NullPointerException If this class loader has already been
+     *      destroyed.
+     */
+    private Class<?> findClassPrivileged(String name) throws ClassNotFoundException {
+
+        // prepare the name of the class
+        final String path = name.replace('.', '/').concat(".class");
+        log.debug("findClassPrivileged: Try to find path {} for class {}",
+            path, name);
+
+        ClassLoaderResource res = findClassLoaderResource(path);
+        if (res != null) {
+
+             // try defining the class, error aborts
+             try {
+                 log.debug(
+                    "findClassPrivileged: Loading class from {}, created {}",
+                    res, new Date(res.getLastModificationTime()));
+
+                 Class<?> c = defineClass(name, res);
+                 if (c == null) {
+                     log.warn("defineClass returned null for class {}", name);
+                     throw new ClassNotFoundException(name);
+                 }
+                 return c;
+
+             } catch (IOException ioe) {
+                 log.debug("defineClass failed", ioe);
+                 throw new ClassNotFoundException(name, ioe);
+             } catch (Throwable t) {
+                 log.debug("defineClass failed", t);
+                 throw new ClassNotFoundException(name, t);
+             }
+         }
+
+        throw new ClassNotFoundException(name);
+     }
+
+    /**
+     * Returns a {@link ClassLoaderResource} for the given <code>name</code> or
+     * <code>null</code> if not existing. If the resource has already been
+     * loaded earlier, the cached instance is returned. If the resource has
+     * not been found in an earlier call to this method, <code>null</code> is
+     * returned. Otherwise the resource is looked up in the class path. If
+     * found, the resource is cached and returned. If not found, the
+     * {@link #NOT_FOUND_RESOURCE} is cached for the name and <code>null</code>
+     * is returned.
+     *
+     * @param name The name of the resource to return.
+     *
+     * @return The named <code>ClassLoaderResource</code> if found or
+     *      <code>null</code> if not found.
+     *
+     * @throws NullPointerException If this class loader has already been
+     *      destroyed.
+     */
+    private ClassLoaderResource findClassLoaderResource(String name) {
+
+        // check for cached resources first
+        ClassLoaderResource res = cache.get(name);
+        if (res == NOT_FOUND_RESOURCE) {
+            log.debug("Resource '{}' known to not exist in class path", name);
+            return null;
+        } else if (res == null) {
+            // walk the repository list and try to find the resource
+            for (int i = 0; i < repository.length; i++) {
+                final ClassPathEntry cp = repository[i];
+                log.debug("Checking {}", cp);
+
+                res = cp.getResource(name);
+                if (res != null) {
+                    log.debug("Found resource in {}, created ", res, new Date(
+                        res.getLastModificationTime()));
+                    cache.put(name, res);
+                    break;
+                }
+            }
+            if ( res == null ) {
+                log.debug("No classpath entry contains {}", name);
+                cache.put(name, NOT_FOUND_RESOURCE);
+                return null;
+            }
+        }
+        // if it could be found, we register it with the caches
+        // register the resource in the expiry map, if an appropriate
+        // property is available
+        Property prop = res.getExpiryProperty();
+        if (prop != null) {
+            try {
+                modTimeCache.put(prop.getPath(), res);
+            } catch (RepositoryException re) {
+                log.warn("Cannot register the resource " + res +
+                    " for expiry", re);
+            }
+        }
+        // and finally return the resource
+        return res;
+    }
+
+    /**
+     * Defines a class getting the bytes for the class from the resource
+     *
+     * @param name The fully qualified class name
+     * @param res The resource to obtain the class bytes from
+     *
+     * @throws RepositoryException If a problem occurrs getting at the data.
+     * @throws IOException If a problem occurrs reading the class bytes from
+     *      the resource.
+     * @throws ClassFormatError If the class bytes read from the resource are
+     *      not a valid class.
+     */
+    private Class<?> defineClass(String name, ClassLoaderResource res)
+            throws IOException, RepositoryException {
+
+        log.debug("defineClass({}, {})", name, res);
+
+        Class<?> clazz = res.getLoadedClass();
+        if (clazz == null) {
+
+            /**
+             * This following code for packages is duplicate from URLClassLoader
+             * because it is private there. I would like to not be forced to
+             * do this, but I still have to find a way ... -fmeschbe
+             */
+
+            // package support
+            int i = name.lastIndexOf('.');
+            if (i != -1) {
+                String pkgname = name.substring(0, i);
+                // Check if package already loaded.
+                Package pkg = getPackage(pkgname);
+                URL url = res.getCodeSourceURL();
+                Manifest man = res.getManifest();
+                if (pkg != null) {
+                    // Package found, so check package sealing.
+                    boolean ok;
+                    if (pkg.isSealed()) {
+                        // Verify that code source URL is the same.
+                        ok = pkg.isSealed(url);
+                    } else {
+                        // Make sure we are not attempting to seal the package
+                        // at this code source URL.
+                        ok = (man == null) || !isSealed(pkgname, man);
+                    }
+                    if (!ok) {
+                        throw new SecurityException("sealing violation");
+                    }
+                } else {
+                    if (man != null) {
+                        definePackage(pkgname, man, url);
+                    } else {
+                        definePackage(pkgname, null, null, null, null, null, null, null);
+                    }
+                }
+            }
+
+            byte[] data = res.getBytes();
+            clazz = defineClass(name, data, 0, data.length);
+            res.setLoadedClass(clazz);
+        }
+
+        return clazz;
+    }
+
+    /**
+     * Returns true if the specified package name is sealed according to the
+     * given manifest
+     * <p>
+     * This code is duplicate from <code>URLClassLoader.isSealed</code> because
+     * the latter has private access and we need the method here.
+     */
+    private boolean isSealed(String name, Manifest man) {
+         String path = name.replace('.', '/').concat("/");
+         Attributes attr = man.getAttributes(path);
+         String sealed = null;
+         if (attr != null) {
+             sealed = attr.getValue(Attributes.Name.SEALED);
+         }
+         if (sealed == null) {
+             if ((attr = man.getMainAttributes()) != null) {
+                 sealed = attr.getValue(Attributes.Name.SEALED);
+             }
+         }
+         return "true".equalsIgnoreCase(sealed);
     }
 
     //---------- reload support ------------------------------------------------
 
     /**
-     * Checks whether this class loader already loaded the named resource and
-     * would load another version if it were instructed to do so. As a side
-     * effect the class loader sets itself dirty in this case.
-     * <p>
-     * Calling this method yields the same result as calling
-     * {@link #shouldReload(String, boolean)} with the <code>force</code>
-     * argument set to <code>false</code>.
-     *
-     * @param name The name of the resource to check.
-     *
-     * @return <code>true</code> if the resource is loaded and reloading would
-     *      take another version than currently loaded.
-     *
-     * @see #isDirty
-     */
-    public synchronized boolean shouldReload(String name) {
-        return shouldReload(name, false);
-    }
-
-    /**
-     * Checks whether this class loader already loaded the named resource and
-     * whether the class loader should be set dirty depending on the
-     * <code>force</code> argument. If the argument is <code>true</code>, the
-     * class loader is marked dirty and <code>true</code> is returned if the
-     * resource has been loaded, else the loaded resource is checked for expiry
-     * and the class loader is only set dirty if the loaded resource has
-     * expired.
-     *
-     * @param name The name of the resource to check.
-     * @param force <code>true</code> if the class loader should be marked dirty
-     *      if the resource is loaded, else the class loader is only marked
-     *      dirty if the resource is loaded and has expired.
-     *
-     * @return <code>true</code> if the resource is loaded and
-     *      <code>force</code> is <code>true</code> or if the resource has
-     *      expired. <code>true</code> is also returned if this class loader
-     *      has already been destroyed.
-     *
-     * @see #isDirty
-     */
-    public synchronized boolean shouldReload(String name, boolean force) {
-        if (isDestroyed()) {
-            log.warn("Classloader already destroyed, reload required");
-            return true;
-        }
-
-        ClassLoaderResource res = getCachedResource(name);
-        if (res != null) {
-            log.debug("shouldReload: Expiring cache entry {}", res);
-            if (force) {
-                log.debug("shouldReload: Forced dirty flag");
-                dirty = true;
-                return true;
-            }
-
-            return expireResource(res);
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns <code>true</code> if any of the loaded classes need reload. Also
-     * sets this class loader dirty. If the class loader is already set dirty
-     * or if this class loader has been destroyed before calling this method,
-     * it returns immediately.
-     *
-     * @return <code>true</code> if any class loader needs to be reinstantiated.
-     *
-     * @see #isDirty
-     */
-    public synchronized boolean shouldReload() {
-
-        // check whether we are already dirty
-        if (isDirty()) {
-            log.debug("shouldReload: Dirty, need reload");
-            return true;
-        }
-
-        // Check whether any class has changed
-        for (Iterator<ClassLoaderResource> iter = getCachedResources(); iter.hasNext();) {
-            if (expireResource(iter.next())) {
-                log.debug("shouldReload: Found expired resource, need reload");
-                return true;
-            }
-        }
-
-        // No changes, no need to reload
-        log.debug("shouldReload: No expired resource found, no need to reload");
-        return false;
-    }
-
-    /**
      * Returns whether the class loader is dirty. This can be the case if any
-     * of the {@link #shouldReload(String)} or {@link #shouldReload()}
-     * methods returned <code>true</code> or if a loaded class has been expired
-     * through the observation.
+     * of the loaded class has been expired through the observation.
      * <p>
      * This method may also return <code>true</code> if the <code>Session</code>
      * associated with this class loader is not valid anymore.
@@ -309,7 +705,7 @@ public class DynamicRepositoryClassLoader
      *      reinstantiation.
      */
     public boolean isDirty() {
-        return isDestroyed() || dirty || !getSession().isLive();
+        return destroyed || dirty || !session.isLive();
     }
 
     /**
@@ -332,7 +728,7 @@ public class DynamicRepositoryClassLoader
     public DynamicRepositoryClassLoader reinstantiate(Session session, ClassLoader parent) {
         log.debug("reinstantiate: Copying {} with parent {}", this, parent);
 
-        if (isDestroyed()) {
+        if (destroyed) {
             throw new IllegalStateException("Destroyed class loader cannot be recreated");
         }
 
@@ -344,115 +740,7 @@ public class DynamicRepositoryClassLoader
         return newLoader;
     }
 
-    //---------- URLClassLoader overwrites -------------------------------------
-
-    /**
-     * Reconfigures this class loader with the pattern list. That is the new
-     * pattern list completely replaces the current pattern list. This new
-     * pattern list will also be used later to configure the reinstantiated
-     * class loader.
-     * <p>
-     * If this class loader already has loaded classes using the old, replaced
-     * path list, it is set dirty.
-     * <p>
-     * If this class loader has already been destroyed, this method has no
-     * effect.
-     *
-     * @param classPath The list of path strings making up the (initial) class
-     *      path of this class loader. The strings may contain globbing
-     *      characters which will be resolved to build the actual class path.
-     */
-    public void reconfigure(String[] classPath) {
-        if (log.isDebugEnabled()) {
-            log.debug("reconfigure: Reconfiguring the with {}",
-                Arrays.asList(classPath));
-        }
-
-        // whether the loader is destroyed
-        if (isDestroyed()) {
-            log.warn("Cannot reconfigure this destroyed class loader");
-            return;
-        }
-
-        // assign new path and register
-        setPaths(classPath);
-        buildRepository();
-
-        dirty = !hasLoadedResources();
-        log.debug("reconfigure: Class loader is dirty now: {}", (isDirty()
-                ? "yes"
-                : "no"));
-    }
-
-    //---------- RepositoryClassLoader overwrites -----------------------------
-
-    /**
-     * Calls the base class implementation to actually retrieve the resource.
-     * If the resource could be found and provides a non-<code>null</code>
-     * {@link ClassLoaderResource#getExpiryProperty() expiry property}, the
-     * resource is registered with an internal cache to check with when
-     * a repository modification is observed in {@link #onEvent(EventIterator)}.
-     *
-     * @param name The name of the resource to be found
-     *
-     * @return the {@link ClassLoaderResource} found for the name or
-     *      <code>null</code> if no such resource is available in the class
-     *      path.
-     *
-     * @throws NullPointerException If this class loader has already been
-     *      destroyed.
-     */
-    /* package */ ClassLoaderResource findClassLoaderResource(String name) {
-        // call the base class implementation to actually search for it
-        ClassLoaderResource res = super.findClassLoaderResource(name);
-
-        // if it could be found, we register it with the caches
-        if (res != null) {
-            // register the resource in the expiry map, if an appropriate
-            // property is available
-            Property prop = res.getExpiryProperty();
-            if (prop != null) {
-                try {
-                    modTimeCache.put(prop.getPath(), res);
-                } catch (RepositoryException re) {
-                    log.warn("Cannot register the resource " + res +
-                        " for expiry", re);
-                }
-            }
-        }
-
-        // and finally return the resource
-        return res;
-    }
-
-    /**
-     * Builds the repository list from the list of path patterns and appends
-     * the path entries from any added handles. This method may be used multiple
-     * times, each time replacing the currently defined repository list.
-     *
-     * @throws NullPointerException If this class loader has already been
-     *      destroyed.
-     */
-    protected synchronized void buildRepository() {
-        super.buildRepository();
-
-        // add added repositories
-        ClassPathEntry[] addedPath = getAddedRepositories();
-        if (addedPath != null && addedPath.length > 0) {
-            ClassPathEntry[] oldClassPath = getRepository();
-            ClassPathEntry[] newClassPath =
-                new ClassPathEntry[oldClassPath.length + addedPath.length];
-
-            System.arraycopy(oldClassPath, 0, newClassPath, 0,
-                oldClassPath.length);
-            System.arraycopy(addedPath, 0, newClassPath, oldClassPath.length,
-                addedPath.length);
-
-            setRepository(newClassPath);
-        }
-    }
-
-    //---------- ModificationListener interface -------------------------------
+    //---------- EventListener interface -------------------------------
 
     /**
      * Handles a repository item modifcation events checking whether a class
@@ -497,56 +785,21 @@ public class DynamicRepositoryClassLoader
      * Returns a string representation of this class loader.
      */
     public String toString() {
-        if (isDestroyed()) {
-            return super.toString();
+        StringBuilder buf = new StringBuilder(getClass().getName());
+        if (destroyed) {
+            buf.append(" - destroyed");
+        } else {
+            buf.append(": parent: { ");
+            buf.append(getParent());
+            buf.append(" }, user: ");
+            buf.append(session.getUserID());
+            buf.append(", dirty: ");
+            buf.append(isDirty());
         }
-
-        StringBuilder buf = new StringBuilder(super.toString());
-        buf.append(", dirty: ");
-        buf.append(isDirty());
         return buf.toString();
     }
 
     //---------- internal ------------------------------------------------------
-
-    /**
-     * Sets the list of class path entries to add to the class path after
-     * reconfiguration or reinstantiation.
-     *
-     * @param addedRepositories The list of class path entries to keep for
-     *      readdition.
-     */
-    protected void setAddedRepositories(ClassPathEntry[] addedRepositories) {
-        this.addedRepositories = addedRepositories;
-    }
-
-    /**
-     * Returns the list of added class path entries to readd them to the class
-     * path after reconfiguring the class loader.
-     */
-    protected ClassPathEntry[] getAddedRepositories() {
-        return addedRepositories;
-    }
-
-    /**
-     * Adds the class path entry to the current class path list. If the class
-     * loader has already been destroyed, this method creates a single entry
-     * class path list with the new class path entry.
-     * <p>
-     * Besides adding the entry to the current class path, it is also added to
-     * the list to be readded after reconfiguration and/or reinstantiation.
-     *
-     * @see #getAddedRepositories()
-     * @see #setAddedRepositories(ClassPathEntry[])
-     */
-    protected void addClassPathEntry(ClassPathEntry cpe) {
-        super.addClassPathEntry(cpe);
-
-        // add the repsitory to the list of added repositories
-        ClassPathEntry[] oldClassPath = getAddedRepositories();
-        ClassPathEntry[] newClassPath = addClassPathEntry(oldClassPath, cpe);
-        setAddedRepositories(newClassPath);
-    }
 
     /**
      * Registers this class loader with the observation service to get
@@ -556,16 +809,15 @@ public class DynamicRepositoryClassLoader
      * @throws NullPointerException if this class loader has already been
      *      destroyed.
      */
-    private final void registerModificationListener() {
-        log.debug("registerModificationListener: Registering to the observation service");
+    private final void registerListeners() {
+        log.debug("registerListeners: Registering to the observation service");
 
-        final String[] paths = this.getPaths();
-        this.proxyListeners = new EventListener[this.getPaths().length];
+        this.proxyListeners = new EventListener[this.paths.length];
         for(int i=0; i < paths.length; i++ ) {
             final String path = paths[i];
             try {
                 final EventListener listener = new ProxyEventListener(this);
-                final ObservationManager om = getSession().getWorkspace().getObservationManager();
+                final ObservationManager om = session.getWorkspace().getObservationManager();
                 om.addEventListener(listener, 255, path, true, null, null, false);
                 proxyListeners[i] = listener;
             } catch (RepositoryException re) {
@@ -582,13 +834,13 @@ public class DynamicRepositoryClassLoader
      * @throws NullPointerException if this class loader has already been
      *      destroyed.
      */
-    private final void unregisterListener() {
-        log.debug("registerModificationListener: Deregistering from the observation service");
+    private final void unregisterListeners() {
+        log.debug("unregisterListeners: Deregistering from the observation service");
         if ( this.proxyListeners != null ) {
             for(final EventListener listener : this.proxyListeners) {
                 if ( listener != null ) {
                     try {
-                        final ObservationManager om = getSession().getWorkspace().getObservationManager();
+                        final ObservationManager om = session.getWorkspace().getObservationManager();
                         om.removeEventListener(listener);
                     } catch (RepositoryException re) {
                         log.error("unregisterListener: Cannot unregister " +
@@ -620,27 +872,6 @@ public class DynamicRepositoryClassLoader
 
         // return the expiry status
         return exp;
-    }
-
-    /**
-     * Returns the list of classpath entries after resetting each of them.
-     *
-     * @param list The list of {@link ClassPathEntry}s to reset
-     *
-     * @return The list of reset {@link ClassPathEntry}s.
-     */
-    private ClassPathEntry[] resetClassPathEntries(
-            ClassPathEntry[] oldClassPath) {
-        if (oldClassPath != null) {
-            for (int i=0; i < oldClassPath.length; i++) {
-                ClassPathEntry entry = oldClassPath[i];
-                log.debug("resetClassPathEntries: Cloning {}", entry);
-                oldClassPath[i] = entry.copy();
-            }
-        } else {
-            log.debug("resetClassPathEntries: No list to reset");
-        }
-        return oldClassPath;
     }
 
     protected final static class ProxyEventListener implements EventListener {
