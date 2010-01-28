@@ -45,6 +45,7 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
+import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
 import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
@@ -414,7 +415,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             throws RepositoryException {
 
         SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
-            dateParser, changes);
+            dateParser, new ReferenceParser(session), changes);
 
         for (RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
