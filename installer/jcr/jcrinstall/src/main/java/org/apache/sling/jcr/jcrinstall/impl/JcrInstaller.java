@@ -191,7 +191,8 @@ public class JcrInstaller implements EventListener {
     	// Configurable folder regexp, system property overrides default value
     	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp != null) {
-            log.info("Using configured ({}) folder name regexp {}", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
+    		folderNameRegexp = folderNameRegexp.trim();
+            log.info("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
     	} else {
     	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
             log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
