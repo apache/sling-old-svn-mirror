@@ -416,7 +416,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
             if (service instanceof Map) {
                 service = new MapWrappingBindingsValuesProvider((Map) service);
             }
-            if (engineName == null || ANY_ENGINE.contains(engineName)) {
+            if (engineName == null || ANY_ENGINE.contains(engineName.toUpperCase())) {
                 genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
             } else {
                 Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
