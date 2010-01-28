@@ -99,6 +99,7 @@ class FolderNameFilter {
     int getPriority(final String path) {
     	int result = 0;
     	List<String> modes = null;
+    	boolean match = false;
     	
         // If path contains dots after the last /, remove suffixes 
     	// starting with dots until path matches regexp, and accept 
@@ -137,6 +138,7 @@ class FolderNameFilter {
             }
             
         } else if(pattern.matcher(path).matches()) {
+        	match = true;
         	result = getRootPriority(path);
         }
         
@@ -144,10 +146,12 @@ class FolderNameFilter {
             if(log.isDebugEnabled()) {
                 log.debug("getPriority(" + path + ")=" + result + " (prefix=" + prefix + ", run modes=" + modes + ")");
             }
-        } else {
+        } else if(match ){
         	log.debug("getPriority({})={}", path, result);
+        } else {
+        	log.debug("getPriority({})={}, path doesn't match regexp", path, result);
         }
-        
+         
         return result;
     }
     
