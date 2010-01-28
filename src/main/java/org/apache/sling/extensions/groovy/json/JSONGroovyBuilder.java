@@ -19,6 +19,8 @@ package org.apache.sling.extensions.groovy.json;
 import groovy.lang.Closure;
 import groovy.util.BuilderSupport;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,19 @@ import org.slf4j.LoggerFactory;
 public class JSONGroovyBuilder extends BuilderSupport {
 
     /**
+     * Construct a JSONGroovyBuilder.
+     */
+    public JSONGroovyBuilder() {
+    }
+
+    /**
+     * Construct a JSONGroovyBuilder which will output to a writer upon completion.
+     */
+    public JSONGroovyBuilder(Writer writer) {
+        this.writer = writer;
+    }
+
+    /**
      * The string 'json' which indicates that the root node should be used
      * as-is. Otherwise, the root node is wrapped in a JSON object.
      */
@@ -52,7 +67,22 @@ public class JSONGroovyBuilder extends BuilderSupport {
     /**
      * A stack containing the names of created nodes.
      */
-    protected Stack<String> nodeNames = new Stack<String>();
+    private Stack<String> nodeNames = new Stack<String>();
+
+    /**
+     * If not null, the writer to output to upon completion.
+     */
+    private Writer writer;
+
+    /**
+     * Create a JSONGroovyBuilder around the provided writer object.
+     *
+     * @param writer the writer
+     * @return a new builder
+     */
+    public static JSONGroovyBuilder write(Writer writer) {
+        return new JSONGroovyBuilder(writer);
+    }
 
     private void addFromMap(JSONObject obj, Map attributes) {
         for (Iterator it = attributes.keySet().iterator(); it.hasNext();) {
@@ -180,19 +210,27 @@ public class JSONGroovyBuilder extends BuilderSupport {
      */
     @Override
     protected Object postNodeCompletion(Object parent, Object node) {
-        if (parent == null && !nodeNames.empty()) {
-            String rootName = nodeNames.pop();
-            if (!JSON.equals(rootName)) {
-                JSONObject obj = new JSONObject();
-                try {
-                    return obj.put(rootName, node);
-                } catch (JSONException e) {
-                    logger.error("Unable to create container JSON Object", e);
-                    return super.postNodeCompletion(parent, node);
+        if (parent == null) {
+            Object finalNode = node;
+            if (!nodeNames.empty()) {
+                String rootName = nodeNames.pop();
+                if (!JSON.equals(rootName)) {
+                    finalNode = new JSONObject();
+                    try {
+                        ((JSONObject)finalNode).put(rootName, node);
+                    } catch (JSONException e) {
+                        logger.error("Unable to create container JSON Object", e);
+                    }
                 }
-            } else {
-                return super.postNodeCompletion(parent, node);
             }
+            if (writer != null) {
+                try {
+                    writer.write(finalNode.toString());
+                } catch (IOException e) {
+                    logger.error("Unable to write JSON Object", e);
+                }
+            }
+            return finalNode;
         } else {
             return super.postNodeCompletion(parent, node);
         }
