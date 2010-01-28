@@ -240,8 +240,24 @@ public class SlingPropertyValueHandler {
                         }
                         return;
                     }
-                    // fall back to default behaviour
+                } else if (type == PropertyType.REFERENCE) {
+                    boolean valueIsNodePath = false;
+                    try {
+                        if (parent.getSession().itemExists(values[0])) {
+                            valueIsNodePath = true;
+                        }
+                    } catch (RepositoryException e) {}
+                    if (valueIsNodePath) {
+                        Property createdProp = parent.setProperty(prop.getName(), (Node) parent.getSession().getItem(values[0]));
+
+                        changes.add(Modification.onModified(createdProp.getPath()));
+
+                        return;
+                    }
                 }
+
+                // fall back to default behaviour
+
                 final Property p;
                 if ( type == PropertyType.UNDEFINED ) {
                     p = parent.setProperty(prop.getName(), values[0]);
