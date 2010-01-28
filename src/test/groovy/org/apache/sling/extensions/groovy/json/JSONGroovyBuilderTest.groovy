@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.commons.json.groovy;
+package org.apache.sling.extensions.groovy.json;
 
 import org.apache.sling.commons.json.*;
-import org.apache.sling.commons.json.test.*;
+import json.JSONAssert;
 
 /**
  * Test of JSONGroovyBuilder.

@@ -14,11 +14,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.commons.json.groovy.internal;
+package org.apache.sling.extensions.groovy.json.internal;
 
 import javax.script.Bindings;
 
-import org.apache.sling.commons.json.groovy.JSONGroovyBuilder;
+import org.apache.sling.extensions.groovy.json.JSONGroovyBuilder;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 
 /**
