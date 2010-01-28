@@ -22,10 +22,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.felix.webconsole.AttachmentProvider;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -35,7 +40,8 @@ import org.osgi.framework.ServiceRegistration;
  * Web Console plugin to display the currently configured log
  * files.
  */
-public class SlingConfigurationPrinter implements ConfigurationPrinter {
+public class SlingConfigurationPrinter
+    implements ConfigurationPrinter, AttachmentProvider {
 
     /** The registration. */
     private static ServiceRegistration registration;
@@ -87,16 +93,45 @@ public class SlingConfigurationPrinter implements ConfigurationPrinter {
                     }
                 } catch (IOException ignore) {
                     // we just ignore this
+                } finally {
                     if ( fr != null ) {
                         try {
                             fr.close();
-                            fr = null;
                         } catch (IOException ignoreCloseException) {}
                     }
                 }
                 printWriter.println();
             }
         }
+    }
+
+    /**
+     * @see org.apache.felix.webconsole.AttachmentProvider#getAttachments(java.lang.String)
+     */
+    public URL[] getAttachments(String mode) {
+        // we only provide urls for mode zip
+        if ( ConfigurationPrinter.MODE_ZIP.equals(mode) ) {
+            final List<URL> urls = new ArrayList<URL>();
+            final LogConfigManager logConfigManager = LogConfigManager.getInstance();
+            Iterator<SlingLoggerWriter> writers = logConfigManager.getSlingLoggerWriters();
+            while (writers.hasNext()) {
+                final SlingLoggerWriter writer = writers.next();
+                final File[] files = writer.getFileRotator().getRotatedFiles(writer.getFile());
+                if ( files != null ) {
+                    for(int i = 0; i < files.length; i++) {
+                        try {
+                            urls.add(files[i].toURL());
+                        } catch (MalformedURLException mue) {
+                            // we just ignore this file then
+                        }
+                    }
+                }
+            }
+            if ( urls.size() > 0 ) {
+                return urls.toArray(new URL[urls.size()]);
+            }
+        }
+        return null;
     }
 
     private static String getPath(SlingLoggerWriter writer) {

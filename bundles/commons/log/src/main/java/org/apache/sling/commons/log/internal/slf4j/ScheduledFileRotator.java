@@ -19,6 +19,7 @@
 package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -235,6 +236,22 @@ final class ScheduledFileRotator implements FileRotator {
         scheduledFilename = dateSuffix;
     }
 
+
+    /**
+     * @see org.apache.sling.commons.log.internal.slf4j.FileRotator#getRotatedFiles(java.io.File)
+     */
+    public File[] getRotatedFiles(File file) {
+        final File dir = file.getParentFile();
+        final String baseName = file.getName();
+        final File[] logFiles = dir.listFiles(new FilenameFilter() {
+
+            public boolean accept(File dir, String name) {
+                return name.startsWith(baseName);
+            }
+        });
+        return logFiles;
+    }
+
     // -----------------------------------------------------------------------
 
     // This method computes the roll over period by looping over the
@@ -245,7 +262,6 @@ final class ScheduledFileRotator implements FileRotator {
     // formatting is done in GMT and not local format because the test
     // logic is based on comparisons relative to 1970-01-01 00:00:00
     // GMT (the epoch).
-
     private static int computeCheckPeriod(String datePattern) {
         if (datePattern != null) {
             final RollingCalendar rollingCalendar = new RollingCalendar(

@@ -19,6 +19,7 @@
 package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.File;
+import java.io.FilenameFilter;
 
 /**
  * The <code>SizeLimitedFileRotator</code> is a {@link FileRotator} which
@@ -115,6 +116,21 @@ final class SizeLimitedFileRotator implements FileRotator {
             file.delete();
 
         }
+    }
+
+    /**
+     * @see org.apache.sling.commons.log.internal.slf4j.FileRotator#getRotatedFiles(java.io.File)
+     */
+    public File[] getRotatedFiles(File file) {
+        final File dir = file.getParentFile();
+        final String baseName = file.getName();
+        final File[] logFiles = dir.listFiles(new FilenameFilter() {
+
+            public boolean accept(File dir, String name) {
+                return name.startsWith(baseName);
+            }
+        });
+        return logFiles;
     }
 
     @Override
