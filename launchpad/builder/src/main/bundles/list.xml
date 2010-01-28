@@ -198,6 +198,11 @@
             <artifactId>org.apache.sling.jcr.webconsole</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.groovy</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </bundle>
     </startLevel>
 
     <startLevel level="10">

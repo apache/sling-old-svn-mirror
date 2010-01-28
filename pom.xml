@@ -123,6 +123,7 @@
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/systemstatus</module>
         <module>bundles/extensions/webconsolebranding</module>
+        <module>bundles/extensions/groovy</module>
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
