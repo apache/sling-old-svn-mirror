@@ -331,7 +331,7 @@ public class JcrInstaller implements EventListener {
         }
         final int depth = path.split("/").length;
         if(depth > maxWatchedFolderDepth) {
-            log.info("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
+            log.debug("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
             return;
         }
         final NodeIterator it = n.getNodes();
