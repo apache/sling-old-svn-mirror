@@ -43,6 +43,10 @@ interface FileRotator {
             // no rotation
         }
 
+        public File[] getRotatedFiles(File file) {
+            return null; // no rotation
+        }
+
         @Override
         public String toString() {
             return "NullRotator";
@@ -61,4 +65,10 @@ interface FileRotator {
      * file.
      */
     void rotate(File file);
+
+    /**
+     * Return an array of already rotated files.
+     * @return An array of files or null.
+     */
+    File[] getRotatedFiles(File file);
 }
