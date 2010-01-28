@@ -60,4 +60,17 @@ public class JSONGroovyBuilderIntegrationTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
+
+    public void testJSONGroovyBuilder2() throws IOException, JSONException {
+        final String toDelete = uploadTestScript("builder2.groovy","json.groovy");
+        try {
+            final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
+            JSONObject jo = new JSONObject(content);
+            assertEquals("Content contained wrong number of items", 1, jo.length());
+            assertEquals("Content contained wrong key", "text", jo.keys().next());
+            assertEquals("Content contained wrong data", testText, jo.get("text"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
 }
