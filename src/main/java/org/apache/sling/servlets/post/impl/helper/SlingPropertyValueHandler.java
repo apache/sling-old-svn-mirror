@@ -60,6 +60,8 @@ public class SlingPropertyValueHandler {
 
     private final DateParser dateParser;
 
+    private final ReferenceParser referenceParser;
+
     /**
      * current date for all properties in this request
      */
@@ -68,8 +70,9 @@ public class SlingPropertyValueHandler {
     /**
      * Constructs a propert value handler
      */
-    public SlingPropertyValueHandler(DateParser dateParser, List<Modification> changes) {
+    public SlingPropertyValueHandler(DateParser dateParser, ReferenceParser referenceParser, List<Modification> changes) {
         this.dateParser = dateParser;
+        this.referenceParser = referenceParser;
         this.changes = changes;
     }
 
@@ -241,19 +244,22 @@ public class SlingPropertyValueHandler {
                         return;
                     }
                 } else if (type == PropertyType.REFERENCE) {
-                    boolean valueIsNodePath = false;
-                    try {
-                        if (parent.getSession().itemExists(values[0])) {
-                            valueIsNodePath = true;
+                    Node n = referenceParser.parse(values[0]);
+                    if (n != null) {
+                        if ( prop.hasMultiValueTypeHint() ) {
+                            final Value[] array = new Value[1];
+                            array[0] = parent.getSession().getValueFactory().createValue(n);
+                            changes.add(Modification.onModified(
+                                parent.setProperty(prop.getName(), array).getPath()
+                            ));
+                        } else {
+                            changes.add(Modification.onModified(
+                                    parent.setProperty(prop.getName(), n).getPath()
+                                ));
                         }
-                    } catch (RepositoryException e) {}
-                    if (valueIsNodePath) {
-                        Property createdProp = parent.setProperty(prop.getName(), (Node) parent.getSession().getItem(values[0]));
-
-                        changes.add(Modification.onModified(createdProp.getPath()));
-
                         return;
                     }
+
                 }
 
                 // fall back to default behaviour
@@ -284,8 +290,18 @@ public class SlingPropertyValueHandler {
                     ));
                     return;
                 }
-                // fall back to default behaviour
+            } else if (type == PropertyType.REFERENCE) {
+                // try conversion
+                ValueFactory valFac = parent.getSession().getValueFactory();
+                Value[] n = referenceParser.parse(values, valFac);
+                if (n != null) {
+                    changes.add(Modification.onModified(
+                        parent.setProperty(prop.getName(), n).getPath()
+                    ));
+                    return;
+                }
             }
+            // fall back to default behaviour
             final Property p;
             if ( type == PropertyType.UNDEFINED ) {
                 p = parent.setProperty(prop.getName(), values);
