@@ -16,10 +16,9 @@
  */
 package org.apache.sling.extensions.groovy.json.internal;
 
-import javax.script.Bindings;
+import java.util.HashMap;
 
 import org.apache.sling.extensions.groovy.json.JSONGroovyBuilder;
-import org.apache.sling.scripting.api.BindingsValuesProvider;
 
 /**
  * BindingsValuesProvider which binds an instance of JSONGroovyBuilder.
@@ -32,13 +31,11 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
  *
  * @scr.property name="javax.script.name" value="groovy"
  */
-public class JSONGroovyBuilderBindingsValuesProvider implements BindingsValuesProvider {
+public class JSONGroovyBuilderBindingsValuesProvider extends HashMap<String, Object> {
 
-    /**
-     * {@inheritDoc}
-     */
-    public void addBindings(Bindings bindings) {
-        bindings.put("jsonBuilder", new JSONGroovyBuilder());
+    public JSONGroovyBuilderBindingsValuesProvider() {
+        super();
+        put("jsonBuilder", new JSONGroovyBuilder());
     }
 
 }
