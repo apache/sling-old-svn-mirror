@@ -233,6 +233,7 @@ public class LogManager {
             return "LogWriter configurator";
         }
 
+        @SuppressWarnings("unchecked")
         public void updated(String pid, Dictionary configuration)
                 throws ConfigurationException {
             logConfigManager.updateLogWriter(pid, configuration);
@@ -262,6 +263,7 @@ public class LogManager {
             return "Logger configurator";
         }
 
+        @SuppressWarnings("unchecked")
         public void updated(String pid, Dictionary configuration)
                 throws ConfigurationException {
             logConfigManager.updateLoggerConfiguration(pid, configuration);

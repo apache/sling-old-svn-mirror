@@ -601,7 +601,7 @@ public class LogConfigManager implements ILoggerFactory {
         Object[] loggersArray;
         if (loggers.getClass().isArray()) {
             loggersArray = (Object[]) loggers;
-        } else if (loggers instanceof Collection) {
+        } else if (loggers instanceof Collection<?>) {
             loggersArray = ((Collection<?>) loggers).toArray();
         } else {
             loggersArray = new Object[] { loggers };
