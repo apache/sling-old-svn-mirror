@@ -31,7 +31,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     /** Max time allowed to refresh packages (TODO configurable??) */
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
-	private int packageRefreshEventsCount;
+	private volatile int packageRefreshEventsCount;
 	private OsgiInstallerContext ctx;
 
     /**
@@ -84,9 +84,9 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 
         // It seems like (at least with Felix 1.0.4) we won't get a FrameworkEvent.PACKAGES_REFRESHED
         // if one happened very recently and there's nothing to refresh
-        ctx.getPackageAdmin().refreshPackages(null);
         ctx.getBundleContext().addFrameworkListener(this);
         try {
+            ctx.getPackageAdmin().refreshPackages(null);
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
                 	if(ctx.getLogService() != null) {
