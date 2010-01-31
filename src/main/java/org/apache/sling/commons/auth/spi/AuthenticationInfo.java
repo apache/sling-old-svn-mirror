@@ -372,8 +372,8 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     @Override
     public Object remove(Object key) {
 
-        // don't return the auth type from the map
-        if (!AUTH_TYPE.equals(key)) {
+        // don't remove the auth type from the map
+        if (AUTH_TYPE.equals(key)) {
             return null;
         }
 
