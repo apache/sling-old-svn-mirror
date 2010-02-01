@@ -1,5 +1,0 @@
-package a {
-  class Testi(vars: TestiVars) {
-    print(1 + 2)
-  }
-}

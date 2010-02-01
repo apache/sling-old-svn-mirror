@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.0.0">
+    <scr:component enabled="true" name="org.apache.sling.scripting.scala.ScalaScriptEngineFactory">
+        <implementation class="org.apache.sling.scripting.scala.ScalaScriptEngineFactory"/>
+        <service servicefactory="false">
+            <provide interface="javax.script.ScriptEngineFactory"/>
+        </service>
+        <property name="service.pid" value="org.apache.sling.scripting.scala.ScalaScriptEngineFactory"/>
+        <reference name="settingsProvider" interface="org.apache.sling.scripting.scala.SettingsProvider" cardinality="0..1" policy="dynamic" bind="setSettingsProvider" unbind="unsetSettingsProvider"/>
+        <reference name="scriptInfo" interface="org.apache.sling.scripting.scala.ScriptInfo" cardinality="0..1" policy="dynamic" bind="setScriptInfo" unbind="unsetScriptInfo"/>
+    </scr:component>
+</components>
