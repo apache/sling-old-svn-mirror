@@ -23,6 +23,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 
@@ -37,6 +38,8 @@ public abstract class AbstractAuthenticationHandlerHolder extends PathBasedHolde
     protected AbstractAuthenticationHandlerHolder(final String fullPath) {
         super(fullPath);
     }
+
+    protected abstract AuthenticationFeedbackHandler getFeedbackHandler();
 
     protected abstract AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response);

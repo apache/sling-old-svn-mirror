@@ -40,8 +40,10 @@ import org.apache.sling.commons.auth.AuthenticationSupport;
 import org.apache.sling.commons.auth.Authenticator;
 import org.apache.sling.commons.auth.NoAuthenticationHandlerException;
 import org.apache.sling.commons.auth.impl.engine.EngineAuthenticationHandlerHolder;
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.TooManySessionsException;
@@ -144,6 +146,13 @@ public class SlingAuthenticator implements Authenticator,
      * <b>DO NOT USE ANY MORE</b>
      */
     private static final String REQUEST_ATTRIBUTE_SESSION = "javax.jcr.Session";
+
+    /**
+     * The name of the {@link AuthenticationInfo} property providing the option
+     * {@link org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler}
+     * handler to be called back on login failure or success.
+     */
+    private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
 
     private static ArrayList<AbstractAuthenticationHandlerHolder> EMPTY_INFO = new ArrayList<AbstractAuthenticationHandlerHolder>();
 
@@ -491,7 +500,12 @@ public class SlingAuthenticator implements Authenticator,
             if (pathInfo.startsWith(holder.path)) {
                 final AuthenticationInfo authInfo = holder.extractCredentials(
                     request, response);
+
                 if (authInfo != null) {
+                    // add the feedback handler to the info (may be null)
+                    authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER,
+                        holder.getFeedbackHandler());
+
                     return authInfo;
                 }
             }
@@ -506,6 +520,9 @@ public class SlingAuthenticator implements Authenticator,
     private boolean getSession(final HttpServletRequest request,
             final HttpServletResponse response, final AuthenticationInfo authInfo) {
 
+        // prepare the feedback handler
+        final AuthenticationFeedbackHandler feedbackHandler = (AuthenticationFeedbackHandler) authInfo.remove(AUTH_INFO_PROP_FEEDBACK_HANDLER);
+
         // try to connect
         try {
             Session session = repository.login(authInfo.getCredentials(),
@@ -514,10 +531,25 @@ public class SlingAuthenticator implements Authenticator,
             // handle impersonation
             session = handleImpersonation(request, response, session);
 
-            // check whether the client asked for redirect after
-            // authentication and/or impersonation
-            if (handleRedirect(request, response)) {
-                return false;
+            // handle success feedback
+            if (feedbackHandler != null) {
+
+                // call the feedback handler, terminating the request if
+                // so desired by the handler
+                if (feedbackHandler.authenticationSucceeded(request, response,
+                    authInfo)) {
+                    return false;
+                }
+
+            } else {
+
+                // if there is no feedback handler: check whether the client
+                // asked for redirect after authentication and/or impersonation
+                if (DefaultAuthenticationFeedbackHandler.handleRedirect(
+                    request, response)) {
+                    return false;
+                }
+
             }
 
             // set the attributes for further processing
@@ -527,6 +559,13 @@ public class SlingAuthenticator implements Authenticator,
 
         } catch (RepositoryException re) {
 
+            // handle failure feedback before proceeding to handling the
+            // failed login internally
+            if (feedbackHandler != null) {
+                feedbackHandler.authenticationFailed(request, response, authInfo);
+            }
+
+            // now find a way to get credentials
             handleLoginFailure(request, response, authInfo.getUser(), re);
 
         }
@@ -550,7 +589,8 @@ public class SlingAuthenticator implements Authenticator,
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
-                if (handleRedirect(request, response)) {
+                if (DefaultAuthenticationFeedbackHandler.handleRedirect(
+                    request, response)) {
                     return false;
                 }
 
@@ -857,58 +897,6 @@ public class SlingAuthenticator implements Authenticator,
 
         // return the session
         return session;
-    }
-
-    /**
-     * Handles an optional request for a redirect after successful
-     * authentication and <code>true</code> if the request has been redirected.
-     * <p>
-     * If sending the redirect response fails due to some IO problems, the
-     * request is still terminated but an error message is logged indicating the
-     * problem.
-     *
-     * @return <code>true</code> if redirect was requested. Otherwise
-     *         <code>false</code> is returned. Note, that <code>true</code> is
-     *         returned regardless of whether sending the redirect response
-     *         succeeded or not.
-     */
-    private boolean handleRedirect(final HttpServletRequest request,
-            final HttpServletResponse response) {
-
-        final String redirect = request.getParameter(REDIRECT_PARAMETER);
-        if (redirect != null) {
-
-            // find the redirect target
-            final String target;
-            if ("true".equalsIgnoreCase(redirect) || redirect.length() == 0) {
-                // redirect to the same path
-                target = request.getRequestURI();
-
-            } else if (redirect.startsWith("/")) {
-                // absolute target (in the servlet context)
-                target = request.getContextPath() + redirect;
-
-            } else {
-                // redirect relative to the current request
-                target = redirect;
-
-            }
-
-            // and redirect ensuring the response is sent to the client
-            try {
-                response.sendRedirect(target);
-            } catch (Exception e) {
-                // expected: IOException and IllegalStateException
-                log.error("handleRedirect: Failed to send redirect to "
-                    + target + ", aborting request without redirect", e);
-            }
-
-            // consider the request done
-            return true;
-        }
-
-        // no redirect requested
-        return false;
     }
 
     /**
