@@ -31,9 +31,6 @@ import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.internal.SessionPool;
-import org.apache.sling.jcr.base.internal.SessionPoolFactory;
-import org.apache.sling.jcr.base.internal.SessionPoolManager;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.framework.BundleContext;
@@ -45,13 +42,11 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>AbstractSlingRepository</code> is an abstract implementation of
- * the {@link SlingRepository} interface which provides core support for session
- * pooling. Implementations of the <code>SlingRepository</code> interface may
- * wish to extend this class to benefit from a default implementation.
- * <p>
- * Extensions of this class will have to declare the following
- * <code>scr.property</code> tags to have them declared automatically in the
- * respective component and metatype definitions by the maven-sling-plugin:
+ * the {@link SlingRepository} interface which provides default support for
+ * attached repositories as well as ensuring live repository connection,
+ * reconnecting if needed. Implementations of the <code>SlingRepository</code>
+ * interface may wish to extend this class to benefit from a default
+ * implementation.
  *
  * @scr.component metatype="no"
  */
@@ -78,31 +73,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /** @scr.property valueRef="DEFAULT_POLL_INACTIVE" */
     public static final String PROPERTY_POLL_INACTIVE = "poll.inactive";
-
-    /**
-     * The name of the configuration parameter containing the maximum number of
-     * seconds to wait for the number of currently active sessions to drop be
-     * low the upper limit before giving up (value is "pool.maxActiveWait").
-     *
-     * @scr.property value="1" type="Integer"
-     */
-    public static final String PROPERTY_MAX_ACTIVE_SESSIONS_WAIT = "pool.maxActiveWait";
-
-    /**
-     * The name of the configuration parameter containing the upper limit of the
-     * simultaneously active sessions (value is "pool.maxActive").
-     *
-     * @scr.property value="-1" type="Integer"
-     */
-    public static final String PROPERTY_MAX_ACTIVE_SESSIONS = "pool.maxActive";
-
-    /**
-     * The name of the configuration parameter containing the upper limit of the
-     * currently idle sessions to keep in the pool (value is "pool.maxIdle").
-     *
-     * @scr.property value="0" type="Integer"
-     */
-    public static final String PROPERTY_MAX_IDLE_SESSIONS = "pool.maxIdle";
 
     public static final String DEFAULT_ANONYMOUS_USER = "anonymous";
 
@@ -145,8 +115,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     private String adminUser;
 
     private char[] adminPass;
-
-    private SessionPoolManager poolManager;
 
     private Loader loader;
 
@@ -236,7 +204,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         try {
             log(LogService.LOG_DEBUG, "login: Logging in to workspace '"
                 + workspace + "'");
-            Session session = getPoolManager().login(credentials, workspace);
+            Session session = getRepository().login(credentials, workspace);
 
             // if the defualt workspace is null, acquire a session from the pool
             // and use the workspace used as the new default workspace
@@ -255,13 +223,13 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             if (workspace != null
                 && workspace.equals(this.getDefaultWorkspace())
                 && this.createWorkspace(workspace)) {
-                return this.getPoolManager().login(credentials, workspace);
+                return this.getRepository().login(credentials, workspace);
             }
 
             // otherwise (any workspace) or if workspace creation fails
             // just forward the original exception
             throw nswe;
-            
+
         } catch (RuntimeException re) {
             // SLING-702: Jackrabbit throws IllegalStateException if the
             // repository has already been shut down ...
@@ -317,49 +285,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         log(LogService.LOG_ERROR, "getDescriptorKeys: Repository not available");
         return new String[0];
-    }
-
-    // ---------- Session Pool support -----------------------------------------
-
-    protected final SessionPoolManager getPoolManager() {
-        if (this.poolManager == null) {
-            this.poolManager = new SessionPoolManager(this.getRepository(),
-                this.loader, this.getSessionPoolFactory());
-        }
-
-        return this.poolManager;
-    }
-
-    /**
-     * @return
-     */
-    protected SessionPoolFactory getSessionPoolFactory() {
-        @SuppressWarnings("unchecked")
-        Dictionary<String, Object> properties = this.componentContext.getProperties();
-        final int maxActiveSessions = this.getIntProperty(properties,
-            PROPERTY_MAX_ACTIVE_SESSIONS);
-        final int maxIdleSessions = this.getIntProperty(properties,
-            PROPERTY_MAX_IDLE_SESSIONS);
-        final int maxActiveSessionsWait = this.getIntProperty(properties,
-            PROPERTY_MAX_ACTIVE_SESSIONS_WAIT);
-        return new SessionPoolFactory() {
-
-            public SessionPool createPool(final SessionPoolManager mgr,
-                    final SimpleCredentials credentials) {
-                // create and configure the new pool
-                final SessionPool pool = createSessionPool(mgr, credentials);
-                pool.setMaxActiveSessions(maxActiveSessions);
-                pool.setMaxActiveSessionsWait(maxActiveSessionsWait);
-                pool.setMaxIdleSessions(maxIdleSessions);
-                return pool;
-            }
-        };
-    }
-
-    protected SessionPool createSessionPool(final SessionPoolManager mgr,
-            final SimpleCredentials credentials) {
-        final SessionPool pool = new SessionPool(mgr, credentials);
-        return pool;
     }
 
     // ---------- logging ------------------------------------------------------
@@ -555,12 +480,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param repository
      */
     protected void tearDown(Repository repository) {
-
-        if (this.poolManager != null) {
-            this.poolManager.dispose();
-            this.poolManager = null;
-        }
-
         if (this.loader != null) {
             this.loader.dispose();
             this.loader = null;
@@ -851,10 +770,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     log(
                         LogService.LOG_DEBUG,
                         "pingRepository() successful but pingAndCheck() fails, calling disposeRepository()");
-                    
+
                     // drop reference
                     repository = null;
-                    
+
                 } else {
 
                     // otherwise let go of the repository and fail startup
@@ -951,7 +870,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     if (repo == null) {
                         // No Repository yet, try to start
                         if (startRepository()) {
-                            log(LogService.LOG_INFO, "Repository started successfully"); 
+                            log(LogService.LOG_INFO, "Repository started successfully");
                             ok = true;
                             newPollTime = pollTimeActiveSeconds * MSEC;
                         } else {
@@ -962,7 +881,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     } else if (pingAndCheck()) {
                         ok = true;
                         newPollTime = pollTimeActiveSeconds * MSEC;
-                        
+
                     } else {
                         // Repository disappeared
                         log(LogService.LOG_INFO,
@@ -970,10 +889,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                         stopRepository();
                         newPollTime = pollTimeInActiveSeconds * MSEC;
                     }
-                    
+
                     if(newPollTime != pollTimeMsec) {
                         pollTimeMsec = newPollTime;
-                        log(LogService.LOG_DEBUG, 
+                        log(LogService.LOG_DEBUG,
                                 "Repository Pinger interval set to " + pollTimeMsec + " msec, repository is "
                                 + (ok ? "available" : "NOT available")
                                 );
@@ -987,9 +906,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         } catch (Throwable t) {
             // try to log the cause for thread termination
             log(LogService.LOG_ERROR, "Repository Pinger caught unexpected issue", t);
-            
+
         } finally {
-            
+
             // whatever goes on, make sure the repository is disposed of
             // at the end of the thread....
             log(LogService.LOG_INFO, "Stopping repository on shutdown");
