@@ -34,7 +34,7 @@
     <inceptionYear>2007</inceptionYear>
 
     <prerequisites>
-        <maven>2.0.7</maven>
+        <maven>2.2.1</maven>
     </prerequisites>
 
 
@@ -100,8 +100,8 @@
           <module>scripting/jst</module>
           <module>scripting/python</module>
           <module>scripting/ruby</module>
-          <module>scripting/scala/engine</module>
-          <module>scripting/scala/interpreter</module>
+          <module>scripting/scala/script</module>
+          <module>scripting/scala/config</module>
           <module>scripting/scala/samples/hello-world</module>
           <module>scripting/scala/samples/forum</module>
           <module>scripting/velocity</module>
