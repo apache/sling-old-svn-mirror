@@ -179,6 +179,11 @@
             <version>2.0.7-SNAPSHOT</version>
         </bundle>
         <bundle>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole.plugins.event</artifactId>
+            <version>0.9.0</version>
+        </bundle>
+        <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.5-SNAPSHOT</version>
