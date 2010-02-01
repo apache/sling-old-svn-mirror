@@ -23,6 +23,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 
@@ -44,6 +45,14 @@ final class AuthenticationHandlerHolder extends
 
         // assign the fields
         this.handler = handler;
+    }
+
+    @Override
+    protected AuthenticationFeedbackHandler getFeedbackHandler() {
+        if (handler instanceof AuthenticationFeedbackHandler) {
+            return (AuthenticationFeedbackHandler) handler;
+        }
+        return null;
     }
 
     public AuthenticationInfo doExtractCredentials(HttpServletRequest request,

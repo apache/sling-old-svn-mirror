@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.auth.impl.AbstractAuthenticationHandlerHolder;
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 
@@ -44,6 +45,14 @@ public final class EngineAuthenticationHandlerHolder extends
             final AuthenticationHandler handler) {
         super(fullPath);
         this.handler = handler;
+    }
+
+    @Override
+    protected AuthenticationFeedbackHandler getFeedbackHandler() {
+        if (handler instanceof AuthenticationFeedbackHandler) {
+            return (AuthenticationFeedbackHandler) handler;
+        }
+        return null;
     }
 
     public AuthenticationInfo doExtractCredentials(HttpServletRequest request,
