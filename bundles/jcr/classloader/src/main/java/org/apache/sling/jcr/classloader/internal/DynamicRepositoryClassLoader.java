@@ -837,14 +837,17 @@ public final class DynamicRepositoryClassLoader
     private final void unregisterListeners() {
         log.debug("unregisterListeners: Deregistering from the observation service");
         if ( this.proxyListeners != null ) {
-            for(final EventListener listener : this.proxyListeners) {
-                if ( listener != null ) {
-                    try {
-                        final ObservationManager om = session.getWorkspace().getObservationManager();
-                        om.removeEventListener(listener);
-                    } catch (RepositoryException re) {
-                        log.error("unregisterListener: Cannot unregister " +
-                            this + " from observation manager", re);
+            // check session first!
+            if ( session.isLive() ) {
+                for(final EventListener listener : this.proxyListeners) {
+                    if ( listener != null ) {
+                        try {
+                            final ObservationManager om = session.getWorkspace().getObservationManager();
+                            om.removeEventListener(listener);
+                        } catch (RepositoryException re) {
+                            log.error("unregisterListener: Cannot unregister " +
+                                this + " from observation manager", re);
+                        }
                     }
                 }
             }
