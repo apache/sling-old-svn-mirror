@@ -57,7 +57,7 @@ public class ScalaScriptingTest extends HttpTestBase {
     }
 
     public void testScala() throws Exception {
-        final String toDelete = uploadTestScript(testNode.scriptPath, "scala/rendering-test.scs", "html.scs");
+        final String toDelete = uploadTestScript(testNode.scriptPath, "scala/rendering-test.scs", "html.scala");
         try {
             checkContent(testNode);
         }
