@@ -198,7 +198,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             try {
                 if (!allowTrace && "TRACE".equals(request.getMethod())) {
                     HttpServletResponse response = (HttpServletResponse) res;
-                    response.sendError(405);
+                    response.setStatus(405);
                     response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
                     return;
                 }
