@@ -155,10 +155,8 @@
                             <tasks>
                                 <echo>
 ********************** WARNING (SLING-443) **********************************
-On most platforms, building Apache Sling currently requires setting
-MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
-You might get a "java.lang.OutOfMemoryError: Java heap space" if that
-setting is not correct.
+On most platforms, you'll get OutOfMemoryErrors when building unless you set
+MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
 *****************************************************************************
                                 </echo>
                             </tasks>
