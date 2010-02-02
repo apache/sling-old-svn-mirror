@@ -104,6 +104,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_INCLUSION_COUNTER" */
     public static final String PROP_MAX_INCLUSION_COUNTER = "sling.max.inclusions";
 
+    /** @scr.property valueRef="DEFAULT_ALLOW_TRACE" */
+    public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
+    
+    public static final boolean DEFAULT_ALLOW_TRACE = false;
+
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
 
@@ -175,6 +180,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
 
+    private boolean allowTrace = DEFAULT_ALLOW_TRACE;
+
     // ---------- Servlet API -------------------------------------------------
 
     public void service(ServletRequest req, ServletResponse res)
@@ -189,6 +196,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             String threadName = setThreadName(request);
 
             try {
+                if (!allowTrace && "TRACE".equals(request.getMethod())) {
+                    HttpServletResponse response = (HttpServletResponse) res;
+                    response.sendError(405);
+                    response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+                    return;
+                }
 
                 // real request handling for HTTP requests
                 service(request, (HttpServletResponse) res);
@@ -584,6 +597,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             configuration.put("servlet-name", PRODUCT_NAME + " "
                 + productVersion);
         }
+        
+        // configure method filter
+        allowTrace = OsgiUtil.toBoolean(componentConfig.get(PROP_ALLOW_TRACE),
+                DEFAULT_ALLOW_TRACE);
 
         // configure the request limits
         RequestData.setMaxIncludeCounter(OsgiUtil.toInteger(
