@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.commons.classloader</artifactId>
     <packaging>bundle</packaging>
-    <version>1.1.4</version>
+    <version>1.1.5-SNAPSHOT</version>
 
     <name>Apache Sling Dynamic Class Loader Support</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.classloader-1.1.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.classloader-1.1.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.classloader-1.1.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/classloader</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/classloader</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/classloader</url>
     </scm>
 
     <build>
