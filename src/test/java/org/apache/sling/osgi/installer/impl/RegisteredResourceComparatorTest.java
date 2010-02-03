@@ -50,7 +50,7 @@ public class RegisteredResourceComparatorTest {
         }
         final InstallableResource r = new InstallableResource("test:" + url, data);
         r.setPriority(priority);
-        return new RegisteredResourceImpl(null, r);
+        return new RegisteredResourceImpl(new MockOsgiInstallerContext(), r);
     }
     
     private void assertOrder(RegisteredResource[] inOrder) {

@@ -181,7 +181,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(bundleContext, r);
+                rr = new RegisteredResourceImpl(ctx, r);
             } catch(IOException ioe) {
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(
@@ -271,7 +271,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 			if(ctx.getLogService()!= null) {
                 				ctx.getLogService().log(LogService.LOG_DEBUG, "Cleanup obsolete " + rr);
                 			}
-                			rr.cleanup(ctx.getBundleContext());
+                			rr.cleanup(ctx);
                 		}
                 	}
                     t.remove(r);
@@ -379,7 +379,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             }
             for(RegisteredResource r : toDelete) {
                 group.remove(r);
-                r.cleanup(ctx.getBundleContext());
+                r.cleanup(ctx);
                 if(ctx.getLogService() != null) {
                     ctx.getLogService().log(LogService.LOG_DEBUG,
                             "Removing RegisteredResource from list, not installable and has been processed: " + r);

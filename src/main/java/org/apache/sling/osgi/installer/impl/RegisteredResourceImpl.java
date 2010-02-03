@@ -44,6 +44,7 @@ import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.service.log.LogService;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
@@ -79,8 +80,9 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	 *  maps to a configuration and the data provides an input stream, it is
 	 *  converted to a Dictionary
 	 */
-	public RegisteredResourceImpl(BundleContext ctx, InstallableResource input) throws IOException {
+	public RegisteredResourceImpl(OsgiInstallerContext osgiCtx, InstallableResource input) throws IOException {
 
+	    final BundleContext ctx = osgiCtx.getBundleContext();
 	    try {
     		url = input.getUrl();
     		urlScheme = getUrlScheme(url);
@@ -97,7 +99,12 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                     throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
                 }
                 dictionary = null;
-                copyToLocalStorage(input.getInputStream(), getDataFile(ctx));
+                final File f = getDataFile(ctx);
+                if(osgiCtx.getLogService() != null) {
+                    osgiCtx.getLogService().log(LogService.LOG_DEBUG, 
+                            "Copying data to local storage " + f.getAbsolutePath());
+                }
+                copyToLocalStorage(input.getInputStream(), f);
                 hasDataFile = true;
                 digest = input.getDigest();
                 setAttributesFromManifest(ctx);
@@ -144,9 +151,13 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		return ctx.getDataFile(filename);
 	}
 
-	public void cleanup(BundleContext bc) {
-	    final File dataFile = getDataFile(bc);
+	public void cleanup(OsgiInstallerContext ctx) {
+	    final File dataFile = getDataFile(ctx.getBundleContext());
 		if(dataFile.exists()) {
+		    if(ctx.getLogService() != null) {
+		        ctx.getLogService().log(LogService.LOG_DEBUG, "Deleting local storage file " 
+		                + dataFile.getAbsolutePath());
+		    } 
 			dataFile.delete();
 		}
 	}

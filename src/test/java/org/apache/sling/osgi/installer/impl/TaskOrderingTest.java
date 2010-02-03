@@ -49,7 +49,7 @@ public class TaskOrderingTest {
 	}
 	
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(null, new InstallableResource(url, new Hashtable<String, Object>()));
+		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableResource(url, new Hashtable<String, Object>()));
 	}
 	
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {

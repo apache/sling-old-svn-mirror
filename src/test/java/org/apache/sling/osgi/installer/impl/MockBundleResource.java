@@ -76,7 +76,7 @@ public class MockBundleResource implements RegisteredResource, Serializable {
         ;
 	}
 	
-	public void cleanup(BundleContext ctx) {
+	public void cleanup(OsgiInstallerContext ctx) {
 	}
 
 	public Map<String, Object> getAttributes() {

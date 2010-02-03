@@ -175,7 +175,7 @@ public class RegisteredResourceTest {
         };
         for(String url : badOnes) {
             try {
-                new RegisteredResourceImpl(null, new InstallableResource(url, s, null));
+                new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableResource(url, s, null));
                 fail("Expected bad URL '" + url + "' to throw IllegalArgumentException");
             } catch(IllegalArgumentException asExpected) {
             }
@@ -189,7 +189,8 @@ public class RegisteredResourceTest {
         };
         
         for(String url : goodOnes) {
-            final RegisteredResource r = new RegisteredResourceImpl(null, new InstallableResource(url, s, "digest1"));
+            final RegisteredResource r = new RegisteredResourceImpl(new MockOsgiInstallerContext(), 
+                    new InstallableResource(url, s, "digest1"));
             assertEquals("Expected scheme 'foo' for URL " + url, "foo", r.getUrlScheme());
         }
     }

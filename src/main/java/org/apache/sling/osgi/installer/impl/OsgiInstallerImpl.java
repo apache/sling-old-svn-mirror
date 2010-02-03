@@ -120,7 +120,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	public void addResource(InstallableResource r) {
 	    RegisteredResource rr = null; 
         try {
-            rr = new RegisteredResourceImpl(bundleContext, r);
+            rr = new RegisteredResourceImpl(this, r);
         } catch(IOException ioe) {
             if(getLogService() != null) {
                 getLogService().log(
