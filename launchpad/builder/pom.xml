@@ -53,11 +53,11 @@
         <test.host>localhost</test.host>
 
         <!--
-            Disable Jetty webapp rescan (override with -D) 
+            Disable Jetty webapp rescan (override with -D)
         -->
         <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
 
-        <!-- 
+        <!--
             Sling home directory when starting with jetty:run
         -->
         <jetty.sling.home>target/sling</jetty.sling.home>
@@ -103,12 +103,22 @@
                         </goals>
                         <configuration>
                             <additionalBundles>
-                                <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+                                <bundle>
+                                    <groupId>org.apache.geronimo.specs</groupId>
+                                    <artifactId>geronimo-jta_1.1_spec</artifactId>
+                                    <version>1.1.1</version>
+                                </bundle>
                             </additionalBundles>
-                            <exclusions>
-                                <exclusion>org.apache.felix:org.apache.felix.configadmin</exclusion>
-                                <exclusion>org.apache.felix:org.apache.felix.webconsole</exclusion>
-                            </exclusions>
+                            <bundleExclusions>
+                                <bundle>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>org.apache.felix.configadmin</artifactId>
+                                </bundle>
+                                <bundle>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>org.apache.felix.webconsole</artifactId>
+                                </bundle>
+                            </bundleExclusions>
                         </configuration>
                     </execution>
                     <execution>
