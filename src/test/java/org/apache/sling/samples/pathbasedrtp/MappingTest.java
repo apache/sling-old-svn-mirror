@@ -20,6 +20,7 @@ package org.apache.sling.samples.pathbasedrtp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 public class MappingTest {
@@ -65,10 +66,10 @@ public class MappingTest {
         assertNull(m.getResourceType("/content/foo", "nt:unstructured"));
     }
     
-    /*
     @Test
     public void testNodetypeString() {
         final Mapping m = new Mapping("/content:2:nt:file");
+        assertNotNull("nt:file must match", m.getResourceType("/content/foo1", "nt:file"));
         assertEquals("foo1", m.getResourceType("/content/foo1", "nt:file"));
         assertNull(m.getResourceType("/content/foo1", "nt:unstructured"));
         assertNull(m.getResourceType("/content/foo1", "some:type"));
@@ -77,10 +78,11 @@ public class MappingTest {
     @Test
     public void testNodetypeRegexp() {
         final Mapping m = new Mapping("/content:2:(nt:(file|test))");
+        assertNotNull("nt:file must match", m.getResourceType("/content/foo1", "nt:file"));
         assertEquals("foo1", m.getResourceType("/content/foo1", "nt:file"));
+        assertNotNull("nt:test must match", m.getResourceType("/content/foo1", "nt:test"));
         assertEquals("foo2", m.getResourceType("/content/foo2", "nt:test"));
         assertNull(m.getResourceType("/content/foo1", "nt:unstructured"));
         assertNull(m.getResourceType("/content/foo1", "some:type"));
     }
-    */
 }

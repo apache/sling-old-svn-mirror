@@ -18,6 +18,8 @@
  */
 package org.apache.sling.samples.pathbasedrtp;
 
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,35 +28,91 @@ class Mapping {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     String path;
+    final String fixedNodeType;
+    final Pattern nodeTypeExpr;
     int resourceTypeIndex;
+    public static final String DEFAULT_NODE_TYPE = "nt:unstructured";
     
     Mapping(String definition) {
-        final String [] parts = definition.split(":");
-        if(parts.length != 2) {
-            log.debug("Invalid Mapping definition ignored: {}", definition);
-        } else {
-            path = parts[0];
-            try {
-                resourceTypeIndex = Integer.parseInt(parts[1]);
-            } catch(Exception e) {
-                log.warn("Invalid path index in Mapping {}", definition);
-            }
+        final String [] parts = definition.trim().split(":");
+        if(parts.length < 2) {
+            throw new IllegalArgumentException("Illegal definition'" + definition + "'");
         }
+        
+        path = parts[0];
+        try {
+            resourceTypeIndex = Integer.parseInt(parts[1]);
+        } catch(Exception e) {
+            log.warn("Invalid path index in Mapping {}", definition);
+        }
+
+        // Parse the definition: two parts means default nodetype,
+        // more than two means fixed nodetype or regexp.
+        // Nodetypes can contain : which is our separator - not fun.
+        if(parts.length > 2) {
+            final StringBuilder sb = new StringBuilder();
+            for(int i=2; i < parts.length; i++) {
+                sb.append(parts[i]);
+                if(i < parts.length - 1) {
+                    sb.append(":");
+                }
+            }
+            
+            String expr = sb.toString();
+            if(expr.startsWith("(") && expr.endsWith(")")) {
+                // Definition in brackets -> regexp
+                fixedNodeType = null;
+                expr = expr.substring(1);
+                expr = expr.substring(0, expr.length() - 1);
+                nodeTypeExpr = Pattern.compile(expr);
+            } else {
+                // No brackets -> fixed node type
+                fixedNodeType = expr;
+                nodeTypeExpr = null;
+            }
+        } else {
+            fixedNodeType = DEFAULT_NODE_TYPE;
+            nodeTypeExpr = null;
+        }
+        
+        log.debug(toString());
     }
     
     @Override
     public String toString() {
-       return "Mapping: path=" + path + ", resource type index=" + resourceTypeIndex; 
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Mapping: path=");
+        sb.append(path);
+        sb.append(", resource type index=");
+        sb.append(resourceTypeIndex);
+        if(fixedNodeType != null) {
+            sb.append(", node type=");
+            sb.append(fixedNodeType);
+        } else {
+            sb.append(", node type regexp=");
+            sb.append(nodeTypeExpr);
+        }
+        return sb.toString();
     }
     
     String getResourceType(String nodePath, String nodeType) {
         String result = null;
-        if(path!=null && nodePath.startsWith(path) && "nt:unstructured".equals(nodeType)) {
+        if(path!=null && nodePath.startsWith(path) && nodeTypeMatches(nodeType)) {
             final String [] paths = nodePath.split("/");
             if(paths.length >= resourceTypeIndex+1) {
                 result = paths[resourceTypeIndex];
             }
         }
         return result;
+    }
+    
+    private boolean nodeTypeMatches(String nodeType) {
+        if(fixedNodeType != null) {
+            return fixedNodeType.equals(nodeType);
+        } else if(nodeTypeExpr == null) {
+            throw new IllegalStateException("Neither fixedNodeType nor nodeTypeExpr supplied in " + this);
+        }
+        return nodeTypeExpr.matcher(nodeType).matches();
+        
     }
 }
