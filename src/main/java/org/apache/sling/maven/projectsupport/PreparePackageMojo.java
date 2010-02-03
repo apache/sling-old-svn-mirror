@@ -23,8 +23,14 @@ import java.util.Properties;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.codehaus.plexus.util.DirectoryScanner;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
+import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.UnArchiver;
+import org.codehaus.plexus.archiver.manager.ArchiverManager;
+import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
+import org.codehaus.plexus.components.io.fileselectors.IncludeExcludeFileSelector;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * Initialize a Sling application project by extracting bundles into the correct
@@ -35,28 +41,7 @@ import org.codehaus.plexus.util.FileUtils;
  * @phase process-sources
  * @description initialize a Sling application project
  */
-public class PreparePackageMojo extends AbstractBundleListMojo {
-
-	/**
-	 * Any additional bundles to include in the project's bundles directory.
-	 *
-	 * @parameter
-	 */
-	private ArtifactDefinition[] additionalBundles;
-
-	/**
-	 * Bundles which should be removed from the project's bundles directory.
-	 *
-	 * @parameter
-	 */
-	private ArtifactDefinition[] bundlesToRemove;
-
-	/**
-	 * If true, install the default bundles.
-	 *
-	 * @parameter default-value="true"
-	 */
-	private boolean installDefaultBundles;
+public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 
 	/**
 	 * The output directory for the default bundles in a WAR-packaged project,
@@ -97,44 +82,42 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 	 */
 	private File buildOutputDirectory;
 
+    /**
+     * To look up Archiver/UnArchiver implementations
+     *
+     * @component
+     */
+    private ArchiverManager archiverManager;
+
 	public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
 		copyBaseArtifact();
-		if (installDefaultBundles) {
-			unpackDefaultBundles();
-		}
-		copyAdditionalBundles();
-		copyWebSupportBundle();
-		removeBundles();
+		copyBundles(getBundleList(), getOutputDirectory());
 		if (JAR.equals(packaging)) {
 			unpackBaseArtifact();
 		}
 	}
 
-	private void removeBundles() throws MojoExecutionException {
-	    if (bundlesToRemove != null) {
-	        File bundleBaseDir = new File(getOutputDirectory(), String.format(
-	                "%s/%s", baseDestination, bundlesDirectory));
-
-	        for (ArtifactDefinition def : bundlesToRemove) {
-	            DirectoryScanner scanner = new DirectoryScanner();
-	            scanner.setBasedir(bundleBaseDir);
-	            scanner.setIncludes(new String[] { "**/" + def.getArtifactId() + "-*.*"});
-	            scanner.scan();
-	            for (String toRemove : scanner.getIncludedFiles()) {
-	                getLog().info("Deleting " + toRemove);
-	                new File(toRemove).delete();
-	            }
-	        }
-	    }
-	}
-
-	private void copyAdditionalBundles() throws MojoExecutionException {
-		if (additionalBundles != null) {
-			for (int i = 0; i < additionalBundles.length; i++) {
-				copy(additionalBundles[i], getOutputDirectory());
-			}
+	protected void initArtifactDefinitions(Properties dependencies) {
+		if (base == null) {
+			base = new ArtifactDefinition();
 		}
+		base.initDefaults(dependencies.getProperty("base"));
+
+		if (jarWebSupport == null) {
+			jarWebSupport = new ArtifactDefinition();
+		}
+		jarWebSupport.initDefaults(dependencies.getProperty("jarWebSupport"));
 	}
+
+	/**
+     * Add the JAR Web Support bundle to the bundle list.
+     */
+    @Override
+    protected void initBundleList(BundleList bundleList) {
+        if (packaging.equals(JAR)) {
+            bundleList.add(jarWebSupport.toBundle());
+        }
+    }
 
 	private void copyBaseArtifact() throws MojoExecutionException {
 		Artifact artifact = getBaseArtifact();
@@ -166,13 +149,6 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 		}
 	}
 
-	private void copyWebSupportBundle() throws MojoExecutionException {
-		if (JAR.equals(packaging)) {
-			copy(jarWebSupport, getOutputDirectory());
-		}
-
-	}
-
 	private Artifact getBaseArtifact() throws MojoExecutionException {
 		Artifact baseDependency = getBaseDependency();
 		if (baseDependency == null) {
@@ -198,20 +174,6 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 		}
 	}
 
-
-
-	protected void initArtifactDefinitions(Properties dependencies) {
-		if (base == null) {
-			base = new ArtifactDefinition();
-		}
-		base.initDefaults(dependencies.getProperty("base"));
-
-		if (jarWebSupport == null) {
-			jarWebSupport = new ArtifactDefinition();
-		}
-		jarWebSupport.initDefaults(dependencies.getProperty("jarWebSupport"));
-	}
-
 	private void unpackBaseArtifact() throws MojoExecutionException {
 		Artifact artifact = getBaseDependency();
 		if (artifact == null) {
@@ -224,8 +186,36 @@ public class PreparePackageMojo extends AbstractBundleListMojo {
 		unpack(artifact.getFile(), buildOutputDirectory, null, null);
 	}
 
-	private void unpackDefaultBundles() throws MojoExecutionException {
-		outputBundleList(getOutputDirectory());
+    private void unpack(File source, File destination, String includes, String excludes)
+            throws MojoExecutionException {
+        getLog().info("Unpacking " + source.getPath() + " to\n  " + destination.getPath());
+        try {
+            destination.mkdirs();
 
-	}
+            UnArchiver unArchiver = archiverManager.getUnArchiver(source);
+
+            unArchiver.setSourceFile(source);
+            unArchiver.setDestDirectory(destination);
+
+            if (StringUtils.isNotEmpty(excludes) || StringUtils.isNotEmpty(includes)) {
+                IncludeExcludeFileSelector[] selectors = new IncludeExcludeFileSelector[] { new IncludeExcludeFileSelector() };
+
+                if (StringUtils.isNotEmpty(excludes)) {
+                    selectors[0].setExcludes(excludes.split(","));
+                }
+
+                if (StringUtils.isNotEmpty(includes)) {
+                    selectors[0].setIncludes(includes.split(","));
+                }
+
+                unArchiver.setFileSelectors(selectors);
+            }
+
+            unArchiver.extract();
+        } catch (NoSuchArchiverException e) {
+            throw new MojoExecutionException("Unable to find archiver for " + source.getPath(), e);
+        } catch (ArchiverException e) {
+            throw new MojoExecutionException("Unable to unpack " + source.getPath(), e);
+        }
+    }
 }

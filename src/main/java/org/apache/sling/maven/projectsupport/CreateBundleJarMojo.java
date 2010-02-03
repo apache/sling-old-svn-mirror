@@ -29,7 +29,6 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.util.DirectoryScanner;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * Create and attach a JAR file containing the resolved artifacts from the
@@ -40,7 +39,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * @phase package
  *
  */
-public class CreateBundleJarMojo extends AbstractBundleListMojo {
+public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
 
 	/**
 	 * The list of resources we want to add to the bundle JAR file.
@@ -76,16 +75,7 @@ public class CreateBundleJarMojo extends AbstractBundleListMojo {
 	public static final String[] DEFAULT_INCLUDES = { "**/**" };
 
 	private void addBundles() throws MojoExecutionException {
-		BundleList bundles = null;
-		try {
-			bundles = readBundleList(bundleListFile);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Unable to read bundle list file",
-					e);
-		} catch (XmlPullParserException e) {
-			throw new MojoExecutionException("Unable to read bundle list file",
-					e);
-		}
+		BundleList bundles = getBundleList();
 
 		for (StartLevel level : bundles.getStartLevels()) {
 			for (Bundle bundle : level.getBundles()) {
