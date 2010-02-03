@@ -57,32 +57,7 @@ public class DefaultResourceTypeProvider implements JcrResourceTypeProvider {
      */
     private static final String PROP_PATH_MAPPING = "path.mapping";
     
-    private static final Logger log = LoggerFactory.getLogger(DefaultResourceTypeProvider.class);
-    
-    /** Map a path prefix to a (1-based) index in the path components */
-    static class Mapping {
-        String path;
-        int resourceTypeIndex;
-        
-        Mapping(String definition) {
-            final String [] parts = definition.split(":");
-            if(parts.length != 2) {
-                log.debug("Invalid Mapping definition ignored: {}", definition);
-            } else {
-                path = parts[0];
-                try {
-                    resourceTypeIndex = Integer.parseInt(parts[1]);
-                } catch(Exception e) {
-                    log.warn("Invalid path index in Mapping {}", definition);
-                }
-            }
-        }
-        
-        @Override
-        public String toString() {
-           return "Mapping: path=" + path + ", resource type index=" + resourceTypeIndex; 
-        }
-    }
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private Mapping [] mappings;
     
@@ -94,14 +69,10 @@ public class DefaultResourceTypeProvider implements JcrResourceTypeProvider {
             final String nt = node.getPrimaryNodeType().getName();
             final String path = node.getPath();
             for(Mapping m : mappings) {
-                if(path.startsWith(m.path) && "nt:unstructured".equals(nt)) {
-                    final String [] paths = node.getPath().split("/");
-                    if(paths.length >= m.resourceTypeIndex+1) {
-                        result = paths[m.resourceTypeIndex];
-                        log.debug("Default resource type {} used for Node {}", 
-                                result, path);
-                        break;
-                    }
+                result = m.getResourceType(path, nt);
+                if(result != null) {
+                    log.debug("Default resource type {} used for Node {}", result, path);
+                    break;
                 }
             }
         }
@@ -128,5 +99,4 @@ public class DefaultResourceTypeProvider implements JcrResourceTypeProvider {
             }
         }
     }
-
 }
