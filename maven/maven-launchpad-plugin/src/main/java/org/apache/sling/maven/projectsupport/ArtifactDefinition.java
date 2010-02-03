@@ -41,7 +41,7 @@ public class ArtifactDefinition {
 
     /** The artifact version */
     private String version;
-    
+
     public ArtifactDefinition() {
     }
 
@@ -113,10 +113,10 @@ public class ArtifactDefinition {
      * Initialize this ArtifactDefinition with a set of default values from a
      * comma-delimited string. This string must have 6 items in it:
      * [groupId],[artifactId],[version],[type],[classifier],[startLevel]
-     * 
+     *
      * The only required parameter is the last one, which must be parseable as
      * an integer.
-     * 
+     *
      * @param commaDelimitedList
      *            the comma-delimited list
      */
@@ -137,7 +137,7 @@ public class ArtifactDefinition {
      * Initialize this ArtifactDefinition with a set of default values. If the
      * corresponding field in this object is null (or 0 in the case of start
      * level) and the parameter is non-null, the parameter value will be used.
-     * 
+     *
      * @param groupId
      *            the groupId
      * @param artifactId
@@ -171,6 +171,19 @@ public class ArtifactDefinition {
         if (this.startLevel == 0) {
             this.startLevel = startLevel;
         }
+    }
+
+    public Bundle toBundle() {
+        Bundle bnd = new Bundle();
+        bnd.setArtifactId(artifactId);
+        bnd.setGroupId(groupId);
+        bnd.setVersion(version);
+        if (type != null) {
+            bnd.setType(type);
+        }
+        bnd.setClassifier(classifier);
+        bnd.setStartLevel(startLevel);
+        return bnd;
     }
 
 }

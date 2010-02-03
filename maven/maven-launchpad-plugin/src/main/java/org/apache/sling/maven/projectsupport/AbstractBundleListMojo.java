@@ -35,49 +35,30 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
-import org.codehaus.plexus.archiver.ArchiverException;
-import org.codehaus.plexus.archiver.UnArchiver;
-import org.codehaus.plexus.archiver.manager.ArchiverManager;
-import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
-import org.codehaus.plexus.components.io.fileselectors.IncludeExcludeFileSelector;
-import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
-     * The name of the directory within the output directory into which the base
-     * JAR should be installed.
-     *
-     * @parameter default-value="resources"
+     * JAR Packaging type.
      */
-    protected String baseDestination;
+    protected static final String JAR = "jar";
 
     /**
-     * The directory which contains the start-level bundle directories.
-     *
-     * @parameter default-value="bundles"
+     * WAR Packaging type.
      */
-    protected String bundlesDirectory;
+    protected static final String WAR = "war";
 
-    /**
-     * The definition of the defaultBundleList artifact.
-     *
-     * @parameter
-     */
-    private ArtifactDefinition defaultBundleList;
-
-    /**
-     * The definition of the defaultBundles package.
-     *
-     * @parameter
-     */
-    private ArtifactDefinition defaultBundles;
+    protected static boolean shouldCopy(File source, File dest) {
+        if (!dest.exists()) {
+            return true;
+        } else {
+            return source.lastModified() > dest.lastModified();
+        }
+    }
 
     /**
      * @parameter default-value="${basedir}/src/main/bundles/list.xml"
@@ -85,16 +66,11 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     protected File bundleListFile;
 
     /**
-     * To look up Archiver/UnArchiver implementations
+     * The definition of the defaultBundleList artifact.
      *
-     * @component
+     * @parameter
      */
-    private ArchiverManager archiverManager;
-
-    /**
-     * @component
-     */
-    protected MavenProjectHelper projectHelper;
+    protected ArtifactDefinition defaultBundleList;
 
     /**
      * The Maven project.
@@ -106,11 +82,39 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     protected MavenProject project;
 
     /**
+     * @component
+     */
+    protected MavenProjectHelper projectHelper;
+
+    /**
+     * Any additional bundles to include in the project's bundles directory.
+     *
+     * @parameter
+     */
+    private ArtifactDefinition[] additionalBundles;
+
+    private BundleList bundleList;
+
+    /**
+     * Bundles which should be removed from the project's bundles directory.
+     *
+     * @parameter
+     */
+    private ArtifactDefinition[] bundleExclusions;
+
+    /**
      * Used to look up Artifacts in the remote repository.
      *
      * @component
      */
     private ArtifactFactory factory;
+
+    /**
+     * If true, include the default bundles.
+     *
+     * @parameter default-value="true"
+     */
+    private boolean includeDefaultBundles;
 
     /**
      * Location of the local repository.
@@ -120,16 +124,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      * @required
      */
     private ArtifactRepository local;
-
-    /**
-     * JAR Packaging type.
-     */
-    protected static final String JAR = "jar";
-
-    /**
-     * WAR Packaging type.
-     */
-    protected static final String WAR = "war";
 
     /**
      * List of Remote Repositories used by the resolver.
@@ -147,31 +141,41 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      */
     private ArtifactResolver resolver;
 
-    public final void execute() throws MojoFailureException,
-            MojoExecutionException {
+    public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
-            initArtifactDefinitions();
-        } catch (IOException e) {
-            throw new MojoExecutionException(
-                    "Unable to load dependency information from properties file.",
-                    e);
+            initBundleList();
+        } catch (Exception e) {
+            throw new MojoExecutionException("Unable to load dependency information from properties file.", e);
         }
         executeWithArtifacts();
 
     }
 
-    protected abstract void executeWithArtifacts()
-            throws MojoExecutionException, MojoFailureException;
+    /**
+     * Execute the logic of the plugin after the default artifacts have been
+     * initialized.
+     */
+    protected abstract void executeWithArtifacts() throws MojoExecutionException, MojoFailureException;
 
-    protected Artifact getArtifact(ArtifactDefinition bundle)
-            throws MojoExecutionException {
-        return getArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle
-                .getVersion(), bundle.getType() != null ? bundle.getType()
-                : JAR, bundle.getClassifier());
+    /**
+     * Get a resolved Artifact from the coordinates found in the artifact
+     * definition.
+     *
+     * @param def the artifact definition
+     * @return the artifact, which has been resolved
+     * @throws MojoExecutionException
+     */
+    protected Artifact getArtifact(ArtifactDefinition def) throws MojoExecutionException {
+        return getArtifact(def.getGroupId(), def.getArtifactId(), def.getVersion(), def.getType(), def.getClassifier());
     }
 
-    protected Artifact getArtifact(String groupId, String artifactId,
-            String version, String type, String classifier)
+    /**
+     * Get a resolved Artifact from the coordinates provided
+     *
+     * @return the artifact, which has been resolved.
+     * @throws MojoExecutionException
+     */
+    protected Artifact getArtifact(String groupId, String artifactId, String version, String type, String classifier)
             throws MojoExecutionException {
         Artifact artifact;
         VersionRange vr;
@@ -183,11 +187,10 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         }
 
         if (StringUtils.isEmpty(classifier)) {
-            artifact = factory.createDependencyArtifact(groupId, artifactId,
-                    vr, type, null, Artifact.SCOPE_COMPILE);
+            artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, null, Artifact.SCOPE_COMPILE);
         } else {
-            artifact = factory.createDependencyArtifact(groupId, artifactId,
-                    vr, type, classifier, Artifact.SCOPE_COMPILE);
+            artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, classifier,
+                    Artifact.SCOPE_COMPILE);
         }
         try {
             resolver.resolve(artifact, remoteRepos, local);
@@ -199,17 +202,40 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         return artifact;
     }
 
-    protected final void initArtifactDefinitions() throws IOException {
-        Properties dependencies = new Properties();
-        dependencies
-                .load(getClass()
-                        .getResourceAsStream(
-                                "/org/apache/sling/maven/projectsupport/dependencies.properties"));
+    protected BundleList getBundleList() {
+        return bundleList;
+    }
 
-        if (defaultBundles == null) {
-            defaultBundles = new ArtifactDefinition();
-        }
-        defaultBundles.initDefaults(dependencies.getProperty("defaultBundles"));
+    /**
+     * Hook methods for subclasses to initialize any additional artifact
+     * definitions.
+     *
+     * @param dependencies the dependency properties loaded from the JAR file
+     */
+    protected void initArtifactDefinitions(Properties dependencies) {
+    }
+
+    /**
+     * Hook methods for subclasses to initialize the bundle list.
+     */
+    protected void initBundleList(BundleList bundleList) {
+    }
+
+    protected boolean isCurrentArtifact(ArtifactDefinition def) {
+        return (def.getGroupId().equals(project.getGroupId()) && def.getArtifactId().equals(project.getArtifactId()));
+    }
+
+    /**
+     * Initialize the artifact definitions using defaults inside the plugin JAR.
+     *
+     * @throws IOException if the default properties can't be read
+     * @throws XmlPullParserException
+     * @throws MojoExecutionException
+     */
+    private final void initArtifactDefinitions() throws IOException {
+        Properties dependencies = new Properties();
+        dependencies.load(getClass().getResourceAsStream(
+                "/org/apache/sling/maven/projectsupport/dependencies.properties"));
 
         if (defaultBundleList == null) {
             defaultBundleList = new ArtifactDefinition();
@@ -219,159 +245,43 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         initArtifactDefinitions(dependencies);
     }
 
-    protected void initArtifactDefinitions(Properties dependencies) {
-    }
+    private final void initBundleList() throws IOException, XmlPullParserException, MojoExecutionException {
+        initArtifactDefinitions();
+        if (isCurrentArtifact(defaultBundleList)) {
+            bundleList = readBundleList(bundleListFile);
+        } else {
+            bundleList = new BundleList();
+            if (includeDefaultBundles) {
+                Artifact artifact = getArtifact(defaultBundleList.getGroupId(), defaultBundleList.getArtifactId(),
+                        defaultBundleList.getVersion(), defaultBundleList.getType(), defaultBundleList.getClassifier());
+                getLog().info("Using bundle list file from " + artifact.getFile().getAbsolutePath());
+                bundleList = readBundleList(artifact.getFile());
+            }
 
-    protected void copy(ArtifactDefinition additionalBundle,
-            File outputDirectory) throws MojoExecutionException {
-        Artifact artifact = getArtifact(additionalBundle);
-        copy(artifact.getFile(), additionalBundle.getStartLevel(),
-                outputDirectory);
-    }
-
-    protected void copy(File file, int startLevel, File outputDirectory)
-            throws MojoExecutionException {
-        File destination = new File(outputDirectory, String.format(
-                "%s/%s/%s/%s", baseDestination, bundlesDirectory, startLevel,
-                file.getName()));
-        if (shouldCopy(file, destination)) {
-            getLog().info(
-                    String.format("Copying bundle from %s to %s", file
-                            .getPath(), destination.getPath()));
-            try {
-                FileUtils.copyFile(file, destination);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Unable to copy bundle from "
-                        + file.getPath(), e);
+            if (bundleListFile.exists()) {
+                bundleList.merge(readBundleList(bundleListFile));
             }
         }
-    }
-
-
-    protected BundleList readBundleList() throws IOException, XmlPullParserException {
-        return readBundleList(bundleListFile);
-    }
-
-
-    protected void outputBundleList(File outputDirectory)
-            throws MojoExecutionException {
-        try {
-            if (bundleListFile != null && bundleListFile.exists()) {
-                getLog().info(
-                        "Using bundle list file from "
-                                + bundleListFile.getAbsolutePath());
-                BundleList bundles = readBundleList(bundleListFile);
-                copyBundles(bundles, outputDirectory);
-                return;
-            }
-        } catch (Exception e) {
-            getLog()
-                    .warn(
-                            String
-                                    .format(
-                                            "Unable to use bundle list from %s. Falling back to bundles artifact.",
-                                            bundleListFile), e);
-        }
-
-        if (!isCurrentArtifact(defaultBundleList)) {
-            try {
-                Artifact artifact = getArtifact(defaultBundleList.getGroupId(),
-                        defaultBundleList.getArtifactId(), defaultBundleList
-                                .getVersion(), defaultBundleList.getType(),
-                        defaultBundleList.getClassifier());
-                getLog().info(
-                        "Using bundle list file from "
-                                + artifact.getFile().getAbsolutePath());
-                BundleList bundles = readBundleList(artifact.getFile());
-                copyBundles(bundles, outputDirectory);
-                return;
-            } catch (Exception e) {
-                getLog()
-                        .warn(
-                                "Unable to load bundle list from artifact. Falling back to bundle jar",
-                                e);
+        if (additionalBundles != null) {
+            for (ArtifactDefinition def : additionalBundles) {
+                bundleList.add(def.toBundle());
             }
         }
-
-        if (!isCurrentArtifact(defaultBundleList)) {
-            Artifact defaultBundlesArtifact = getArtifact(defaultBundles
-                    .getGroupId(), defaultBundles.getArtifactId(),
-                    defaultBundles.getVersion(), defaultBundles.getType(),
-                    defaultBundles.getClassifier());
-            unpack(defaultBundlesArtifact.getFile(), outputDirectory, null,
-                    "META-INF/**");
-        }
-    }
-
-    private boolean isCurrentArtifact(ArtifactDefinition def) {
-        return (def.getGroupId().equals(project.getGroupId()) && def
-                .getArtifactId().equals(project.getArtifactId()));
-    }
-
-    private void copyBundles(BundleList bundles, File outputDirectory)
-            throws MojoExecutionException {
-        for (StartLevel startLevel : bundles.getStartLevels()) {
-            for (Bundle bundle : startLevel.getBundles()) {
-                copy(new ArtifactDefinition(bundle, startLevel.getLevel()),
-                        outputDirectory);
+        if (bundleExclusions != null) {
+            for (ArtifactDefinition def : bundleExclusions) {
+                bundleList.remove(def.toBundle(), false);
             }
         }
+        initBundleList(bundleList);
     }
 
-    protected BundleList readBundleList(File file) throws IOException,
-            XmlPullParserException {
+    private BundleList readBundleList(File file) throws IOException, XmlPullParserException {
         BundleListXpp3Reader reader = new BundleListXpp3Reader();
         FileInputStream fis = new FileInputStream(file);
         try {
             return reader.read(fis);
         } finally {
             fis.close();
-        }
-    }
-
-    protected boolean shouldCopy(File source, File dest) {
-        if (!dest.exists()) {
-            return true;
-        } else {
-            return source.lastModified() > dest.lastModified();
-        }
-    }
-
-    protected void unpack(File source, File destination, String includes,
-            String excludes) throws MojoExecutionException {
-        getLog().info(
-                "Unpacking " + source.getPath() + " to\n  "
-                        + destination.getPath());
-        try {
-            destination.mkdirs();
-
-            UnArchiver unArchiver = archiverManager.getUnArchiver(source);
-
-            unArchiver.setSourceFile(source);
-            unArchiver.setDestDirectory(destination);
-
-            if (StringUtils.isNotEmpty(excludes)
-                    || StringUtils.isNotEmpty(includes)) {
-                IncludeExcludeFileSelector[] selectors = new IncludeExcludeFileSelector[] { new IncludeExcludeFileSelector() };
-
-                if (StringUtils.isNotEmpty(excludes)) {
-                    selectors[0].setExcludes(excludes.split(","));
-                }
-
-                if (StringUtils.isNotEmpty(includes)) {
-                    selectors[0].setIncludes(includes.split(","));
-                }
-
-                unArchiver.setFileSelectors(selectors);
-            }
-
-            unArchiver.extract();
-        } catch (NoSuchArchiverException e) {
-            throw new MojoExecutionException("Unable to find archiver for "
-                    + source.getPath(), e);
-        } catch (ArchiverException e) {
-            throw new MojoExecutionException("Unable to unpack "
-                    + source.getPath(), e);
         }
     }
 

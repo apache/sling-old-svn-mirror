@@ -16,33 +16,51 @@
  */
 package org.apache.sling.maven.projectsupport;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 
 /**
  * Attaches the bundle list as a project artifact.
- * 
+ *
  * @goal attach-bundle-list
  * @phase package
  * @description attach the bundle list as a project artifact
  */
 public class AttachBundleListMojo extends AbstractBundleListMojo {
-    
+
     private static final String CLASSIFIER = "bundlelist";
-    
+
     private static final String TYPE = "xml";
 
-    @Override
-    protected void executeWithArtifacts() throws MojoExecutionException,
-            MojoFailureException {
-        if (bundleListFile != null && bundleListFile.exists()) {
-            projectHelper.attachArtifact(project, TYPE, CLASSIFIER,
-                    bundleListFile);
-        } else {
-            throw new MojoExecutionException(
-                    "The bundle list file does not exist.");
-        }
+    /**
+     * @parameter default-value="${project.build.directory}/bundleList.xml"
+     */
+    private File outputFile;
 
+    private BundleListXpp3Writer writer = new BundleListXpp3Writer();
+
+    @Override
+    protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(outputFile);
+            writer.write(fw, getBundleList());
+            projectHelper.attachArtifact(project, TYPE, CLASSIFIER, outputFile);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to output effective bundle list", e);
+        } finally {
+            if (fw != null) {
+                try {
+                    fw.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
 
 }

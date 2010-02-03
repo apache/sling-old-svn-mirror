@@ -16,7 +16,6 @@
  */
 package org.apache.sling.maven.projectsupport;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,60 +24,45 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * Validate that the bundle list file (if it exists) does not contain references
  * to SNAPSHOT versions.
- * 
+ *
  * @goal check-bundle-list-for-snapshots
- * 
+ *
  */
 public class CheckBundleListForSnapshotsMojo extends AbstractBundleListMojo {
 
     /**
      * True if the build should be failed if a snapshot is found.
-     * 
+     *
      * @parameter default-value="true"
      */
     private boolean failOnSnapshot;
 
     @Override
-    protected void executeWithArtifacts() throws MojoExecutionException,
-            MojoFailureException {
-        if (bundleListFile.exists()) {
-            try {
-                List<Bundle> snapshots = new ArrayList<Bundle>();
-                BundleList bundleList = readBundleList();
-                for (StartLevel level : bundleList.getStartLevels()) {
-                    for (Bundle bundle : level.getBundles()) {
-                        if (isSnapshot(bundle)) {
-                            snapshots.add(bundle);
-                        }
-                    }
+    protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
+        List<Bundle> snapshots = new ArrayList<Bundle>();
+        BundleList bundleList = getBundleList();
+        for (StartLevel level : bundleList.getStartLevels()) {
+            for (Bundle bundle : level.getBundles()) {
+                if (isSnapshot(bundle)) {
+                    snapshots.add(bundle);
                 }
-                if (!snapshots.isEmpty()) {
-                    getLog()
-                            .error(
-                                    "The following entries in the bundle list file are SNAPSHOTs:");
-                    for (Bundle bundle : snapshots) {
-                        getLog().error(String.format("     %s:%s:%s", bundle.getGroupId(),
-                                bundle.getArtifactId(), bundle.getVersion()));
-                    }
-                    if (failOnSnapshot) {
-                        throw new MojoFailureException("SNAPSHOTs were found in the bundle list. See log.");
-                    }
-                }
-            } catch (IOException e) {
-                throw new MojoExecutionException(
-                        "Unable to load bundle list file", e);
-            } catch (XmlPullParserException e) {
-                throw new MojoExecutionException(
-                        "Unable to load bundle list file", e);
             }
-
-        } else {
-            getLog().debug("Bundle list file does not exist. Skipping.");
+        }
+        if (!snapshots.isEmpty()) {
+            getLog().error("The following entries in the bundle list file are SNAPSHOTs:");
+            for (Bundle bundle : snapshots) {
+                getLog().error(
+                        String
+                                .format("     %s:%s:%s", bundle.getGroupId(), bundle.getArtifactId(), bundle
+                                        .getVersion()));
+            }
+            if (failOnSnapshot) {
+                throw new MojoFailureException("SNAPSHOTs were found in the bundle list. See log.");
+            }
         }
     }
 

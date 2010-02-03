@@ -35,8 +35,8 @@ public class PreparePackageMojoTest {
 		makeArtifactAssertions(mojo, "base", "org.apache.sling",
 				"org.apache.sling.launchpad.base", null, "jar", null, 0);
 
-		makeArtifactAssertions(mojo, "defaultBundles", "org.apache.sling",
-				"org.apache.sling.launchpad", "RELEASE", "jar", "bundles", 0);
+		//makeArtifactAssertions(mojo, "defaultBundles", "org.apache.sling",
+		//		"org.apache.sling.launchpad", "RELEASE", "jar", "bundles", 0);
 
         makeArtifactAssertions(mojo, "defaultBundleList", "org.apache.sling",
                 "org.apache.sling.launchpad", "RELEASE", "xml", "bundlelist", 0);
