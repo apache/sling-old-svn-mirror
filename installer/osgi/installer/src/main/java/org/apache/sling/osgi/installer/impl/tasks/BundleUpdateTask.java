@@ -18,6 +18,8 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import java.io.InputStream;
+
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -92,7 +94,13 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         }
         b.stop();
-        b.update(resource.getInputStream(ctx.getBundleContext()));
+        final InputStream is = resource.getInputStream(ctx.getBundleContext());
+        if(is == null) {
+            throw new IllegalStateException(
+                    "RegisteredResource provides null InputStream, cannot update bundle: "
+                    + resource);
+        }
+        b.update(is);
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
         if(ctx.getLogService() != null) {

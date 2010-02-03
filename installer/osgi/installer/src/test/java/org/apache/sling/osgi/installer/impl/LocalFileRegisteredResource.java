@@ -29,7 +29,7 @@ class LocalFileRegisteredResource extends RegisteredResourceImpl {
 	private File storage;
 	
 	LocalFileRegisteredResource(InstallableResource r) throws IOException {
-		super(null, r);
+		super(new MockOsgiInstallerContext(), r);
 	}
 	
 	@Override

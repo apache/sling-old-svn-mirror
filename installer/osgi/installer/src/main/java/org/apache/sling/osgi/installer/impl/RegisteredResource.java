@@ -42,7 +42,7 @@ public interface RegisteredResource {
 	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
 	public static final String ENTITY_CONFIG_PREFIX = "config:";
 	
-	void cleanup(BundleContext bc);
+	void cleanup(OsgiInstallerContext ctx);
 	String getURL();
 	InputStream getInputStream(BundleContext bc) throws IOException;
 	Dictionary<String, Object> getDictionary();
