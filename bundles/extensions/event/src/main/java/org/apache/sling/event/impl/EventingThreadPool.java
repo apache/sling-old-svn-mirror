@@ -18,6 +18,10 @@
  */
 package org.apache.sling.event.impl;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -28,28 +32,29 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * The configurable eventing thread pool.
- * @scr.component label="%event.pool.name" description="%event.pool.description"
- * @scr.service interface="org.apache.sling.event.ThreadPool"
- *
- * @scr.property nameRef="PROPERTY_MIN_POOL_SIZE" valueRef="DEFAULT_MIN_POOL_SIZE"
- * @scr.property nameRef="PROPERTY_MAX_POOL_SIZE" valueRef="DEFAULT_MAX_POOL_SIZE"
- * @scr.property nameRef="PROPERTY_QUEUEL_SIZE" valueRef="DEFAULT_QUEUE_SIZE"
  */
+@Component(label="%event.pool.name",
+        description="%event.pool.description",
+        metatype=true)
+@Service(value=ThreadPool.class)
 public class EventingThreadPool implements ThreadPool {
 
-    /** @scr.reference */
+    @Reference
     protected ThreadPoolManager threadPoolManager;
 
     /** The real thread pool used. */
     private org.apache.sling.commons.threads.ThreadPool threadPool;
 
-    private static final String PROPERTY_MIN_POOL_SIZE = "minPoolSize";
-    private static final String PROPERTY_MAX_POOL_SIZE = "maxPoolSize";
-    private static final String PROPERTY_QUEUEL_SIZE = "queueSize";
-
     private static final int DEFAULT_MIN_POOL_SIZE = 35; // this is sufficient for all threads + approx 25 job queues
     private static final int DEFAULT_MAX_POOL_SIZE = 50;
     private static final int DEFAULT_QUEUE_SIZE = -1; // infinite
+
+    @Property(intValue=DEFAULT_MIN_POOL_SIZE)
+    private static final String PROPERTY_MIN_POOL_SIZE = "minPoolSize";
+    @Property(intValue=DEFAULT_MAX_POOL_SIZE)
+    private static final String PROPERTY_MAX_POOL_SIZE = "maxPoolSize";
+    @Property(intValue=DEFAULT_QUEUE_SIZE)
+    private static final String PROPERTY_QUEUE_SIZE = "queueSize";
 
     /**
      * Activate this component.
@@ -63,7 +68,7 @@ public class EventingThreadPool implements ThreadPool {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
         config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MIN_POOL_SIZE), DEFAULT_MIN_POOL_SIZE));
         config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
-        config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUEL_SIZE), DEFAULT_QUEUE_SIZE));
+        config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUE_SIZE), DEFAULT_QUEUE_SIZE));
         config.setShutdownGraceful(true);
         this.threadPool = threadPoolManager.create(config);
     }

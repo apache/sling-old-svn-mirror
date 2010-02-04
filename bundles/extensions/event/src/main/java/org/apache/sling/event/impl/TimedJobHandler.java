@@ -45,6 +45,11 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -57,13 +62,16 @@ import org.osgi.service.event.EventAdmin;
 /**
  * An event handler for timed events.
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="TimedEventStatusProvider"
- * @scr.property name="event.topics" valueRefs="EventUtil.TOPIC_TIMED_EVENT"
- *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
- *               values.started="org/osgi/framework/BundleEvent/STARTED"
- * @scr.property name="repository.path" value="/var/eventing/timed-jobs"
  */
+@Component(immediate=true)
+@Service(value=TimedEventStatusProvider.class)
+@Properties({
+     @Property(name="event.topics",propertyPrivate=true,
+               value={"org/osgi/framework/BundleEvent/UPDATED",
+                      "org/osgi/framework/BundleEvent/STARTED",
+                      EventUtil.TOPIC_TIMED_EVENT}),
+     @Property(name="repository.path",value="/var/eventing/timed-jobs",propertyPrivate=true)
+})
 public class TimedJobHandler
     extends AbstractRepositoryEventHandler
     implements Job, TimedEventStatusProvider {
@@ -74,7 +82,7 @@ public class TimedJobHandler
 
     protected static final String JOB_SCHEDULE_INFO = "info";
 
-    /** @scr.reference */
+    @Reference
     protected Scheduler scheduler;
 
     /** Unloaded events. */

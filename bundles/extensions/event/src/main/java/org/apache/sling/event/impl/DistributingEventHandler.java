@@ -28,6 +28,11 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.EventUtil;
@@ -37,17 +42,23 @@ import org.osgi.service.event.EventAdmin;
 
 /**
  * This event handler distributes events across an application cluster.
- * @scr.component label="%dist.events.name" description="%dist.events.description" immediate="true"
- * @scr.property name="event.topics" value="*" private="true"
- * @scr.property name="event.filter" value="(event.distribute=*)" private="true"
- * @scr.property name="repository.path" value="/var/eventing/distribution" private="true"
  *
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
- * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.period" value="1800" type="Long"
- * @scr.property name="scheduler.concurrent" value="false" type="Boolean" private="true"
  */
+@Component(label="%dist.events.name",
+           description="%dist.events.description",
+           immediate=true,
+           metatype=true,
+           policy=ConfigurationPolicy.REQUIRE)
+@Service(value=Runnable.class)
+@Properties({
+    @Property(name="event.topics",value="*",propertyPrivate=true),
+    @Property(name="event.filter",value="(event.distribute=*)",propertyPrivate=true),
+    @Property(name="repository.path",value="/var/eventing/distribution",propertyPrivate=true),
+    @Property(name="scheduler.period", longValue=1800),
+    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
+})
 public class DistributingEventHandler
     extends AbstractRepositoryEventHandler
     implements Runnable {
@@ -55,7 +66,7 @@ public class DistributingEventHandler
     /** Default clean up time is 15 minutes. */
     protected static final int DEFAULT_CLEANUP_PERIOD = 15;
 
-    /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" */
+    @Property(intValue=DEFAULT_CLEANUP_PERIOD)
     protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** We remove everything which is older than 15min by default. */
