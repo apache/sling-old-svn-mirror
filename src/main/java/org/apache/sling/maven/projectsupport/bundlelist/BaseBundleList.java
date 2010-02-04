@@ -85,6 +85,7 @@ public abstract class BaseBundleList {
         }
 
         StartLevel sl = new StartLevel();
+        getStartLevels().add(sl);
         sl.setLevel(startLevel);
         return sl;
     }
