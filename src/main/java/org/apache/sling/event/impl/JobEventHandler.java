@@ -44,6 +44,11 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.Services;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -62,19 +67,26 @@ import org.osgi.service.event.EventConstants;
 /**
  * An event handler for special job events.
  *
- * @scr.component label="%job.events.name" description="%job.events.description" immediate="true"
- * @scr.service interface="org.apache.sling.event.JobStatusProvider"
- * @scr.property name="event.topics" valueRefs="EventUtil.TOPIC_JOB"
- *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
- *               values.started="org/osgi/framework/BundleEvent/STARTED"
- *               private="true"
- * @scr.property name="repository.path" value="/var/eventing/jobs" private="true"
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
- * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.period" value="300" type="Long" label="%jobscheduler.period.name" description="%jobscheduler.period.description"
- * @scr.property name="scheduler.concurrent" value="false" type="Boolean" private="true"
  */
+@Component(label="%job.events.name",
+        description="%job.events.description",
+        immediate=true,
+        metatype=true)
+@Services({
+    @Service(value=JobStatusProvider.class),
+    @Service(value=Runnable.class)
+})
+@Properties({
+     @Property(name="event.topics",propertyPrivate=true,
+               value={"org/osgi/framework/BundleEvent/UPDATED",
+                      "org/osgi/framework/BundleEvent/STARTED",
+                      EventUtil.TOPIC_JOB}),
+     @Property(name="repository.path",value="/var/eventing/jobs",propertyPrivate=true),
+     @Property(name="scheduler.period", longValue=300,label="%jobscheduler.period.name",description="%jobscheduler.period.description"),
+     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
+})
 public class JobEventHandler
     extends AbstractRepositoryEventHandler
     implements EventUtil.JobStatusNotifier, JobStatusProvider, Runnable {
@@ -88,25 +100,25 @@ public class JobEventHandler
     /** Default sleep time. */
     private static final long DEFAULT_SLEEP_TIME = 30;
 
-    /** @scr.property valueRef="DEFAULT_SLEEP_TIME" */
-    private static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
-
     /** Default number of job retries. */
     private static final int DEFAULT_MAX_JOB_RETRIES = 10;
 
-    /** @scr.property valueRef="DEFAULT_MAX_JOB_RETRIES" */
+    @Property(longValue=DEFAULT_SLEEP_TIME)
+    private static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
+
+    @Property(intValue=DEFAULT_MAX_JOB_RETRIES)
     private static final String CONFIG_PROPERTY_MAX_JOB_RETRIES = "max.job.retries";
 
     /** Default number of seconds to wait for an ack. */
     private static final long DEFAULT_WAIT_FOR_ACK = 90; // by default we wait 90 secs
 
-    /** @scr.property valueRef="DEFAULT_MAXIMUM_PARALLEL_JOBS" */
-    private static final String CONFIG_PROPERTY_MAXIMUM_PARALLEL_JOBS = "max.parallel.jobs";
-
     /** Default nubmer of parallel jobs. */
     private static final long DEFAULT_MAXIMUM_PARALLEL_JOBS = 15;
 
-    /** @scr.property valueRef="DEFAULT_WAIT_FOR_ACK" */
+    @Property(longValue=DEFAULT_MAXIMUM_PARALLEL_JOBS)
+    private static final String CONFIG_PROPERTY_MAXIMUM_PARALLEL_JOBS = "max.parallel.jobs";
+
+    @Property(longValue=DEFAULT_WAIT_FOR_ACK)
     private static final String CONFIG_PROPERTY_WAIT_FOR_ACK = "wait.for.ack";
 
     /** We check every 30 secs by default. */
@@ -133,7 +145,7 @@ public class JobEventHandler
     /** Default clean up time is 5 minutes. */
     private static final int DEFAULT_CLEANUP_PERIOD = 5;
 
-    /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" label="%jobcleanup.period.name" description="%jobcleanup.period.description" */
+    @Property(intValue=DEFAULT_CLEANUP_PERIOD,label="%jobcleanup.period.name",description="%jobcleanup.period.description")
     private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** We remove everything which is older than 5 min by default. */
@@ -163,38 +175,38 @@ public class JobEventHandler
     /** Number of jobs to load from the repository on startup in one go. */
     private long maxLoadJobs;
 
-    /** @scr.property valueRef="DEFAULT_MAXIMUM_LOAD_JOBS" */
-    private static final String CONFIG_PROPERTY_MAX_LOAD_JOBS = "max.load.jobs";
-
     /** Default maximum load jobs. */
     private static final long DEFAULT_MAXIMUM_LOAD_JOBS = 1000;
+
+    @Property(longValue=DEFAULT_MAXIMUM_LOAD_JOBS)
+    private static final String CONFIG_PROPERTY_MAX_LOAD_JOBS = "max.load.jobs";
 
     /** Threshold - if the queue is lower than this threshold the repository is checked for events. */
     private long loadThreshold;
 
-    /** @scr.property valueRef="DEFAULT_LOAD_THRESHOLD" */
-    private static final String CONFIG_PROPERTY_LOAD_THREASHOLD = "load.threshold";
-
     /** Default load threshold. */
     private static final long DEFAULT_LOAD_THRESHOLD = 400;
+
+    @Property(longValue=DEFAULT_LOAD_THRESHOLD)
+    private static final String CONFIG_PROPERTY_LOAD_THREASHOLD = "load.threshold";
 
     /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
     private long backgroundLoadDelay;
 
-    /** @scr.property valueRef="DEFAULT_BACKGROUND_LOAD_DELAY" */
-    private static final String CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
-
     /** Default background load delay. */
     private static final long DEFAULT_BACKGROUND_LOAD_DELAY = 30;
+
+    @Property(longValue=DEFAULT_BACKGROUND_LOAD_DELAY)
+    private static final String CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
 
     /** The background loader waits this time of seconds between loads from the repository. (in secs) */
     private long backgroundCheckDelay;
 
-    /** @scr.property valueRef="DEFAULT_BACKGROUND_CHECK_DELAY" */
-    private static final String CONFIG_PROPERTY_BACKGROUND_CHECK_DELAY = "load.checkdelay";
-
     /** Default background check delay. */
     private static final long DEFAULT_BACKGROUND_CHECK_DELAY = 240;
+
+    @Property(longValue=DEFAULT_BACKGROUND_CHECK_DELAY)
+    private static final String CONFIG_PROPERTY_BACKGROUND_CHECK_DELAY = "load.checkdelay";
 
     /** Time when this service has been started. */
     private long startTime;

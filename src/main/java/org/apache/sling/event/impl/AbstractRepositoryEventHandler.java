@@ -29,6 +29,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.SlingSettingsService;
@@ -46,25 +50,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract base class for all event handlers in this package.
  *
- * @scr.component abstract="true" metatype="no"
- * @scr.service interface="org.osgi.service.event.EventHandler"
  */
+@Component(componentAbstract=true)
+@Service(value=EventHandler.class)
 public abstract class AbstractRepositoryEventHandler
     implements EventHandler, EventListener {
 
     /** Default log. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** @scr.property valueRef="DEFAULT_PROPERTY_REPO_PATH" */
-    protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
-
     /** Default path for the {@link #CONFIG_PROPERTY_REPO_PATH} */
     private static final String DEFAULT_PROPERTY_REPO_PATH = "/sling/events";
 
-    /** @scr.reference */
+    @Property(value=DEFAULT_PROPERTY_REPO_PATH)
+    protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
+
+    @Reference
     protected SlingRepository repository;
 
-    /** @scr.reference */
+    @Reference
     protected EventAdmin eventAdmin;
 
     /** Our application id. */
@@ -85,16 +89,17 @@ public abstract class AbstractRepositoryEventHandler
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
-    /** @scr.reference */
+    @Reference
     protected DynamicClassLoaderManager classLoaderManager;
 
     /**
      * Our thread pool.
-     * @scr.reference */
+     */
+    @Reference
     protected ThreadPool threadPool;
 
-    /** @scr.reference
-     *  Sling settings service. */
+    /** Sling settings service. */
+    @Reference
     protected SlingSettingsService settingsService;
 
     /** The root node for writing. */
