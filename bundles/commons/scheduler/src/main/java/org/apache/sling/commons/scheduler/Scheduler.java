@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
 
 /**
  * A scheduler to schedule time/cron based jobs.
- * A job is an object which is executed/fired by the scheduler. The object
+ * A job is an object that is executed/fired by the scheduler. The object
  * should either implement the {@link Job} interface or the {@link Runnable}
  * interface.
  */
@@ -45,7 +45,7 @@ public interface Scheduler {
 
     /**
      * Schedule a time based job.
-     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
      * the old job.
      *
      * @param name The name of the job - or null. If no name is specified it can't be cancelled.
@@ -62,7 +62,7 @@ public interface Scheduler {
     /**
      * Schedule a periodic job.
      * The job is started the first time when the period has passed.
-     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
      * the old job.
      *
      * @param name The name of the job - or null. If no name is specified it can't be cancelled.
@@ -102,7 +102,7 @@ public interface Scheduler {
 
     /**
      * Fire a job once at a specific date
-     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
      * the old job.
      *
      * @param name The name of the job - or null. If no name is specified it can't be cancelled.
@@ -117,7 +117,7 @@ public interface Scheduler {
 
     /**
      * Fire a job once at a specific date, several times with a given interval.
-     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
      * the old job.
      *
      * @param name The name of the job - or null. If no name is specified it can't be cancelled.
