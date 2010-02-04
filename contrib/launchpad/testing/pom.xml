@@ -156,75 +156,34 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-launchpad-plugin</artifactId>
                 <executions>
                     <execution>
-                        <!-- Unpack the sling-app launcher for inclusion in the web app -->
-                        <id>unpack-dependencies</id>
+                        <id>prepare-package</id>
                         <goals>
-                            <goal>unpack-dependencies</goal>
+                            <goal>prepare-package</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.apache.sling.launchpad.bundles
-                            </includeArtifactIds>
-                            <includes>
-                                resources/**
-                            </includes>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles
-                            </outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>
-                                true
-                            </overWriteSnapshots>
-                        </configuration>
-                    </execution>
-                    <!-- Launcher Jar -->                    
-                    <execution>
-                        <id>copy-launcher-jar</id>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.base</artifactId>
-                                    <version>2.1.1-SNAPSHOT</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <stripVersion>true</stripVersion>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles/resources
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
+                            <defaultBundleList>
+                                <version>6-SNAPSHOT</version>
+                            </defaultBundleList>
 
-                    <execution>
-                        <!-- 
-                        	Copy bundles that must be initially installed to
-                            WEB-INF/resources/bundles/N where N = desired
-                            start level 
-                        -->
-                        <id>copy-bundles-dependencies</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>
-                                ${resources.bundles.path}/${sling.modules.start.level}
-                            </outputDirectory>
-                            <excludeTransitive>true</excludeTransitive>
-                            <includeArtifactIds>
-                                org.apache.sling.scripting.python,org.apache.sling.scripting.xproc,org.apache.sling.extensions.apt.parser,org.apache.sling.extensions.apt.servlet,org.apache.sling.samples.path-based.rtp,org.apache.sling.scripting.scala.script,org.apache.sling.scripting.scala.config,scala-library,scala-compiler
-                            </includeArtifactIds>
-                            <includeScope>
-                                provided
-                            </includeScope>
+                            <additionalBundles>
+                                <additionalBundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.test-services</artifactId>
+                                    <version>2.0.7-SNAPSHOT</version>
+                                    <startLevel>0</startLevel>
+                                </additionalBundle>
+                                <additionalBundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
+                                    <version>2.0.7-SNAPSHOT</version>
+                                    <type>war</type>
+                                    <startLevel>0</startLevel>
+                                </additionalBundle>
+                            </additionalBundles>
                         </configuration>
                     </execution>
                 </executions>
@@ -286,35 +245,6 @@
                     </systemProperties>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/bin.xml</descriptor>
-                    </descriptors>
-                </configuration>
-            </plugin>
-            
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <configuration>
-                            <tasks>
-                              <move todir="${resources.bundles.path}/${sling.modules.start.level}">
-                                <fileset dir="${resources.bundles.path}/0"/>
-                              </move>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-                      
         </plugins>
     </build>
     <reporting>
@@ -482,15 +412,6 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- The basic Sling Bundles -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.bundles</artifactId>
-            <version>6-SNAPSHOT</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-
         <!-- additional bundles for integration tests -->
         <dependency>
             <groupId>org.apache.sling</groupId>
