@@ -723,8 +723,7 @@ public class JobEventHandler
                      && !this.backgroundSession.itemExists(info.nodePath + "/" + EventHelper.NODE_PROPERTY_FINISHED)) {
                     final Event event = info.event;
                     final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-                    final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null
-                                                    || event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
+                    final boolean parallelProcessing = this.useParallelProcessing(event);
 
                     // check how we can process this job
                     // if parallel processing is allowed, we can just process
@@ -983,8 +982,7 @@ public class JobEventHandler
      * @param isMainQueue Is this the main queue?
      */
     private void processJob(Event event, Node eventNode, boolean isMainQueue)  {
-        final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null
-                                           || event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
+        final boolean parallelProcessing = this.useParallelProcessing(event);
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         logger.debug("Starting job {}", event);
         boolean unlock = true;
@@ -1288,8 +1286,7 @@ public class JobEventHandler
         } else {
             this.sendNotification(EventUtil.TOPIC_JOB_FINISHED, job);
         }
-        final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null
-                                        || job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
+        final boolean parallelProcessing = this.useParallelProcessing(job);
         EventInfo putback = null;
         // we have to use the same session for unlocking that we used for locking!
         synchronized ( this.backgroundLock ) {
@@ -1661,6 +1658,34 @@ public class JobEventHandler
             props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
             localEA.postEvent(new Event(topic, props));
         }
+    }
+
+    /**
+     * Check if the job should be handled in parallel.
+     * For improved processing we first check if a job queue name is set
+     * and always return true. This is a pure implementation thing!
+     * If the parallel property is set and is a boolean object, we return
+     * its value; if it is any other object we use its string value
+     * and return false if the string value is either "no" or "false".
+     * If any other value is set we return true, if the property is not
+     * set we return false.
+     */
+    private boolean useParallelProcessing(final Event job) {
+        if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
+            return true;
+        }
+        final Object value = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL);
+        if ( value != null ) {
+            if ( value instanceof Boolean ) {
+                return ((Boolean)value).booleanValue();
+            }
+            final String strValue = value.toString();
+            if ( "no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue) ) {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     private static final class StartedJobInfo {

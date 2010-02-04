@@ -71,7 +71,11 @@ public abstract class EventUtil {
     /** The property for the unique event id. Value is of type String (This is optional). */
     public static final String PROPERTY_JOB_ID = "event.job.id";
 
-    /** The property to set if a job can be run parallel to any other job. */
+    /** The property to set if a job can be run parallel to any other job.
+     * For now the property should only contain the values <code>true</code>
+     * or <code>false</code> as a string value.
+     * We might want to use different values in the future for enhanced
+     * parallel job handling. */
     public static final String PROPERTY_JOB_PARALLEL = "event.job.parallel";
 
     /** The property to set if a job should only be run on the same app it has been created. */
