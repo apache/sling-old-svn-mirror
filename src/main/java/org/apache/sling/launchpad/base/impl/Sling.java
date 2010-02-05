@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -85,19 +86,6 @@ public class Sling implements BundleActivator {
 
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
-
-    /**
-     * The name of the configuration property defining the Sling home directory
-     * (value is "sling.home"). This is a Platform file system directory below
-     * which all runtime data, such as the Felix bundle archives, logfiles, CRX
-     * repository, etc., is located.
-     * <p>
-     * The value of this property, if not set as a system property defaults to
-     * the <i>sling</i> directory in the current working directory.
-     *
-     * @see #SLING_HOME_URL
-     */
-//    public static final String SLING_HOME = "sling.home";
 
     /**
      * The name of the configuration property defining the Sling home directory
@@ -445,6 +433,14 @@ public class Sling implements BundleActivator {
         staticProps.put(SharedConstants.SLING_HOME, slingHome);
         runtimeProps.put(SharedConstants.SLING_HOME, slingHome);
         runtimeProps.put(SLING_HOME_URL, slingHomeFile.toURI().toString());
+
+        // add property file locations
+        runtimeProps.put(SharedConstants.SLING_PROPERTIES, propFile.getAbsolutePath());
+        try {
+            runtimeProps.put(SharedConstants.SLING_PROPERTIES_URL, propFile.toURL().toString());
+        } catch (MalformedURLException e) {
+            // we simple ignore this
+        }
 
         // Perform variable substitution for system properties.
         for (Entry<String, String> entry : runtimeProps.entrySet()) {

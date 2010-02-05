@@ -76,4 +76,20 @@ public interface SharedConstants {
      */
     public static final String DISABLE_PACKAGE_BUNDLE_LOADING = "org.apache.sling.launchpad.disable.package.bundle.loading";
 
+
+    /**
+     * The name of the configuration property defining the Sling properties file
+     * (value is "sling.properties"). This is a Platform file system file
+     * containing the startup configuration of Sling.
+     * @since 2.2
+     */
+    public static final String SLING_PROPERTIES = "sling.properties";
+
+    /**
+     * The name of the configuration property defining the Sling properties url
+     * (value is "sling.properties.url"). This is a url pointing to a resource
+     * containing the startup configuration of Sling.
+     * @since 2.2
+     */
+    public static final String SLING_PROPERTIES_URL = "sling.properties.url";
 }
