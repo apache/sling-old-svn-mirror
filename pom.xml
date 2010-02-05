@@ -60,7 +60,9 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            org.apache.sling.scripting.api.*;resolution:=optional,*
+                            org.apache.sling.scripting.api.*;resolution:=optional,
+                            org.apache.felix.webconsole;resolution:=optional,
+                            *
                         </Import-Package>
                         <Export-Package>
                             org.apache.sling.jcr.resource;version=${pom.version}
