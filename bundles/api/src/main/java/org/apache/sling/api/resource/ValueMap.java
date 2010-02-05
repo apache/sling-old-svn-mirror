@@ -54,7 +54,7 @@ public interface ValueMap extends Map<String, Object> {
      * @param defaultValue The default value to use if the named property does
      *            not exist or cannot be converted to the requested type. The
      *            default value is also used to define the type to convert the
-     *            value to. If this is <code>null</code> any existing propert is
+     *            value to. If this is <code>null</code> any existing property is
      *            not converted.
      * @return Return named value converted to type T or the default value if
      *         non existing or can't be converted.
