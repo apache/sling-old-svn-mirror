@@ -113,6 +113,9 @@ public class ValueMapDecorator implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(String name, T defaultValue) {
+        if ( defaultValue == null ) {
+            return (T)get(name);
+        }
         T value = get(name, (Class<T>) defaultValue.getClass());
         return value == null ? defaultValue : value;
     }
