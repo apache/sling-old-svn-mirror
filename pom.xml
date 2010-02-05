@@ -65,6 +65,7 @@
                         </Private-Package>
                         <Import-Package>
                             javax.servlet.*;resolution:=optional,
+                            org.apache.felix.webconsole;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
