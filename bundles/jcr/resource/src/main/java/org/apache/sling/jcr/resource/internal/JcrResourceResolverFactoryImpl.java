@@ -380,7 +380,6 @@ public class JcrResourceResolverFactoryImpl implements
         // set up the map entries from configuration
         try {
             mapEntries = new MapEntries(this, getRepository());
-            plugin = new JcrResourceResolverWebConsolePlugin(componentContext.getBundleContext(), this);
         } catch (Exception e) {
             log.error(
                 "activate: Cannot access repository, failed setting up Mapping Support",
@@ -394,6 +393,14 @@ public class JcrResourceResolverFactoryImpl implements
             log.error(
                 "activate: Cannot create resource listener; resource events for JCR resources will be disabled.",
                 e);
+        }
+
+        try {
+            plugin = new JcrResourceResolverWebConsolePlugin(componentContext.getBundleContext(), this);
+        } catch (Throwable ignore) {
+            // an exception here propably means the web console plugin is not available
+            log.debug(
+                    "activate: unable to setup web console plugin.", ignore);
         }
     }
 
