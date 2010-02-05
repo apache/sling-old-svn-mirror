@@ -314,6 +314,11 @@ public class SlingAuthenticator implements Authenticator,
      *            authentication.
      * @param response The response object which may be used to send the information
      *            on the request failure to the user.
+     *
+     * @return <code>true</code> if request processing should continue assuming
+     *      successfull authentication. If <code>false</code> is returned it
+     *      is assumed a response has been sent to the client and the request
+     *      is terminated.
      */
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) {
@@ -516,7 +521,14 @@ public class SlingAuthenticator implements Authenticator,
         return null;
     }
 
-    /** Try to acquire an Session as indicated by authInfo */
+    /**
+     * Try to acquire an Session as indicated by authInfo
+     *
+     * @return <code>true</code> if request processing should continue assuming
+     *         successfull authentication. If <code>false</code> is returned it
+     *         is assumed a response has been sent to the client and the request
+     *         is terminated.
+     */
     private boolean getSession(final HttpServletRequest request,
             final HttpServletResponse response, final AuthenticationInfo authInfo) {
 
@@ -552,9 +564,9 @@ public class SlingAuthenticator implements Authenticator,
 
             }
 
-            // set the attributes for further processing
+            // no redirect desired, so continue processing by first setting
+            // the request attributes and then returning true
             setAttributes(session, authInfo.getAuthType(), request);
-
             return true;
 
         } catch (RepositoryException re) {
