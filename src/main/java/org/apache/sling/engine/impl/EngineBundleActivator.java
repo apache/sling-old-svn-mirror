@@ -51,7 +51,11 @@ public class EngineBundleActivator implements BundleActivator {
         serviceRegistration = context.registerService(SlingSettingsService.class.getName(),
                                                       service,
                                                       props);
-        RequestHistoryConsolePlugin.initPlugin(context);
+        try {
+            RequestHistoryConsolePlugin.initPlugin(context);
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
     }
 
     /**
@@ -62,6 +66,10 @@ public class EngineBundleActivator implements BundleActivator {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }
-        RequestHistoryConsolePlugin.destroyPlugin();
+        try {
+            RequestHistoryConsolePlugin.destroyPlugin();
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
     }
 }

@@ -46,7 +46,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -76,6 +75,7 @@ import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpContext;
@@ -88,7 +88,6 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
- * @scr.service interface="ConfigurationPrinter"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
@@ -96,7 +95,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class SlingMainServlet extends GenericServlet implements ErrorHandler,
-        HttpContext, ConfigurationPrinter {
+        HttpContext {
 
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_CALL_COUNTER" */
     public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls";
@@ -106,7 +105,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     /** @scr.property valueRef="DEFAULT_ALLOW_TRACE" */
     public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
-    
+
     public static final boolean DEFAULT_ALLOW_TRACE = false;
 
     /** default log */
@@ -181,6 +180,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
 
     private boolean allowTrace = DEFAULT_ALLOW_TRACE;
+
+    private ServiceRegistration printerRegistration;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -572,10 +573,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         osgiComponentContext = componentContext;
 
         // setup server info
-        BundleContext bundleContext = componentContext.getBundleContext();
-        Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
-        Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
-        String productVersion = bundleVersion.getMajor() + "."
+        final BundleContext bundleContext = componentContext.getBundleContext();
+        final Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
+        final Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
+        final String productVersion = bundleVersion.getMajor() + "."
             + bundleVersion.getMinor();
         this.serverInfo = PRODUCT_NAME + "/" + productVersion + " ("
             + System.getProperty("java.vm.name") + " "
@@ -585,8 +586,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             + System.getProperty("os.arch") + ")";
 
         // prepare the servlet configuration from the component config
-        Hashtable<String, Object> configuration = new Hashtable<String, Object>();
-        Dictionary<?, ?> componentConfig = componentContext.getProperties();
+        final Hashtable<String, Object> configuration = new Hashtable<String, Object>();
+        final Dictionary<?, ?> componentConfig = componentContext.getProperties();
         for (Enumeration<?> cce = componentConfig.keys(); cce.hasMoreElements();) {
             Object key = cce.nextElement();
             configuration.put(String.valueOf(key), componentConfig.get(key));
@@ -597,7 +598,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             configuration.put("servlet-name", PRODUCT_NAME + " "
                 + productVersion);
         }
-        
+
         // configure method filter
         allowTrace = OsgiUtil.toBoolean(componentConfig.get(PROP_ALLOW_TRACE),
                 DEFAULT_ALLOW_TRACE);
@@ -625,7 +626,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        SlingServletContext tmpServletContext = new SlingServletContext(this);
+        final SlingServletContext tmpServletContext = new SlingServletContext(this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
@@ -649,11 +650,22 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 initFilter(componentContext, serviceReference);
             }
         }
+
+        // try to setup configuration printer
+        try {
+            this.printerRegistration = WebConsoleConfigPrinter.register(bundleContext, requestFilterChain, innerFilterChain);
+
+        } catch (Throwable t) {
+            log.debug("Unable to register web console configuration printer.", t);
+        }
     }
 
     protected void deactivate(ComponentContext componentContext) {
-
         // this reverses the activation setup
+        if ( this.printerRegistration != null ) {
+            this.printerRegistration.unregister();
+            this.printerRegistration = null;
+        }
 
         // first destroy the filters
         destroyFilters(innerFilterChain);
@@ -887,44 +899,5 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         // return the previous thread name
         return oldThreadName;
-    }
-
-    /**
-     * Return the title for the configuration printer
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Servlet Filter";
-    }
-
-    /**
-     * Helper method for printing out a filter chain.
-     */
-    private void printFilterChain(final PrintWriter pw, final SlingFilterChainHelper.FilterListEntry[] entries) {
-        if ( entries == null ) {
-            pw.println("---");
-        } else {
-            for(final SlingFilterChainHelper.FilterListEntry entry : entries) {
-                pw.print(entry.getOrder());
-                pw.print(" : ");
-                pw.print(entry.getFilter().getClass());
-                pw.print(" (");
-                pw.print(entry.getFitlerId());
-                pw.println(")");
-            }
-        }
-    }
-    /**
-     * Print out the servlet filter chains.
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
-    public void printConfiguration(PrintWriter pw) {
-        pw.println("Current Apache Sling Servlet Filter Configuration");
-        pw.println();
-        pw.println("Request Filters:");
-        printFilterChain(pw, this.requestFilterChain.getFilterListEntries());
-        pw.println();
-        pw.println("Component Filters:");
-        printFilterChain(pw, this.innerFilterChain.getFilterListEntries());
     }
 }
