@@ -186,14 +186,12 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
             pw.println(HEADLINE);
             pw.println();
             SortedSet<Object> keys = new TreeSet<Object>( props.keySet() );
-            for ( Iterator<Object> ki = keys.iterator(); ki.hasNext(); )
-            {
+            for ( Iterator<Object> ki = keys.iterator(); ki.hasNext(); ) {
                 final Object key = ki.next();
                 pw.print( key );
                 pw.print(" = ");
                 final Object value = props.get(key);
-                if ( value != null )
-                {
+                if ( value != null ) {
                     pw.print(value.toString());
                 }
                 pw.println();
