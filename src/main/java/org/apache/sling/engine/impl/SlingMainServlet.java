@@ -75,7 +75,6 @@ import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpContext;
@@ -181,7 +180,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     private boolean allowTrace = DEFAULT_ALLOW_TRACE;
 
-    private ServiceRegistration printerRegistration;
+    private Object printerRegistration;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -663,7 +662,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     protected void deactivate(ComponentContext componentContext) {
         // this reverses the activation setup
         if ( this.printerRegistration != null ) {
-            this.printerRegistration.unregister();
+            WebConsoleConfigPrinter.unregister(this.printerRegistration);
             this.printerRegistration = null;
         }
 
