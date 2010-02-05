@@ -18,15 +18,26 @@
  */
 package org.apache.sling.engine.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.webconsole.ModeAwareConfigurationPrinter;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a configuration printer for the web console which
@@ -34,6 +45,8 @@ import org.osgi.framework.ServiceRegistration;
  *
  */
 public class WebConsoleConfigPrinter implements ConfigurationPrinter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebConsoleConfigPrinter.class);
 
     private final SlingFilterChainHelper requestFilterChain;
     private final SlingFilterChainHelper innerFilterChain;
@@ -44,18 +57,70 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
         this.innerFilterChain = innerFilterChain;
     }
 
-    public static ServiceRegistration register(final BundleContext bundleContext,
+    private static final class Registration {
+        public ServiceRegistration filterPlugin;
+        public ServiceRegistration propertiesPlugin;
+    }
+
+    public static Object register(final BundleContext bundleContext,
             final SlingFilterChainHelper requestFilterChain,
             final SlingFilterChainHelper innerFilterChain) {
-        final Object service = new WebConsoleConfigPrinter(requestFilterChain, innerFilterChain);
+        final Registration reg = new Registration();
+
+        // first we register the plugin for the filters
+        final WebConsoleConfigPrinter filterPrinter = new WebConsoleConfigPrinter(requestFilterChain, innerFilterChain);
         final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Servlet Filter Configuration Printer");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        return bundleContext.registerService("org.apache.felix.webconsole.ConfigurationPrinter",
-                                                      service,
-                                                      serviceProps);
+
+        reg.filterPlugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+                filterPrinter,
+                serviceProps);
+
+        // if the properties are available, we register the second plugin
+        final String propUrl = bundleContext.getProperty("sling.properties.url");
+        if ( propUrl != null ) {
+            // try to read properties
+            Properties props = null;
+            try {
+                final URL url = new URL(propUrl);
+                final InputStream is = url.openStream();
+                final Properties tmp = new Properties();
+                tmp.load(is);
+                props = tmp;
+            } catch (IOException ioe) {
+                LOGGER.warn("Unable to read sling properties from " + propUrl, ioe);
+            }
+            if ( props != null ) {
+                final PropsPlugin propertiesPrinter = new PropsPlugin(props);
+                final Dictionary<String, String> serviceProps2 = new Hashtable<String, String>();
+                serviceProps2.put(Constants.SERVICE_DESCRIPTION,
+                    "Apache Sling Sling Properties Configuration Printer");
+                serviceProps2.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+                reg.propertiesPlugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+                        propertiesPrinter,
+                        serviceProps2);
+            }
+        }
+        return reg;
     }
+
+    public static void unregister(final Object reg) {
+        if ( reg instanceof Registration ) {
+            final Registration registration = (Registration)reg;
+            if ( registration.filterPlugin != null) {
+                registration.filterPlugin.unregister();
+                registration.filterPlugin = null;
+            }
+            if ( registration.propertiesPlugin != null) {
+                registration.propertiesPlugin.unregister();
+                registration.propertiesPlugin = null;
+            }
+        }
+    }
+
     /**
      * Return the title for the configuration printer
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
@@ -81,6 +146,7 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
             }
         }
     }
+
     /**
      * Print out the servlet filter chains.
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
@@ -93,5 +159,64 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
         pw.println();
         pw.println("Component Filters:");
         printFilterChain(pw, innerFilterChain.getFilterListEntries());
+    }
+
+    public static final class PropsPlugin implements ModeAwareConfigurationPrinter {
+
+        private static String HEADLINE = "Apache Sling Launchpad Properties";
+
+        private final Properties props;
+
+        public PropsPlugin(final Properties props) {
+            this.props = props;
+        }
+
+        /**
+         * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+         */
+        public String getTitle() {
+            return "Sling Properties";
+        }
+
+        /**
+         * Print out the servlet filter chains.
+         * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+         */
+        public void printConfiguration(PrintWriter pw) {
+            pw.println(HEADLINE);
+            pw.println();
+            SortedSet<Object> keys = new TreeSet<Object>( props.keySet() );
+            for ( Iterator<Object> ki = keys.iterator(); ki.hasNext(); )
+            {
+                final Object key = ki.next();
+                pw.print( key );
+                pw.print(" = ");
+                final Object value = props.get(key);
+                if ( value != null )
+                {
+                    pw.print(value.toString());
+                }
+                pw.println();
+            }
+        }
+
+        public void printConfiguration(PrintWriter printWriter, String mode) {
+            if ( mode != ConfigurationPrinter.MODE_ZIP ) {
+                this.printConfiguration(printWriter);
+            } else {
+                // write into byte array first
+                String contents = null;
+                try {
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    this.props.store(baos , HEADLINE);
+                    contents = baos.toString("8859_1");
+                } catch (IOException ioe) {
+                    // if something goes wrong here we default to text output
+                    this.printConfiguration(printWriter);
+                    return;
+                }
+                printWriter.write(contents);
+            }
+        }
     }
 }
