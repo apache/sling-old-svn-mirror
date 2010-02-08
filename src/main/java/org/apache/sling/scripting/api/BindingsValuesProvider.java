@@ -21,7 +21,8 @@ package org.apache.sling.scripting.api;
 import javax.script.Bindings;
 
 /**
- * Service interface which allows for the Bindings object
+ * Service interface which allows for the Bindings object.
+ * @since 2.1
  */
 public interface BindingsValuesProvider {
 

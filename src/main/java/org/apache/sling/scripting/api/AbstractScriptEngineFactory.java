@@ -29,17 +29,26 @@ import java.util.jar.Manifest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
-public abstract class AbstractScriptEngineFactory implements
-        ScriptEngineFactory {
+/**
+ * This abstract class can be used for own script engine
+ * factory implementations.
+ */
+public abstract class AbstractScriptEngineFactory
+    implements ScriptEngineFactory {
 
+    /** The engine name. */
     private String engineName;
 
+    /** The version of the engine. */
     private String engineVersion;
 
+    /** List of extensions. */
     private List<String> extensions;
 
+    /** List of mime types. */
     private List<String> mimeTypes;
 
+    /** List of names. */
     private List<String> names;
 
     protected AbstractScriptEngineFactory() {
@@ -79,32 +88,53 @@ public abstract class AbstractScriptEngineFactory implements
 
         setEngineName(name);
         setEngineVersion(version);
-        
+
         setExtensions((String[]) null);
         setMimeTypes((String[]) null);
         setNames((String[]) null);
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getEngineName()
+     */
     public String getEngineName() {
         return engineName;
     }
 
+    /**
+     * Set the engine name.
+     * @param engineName The new engine name
+     */
     protected void setEngineName(String engineName) {
         this.engineName = engineName;
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getEngineVersion()
+     */
     public String getEngineVersion() {
         return engineVersion;
     }
 
+    /**
+     * Set the engine version
+     * @param engineVersion The version string
+     */
     protected void setEngineVersion(String engineVersion) {
         this.engineVersion = engineVersion;
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getExtensions()
+     */
     public List<String> getExtensions() {
         return extensions;
     }
 
+    /**
+     * Set the extensions
+     * @param extensions The array of extensions
+     */
     protected void setExtensions(String... extensions) {
         if (extensions == null) {
             this.extensions = Collections.emptyList();
@@ -113,10 +143,17 @@ public abstract class AbstractScriptEngineFactory implements
         }
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getMimeTypes()
+     */
     public List<String> getMimeTypes() {
         return mimeTypes;
     }
 
+    /**
+     * Set the mime types
+     * @param mimeTypes The array of mime types
+     */
     protected void setMimeTypes(String... mimeTypes) {
         if (mimeTypes == null) {
             this.mimeTypes = Collections.emptyList();
@@ -125,10 +162,17 @@ public abstract class AbstractScriptEngineFactory implements
         }
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getNames()
+     */
     public List<String> getNames() {
         return names;
     }
 
+    /**
+     * Set the names
+     * @param names The array of names.
+     */
     protected void setNames(String... names) {
         if (names == null) {
             this.names = Collections.emptyList();
@@ -137,8 +181,11 @@ public abstract class AbstractScriptEngineFactory implements
         }
     }
 
-    public String getMethodCallSyntax(String obj, String m, String[] args) {
-        StringBuffer callSyntax = new StringBuffer();
+    /**
+     * @see javax.script.ScriptEngineFactory#getMethodCallSyntax(java.lang.String, java.lang.String, java.lang.String[])
+     */
+    public String getMethodCallSyntax(String obj, String m, String... args) {
+        StringBuilder callSyntax = new StringBuilder();
         callSyntax.append(obj).append('.').append(m).append('(');
         for (int i = 0; args != null && i < args.length; i++) {
             if (i > 0) callSyntax.append(',');
@@ -148,10 +195,16 @@ public abstract class AbstractScriptEngineFactory implements
         return callSyntax.toString();
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getOutputStatement(java.lang.String)
+     */
     public String getOutputStatement(String value) {
         return "out.print(" + value + ")";
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getParameter(java.lang.String)
+     */
     public Object getParameter(String name) {
         if (ScriptEngine.ENGINE.equals(name)) {
             return getEngineName();
@@ -167,7 +220,10 @@ public abstract class AbstractScriptEngineFactory implements
         return null;
     }
 
-    public String getProgram(String[] arg0) {
+    /**
+     * @see javax.script.ScriptEngineFactory#getProgram(java.lang.String[])
+     */
+    public String getProgram(String... arg0) {
         return null;
     }
 
