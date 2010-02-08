@@ -1,0 +1,751 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.formauth;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Dictionary;
+
+import javax.jcr.Credentials;
+import javax.jcr.SimpleCredentials;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.commons.auth.Authenticator;
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
+import org.apache.sling.commons.auth.spi.AuthenticationHandler;
+import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.commons.osgi.OsgiUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * The <code>CookieAuthenticationHandler</code> class implements the
+ * authorization steps based on a cookie.
+ *
+ * @scr.component immediate="false" label="%auth.form.name"
+ *                description="%auth.form.description"
+ * @scr.property name="service.description"
+ *               value="Cookie Based Authentication Handler"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
+ * @scr.service
+ */
+public class FormAuthenticationHandler implements AuthenticationHandler,
+        AuthenticationFeedbackHandler {
+
+    /**
+     * The request parameter causing a 401/UNAUTHORIZED status to be sent back
+     * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
+     * method if no credentials are present in the request (value is
+     * "sling:authRequestLogin").
+     *
+     * @see #requestCredentials(HttpServletRequest, HttpServletResponse)
+     */
+    static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
+
+    /**
+     * The name of the parameter providing the login form URL.
+     *
+     * @scr.property valueRef="AuthenticationFormServlet.SERVLET_PATH"
+     */
+    private static final String PAR_LOGIN_FORM = "form.login.form";
+
+    /**
+     * @scr.property valueRef="DEFAULT_AUTH_STORAGE" options "cookie"="Cookie"
+     *               "session"="Session Attribute"
+     */
+    private static final String PAR_AUTH_STORAGE = "form.auth.storage";
+
+    /**
+     * The value of the {@link #PAR_AUTH_STORAGE} parameter indicating the use
+     * of a Cookie to store the authentication data.
+     */
+    private static final String AUTH_STORAGE_COOKIE = "cookie";
+
+    /**
+     * The value of the {@link #PAR_AUTH_STORAGE} parameter indicating the use
+     * of a session attribute to store the authentication data.
+     */
+    private static final String AUTH_STORAGE_SESSION_ATTRIBUTE = "session";
+
+    /**
+     * To be used to determine if the auth has value comes from a cookie or from
+     * a session attribute.
+     */
+    private static final String DEFAULT_AUTH_STORAGE = AUTH_STORAGE_COOKIE;
+
+    /**
+     * The name of the configuration parameter providing the Cookie or session
+     * attribute name.
+     *
+     * @scr.property valueRef="DEFAULT_AUTH_NAME"
+     */
+    private static final String PAR_AUTH_NAME = "form.auth.name";
+
+    /**
+     * The default Cookie or session attribute name
+     *
+     * @see #PAR_AUTH_NAME
+     */
+    private static final String DEFAULT_AUTH_NAME = "sling.formauth";
+
+    /**
+     * This is the name of the SimpleCredentials attribute that holds the auth
+     * info extracted from the cookie value.
+     *
+     * @scr.property valueRef="DEFAULT_CREDENTIALS_ATTRIBUTE_NAME"
+     */
+    private static final String PAR_CREDENTIALS_ATTRIBUTE_NAME = "form.credentials.name";
+
+    /**
+     * Default value for the {@link #PAR_CREDENTIALS_ATTRIBUTE_NAME} property
+     */
+    private static final String DEFAULT_CREDENTIALS_ATTRIBUTE_NAME = DEFAULT_AUTH_NAME;
+
+    /**
+     * The number of minutes after which a login session times out. This value
+     * is used as the expiry time set in the authentication data.
+     *
+     * @scr.property type="Integer" valueRef="DEFAULT_AUTH_TIMEOUT"
+     */
+    public static final String PAR_AUTH_TIMEOUT = "form.auth.timeout";
+
+    /**
+     * The default authentication data time out value.
+     *
+     * @see #PAR_AUTH_TIMEOUT
+     */
+    private static final int DEFAULT_AUTH_TIMEOUT = 30;
+
+    /**
+     * The name of the file used to persist the security tokens
+     *
+     * @scr.property valueRef="DEFAULT_TOKEN_FILE"
+     */
+    private static final String PAR_TOKEN_FILE = "form.token.file";
+
+    private static final String DEFAULT_TOKEN_FILE = "cookie-tokens.bin";
+
+    /**
+     * The request method required for user name and password submission by the
+     * form (value is "POST").
+     */
+    private static final String REQUEST_METHOD = "POST";
+
+    /**
+     * The last segment of the request URL for the user name and password
+     * submission by the form (value is "/j_security_check").
+     * <p>
+     * This name is derived from the prescription in the Servlet API 2.4
+     * Specification, Section SRV.12.5.3.1 Login Form Notes: <i>In order for the
+     * authentication to proceeed appropriately, the action of the login form
+     * must always be set to <code>j_security_check</code>.</i>
+     */
+    private static final String REQUEST_URL_SUFFIX = "/j_security_check";
+
+    /**
+     * The name of the form submission parameter providing the name of the user
+     * to authenticate (value is "j_username").
+     * <p>
+     * This name is prescribed by the Servlet API 2.4 Specification, Section
+     * SRV.12.5.3 Form Based Authentication.
+     */
+    private static final String PAR_J_USERNAME = "j_username";
+
+    /**
+     * The name of the form submission parameter providing the password of the
+     * user to authenticate (value is "j_password").
+     * <p>
+     * This name is prescribed by the Servlet API 2.4 Specification, Section
+     * SRV.12.5.3 Form Based Authentication.
+     */
+    private static final String PAR_J_PASSWORD = "j_password";
+
+    /**
+     * The factor to convert minute numbers into milliseconds used internally
+     */
+    private static final long MINUTES = 60L * 1000L;
+
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private AuthenticationStorage authStorage;
+
+    private String loginForm;
+
+    /**
+     * The timeout of a login session in milliseconds, converted from the
+     * configuration property {@link #PAR_AUTH_TIMEOUT} by multiplying with
+     * {@link #MINUTES}.
+     */
+    private long sessionTimeout;
+
+    private String attrCookieAuthData;
+
+    private TokenStore tokenStore;
+
+    /**
+     * Extracts cookie/session based credentials from the request. Returns
+     * <code>null</code> if the handler assumes HTTP Basic authentication would
+     * be more appropriate, if no form fields are present in the request and if
+     * the secure user data is not present either in the cookie or an HTTP
+     * Session.
+     */
+    public AuthenticationInfo extractCredentials(HttpServletRequest request,
+            HttpServletResponse response) {
+
+        AuthenticationInfo info = null;
+
+        // 1. try credentials from POST'ed request parameters
+        info = this.extractRequestParameterAuthentication(request);
+
+        // 2. try credentials from the cookie or session
+        if (info == null) {
+            String authData = authStorage.extractAuthenticationInfo(request);
+            if (authData != null && tokenStore.isValid(authData)) {
+                info = createAuthInfo(authData);
+            }
+        }
+
+        return info;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials
+     * (javax.servlet.http.HttpServletRequest,
+     * javax.servlet.http.HttpServletResponse)
+     */
+    public boolean requestCredentials(HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        // 0. ignore this handler if an authentication handler is requested
+        if (ignoreRequestCredentials(request)) {
+            return false;
+        }
+
+        String resource = (String) request.getAttribute(Authenticator.LOGIN_RESOURCE);
+        if (resource == null || resource.length() == 0) {
+            resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
+            if (resource == null || resource.length() == 0) {
+                resource = request.getRequestURI();
+            }
+        }
+
+        final StringBuilder targetBuilder = new StringBuilder();
+        targetBuilder.append(request.getContextPath());
+        targetBuilder.append(loginForm);
+        targetBuilder.append('?').append(Authenticator.LOGIN_RESOURCE);
+        targetBuilder.append("=").append(URLEncoder.encode(resource, "UTF-8"));
+
+        final String target = targetBuilder.toString();
+        try {
+            response.sendRedirect(target);
+        } catch (IOException e) {
+            log.error("Failed to redirect to the page: " + target, e);
+        }
+
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials
+     * (javax.servlet.http.HttpServletRequest,
+     * javax.servlet.http.HttpServletResponse)
+     */
+    public void dropCredentials(HttpServletRequest request,
+            HttpServletResponse response) {
+
+        authStorage.clear(request, response);
+
+        // if there is a referer header, redirect back there
+        // with an anonymous session
+        String referer = request.getHeader("referer");
+        if (referer == null) {
+            referer = request.getContextPath() + "/";
+        }
+
+        try {
+            response.sendRedirect(referer);
+        } catch (IOException e) {
+            log.error("Failed to redirect to the page: " + referer, e);
+        }
+    }
+
+    // ---------- AuthenticationFeedbackHandler
+
+    /**
+     * Called after an unsuccessful login attempt. This implementation makes
+     * sure the authentication data is removed either by removing the cookie or
+     * by remove the HTTP Session attribute.
+     */
+    public void authenticationFailed(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationInfo authInfo) {
+        authStorage.clear(request, response);
+    }
+
+    /**
+     * Called after successfull login with the given authentication info. This
+     * implementation ensures the authentication data is set in either the
+     * cookie or the HTTP session with the correct security tokens.
+     * <p>
+     * If no authentication data already exists, it is created. Otherwise if the
+     * data has expired the data is updated with a new security token and a new
+     * expiry time.
+     * <p>
+     * If creating or updating the authentication data fails, it is actually
+     * removed from the cookie or the HTTP session and future requests will not
+     * be authenticated any longer.
+     */
+    public boolean authenticationSucceeded(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationInfo authInfo) {
+
+        // get current authentication data, may be missing after first login
+        String authData = getCookieAuthData(authInfo.getCredentials());
+
+        // check whether we have to "store" or create the data
+        final boolean refreshCookie = needsRefresh(authData,
+            this.sessionTimeout);
+
+        // add or refresh the stored auth hash
+        if (refreshCookie) {
+            long expires = System.currentTimeMillis() + this.sessionTimeout;
+            try {
+                authData = null;
+                authData = tokenStore.encode(expires, authInfo.getUser());
+            } catch (InvalidKeyException e) {
+                log.error(e.getMessage(), e);
+            } catch (IllegalStateException e) {
+                log.error(e.getMessage(), e);
+            } catch (UnsupportedEncodingException e) {
+                log.error(e.getMessage(), e);
+            } catch (NoSuchAlgorithmException e) {
+                log.error(e.getMessage(), e);
+            }
+
+            if (authData != null) {
+                authStorage.set(request, response, authData);
+            } else {
+                authStorage.clear(request, response);
+            }
+        }
+
+        if (!DefaultAuthenticationFeedbackHandler.handleRedirect(request,
+            response)) {
+
+            String resource = (String) request.getAttribute(Authenticator.LOGIN_RESOURCE);
+            if (resource == null || resource.length() == 0) {
+                resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
+            }
+            if (resource != null && resource.length() > 0) {
+                try {
+                    response.sendRedirect(resource);
+                } catch (IOException ioe) {
+                }
+                return true;
+            }
+
+        }
+
+        // no redirect
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Form Based Authentication Handler";
+    }
+
+    // --------- Force HTTP Basic Auth ---------
+
+    /**
+     * Returns <code>true</code> if this authentication handler should ignore
+     * the call to
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
+     * <p>
+     * This method returns <code>true</code> if the
+     * {@link #REQUEST_LOGIN_PARAMETER} is set to any value other than "Form"
+     * (HttpServletRequest.FORM_AUTH).
+     */
+    private boolean ignoreRequestCredentials(HttpServletRequest request) {
+        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        return requestLogin != null
+            && !HttpServletRequest.FORM_AUTH.equals(requestLogin);
+    }
+
+    // --------- Request Parameter Auth ---------
+
+    private AuthenticationInfo extractRequestParameterAuthentication(
+            HttpServletRequest request) {
+        AuthenticationInfo info = null;
+
+        // only consider login form parameters if this is a POST request
+        // to the j_security_check URL
+        if (REQUEST_METHOD.equals(request.getMethod())
+            && request.getRequestURI().endsWith(REQUEST_URL_SUFFIX)) {
+
+            String user = request.getParameter(PAR_J_USERNAME);
+            String pwd = request.getParameter(PAR_J_PASSWORD);
+
+            if (user != null && user.length() > 0 && pwd != null) {
+                info = new AuthenticationInfo(HttpServletRequest.FORM_AUTH,
+                    user, pwd.toCharArray());
+            }
+        }
+
+        return info;
+    }
+
+    private AuthenticationInfo createAuthInfo(final String authData) {
+        final String userId = getUserId(authData);
+        if (userId == null) {
+            return null;
+        }
+
+        final SimpleCredentials cookieAuthCredentials = new SimpleCredentials(
+            userId, new char[0]);
+        cookieAuthCredentials.setAttribute(attrCookieAuthData, authData);
+
+        final AuthenticationInfo info = new AuthenticationInfo(
+            HttpServletRequest.FORM_AUTH, userId);
+        info.setCredentials(cookieAuthCredentials);
+
+        return info;
+    }
+
+    // ---------- LoginModulePlugin support
+
+    private String getCookieAuthData(final Credentials credentials) {
+        if (credentials instanceof SimpleCredentials) {
+            Object data = ((SimpleCredentials) credentials).getAttribute(attrCookieAuthData);
+            if (data instanceof String) {
+                return (String) data;
+            }
+        }
+
+        // no SimpleCredentials or no valid attribute
+        return null;
+    }
+
+    boolean hasAuthData(final Credentials credentials) {
+        return getCookieAuthData(credentials) != null;
+    }
+
+    boolean isValid(final Credentials credentials) {
+        String authData = getCookieAuthData(credentials);
+        if (authData != null) {
+            return tokenStore.isValid(authData);
+        }
+
+        // no authdata, not valid
+        return false;
+    }
+
+    // ---------- SCR Integration ----------------------------------------------
+
+    /**
+     * Called by SCR to activate the authentication handler.
+     *
+     * @throws InvalidKeyException
+     * @throws NoSuchAlgorithmException
+     * @throws IllegalStateException
+     * @throws UnsupportedEncodingException
+     */
+    protected void activate(ComponentContext componentContext)
+            throws InvalidKeyException, NoSuchAlgorithmException,
+            IllegalStateException, UnsupportedEncodingException {
+
+        Dictionary<?, ?> properties = componentContext.getProperties();
+
+        this.loginForm = OsgiUtil.toString(properties.get(PAR_LOGIN_FORM),
+            AuthenticationFormServlet.SERVLET_PATH);
+        log.info("Login Form URL {}", loginForm);
+
+        final String authName = OsgiUtil.toString(
+            properties.get(PAR_AUTH_NAME), DEFAULT_AUTH_NAME);
+        final String authStorage = OsgiUtil.toString(
+            properties.get(PAR_AUTH_STORAGE), DEFAULT_AUTH_STORAGE);
+        if (AUTH_STORAGE_SESSION_ATTRIBUTE.equals(authStorage)) {
+
+            this.authStorage = new SessionStorage(authName);
+            log.info("Using HTTP Session store with attribute name {}",
+                authName);
+
+        } else {
+
+            this.authStorage = new CookieStorage(authName);
+            log.info("Using Cookie store with name {}", authName);
+
+        }
+
+        this.attrCookieAuthData = OsgiUtil.toString(
+            properties.get(PAR_CREDENTIALS_ATTRIBUTE_NAME),
+            DEFAULT_CREDENTIALS_ATTRIBUTE_NAME);
+        log.info("Setting Auth Data attribute name {}", attrCookieAuthData);
+
+        int timeoutMinutes = OsgiUtil.toInteger(
+            properties.get(PAR_AUTH_TIMEOUT), DEFAULT_AUTH_TIMEOUT);
+        if (timeoutMinutes < 1) {
+            timeoutMinutes = DEFAULT_AUTH_TIMEOUT;
+        }
+        log.info("Setting session timeout {} minutes", timeoutMinutes);
+        this.sessionTimeout = MINUTES * timeoutMinutes;
+
+        final String tokenFileName = OsgiUtil.toString(
+            properties.get(PAR_TOKEN_FILE), DEFAULT_TOKEN_FILE);
+        final File tokenFile = getTokenFile(tokenFileName,
+            componentContext.getBundleContext());
+        log.info("Storing tokens in ", tokenFile);
+        this.tokenStore = new TokenStore(tokenFile, sessionTimeout);
+    }
+
+    /**
+     * Returns an absolute file indicating the file to use to persist the
+     * security tokens.
+     * <p>
+     * This method is not part of the API of this class and is package private
+     * to enable unit tests.
+     *
+     * @param tokenFileName The configured file name, must not be null
+     * @param bundleContext The BundleContext to use to make an relative file
+     *            absolute
+     * @return The absolute file
+     */
+    File getTokenFile(final String tokenFileName,
+            final BundleContext bundleContext) {
+        File tokenFile = new File(tokenFileName);
+        if (tokenFile.isAbsolute()) {
+            return tokenFile;
+        }
+
+        tokenFile = bundleContext.getDataFile(tokenFileName);
+        if (tokenFile == null) {
+            final String slingHome = bundleContext.getProperty("sling.home");
+            if (slingHome != null) {
+                tokenFile = new File(slingHome, tokenFileName);
+            } else {
+                tokenFile = new File(tokenFileName);
+            }
+        }
+
+        return tokenFile.getAbsoluteFile();
+    }
+
+    /**
+     * Returns the user id from the authentication data. If the authentication
+     * data is a non-<code>null</code> value with 3 fields separated by an @
+     * sign, the value of the third field is returned. Otherwise
+     * <code>null</code> is returned.
+     * <p>
+     * This method is not part of the API of this class and is package private
+     * to enable unit tests.
+     *
+     * @param authData
+     * @return
+     */
+    String getUserId(final String authData) {
+        if (authData != null) {
+            String[] parts = StringUtils.split(authData, "@");
+            if (parts != null && parts.length == 3) {
+                return parts[2];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Refresh the cookie periodically.
+     *
+     * @param sessionTimeout time to live for the session
+     * @return true or false
+     */
+    private boolean needsRefresh(final String authData,
+            final long sessionTimeout) {
+        boolean updateCookie = false;
+        if (authData == null) {
+            updateCookie = true;
+        } else {
+            String[] parts = StringUtils.split(authData, "@");
+            if (parts != null && parts.length == 3) {
+                long cookieTime = Long.parseLong(parts[1].substring(1));
+                if (System.currentTimeMillis() + (sessionTimeout / 2) > cookieTime) {
+                    updateCookie = true;
+                }
+            }
+        }
+        return updateCookie;
+    }
+
+    /**
+     * The <code>AuthenticationStorage</code> interface abstracts the API
+     * required to store the {@link CookieAuthData} in an HTTP cookie or in an
+     * HTTP Session. The concrete class -- {@link CookieExtractor} or
+     * {@link SessionExtractor} -- is selected using the
+     * {@link CookieAuthenticationHandler#PAR_AUTH_HASH_STORAGE} configuration
+     * parameter, {@link CookieExtractor} by default.
+     */
+    private static interface AuthenticationStorage {
+        String extractAuthenticationInfo(HttpServletRequest request);
+
+        void set(HttpServletRequest request, HttpServletResponse response,
+                String authData);
+
+        void clear(HttpServletRequest request, HttpServletResponse response);
+    }
+
+    /**
+     * The <code>CookieExtractor</code> class supports storing the
+     * {@link CookieAuthData} in an HTTP Cookie.
+     */
+    private static class CookieStorage implements AuthenticationStorage {
+        private final String cookieName;
+
+        public CookieStorage(final String cookieName) {
+            this.cookieName = cookieName;
+        }
+
+        public String extractAuthenticationInfo(HttpServletRequest request) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (this.cookieName.equals(cookie.getName())) {
+                        // found the cookie, so try to extract the credentials
+                        // from it
+                        String value = cookie.getValue();
+
+                        // reverse the base64 encoding
+                        try {
+                            return new String(Base64.decodeBase64(value),
+                                "UTF-8");
+                        } catch (UnsupportedEncodingException e1) {
+                            throw new RuntimeException(e1);
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public void set(HttpServletRequest request,
+                HttpServletResponse response, String authData) {
+            // base64 encode to handle any special characters
+            String cookieValue;
+            try {
+                cookieValue = Base64.encodeBase64URLSafeString(authData.getBytes("UTF-8"));
+            } catch (UnsupportedEncodingException e1) {
+                throw new RuntimeException(e1);
+            }
+
+            // send the cookie to the response
+            setCookie(request, response, cookieValue, -1);
+        }
+
+        public void clear(HttpServletRequest request,
+                HttpServletResponse response) {
+            Cookie oldCookie = null;
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (this.cookieName.equals(cookie.getName())) {
+                        // found the cookie
+                        oldCookie = cookie;
+                        break;
+                    }
+                }
+            }
+
+            // remove the old cookie from the client
+            if (oldCookie != null) {
+                setCookie(request, response, "", 0);
+            }
+        }
+
+        private void setCookie(final HttpServletRequest request,
+                final HttpServletResponse response, final String value,
+                final int age) {
+
+            final String ctxPath = request.getContextPath();
+            final String cookiePath = (ctxPath == null || ctxPath.length() == 0)
+                    ? "/"
+                    : ctxPath;
+
+            Cookie cookie = new Cookie(this.cookieName, value);
+            cookie.setMaxAge(age);
+            cookie.setPath(cookiePath);
+            cookie.setSecure(request.isSecure());
+            response.addCookie(cookie);
+        }
+    }
+
+    /**
+     * The <code>SessionExtractor</code> class provides support to store the
+     * {@link CookieAuthData} in an HTTP Session.
+     */
+    private static class SessionStorage implements AuthenticationStorage {
+        private final String sessionAttributeName;
+
+        SessionStorage(final String sessionAttributeName) {
+            this.sessionAttributeName = sessionAttributeName;
+        }
+
+        public String extractAuthenticationInfo(HttpServletRequest request) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Object attribute = session.getAttribute(sessionAttributeName);
+                if (attribute instanceof String) {
+                    return (String) attribute;
+                }
+            }
+            return null;
+        }
+
+        public void set(HttpServletRequest request,
+                HttpServletResponse response, String authData) {
+            // store the auth hash as a session attribute
+            HttpSession session = request.getSession();
+            session.setAttribute(sessionAttributeName, authData);
+        }
+
+        public void clear(HttpServletRequest request,
+                HttpServletResponse response) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.removeAttribute(sessionAttributeName);
+            }
+        }
+
+    }
+}
