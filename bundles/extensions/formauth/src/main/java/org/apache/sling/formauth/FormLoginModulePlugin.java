@@ -77,7 +77,7 @@ final class FormLoginModulePlugin implements LoginModulePlugin {
      * This implementation does nothing.
      */
     @SuppressWarnings("unchecked")
-    public void addPrincipals(Set principals) {
+    public void addPrincipals(@SuppressWarnings("unused") Set principals) {
     }
 
     /**
