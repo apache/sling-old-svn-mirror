@@ -170,7 +170,7 @@ public class JobEventHandler
     private final Object backgroundLock = new Object();
 
     /** Number of parallel jobs for the main queue. */
-    private long parallelJobCount;
+    private volatile long parallelJobCount;
 
     /** Number of jobs to load from the repository on startup in one go. */
     private long maxLoadJobs;
@@ -749,14 +749,12 @@ public class JobEventHandler
                                 process = true;
                             }
                         }
-
-                    } else {
-                        // check number of parallel jobs for main queue
-                        if ( jobQueue == null && this.parallelJobCount >= this.maximumParallelJobs ) {
-                            logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", info.event, this.maximumParallelJobs);
-                            process = false;
-                            wait = true;
-                        }
+                    }
+                    // check number of parallel jobs for main queue
+                    if ( process && jobQueue == null && this.parallelJobCount >= this.maximumParallelJobs ) {
+                        logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", info.event, this.maximumParallelJobs);
+                        process = false;
+                        wait = true;
                     }
                     if ( process ) {
                         boolean unlock = true;
@@ -999,7 +997,7 @@ public class JobEventHandler
         logger.debug("Starting job {}", event);
         boolean unlock = true;
         try {
-            if ( isMainQueue && parallelProcessing ) {
+            if ( isMainQueue ) {
                 this.parallelJobCount++;
             }
             final String nodePath = eventNode.getPath();
@@ -1028,7 +1026,7 @@ public class JobEventHandler
             this.logger.error("Exception during job processing.", re);
         } finally {
             if ( unlock ) {
-                if ( isMainQueue && parallelProcessing ) {
+                if ( isMainQueue ) {
                     this.parallelJobCount--;
                 }
                 if ( !parallelProcessing ) {
@@ -1350,11 +1348,11 @@ public class JobEventHandler
                         synchronized ( this.processingMap ) {
                             this.processingMap.put(jobTopic, Boolean.FALSE);
                         }
-                    } else {
-                        if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) == null ) {
-                            this.parallelJobCount--;
-                        }
                     }
+                    if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) == null ) {
+                        this.parallelJobCount--;
+                    }
+
                     if ( unlock ) {
                         synchronized ( this.deletedJobs ) {
                             this.deletedJobs.add(eventNodePath);
