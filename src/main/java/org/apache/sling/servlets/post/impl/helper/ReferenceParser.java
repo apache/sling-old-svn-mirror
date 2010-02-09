@@ -43,17 +43,19 @@ public class ReferenceParser {
      * @throws RepositoryException
      */
     public Node parse(String value) throws RepositoryException {
-        boolean valueIsNodePath = false;
         try {
             if (session.itemExists(value)) {
-                valueIsNodePath = true;
+                return (Node) session.getItem(value);
             }
-        } catch (RepositoryException e) {}
-        if (valueIsNodePath) {
-            return (Node) session.getItem(value);
-        } else {
-            return session.getNodeByUUID(value);
+        } catch (RepositoryException ignore) {
+            // we ignore this
         }
+        try {
+            return session.getNodeByUUID(value);
+        } catch (RepositoryException ignore) {
+            // we ignore this
+        }
+        return null;
     }
 
     /**
