@@ -217,6 +217,11 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                             <goals>
                                 <goal>scr</goal>
                             </goals>
+                            <configuration>
+                                <properties>
+                                    <service.vendor>The Apache Software Foundation</service.vendor>
+                                </properties>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
