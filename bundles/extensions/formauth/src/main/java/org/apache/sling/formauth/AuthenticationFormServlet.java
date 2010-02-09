@@ -23,12 +23,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.commons.auth.Authenticator;
 
 /**
  * The <code>AuthenticationFormServlet</code> provides the default login form
@@ -44,27 +41,54 @@ import org.apache.sling.commons.auth.Authenticator;
 public class AuthenticationFormServlet extends HttpServlet {
 
     /**
+     * The constant is sued to provide the service registration path
+     *
      * @scr.property name="sling.servlet.paths"
      */
     static final String SERVLET_PATH = "/system/sling/form/login";
 
     /**
+     * This constant is used to provide the service registration property
+     * indicating to pass requests to this servlet unauthenticated.
+     *
      * @scr.property name="sling.auth.requirements"
      */
     @SuppressWarnings("unused")
     private static final String AUTH_REQUIREMENT = "-" + SERVLET_PATH;
 
+    /**
+     * The raw form used by the {@link #getForm(HttpServletRequest)} method to
+     * fill in with per-request data. This field is set by the
+     * {@link #getRawForm()} method when first loading the form.
+     */
     private volatile String rawForm;
 
+    /**
+     * Prepares and returns the login form. The response is sent as an UTF-8
+     * encoded <code>text/html</code> page with all known cache control headers
+     * set to prevent all caching.
+     * <p>
+     * This servlet is to be called to handle the request directly, that is it
+     * expected to not be included and for the response to not be committed yet
+     * because it first resets the response.
+     *
+     * @throws IOException if an error occurrs preparing or sending back the
+     *             login form
+     * @throws IllegalStateException if the response has already been committed
+     *             and thus response reset is not possible.
+     */
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
+        // reset the response first
+        response.reset();
+
         // setup the response for HTML and cache prevention
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
-        response.setHeader("Cache-control", "no-cache");
-        response.addHeader("Cache-control", "no-store");
+        response.setHeader("Cache-Control", "no-cache");
+        response.addHeader("Cache-Control", "no-store");
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Expires", "0");
 
@@ -73,30 +97,73 @@ public class AuthenticationFormServlet extends HttpServlet {
         response.flushBuffer();
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-        super.doPost(request, response);
+    /**
+     * Returns the form to be sent back to the client for login providing an
+     * optional informational message and the optional target to redirect to
+     * after successfully logging in.
+     *
+     * @param request The request providing parameters indicating the
+     *            informational message and redirection target.
+     * @return The login form to be returned to the client
+     * @throws IOException If the login form cannot be loaded
+     */
+    private String getForm(final HttpServletRequest request) throws IOException {
+        String form = getRawForm();
+
+        form = form.replace("${resource}", getResource(request));
+        form = form.replace("${j_reason}", getReason(request));
+
+        return form;
     }
 
-    private String getForm(final HttpServletRequest request) throws IOException {
+    /**
+     * Returns the path to the resource to which the request should be
+     * redirected after successfully completing the form or an empty string if
+     * there is no <code>resource</code> request parameter.
+     *
+     * @param request The request providing the <code>resource</code> parameter.
+     * @return The target to redirect after sucessfully login or an empty string
+     *         if no specific target has been requested.
+     */
+    private String getResource(final HttpServletRequest request) {
+        final String resource = FormAuthenticationHandler.getLoginResource(request);
+        return (resource == null) ? "" : resource;
+    }
 
-        String resource = (String) request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        if (resource == null) {
-            resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-            if (resource == null) {
-                resource = "/";
+    /**
+     * Returns an informational message according to the value provided in the
+     * <code>j_reason</code> request parameter. Supported reasons are invalid
+     * credentials and session timeout.
+     *
+     * @param request The request providing the parameter
+     * @return The "translated" reason to render the login form or an empty
+     *         string if there is no specific reason
+     */
+    private String getReason(final HttpServletRequest request) {
+        final String reason = request.getParameter(FormAuthenticationHandler.PAR_J_REASON);
+        if (reason != null) {
+            try {
+                return FormReason.valueOf(reason).getMessage();
+            } catch (IllegalArgumentException iae) {
+                // thrown if the reason is not an expected value, assume none
             }
         }
 
-        return getRawForm().replace("${resource}", resource);
+        return "";
     }
 
+    /**
+     * Load the raw unmodified form from the bundle (through the class loader).
+     *
+     * @return The raw form as a string
+     * @throws IOException If an error occurrs reading the "file" or if the
+     *             class loader cannot provide the form data.
+     */
     private String getRawForm() throws IOException {
         if (rawForm == null) {
             InputStream ins = null;
             try {
-                ins = getClass().getResourceAsStream("/login.html");
+                ins = getClass().getResourceAsStream("login.html");
                 if (ins != null) {
                     StringBuilder builder = new StringBuilder();
                     Reader r = new InputStreamReader(ins, "UTF-8");
