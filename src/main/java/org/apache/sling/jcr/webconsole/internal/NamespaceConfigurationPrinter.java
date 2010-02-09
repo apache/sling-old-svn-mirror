@@ -19,9 +19,12 @@
 package org.apache.sling.jcr.webconsole.internal;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -63,11 +66,17 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
     public void printConfiguration(PrintWriter pw) {
         if (slingRepository != null) {
             try {
-                NamespaceRegistry reg = slingRepository.loginAdministrative(slingRepository.getDefaultWorkspace()).getWorkspace()
-                        .getNamespaceRegistry();
-                for (String prefix : reg.getPrefixes()) {
+                Session session = slingRepository.loginAdministrative(null);
+                NamespaceRegistry reg = session.getWorkspace().getNamespaceRegistry();
+                List<String> globalPrefixes = Arrays.asList(reg.getPrefixes());
+                for (String prefix : session.getNamespacePrefixes()) {
                     if (prefix.length() > 0) {
-                        pw.printf("%10s = %s", prefix, reg.getURI(prefix));
+                        pw.printf("%10s = %s", prefix, session.getNamespaceURI(prefix));
+                        if (globalPrefixes.contains(prefix)) {
+                            pw.print(" [global]");
+                        } else {
+                            pw.print(" [local]");
+                        }
                         pw.println();
                     }
                 }
