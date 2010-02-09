@@ -312,13 +312,12 @@ public class SlingAuthenticator implements Authenticator,
      *
      * @param request The request object containing the information for the
      *            authentication.
-     * @param response The response object which may be used to send the information
-     *            on the request failure to the user.
-     *
+     * @param response The response object which may be used to send the
+     *            information on the request failure to the user.
      * @return <code>true</code> if request processing should continue assuming
-     *      successfull authentication. If <code>false</code> is returned it
-     *      is assumed a response has been sent to the client and the request
-     *      is terminated.
+     *         successfull authentication. If <code>false</code> is returned it
+     *         is assumed a response has been sent to the client and the request
+     *         is terminated.
      */
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) {
@@ -419,7 +418,6 @@ public class SlingAuthenticator implements Authenticator,
      * Logs out the user calling all applicable
      * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
      * authentication handlers.
-     *
      */
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
@@ -445,6 +443,8 @@ public class SlingAuthenticator implements Authenticator,
                 }
             }
         }
+
+        redirectAfterLogout(request, response);
     }
 
     // ---------- ServletRequestListener
@@ -530,7 +530,8 @@ public class SlingAuthenticator implements Authenticator,
      *         is terminated.
      */
     private boolean getSession(final HttpServletRequest request,
-            final HttpServletResponse response, final AuthenticationInfo authInfo) {
+            final HttpServletResponse response,
+            final AuthenticationInfo authInfo) {
 
         // prepare the feedback handler
         final AuthenticationFeedbackHandler feedbackHandler = (AuthenticationFeedbackHandler) authInfo.remove(AUTH_INFO_PROP_FEEDBACK_HANDLER);
@@ -574,7 +575,8 @@ public class SlingAuthenticator implements Authenticator,
             // handle failure feedback before proceeding to handling the
             // failed login internally
             if (feedbackHandler != null) {
-                feedbackHandler.authenticationFailed(request, response, authInfo);
+                feedbackHandler.authenticationFailed(request, response,
+                    authInfo);
             }
 
             // now find a way to get credentials
@@ -668,7 +670,8 @@ public class SlingAuthenticator implements Authenticator,
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "SlingAuthenticator: Too Many Users");
             } catch (IOException ioe) {
-                log.error("handleLoginFailure: Cannot send status 503 to client", ioe);
+                log.error(
+                    "handleLoginFailure: Cannot send status 503 to client", ioe);
             }
 
         } else if (reason instanceof LoginException) {
@@ -684,7 +687,8 @@ public class SlingAuthenticator implements Authenticator,
         } else {
 
             // general problem, send a 500 Internal Server Error
-            log.error("handleLoginFailure: Unable to authenticate " + user, reason);
+            log.error("handleLoginFailure: Unable to authenticate " + user,
+                reason);
 
             try {
                 response.sendError(
@@ -692,7 +696,8 @@ public class SlingAuthenticator implements Authenticator,
                     "SlingAuthenticator: data access error, reason="
                         + reason.getClass().getSimpleName());
             } catch (IOException ioe) {
-                log.error("handleLoginFailure: Cannot send status 500 to client", ioe);
+                log.error(
+                    "handleLoginFailure: Cannot send status 500 to client", ioe);
             }
         }
 
@@ -903,7 +908,8 @@ public class SlingAuthenticator implements Authenticator,
                 // or is set to another name, send the cookie with current sudo
 
                 // (re-)set impersonation
-                this.sendSudoCookie(res, sudo, -1, req.getContextPath(), authUser);
+                this.sendSudoCookie(res, sudo, -1, req.getContextPath(),
+                    authUser);
             }
         }
 
@@ -933,6 +939,43 @@ public class SlingAuthenticator implements Authenticator,
             path = "/";
         }
         return path;
+    }
+
+    /**
+     * If the response has not been committed yet, redirect to target requested
+     * by the <code>resource</code> request attribute or parameter. If neither
+     * is set to a non-null string, the request is redirected to the context
+     * root.
+     * <p>
+     * The response is not reset though, since the hanlder may have set states
+     * such as an updated HTTP session or some Cookie
+     *
+     * @param request The request providing the redirect target
+     * @param response The response to send the redirect to
+     */
+    private void redirectAfterLogout(final HttpServletRequest request,
+            final HttpServletResponse response) {
+
+        // nothing more to do if the response has already been committed
+        if (response.isCommitted()) {
+            return;
+        }
+
+        // check resource attribute/parameter
+        String target = (String) request.getAttribute(LOGIN_RESOURCE);
+        if (target == null || target.length() == 0) {
+            target = request.getParameter(LOGIN_RESOURCE);
+            if (target == null || target.length() == 0) {
+                target = "/";
+            }
+        }
+
+        // redirect to there
+        try {
+            response.sendRedirect(request.getContextPath() + target);
+        } catch (IOException e) {
+            log.error("Failed to redirect to the page: " + target, e);
+        }
     }
 
     /**
@@ -968,7 +1011,7 @@ public class SlingAuthenticator implements Authenticator,
 
         StringBuilder builder = new StringBuilder(value.length() * 2);
         builder.append('"');
-        for (int i=0; i < value.length(); i++) {
+        for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             if (c == '"') {
                 builder.append("\\\"");
@@ -985,8 +1028,8 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     /**
-     * Removes (optional) quotes from a cookie value to get the raw value of
-     * the cookie.
+     * Removes (optional) quotes from a cookie value to get the raw value of the
+     * cookie.
      *
      * @param value The cookie value to unquote
      * @return The unquoted cookie value
@@ -1000,7 +1043,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         StringBuilder builder = new StringBuilder(value.length());
-        for (int i=1; i < value.length()-1; i++) {
+        for (int i = 1; i < value.length() - 1; i++) {
             char c = value.charAt(i);
             if (c != '\\') {
                 builder.append(c);
