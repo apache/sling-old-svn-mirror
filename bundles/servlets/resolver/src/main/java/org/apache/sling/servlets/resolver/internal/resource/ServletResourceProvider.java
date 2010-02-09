@@ -42,7 +42,7 @@ public class ServletResourceProvider implements ResourceProvider {
     public void setServlet(Servlet servlet) {
         this.servlet = servlet;
     }
-    
+
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) {
         return getResource(resourceResolver, path);
@@ -72,12 +72,12 @@ public class ServletResourceProvider implements ResourceProvider {
     public String[] getSerlvetPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
-    
+
     /** Return suitable info for logging */
     @Override
     public String toString() {
-    	return getClass().getSimpleName() 
-    	+ ": servlet=" + servlet.getClass().getName() 
-    	+ ", paths=" + Arrays.asList(resourcePaths);
+    	return getClass().getSimpleName()
+    	+ ": servlet=" + servlet.getClass().getName()
+    	+ ", paths=" + Arrays.toString(getSerlvetPaths());
     }
 }
