@@ -190,10 +190,25 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
     private static final String PAR_J_PASSWORD = "j_password";
 
     /**
+     * The name of the form submission parameter indicating that the submitted
+     * username and password should just be checked and a status code be set for
+     * success (200/OK) or failure (403/FORBIDDEN).
+     */
+    private static final String PAR_J_VALIDATE = "j_validate";
+
+    /**
+     * The name of the request parameter indicating to the login form why the
+     * form is being rendered. If this parameter is not set the form is called
+     * for the first time and the implied reason is that the authenticator just
+     * requests credentials. Otherwise the parameter is set to a
+     * {@link FormReason} value.
+     */
+    static final String PAR_J_REASON = "j_reason";
+
+    /**
      * The factor to convert minute numbers into milliseconds used internally
      */
     private static final long MINUTES = 60L * 1000L;
-
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -231,43 +246,75 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
         // 2. try credentials from the cookie or session
         if (info == null) {
             String authData = authStorage.extractAuthenticationInfo(request);
-            if (authData != null && tokenStore.isValid(authData)) {
-                info = createAuthInfo(authData);
+            if (authData != null) {
+                if (tokenStore.isValid(authData)) {
+                    info = createAuthInfo(authData);
+                } else {
+                    // signal the requestCredentials method a previous login failure
+                    request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
+                }
             }
         }
 
         return info;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials
-     * (javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse)
+    /**
+     * Unless the <code>sling:authRequestLogin</code> to anything other than
+     * <code>Form</code> this method either sends back a 403/FORBIDDEN response
+     * if the <code>j_verify</code> parameter is set to <code>true</code> or
+     * redirects to the login form to ask for credentials.
+     * <p>
+     * This method assumes the <code>j_verify</code> request parameter to only
+     * be set in the initial username/password submission through the login
+     * form. No further checks are applied, though, before sending back the
+     * 403/FORBIDDEN response.
      */
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         // 0. ignore this handler if an authentication handler is requested
         if (ignoreRequestCredentials(request)) {
+            // consider this handler is not used
             return false;
         }
 
-        String resource = (String) request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        if (resource == null || resource.length() == 0) {
-            resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-            if (resource == null || resource.length() == 0) {
-                resource = request.getRequestURI();
+        // 1. check whether we short cut for a failed log in with validation
+        if (isValidateRequest(request)) {
+            try {
+                response.setStatus(403);
+                response.flushBuffer();
+            } catch (IOException ioe) {
+                log.error("Failed to send 403/FORBIDDEN response", ioe);
             }
+
+            // consider credentials requested
+            return true;
         }
 
+        // prepare the login form redirection target
         final StringBuilder targetBuilder = new StringBuilder();
         targetBuilder.append(request.getContextPath());
         targetBuilder.append(loginForm);
-        targetBuilder.append('?').append(Authenticator.LOGIN_RESOURCE);
-        targetBuilder.append("=").append(URLEncoder.encode(resource, "UTF-8"));
 
+        // append originally requested resource (for redirect after login)
+        char parSep = '?';
+        final String resource = getLoginResource(request);
+        if (resource != null) {
+            targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
+            targetBuilder.append("=").append(
+                URLEncoder.encode(resource, "UTF-8"));
+            parSep = '&';
+        }
+
+        // append indication of previous login failure
+        if (request.getAttribute(PAR_J_REASON) != null) {
+            final String reason = String.valueOf(request.getAttribute(PAR_J_REASON));
+            targetBuilder.append(parSep).append(PAR_J_REASON);
+            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
+        }
+
+        // finally redirect to the login form
         final String target = targetBuilder.toString();
         try {
             response.sendRedirect(target);
@@ -278,30 +325,13 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials
-     * (javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse)
+    /**
+     * Clears all authentication state which might have been prepared by this
+     * authentication handler.
      */
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-
         authStorage.clear(request, response);
-
-        // if there is a referer header, redirect back there
-        // with an anonymous session
-        String referer = request.getHeader("referer");
-        if (referer == null) {
-            referer = request.getContextPath() + "/";
-        }
-
-        try {
-            response.sendRedirect(referer);
-        } catch (IOException e) {
-            log.error("Failed to redirect to the page: " + referer, e);
-        }
     }
 
     // ---------- AuthenticationFeedbackHandler
@@ -313,7 +343,17 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
      */
     public void authenticationFailed(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
+
+        /*
+         * Note: This method is called if this handler provided credentials
+         * which cause a login failure
+         */
+
+        // clear authentication data from Cookie or Http Session
         authStorage.clear(request, response);
+
+        // signal the requestCredentials method a previous login failure
+        request.setAttribute(PAR_J_REASON, FormReason.INVALID_CREDENTIALS);
     }
 
     /**
@@ -331,6 +371,111 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
      */
     public boolean authenticationSucceeded(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
+
+        /*
+         * Note: This method is called if this handler provided credentials
+         * which succeeded loging into the repository
+         */
+
+        // ensure fresh authentication data
+        refreshAuthData(request, response, authInfo);
+
+        final boolean result;
+        if (isValidateRequest(request)) {
+
+            try {
+                response.setStatus(200);
+                response.flushBuffer();
+            } catch (IOException ioe) {
+                log.error("Failed to send 200/OK response", ioe);
+            }
+
+            // terminate request, all done
+            result = true;
+
+        } else if (DefaultAuthenticationFeedbackHandler.handleRedirect(
+            request, response)) {
+
+            // terminate request, all done in the default handler
+            result = false;
+
+        } else {
+
+            // check whether redirect is requested by the resource parameter
+
+            final String resource = getLoginResource(request);
+            if (resource != null) {
+                try {
+                    response.sendRedirect(resource);
+                } catch (IOException ioe) {
+                    log.error("Failed to send redirect to: " + resource, ioe);
+                }
+
+                // terminate request, all done
+                result = true;
+            } else {
+                // no redirect, hence continue processing
+                result = false;
+            }
+
+        }
+
+        // no redirect
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Form Based Authentication Handler";
+    }
+
+    // --------- Force HTTP Basic Auth ---------
+
+    /**
+     * Returns <code>true</code> if this authentication handler should ignore
+     * the call to
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
+     * <p>
+     * This method returns <code>true</code> if the
+     * {@link #REQUEST_LOGIN_PARAMETER} is set to any value other than "Form"
+     * (HttpServletRequest.FORM_AUTH).
+     */
+    private boolean ignoreRequestCredentials(final HttpServletRequest request) {
+        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        return requestLogin != null
+            && !HttpServletRequest.FORM_AUTH.equals(requestLogin);
+    }
+
+    /**
+     * Returns <code>true</code> if the the client just asks for validation of
+     * submitted username/password credentials.
+     * <p>
+     * This implementation returns <code>true</code> if the request parameter
+     * {@link #PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
+     * the request parameter is not set or to any value other than
+     * <code>true</code> this method returns <code>false</code>.
+     *
+     * @param request The request to provide the parameter to check
+     * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
+     *         to <code>true</code>.
+     */
+    private boolean isValidateRequest(final HttpServletRequest request) {
+        return "true".equalsIgnoreCase(request.getParameter(PAR_J_VALIDATE));
+    }
+
+    /**
+     * Ensures the authentication data is set (if not set yet) and the expiry
+     * time is prolonged (if auth data already existed).
+     * <p>
+     * This method is intended to be called in case authentication succeeded.
+     *
+     * @param request The curent request
+     * @param response The current response
+     * @param authInfo The authentication info used to successfull log in
+     */
+    private void refreshAuthData(final HttpServletRequest request,
+            final HttpServletResponse response,
+            final AuthenticationInfo authInfo) {
 
         // get current authentication data, may be missing after first login
         String authData = getCookieAuthData(authInfo.getCredentials());
@@ -361,48 +506,35 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
                 authStorage.clear(request, response);
             }
         }
-
-        if (!DefaultAuthenticationFeedbackHandler.handleRedirect(request,
-            response)) {
-
-            String resource = (String) request.getAttribute(Authenticator.LOGIN_RESOURCE);
-            if (resource == null || resource.length() == 0) {
-                resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-            }
-            if (resource != null && resource.length() > 0) {
-                try {
-                    response.sendRedirect(resource);
-                } catch (IOException ioe) {
-                }
-                return true;
-            }
-
-        }
-
-        // no redirect
-        return false;
     }
-
-    @Override
-    public String toString() {
-        return "Form Based Authentication Handler";
-    }
-
-    // --------- Force HTTP Basic Auth ---------
 
     /**
-     * Returns <code>true</code> if this authentication handler should ignore
-     * the call to
-     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
-     * <p>
-     * This method returns <code>true</code> if the
-     * {@link #REQUEST_LOGIN_PARAMETER} is set to any value other than "Form"
-     * (HttpServletRequest.FORM_AUTH).
+     * Returns any resource target to redirect to after successful
+     * authentication. This method either returns a non-empty string or
+     * <code>null</code>. First the <code>resource</code> request attribute is
+     * checked. If it is a non-empty string, it is returned. Second the
+     * <code>resource</code> request parameter is checked and returned if it is
+     * a non-empty string.
+     *
+     * @param request The request providing the attribute or parameter
+     * @return The non-empty redirection target or <code>null</code>.
      */
-    private boolean ignoreRequestCredentials(HttpServletRequest request) {
-        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
-        return requestLogin != null
-            && !HttpServletRequest.FORM_AUTH.equals(requestLogin);
+    static String getLoginResource(final HttpServletRequest request) {
+
+        // return the resource attribute if set to a non-empty string
+        Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
+        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
+            return (String) resObj;
+        }
+
+        // return the resource parameter if not set or set to a non-empty value
+        final String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
+        if (resource == null || resource.length() > 0) {
+            return resource;
+        }
+
+        // normalize empty resource string to null
+        return null;
     }
 
     // --------- Request Parameter Auth ---------
@@ -419,7 +551,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             String user = request.getParameter(PAR_J_USERNAME);
             String pwd = request.getParameter(PAR_J_PASSWORD);
 
-            if (user != null && user.length() > 0 && pwd != null) {
+            if (user != null && pwd != null) {
                 info = new AuthenticationInfo(HttpServletRequest.FORM_AUTH,
                     user, pwd.toCharArray());
             }
