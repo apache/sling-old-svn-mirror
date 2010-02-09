@@ -57,6 +57,10 @@
                         <Private-Package>
                             org.apache.sling.launchpad.testservices.*
                         </Private-Package>
+                        <Sling-Nodetypes>
+                            SLING-INF/nodetypes/test.cnd
+                        </Sling-Nodetypes>
+                        <Sling-Initial-Content>SLING-INF/content;path:=/sling-test</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>
