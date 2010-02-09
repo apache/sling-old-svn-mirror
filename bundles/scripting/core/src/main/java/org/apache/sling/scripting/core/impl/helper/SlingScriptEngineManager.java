@@ -39,7 +39,6 @@ public class SlingScriptEngineManager extends ScriptEngineManager {
 
     @Override
     public List<ScriptEngineFactory> getEngineFactories() {
-        @SuppressWarnings("unchecked")
         List<ScriptEngineFactory> baseFactories = super.getEngineFactories();
 
         List<ScriptEngineFactory> result = new ArrayList<ScriptEngineFactory>();

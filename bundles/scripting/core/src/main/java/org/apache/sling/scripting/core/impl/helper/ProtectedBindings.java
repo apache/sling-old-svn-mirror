@@ -21,7 +21,7 @@ public class ProtectedBindings implements Bindings {
     /**
      * {@inheritDoc}
      *
-     * @throws an IllegalArgumentException if the key is protected
+     * @throws IllegalArgumentException if the key is protected
      */
     public Object put(String key, Object value) {
         if (protectedKeys.contains(key)) {
@@ -44,7 +44,7 @@ public class ProtectedBindings implements Bindings {
     /**
      * {@inheritDoc}
      *
-     * @throws an IllegalArgumentException if the key is protected
+     * @throws IllegalArgumentException if the key is protected
      */
     public Object remove(Object key) {
         if (protectedKeys.contains(key)) {
