@@ -45,7 +45,7 @@ public class ScriptableItemMap extends ScriptableObject {
     }
 
     public void jsConstructor(Object res) {
-        if (res instanceof Iterator) {
+        if (res instanceof Iterator<?>) {
             Iterator<?> itemIterator = (Iterator<?>) res;
             while (itemIterator.hasNext()) {
                 Item item = (Item) itemIterator.next();

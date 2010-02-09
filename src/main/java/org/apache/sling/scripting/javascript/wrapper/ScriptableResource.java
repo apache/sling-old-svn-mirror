@@ -69,9 +69,10 @@ public class ScriptableResource extends ScriptableObject implements
      * Maps getResourceType() to type property. This property is deprecated
      * since it does not correctly map the getResourceType() method name to a
      * property.
-     * 
+     *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
      */
+    @Deprecated
     public String jsGet_type() {
         return this.jsFunction_getResourceType();
     }
@@ -108,9 +109,10 @@ public class ScriptableResource extends ScriptableObject implements
      * Maps getResourceMetadata() to meta property. This property is deprecated
      * since it does not correctly map the getResourceType() method name to a
      * property.
-     * 
+     *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
      */
+    @Deprecated
     public Object jsGet_meta() {
         return jsFunction_getResourceMetadata();
     }
@@ -126,9 +128,10 @@ public class ScriptableResource extends ScriptableObject implements
      * Maps getResourceMetadata() to getMetadata() method. This method is
      * deprecated since it has the wrong name to support the
      * getResourceMetadata() method.
-     * 
+     *
      * @deprecated since 2.1.0 because the method is named incorrectly.
      */
+    @Deprecated
     public Object jsFunction_getMetadata() {
         return jsFunction_getResourceMetadata();
     }
@@ -175,7 +178,7 @@ public class ScriptableResource extends ScriptableObject implements
      * use in JavaScript since instead of for example writing
      * <i>"javax.jcr.Node"</i> instead of the much clumsier
      * <i>Packages.javax.jcr.Node</i>.
-     * 
+     *
      * @param cx The current Rhino context
      * @param thisObj The ScriptableResource object in which the method is
      *            called.
@@ -199,7 +202,7 @@ public class ScriptableResource extends ScriptableObject implements
 
         // try to get the Class object for the argument
         Class<?> adapter = null;
-        if (arg instanceof Class) {
+        if (arg instanceof Class<?>) {
 
             adapter = (Class<?>) arg;
 
