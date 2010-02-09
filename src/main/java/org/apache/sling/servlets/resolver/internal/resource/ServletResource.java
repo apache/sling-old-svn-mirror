@@ -18,12 +18,17 @@
  */
 package org.apache.sling.servlets.resolver.internal.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.Servlet;
 
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 class ServletResource extends SlingAdaptable implements Resource {
 
@@ -70,17 +75,7 @@ class ServletResource extends SlingAdaptable implements Resource {
         return path;
     }
 
-    @SuppressWarnings("unchecked")
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        if (type == Servlet.class) {
-            return (AdapterType) servlet; // unchecked cast
-        }
-
-        return super.adaptTo(type);
-    }
-
-    public String toString() {
-        // prepare the servlet name
+    private String getServletName() {
         String servletName = null;
         if (servlet.getServletConfig() != null) {
             servletName = servlet.getServletConfig().getServletName();
@@ -91,8 +86,28 @@ class ServletResource extends SlingAdaptable implements Resource {
         if (servletName == null) {
             servletName = servlet.getClass().getName();
         }
+        return servletName;
+    }
 
-        return getClass().getSimpleName() + ", servlet=" + servletName
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type == Servlet.class) {
+            return (AdapterType) servlet; // unchecked cast
+        } else if ( type == ValueMap.class ) {
+            final Map<String, Object> props = new HashMap<String, Object>();
+            props.put("sling:resourceType", this.getResourceType());
+            props.put("sling:resourceSuperType", this.getResourceSuperType());
+            props.put("servletName", this.getServletName());
+            props.put("servletClass", this.servlet.getClass().getName());
+
+            return (AdapterType) new ValueMapDecorator(props); // unchecked cast
+        }
+
+        return super.adaptTo(type);
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + ", servlet=" + this.getServletName()
             + ", path=" + getPath();
     }
 
