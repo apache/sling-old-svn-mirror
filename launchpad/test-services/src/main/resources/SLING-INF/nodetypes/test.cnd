@@ -1,0 +1,8 @@
+<nt='http://www.jcp.org/jcr/nt/1.0'>
+<sling = 'http://sling.apache.org/jcr/sling/1.0'>
+
+[sling:propertySetTestNodeType] > nt:base
+/* post jcr-2 upgrade, change property type below to be 'uri' */
+ - uri (string)
+ - path (path)
+ - name (name)

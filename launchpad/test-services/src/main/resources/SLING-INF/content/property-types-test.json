@@ -1,0 +1,8 @@
+{
+	"test-node" : {
+		"jcr:primaryType" : "sling:propertySetTestNodeType",
+		"uri" : "http://www.google.com/",
+		"name" : "sling:test",
+		"path" : "/sling-test/initial-content-folder/folder-content-test"
+	}
+}
