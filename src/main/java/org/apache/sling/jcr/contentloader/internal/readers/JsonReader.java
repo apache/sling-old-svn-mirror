@@ -42,39 +42,39 @@ import org.apache.sling.jcr.contentloader.internal.ImportProvider;
  * The <code>JsonReader</code> Parses a Json document on content load and creates the
  * corresponding node structure with properties. Will not update protected nodes and
  * properties like rep:Policy and children.
- * 
+ *
  * <pre>
  * Nodes, Properties and in fact complete subtrees may be described in JSON files
  * using the following skeleton structure (see http://www.json.org for information
  * on the syntax of JSON) :
- * 
+ *
  * # the name of the node is taken from the name of the file without the .json ext.
  *   {
- *   
+ *
  *     # optional primary node type, default &quot;nt:unstructured&quot;
  *     &quot;jcr:primaryType&quot;:&quot;sling:ScriptedComponent&quot;,
  *     # optional mixin node types as array
  *     &quot;jcr:mixinTypes&quot;: [ ],
- *     
- *       
+ *
+ *
  *       # &quot;properties&quot; are added as key value pairs, the name of the key being the name
- *       # of the property. The value is either the string property value, array for 
- *       # multi-values or an object whose value[s] property denotes the property 
+ *       # of the property. The value is either the string property value, array for
+ *       # multi-values or an object whose value[s] property denotes the property
  *       # value(s) and whose type property denotes the property type
  *       &quot;sling:contentClass&quot;: &quot;com.day.sling.jcr.test.Test&quot;,
  *       &quot;sampleMulti&quot;: [ &quot;v1&quot;, &quot;v2&quot; ],
  *       &quot;sampleStruct&quot;: 1,
  *       &quot;sampleStructMulti&quot;: [ 1, 2, 3 ],
- *       
+ *
  *       # reference properties start with jcr:reference
  *       &quot;jcr:reference:sampleReference&quot;: &quot;/test/content&quot;,
- *       
+ *
  *       # path propertie start with jcr:path
  *       &quot;jcr:path:sampleReference&quot;: &quot;/test/path&quot;,
- *         
- *       # nested nodes are added as nested maps. 
+ *
+ *       # nested nodes are added as nested maps.
  *     &quot;sling:scripts&quot;:  {
- *               
+ *
  *         &quot;jcr:primaryType&quot;: &quot;sling:ScriptList&quot;,
  *         &quot;script1&quot; :{
  *             &quot;primaryNodeType&quot;: &quot;sling:Script&quot;,
@@ -84,7 +84,7 @@ import org.apache.sling.jcr.contentloader.internal.ImportProvider;
  *         }
  *     }
  *   }
- * 
+ *
  * </pre>
  */
 public class JsonReader implements ContentReader {
@@ -104,7 +104,7 @@ public class JsonReader implements ContentReader {
         ignoredNames.add("jcr:checkedOut");
         ignoredNames.add("jcr:created");
     }
-    
+
     private static final Set<String> ignoredPrincipalPropertyNames = new HashSet<String>();
     static {
     	ignoredPrincipalPropertyNames.add("name");
@@ -239,7 +239,7 @@ public class JsonReader implements ContentReader {
         }
 
         // fall back to default
-        return PropertyType.STRING;
+        return PropertyType.UNDEFINED;
     }
 
     protected String getName(String name) {
@@ -278,8 +278,8 @@ public class JsonReader implements ContentReader {
 
         return new String(bos.toByteArray(), encoding);
     }
-    
-    
+
+
     /**
      * Create or update one or more user and/or groups
      *	<code>
@@ -313,7 +313,7 @@ public class JsonReader implements ContentReader {
     		}
     	}
     }
-    
+
     /**
      * Create or update a user or group
      */
@@ -349,11 +349,11 @@ public class JsonReader implements ContentReader {
     		contentCreator.createUser(name, password, extraProps);
     	}
     }
-    
+
     /**
      * Create or update one or more access control entries for the current
      * node.
-     * 
+     *
      *  <code>
      *  {
      *   "security:acl" : [
@@ -372,8 +372,8 @@ public class JsonReader implements ContentReader {
      *      		"jcr:read",
      *      		"jcr:write"
      *     		]
-     *     	}   
-     *   ]   
+     *     	}
+     *   ]
      *  }
      *  </code>
      */
@@ -395,14 +395,14 @@ public class JsonReader implements ContentReader {
     		}
     	}
     }
-   
+
     /**
      * Create or update an access control entry
      */
     protected void createAce(JSONObject ace, ContentCreator contentCreator)
     throws JSONException, RepositoryException {
 		String principalID = ace.getString("principal");
-		
+
 		String [] grantedPrivileges = null;
 		JSONArray granted = ace.optJSONArray("granted");
 		if (granted != null) {
@@ -420,9 +420,9 @@ public class JsonReader implements ContentReader {
 				deniedPrivileges[a] = denied.getString(a);
 			}
 		}
-		
+
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges);
-    }   
-   
+    }
+
 }
