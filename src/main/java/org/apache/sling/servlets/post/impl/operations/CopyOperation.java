@@ -71,9 +71,8 @@ public class CopyOperation extends AbstractCopyMoveOperation {
             throws RepositoryException {
         if (src.isNode()) {
             return copy((Node) src, dstParent, name);
-        } else {
-            return copy((Property) src, dstParent, name);
         }
+        return copy((Property) src, dstParent, name);
     }
 
     /**
@@ -156,9 +155,8 @@ public class CopyOperation extends AbstractCopyMoveOperation {
 
             if (src.getDefinition().isMultiple()) {
                 return dstParent.setProperty(name, src.getValues());
-            } else {
-                return dstParent.setProperty(name, src.getValue());
             }
+            return dstParent.setProperty(name, src.getValue());
         }
         return null;
     }
