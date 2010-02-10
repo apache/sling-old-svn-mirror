@@ -164,32 +164,42 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     /**
-     * Logs in as an anonymous user. This implementation simply returns the
-     * result of calling {@link #login(Credentials, String)}
+     * @see javax.jcr.Repository#login()
      */
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
     }
 
+    /**
+     * @see org.apache.sling.jcr.api.SlingRepository#loginAdministrative(java.lang.String)
+     */
     public Session loginAdministrative(String workspace)
-            throws RepositoryException {
+    throws RepositoryException {
         Credentials sc = getAdministrativeCredentials(this.adminUser);
         return this.login(sc, workspace);
     }
 
-    public Session login(Credentials credentials) throws LoginException,
-            RepositoryException {
+    /**
+     * @see javax.jcr.Repository#login(javax.jcr.Credentials)
+     */
+    public Session login(Credentials credentials)
+    throws LoginException, RepositoryException {
         return this.login(credentials, null);
     }
 
-    public Session login(String workspace) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException {
+    /**
+     * @see javax.jcr.Repository#login(java.lang.String)
+     */
+    public Session login(String workspace)
+    throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return this.login(null, workspace);
     }
 
+    /**
+     * @see javax.jcr.Repository#login(javax.jcr.Credentials, java.lang.String)
+     */
     public Session login(Credentials credentials, String workspace)
-            throws LoginException, NoSuchWorkspaceException,
-            RepositoryException {
+    throws LoginException, NoSuchWorkspaceException, RepositoryException {
 
         // if already stopped, don't retrieve a session
         if (this.componentContext == null || this.getRepository() == null) {
@@ -208,7 +218,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         try {
             log(LogService.LOG_DEBUG, "login: Logging in to workspace '"
                 + workspace + "'");
-            Session session = getRepository().login(credentials, workspace);
+            final Session session = getRepository().login(credentials, workspace);
 
             // if the defualt workspace is null, acquire a session from the pool
             // and use the workspace used as the new default workspace
@@ -219,6 +229,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 setDefaultWorkspace(defaultWorkspace);
             }
 
+            // apply namespace mapping
+            this.loader.defineNamespacePrefixes(session);
+
+            // call post processors
             Object[] postProcessors = sessionConfigurerTracker.getServices();
             if (postProcessors != null) {
                 for (int i = 0; i < postProcessors.length; i++) {
