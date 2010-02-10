@@ -54,8 +54,14 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     /** The logger. */
     private final Logger logger;
 
-    public JobBlockingQueue(final String name, final Logger logger) {
+    /** Ordered Queue? */
+    private final boolean orderedQueue;
+
+    public JobBlockingQueue(final String name,
+                            final boolean orderedQueue,
+                            final Logger logger) {
         this.queueName = name;
+        this.orderedQueue = orderedQueue;
         this.logger = logger;
     }
 
@@ -131,6 +137,13 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     }
 
     /**
+     * Is this a ordered queue?
+     */
+    public boolean isOrdered() {
+        return orderedQueue;
+    }
+
+    /**
      * Reschedule a job.
      * If this is a ordered queue, this method will return the event info
      * which should be processed next. Otherwise null is returned.
@@ -138,8 +151,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     public EventInfo reschedule(final EventInfo info, final Scheduler scheduler) {
         final Event job = info.event;
         // is this an ordered queue?
-        final boolean orderedQueue = job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
-        if ( orderedQueue ) {
+        if ( this.orderedQueue ) {
             // we just sleep for the delay time - if none, we continue and retry
             // this job again
             if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
