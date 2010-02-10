@@ -587,7 +587,8 @@ public class JobEventHandler
                         logger.debug("Queuing job {} into queue {}.", info.event, queueName);
                         BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
                         if ( jobQueue == null ) {
-                            final JobBlockingQueue jq = new JobBlockingQueue(queueName, this.logger);
+                            final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
+                            final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
                             jobQueue = jq;
                             this.jobQueues.put(queueName, jq);
                             // Start background thread
@@ -654,15 +655,10 @@ public class JobEventHandler
                     info = null;
                     final Status status = this.executeJob(processInfo, jobQueue);
                     if ( status == Status.SUCCESS ) {
-                        EventInfo newInfo = null;
                         try {
-                            newInfo = jobQueue.waitForFinish();
+                            info = jobQueue.waitForFinish();
                         } catch (InterruptedException e) {
                             this.ignoreException(e);
-                        }
-                        // if we have an info, this is a reschedule
-                        if ( newInfo != null ) {
-                            info = jobQueue.reschedule(newInfo, this.scheduler);
                         }
                     } else if ( status == Status.RESCHEDULE ) {
                         info = jobQueue.reschedule(processInfo, this.scheduler);
@@ -1432,7 +1428,11 @@ public class JobEventHandler
                 jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
             }
             synchronized ( jobQueue.getLock()) {
-                jobQueue.notifyFinish(info);
+                EventInfo reprocessInfo = null;
+                if ( info != null ) {
+                    reprocessInfo = jobQueue.reschedule(info, this.scheduler);
+                }
+                jobQueue.notifyFinish(reprocessInfo);
             }
         }
     }
