@@ -572,6 +572,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().addBundleListener(this);
 
+        this.sessionConfigurerTracker = new ServiceTracker(componentContext.getBundleContext(), SessionConfigurer.SERVICE_NAME, null);
+        this.sessionConfigurerTracker.open();
+
         // immediately try to start the repository while activating
         // this component instance
         try {
@@ -585,9 +588,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             log(LogService.LOG_WARNING,
                 "activate: Unexpected problem starting repository", t);
         }
-
-        this.sessionConfigurerTracker = new ServiceTracker(componentContext.getBundleContext(), SessionConfigurer.SERVICE_NAME, null);
-        this.sessionConfigurerTracker.open();
 
         // launch the background repository checker now
         startRepositoryPinger();
