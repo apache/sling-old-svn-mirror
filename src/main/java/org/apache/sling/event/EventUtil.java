@@ -156,6 +156,7 @@ public abstract class EventUtil {
     public static final String TOPIC_JOB_FINISHED = "org/apache/sling/event/notification/job/FINISHED";
 
     /** Asynchronous notification event when a job failed.
+     * If a job execution fails, it is rescheduled for another try.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
@@ -163,6 +164,7 @@ public abstract class EventUtil {
     public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
 
     /** Asynchronous notification event when a job is cancelled.
+     * If a job execution is cancelled it is not rescheduled.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
@@ -661,7 +663,9 @@ public abstract class EventUtil {
             return "<null>";
         }
         final StringBuilder buffer = new StringBuilder(e.getClass().getName());
-        buffer.append(" [topic=");
+        buffer.append('(');
+        buffer.append(e.hashCode());
+        buffer.append(") [topic=");
         buffer.append(e.getTopic());
         buffer.append(", properties=");
         final String[] names = e.getPropertyNames();
