@@ -118,6 +118,7 @@
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/event</module>
         <module>bundles/extensions/fsresource</module>
+        <module>bundles/extensions/formauth</module>
         <module>bundles/extensions/httpauth</module>
         <module>bundles/extensions/openidauth</module>
         <module>bundles/extensions/threaddump</module>
