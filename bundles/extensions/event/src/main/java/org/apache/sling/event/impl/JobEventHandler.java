@@ -404,7 +404,7 @@ public class JobEventHandler
                     process = this.processingEventsList.remove(info.nodePath) != null;
                 }
                 if ( process ) {
-                    this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", info.event, info.nodePath);
+                    this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", EventUtil.toString(info.event), info.nodePath);
                     this.finishedJob(info.event, info.nodePath, true);
                 }
             }
@@ -451,7 +451,9 @@ public class JobEventHandler
                 this.ignoreException(e);
             }
             if ( event != null && this.running ) {
-                logger.debug("Persisting job {}", event);
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Persisting job {}", EventUtil.toString(event));
+                }
                 final EventInfo info = new EventInfo();
                 info.event = event;
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
@@ -512,7 +514,7 @@ public class JobEventHandler
                             }
                         } catch (RepositoryException re ) {
                             // something went wrong, so let's log it
-                            this.logger.error("Exception during writing new job '" + event + "' to repository at " + nodePath, re);
+                            this.logger.error("Exception during writing new job '" + EventUtil.toString(event) + "' to repository at " + nodePath, re);
                         }
                     }
                 }
@@ -570,13 +572,17 @@ public class JobEventHandler
             }
 
             if ( info != null && this.running ) {
-                logger.debug("Processing new job {}", info.event);
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Received new job {}", EventUtil.toString(info.event));
+                }
                 // check for local only jobs and remove them from the queue if they're meant
                 // for another application node
                 final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
                 if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
                     && appId != null && !this.applicationId.equals(appId) ) {
-                    logger.debug("Discarding job {} : local job for a different application node.", info.event);
+                    if ( logger.isDebugEnabled() ) {
+                         logger.debug("Discarding job {} : local job for a different application node.", EventUtil.toString(info.event));
+                    }
                     info = null;
                 }
 
@@ -584,7 +590,9 @@ public class JobEventHandler
                 if ( info != null && info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
                     final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
                     synchronized ( this.jobQueues ) {
-                        logger.debug("Queuing job {} into queue {}.", info.event, queueName);
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Queuing job {} into queue {}.", EventUtil.toString(info.event), queueName);
+                        }
                         BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
                         if ( jobQueue == null ) {
                             final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
@@ -699,7 +707,9 @@ public class JobEventHandler
         boolean putback = false;
         boolean wait = false;
         synchronized (this.backgroundLock) {
-            logger.debug("Executing job {}.", info.event);
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Executing job {}.", EventUtil.toString(info.event));
+            }
             try {
                 this.backgroundSession.refresh(false);
                 // check if the node still exists
@@ -738,7 +748,9 @@ public class JobEventHandler
                     }
                     // check number of parallel jobs for main queue
                     if ( process && jobQueue == null && this.parallelJobCount >= this.maximumParallelJobs ) {
-                        logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", info.event, this.maximumParallelJobs);
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", EventUtil.toString(info.event), this.maximumParallelJobs);
+                        }
                         process = false;
                         wait = true;
                     }
@@ -826,12 +838,16 @@ public class JobEventHandler
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
     public void handleEvent(final Event event) {
-        logger.debug("Receiving event {}", event);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Receiving event {}", EventUtil.toString(event));
+        }
         // we ignore remote job events
         if ( EventUtil.isLocal(event) ) {
             // check for bundle event
             if ( event.getTopic().equals(EventUtil.TOPIC_JOB)) {
-                logger.debug("Handling local job {}", event);
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Handling local job {}", EventUtil.toString(event));
+                }
                 // job event
                 final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
 
@@ -956,7 +972,9 @@ public class JobEventHandler
         final ParallelInfo parInfo = ParallelInfo.getParallelInfo(event);
         final boolean parallelProcessing = parInfo.processParallel;
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-        logger.debug("Starting job {}", event);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Starting job {}", EventUtil.toString(event));
+        }
         boolean unlock = true;
         try {
             if ( isMainQueue ) {
@@ -1231,6 +1249,9 @@ public class JobEventHandler
      * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, boolean)
      */
     public boolean finishedJob(Event job, String eventNodePath, boolean shouldReschedule) {
+        if ( this.logger.isDebugEnabled() ) {
+            this.logger.debug("Received finish for job {}, shouldReschedule={}", EventUtil.toString(job), shouldReschedule);
+        }
         // let's remove the event from our processing list
         // this is just a sanity check, as usually the job should have been
         // removed during sendAcknowledge.
@@ -1259,11 +1280,20 @@ public class JobEventHandler
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRIES, retries);
                 job = new Event(job.getTopic(), newProperties);
-                this.sendNotification(EventUtil.TOPIC_JOB_CANCELLED, job);
-            } else {
+                if ( this.logger.isDebugEnabled() ) {
+                    this.logger.debug("Failed job {}", EventUtil.toString(job));
+                }
                 this.sendNotification(EventUtil.TOPIC_JOB_FAILED, job);
+            } else {
+                if ( this.logger.isDebugEnabled() ) {
+                    this.logger.debug("Cancelled job {}", EventUtil.toString(job));
+                }
+                this.sendNotification(EventUtil.TOPIC_JOB_CANCELLED, job);
             }
         } else {
+            if ( this.logger.isDebugEnabled() ) {
+                this.logger.debug("Finished job {}", EventUtil.toString(job));
+            }
             this.sendNotification(EventUtil.TOPIC_JOB_FINISHED, job);
         }
         final ParallelInfo parInfo = ParallelInfo.getParallelInfo(job);
@@ -1401,7 +1431,9 @@ public class JobEventHandler
     }
 
     private void putBackIntoMainQueue(final EventInfo info, final boolean useSleepTime) {
-        logger.debug("Putting job {} back into the queue.", info.event);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Putting job {} back into the queue.", EventUtil.toString(info.event));
+        }
         final Date fireDate = new Date();
         if ( useSleepTime ) {
             fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
