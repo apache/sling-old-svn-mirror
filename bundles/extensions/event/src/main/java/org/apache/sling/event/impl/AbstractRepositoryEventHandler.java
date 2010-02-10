@@ -327,7 +327,7 @@ public abstract class AbstractRepositoryEventHandler
         }
     }
 
-    protected static final class EventInfo {
+    public static final class EventInfo {
         public String nodePath;
         public Event event;
     }
