@@ -72,8 +72,12 @@ public abstract class EventUtil {
     public static final String PROPERTY_JOB_ID = "event.job.id";
 
     /** The property to set if a job can be run parallel to any other job.
-     * For now the property should only contain the values <code>true</code>
-     * or <code>false</code> as a string value.
+     * The following values are supported:
+     * - boolean value <code>true</code> and <code>false</code>
+     * - string value <code>true</code> and <code>false</code>
+     * - integer value higher than 1 - if this is specified jobs are run in
+     * parallel but never more than the specified number.
+     *
      * We might want to use different values in the future for enhanced
      * parallel job handling. */
     public static final String PROPERTY_JOB_PARALLEL = "event.job.parallel";
@@ -93,13 +97,18 @@ public abstract class EventUtil {
     /** The property to set to put the jobs into a separate job queue. This property
      * specifies the name of the job queue. If the job queue does not exists yet
      * a new queue is created.
-     * If a job queue is used, the jobs are never executed in parallel from this queue!
+     * If a ordered job queue is used, the jobs are never executed in parallel
+     * from this queue! For non ordered queues the {@link #PROPERTY_JOB_PARALLEL}
+     * with an integer value higher than 1 can be used to specify the maximum number
+     * of parallel jobs for this queue.
      */
     public static final String PROPERTY_JOB_QUEUE_NAME = "event.job.queuename";
 
     /** If this property is set with any value, the queue processes the jobs in the same
      * order as they have arrived.
-     * This property has only an effect if {@link #PROPERTY_JOB_QUEUE_NAME} is specified.
+     * This property has only an effect if {@link #PROPERTY_JOB_QUEUE_NAME} is specified
+     * and starting with version 2.2 this value is only checked in the first job for this
+     * queue.
      */
     public static final String PROPERTY_JOB_QUEUE_ORDERED = "event.job.queueordered";
 

@@ -599,7 +599,7 @@ public class JobEventHandler
                                  */
                                 public void run() {
                                     while ( running && !jq.isFinished() ) {
-                                        logger.info("Starting job queue {}", queueName);
+                                        logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
                                         try {
                                             runJobQueue(queueName, jq);
                                         } catch (Throwable t) {
@@ -650,18 +650,36 @@ public class JobEventHandler
             }
 
             if ( info != null && this.running && !jobQueue.isFinished() ) {
-                synchronized ( jobQueue.getLock()) {
-                    final EventInfo processInfo = info;
-                    info = null;
-                    final Status status = this.executeJob(processInfo, jobQueue);
-                    if ( status == Status.SUCCESS ) {
+                final EventInfo processInfo = info;
+                info = null;
+                if ( jobQueue.isOrdered() ) {
+                    // if we are ordered we simply wait for the finish
+                    synchronized ( jobQueue.getLock()) {
+                        final Status status = this.executeJob(processInfo, jobQueue);
+                        if ( status == Status.SUCCESS ) {
+                            try {
+                                info = jobQueue.waitForFinish();
+                            } catch (InterruptedException e) {
+                                this.ignoreException(e);
+                            }
+                        } else if ( status == Status.RESCHEDULE ) {
+                            info = jobQueue.reschedule(processInfo, this.scheduler);
+                        }
+                    }
+                } else {
+                    final int maxJobs = ParallelInfo.getMaxNumberOfParallelJobs(processInfo.event);
+                    synchronized ( jobQueue.getLock() ) {
                         try {
-                            info = jobQueue.waitForFinish();
+                            jobQueue.acquireSlot(maxJobs);
                         } catch (InterruptedException e) {
                             this.ignoreException(e);
                         }
-                    } else if ( status == Status.RESCHEDULE ) {
-                        info = jobQueue.reschedule(processInfo, this.scheduler);
+                    }
+                    if ( this.running && !jobQueue.isFinished() ) {
+                        final Status status = this.executeJob(processInfo, jobQueue);
+                        if ( status == Status.RESCHEDULE ) {
+                            jobQueue.reschedule(processInfo, this.scheduler);
+                        }
                     }
                 }
             }
@@ -1432,7 +1450,11 @@ public class JobEventHandler
                 if ( info != null ) {
                     reprocessInfo = jobQueue.reschedule(info, this.scheduler);
                 }
-                jobQueue.notifyFinish(reprocessInfo);
+                if ( jobQueue.isOrdered() ) {
+                    jobQueue.notifyFinish(reprocessInfo);
+                } else {
+                    jobQueue.freeSlot();
+                }
             }
         }
     }

@@ -92,4 +92,27 @@ public class ParallelInfo {
         }
         return ParallelInfo.SERIAL;
     }
+
+    /**
+     * Return the maximum number of parallel jobs for named queues.
+     * @param job The job
+     */
+    public static int getMaxNumberOfParallelJobs(final Event job) {
+        Object value = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL);
+        if ( value instanceof String ) {
+            // try to parse the value
+            try {
+                value = Integer.valueOf((String)value);
+            } catch (NumberFormatException ne) {
+                // we ignore this
+            }
+        }
+        if ( value instanceof Number ) {
+            final int result = ((Number)value).intValue();
+            if ( result > 1 ) {
+                return result;
+            }
+        }
+        return 1;
+    }
 }
