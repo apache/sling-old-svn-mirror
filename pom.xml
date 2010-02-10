@@ -58,7 +58,8 @@
                             org.apache.sling.event;version=2.2.0
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.event.impl
+                            org.apache.sling.event.impl,
+                            org.apache.sling.event.impl.job
                         </Private-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/event.cnd
