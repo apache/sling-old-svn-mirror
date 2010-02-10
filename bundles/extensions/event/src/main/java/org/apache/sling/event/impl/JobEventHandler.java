@@ -623,41 +623,7 @@ public class JobEventHandler
                 // if we still have a job, process it
                 if ( info != null ) {
                     if ( this.executeJob(info, null) == Status.RESCHEDULE ) {
-                        logger.debug("Putting job {} back into the queue.", info.event);
-                        final EventInfo eInfo = info;
-                        final Date fireDate = new Date();
-                        fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
-
-                            // we put it back into the queue after a specific time
-                        final Runnable r = new Runnable() {
-
-                            /**
-                             * @see java.lang.Runnable#run()
-                             */
-                            public void run() {
-                                try {
-                                    queue.put(eInfo);
-                                } catch (InterruptedException e) {
-                                    // ignore
-                                    ignoreException(e);
-                                }
-                            }
-
-                        };
-                        try {
-                            this.scheduler.fireJobAt(null, r, null, fireDate);
-                        } catch (Exception e) {
-                            // we ignore the exception
-                            ignoreException(e);
-                            // then wait for the time and readd the job
-                            try {
-                                Thread.sleep(sleepTime * 1000);
-                            } catch (InterruptedException ie) {
-                                // ignore
-                                ignoreException(ie);
-                            }
-                            r.run();
-                        }
+                        this.putBackIntoMainQueue(info, true);
                     }
                 }
             }
@@ -696,10 +662,10 @@ public class JobEventHandler
                         }
                         // if we have an info, this is a reschedule
                         if ( newInfo != null ) {
-                            info = ((JobBlockingQueue)queue).reschedule(newInfo, this.scheduler);
+                            info = jobQueue.reschedule(newInfo, this.scheduler);
                         }
                     } else if ( status == Status.RESCHEDULE ) {
-                        info = ((JobBlockingQueue)queue).reschedule(processInfo, this.scheduler);
+                        info = jobQueue.reschedule(processInfo, this.scheduler);
                     }
                 }
             }
@@ -1412,33 +1378,50 @@ public class JobEventHandler
             }
         }
         if ( putback != null ) {
-            final EventInfo info = putback;
-            final long delay = (Long)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
-            final Date fireDate = new Date();
-            fireDate.setTime(System.currentTimeMillis() + delay);
-
-            final Runnable t = new Runnable() {
-                public void run() {
-                    try {
-                        queue.put(info);
-                    } catch (InterruptedException e) {
-                        // this should never happen
-                        ignoreException(e);
-                    }
-                }
-            };
-            try {
-                this.scheduler.fireJobAt(null, t, null, fireDate);
-            } catch (Exception e) {
-                // we ignore the exception and just put back the job in the queue
-                ignoreException(e);
-                t.run();
-            }
+            this.putBackIntoMainQueue(putback, false);
         }
         if ( !shouldReschedule ) {
             return true;
         }
         return reschedule;
+    }
+
+    private void putBackIntoMainQueue(final EventInfo info, final boolean useSleepTime) {
+        logger.debug("Putting job {} back into the queue.", info.event);
+        final Date fireDate = new Date();
+        if ( useSleepTime ) {
+            fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
+        } else {
+            final long delay = (Long)info.event.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
+            fireDate.setTime(System.currentTimeMillis() + delay);
+        }
+
+        final Runnable t = new Runnable() {
+            public void run() {
+                try {
+                    queue.put(info);
+                } catch (InterruptedException e) {
+                    // this should never happen
+                    ignoreException(e);
+                }
+            }
+        };
+        try {
+            this.scheduler.fireJobAt(null, t, null, fireDate);
+        } catch (Exception e) {
+            // we ignore the exception and just put back the job in the queue
+            ignoreException(e);
+            if ( useSleepTime ) {
+                // then wait for the time and readd the job
+                try {
+                    Thread.sleep(sleepTime * 1000);
+                } catch (InterruptedException ie) {
+                    // ignore
+                    ignoreException(ie);
+                }
+            }
+            t.run();
+        }
     }
 
     private void checkForNotify(final Event job, final EventInfo info) {
