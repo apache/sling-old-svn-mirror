@@ -57,6 +57,8 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     /** Ordered Queue? */
     private final boolean orderedQueue;
 
+    private volatile int jobCount;
+
     public JobBlockingQueue(final String name,
                             final boolean orderedQueue,
                             final Logger logger) {
@@ -65,6 +67,10 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         this.logger = logger;
     }
 
+    /**
+     * Wait for the job to be finished.
+     * This is called if the queue is ordered.
+     */
     public EventInfo waitForFinish() throws InterruptedException {
         this.isWaiting = true;
         this.markForCleanUp = false;
@@ -75,21 +81,56 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         return object;
     }
 
+    /**
+     * Mark this queue for cleanup.
+     */
     public void markForCleanUp() {
         if ( !this.isWaiting ) {
             this.markForCleanUp = true;
         }
     }
 
+    /**
+     * Acquire a processing slot.
+     * This method is called if the queue is not ordered.
+     * @param maxJobs
+     */
+    public void acquireSlot(final int maxJobs) throws InterruptedException {
+        if ( jobCount >= maxJobs ) {
+            this.isWaiting = true;
+            this.markForCleanUp = false;
+            this.lock.wait();
+            this.isWaiting = false;
+        }
+    }
+
+    /**
+     * Free a slot when a job processing is finished.
+     */
+    public void freeSlot() {
+        if ( this.isWaiting ) {
+            this.lock.notify();
+        }
+    }
+
+    /**
+     * Check if this queue is marked for cleanup
+     */
     public boolean isMarkedForCleanUp() {
         return !this.isWaiting && this.markForCleanUp;
     }
 
+    /**
+     * Notify a finished job - for ordered queues
+     */
     public void notifyFinish(EventInfo i) {
         this.eventInfo = i;
         this.lock.notify();
     }
 
+    /**
+     * Return the lock for this queue.
+     */
     public Object getLock() {
         return lock;
     }
