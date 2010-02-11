@@ -118,7 +118,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private char[] adminPass;
 
-    private Loader loader;
+    /** Namespace handler. */
+    private Loader namespaceHandler;
+
+    /** Session proxy handler. */
+    private SessionProxyHandler sessionProxyHandler;
 
     // the poll interval used while the repository is not active
     private long pollTimeInActiveSeconds;
@@ -231,6 +235,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
             defineNamespacePrefixes(session);
 
+            // to support namespace prefixes if session.impersonate is called
+            // we have to use a proxy
+            if ( this.sessionProxyHandler != null ) {
+                return this.sessionProxyHandler.createProxy(session);
+            }
             return session;
 
         } catch (NoSuchWorkspaceException nswe) {
@@ -390,7 +399,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      */
     protected void setupRepository(Repository repository) {
         BundleContext bundleContext = componentContext.getBundleContext();
-        this.loader = new Loader(this, bundleContext.getBundles());
+        this.namespaceHandler = new Loader(this, bundleContext.getBundles());
+        this.sessionProxyHandler = new SessionProxyHandler(this);
     }
 
     /**
@@ -496,10 +506,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param repository
      */
     protected void tearDown(Repository repository) {
-        if (this.loader != null) {
-            this.loader.dispose();
-            this.loader = null;
+        if (this.namespaceHandler != null) {
+            this.namespaceHandler.dispose();
+            this.namespaceHandler = null;
         }
+        this.sessionProxyHandler = null;
     }
 
     /**
@@ -525,7 +536,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      */
     public void bundleChanged(BundleEvent event) {
         // Take care: This is synchronous - take care to not block the system !!
-        Loader theLoader = this.loader;
+        Loader theLoader = this.namespaceHandler;
         if (theLoader != null) {
             switch (event.getType()) {
                 case BundleEvent.INSTALLED:
@@ -693,10 +704,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         return false;
     }
 
-    private void defineNamespacePrefixes(final Session session) throws RepositoryException {
-        if (this.loader != null) {
+    void defineNamespacePrefixes(final Session session) throws RepositoryException {
+        if (this.namespaceHandler != null) {
             // apply namespace mapping
-            this.loader.defineNamespacePrefixes(session);
+            this.namespaceHandler.defineNamespacePrefixes(session);
         }
 
         // call post processors
