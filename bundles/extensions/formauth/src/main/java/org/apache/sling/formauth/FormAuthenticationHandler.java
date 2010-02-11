@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * @scr.component immediate="false" label="%auth.form.name"
  *                description="%auth.form.description"
  * @scr.property name="service.description"
- *               value="Cookie Based Authentication Handler"
+ *               value="Apache Sling Form Based Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
  * @scr.service
