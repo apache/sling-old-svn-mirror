@@ -98,7 +98,7 @@ public class SlingAuthenticator implements Authenticator,
     private final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
 
     /** @scr.property name="service.description" */
-    private static final String DESCRIPTION = "Sling Request Authenticator";
+    static final String DESCRIPTION = "Apache Sling Request Authenticator";
 
     /**
      * @scr.property valueRef="DEFAULT_IMPERSONATION_COOKIE"
@@ -255,23 +255,23 @@ public class SlingAuthenticator implements Authenticator,
         boolean flag = OsgiUtil.toBoolean(
             properties.get(PAR_ANONYMOUS_ALLOWED), DEFAULT_ANONYMOUS_ALLOWED);
         authRequiredCache.addHolder(new AuthenticationRequirementHolder("/",
-            !flag, DESCRIPTION));
+            !flag, null));
 
         String[] authReqs = OsgiUtil.toStringArray(properties.get(PAR_AUTH_REQ));
         if (authReqs != null) {
             for (String authReq : authReqs) {
                 if (authReq != null && authReq.length() > 0) {
                     authRequiredCache.addHolder(AuthenticationRequirementHolder.fromConfig(
-                        authReq, DESCRIPTION));
+                        authReq, null));
                 }
             }
         }
 
         // don't require authentication for login/logout servlets
         authRequiredCache.addHolder(new AuthenticationRequirementHolder(
-            LoginServlet.SERVLET_PATH, false, DESCRIPTION));
+            LoginServlet.SERVLET_PATH, false, null));
         authRequiredCache.addHolder(new AuthenticationRequirementHolder(
-            LogoutServlet.SERVLET_PATH, false, DESCRIPTION));
+            LogoutServlet.SERVLET_PATH, false, null));
 
         // add all registered services
         if (serviceListener != null) {
@@ -1156,13 +1156,12 @@ public class SlingAuthenticator implements Authenticator,
 
         private void addService(final ServiceReference ref) {
             final String[] authReqPaths = OsgiUtil.toStringArray(ref.getProperty(PAR_AUTH_REQ));
-            final String source = getSource(ref);
 
             ArrayList<AuthenticationRequirementHolder> authReqList = new ArrayList<AuthenticationRequirementHolder>();
             for (String authReq : authReqPaths) {
                 if (authReq != null && authReq.length() > 0) {
                     authReqList.add(AuthenticationRequirementHolder.fromConfig(
-                        authReq, source));
+                        authReq, ref));
                 }
             }
 
@@ -1185,18 +1184,6 @@ public class SlingAuthenticator implements Authenticator,
                     authenticator.authRequiredCache.removeHolder(authReq);
                 }
             }
-        }
-
-        private String getSource(final ServiceReference ref) {
-            final String descr = OsgiUtil.toString(
-                ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
-            if (descr != null) {
-                return descr;
-            }
-
-            return "Service "
-                + OsgiUtil.toString(ref.getProperty(Constants.SERVICE_ID),
-                    "unknown");
         }
     }
 
@@ -1242,12 +1229,13 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         protected AbstractAuthenticationHandlerHolder createHolder(
-                final String path, final Object handler) {
+                final String path, final Object handler,
+                final ServiceReference serviceReference) {
             return new AuthenticationHandlerHolder(path,
-                (AuthenticationHandler) handler);
+                (AuthenticationHandler) handler, serviceReference);
         }
 
-        private void bindAuthHandler(final Object handler, ServiceReference ref) {
+        private void bindAuthHandler(final Object handler, final ServiceReference ref) {
             final String paths[] = OsgiUtil.toStringArray(ref.getProperty(AuthenticationHandler.PATH_PROPERTY));
             if (paths != null && paths.length > 0) {
 
@@ -1255,7 +1243,7 @@ public class SlingAuthenticator implements Authenticator,
                 ArrayList<AbstractAuthenticationHandlerHolder> holderList = new ArrayList<AbstractAuthenticationHandlerHolder>();
                 for (String path : paths) {
                     if (path != null && path.length() > 0) {
-                        holderList.add(createHolder(path, handler));
+                        holderList.add(createHolder(path, handler, ref));
                     }
                 }
 
@@ -1301,10 +1289,10 @@ public class SlingAuthenticator implements Authenticator,
         @SuppressWarnings("deprecation")
         @Override
         protected AbstractAuthenticationHandlerHolder createHolder(String path,
-                Object handler) {
+                Object handler, final ServiceReference serviceReference) {
             return new EngineAuthenticationHandlerHolder(path,
-                (org.apache.sling.engine.auth.AuthenticationHandler) handler);
-
+                (org.apache.sling.engine.auth.AuthenticationHandler) handler,
+                serviceReference);
         }
     }
 

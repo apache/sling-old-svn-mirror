@@ -18,14 +18,14 @@
  */
 package org.apache.sling.commons.auth.impl;
 
+import org.osgi.framework.ServiceReference;
+
 class AuthenticationRequirementHolder extends PathBasedHolder {
 
     private final boolean requiresAuthentication;
 
-    private final String source;
-
     static AuthenticationRequirementHolder fromConfig(final String config,
-            final String source) {
+            final ServiceReference serviceReference) {
         if (config == null || config.length() == 0) {
             throw new IllegalArgumentException(
                 "Configuration must not be null or empty");
@@ -44,21 +44,18 @@ class AuthenticationRequirementHolder extends PathBasedHolder {
             path = config;
         }
 
-        return new AuthenticationRequirementHolder(path, required, source);
+        return new AuthenticationRequirementHolder(path, required,
+            serviceReference);
     }
 
     AuthenticationRequirementHolder(final String fullPath,
-            final boolean requiresAuthentication, final String source) {
-        super(fullPath);
+            final boolean requiresAuthentication,
+            final ServiceReference serviceReference) {
+        super(fullPath, serviceReference);
         this.requiresAuthentication = requiresAuthentication;
-        this.source = source;
     }
 
     boolean requiresAuthentication() {
         return requiresAuthentication;
-    }
-
-    String getSource() {
-        return source;
     }
 }

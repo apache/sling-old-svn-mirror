@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>AuthenticationHandlerHolder</code> class represents an
@@ -40,8 +41,9 @@ final class AuthenticationHandlerHolder extends
     private final AuthenticationHandler handler;
 
     AuthenticationHandlerHolder(final String fullPath,
-            final AuthenticationHandler handler) {
-        super(fullPath);
+            final AuthenticationHandler handler,
+            final ServiceReference serviceReference) {
+        super(fullPath, serviceReference);
 
         // assign the fields
         this.handler = handler;
