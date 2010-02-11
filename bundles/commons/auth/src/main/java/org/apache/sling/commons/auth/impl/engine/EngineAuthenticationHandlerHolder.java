@@ -27,6 +27,7 @@ import org.apache.sling.commons.auth.impl.AbstractAuthenticationHandlerHolder;
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.auth.AuthenticationHandler;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>EngineAuthenticationHandlerHolder</code> class represents an
@@ -42,8 +43,9 @@ public final class EngineAuthenticationHandlerHolder extends
     private final AuthenticationHandler handler;
 
     public EngineAuthenticationHandlerHolder(final String fullPath,
-            final AuthenticationHandler handler) {
-        super(fullPath);
+            final AuthenticationHandler handler,
+            final ServiceReference serviceReference) {
+        super(fullPath, serviceReference);
         this.handler = handler;
     }
 
