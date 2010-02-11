@@ -30,7 +30,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.sling.jcr.api.SessionConfigurer;
+import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
@@ -133,7 +133,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     // the background thread constantly checking the repository
     private Thread repositoryPinger;
 
-    private ServiceTracker sessionConfigurerTracker;
+    private ServiceTracker namespaceMapperTracker;
 
     protected AbstractSlingRepository() {
     }
@@ -229,18 +229,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 setDefaultWorkspace(defaultWorkspace);
             }
 
-            if (this.loader != null) {
-                // apply namespace mapping
-                this.loader.defineNamespacePrefixes(session);
-            }
-
-            // call post processors
-            Object[] postProcessors = sessionConfigurerTracker.getServices();
-            if (postProcessors != null) {
-                for (int i = 0; i < postProcessors.length; i++) {
-                    ((SessionConfigurer) postProcessors[i]).configure(session);
-                }
-            }
+            defineNamespacePrefixes(session);
 
             return session;
 
@@ -588,8 +577,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().addBundleListener(this);
 
-        this.sessionConfigurerTracker = new ServiceTracker(componentContext.getBundleContext(), SessionConfigurer.SERVICE_NAME, null);
-        this.sessionConfigurerTracker.open();
+        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.SERVICE_NAME, null);
+        this.namespaceMapperTracker.open();
 
         // immediately try to start the repository while activating
         // this component instance
@@ -615,7 +604,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
-        this.sessionConfigurerTracker.close();
+        this.namespaceMapperTracker.close();
 
         componentContext.getBundleContext().removeBundleListener(this);
 
@@ -702,6 +691,21 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         // fall back to failure
         return false;
+    }
+
+    private void defineNamespacePrefixes(final Session session) throws RepositoryException {
+        if (this.loader != null) {
+            // apply namespace mapping
+            this.loader.defineNamespacePrefixes(session);
+        }
+
+        // call post processors
+        Object[] postProcessors = namespaceMapperTracker.getServices();
+        if (postProcessors != null) {
+            for (int i = 0; i < postProcessors.length; i++) {
+                ((NamespaceMapper) postProcessors[i]).defineNamespacePrefixes(session);
+            }
+        }
     }
 
     // ---------- Background operation checking repository availability --------
