@@ -42,6 +42,7 @@ import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,9 +225,23 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
      */
     private long sessionTimeout;
 
+    /**
+     * The name of the credentials attribute which is set to the cookie data
+     * to validate.
+     */
     private String attrCookieAuthData;
 
+    /**
+     * The {@link TokenStore} used to persist and check authentication data
+     */
     private TokenStore tokenStore;
+
+    /**
+     * The {@link FormLoginModulePlugin} service registration created when
+     * this authentication handler is registered. If the login module plugin
+     * cannot be created this field is set to <code>null</code>.
+     */
+    private ServiceRegistration loginModule;
 
     /**
      * Extracts cookie/session based credentials from the request. Returns
@@ -554,6 +569,15 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             if (user != null && pwd != null) {
                 info = new AuthenticationInfo(HttpServletRequest.FORM_AUTH,
                     user, pwd.toCharArray());
+
+                // if this request is providing form credentials, we have to
+                // make sure, that the request is redirected after successful
+                // authentication, otherwise the request may be processed
+                // as a POST request to the j_security_check page (unless
+                // the j_validate parameter is set)
+                if (getLoginResource(request) == null) {
+                    request.setAttribute(Authenticator.LOGIN_RESOURCE, "/");
+                }
             }
         }
 
@@ -661,6 +685,23 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             componentContext.getBundleContext());
         log.info("Storing tokens in ", tokenFile);
         this.tokenStore = new TokenStore(tokenFile, sessionTimeout);
+
+        this.loginModule = null;
+        try {
+            this.loginModule = FormLoginModulePlugin.register(this,
+                componentContext.getBundleContext());
+        } catch (Throwable t) {
+            log.info("Cannot register FormLoginModulePlugin. This is expected if Sling LoginModulePlugin services are not supported");
+            log.debug("dump", t);
+        }
+    }
+
+    protected void deactivate(
+            @SuppressWarnings("unused") ComponentContext componentContext) {
+        if (loginModule != null) {
+            loginModule.unregister();
+            loginModule = null;
+        }
     }
 
     /**
