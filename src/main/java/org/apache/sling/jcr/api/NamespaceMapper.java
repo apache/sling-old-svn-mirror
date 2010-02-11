@@ -24,11 +24,16 @@ import javax.jcr.Session;
 /**
  * This interface is used to customize the namespace mapping of
  * a session.
+ * @since 2.1
  */
 public interface NamespaceMapper {
 
-    static final String SERVICE_NAME = "org.apache.sling.jcr.api.NamespaceMapper";
-
+    /**
+     * This method is invoked whenever a new session is created.
+     * It allows the service to add own namespace prefixes.
+     * @param session The new session
+     * @throws RepositoryException If anything goes wrong
+     */
     void defineNamespacePrefixes(Session session)
     throws RepositoryException;
 }
