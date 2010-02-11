@@ -255,22 +255,28 @@ public class JobEventHandler
             final Iterator<JobBlockingQueue> i = this.jobQueues.values().iterator();
             while ( i.hasNext() ) {
                 final JobBlockingQueue jbq = i.next();
+                this.logger.debug("Shutting down job queue {}", jbq.getName());
+                this.logger.debug("Waking up sleeping queue {}", jbq.getName());
+                this.wakeUpJobQueue(jbq);
                 // wake up qeue
                 if ( jbq.isWaiting() ) {
+                    this.logger.debug("Waking up waiting queue {}", jbq.getName());
                     synchronized ( jbq.getLock()) {
                         jbq.notifyFinish(null);
                     }
                 }
-                // continue queue processing
+                // continue queue processing to stop the queue
                 try {
                     jbq.put(new EventInfo());
                 } catch (InterruptedException e) {
                     this.ignoreException(e);
                 }
+                this.logger.debug("Stopped job queue {}", jbq.getName());
             }
         }
         if ( this.backgroundSession != null ) {
             synchronized ( this.backgroundLock ) {
+                this.logger.debug("Shutting down background session.");
                 try {
                     this.backgroundSession.getWorkspace().getObservationManager().removeEventListener(this);
                 } catch (RepositoryException e) {
@@ -1678,20 +1684,28 @@ public class JobEventHandler
         if ( jobQueueName != null ) {
             synchronized ( this.jobQueues ) {
                 final JobBlockingQueue queue = this.jobQueues.get(jobQueueName);
-                if ( queue != null && queue.isSleeping() ) {
-                    final String schedulerJobName = queue.getSchedulerJobName();
-                    final Thread thread = queue.getSleepingThread();
-                    if ( schedulerJobName != null ) {
-                        this.scheduler.removeJob(schedulerJobName);
-                    }
-                    if ( thread != null ) {
-                        thread.interrupt();
-                    }
+                if ( queue != null ) {
+                    this.wakeUpJobQueue(queue);
                 }
             }
         }
     }
 
+    private void wakeUpJobQueue(final JobBlockingQueue jobQueue) {
+        if ( jobQueue.isSleeping() ) {
+            final String schedulerJobName = jobQueue.getSchedulerJobName();
+            final Thread thread = jobQueue.getSleepingThread();
+            if ( schedulerJobName != null ) {
+                final Scheduler localScheduler = this.scheduler;
+                if ( localScheduler != null ) {
+                    localScheduler.removeJob(schedulerJobName);
+                }
+            }
+            if ( thread != null ) {
+                thread.interrupt();
+            }
+        }
+    }
     /**
      * Helper method for sending the notification events.
      */

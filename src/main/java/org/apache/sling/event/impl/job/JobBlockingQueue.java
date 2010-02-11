@@ -74,11 +74,20 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     public EventInfo waitForFinish() throws InterruptedException {
         this.isWaiting = true;
         this.markForCleanUp = false;
+        this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
         this.lock.wait();
+        this.logger.debug("Job queue {} is continuing.", this.queueName);
         this.isWaiting = false;
         final EventInfo object = this.eventInfo;
         this.eventInfo = null;
         return object;
+    }
+
+    /**
+     * Get the name of the job queue.
+     */
+    public String getName() {
+        return this.queueName;
     }
 
     /**
@@ -99,16 +108,21 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         if ( jobCount >= maxJobs ) {
             this.isWaiting = true;
             this.markForCleanUp = false;
+            this.logger.debug("Job queue {} is processing {} job - waiting for a free slot.", this.queueName, jobCount);
             this.lock.wait();
+            this.logger.debug("Job queue {} is continuing.", this.queueName);
             this.isWaiting = false;
         }
+        jobCount++;
     }
 
     /**
      * Free a slot when a job processing is finished.
      */
     public void freeSlot() {
+        jobCount--;
         if ( this.isWaiting ) {
+            this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
             this.lock.notify();
         }
     }
@@ -125,6 +139,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
      */
     public void notifyFinish(EventInfo i) {
         this.eventInfo = i;
+        this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
         this.lock.notify();
     }
 
@@ -155,14 +170,14 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         }
     }
 
-    public void setSleeping(boolean flag, String schedulerJobName) {
+    public void setSleeping(String schedulerJobName) {
         this.schedulerJobName = schedulerJobName;
-        this.setSleeping(flag);
+        this.setSleeping(true);
     }
 
-    public void setSleeping(boolean flag, Thread sleepingThread) {
+    public void setSleeping(Thread sleepingThread) {
         this.sleepingThread = sleepingThread;
-        this.setSleeping(flag);
+        this.setSleeping(true);
     }
 
     public String getSchedulerJobName() {
@@ -197,8 +212,9 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
             // this job again
             if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
                 final long delay = (Long)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
-                setSleeping(true, Thread.currentThread());
+                setSleeping(Thread.currentThread());
                 try {
+                    this.logger.debug("Job queue {} is sleeping for {}ms.", this.queueName, delay);
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     this.ignoreException(e);
@@ -216,7 +232,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
             final String schedulerJobName = "Waiting:" + queueName;
             final Runnable t = new Runnable() {
                 public void run() {
-                    setSleeping(true, schedulerJobName);
+                    setSleeping(schedulerJobName);
                     try {
                         put(info);
                     } catch (InterruptedException e) {
