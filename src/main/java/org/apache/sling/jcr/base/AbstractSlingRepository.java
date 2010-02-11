@@ -577,7 +577,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().addBundleListener(this);
 
-        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.SERVICE_NAME, null);
+        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.class.getName(), null);
         this.namespaceMapperTracker.open();
 
         // immediately try to start the repository while activating
