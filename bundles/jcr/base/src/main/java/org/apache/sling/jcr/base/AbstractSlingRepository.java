@@ -229,8 +229,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 setDefaultWorkspace(defaultWorkspace);
             }
 
-            // apply namespace mapping
-            this.loader.defineNamespacePrefixes(session);
+            if (this.loader != null) {
+                // apply namespace mapping
+                this.loader.defineNamespacePrefixes(session);
+            }
 
             // call post processors
             Object[] postProcessors = sessionConfigurerTracker.getServices();
