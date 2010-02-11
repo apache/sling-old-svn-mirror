@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.base.internal;
+package org.apache.sling.jcr.api;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -26,6 +26,8 @@ import javax.jcr.Session;
  * a session.
  */
 public interface NamespaceMapper {
+
+    static final String SERVICE_NAME = "org.apache.sling.jcr.api.NamespaceMapper";
 
     void defineNamespacePrefixes(Session session)
     throws RepositoryException;

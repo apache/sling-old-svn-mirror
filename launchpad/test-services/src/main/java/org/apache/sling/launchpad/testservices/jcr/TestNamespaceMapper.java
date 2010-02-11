@@ -14,22 +14,27 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.jcr.api;
+package org.apache.sling.launchpad.testservices.jcr;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.api.NamespaceMapper;
+
 /**
- * Service interface which allows for the JCR Sessions produced by
- * SlingRepository instances to be configured programmatically.
+ * Test Implementation of NamespaceMapper
+ *
+ * @scr.component immediate="true" metatype="no"
+ * @scr.service interface="org.apache.sling.jcr.api.NamespaceMapper"
+ *
+ * @scr.property name="service.description" value="Test NamespaceMapper"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ *
  */
-public interface SessionConfigurer {
+public class TestNamespaceMapper implements NamespaceMapper {
 
-    static final String SERVICE_NAME = "org.apache.sling.jcr.api.SessionConfigurer";
+    public void defineNamespacePrefixes(Session session) throws RepositoryException {
+        session.setNamespacePrefix("test2", "test2=http://sling.apache.org/test/two");
+    }
 
-    /**
-     * Configure the Session instance as necessary.
-     *
-     * @param session the JCR Session
-     */
-    void configure(Session session);
 }
