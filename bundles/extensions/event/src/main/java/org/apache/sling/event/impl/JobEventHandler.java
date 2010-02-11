@@ -120,11 +120,17 @@ public class JobEventHandler
     /** Default nubmer of parallel jobs. */
     private static final long DEFAULT_MAXIMUM_PARALLEL_JOBS = 15;
 
+    /** Default nubmer of job queues. */
+    private static final int DEFAULT_MAXIMUM_JOB_QUEUES = 10;
+
     @Property(longValue=DEFAULT_MAXIMUM_PARALLEL_JOBS)
     private static final String CONFIG_PROPERTY_MAXIMUM_PARALLEL_JOBS = "max.parallel.jobs";
 
     @Property(longValue=DEFAULT_WAIT_FOR_ACK)
     private static final String CONFIG_PROPERTY_WAIT_FOR_ACK = "wait.for.ack";
+
+    @Property(intValue=DEFAULT_MAXIMUM_JOB_QUEUES)
+    private static final String CONFIG_PROPERTY_MAXIMUM_JOB_QUEUES = "max.job.queues";
 
     /** We check every 30 secs by default. */
     private long sleepTime;
@@ -180,6 +186,9 @@ public class JobEventHandler
     /** Number of jobs to load from the repository on startup in one go. */
     private long maxLoadJobs;
 
+    /** Number of allowed job queues */
+    private int maxJobQueues;
+
     /** Default maximum load jobs. */
     private static final long DEFAULT_MAXIMUM_LOAD_JOBS = 1000;
 
@@ -234,6 +243,7 @@ public class JobEventHandler
         this.loadThreshold = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_LOAD_THREASHOLD), DEFAULT_LOAD_THRESHOLD);
         this.backgroundLoadDelay = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
         this.backgroundCheckDelay = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_CHECK_DELAY), DEFAULT_BACKGROUND_CHECK_DELAY);
+        this.maxJobQueues = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_MAXIMUM_JOB_QUEUES), DEFAULT_MAXIMUM_JOB_QUEUES);
         this.componentContext = context;
         super.activate(context);
         JOB_THREAD_POOL = this.threadPool;
@@ -555,8 +565,9 @@ public class JobEventHandler
         // load unprocessed jobs from repository
         if ( this.running ) {
             logger.info("Apache Sling Job Event Handler started.");
-            logger.debug("Job Handler Configuration: (sleepTime={} secs, maxJobRetries={}, waitForAck={} ms, maximumParallelJobs={}, cleanupPeriod={} min)",
-                    new Object[] {sleepTime, maxJobRetries,waitForAckMs,maximumParallelJobs,cleanupPeriod});
+            logger.debug("Job Handler Configuration: (sleepTime={} secs, maxJobRetries={}," +
+                    " waitForAck={} ms, maximumParallelJobs={}, cleanupPeriod={} min, maxJobQueues={})",
+                    new Object[] {sleepTime, maxJobRetries,waitForAckMs,maximumParallelJobs,cleanupPeriod,maxJobQueues});
         } else {
             final ComponentContext ctx = this.componentContext;
             // deactivate
@@ -596,43 +607,51 @@ public class JobEventHandler
                 if ( info != null && info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
                     final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
                     synchronized ( this.jobQueues ) {
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug("Queuing job {} into queue {}.", EventUtil.toString(info.event), queueName);
-                        }
                         BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
                         if ( jobQueue == null ) {
-                            final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
-                            final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
-                            jobQueue = jq;
-                            this.jobQueues.put(queueName, jq);
-                            // Start background thread
-                            this.threadPool.execute(new Runnable() {
+                            // check if we have exceeded the maximum number of job queues
+                            if ( this.jobQueues.size() >= this.maxJobQueues ) {
+                                this.logger.warn("Unable to create new job queue named {} as there are already {} job queues." +
+                                        " Try to increase the maximum number of job queues!", queueName, this.jobQueues.size());
+                            } else {
+                                final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
+                                final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
+                                jobQueue = jq;
+                                this.jobQueues.put(queueName, jq);
+                                // Start background thread
+                                this.threadPool.execute(new Runnable() {
 
-                                /**
-                                 * @see java.lang.Runnable#run()
-                                 */
-                                public void run() {
-                                    while ( running && !jq.isFinished() ) {
-                                        logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
-                                        try {
-                                            runJobQueue(queueName, jq);
-                                        } catch (Throwable t) {
-                                            logger.error("Job queue stopped with exception: " + t.getMessage() + ". Restarting.", t);
+                                    /**
+                                     * @see java.lang.Runnable#run()
+                                     */
+                                    public void run() {
+                                        while ( running && !jq.isFinished() ) {
+                                            logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
+                                            try {
+                                                runJobQueue(queueName, jq);
+                                            } catch (Throwable t) {
+                                                logger.error("Job queue stopped with exception: " + t.getMessage() + ". Restarting.", t);
+                                            }
                                         }
                                     }
-                                }
 
-                            });
+                                });
+                            }
                         }
-                        try {
-                            jobQueue.put(info);
-                        } catch (InterruptedException e) {
-                            // this should never happen
-                            this.ignoreException(e);
+                        if ( jobQueue != null ) {
+                            if ( logger.isDebugEnabled() ) {
+                                logger.debug("Queuing job {} into queue {}.", EventUtil.toString(info.event), queueName);
+                            }
+                            try {
+                                jobQueue.put(info);
+                            } catch (InterruptedException e) {
+                                // this should never happen
+                                this.ignoreException(e);
+                            }
+                            // don't process this here
+                            info = null;
                         }
                     }
-                    // don't process this here
-                    info = null;
                 }
 
                 // if we still have a job, process it
