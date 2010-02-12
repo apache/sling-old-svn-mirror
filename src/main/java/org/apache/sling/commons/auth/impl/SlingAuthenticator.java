@@ -72,13 +72,6 @@ import org.slf4j.LoggerFactory;
  * Currently this class does not support multiple handlers for any one request
  * URL.
  * <p>
- * Clients of this class use {@link #authenticate} method to create a
- * {@link AuthenticationInfo} for the handling of the request. This method uses
- * any of the handlers to extract the user information from the request. Next an
- * object is created for this user information. If no user information is
- * contained in the request (according to the handler), the anonymous info is
- * used.
- * <p>
  *
  * @scr.component name="org.apache.sling.engine.impl.auth.SlingAuthenticator"
  *                label="%auth.name" description="%auth.description"
