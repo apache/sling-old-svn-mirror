@@ -131,11 +131,7 @@ public class SessionProxyHandler  {
     private void addInterfaces( final Class<?>[] classInterfaces,
                                 final Set<Class<?>> workInterfaces ) {
         for ( int i = 0; i < classInterfaces.length; i++ ) {
-            // to avoid problems we simply ignore all pre jsr 283 interfaces - once we
-            // moved to jcr 2.0 completly we can remove this check
-            if ( !classInterfaces[i].getName().startsWith("org.apache.jackrabbit.api.jsr283")) {
-                workInterfaces.add( classInterfaces[i] );
-            }
+            workInterfaces.add( classInterfaces[i] );
             addInterfaces(classInterfaces[i].getInterfaces(), workInterfaces);
         }
     }
