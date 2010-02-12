@@ -1,4 +1,4 @@
-Apache Sling Launchpad Builder
+    Apache Sling Launchpad Builder
 
 The Launchpad Builder project produces both a Standalone Java Application which contains
 everything needed to run the Launchpad in a single JAR file and a Web Application. It also
@@ -43,7 +43,7 @@ in the top-level directory of the Sling source code.
 
 2) Start the generated jar with
 
-	 java -jar target/org.apache.sling.launchpad.builder-6-SNAPSHOT-standalone.jar 
+	 java -jar target/org.apache.sling.launchpad-6-SNAPSHOT-standalone.jar 
 	 
 Use the correct version number instead of 6-SNAPSHOT, if needed.
 
@@ -70,7 +70,7 @@ in the top-level directory of the Sling source code.
         
   OR
   
-   Deploy target/org.apache.sling.launchpad.builder-6-SNAPSHOT.war to your favorite application server
+   Deploy target/org.apache.sling.launchpad-6-SNAPSHOT.war to your favorite application server
    or servlet container.
 
 How to run the Sling launchpad/builder module in Apache Felix Karaf
@@ -96,7 +96,7 @@ in the top-level directory of the Sling source code.
 
 5) Add the Sling features reposity and install:
 
-        karaf@root:/> features:addUrl mvn:org.apache.sling/org.apache.sling.launchpad.builder/6-SNAPSHOT/xml/features 
+        karaf@root:/> features:addUrl mvn:org.apache.sling/org.apache.sling.launchpad/6-SNAPSHOT/xml/features 
         karaf@root:/> features:install sling
 
 6) Browse Sling in:
