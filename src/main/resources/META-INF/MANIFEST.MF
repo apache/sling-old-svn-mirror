@@ -27,7 +27,7 @@ Bundle-Name: Apache Sling Jackrabbit Embedded Repository
 Created-By: 1.6.0_13 (Sun Microsystems Inc.)
 DynamicImport-Package: *
 Bundle-Vendor: The Apache Software Foundation
-Bundle-Version: 2.0.5.SNAPSHOT
+Bundle-Version: 2.0.6
 Bnd-LastModified: 1264510177332
 Bundle-ManifestVersion: 2
 Bundle-Description: Bundle providing support to embed Jackrabbit Repos
