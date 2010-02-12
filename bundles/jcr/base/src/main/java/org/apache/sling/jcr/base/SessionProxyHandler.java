@@ -71,20 +71,25 @@ public class SessionProxyHandler  {
      */
     public Session createProxy(final Session session) {
         final Class<?> sessionClass = session.getClass();
+        final Class<?>[] interfaces = getInterfaces(sessionClass);
         return (Session)Proxy.newProxyInstance(sessionClass.getClassLoader(),
-                getInterfaces(sessionClass),
-                new SessionProxy(session, this.repository));
+                interfaces,
+                new SessionProxyInvocationHandler(session, this.repository, interfaces));
 
     }
 
 
-    public static final class SessionProxy implements InvocationHandler {
+    public static final class SessionProxyInvocationHandler implements InvocationHandler {
         private final Session delegatee;
         private final AbstractSlingRepository repository;
+        private final Class<?>[] interfaces;
 
-        public SessionProxy(final Session delegatee, final AbstractSlingRepository repo) {
+        public SessionProxyInvocationHandler(final Session delegatee,
+                            final AbstractSlingRepository repo,
+                            final Class<?>[] interfaces) {
             this.delegatee = delegatee;
             this.repository = repo;
+            this.interfaces = interfaces;
         }
 
         /**
@@ -95,7 +100,10 @@ public class SessionProxyHandler  {
             if ( method.getName().equals("impersonate") && args != null && args.length == 1) {
                 final Session session = this.delegatee.impersonate((Credentials)args[0]);
                 this.repository.defineNamespacePrefixes(session);
-                return new SessionProxy(session, this.repository);
+                final Class<?> sessionClass = session.getClass();
+                return Proxy.newProxyInstance(sessionClass.getClassLoader(),
+                        interfaces,
+                        new SessionProxyInvocationHandler(session, this.repository, interfaces));
             }
             try {
                 return method.invoke(this.delegatee, args);
