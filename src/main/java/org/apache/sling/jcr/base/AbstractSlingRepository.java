@@ -30,7 +30,6 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
@@ -40,7 +39,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>AbstractSlingRepository</code> is an abstract implementation of
@@ -137,8 +135,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     // the background thread constantly checking the repository
     private Thread repositoryPinger;
 
-    private ServiceTracker namespaceMapperTracker;
-
     protected AbstractSlingRepository() {
     }
 
@@ -168,42 +164,32 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     /**
-     * @see javax.jcr.Repository#login()
+     * Logs in as an anonymous user. This implementation simply returns the
+     * result of calling {@link #login(Credentials, String)}
      */
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
     }
 
-    /**
-     * @see org.apache.sling.jcr.api.SlingRepository#loginAdministrative(java.lang.String)
-     */
     public Session loginAdministrative(String workspace)
-    throws RepositoryException {
+            throws RepositoryException {
         Credentials sc = getAdministrativeCredentials(this.adminUser);
         return this.login(sc, workspace);
     }
 
-    /**
-     * @see javax.jcr.Repository#login(javax.jcr.Credentials)
-     */
-    public Session login(Credentials credentials)
-    throws LoginException, RepositoryException {
+    public Session login(Credentials credentials) throws LoginException,
+            RepositoryException {
         return this.login(credentials, null);
     }
 
-    /**
-     * @see javax.jcr.Repository#login(java.lang.String)
-     */
-    public Session login(String workspace)
-    throws LoginException, NoSuchWorkspaceException, RepositoryException {
+    public Session login(String workspace) throws LoginException,
+            NoSuchWorkspaceException, RepositoryException {
         return this.login(null, workspace);
     }
 
-    /**
-     * @see javax.jcr.Repository#login(javax.jcr.Credentials, java.lang.String)
-     */
     public Session login(Credentials credentials, String workspace)
-    throws LoginException, NoSuchWorkspaceException, RepositoryException {
+            throws LoginException, NoSuchWorkspaceException,
+            RepositoryException {
 
         // if already stopped, don't retrieve a session
         if (this.componentContext == null || this.getRepository() == null) {
@@ -222,7 +208,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         try {
             log(LogService.LOG_DEBUG, "login: Logging in to workspace '"
                 + workspace + "'");
-            final Session session = getRepository().login(credentials, workspace);
+            Session session = getRepository().login(credentials, workspace);
 
             // if the defualt workspace is null, acquire a session from the pool
             // and use the workspace used as the new default workspace
@@ -261,7 +247,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             throw new RepositoryException(re.getMessage(), re);
         }
     }
-
+    
     /**
      * @param anonUser the user name of the anon user.
      * @return a Credentials implementation that represents the anon user.
@@ -270,7 +256,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the anon password. SLING-1282
         return new SimpleCredentials(anonUser, anonPass);
     }
-
+    
     /**
      * @param adminUser the name of the administrative user.
      * @return a Credentials implementation that represents the administrative user.
@@ -279,7 +265,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the admin password. SLING-1282
         return new SimpleCredentials(adminUser, adminPass);
     }
-
+     
 
 
     /*
@@ -588,9 +574,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().addBundleListener(this);
 
-        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.class.getName(), null);
-        this.namespaceMapperTracker.open();
-
         // immediately try to start the repository while activating
         // this component instance
         try {
@@ -615,7 +598,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
-        this.namespaceMapperTracker.close();
 
         componentContext.getBundleContext().removeBundleListener(this);
 
@@ -708,14 +690,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         if (this.namespaceHandler != null) {
             // apply namespace mapping
             this.namespaceHandler.defineNamespacePrefixes(session);
-        }
-
-        // call post processors
-        Object[] postProcessors = namespaceMapperTracker.getServices();
-        if (postProcessors != null) {
-            for (int i = 0; i < postProcessors.length; i++) {
-                ((NamespaceMapper) postProcessors[i]).defineNamespacePrefixes(session);
-            }
         }
     }
 
