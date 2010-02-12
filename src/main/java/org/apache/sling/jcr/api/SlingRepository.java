@@ -34,12 +34,6 @@ import javax.jcr.Session;
  * Implementations of this interface will generally provide configurability of
  * the default workspace name as well as the access details for the
  * administrative session.
- * <p>
- * Implementations of SlingRepository are expected to invoke any available
- * implementations of the {@link SessionConfigurer} interface <b>before</b>
- * returning <b>any</b> {@link Session} to callers. This includes the methods
- * defined in the {@link Repository} interface.
- *
  */
 public interface SlingRepository extends Repository {
 
