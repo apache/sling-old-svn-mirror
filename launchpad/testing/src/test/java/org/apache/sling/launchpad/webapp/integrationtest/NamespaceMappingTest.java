@@ -17,13 +17,17 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.NameValuePair;
 
 /**
  * Test that Namespace Mappings are working properly.
  */
-public class NamespaceMappingTest extends HttpTestBase {
+public class NamespaceMappingTest extends AbstractAuthenticatedTest {
 
     /**
      * Verify that Sling-Namespaces works.
@@ -34,4 +38,36 @@ public class NamespaceMappingTest extends HttpTestBase {
                 CONTENT_TYPE_PLAIN);
         assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
     }
+
+    /**
+     * Verify that Sling-Namespaces works with impersonation.
+     */
+    public void testNamespaceFromManifestWithImpersonation() throws IOException {
+        final String expectedUser = "userid=" + testUserId;
+        final String expected = "test1=http://sling.apache.org/test/one";
+        final String content = getContent(HTTP_BASE_URL + "/testing/NamespaceTestServlet/output?sudo=" + testUserId,
+                CONTENT_TYPE_PLAIN);
+        assertTrue("Username is wrong contains " + expectedUser + " (" + content + ")", content.contains(expectedUser));
+        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
+    }
+
+    String testUserId = null;
+
+    @Override
+    protected void tearDown() throws Exception {
+        if (testUserId != null) {
+            //remove the test user if it exists.
+            String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
+            List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+            assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+        }
+        super.tearDown();
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        this.testUserId = createTestUser();
+    }
+
 }
