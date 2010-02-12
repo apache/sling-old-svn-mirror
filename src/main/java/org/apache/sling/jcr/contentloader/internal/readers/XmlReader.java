@@ -156,10 +156,10 @@ public class XmlReader implements ContentReader {
 
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
      */
-    public synchronized void parse(java.net.URL url, ContentCreator creator)
-            throws IOException, RepositoryException {
+    public synchronized void parse(final URL url, final ContentCreator creator)
+    throws IOException, RepositoryException {
         BufferedInputStream bufferedInput = null;
         try {
             // We need to buffer input, so that we can reset the stream if we encounter an XSL stylesheet reference
@@ -172,8 +172,11 @@ public class XmlReader implements ContentReader {
         }
     }
 
-    private void parseInternal(InputStream bufferedInput, ContentCreator creator, java.net.URL xmlLocation) throws XmlPullParserException, IOException, RepositoryException {
-        final StringBuffer contentBuffer = new StringBuffer();
+    private void parseInternal(final InputStream bufferedInput,
+                               final ContentCreator creator,
+                               final URL xmlLocation)
+    throws XmlPullParserException, IOException, RepositoryException {
+        final StringBuilder contentBuffer = new StringBuilder();
         // Mark the beginning of the stream. We assume that if there's an XSL processing instruction,
         // it will occur in the first gulp - which makes sense, as processing instructions must be
         // specified before the root elemeent of an XML file.
@@ -223,7 +226,7 @@ public class XmlReader implements ContentReader {
                 } else if (ELEM_FILE_NAME.equals(currentElement) && ELEM_FILE_NAMESPACE.equals(this.xmlParser.getNamespace())) {
                     int attributeCount = this.xmlParser.getAttributeCount();
                     if (attributeCount < 2 || attributeCount > 3) {
-                        throw new IOException("File element must have these attributes: url, mimeType and lastModified");
+                        throw new IOException("File element must have these attributes: url, mimeType and lastModified: " + xmlLocation);
                     }
                     try {
                         AttributeMap attributes = AttributeMap.getInstance();
@@ -232,7 +235,7 @@ public class XmlReader implements ContentReader {
                         FileDescription.SHARED.setValues(attributes);
                         attributes.clear();
                     } catch (ParseException e) {
-                        IOException ioe = new IOException("Error parsing file description");
+                        IOException ioe = new IOException("Error parsing file description: " + xmlLocation);
                         ioe.initCause(e);
                         throw ioe;
                     }
@@ -257,12 +260,21 @@ public class XmlReader implements ContentReader {
                     }
 
                 } else if (ELEM_VALUE.equals(qName)) {
+                    if ( currentProperty == null ) {
+                        throw new IOException("XML file does not seem to contain valid content xml. Unexpected " + ELEM_VALUE + " element in : " + xmlLocation);
+                    }
                     currentProperty.addValue(content);
 
                 } else if (ELEM_VALUES.equals(qName)) {
+                    if ( currentProperty == null ) {
+                        throw new IOException("XML file does not seem to contain valid content xml. Unexpected " + ELEM_VALUE + " element in : " + xmlLocation);
+                    }
                     currentProperty.isMultiValue = true;
 
                 } else if (ELEM_TYPE.equals(qName)) {
+                    if ( currentProperty == null ) {
+                        throw new IOException("XML file does not seem to contain valid content xml. Unexpected " + ELEM_VALUE + " element in : " + xmlLocation);
+                    }
                     currentProperty.type = content;
 
                 } else if (ELEM_NODE.equals(qName)) {
@@ -271,13 +283,13 @@ public class XmlReader implements ContentReader {
 
                 } else if (ELEM_PRIMARY_NODE_TYPE.equals(qName)) {
                     if ( currentNode == null ) {
-                        throw new IOException("Element is not allowed at this location: " + qName);
+                        throw new IOException("Element is not allowed at this location: " + qName + " in " + xmlLocation);
                     }
                     currentNode.primaryNodeType = content;
 
                 } else if (ELEM_MIXIN_NODE_TYPE.equals(qName)) {
                     if ( currentNode == null ) {
-                        throw new IOException("Element is not allowed at this location: " + qName);
+                        throw new IOException("Element is not allowed at this location: " + qName + " in " + xmlLocation);
                     }
                     currentNode.addMixinType(content);
                 }
@@ -321,7 +333,7 @@ public class XmlReader implements ContentReader {
          * @throws IOException
          */
         public void startTransform() throws IOException {
-            final URL xslResource = new java.net.URL(xmlLocation, this.xslHref);
+            final URL xslResource = new URL(xmlLocation, this.xslHref);
 
 /*
             if (xslResource == null) {

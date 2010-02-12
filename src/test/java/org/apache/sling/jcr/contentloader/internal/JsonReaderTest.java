@@ -127,7 +127,7 @@ public class JsonReaderTest {
 
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
-            allowing(creator).createProperty("property", PropertyType.STRING, ""); inSequence(mySequence);
+            allowing(creator).createProperty("property", PropertyType.UNDEFINED, ""); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
@@ -138,7 +138,7 @@ public class JsonReaderTest {
 
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
-            allowing(creator).createProperty("p1", PropertyType.STRING, "v1"); inSequence(mySequence);
+            allowing(creator).createProperty("p1", PropertyType.UNDEFINED, "v1"); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
@@ -160,8 +160,8 @@ public class JsonReaderTest {
 
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
-            allowing(creator).createProperty("p1", PropertyType.STRING, "v1"); inSequence(mySequence);
-            allowing(creator).createProperty("p2", PropertyType.STRING, "v2"); inSequence(mySequence);
+            allowing(creator).createProperty("p1", PropertyType.UNDEFINED, "v1"); inSequence(mySequence);
+            allowing(creator).createProperty("p2", PropertyType.UNDEFINED, "v2"); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
@@ -172,7 +172,7 @@ public class JsonReaderTest {
 
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
-            allowing(creator).createProperty("p1", PropertyType.STRING, new String[] {"v1"}); inSequence(mySequence);
+            allowing(creator).createProperty("p1", PropertyType.UNDEFINED, new String[] {"v1"}); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
@@ -253,14 +253,14 @@ public class JsonReaderTest {
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
             allowing(creator).createNode("c1", null, null); inSequence(mySequence);
-            allowing(creator).createProperty("c1p1", PropertyType.STRING, "v1");
+            allowing(creator).createProperty("c1p1", PropertyType.UNDEFINED, "v1");
             allowing(creator).finishNode(); inSequence(mySequence);
             allowing(creator).finishNode(); inSequence(mySequence);
         }});
         this.parse(json);
     }
-    
-    
+
+
     @org.junit.Test public void testCreateAcl() throws Exception {
     	String json = " { " +
     			"\"security:acl\" : [ " +
@@ -279,10 +279,10 @@ public class JsonReaderTest {
     			"    \"denied\" : [\"jcr:write\"]" +
     			"  }" +
     			"]" +
-    			"}";	
+    			"}";
         this.mockery.checking(new Expectations() {{
         	allowing(creator).createNode(null, null, null); inSequence(mySequence);
-            
+
             allowing(creator).createAce("username1",new String[]{"jcr:read","jcr:write"},new String[]{}); inSequence(mySequence);
             allowing(creator).createAce("groupname1",new String[]{"jcr:read","jcr:write"},null); inSequence(mySequence);
             allowing(creator).createAce("groupname2",new String[]{"jcr:read"},new String[]{"jcr:write"}); inSequence(mySequence);
