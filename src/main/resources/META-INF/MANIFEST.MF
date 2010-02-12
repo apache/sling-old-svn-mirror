@@ -55,7 +55,7 @@ Import-Package: javax.jcr;version="1.0.0",javax.jcr.lock;version="1.0.
  pi.observation;version="1.6.0",org.apache.jackrabbit.api.security.pri
  ncipal;version="1.6.0",org.apache.jackrabbit.api.security.user;versio
  n="1.6.0",org.apache.sling.jcr.api;version="2.0.2",org.apache.sling.j
- cr.base;version="2.0.5",org.apache.sling.jcr.jackrabbit.server.securi
+ cr.base;version="2.0.4",org.apache.sling.jcr.jackrabbit.server.securi
  ty;version="2.0.4",org.apache.sling.jcr.jackrabbit.server.security.ac
  cessmanager;version="2.0.4",org.osgi.framework;version="1.4.0",org.os
  gi.service.cm;version="1.2.0",org.osgi.service.component;version="1.0
