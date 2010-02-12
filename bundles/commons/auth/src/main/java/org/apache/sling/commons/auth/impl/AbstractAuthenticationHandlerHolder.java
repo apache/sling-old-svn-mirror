@@ -146,7 +146,6 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      *
      * @param request The current request
      * @param response The current response
-     * @return as returned from the called authentication handler
      * @throws IOException if an error occurrs sending back any response to the
      *             client.
      * @see #dropCredentials(HttpServletRequest, HttpServletResponse)

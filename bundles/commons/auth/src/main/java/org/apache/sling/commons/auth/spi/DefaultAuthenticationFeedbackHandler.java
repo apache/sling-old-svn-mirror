@@ -98,7 +98,7 @@ public class DefaultAuthenticationFeedbackHandler implements
      * Extensions of this class may overwrite this method to perform additional
      * cleanup etc.
      *
-     * @param the result of calling the
+     * @return the result of calling the
      *            {@link #handleRedirect(HttpServletRequest, HttpServletResponse)}
      *            method.
      */
