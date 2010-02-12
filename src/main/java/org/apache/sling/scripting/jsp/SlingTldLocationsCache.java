@@ -194,10 +194,6 @@ public class SlingTldLocationsCache extends TldLocationsCache implements
             return bundle;
         }
 
-        String getTldPath() {
-            return tldPath;
-        }
-
         URL getTldURL() {
             return bundle.getEntry(tldPath);
         }

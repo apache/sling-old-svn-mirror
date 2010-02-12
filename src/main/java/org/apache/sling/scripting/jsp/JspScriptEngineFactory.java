@@ -126,7 +126,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingServletException
      * @throws SlingIOException
      */
-    @SuppressWarnings("unchecked")
     private void callJsp(final Bindings bindings,
                          final SlingScriptHelper scriptHelper,
                          final ScriptContext context) {

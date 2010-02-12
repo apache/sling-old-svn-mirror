@@ -353,6 +353,7 @@ public class JspServletOptions implements Options {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public Map getCache() {
         return null;
     }

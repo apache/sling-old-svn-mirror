@@ -29,7 +29,7 @@ public class LogFactory {
      * @exception LogConfigurationException if a suitable <code>Log</code>
      *  instance cannot be returned
      */
-    public static Log getLog(Class clazz)
+    public static Log getLog(Class<?> clazz)
         throws LogConfigurationException {
 
         return getLog(clazz.getName());
