@@ -57,8 +57,8 @@
                         </Bundle-Category>
                         <Export-Package>
                             <!-- Export provider API selectively -->
-                            org.apache.sling.jcr.api;version=2.0.2
-                        </Export-Package>    
+                            org.apache.sling.jcr.api;version=2.1.0
+                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
