@@ -18,9 +18,13 @@
  */
 package org.apache.sling.commons.testing.jcr;
 
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Item;
@@ -49,6 +53,7 @@ public class MockNode implements Node {
     private Map <String, Property> properties = new HashMap <String, Property>();
 
     private NodeType nodeType;
+    private Session session;
 
     public MockNode(String path) {
         this(path, null);
@@ -173,8 +178,19 @@ public class MockNode implements Node {
         return new MockPropertyIterator(properties.values().iterator());
     }
 
-    public PropertyIterator getProperties(String namePattern) {
-        return null;
+    public PropertyIterator getProperties(String namePattern) throws RepositoryException {
+        PropertyIterator iterator = getProperties();
+        List<Property> properties = new ArrayList<Property>();
+    
+        while (iterator.hasNext()) {
+            Property p = iterator.nextProperty();
+            String name = p.getName();
+            if (ChildrenCollectorFilter.matches(name, namePattern)) {
+                properties.add(p);
+            }
+        }
+    
+        return new MockPropertyIterator(properties.iterator());
     }
 
     public Property getProperty(String relPath) {
@@ -251,12 +267,18 @@ public class MockNode implements Node {
     public void restoreByLabel(String versionLabel, boolean removeExisting) {
     }
 
-    public Property setProperty(String name, Value value) {
-        return null;
+    public Property setProperty(String name, Value value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, Value[] values) {
-        return null;
+    public Property setProperty(String name, Value[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(values);
+        properties.put(name, p);
+        return p;
     }
 
     public Property setProperty(String name, String[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
@@ -273,24 +295,39 @@ public class MockNode implements Node {
         return p;
     }
 
-    public Property setProperty(String name, InputStream value) {
-        return null;
+    public Property setProperty(String name, InputStream value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, boolean value) {
-        return null;
+    public Property setProperty(String name, boolean value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, double value) {
-        return null;
+    public Property setProperty(String name, double value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, long value) {
-        return null;
+    public Property setProperty(String name, long value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, Calendar value) {
-        return null;
+    public Property setProperty(String name, Calendar value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
     public Property setProperty(String name, Node value) {
@@ -331,7 +368,11 @@ public class MockNode implements Node {
     }
 
     public Session getSession() {
-        return null;
+        return this.session;
+    }
+    
+    public void setSession(Session session) {
+      this.session = session;
     }
 
     public boolean isModified() {
