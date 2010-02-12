@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.api;
+package org.apache.sling.jcr.base.internal;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -24,16 +24,9 @@ import javax.jcr.Session;
 /**
  * This interface is used to customize the namespace mapping of
  * a session.
- * @since 2.1
  */
 public interface NamespaceMapper {
 
-    /**
-     * This method is invoked whenever a new session is created.
-     * It allows the service to add own namespace prefixes.
-     * @param session The new session
-     * @throws RepositoryException If anything goes wrong
-     */
     void defineNamespacePrefixes(Session session)
     throws RepositoryException;
 }
