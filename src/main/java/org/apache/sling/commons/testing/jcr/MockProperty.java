@@ -51,11 +51,17 @@ public class MockProperty implements Property {
     }
     
     public boolean getBoolean() throws ValueFormatException, RepositoryException {
-        return false;
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0].getBoolean();
     }
 
     public Calendar getDate() throws ValueFormatException, RepositoryException {
-        return null;
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0].getDate();
     }
 
     public PropertyDefinition getDefinition() throws RepositoryException {
@@ -63,7 +69,10 @@ public class MockProperty implements Property {
     }
 
     public double getDouble() throws ValueFormatException, RepositoryException {
-        return 0;
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0].getDouble();
     }
 
     public long getLength() throws ValueFormatException, RepositoryException {
@@ -75,7 +84,10 @@ public class MockProperty implements Property {
     }
 
     public long getLong() throws ValueFormatException, RepositoryException {
-        return 0;
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0].getLong();
     }
 
     public Node getNode() throws ValueFormatException, RepositoryException {
@@ -83,7 +95,10 @@ public class MockProperty implements Property {
     }
 
     public InputStream getStream() throws ValueFormatException, RepositoryException {
-        return null;
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0].getStream();
     }
 
     public String getString() throws ValueFormatException, RepositoryException {
@@ -96,7 +111,10 @@ public class MockProperty implements Property {
     }
 
     public Value getValue() throws ValueFormatException, RepositoryException {
-        return new MockValue(getString());
+        if (values.length > 1) {
+            throw new ValueFormatException();
+        }
+        return values[0];
     }
 
     public Value[] getValues() throws ValueFormatException, RepositoryException {
@@ -105,22 +123,42 @@ public class MockProperty implements Property {
 
     public void setValue(boolean value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      MockValue val = new MockValue();
+      val.setValue(value);
+      values = new MockValue[1];
+      values[0] = val;
     }
 
     public void setValue(Calendar value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      MockValue val = new MockValue();
+      val.setValue(value);
+      values = new MockValue[1];
+      values[0] = val;
     }
 
     public void setValue(double value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      MockValue val = new MockValue();
+      val.setValue(value);
+      values = new MockValue[1];
+      values[0] = val;
     }
 
     public void setValue(InputStream value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      MockValue val = new MockValue();
+      val.setValue(value);
+      values = new MockValue[1];
+      values[0] = val;
     }
 
     public void setValue(long value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      MockValue val = new MockValue();
+      val.setValue(value);
+      values = new MockValue[1];
+      values[0] = val;
     }
 
     public void setValue(Node value) throws ValueFormatException, VersionException, LockException,
@@ -129,13 +167,13 @@ public class MockProperty implements Property {
 
     public void setValue(String value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
-        values =new Value[1];
+        values =new MockValue[1];
         values[0] = new MockValue(value);
     }
 
     public void setValue(String[] inputValues) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
-        this.values = new Value[inputValues.length];
+        this.values = new MockValue[inputValues.length];
         int i = 0;
         for(String str : inputValues) {
             values[i++] = new MockValue(str);
@@ -144,10 +182,13 @@ public class MockProperty implements Property {
 
     public void setValue(Value value) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      values = new Value[1];
+      values[0] = value;
     }
 
     public void setValue(Value[] values) throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
+      this.values = values;
     }
 
     public void accept(ItemVisitor visitor) throws RepositoryException {

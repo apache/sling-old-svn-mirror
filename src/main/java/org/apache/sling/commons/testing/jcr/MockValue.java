@@ -28,38 +28,72 @@ import javax.jcr.ValueFormatException;
 
 public class MockValue implements Value {
 
-    private final String value;
+    private String stringValue;
+    private boolean booleanValue;
+    private Calendar calendarValue;
+    private double doubleValue;
+    private long longValue;
+    private InputStream stream;
+    private int propertyType;
+    
+    public MockValue() {
+    }
     
     public MockValue(String str) {
-        value = str;
+        stringValue = str;
+        propertyType = PropertyType.STRING;
     }
     
     public boolean getBoolean() throws ValueFormatException, IllegalStateException, RepositoryException {
-        return false;
+        return booleanValue;
     }
 
     public Calendar getDate() throws ValueFormatException, IllegalStateException, RepositoryException {
-        return null;
+        return calendarValue;
     }
 
     public double getDouble() throws ValueFormatException, IllegalStateException, RepositoryException {
-        return 0;
+        return doubleValue;
     }
 
     public long getLong() throws ValueFormatException, IllegalStateException, RepositoryException {
-        return 0;
+        return longValue;
     }
 
     public InputStream getStream() throws IllegalStateException, RepositoryException {
-        return null;
+        return stream;
     }
 
     public String getString() throws ValueFormatException, IllegalStateException, RepositoryException {
-        return value;
+        return stringValue;
     }
 
     public int getType() {
-        return PropertyType.STRING;
+        return propertyType;
     }
 
+
+    public void setValue(String stringValue) {
+      this.stringValue = stringValue;
+    }
+
+    public void setValue(boolean booleanValue) {
+      this.booleanValue = booleanValue;
+    }
+
+    public void setValue(Calendar calendarValue) {
+      this.calendarValue = calendarValue;
+    }
+
+    public void setValue(double doubleValue) {
+      this.doubleValue = doubleValue;
+    }
+
+    public void setValue(long longValue) {
+      this.longValue = longValue;
+    }
+
+    public void setValue(InputStream stream) {
+      this.stream = stream;
+    }
 }
