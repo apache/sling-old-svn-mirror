@@ -339,6 +339,12 @@ public class SlingAuthenticator implements Authenticator,
             log.debug("handleSecurity: ongoing authentication in the handler");
             return false;
 
+        } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
+
+            log.debug("handleSecurity: Credentials present but not valid, request authentication again");
+            doLogin(request, response);
+            return false;
+
         } else if (authInfo == null) {
 
             log.debug("handleSecurity: No credentials in the request, anonymous");

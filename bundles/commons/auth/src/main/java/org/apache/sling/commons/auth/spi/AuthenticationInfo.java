@@ -19,6 +19,7 @@
 package org.apache.sling.commons.auth.spi;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
@@ -41,7 +42,7 @@ import javax.jcr.SimpleCredentials;
 public class AuthenticationInfo extends HashMap<String, Object> {
 
     /**
-     * A special instance of this class which is returned by the
+     * A special instance of this class which may be returned from the
      * {@link AuthenticationHandler#extractCredentials(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
      * method to inform the caller, that a response has been sent to the client
      * to request for credentials.
@@ -49,7 +50,22 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * If this value is returned, the request should be considered finished and
      * no further actions should be taken on this request.
      */
-    public static final AuthenticationInfo DOING_AUTH = new AuthenticationInfo();
+    public static final AuthenticationInfo DOING_AUTH = new ReadOnlyAuthenticationInfo(
+        "DOING_AUTH");
+
+    /**
+     * A special instance of this class which may be returned from the
+     * {@link AuthenticationHandler#extractCredentials(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+     * method to inform the caller that credential extraction failed for some
+     * reason.
+     * <p>
+     * If this value is returned, the handler signals that credentials would be
+     * present in the request but the credentials are not valid for use (for
+     * example OpenID identify failed to validate or some authentication cookie
+     * expired).
+     */
+    public static final AuthenticationInfo FAIL_AUTH = new ReadOnlyAuthenticationInfo(
+        "FAIL_AUTH");
 
     /**
      * The name of the special property providing the authentication type
@@ -90,9 +106,9 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * The name of the property providing the JCR credentials. These credentials
      * are preset to the credentials given to the
      * {@link #AuthenticationInfo(String, String)} or
-     * {@link #AuthenticationInfo(String, String, char[])} constructors.
-     * the {@link #AuthenticationInfo(String, String, char[], String)}
-     * constructor is used the credentials property is set to a JCR
+     * {@link #AuthenticationInfo(String, String, char[])} constructors. the
+     * {@link #AuthenticationInfo(String, String, char[], String)} constructor
+     * is used the credentials property is set to a JCR
      * <code>SimpleCredentials</code> instance containing the user id and
      * password passed to the constructor.
      */
@@ -108,11 +124,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * The type of this property, if present, is <code>String</code>.
      */
     public static final String WORKSPACE = "user.jcr.workspace";
-
-    /** Creates an empty instance, used for the {@link #DOING_AUTH} constant */
-    private AuthenticationInfo() {
-        super.put(AUTH_TYPE, "Authentication in Progress");
-    }
 
     /**
      * Creates an instance of this class with just the authentication type. To
@@ -189,7 +200,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      *            <code>null</code> the current authentication type is not
      *            replaced.
      */
-    public void setAuthType(String authType) {
+    public final void setAuthType(String authType) {
         putIfNotNull(AUTH_TYPE, authType);
     }
 
@@ -202,7 +213,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * of the <code>HttpServletRequest</code> interface. Otherwise the value may
      * be specific to the {@link AuthenticationHandler} implementation.
      */
-    public String getAuthType() {
+    public final String getAuthType() {
         return (String) get(AUTH_TYPE);
     }
 
@@ -210,7 +221,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * @param user The name of the user to authenticate as. If this is
      *            <code>null</code> the current user name is not replaced.
      */
-    public void setUser(String user) {
+    public final void setUser(String user) {
         putIfNotNull(USER, user);
     }
 
@@ -218,7 +229,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * Returns the user name stored as the {@link #USER} property or
      * <code>null</code> if the user is not set in this map.
      */
-    public String getUser() {
+    public final String getUser() {
         return (String) get(USER);
     }
 
@@ -226,7 +237,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * @param password The password to authenticate with. If this is
      *            <code>null</code> the current password is not replaced.
      */
-    public void setPassword(char[] password) {
+    public final void setPassword(char[] password) {
         putIfNotNull(PASSWORD, password);
     }
 
@@ -234,7 +245,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * Returns the password stored as the {@link #PASSWORD} property or
      * <code>null</code> if the password is not set in this map.
      */
-    public char[] getPassword() {
+    public final char[] getPassword() {
         return (char[]) get(PASSWORD);
     }
 
@@ -242,7 +253,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * @param workspaceName The name of the workspace to connect to. If this is
      *            <code>null</code> the current workspace name is not replaced.
      */
-    public void setWorkspaceName(String workspaceName) {
+    public final void setWorkspaceName(String workspaceName) {
         putIfNotNull(WORKSPACE, workspaceName);
     }
 
@@ -250,7 +261,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * Returns the workspace name stored as the {@link #WORKSPACE} property or
      * <code>null</code> if the workspace name is not set in this map.
      */
-    public String getWorkspaceName() {
+    public final String getWorkspaceName() {
         return (String) get(WORKSPACE);
     }
 
@@ -259,7 +270,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      *            this is <code>null</code> the currently set credentials are
      *            not replaced.
      */
-    public void setCredentials(Credentials credentials) {
+    public final void setCredentials(Credentials credentials) {
         putIfNotNull(CREDENTIALS, credentials);
     }
 
@@ -270,7 +281,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * based on that user ID and the (optional) {@link #PASSWORD}. If the userID
      * is not set, this method returns <code>null</code>.
      */
-    public Credentials getCredentials() {
+    public final Credentials getCredentials() {
 
         // return credentials explicitly set
         final Credentials creds = (Credentials) get(CREDENTIALS);
@@ -348,7 +359,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
                 + " property must be a char[]");
         }
 
-        if (CREDENTIALS.equals(key) && !(value instanceof String)) {
+        if (CREDENTIALS.equals(key) && !(value instanceof Credentials)) {
             throw new IllegalArgumentException(CREDENTIALS
                 + " property must be a javax.jcr.Credentials instance");
         }
@@ -380,10 +391,78 @@ public class AuthenticationInfo extends HashMap<String, Object> {
         return super.remove(key);
     }
 
-    // helper to only set the property if the value is not null
+    /**
+     * Clears all properties from the map with the exception of the
+     * {@link #AUTH_TYPE} property.
+     */
+    @Override
+    public void clear() {
+        final String authType = getAuthType();
+        super.clear();
+        setAuthType(authType);
+    }
+
+    /**
+     * Calls {@link #put(String, Object)} only if the <code>value</code> is not
+     * <code>null</code>, otherwise does nothing.
+     *
+     * @param key The key of the property to set
+     * @param value The value to set for the property. This may be
+     *            <code>null</code> in which case this method does nothing.
+     */
     private void putIfNotNull(final String key, final Object value) {
         if (value != null) {
-            super.put(key, value);
+            put(key, value);
+        }
+    }
+
+    /**
+     * The <code>ReadOnlyAuthenticationInfo</code> extends the
+     * {@link AuthenticationInfo} class overwriting the
+     * {@link #put(String, Object)} method such that no property is ever set.
+     * This acts like kind of a read-only wrapper.
+     */
+    private static final class ReadOnlyAuthenticationInfo extends
+            AuthenticationInfo {
+
+        /**
+         * Creates an instance of this read-only class with the given
+         * authentication type.
+         *
+         * @param authType The authentication type to set
+         */
+        ReadOnlyAuthenticationInfo(final String authType) {
+            super(authType);
+        }
+
+        /**
+         * Does not put the property into the map
+         */
+        @Override
+        public Object put(String key, Object value) {
+            return null;
+        }
+
+        /**
+         * Sets/adds non of the properties
+         */
+        @Override
+        public void putAll(Map<? extends String, ? extends Object> m) {
+        }
+
+        /**
+         * Does not clear the properties
+         */
+        @Override
+        public void clear() {
+        }
+
+        /**
+         * Removes nothing
+         */
+        @Override
+        public Object remove(Object key) {
+            return null;
         }
     }
 }
