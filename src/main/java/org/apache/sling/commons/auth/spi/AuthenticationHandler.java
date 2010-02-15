@@ -69,7 +69,14 @@ public interface AuthenticationHandler {
      * <td>{@link AuthenticationInfo#DOING_AUTH}
      * <td>the handler is in an ongoing authentication transaction with the
      * client. Request processing should be aborted at this stage.
+     * </tr>
      * <tr>
+     * <td>{@link AuthenticationInfo#FAIL_AUTH}
+     * <td>the handler failed extracting the credentials from the request for
+     * any reason. An example of this result is that credentials are present
+     * in the request but they could not be validated and thus not be used
+     * for request processing.
+     * </tr>
      * <tr>
      * <td><code>AuthenticationInfo</code> object
      * <td>The user sent credentials. The returned object contains the
