@@ -352,13 +352,28 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             synchronized (tasks) {
                 t = tasks.first();
             }
-            t.execute(ctx);
-            counter++;
-            synchronized (tasks) {
-                tasks.remove(t);
+            try {
+                t.execute(ctx);
+                removeTask(t);
+                counter++;
+            } catch(Exception e) {
+            	if(!t.canRetry(ctx)) {
+            		if(ctx.getLogService() != null) {
+            			ctx.getLogService().log(LogService.LOG_INFO, 
+            					"Task cannot be retried, removing from list:" + t);
+            		}
+                    removeTask(t);
+            	}
+            	throw e;
             }
         }
         return counter;
+    }
+    
+    private void removeTask(OsgiInstallerTask t) {
+        synchronized (tasks) {
+            tasks.remove(t);
+        }
     }
     
     private void cleanupInstallableResources() throws IOException {
