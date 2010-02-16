@@ -45,22 +45,17 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
         try {
             register(bundleContext,
                 new String[] { "org.apache.felix.shell.Command" },
-                new ThreadDumpCommand(), null);
+                new ThreadDumpCommand());
         } catch (Throwable t) {
             // shell service might not be available, don't care
         }
 
-        // install Web Console plugin
+        // install Web Console configuration printer
         try {
             ThreadDumperPanel tdp = new ThreadDumperPanel();
-            tdp.activate(bundleContext);
 
-            Dictionary<String, Object> properties = new Hashtable<String, Object>();
-            properties.put("felix.webconsole.label", tdp.getLabel());
-
-            register(bundleContext, new String[] { "javax.servlet.Servlet",
-                "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp,
-                properties);
+            register(bundleContext, new String[] {
+                "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp);
         } catch (Throwable t) {
             // web console might not be available, don't care
         }
@@ -71,12 +66,9 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
     }
 
     private void register(BundleContext context, String[] serviceNames,
-            Object service, Dictionary<String, Object> properties) {
+            Object service) {
 
-        // ensure properties
-        if (properties == null) {
-            properties = new Hashtable<String, Object>();
-        }
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // default settings
         properties.put(Constants.SERVICE_DESCRIPTION, "Thread Dumper ("
@@ -92,7 +84,7 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
      * Logs the uncaught exception for the thread at level ERROR and chains to
      * the old handler, which was installed before this handler has been
      * installed.
-     * 
+     *
      * @param t The <code>Thread</code> which got the exception but did not
      *            handle it.
      * @param e The uncaught <code>Throwable</code> causing the thread to die.
