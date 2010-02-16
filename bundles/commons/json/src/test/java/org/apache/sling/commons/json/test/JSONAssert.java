@@ -26,7 +26,7 @@ import org.apache.sling.commons.json.JSONObject;
 
 /**
  * Provides assertions on equality for JSON Arrays and Objects.
- * 
+ *
  * Based on code written by Andres Almiray <aalmiray@users.sourceforge.net> as
  * part of the json-lib project - http://json-lib.sourceforge.net/
  */
@@ -76,10 +76,9 @@ public class JSONAssert extends Assert {
 			if (JSONObject.NULL.equals(o1)) {
 				if (JSONObject.NULL.equals(o2)) {
 					continue;
-				} else {
-					fail(header + "arrays first differed at element [" + i
-							+ "];");
-				}
+                }
+				fail(header + "arrays first differed at element [" + i
+						+ "];");
 			} else {
 				if (JSONObject.NULL.equals(o2)) {
 					fail(header + "arrays first differed at element [" + i
@@ -134,7 +133,7 @@ public class JSONAssert extends Assert {
 		if (expectedNames == null) {
 		    expectedNames = new JSONArray();
 		}
-		
+
 		if (actualNames == null) {
 		    actualNames = new JSONArray();
 		}
@@ -145,16 +144,15 @@ public class JSONAssert extends Assert {
 				+ actualNames.length(), expectedNames.length(), actualNames
 				.length());
 		for (Iterator<String> keys = expected.keys(); keys.hasNext();) {
-			String key = (String) keys.next();
+			String key = keys.next();
 			Object o1 = expected.opt(key);
 			Object o2 = actual.opt(key);
 
 			if (JSONObject.NULL.equals(o1)) {
 				if (JSONObject.NULL.equals(o2)) {
 					continue;
-				} else {
-					fail(header + "objects differed at key [" + key + "];");
-				}
+                }
+				fail(header + "objects differed at key [" + key + "];");
 			} else {
 				if (JSONObject.NULL.equals(o2)) {
 					fail(header + "objects differed at key [" + key + "];");
