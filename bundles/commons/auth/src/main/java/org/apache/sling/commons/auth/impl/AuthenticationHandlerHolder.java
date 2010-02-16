@@ -26,19 +26,22 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>AuthenticationHandlerHolder</code> class represents an
  * authentication handler service in the internal data structure of the
  * {@link SlingAuthenticator}.
- *
  */
 final class AuthenticationHandlerHolder extends
         AbstractAuthenticationHandlerHolder {
 
     // the actual authentication handler
     private final AuthenticationHandler handler;
+
+    // the supported authentication type of the handler
+    private final String authType;
 
     AuthenticationHandlerHolder(final String fullPath,
             final AuthenticationHandler handler,
@@ -47,6 +50,8 @@ final class AuthenticationHandlerHolder extends
 
         // assign the fields
         this.handler = handler;
+        this.authType = OsgiUtil.toString(
+            serviceReference.getProperty(TYPE_PROPERTY), null);
     }
 
     @Override
@@ -59,14 +64,19 @@ final class AuthenticationHandlerHolder extends
 
     public AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-
         return handler.extractCredentials(request, response);
-
     }
 
     public boolean doRequestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        return handler.requestCredentials(request, response);
+
+        // call handler if ok by its authentication type
+        if (doesRequestCredentials(request)) {
+            return handler.requestCredentials(request, response);
+        }
+
+        // no credentials have been requested
+        return false;
     }
 
     public void doDropCredentials(HttpServletRequest request,
@@ -93,5 +103,35 @@ final class AuthenticationHandlerHolder extends
     @Override
     public String toString() {
         return handler.toString();
+    }
+
+    /**
+     * Returns <code>true</code> if the <code>requestCredentials</code> method
+     * of the held authentication handler should be called or not:
+     * <ul>
+     * <li>If the authentication handler is registered without an authentication
+     * type</li>
+     * <li>If the <code>sling:authRequestLogin</code> request parameter is not
+     * set</li>
+     * <li>If the <code>sling:authRequestLogin</code> is set to the same value
+     * as the authentication type of the held authentication handler.</li>
+     * <ul>
+     * <p>
+     * Otherwise <code>false</code> is returned and the
+     * <code>requestCredentials</code> method is not called.
+     *
+     * @param request The request object providing the <code>
+     *            sling:authRequestLogin</code> parameter
+     * @return <code>true</code> if the <code>requestCredentials</code> method
+     *         should be called.
+     */
+    private boolean doesRequestCredentials(final HttpServletRequest request) {
+        // no configured authentication type, always request credentials
+        if (authType == null) {
+            return true;
+        }
+
+        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        return requestLogin == null || authType.equals(requestLogin);
     }
 }
