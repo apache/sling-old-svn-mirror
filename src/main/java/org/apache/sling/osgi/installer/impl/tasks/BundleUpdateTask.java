@@ -36,6 +36,7 @@ import org.osgi.service.log.LogService;
 public class BundleUpdateTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
+    private boolean canRetry = true;
     
     public BundleUpdateTask(RegisteredResource r) {
         this.resource = r;
@@ -96,6 +97,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         b.stop();
         final InputStream is = resource.getInputStream(ctx.getBundleContext());
         if(is == null) {
+        	canRetry = false;
             throw new IllegalStateException(
                     "RegisteredResource provides null InputStream, cannot update bundle: "
                     + resource);
@@ -107,6 +109,11 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         }
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+    }
+    
+    @Override
+    public boolean canRetry(OsgiInstallerContext ctx) {
+    	return canRetry;
     }
 
     @Override

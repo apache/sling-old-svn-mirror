@@ -42,6 +42,11 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
 	    return true;
 	}
+	
+	/** Can the task be retried after {@link execute} failed? */
+	public boolean canRetry(OsgiInstallerContext ctx) {
+		return true;
+	}
 
 	@Override
 	public final boolean equals(Object o) {
