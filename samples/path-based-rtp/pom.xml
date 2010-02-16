@@ -29,7 +29,7 @@
     <groupId>org.apache.sling.samples</groupId>
     <artifactId>org.apache.sling.samples.path-based.rtp</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.4</version>
+    <version>2.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Sample Path Based Resource Type Provider</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.samples.path-based.rtp-2.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.samples.path-based.rtp-2.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.samples.path-based.rtp-2.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/samples/path-based-rtp</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/samples/path-based-rtp</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/samples/path-based-rtp</url>
     </scm>
 
     <build>
