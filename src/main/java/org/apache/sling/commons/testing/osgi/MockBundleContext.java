@@ -107,12 +107,14 @@ class MockBundleContext implements BundleContext {
 
     }
 
+    @SuppressWarnings("unchecked")
     public ServiceRegistration registerService(String[] strings, Object o,
             Dictionary dictionary) {
         throw new UnsupportedOperationException("Not implemented");
 
     }
 
+    @SuppressWarnings("unchecked")
     public ServiceRegistration registerService(String s, Object o,
             Dictionary dictionary) {
         return new MockServiceRegistration();

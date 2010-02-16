@@ -33,7 +33,7 @@ import org.osgi.service.component.ComponentInstance;
 
 public class MockComponentContext implements ComponentContext {
 
-    private Dictionary properties = new Properties();
+    private Dictionary<Object, Object> properties = new Properties();
 
     private MockBundleContext mockBundleContext;
 
@@ -60,7 +60,7 @@ public class MockComponentContext implements ComponentContext {
         this.properties.put(key, value);
     }
 
-    public Dictionary getProperties() {
+    public Dictionary<Object, Object> getProperties() {
         // noinspection ReturnOfCollectionOrArrayField
         return this.properties;
     }
