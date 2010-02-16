@@ -226,65 +226,21 @@ public class RedirectServletTest extends TestCase {
     }
 
     public void testSelectorsEtc() {
-        String base = "/a/b/c";
-        String target = "/a/b/d";
-        String expected = "/a/b/d";
+        assertEquals(null, null, null, null);
 
-        String selectors = null;
-        String extension = null;
-        String suffix = null;
-        String queryString = null;
-        assertEquals(expected, base, null, extension, suffix, queryString,
-            target);
+        assertEquals(null, "html", null, null);
 
-        selectors = null;
-        extension = "html";
-        suffix = null;
-        queryString = null;
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals("print", "html", null, null);
 
-        selectors = "print";
-        extension = "html";
-        suffix = null;
-        queryString = null;
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals("print.a4", "html", null, null);
 
-        selectors = "print.a4";
-        extension = "html";
-        suffix = null;
-        queryString = null;
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals(null, "html", "/suffix.pdf", null);
 
-        selectors = null;
-        extension = "html";
-        suffix = "/suffix.pdf";
-        queryString = null;
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals(null, "html", null, "xy=1");
 
-        selectors = null;
-        extension = "html";
-        suffix = null;
-        queryString = "xy=1";
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals(null, "html", "/suffix.pdf", "xy=1");
 
-        selectors = null;
-        extension = "html";
-        suffix = "/suffix.pdf";
-        queryString = "xy=1";
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
-
-        selectors = "print.a4";
-        extension = "html";
-        suffix = "/suffix.pdf";
-        queryString = "xy=1";
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
-            target);
+        assertEquals("print.a4", "html", "/suffix.pdf", "xy=1");
     }
 
     public void testEmptyPath() {
@@ -300,9 +256,12 @@ public class RedirectServletTest extends TestCase {
 
     //---------- Helper
 
-    private static void assertEquals(String expected, String basePath,
+    private static void assertEquals(
             String selectors, String extension, String suffix,
-            String queryString, String targetPath) {
+            String queryString) {
+        final String basePath = "/a/b/c";
+        final String targetPath = "/a/b/d";
+        String expected = "/a/b/d";
 
         if (selectors != null) {
             expected += "." + selectors;
