@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Resource Provider implementation for jackrabbit UserManager resources.
- * 
+ *
  * @scr.component immediate="true" label="%authorizable.resourceprovider.name"
  *                description="authorizable.resourceprovider.description"
  * @scr.property name="service.description"
@@ -177,8 +177,7 @@ public class AuthorizableResourceProvider implements ResourceProvider {
                 Session session = resourceResolver.adaptTo(Session.class);
                 if (session != null) {
                     PrincipalManager principalManager = AccessControlUtil.getPrincipalManager(session);
-                    principals = principalManager.findPrincipals(".*",
-                        PrincipalManager.SEARCH_TYPE_NOT_GROUP);
+                    principals = principalManager.getPrincipals(PrincipalManager.SEARCH_TYPE_NOT_GROUP);
                 }
 
                 if (principals != null) {
