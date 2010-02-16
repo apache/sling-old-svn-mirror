@@ -36,7 +36,7 @@ import javax.jcr.Session;
  * administrative session.
  * <p>
  * Implementations of SlingRepository are expected to invoke any available
- * implementations of the {@link SessionConfigurer} interface <b>before</b>
+ * implementations of the {@link NamespaceMapper} interface <b>before</b>
  * returning <b>any</b> {@link Session} to callers. This includes the methods
  * defined in the {@link Repository} interface.
  *
