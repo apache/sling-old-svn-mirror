@@ -52,6 +52,35 @@ public interface AuthenticationHandler {
     static final String PATH_PROPERTY = "path";
 
     /**
+     * The name of the service registration property (single string) providing
+     * the authentication type of authentication handler. This is the same value
+     * as will be returned as the {@link AuthenticationInfo#getAuthType()
+     * authentication type} returned by the
+     * {@link #extractCredentials(HttpServletRequest, HttpServletResponse)}
+     * method.
+     * <p>
+     * <p>
+     * This property is optional but allows the client to optionally select the
+     * authentication handler which will actually request credentials upon the
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * method.
+     *
+     * @see #REQUEST_LOGIN_PARAMETER
+     */
+    static final String TYPE_PROPERTY = "authtype";
+
+    /**
+     * The request parameter which may be used to explicitly select an
+     * authentication handler by its {@link #TYPE_PROPERTY type} if
+     * authentication will be requested through
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
+     *
+     * @see #requestCredentials(HttpServletRequest, HttpServletResponse)
+     * @see #TYPE_PROPERTY
+     */
+    static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
+
+    /**
      * Extracts credential data from the request if at all contained.
      * <p>
      * The method returns any of the following values :
@@ -73,9 +102,9 @@ public interface AuthenticationHandler {
      * <tr>
      * <td>{@link AuthenticationInfo#FAIL_AUTH}
      * <td>the handler failed extracting the credentials from the request for
-     * any reason. An example of this result is that credentials are present
-     * in the request but they could not be validated and thus not be used
-     * for request processing.
+     * any reason. An example of this result is that credentials are present in
+     * the request but they could not be validated and thus not be used for
+     * request processing.
      * </tr>
      * <tr>
      * <td><code>AuthenticationInfo</code> object
@@ -125,10 +154,20 @@ public interface AuthenticationHandler {
      * attribute. If the service is registered with multiple path values, the
      * value of the <code>path</code> request attribute may be used to implement
      * specific handling.
+     * <p>
+     * If the {@link #REQUEST_LOGIN_PARAMETER} request parameter is set only
+     * those authentication handlers registered with an {@link #TYPE_PROPERTY
+     * authentication type} matching the parameter will be considered for
+     * requesting credentials through this method.
+     * <p>
+     * A handler not registered with an {@link #TYPE_PROPERTY authentication
+     * type} will, for backwards compatibility reasons, always be called
+     * ignoring the actual value of the {@link #REQUEST_LOGIN_PARAMETER}
+     * parameter.
      *
      * @param request The request object.
      * @param response The response object to which to send the request.
-     * @return <code>true</code> if the handler is able to end an authentication
+     * @return <code>true</code> if the handler is able to send an authentication
      *         inquiry for the given request. <code>false</code> otherwise.
      * @throws IOException If an error occurrs sending the authentication
      *             inquiry to the client.
