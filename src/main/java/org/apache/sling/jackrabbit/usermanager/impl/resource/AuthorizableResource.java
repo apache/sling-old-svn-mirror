@@ -21,6 +21,8 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -107,7 +109,9 @@ public class AuthorizableResource extends SlingAdaptable implements Resource {
         if (type == Map.class || type == ValueMap.class) {
             return (AdapterType) new AuthorizableValueMap(authorizable); // unchecked
                                                                          // cast
-        } else if (type == Authorizable.class) {
+        } else if (type == Authorizable.class
+            || (type == User.class && !authorizable.isGroup())
+            || (type == Group.class && authorizable.isGroup())) {
             return (AdapterType) authorizable;
         }
 
