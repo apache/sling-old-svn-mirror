@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 
 public class OsgiUtilTest extends TestCase {
 
+    @SuppressWarnings("deprecation")
     public void testToDouble() {
         // we test getProperty which calls toDouble - so we can test both
         // methods in one go
