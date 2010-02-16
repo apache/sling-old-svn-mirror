@@ -25,7 +25,6 @@ import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.security.auth.callback.CallbackHandler;
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
@@ -114,19 +113,10 @@ final class FormLoginModulePlugin implements LoginModulePlugin {
     }
 
     /**
-     * Returns a simple <code>Principal</code> just providing the user id
-     * contained in the <code>SimpleCredentials</code> object. If the
-     * credentials is not a <code>SimpleCredentials</code> instance,
-     * <code>null</code> is returned.
+     * Returns <code>null</code> to have the <code>DefaultLoginModule</code>
+     * provide a principal based on an existing user defined in the repository.
      */
     public Principal getPrincipal(final Credentials credentials) {
-        if (credentials instanceof SimpleCredentials) {
-            return new Principal() {
-                public String getName() {
-                    return ((SimpleCredentials) credentials).getUserID();
-                }
-            };
-        }
         return null;
     }
 
