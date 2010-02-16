@@ -184,6 +184,16 @@ public class AuthorizableValueMap implements ValueMap {
         }
     }
 
+    /**
+     * Reads the authorizable map completely and returns the string
+     * representation of the cached properties.
+     */
+    @Override
+    public String toString() {
+        readFully();
+        return cache.toString();
+    }
+
     // ---------- Unsupported Modification methods
 
     public Object remove(Object arg0) {
