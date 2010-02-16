@@ -18,73 +18,28 @@
  */
 package org.apache.sling.extensions.threaddump.internal;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 
-public class ThreadDumperPanel extends AbstractWebConsolePlugin implements
-        Servlet, ConfigurationPrinter {
-
-    private static final String LABEL = "threads";
+public class ThreadDumperPanel implements ConfigurationPrinter {
 
     private static final String TITLE = "Threads";
 
     private BaseThreadDumper baseThreadDumper = new BaseThreadDumper();
 
-    // ---------- AbstractWebConsolePlugin API
-
-    @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    @Override
+    /**
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
+     */
     public String getTitle() {
         return TITLE;
     }
 
-    @Override
-    protected void renderContent(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-        PrintWriter pw = response.getWriter();
-
-        pw.println("<pre>");
-        pw.println("</pre>");
-
-        pw.println( "<table class='content' cellpadding='0' cellspacing='0' width='100%'>" );
-
-        pw.println( "<tr class='content'>" );
-        pw.println( "<th class='content container'>" + getTitle() + "</th>" );
-        pw.println( "</tr>" );
-
-        pw.println( "<tr class='content'>" );
-        pw.println( "<td class='content'>" );
-        pw.println( "<pre>" );
-
-        pw.println( "*** Date: "
-            + SimpleDateFormat.getDateTimeInstance( SimpleDateFormat.LONG, SimpleDateFormat.LONG, Locale.US ).format(
-                new Date() ) );
-        pw.println();
-
-        baseThreadDumper.printThreads(pw, true);
-
-        pw.println( "</pre>" );
-        pw.println( "</td>" );
-        pw.println( "</tr>" );
-        pw.println( "</table>" );
-    }
-
     // ---------- ConfigurationPrinter
 
+    /**
+     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+     */
     public void printConfiguration(PrintWriter pw) {
         pw.println("*** Threads Dumps:");
         baseThreadDumper.printThreads(pw, true);
