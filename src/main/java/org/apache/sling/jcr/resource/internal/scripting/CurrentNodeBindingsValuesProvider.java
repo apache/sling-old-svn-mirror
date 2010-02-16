@@ -25,10 +25,10 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
 /**
  * BindingsValuesProvider for currentNode object.
  *
- * @scr.component immediate="true" metatype="no"
+ * @scr.component metatype="no"
  * @scr.service
  *
- * @scr.property name="service.description" value="CurrentNode BindingsValuesProvider"
+ * @scr.property name="service.description" value="Apache Sling CurrentNode BindingsValuesProvider"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
 public class CurrentNodeBindingsValuesProvider implements BindingsValuesProvider {
@@ -44,5 +44,4 @@ public class CurrentNodeBindingsValuesProvider implements BindingsValuesProvider
         }
 
     }
-
 }
