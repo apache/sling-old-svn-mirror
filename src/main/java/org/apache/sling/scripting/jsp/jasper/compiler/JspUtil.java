@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,6 @@ import java.util.zip.ZipEntry;
 import javax.el.FunctionMapper;
 import javax.servlet.jsp.el.ExpressionEvaluator;
 
-
 import org.apache.el.ExpressionFactoryImpl;
 import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -37,7 +36,7 @@ import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.el.ExpressionEvaluatorImpl;
 import org.xml.sax.Attributes;
 
-/** 
+/**
  * This class has all the utility method(s).
  * Ideally should move all the bean containers here.
  *
@@ -60,10 +59,10 @@ public class JspUtil {
     private static final String CLOSE_EXPR_XML = "%";
 
     private static int tempSequenceNumber = 0;
-    
+
     //private static ExpressionEvaluatorImpl expressionEvaluator
     //= new ExpressionEvaluatorImpl();
-    
+
     //tc6
     private final static ExpressionEvaluator expressionEvaluator =
         new ExpressionEvaluatorImpl(new ExpressionFactoryImpl());
@@ -81,7 +80,7 @@ public class JspUtil {
         "volatile", "while" };
 
     public static final int CHUNKSIZE = 1024;
-        
+
     public static char[] removeQuotes(char []chars) {
         CharArrayWriter caw = new CharArrayWriter();
         for (int i = 0; i < chars.length; i++) {
@@ -154,7 +153,7 @@ public class JspUtil {
     }
 
     /**
-     * @return the "expression" part of a runtime expression, 
+     * @return the "expression" part of a runtime expression,
      * taking the delimiters out.
      */
     public static String getExpr (String expression, boolean isXml) {
@@ -169,7 +168,7 @@ public class JspUtil {
         closeExpr = CLOSE_EXPR;
     }
     int length = expression.length();
-    if (expression.startsWith(openExpr) && 
+    if (expression.startsWith(openExpr) &&
                 expression.endsWith(closeExpr)) {
         returnString = expression.substring(
                                openExpr.length(), length - closeExpr.length());
@@ -186,7 +185,7 @@ public class JspUtil {
         String returnString;
         int length = expression.length();
 
-        if (expression.startsWith(OPEN_EXPR) 
+        if (expression.startsWith(OPEN_EXPR)
                 && expression.endsWith(CLOSE_EXPR)) {
             returnString = expression.substring (1, length - 1);
         } else {
@@ -220,7 +219,7 @@ public class JspUtil {
      * Checks if all mandatory attributes are present and if all attributes
      * present have valid names.  Checks attributes specified as XML-style
      * attributes as well as attributes specified using the jsp:attribute
-     * standard action. 
+     * standard action.
      */
     public static void checkAttributes(String typeOfTag,
                        Node n,
@@ -271,7 +270,7 @@ public class JspUtil {
     String missingAttribute = null;
 
     for (int i = 0; i < validAttributes.length; i++) {
-        int attrPos;    
+        int attrPos;
         if (validAttributes[i].mandatory) {
                 attrPos = temp.indexOf(validAttributes[i].name);
         if (attrPos != -1) {
@@ -313,25 +312,25 @@ public class JspUtil {
     }
     // XXX *could* move EL-syntax validation here... (sb)
     }
-    
+
     public static String escapeQueryString(String unescString) {
     if ( unescString == null )
         return null;
-    
+
     String escString    = "";
     String shellSpChars = "\\\"";
-    
+
     for(int index=0; index<unescString.length(); index++) {
         char nextChar = unescString.charAt(index);
-        
+
         if( shellSpChars.indexOf(nextChar) != -1 )
         escString += "\\";
-        
+
         escString += nextChar;
     }
     return escString;
     }
- 
+
     /**
      *  Escape the 5 entities defined by XML.
      */
@@ -379,7 +378,7 @@ public class JspUtil {
         buf.append(with);
         begin = end + 1;
     }
-    
+
     return buf.toString();
     }
 
@@ -404,12 +403,12 @@ public class JspUtil {
         this (name, false);
     }
     }
-    
+
     /**
      * Convert a String value to 'boolean'.
      * Besides the standard conversions done by
      * Boolean.valueOf(s).booleanValue(), the value "yes"
-     * (ignore case) is also converted to 'true'. 
+     * (ignore case) is also converted to 'true'.
      * If 's' is null, then 'false' is returned.
      *
      * @param s the string to be converted
@@ -479,7 +478,7 @@ public class JspUtil {
     // Array of more than i dimension
     return java.lang.reflect.Array.newInstance(c, new int[dims]).getClass();
     }
-    
+
     /**
      * Produces a String representing a call to the EL interpreter.
      * @param expression a String containing zero or more "${}" expressions
@@ -492,7 +491,7 @@ public class JspUtil {
                      String expression,
                                          Class expectedType,
                                          String fnmapvar,
-                                         boolean XmlEscape ) 
+                                         boolean XmlEscape )
     {
         /*
          * Determine which context object to use.
@@ -532,12 +531,12 @@ public class JspUtil {
         } else if (expectedType.equals(Float.TYPE)) {
         targetType = Float.class.getName();
         primitiveConverterMethod = "floatValue";
-        } else if (expectedType.equals(Double.TYPE)) { 
+        } else if (expectedType.equals(Double.TYPE)) {
         targetType = Double.class.getName();
         primitiveConverterMethod = "doubleValue";
         }
     }
- 
+
     if (primitiveConverterMethod != null) {
         XmlEscape = false;
     }
@@ -562,11 +561,11 @@ public class JspUtil {
                + "org.apache.sling.scripting.jsp.jasper.runtime.PageContextImpl.proprietaryEvaluate"
                + "(" + Generator.quote(expression) + ", "
                +       targetType + ".class, "
-           +       "(PageContext)" + jspCtxt 
+           +       "(PageContext)" + jspCtxt
                +       ", " + fnmapvar
            + ", " + XmlEscape
                + ")");
- 
+
     /*
          * Add the primitive converter method if we need to.
          */
@@ -574,7 +573,7 @@ public class JspUtil {
         call.insert(0, "(");
         call.append(")." + primitiveConverterMethod + "()");
     }
- 
+
     return call.toString();
     }
 
@@ -585,6 +584,7 @@ public class JspUtil {
      * @param err an error dispatcher to use
      * @deprecated now delegated to the org.apache.el Package
      */
+    @Deprecated
     public static void validateExpressions(Mark where,
                                            String expressions,
                                            Class expectedType,
@@ -593,8 +593,8 @@ public class JspUtil {
             throws JasperException {
 
 //        try {
-//            
-//            JspUtil.expressionEvaluator.parseExpression( expressions, 
+//
+//            JspUtil.expressionEvaluator.parseExpression( expressions,
 //                expectedType, functionMapper );
 //        }
 //        catch( ELParseException e ) {
@@ -786,7 +786,7 @@ public class JspUtil {
         return "((short) " + Short.valueOf(s).toString() + ")";
     }
     }
-    
+
     public static String coerceToShort(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
         return "(Short) org.apache.sling.scripting.jsp.jasper.runtime.JspRuntimeLibrary.coerce(" + s + ", Short.class)";
@@ -799,7 +799,7 @@ public class JspUtil {
         }
     }
     }
-    
+
     public static String coerceToPrimitiveLong(String s,
                            boolean isNamedAttribute) {
     if (isNamedAttribute) {
@@ -857,7 +857,7 @@ public class JspUtil {
      * @param path Tag file path
      * @param err Error dispatcher
      *
-     * @return Fully-qualified class name of the tag handler corresponding to 
+     * @return Fully-qualified class name of the tag handler corresponding to
      * the given tag file path
      */
     public static String getTagHandlerClassName(String path,
@@ -867,7 +867,7 @@ public class JspUtil {
         String className = null;
         int begin = 0;
         int index;
-        
+
         index = path.lastIndexOf(".tag");
         if (index == -1) {
             err.jspError("jsp.error.tagfile.badSuffix", path);
@@ -898,7 +898,7 @@ public class JspUtil {
     }
 
         className += makeJavaPackage(path.substring(begin));
-  
+
        return className;
     }
 
@@ -948,7 +948,7 @@ public class JspUtil {
         }
         return result;
     }
-            
+
     /**
      * Converts the given identifier to a legal Java identifier
      *
@@ -957,7 +957,7 @@ public class JspUtil {
      * @return Legal Java identifier corresponding to the given identifier
      */
     public static final String makeJavaIdentifier(String identifier) {
-        StringBuffer modifiedIdentifier = 
+        StringBuffer modifiedIdentifier =
             new StringBuffer(identifier.length());
         if (!Character.isJavaIdentifierStart(identifier.charAt(0))) {
             modifiedIdentifier.append('_');
@@ -977,7 +977,7 @@ public class JspUtil {
         }
         return modifiedIdentifier.toString();
     }
-    
+
     /**
      * Mangle the specified character to create a legal Java class name.
      */
@@ -1061,14 +1061,14 @@ public class JspUtil {
 
         return reader;
     }
-    
+
     /**
      * Handles taking input from TLDs
      * 'java.lang.Object' -> 'java.lang.Object.class'
      * 'int' -> 'int.class'
      * 'void' -> 'Void.TYPE'
      * 'int[]' -> 'int[].class'
-     * 
+     *
      * @param type
      * @return
      */

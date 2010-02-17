@@ -18,7 +18,6 @@ package org.apache.sling.scripting.jsp;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
@@ -45,11 +44,6 @@ public class JspServletOptions implements Options {
     private static final String DEFAULT_VM_VERSION = "1.5";
 
     private Properties settings = new Properties();
-
-    /**
-     * Is Jasper being used in development mode?
-     */
-    private boolean development = true;
 
     /**
      * Should Ant fork its java compiles of JSP pages.
@@ -89,11 +83,6 @@ public class JspServletOptions implements Options {
      * Do we want to include debugging information in the class file?
      */
     private boolean classDebugInfo = true;
-
-    /**
-     * Background compile thread check interval in seconds.
-     */
-    private int checkInterval = 0;
 
     /**
      * Is the generation of SMAP info for JSR45 debuggin suppressed?
@@ -153,11 +142,6 @@ public class JspServletOptions implements Options {
      * Java platform encoding to generate the JSP page servlet.
      */
     private String javaEncoding = "UTF8";
-
-    /**
-     * Modification test interval.
-     */
-    private int modificationTestInterval = -1;
 
     /**
      * The class loader to use to compile and load JSP files
@@ -222,27 +206,6 @@ public class JspServletOptions implements Options {
      */
     public boolean getClassDebugInfo() {
         return this.classDebugInfo;
-    }
-
-    /**
-     * Background JSP compile thread check intervall
-     */
-    public int getCheckInterval() {
-        return this.checkInterval;
-    }
-
-    /**
-     * Modification test interval.
-     */
-    public int getModificationTestInterval() {
-        return this.modificationTestInterval;
-    }
-
-    /**
-     * Is Jasper being used in development mode?
-     */
-    public boolean getDevelopment() {
-        return this.development;
     }
 
     /**
@@ -347,15 +310,6 @@ public class JspServletOptions implements Options {
 
     public TagPluginManager getTagPluginManager() {
         return this.tagPluginManager;
-    }
-
-    public boolean isCaching() {
-        return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map getCache() {
-        return null;
     }
 
     public boolean getDisplaySourceFragment() {
@@ -489,47 +443,6 @@ public class JspServletOptions implements Options {
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.classDebugInfo"));
-                }
-            }
-        }
-
-        String checkInterval = getProperty("checkInterval");
-        if (checkInterval != null) {
-            try {
-                this.checkInterval = Integer.parseInt(checkInterval);
-                if (this.checkInterval == 0) {
-                    this.checkInterval = 300;
-                    if (log.isWarnEnabled()) {
-                        log.warn(Localizer.getMessage("jsp.warning.checkInterval"));
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                if (log.isWarnEnabled()) {
-                    log.warn(Localizer.getMessage("jsp.warning.checkInterval"));
-                }
-            }
-        }
-
-        String modificationTestInterval = getProperty("modificationTestInterval");
-        if (modificationTestInterval != null) {
-            try {
-                this.modificationTestInterval = Integer.parseInt(modificationTestInterval);
-            } catch (NumberFormatException ex) {
-                if (log.isWarnEnabled()) {
-                    log.warn(Localizer.getMessage("jsp.warning.modificationTestInterval"));
-                }
-            }
-        }
-
-        String development = getProperty("development");
-        if (development != null) {
-            if (development.equalsIgnoreCase("true")) {
-                this.development = true;
-            } else if (development.equalsIgnoreCase("false")) {
-                this.development = false;
-            } else {
-                if (log.isWarnEnabled()) {
-                    log.warn(Localizer.getMessage("jsp.warning.development"));
                 }
             }
         }

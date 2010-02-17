@@ -19,6 +19,8 @@ package org.apache.sling.scripting.jsp;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.Reader;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -28,6 +30,12 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
@@ -45,43 +53,53 @@ import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.util.TagUtil;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
  *
- * @scr.component label="%jsphandler.name" description="%jsphandler.description"
- * @scr.property name="service.description" value="JSP Script Handler"
- * @scr.property name="service.vendor" value="The Apache Software Foundation" *
- * @scr.property name="jasper.development" value="true" type="Boolean"
- * @scr.property name="jasper.modificationTestInterval" value="4" type="Integer"
- * @scr.property name="jasper.classdebuginfo" value="true" type="Boolean"
- * @scr.property name="jasper.enablePooling" value="true" type="Boolean"
- * @scr.property name="jasper.ieClassId"
- *               value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
- * @scr.property name="jasper.genStringAsCharArray" value="false" type="Boolean"
- * @scr.property name="jasper.keepgenerated" value="true" type="Boolean"
- * @scr.property name="jasper.mappedfile" value="true" type="Boolean"
- * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
- * @scr.property name="jasper.checkInterval" value="300" type="Integer"
- * @scr.property name="jasper.displaySourceFragments" value="true"
- *               type="Boolean"
- * @scr.service
  */
-public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
+@Component(label="%jsphandler.name",
+           description="%jsphandler.description",
+           metatype=true)
+@Service(value=javax.script.ScriptEngineFactory.class)
+@Properties({
+   @Property(name="service.description",value="JSP Script Handler"),
+   @Property(name="service.vendor",value="The Apache Software Foundation"),
+   @Property(name="jasper.classdebuginfo",boolValue=true),
+   @Property(name="jasper.enablePooling",boolValue=true),
+   @Property(name="jasper.ieClassId",value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"),
+   @Property(name="jasper.genStringAsCharArray",boolValue=false),
+   @Property(name="jasper.keepgenerated",boolValue=true),
+   @Property(name="jasper.mappedfile",boolValue=true),
+   @Property(name="jasper.trimSpaces",boolValue=false),
+   @Property(name="jasper.displaySourceFragments",boolValue=true)
+})
+public class JspScriptEngineFactory
+    extends AbstractScriptEngineFactory
+    implements EventHandler {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(JspScriptEngineFactory.class);
+    /** Default logger */
+    private final Logger logger = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
-    ComponentContext componentContext;
-
-    /** @scr.reference */
+    @Reference
     private ServletContext slingServletContext;
 
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    @Reference
+    private ClassLoaderWriter classLoaderWriter;
+
+    /** The class loader for the jsps. */
     private ClassLoader jspClassLoader;
 
+    /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
 
     private SlingTldLocationsCache tldLocationsCache;
@@ -94,11 +112,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     private ServletConfig servletConfig;
 
-    /** @scr.reference */
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    /** @scr.reference */
-    private ClassLoaderWriter classLoaderWriter;
+    private ServiceRegistration eventHandlerRegistration;
 
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
@@ -109,14 +123,23 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         setNames(NAMES);
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getScriptEngine()
+     */
     public ScriptEngine getScriptEngine() {
         return new JspScriptEngine();
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getLanguageName()
+     */
     public String getLanguageName() {
         return "Java Server Pages";
     }
 
+    /**
+     * @see javax.script.ScriptEngineFactory#getLanguageVersion()
+     */
     public String getLanguageVersion() {
         return "2.1";
     }
@@ -147,19 +170,18 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         }
     }
 
-    private JspServletWrapperAdapter getJspWrapperAdapter(
-            SlingScriptHelper scriptHelper) throws SlingException {
+    private JspServletWrapperAdapter getJspWrapperAdapter(final SlingScriptHelper scriptHelper)
+    throws SlingException {
+        final JspRuntimeContext rctxt = jspRuntimeContext;
 
-        JspRuntimeContext rctxt = jspRuntimeContext;
-
-        SlingScript script = scriptHelper.getScript();
-        String scriptName = script.getScriptResource().getPath();
+        final SlingScript script = scriptHelper.getScript();
+        final String scriptName = script.getScriptResource().getPath();
         JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
         if (wrapper != null) {
             return wrapper;
         }
 
-        synchronized (this) {
+        synchronized (rctxt) {
             wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
             if (wrapper != null) {
                 return wrapper;
@@ -183,12 +205,13 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     // ---------- SCR integration ----------------------------------------------
 
-    protected void activate(ComponentContext componentContext) {
-        this.componentContext = componentContext;
-
+    /**
+     * Activate this component
+     */
+    protected void activate(final ComponentContext componentContext) {
         // set the current class loader as the thread context loader for
         // the setup of the JspRuntimeContext
-        ClassLoader old = Thread.currentThread().getContextClassLoader();
+        final ClassLoader old = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
@@ -203,11 +226,11 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                 componentContext, jspClassLoader, tldLocationsCache);
 
             // Initialize the JSP Runtime Context
-            jspRuntimeContext = new JspRuntimeContext(slingServletContext,
-                options);
+            this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
+                    options);
 
-            // by default access the repository
-            jspRuntimeContext.setIOProvider(ioProvider);
+                // by default access the repository
+            this.jspRuntimeContext.setIOProvider(ioProvider);
 
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
@@ -221,26 +244,35 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             Thread.currentThread().setContextClassLoader(old);
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Scratch dir for the JSP engine is: {}",
-                options.getScratchDir().toString());
-            log.debug("IMPORTANT: Do not modify the generated servlets");
-        }
+        // register event handler
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put("event.topics","org/apache/sling/api/resource/*");
+        props.put("service.description","JSP Script Modification Handler");
+        props.put("service.vendor","The Apache Software Foundation");
 
+        this.eventHandlerRegistration = componentContext.getBundleContext()
+                  .registerService(EventHandler.class.getName(), this, props);
+
+        logger.debug("IMPORTANT: Do not modify the generated servlets");
     }
 
-    protected void deactivate(ComponentContext oldComponentContext) {
-        if (log.isDebugEnabled()) {
-            log.debug("JspScriptEngine.deactivate()");
-        }
+    /**
+     * Activate this component
+     */
+    protected void deactivate(final ComponentContext componentContext) {
+        logger.debug("JspScriptEngine.deactivate()");
 
+        if ( this.eventHandlerRegistration != null ) {
+            this.eventHandlerRegistration.unregister();
+            this.eventHandlerRegistration = null;
+        }
         if (jspRuntimeContext != null) {
             try {
                 jspRuntimeContext.destroy();
             } catch (NullPointerException npe) {
                 // SLING-530, might be thrown on system shutdown in a servlet
                 // container when using the Equinox servlet container bridge
-                log.debug("deactivate: ServletContext might already be unavailable", npe);
+                logger.debug("deactivate: ServletContext might already be unavailable", npe);
             }
             jspRuntimeContext = null;
         }
@@ -251,7 +283,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         }
 
         ioProvider = null;
-        componentContext = null;
 
         // remove JspApplicationContextImpl from the servlet context, otherwise
         // a ClassCastException may be caused after this component is recreated
@@ -262,7 +293,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         } catch (NullPointerException npe) {
             // SLING-530, might be thrown on system shutdown in a servlet
             // container when using the Equinox servlet container bridge
-            log.debug("deactivate: ServletContext might already be unavailable", npe);
+            logger.debug("deactivate: ServletContext might already be unavailable", npe);
         }
     }
 
@@ -378,5 +409,18 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             this.initCause(cause);
         }
 
+    }
+
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
+    public void handleEvent(Event event) {
+        if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()) ) {
+            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        } else if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
+            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        } else {
+            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        }
     }
 }
