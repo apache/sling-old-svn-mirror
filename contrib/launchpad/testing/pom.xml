@@ -39,10 +39,6 @@
 
     <repositories>
         <repository>
-            <id>aQute</id>
-            <url>http://www.aQute.biz/repo</url>
-        </repository>
-        <repository>
             <id>scala-tools.org</id>
             <name>Scala-Tools Maven2 Repository</name>
             <url>http://scala-tools.org/repo-releases</url>
@@ -453,7 +449,7 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bnd</artifactId>
-            <version>0.0.323</version>
+            <version>0.0.169</version>
             <scope>test</scope>
         </dependency>
 		
