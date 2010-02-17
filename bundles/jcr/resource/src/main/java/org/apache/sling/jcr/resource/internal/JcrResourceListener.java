@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -32,6 +33,7 @@ import javax.jcr.observation.EventListener;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
@@ -162,10 +164,26 @@ public class JcrResourceListener implements EventListener {
 
     private void sendEvents(final Set<String> paths, final String topic, final EventAdmin localEA) {
         for(final String path : paths) {
-            final Resource resource = this.resolver.getResource(path);
+            Resource resource = this.resolver.getResource(path);
             if ( resource != null ) {
+                // check for nt:file nodes
+                if ( path.endsWith("/jcr:content") ) {
+                    final Node node = resource.adaptTo(Node.class);
+                    if ( node != null ) {
+                        try {
+                            if (node.getParent().isNodeType("nt:file") ) {
+                                final Resource parentResource = ResourceUtil.getParent(resource);
+                                if ( parentResource != null ) {
+                                    resource = parentResource;
+                                }
+                            }
+                        } catch (RepositoryException re) {
+                            // ignore this
+                        }
+                    }
+                }
                 final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, path);
+                properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
                 final String resourceType = resource.getResourceType();
                 if ( resourceType != null ) {
                     properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
