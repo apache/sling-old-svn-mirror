@@ -166,7 +166,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 				base.getGroupId() + ":" + base.getArtifactId());
 	}
 
-	private File getOutputDirectory() {
+	protected File getOutputDirectory() {
 		if (WAR.equals(packaging)) {
 			return warOutputDirectory;
 		} else {
@@ -174,7 +174,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 		}
 	}
 
-	private void unpackBaseArtifact() throws MojoExecutionException {
+	protected void unpackBaseArtifact() throws MojoExecutionException {
 		Artifact artifact = getBaseDependency();
 		if (artifact == null) {
 			throw new MojoExecutionException(
