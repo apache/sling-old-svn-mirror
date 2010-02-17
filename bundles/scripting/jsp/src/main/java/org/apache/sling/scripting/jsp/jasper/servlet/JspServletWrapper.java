@@ -315,14 +315,12 @@ public class JspServletWrapper {
              */
             if (firstTime || this.lastModificationTest == 0 ) {
                 synchronized (this) {
-                    System.out.println("Compiling " + this.getJspUri());
                     firstTime = false;
 
                     // The following sets reload to true, if necessary
                     ctxt.compile();
                 }
             } else {
-                System.out.println("Calling " + this.getJspUri());
                 if (compileException != null) {
                     // Throw cached compilation exception
                     throw compileException;
