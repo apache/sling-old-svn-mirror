@@ -53,9 +53,6 @@ public class ServletWrapper {
     /** Reload flag. */
     private boolean reload = true;
 
-    /** Compiler options. */
-    private final Options options;
-
     private Servlet theServlet;
     private long available = 0L;
     private boolean firstTime = true;
@@ -72,7 +69,6 @@ public class ServletWrapper {
                           final ServletCache servletCache) {
         this.config = config;
         this.servletUri = servletPath;
-        this.options = options;
         this.ctxt = new CompilationContext(servletUri, options,
                 ioProvider, servletCache, this);
     }
@@ -83,6 +79,10 @@ public class ServletWrapper {
      */
     public void setReload(boolean reload) {
         this.reload = reload;
+    }
+
+    public CompilationContext getCompilationContext() {
+        return this.ctxt;
     }
 
     /**
@@ -189,7 +189,7 @@ public class ServletWrapper {
             /*
              * (1) Compile
              */
-            if (options.getDevelopment() || firstTime ) {
+            if (firstTime || ctxt.getLastModificationTest() == 0 ) {
                 synchronized (this) {
                     firstTime = false;
 

@@ -19,6 +19,8 @@ package org.apache.sling.scripting.java;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.Reader;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -27,6 +29,7 @@ import javax.script.ScriptException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
@@ -39,7 +42,10 @@ import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,19 +55,19 @@ import org.slf4j.LoggerFactory;
  * @scr.component label="%javahandler.name" description="%javahandler.description"
  * @scr.property name="service.description" value="Java Servlet Script Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service
+ * @scr.service interface="javax.script.ScriptEngineFactory"
  *
  * @scr.property name="java.javaEncoding" value="UTF-8"
  * @scr.property name="java.compilerSourceVM" value="1.5"
  * @scr.property name="java.compilerTargetVM" value="1.5"
- * @scr.property name="java.development" value="true" type="Boolean"
- * @scr.property name="java.modificationTestInterval" value="-1"
  * @scr.property name="java.classdebuginfo" value="true" type="Boolean"
  */
-public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
+public class JavaScriptEngineFactory
+    extends AbstractScriptEngineFactory
+    implements EventHandler {
 
     /** default logger */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * @scr.reference
@@ -89,6 +95,8 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /** Compiler options. */
     private Options compilerOptions;
+
+    private ServiceRegistration eventHandlerRegistration;
 
     public static final String SCRIPT_TYPE = "java";
 
@@ -124,7 +132,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * Activate this engine
      * @param componentContext
      */
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(final ComponentContext componentContext) {
         this.ioProvider = new SlingIOProvider(this.classLoaderWriter);
         this.servletCache = new ServletCache();
 
@@ -135,20 +143,31 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
             componentContext.getProperties());
         this.compilerOptions = new Options(componentContext,
                                            this.javaClassLoader);
-        if (log.isDebugEnabled()) {
-            log.debug("JavaServletScriptEngine.activate()");
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put("event.topics","org/apache/sling/api/resource/*");
+        props.put("service.description","Java Servlet Script Modification Handler");
+        props.put("service.vendor","The Apache Software Foundation");
+
+        this.eventHandlerRegistration = componentContext.getBundleContext()
+                  .registerService(EventHandler.class.getName(), this, props);
+        if (logger.isDebugEnabled()) {
+            logger.debug("JavaServletScriptEngine.activate()");
         }
     }
 
     /**
      * Deactivate this engine
-     * @param oldComponentContext
+     * @param componentContext
      */
-    protected void deactivate(ComponentContext oldComponentContext) {
-        if (log.isDebugEnabled()) {
-            log.debug("JavaServletScriptEngine.deactivate()");
+    protected void deactivate(final ComponentContext componentContext) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("JavaServletScriptEngine.deactivate()");
         }
 
+        if ( this.eventHandlerRegistration != null ) {
+            this.eventHandlerRegistration.unregister();
+            this.eventHandlerRegistration = null;
+        }
         ioProvider = null;
         javaServletContext = null;
         servletConfig = null;
@@ -164,7 +183,6 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingServletException
      * @throws SlingIOException
      */
-    @SuppressWarnings("unchecked")
     private void callServlet(final Bindings bindings,
                              final SlingScriptHelper scriptHelper,
                              final ScriptContext context) {
@@ -185,8 +203,8 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
         }
     }
 
-    private ServletWrapper getWrapperAdapter(
-            SlingScriptHelper scriptHelper) throws SlingException {
+    private ServletWrapper getWrapperAdapter(final SlingScriptHelper scriptHelper)
+    throws SlingException {
 
         SlingScript script = scriptHelper.getScript();
         final String scriptName = script.getScriptResource().getPath();
@@ -246,6 +264,24 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
         this.javaClassLoader = null;
     }
     // ---------- Internal -----------------------------------------------------
+
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
+    public void handleEvent(Event event) {
+        if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()) ) {
+            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        } else if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
+            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        }
+    }
+
+    private void handleModification(final String scriptName) {
+        final ServletWrapper wrapper = this.servletCache.getWrapper(scriptName);
+        if ( wrapper != null ) {
+            wrapper.getCompilationContext().setLastModificationTest(0);
+        }
+    }
 
     private static class JavaScriptEngine extends AbstractSlingScriptEngine {
 
