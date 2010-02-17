@@ -184,7 +184,6 @@ public final class JspRuntimeContext {
     }
 
     private void invalidate(final JspServletWrapper jsw) {
-        System.out.println("Invalidation " + jsw.getJspUri());
         jsw.setLastModificationTest(0);
     }
 
