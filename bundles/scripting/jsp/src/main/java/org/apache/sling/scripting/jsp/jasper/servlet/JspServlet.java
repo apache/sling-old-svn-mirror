@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.sling.scripting.jsp.jasper.Constants;
@@ -36,7 +35,6 @@ import org.apache.sling.scripting.jsp.jasper.EmbeddedServletOptions;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
-import org.apache.sling.scripting.jsp.jasper.runtime.PeriodicEventListener;
 
 /**
  * The JSP engine (a.k.a Jasper).
@@ -54,7 +52,7 @@ import org.apache.sling.scripting.jsp.jasper.runtime.PeriodicEventListener;
  * @author Kin-man Chung
  * @author Glenn Nielsen
  */
-public class JspServlet extends HttpServlet implements PeriodicEventListener {
+public class JspServlet extends HttpServlet {
 
     // Logger
     private Log log = LogFactory.getLog(JspServlet.class);
@@ -69,14 +67,14 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
      * Initializes this JspServlet.
      */
     public void init(ServletConfig config) throws ServletException {
-        
+
         super.init(config);
         this.config = config;
         this.context = config.getServletContext();
-        
+
         // Initialize the JSP Runtime Context
         // Check for a custom Options implementation
-        String engineOptionsName = 
+        String engineOptionsName =
             config.getInitParameter("engineOptionsClass");
         if (engineOptionsName != null) {
             // Instantiate the indicated Options implementation
@@ -99,7 +97,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
             options = new EmbeddedServletOptions(config, context);
         }
         rctxt = new JspRuntimeContext(context, options);
-        
+
         if (log.isDebugEnabled()) {
             log.debug(Localizer.getMessage("jsp.message.scratch.dir.is",
                     options.getScratchDir().toString()));
@@ -202,9 +200,9 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
         }
 
     }
-    
 
-    public void service (HttpServletRequest request, 
+
+    public void service (HttpServletRequest request,
     			 HttpServletResponse response)
                 throws ServletException, IOException {
 
@@ -233,7 +231,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
                 }
             } else {
                 /*
-                 * Requested JSP has not been the target of a 
+                 * Requested JSP has not been the target of a
                  * RequestDispatcher.include(). Reconstruct its path from the
                  * request's getServletPath() and getPathInfo()
                  */
@@ -245,7 +243,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
             }
         }
 
-        if (log.isDebugEnabled()) {	    
+        if (log.isDebugEnabled()) {
             log.debug("JspEngine --> " + jspUri);
             log.debug("\t     ServletPath: " + request.getServletPath());
             log.debug("\t        PathInfo: " + request.getPathInfo());
@@ -256,7 +254,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
             Enumeration e = request.getParameterNames();
             while (e.hasMoreElements()) {
                 String name = (String) e.nextElement();
-                log.debug("\t\t " + name + " = " 
+                log.debug("\t\t " + name + " = "
                           + request.getParameter(name));
             }
         }
@@ -285,10 +283,6 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
     }
 
 
-    public void periodicEvent() {
-        rctxt.checkCompile();
-    }
-
     // -------------------------------------------------------- Private Methods
 
     private void serviceJspFile(HttpServletRequest request,
@@ -296,11 +290,10 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
                                 Throwable exception, boolean precompile)
         throws ServletException, IOException {
 
-        JspServletWrapper wrapper =
-            (JspServletWrapper) rctxt.getWrapper(jspUri);
+        JspServletWrapper wrapper = rctxt.getWrapper(jspUri);
         if (wrapper == null) {
             synchronized(this) {
-                wrapper = (JspServletWrapper) rctxt.getWrapper(jspUri);
+                wrapper = rctxt.getWrapper(jspUri);
                 if (wrapper == null) {
                     // Check if the requested JSP page exists, to avoid
                     // creating unnecessary directories and files.

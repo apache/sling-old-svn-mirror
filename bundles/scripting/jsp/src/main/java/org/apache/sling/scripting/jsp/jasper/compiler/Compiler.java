@@ -324,9 +324,9 @@ public abstract class Compiler {
             // In development mode, they are used for detailed
             // error messages.
             // http://issues.apache.org/bugzilla/show_bug.cgi?id=37062
-            if (!this.options.getDevelopment()) {
-                pageNodes = null;
-            }
+            //if (!this.options.getDevelopment()) {
+            //    pageNodes = null;
+            //}
 
             if (ctxt.getWriter() != null) {
                 ctxt.getWriter().close();
@@ -354,19 +354,13 @@ public abstract class Compiler {
      *            .java file.
      */
     public boolean isOutDated(boolean checkClass) {
-
+        if ( jsw.getLastModificationTest() != 0 ) {
+            return false;
+        }
         String jsp = ctxt.getJspFile();
 
-        if (jsw != null
-                && (ctxt.getOptions().getModificationTestInterval() > 0)) {
-
-            if (jsw.getLastModificationTest()
-                    + (ctxt.getOptions().getModificationTestInterval() * 1000) > System
-                    .currentTimeMillis()) {
-                return false;
-            } else {
-                jsw.setLastModificationTest(System.currentTimeMillis());
-            }
+        if (jsw != null) {
+            jsw.setLastModificationTest(System.currentTimeMillis());
         }
 
         long jspRealLastModified = 0;

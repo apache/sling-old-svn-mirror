@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@
 package org.apache.sling.scripting.jsp.jasper.compiler;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FilePermission;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -26,8 +25,12 @@ import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.cert.Certificate;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
@@ -37,7 +40,6 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
-import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl;
 import org.apache.sling.scripting.jsp.jasper.security.SecurityClassLoad;
@@ -119,34 +121,25 @@ public final class JspRuntimeContext {
             parentClassLoader = this.getClass().getClassLoader();
         }
 
-	if (log.isDebugEnabled()) {
-	    if (parentClassLoader != null) {
-		log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
+        if (log.isDebugEnabled()) {
+            if (parentClassLoader != null) {
+                log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
 					       parentClassLoader.toString()));
-	    } else {
-		log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
+            } else {
+                log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
 					       "<none>"));
-	    }
+            }
         }
 
         initClassPath();
 
-	if (context instanceof org.apache.sling.scripting.jsp.jasper.servlet.JspCServletContext) {
-	    return;
-	}
+    	if (context instanceof org.apache.sling.scripting.jsp.jasper.servlet.JspCServletContext) {
+    	    return;
+    	}
 
         if (Constants.IS_SECURITY_ENABLED) {
             initSecurity();
         }
-
-        // If this web application context is running from a
-        // directory, start the background compilation thread
-        String appBase = context.getRealPath("/");         
-        if (!options.getDevelopment()
-                && appBase != null
-                && options.getCheckInterval() > 0) {
-            lastCheck = System.currentTimeMillis();
-        }                                            
     }
 
     // ----------------------------------------------------- Instance Variables
@@ -158,17 +151,65 @@ public final class JspRuntimeContext {
     private Options options;
     private ClassLoader parentClassLoader;
     private PermissionCollection permissionCollection;
-    private CodeSource codeSource;                    
+    private CodeSource codeSource;
     private String classpath;
-    private long lastCheck = -1L;
 
     /**
      * Maps JSP pages to their JspServletWrapper's
      */
     private Map<String, JspServletWrapper> jsps = new ConcurrentHashMap<String, JspServletWrapper>();
- 
+
+    /**
+     * Maps dependencies to the using jsp.
+     */
+    private Map<String, Set<String>> depToJsp = new HashMap<String, Set<String>>();
 
     // ------------------------------------------------------ Public Methods
+
+    public void addJspDependencies(final JspServletWrapper jsw) {
+        final List<String> deps = jsw.getDependants();
+        if ( deps != null ) {
+            final String jspUri = jsw.getJspUri();
+            synchronized ( depToJsp ) {
+                for(final String dep : deps) {
+                    Set<String> set = depToJsp.get(dep);
+                    if ( set == null ) {
+                        set = new HashSet<String>();
+                        depToJsp.put(dep, set);
+                    }
+                    set.add(jspUri);
+                }
+            }
+        }
+    }
+
+    private void invalidate(final JspServletWrapper jsw) {
+        System.out.println("Invalidation " + jsw.getJspUri());
+        jsw.setLastModificationTest(0);
+    }
+
+    public void handleModification(final String scriptName) {
+        synchronized ( this ) {
+            // first check if jsps contains this
+            JspServletWrapper wrapper = jsps.get(scriptName);
+            if ( wrapper != null ) {
+                invalidate(wrapper);
+            }
+            if ( wrapper == null ) {
+                synchronized ( depToJsp ) {
+                    final Set<String> deps = depToJsp.get(scriptName);
+                    if ( deps != null ) {
+                        for(final String jspName : deps) {
+                            wrapper = jsps.get(jspName);
+                            if ( wrapper != null ) {
+                                invalidate(wrapper);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Add a new JspServletWrapper.
@@ -188,6 +229,13 @@ public final class JspRuntimeContext {
      */
     public JspServletWrapper getWrapper(String jspUri) {
         return jsps.get(jspUri);
+    }
+
+    public JspServletWrapper getAWrapper() {
+        if ( jsps.size() > 0 ) {
+            return jsps.values().iterator().next();
+        }
+        return null;
     }
 
     /**
@@ -239,12 +287,12 @@ public final class JspRuntimeContext {
     }
 
     /**
-     * Process a "destory" event for this web application context.
-     */                                                        
+     * Process a "destroy" event for this web application context.
+     */
     public void destroy() {
-        Iterator servlets = jsps.values().iterator();
+        Iterator<JspServletWrapper> servlets = jsps.values().iterator();
         while (servlets.hasNext()) {
-            ((JspServletWrapper) servlets.next()).destroy();
+            servlets.next().destroy();
         }
     }
 
@@ -271,44 +319,6 @@ public final class JspRuntimeContext {
      */
     public int getJspReloadCount() {
         return jspReloadCount;
-    }
-
-
-    /**
-     * Method used by background thread to check the JSP dependencies
-     * registered with this class for JSP's.
-     */
-    public void checkCompile() {
-
-        if (lastCheck < 0) {
-            // Checking was disabled
-            return;
-        }
-        long now = System.currentTimeMillis();
-        if (now > (lastCheck + (options.getCheckInterval() * 1000L))) {
-            lastCheck = now;
-        } else {
-            return;
-        }
-        
-        Object [] wrappers = jsps.values().toArray();
-        for (int i = 0; i < wrappers.length; i++ ) {
-            JspServletWrapper jsw = (JspServletWrapper)wrappers[i];
-            JspCompilationContext ctxt = jsw.getJspEngineContext();
-            // JspServletWrapper also synchronizes on this when
-            // it detects it has to do a reload
-            synchronized(jsw) {
-                try {
-                    ctxt.compile();
-                } catch (FileNotFoundException ex) {
-                    ctxt.incrementRemoved();
-                } catch (Throwable t) {
-                    jsw.getServletContext().log("Background compile failed",
-						t);
-                }
-            }
-        }
-
     }
 
     /**
@@ -362,7 +372,7 @@ public final class JspRuntimeContext {
                     cpath.append(urls[i].getFile() + sep);
                 }
             }
-        }    
+        }
 
 	cpath.append(options.getScratchDir() + sep);
 
@@ -389,7 +399,7 @@ public final class JspRuntimeContext {
         // for that directory.
         Policy policy = Policy.getPolicy();
         if( policy != null ) {
-            try {          
+            try {
                 // Get the permissions for the web app context
                 String docBase = context.getRealPath("/");
                 if( docBase == null ) {
