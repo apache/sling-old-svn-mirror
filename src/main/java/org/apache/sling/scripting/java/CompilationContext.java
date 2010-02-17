@@ -52,7 +52,7 @@ public class CompilationContext {
 
     private ServletCache servletCache;
 
-    private long lastModificationTest = 0L;
+    private volatile long lastModificationTest = 0L;
     private int removed = 0;
 
     private Class<?> servletClass;
@@ -131,18 +131,22 @@ public class CompilationContext {
         return false;
     }
 
+    public long getLastModificationTest() {
+        return this.lastModificationTest;
+    }
+
+    public void setLastModificationTest(final long value) {
+        this.lastModificationTest = value;
+    }
+
     /**
      * Check if the compiled class file is older than the source file
      */
     public boolean isOutDated() {
-        if (this.options.getModificationTestInterval() > 0) {
-
-            if (this.lastModificationTest
-                + (this.options.getModificationTestInterval() * 1000) > System.currentTimeMillis()) {
-                return false;
-            }
-            this.lastModificationTest = System.currentTimeMillis();
+        if ( this.lastModificationTest > 0 ) {
+            return false;
         }
+        this.lastModificationTest = System.currentTimeMillis();
 
         final long sourceLastModified = this.ioProvider.lastModified(getSourcePath());
 

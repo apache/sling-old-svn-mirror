@@ -34,19 +34,10 @@ public class Options {
 
     private static final String PROPERTY_COMPILER_TARGET_V_M = "compilerTargetVM";
 
-    private static final String PROPERTY_DEVELOPMENT = "development";
-
-    private static final String PROPERTY_MODIFICATION_TEST_INTERVAL = "modificationTestInterval";
-
     private static final String PROPERTY_CLASSDEBUGINFO = "classdebuginfo";
 
     /** Default source and target VM version (value is "1.5"). */
     private static final String DEFAULT_VM_VERSION = "1.5";
-
-    /**
-     * Is the engine being used in development mode?
-     */
-    private final boolean development;
 
     /**
      * Do we want to include debugging information in the class file?
@@ -69,11 +60,6 @@ public class Options {
     private final String javaEncoding;
 
     /**
-     * Modification test interval.
-     */
-    private final int modificationTestInterval;
-
-    /**
      * Classloader
      */
     private final ClassLoader classLoader;
@@ -91,8 +77,6 @@ public class Options {
         final Properties properties = new Properties();
         // set default values first
         properties.put(PROPERTY_CLASSDEBUGINFO, "true");
-        properties.put(PROPERTY_DEVELOPMENT, "true");
-        properties.put(PROPERTY_MODIFICATION_TEST_INTERVAL, "-1");
         properties.put(PROPERTY_COMPILER_TARGET_V_M, DEFAULT_VM_VERSION);
         properties.put(PROPERTY_COMPILER_SOURCE_V_M, DEFAULT_VM_VERSION);
         properties.put(PROPERTY_JAVA_ENCODING, "UTF-8");
@@ -112,8 +96,6 @@ public class Options {
         }
 
         this.classDebugInfo = Boolean.valueOf(properties.get(PROPERTY_CLASSDEBUGINFO).toString());
-        this.modificationTestInterval = Integer.valueOf(properties.get(PROPERTY_MODIFICATION_TEST_INTERVAL).toString());
-        this.development = Boolean.valueOf(properties.get(PROPERTY_DEVELOPMENT).toString());
         this.compilerTargetVM = properties.get(PROPERTY_COMPILER_TARGET_V_M).toString();
         this.compilerSourceVM = properties.get(PROPERTY_COMPILER_SOURCE_V_M).toString();
         this.javaEncoding = properties.get(PROPERTY_JAVA_ENCODING).toString();
@@ -131,20 +113,6 @@ public class Options {
      */
     public boolean getClassDebugInfo() {
         return this.classDebugInfo;
-    }
-
-    /**
-     * Modification test interval.
-     */
-    public int getModificationTestInterval() {
-        return this.modificationTestInterval;
-    }
-
-    /**
-     * Is the engine being used in development mode?
-     */
-    public boolean getDevelopment() {
-        return this.development;
     }
 
     public ClassLoader getClassLoader() {
