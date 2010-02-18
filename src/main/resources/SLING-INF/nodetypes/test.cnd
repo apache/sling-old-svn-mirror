@@ -19,7 +19,6 @@
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
 [sling:propertySetTestNodeType] > nt:base
-/* post jcr-2 upgrade, change property type below to be 'uri' */
- - uri (string)
+ - uri (uri)
  - path (path)
  - name (name)
