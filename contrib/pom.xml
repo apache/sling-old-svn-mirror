@@ -90,7 +90,6 @@
           <module>extensions/obr</module>
           <module>extensions/rewriter</module>
           <module>extensions/runmode</module>
-          <module>jcr/jackrabbit-api</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>

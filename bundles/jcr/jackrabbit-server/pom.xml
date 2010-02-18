@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -49,7 +49,7 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
             </plugin>
-            
+
             <!--
                 copy the SCR descriptors into the correct location
                 because the maven-scr-plugin cannot be configured
@@ -70,17 +70,17 @@
                         ${project.build.outputDirectory}
                       </outputDirectory>
                       <encoding>UTF-8</encoding>
-                      <resources>          
+                      <resources>
                         <resource>
                           <directory>target/scr-plugin-generated</directory>
                           <filtering>false</filtering>
                         </resource>
-                      </resources>              
-                    </configuration>            
+                      </resources>
+                    </configuration>
                   </execution>
                 </executions>
             </plugin>
-            
+
             <!--
                 copy the embedded libraries required for the embedded
                 Jackrabbit Repository
@@ -96,7 +96,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                jackrabbit-jcr-rmi,jackrabbit-core,jackrabbit-jcr-commons,jackrabbit-spi-commons,jackrabbit-spi,lucene-core,derby,concurrent,jackrabbit-text-extractors,pdfbox,jempbox,fontbox,poi,poi-scratchpad,nekohtml,xercesImpl
+                                jackrabbit-core,lucene-core,concurrent,xercesImpl,commons-dbcp,commons-pool
                             </includeArtifactIds>
                             <excludeTransitive>false</excludeTransitive>
                             <outputDirectory>
@@ -111,11 +111,11 @@
                 By default the JAR plugin will use the MANIFEST.MF file found
                 in the src/main/resources/META-INF folder, which is copied
                 as a resource.
-                
+
                 To use a manifest file, which is generated with the Apache
                 Felix Maven Bundle plugin enable the bundle profile (see below)
                 as in
-                
+
                     $ mvn -P bundle clean install
             -->
             <plugin>
@@ -132,9 +132,9 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <profiles>
-        <!-- 
+        <!--
             The bundle profile may be used to update the manifest entries of
             the above default profile. If running the build with the build
             profile, you may use the generated manifest to update the
@@ -167,40 +167,63 @@
                                             org.apache.sling.jcr.jackrabbit.server.impl.Activator
                                         </Bundle-Activator>
                                         <Export-Package>
-                                        	org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
-                                            org.apache.jackrabbit.core.security.principal;version=1.6.0
+                                            org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
+                                            org.apache.jackrabbit.core.security.principal;version=2.0.0
                                         </Export-Package>
                                         <Private-Package>
-                                            org.apache.sling.jcr.jackrabbit.server.impl.*
+                                            org.apache.sling.jcr.jackrabbit.server.impl.*,
+                                            org.apache.commons.*
                                         </Private-Package>
                                         <Import-Package>
-                                            org.apache.sling.*, javax.jcr.*,
-                                            javax.naming.*, javax.xml.*,
+                                            <!-- Sling and OSGi -->
+                                            org.apache.sling.*, org.osgi.*,
+                                            <!-- JNDI, Security, Transactions -->
+                                            javax.naming.*,
                                             javax.security.*,
+                                            javax.sql.*,
+                                            javax.transaction.xa,
+                                            <!--  Helpers -->
+                                            org.apache.commons.io.*,
                                             org.apache.commons.collections.*,
-                                            org.apache.jackrabbit.api.*,
-                                            org.osgi.*,
-                                            org.slf4j, org.xml.sax, org.xml.sax.helpers
+                                            <!-- JCR and Jackrabbit API -->
+                                            javax.jcr.*, org.apache.jackrabbit.api.*,
+                                            <!-- Logging -->
+                                            org.slf4j,
+                                            <!-- XML stuff -->
+                                            javax.xml.*, org.xml.sax.*, org.w3c.dom.*,
+                                            <!-- JAR Service Registry for Query -->
+                                            javax.imageio.spi,
+
+                                            <!-- Exclude package, see JCR-2412 -->
+                                            !org.apache.jackrabbit.test,
+
+                                            <!-- playground imports -->
+                                            org.apache.tika.*,
+
+                                            <!-- Our default configuration uses derby, so import the driver -->
+                                            org.apache.derby.jdbc;resolution:=optional,
+
+                                            <!-- Required by concurrent lib SynchronizationTimer class -->
+                                            javax.swing.*;resolution:=optional
                                         </Import-Package>
+                                        <!--
                                         <DynamicImport-Package>*</DynamicImport-Package>
-                
+                                        -->
+
                                         <!-- Embedd some libraries -->
                                         <Embed-Transitive>true</Embed-Transitive>
                                         <Embed-Dependency>
-                                            <!-- core repository implementation -->
-                                            jackrabbit-jcr-rmi; jackrabbit-core;
-                                            jackrabbit-jcr-commons;
-                                            jackrabbit-spi-commons; jackrabbit-spi;
-                                            lucene-core; derby; concurrent,
-                                            
-                                            <!-- jackrabbit text extraction -->
-                                            jackrabbit-text-extractors,
-                                            pdfbox, jempbox, fontbox,
-                                            poi, poi-scratchpad,
-                                            nekohtml, xercesImpl
+                                            jackrabbit-core,
+                                            lucene-core,
+                                            concurrent,
+                                            commons-dbcp,
+                                            commons-pool
                                         </Embed-Dependency>
                                         <_removeheaders>
-                                            Embed-Dependency,Private-Package,Include-Resource
+                                            Embed-Dependency,
+                                            Embed-Transitive,
+                                            Private-Package,
+                                            Include-Resource
                                         </_removeheaders>
                                     </instructions>
                                 </configuration>
@@ -211,7 +234,7 @@
             </build>
         </profile>
     </profiles>
-    
+
     <reporting>
         <plugins>
             <plugin>
@@ -230,6 +253,7 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -240,37 +264,31 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.7-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        
+
         <!-- The core repository implementation -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <version>1.6.0</version>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <version>1.6.0</version>
+            <version>2.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <version>1.5.0</version>
-            <scope>compile</scope>
+            <version>2.0.0</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Text Extractor support -->
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-text-extractors</artifactId>
-            <version>1.6.0</version>
-        </dependency>
-        
+
         <!-- OSGi Libraries -->
         <dependency>
             <groupId>org.osgi</groupId>

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.NameValuePair;
 
 /**
- * Test that Namespace Mappings are working properly.
+ * Test that both Sling-Namespaces and {@link NamespaceMapper} work.
  */
 public class NamespaceMappingTest extends AbstractAuthenticatedTest {
 
@@ -48,6 +48,26 @@ public class NamespaceMappingTest extends AbstractAuthenticatedTest {
         final String content = getContent(HTTP_BASE_URL + "/testing/NamespaceTestServlet/output?sudo=" + testUserId,
                 CONTENT_TYPE_PLAIN);
         assertTrue("Username is wrong contains " + expectedUser + " (" + content + ")", content.contains(expectedUser));
+        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
+    }
+
+    /**
+     * Verify that {@link NamespaceMapper} works.
+     */
+    public void testNamespaceFromNamespaceMapper() throws IOException {
+        final String expected = "test2=http://sling.apache.org/test/two";
+        final String content = getContent(HTTP_BASE_URL + "/testing/NamespaceTestServlet/output",
+                CONTENT_TYPE_PLAIN);
+        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
+    }
+
+    /**
+     * Verify that {@link NamespaceMapper} works with impersonation.
+     */
+    public void testNamespaceFromNamespaceMapperWithImpersonation() throws IOException {
+        final String expected = "test2=http://sling.apache.org/test/two";
+        final String content = getContent(HTTP_BASE_URL + "/testing/NamespaceTestServlet/output?sudo=" + testUserId,
+                CONTENT_TYPE_PLAIN);
         assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
     }
 

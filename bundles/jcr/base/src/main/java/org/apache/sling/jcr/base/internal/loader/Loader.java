@@ -20,6 +20,7 @@ package org.apache.sling.jcr.base.internal.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,9 +34,9 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.NodeTypeLoader;
-import org.apache.sling.jcr.base.internal.NamespaceMapper;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,6 +189,17 @@ public class Loader implements NamespaceMapper {
             StringTokenizer tokener = new StringTokenizer(typesHeader, ",");
             while (tokener.hasMoreTokens()) {
                 String nodeTypeFile = tokener.nextToken().trim();
+                Map<String,String> nodeTypeFileParams = new HashMap<String,String>();
+                nodeTypeFileParams.put("reregister", "true");
+
+                if (nodeTypeFile.contains(";")) {
+                    int idx = nodeTypeFile.indexOf(';');
+                    String nodeTypeFileParam = nodeTypeFile.substring(idx + 1);
+                    String[] params = nodeTypeFileParam.split(":=");
+                    nodeTypeFileParams.put(params[0], params[1]);
+                    nodeTypeFile = nodeTypeFile.substring(0, idx);
+
+                }
 
                 URL mappingURL = bundle.getEntry(nodeTypeFile);
                 if (mappingURL == null) {
@@ -202,7 +214,9 @@ public class Loader implements NamespaceMapper {
                 try {
                     // laod the node types
                     ins = mappingURL.openStream();
-                    NodeTypeLoader.registerNodeType(session, ins);
+                    String reregister = nodeTypeFileParams.get("reregister");
+                    boolean reregisterBool = Boolean.valueOf(reregister);
+                    NodeTypeLoader.registerNodeType(session, mappingURL.toString(), new InputStreamReader(ins), reregisterBool);
                     // log a message if retry is successful
                     if ( isRetry ) {
                         log.info("Retrytring to register node types from {} in bundle {} succeeded.",

@@ -27,9 +27,11 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
@@ -39,6 +41,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>AbstractSlingRepository</code> is an abstract implementation of
@@ -134,6 +137,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     // the background thread constantly checking the repository
     private Thread repositoryPinger;
+
+    private ServiceTracker namespaceMapperTracker;
 
     protected AbstractSlingRepository() {
     }
@@ -247,7 +252,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             throw new RepositoryException(re.getMessage(), re);
         }
     }
-    
+
     /**
      * @param anonUser the user name of the anon user.
      * @return a Credentials implementation that represents the anon user.
@@ -256,7 +261,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the anon password. SLING-1282
         return new SimpleCredentials(anonUser, anonPass);
     }
-    
+
     /**
      * @param adminUser the name of the administrative user.
      * @return a Credentials implementation that represents the administrative user.
@@ -265,7 +270,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // NB: this method is overridden in the Jackrabbit Service bundle to avoid using the admin password. SLING-1282
         return new SimpleCredentials(adminUser, adminPass);
     }
-     
+
 
 
     /*
@@ -296,6 +301,58 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         log(LogService.LOG_ERROR, "getDescriptorKeys: Repository not available");
         return new String[0];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value getDescriptorValue(String key) {
+        Repository repo = getRepository();
+        if (repo != null) {
+            return repo.getDescriptorValue(key);
+        }
+
+        log(LogService.LOG_ERROR, "getDescriptorValue: Repository not available");
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Value[] getDescriptorValues(String key) {
+        Repository repo = getRepository();
+        if (repo != null) {
+            return repo.getDescriptorValues(key);
+        }
+
+        log(LogService.LOG_ERROR, "getDescriptorValues: Repository not available");
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSingleValueDescriptor(String key) {
+        Repository repo = getRepository();
+        if (repo != null) {
+            return repo.isSingleValueDescriptor(key);
+        }
+
+        log(LogService.LOG_ERROR, "isSingleValueDescriptor: Repository not available");
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isStandardDescriptor(String key) {
+        Repository repo = getRepository();
+        if (repo != null) {
+            return repo.isStandardDescriptor(key);
+        }
+
+        log(LogService.LOG_ERROR, "isStandardDescriptor: Repository not available");
+        return false;
     }
 
     // ---------- logging ------------------------------------------------------
@@ -552,6 +609,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @throws nothing, but allow derived classes to throw any Exception
      */
     protected void activate(ComponentContext componentContext) throws Exception {
+        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.class.getName(), null);
+        this.namespaceMapperTracker.open();
+
         this.componentContext = componentContext;
 
         @SuppressWarnings("unchecked")
@@ -598,6 +658,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
+        this.namespaceMapperTracker.close();
 
         componentContext.getBundleContext().removeBundleListener(this);
 
@@ -690,6 +751,14 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         if (this.namespaceHandler != null) {
             // apply namespace mapping
             this.namespaceHandler.defineNamespacePrefixes(session);
+        }
+
+        // call namespace mappers
+        Object[] nsMappers = namespaceMapperTracker.getServices();
+        if (nsMappers != null) {
+            for (int i = 0; i < nsMappers.length; i++) {
+                ((NamespaceMapper) nsMappers[i]).defineNamespacePrefixes(session);
+            }
         }
     }
 

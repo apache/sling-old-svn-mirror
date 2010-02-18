@@ -20,14 +20,16 @@ package org.apache.sling.jcr.base;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
-import javax.jcr.nodetype.NodeTypeManager;
 
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,37 +110,17 @@ public class NodeTypeLoader {
      */
     public static boolean registerNodeType(Session session, InputStream source)
             throws IOException, RepositoryException {
-        final Workspace workspace = session.getWorkspace();
-        final NodeTypeManager ntm = workspace.getNodeTypeManager();
-        if (ntm instanceof JackrabbitNodeTypeManager) {
-            log.debug("Using Jackrabbit to import node types");
-            JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
-            try {
-                jntm.registerNodeTypes(source,
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
-                return true;
-            } catch (RepositoryException re) {
-                Throwable t = re.getCause();
-                if (t != null
-                    && t.getClass().getName().endsWith(
-                        ".InvalidNodeTypeDefException")) {
-                    // hacky wacky: interpret message to check whether it is for
-                    // duplicate node type -> very bad, that this is the only
-                    // way to check !!!
-                    if (re.getCause().getMessage().indexOf("already exists") >= 0) {
-                        // alright, node types are already registered, ignore
-                        // this
-                        log.debug("Node types already registered...");
-                        return true;
-                    }
-                }
+        return registerNodeType(session, "cnd input stream", new InputStreamReader(source), false);
+    }
 
-                // get here to rethrow the RepositoryException
-                throw re;
-            }
+    public static boolean registerNodeType(Session session, String systemId, Reader reader, boolean reregisterExisting)
+        throws IOException, RepositoryException {
+        try {
+            Workspace wsp = session.getWorkspace();
+            CndImporter.registerNodeTypes(reader, systemId, wsp.getNodeTypeManager(), wsp.getNamespaceRegistry(), session.getValueFactory(), reregisterExisting);
+        } catch (ParseException e) {
+            throw new IOException("Unable to parse CND Input.", e);
         }
-
-        log.warn("Repository does not implement JackrabbitNodeTypeManager, cannot import node types");
-        return false;
+        return true;
     }
 }

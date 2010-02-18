@@ -27,8 +27,8 @@ import java.rmi.server.UnicastRemoteObject;
 
 import javax.jcr.Repository;
 
-import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
+import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.osgi.service.log.LogService;
 
 /**
@@ -186,7 +186,7 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
      * extension API depending on the server implementation.
      */
     protected RemoteAdapterFactory getRemoteAdapterFactory() {
-        return new JackrabbitServerAdapterFactory();
+        return new ServerAdapterFactory();
     }
 
     // ---------- Inner Class --------------------------------------------------

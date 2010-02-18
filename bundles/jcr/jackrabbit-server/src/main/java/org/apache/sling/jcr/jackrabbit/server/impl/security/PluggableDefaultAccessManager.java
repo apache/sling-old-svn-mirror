@@ -23,7 +23,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
