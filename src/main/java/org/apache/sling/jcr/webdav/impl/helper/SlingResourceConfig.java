@@ -30,7 +30,6 @@ import org.apache.jackrabbit.server.io.DefaultHandler;
 import org.apache.jackrabbit.server.io.DirListingExportHandler;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.IOManagerImpl;
-import org.apache.jackrabbit.server.io.MimeResolver;
 import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.server.io.PropertyManagerImpl;
 import org.apache.jackrabbit.webdav.simple.DefaultItemFilter;
@@ -42,8 +41,6 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.webdav.impl.servlets.SlingWebDavServlet;
 
 public class SlingResourceConfig extends ResourceConfig {
-
-    private final MimeResolver mimeResolver;
 
     private final String[] collectionTypes;
 
@@ -57,9 +54,9 @@ public class SlingResourceConfig extends ResourceConfig {
 
     private final Dictionary<String, String> servletInitParams;
 
-    public SlingResourceConfig(MimeTypeService mimetypService,
+    public SlingResourceConfig(MimeTypeService mimeTypeService,
             Dictionary<?, ?> config) {
-        mimeResolver = new SlingMimeResolver(mimetypService);
+        super(new SlingTikaDetector(mimeTypeService));
         collectionTypes = OsgiUtil.toStringArray(
             config.get(SlingWebDavServlet.COLLECTION_TYPES),
             SlingWebDavServlet.COLLECTION_TYPES_DEFAULT);
@@ -93,7 +90,7 @@ public class SlingResourceConfig extends ResourceConfig {
         DirListingExportHandler dirHandler = new DirListingExportHandler();
         DefaultHandler defaultHandler = new DefaultHandler(null, collectionType,
             nonCollectionType, contentType);
-        
+
         ioManager = new IOManagerImpl();
         ioManager.addIOHandler(dirHandler);
         ioManager.addIOHandler(defaultHandler);
@@ -128,11 +125,6 @@ public class SlingResourceConfig extends ResourceConfig {
     @Override
     public ItemFilter getItemFilter() {
         return itemFilter;
-    }
-
-    @Override
-    public MimeResolver getMimeResolver() {
-        return mimeResolver;
     }
 
     @Override
