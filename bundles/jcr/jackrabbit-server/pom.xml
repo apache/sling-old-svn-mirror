@@ -187,6 +187,8 @@
                                             org.apache.commons.collections.*,
                                             <!-- JCR and Jackrabbit API -->
                                             javax.jcr.*, org.apache.jackrabbit.api.*,
+                                            org.apache.jackrabbit.spi.*,
+
                                             <!-- Logging -->
                                             org.slf4j,
                                             <!-- XML stuff -->
@@ -199,6 +201,13 @@
 
                                             <!-- playground imports -->
                                             org.apache.tika.*,
+
+                                            <!-- Jackrabbit internals -->
+                                            org.apache.jackrabbit.rmi.*,
+                                            org.apache.jackrabbit.util,
+                                            org.apache.jackrabbit.value,
+                                            org.apache.jackrabbit.commons.*,
+                                            org.apache.jackrabbit.spi.commons.*,
 
                                             <!-- Our default configuration uses derby, so import the driver -->
                                             org.apache.derby.jdbc;resolution:=optional,
