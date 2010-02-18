@@ -243,7 +243,7 @@ public class SlingPropertyValueHandler {
                         }
                         return;
                     }
-                } else if (type == PropertyType.REFERENCE) {
+                } else if (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE) {
                     Node n = referenceParser.parse(values[0]);
                     if (n != null) {
                         if ( prop.hasMultiValueTypeHint() ) {
@@ -290,7 +290,7 @@ public class SlingPropertyValueHandler {
                     ));
                     return;
                 }
-            } else if (type == PropertyType.REFERENCE) {
+            } else if (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE) {
                 // try conversion
                 ValueFactory valFac = parent.getSession().getValueFactory();
                 Value[] n = referenceParser.parse(values, valFac);
