@@ -119,7 +119,7 @@ public class NodeTypeLoader {
             Workspace wsp = session.getWorkspace();
             CndImporter.registerNodeTypes(reader, systemId, wsp.getNodeTypeManager(), wsp.getNamespaceRegistry(), session.getValueFactory(), reregisterExisting);
         } catch (ParseException e) {
-            throw new IOException("Unable to parse CND Input.", e);
+            throw new IOException("Unable to parse CND Input: " + e.getMessage());
         }
         return true;
     }
