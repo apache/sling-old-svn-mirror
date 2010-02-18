@@ -126,13 +126,6 @@
                         ${jetty.scan.interval.seconds}
                     </scanIntervalSeconds>
 
-                    <systemProperties>
-                        <systemProperty>
-                            <name>sling.home</name>
-                            <value>${jetty.sling.home}</value>
-                        </systemProperty>
-                    </systemProperties>
-
                     <connectors>
                         <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
                             <port>${http.port}</port>
@@ -141,6 +134,13 @@
                     </connectors>
 
                     <webApp>${test.webapp.war}</webApp>
+                    
+                    <webAppConfig>
+                        <initParams>
+                            <sling.home>${jetty.sling.home}</sling.home>
+                        </initParams>
+                    </webAppConfig>
+                    
                 </configuration>
             </plugin>
             <plugin>
