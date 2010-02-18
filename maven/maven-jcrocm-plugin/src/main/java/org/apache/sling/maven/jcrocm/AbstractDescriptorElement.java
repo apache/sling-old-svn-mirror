@@ -16,6 +16,7 @@
  */
 package org.apache.sling.maven.jcrocm;
 
+import com.thoughtworks.qdox.model.AbstractBaseJavaEntity;
 import org.apache.maven.plugin.logging.Log;
 
 import com.thoughtworks.qdox.model.AbstractJavaEntity;
@@ -43,7 +44,7 @@ abstract class AbstractDescriptorElement {
     abstract void generate(XMLWriter xmlWriter);
 
     JavaClass getJavaClass() {
-        AbstractJavaEntity aje = tag.getContext();
+        AbstractBaseJavaEntity aje = tag.getContext();
         if (aje instanceof JavaClass) {
             return (JavaClass) aje;
         }
@@ -58,7 +59,7 @@ abstract class AbstractDescriptorElement {
 
     protected void log(String message) {
         log.error("@" + tag.getName() + ": " + message + " ("
-            + tag.getContext().getSource().getURL() + ", line "
+            + tag.getContext().getName() + ", line "
             + tag.getLineNumber() + ")");
     }
 
