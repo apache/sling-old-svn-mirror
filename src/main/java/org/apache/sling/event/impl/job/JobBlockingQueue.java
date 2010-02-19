@@ -229,10 +229,10 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + delay);
 
-            final String schedulerJobName = "Waiting:" + queueName;
+            final String jobName = "Waiting:" + queueName;
             final Runnable t = new Runnable() {
                 public void run() {
-                    setSleeping(schedulerJobName);
+                    setSleeping(jobName);
                     try {
                         put(info);
                     } catch (InterruptedException e) {
@@ -245,7 +245,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
             };
             if ( scheduler != null ) {
                 try {
-                    scheduler.fireJobAt(schedulerJobName, t, null, fireDate);
+                    scheduler.fireJobAt(jobName, t, null, fireDate);
                 } catch (Exception e) {
                     // we ignore the exception and just put back the job in the queue
                     ignoreException(e);

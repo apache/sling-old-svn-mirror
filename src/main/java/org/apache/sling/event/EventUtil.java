@@ -259,8 +259,30 @@ public abstract class EventUtil {
     }
 
     /**
+     * Send an acknowledge.
+     * This signals the job handler that someone is starting to process the job. This method
+     * should be invoked as a first command during job processing.
+     * If this method returns <code>false</code> this means someone else is already
+     * processing this job, and the caller should not process the event anymore.
+     * @return Returns <code>true</code> if the acknowledge could be sent
+     * @since 2.3
+     */
+    public static boolean acknowledgeJob(Event job) {
+        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        if ( ctx != null ) {
+            if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
+                // if we don't get an ack, someone else is already processing this job.
+                // we process but do not notify the job event handler.
+                LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Notify a finished job.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static void finishedJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
@@ -272,7 +294,6 @@ public abstract class EventUtil {
     /**
      * Notify a failed job.
      * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static boolean rescheduleJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);

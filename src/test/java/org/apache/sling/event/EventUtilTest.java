@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.jcr.PropertyType;
@@ -56,6 +57,15 @@ public class EventUtilTest {
         assertTrue(EventUtil.shouldDistribute(distributableEvent));
         final Event nonDistributableEvent = new Event("another/topic", (Dictionary<String, Object>)null);
         assertFalse(EventUtil.shouldDistribute(nonDistributableEvent));
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("a", "a");
+        props.put("b", "b");
+        final Event distributableEvent2 = EventUtil.createDistributableEvent("some/topic", props);
+        assertTrue(EventUtil.shouldDistribute(distributableEvent2));
+        // we should have four properties: 2 custom, one for the dist flag and the fourth for the topic
+        assertEquals(4, distributableEvent2.getPropertyNames().length);
+        assertEquals("a", distributableEvent2.getProperty("a"));
+        assertEquals("b", distributableEvent2.getProperty("b"));
     }
 
     @Test public void testLocalFlag() {

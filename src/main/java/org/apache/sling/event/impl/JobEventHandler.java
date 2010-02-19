@@ -164,7 +164,7 @@ public class JobEventHandler
 
     /** The scheduler for rescheduling jobs.
      * @scr.reference */
-    private Scheduler scheduler;
+    protected Scheduler scheduler;
 
     /** Our component context. */
     private ComponentContext componentContext;
