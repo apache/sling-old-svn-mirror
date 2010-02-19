@@ -54,6 +54,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!-- As we're using JCR 2.0 for testing we explicitly have to
+                             import version 1.0 here  -->
+                        <Import-Package>
+                            javax.jcr.*;version=1.0,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.event;version=2.2.0
                         </Export-Package>
@@ -68,7 +73,7 @@
                             slingevent=http://sling.apache.org/jcr/event/1.0
                         </Sling-Namespaces>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -103,9 +108,12 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
+        <!-- We use version 2.0 for testing! -->
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+            <version>2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -156,7 +164,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>1.4.2</version>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- Testing -->
@@ -169,9 +177,13 @@
             <artifactId>jmock-junit4</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.4-incubator</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
+            <version>2.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
