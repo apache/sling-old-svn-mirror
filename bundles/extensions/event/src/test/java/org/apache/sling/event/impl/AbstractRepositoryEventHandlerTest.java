@@ -18,8 +18,6 @@
  */
 package org.apache.sling.event.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Dictionary;
@@ -29,9 +27,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.observation.EventListenerIterator;
 
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.engine.SlingSettingsService;
@@ -66,19 +62,19 @@ public abstract class AbstractRepositoryEventHandlerTest {
     }
 
     @org.junit.BeforeClass public static void setupRepository() throws Exception {
-        RepositoryUtil.startRepository();
-        final SlingRepository repository = RepositoryUtil.getRepository();
+        RepositoryTestUtil.startRepository();
+        final SlingRepository repository = RepositoryTestUtil.getSlingRepository();
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
-        assertTrue(RepositoryUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/event.cnd")));
-        assertTrue(RepositoryUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/folder.cnd")));
+        assertTrue(RepositoryTestUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/event.cnd")));
+        assertTrue(RepositoryTestUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/folder.cnd")));
     }
 
     @org.junit.AfterClass public static void shutdownRepository() throws Exception {
-        RepositoryUtil.stopRepository();
+        RepositoryTestUtil.stopRepository();
     }
 
     @org.junit.Before public void setup() throws Exception {
-        this.handler.repository = RepositoryUtil.getRepository();
+        this.handler.repository = RepositoryTestUtil.getSlingRepository();
 
         // the event admin
         final EventAdmin eventAdmin = this.getMockery().mock(EventAdmin.class);
@@ -119,14 +115,6 @@ public abstract class AbstractRepositoryEventHandlerTest {
     }
 
     @org.junit.After public void shutdown() throws Exception {
-        // delete all child nodes to get a clean repository again
-        final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
-        final NodeIterator iter = rootNode.getNodes();
-        while ( iter.hasNext() ) {
-            final Node child = iter.nextNode();
-            child.remove();
-        }
-        rootNode.save();
         // lets set up the bundle context with the sling id
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
 
@@ -136,19 +124,18 @@ public abstract class AbstractRepositoryEventHandlerTest {
             will(returnValue(bundleContext));
         }});
         this.handler.deactivate(componentContext);
-    }
-
-    @org.junit.Test public void testSetup() throws RepositoryException {
-        assertEquals(this.handler.applicationId, SLING_ID);
-        assertEquals(this.handler.repositoryPath, REPO_PATH);
-        assertNotNull(this.handler.writerSession);
-        final EventListenerIterator iter = this.handler.writerSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
-        boolean found = false;
-        while ( !found && iter.hasNext() ) {
-            final javax.jcr.observation.EventListener listener = iter.nextEventListener();
-            found = (listener == this.handler);
+        try {
+            // delete all child nodes to get a clean repository again
+            final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
+            final NodeIterator iter = rootNode.getNodes();
+            while ( iter.hasNext() ) {
+                final Node child = iter.nextNode();
+                child.remove();
+            }
+            session.save();
+        } catch ( RepositoryException re) {
+            // we ignore this for the test
         }
-        assertTrue("Handler is not registered as event listener.", found);
     }
 
     @org.junit.Test public void testPathCreation() throws RepositoryException {

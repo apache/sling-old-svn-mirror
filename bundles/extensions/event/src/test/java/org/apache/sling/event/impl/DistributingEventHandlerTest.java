@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
@@ -27,6 +28,8 @@ import java.util.Hashtable;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil;
@@ -49,6 +52,19 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
     @Override
     protected Mockery getMockery() {
         return this.context;
+    }
+
+    @org.junit.Test public void testSetup() throws RepositoryException {
+        assertEquals(this.handler.applicationId, SLING_ID);
+        assertEquals(this.handler.repositoryPath, REPO_PATH);
+        assertNotNull(this.handler.writerSession);
+        final EventListenerIterator iter = this.handler.writerSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
+        boolean found = false;
+        while ( !found && iter.hasNext() ) {
+            final javax.jcr.observation.EventListener listener = iter.nextEventListener();
+            found = (listener == this.handler);
+        }
+        assertTrue("Handler is not registered as event listener.", found);
     }
 
     @org.junit.Test public void testWriteEvent() throws Exception {

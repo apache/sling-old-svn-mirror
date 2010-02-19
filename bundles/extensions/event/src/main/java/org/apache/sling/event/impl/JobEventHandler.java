@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 import javax.jcr.Item;
@@ -57,6 +56,7 @@ import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.apache.sling.event.impl.job.JobBlockingQueue;
+import org.apache.sling.event.impl.job.JobUtil;
 import org.apache.sling.event.impl.job.ParallelInfo;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
@@ -145,7 +145,7 @@ public class JobEventHandler
     private long maximumParallelJobs;
 
     /** Background session. */
-    private Session backgroundSession;
+    protected Session backgroundSession;
 
     /** Unloaded jobs. */
     private Set<String>unloadedJobs = new HashSet<String>();
@@ -281,12 +281,14 @@ public class JobEventHandler
                 } catch (InterruptedException e) {
                     this.ignoreException(e);
                 }
-                this.logger.debug("Stopped job queue {}", jbq.getName());
+                this.logger.info("Stopped job queue {}", jbq.getName());
             }
         }
         if ( this.backgroundSession != null ) {
             synchronized ( this.backgroundLock ) {
                 this.logger.debug("Shutting down background session.");
+                // notify possibly sleeping thread
+                this.backgroundLock.notify();
                 try {
                     this.backgroundSession.getWorkspace().getObservationManager().removeEventListener(this);
                 } catch (RepositoryException e) {
@@ -474,7 +476,7 @@ public class JobEventHandler
                 info.event = event;
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
                 final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-                final String nodePath = this.getNodePath(jobTopic, jobId);
+                final String nodePath = JobUtil.getUniquePath(jobTopic, jobId);
 
                 // if the job has no job id, we can just write the job to the repo and don't
                 // need locking
@@ -537,12 +539,86 @@ public class JobEventHandler
                 // if we were able to write the event into the repository
                 // we will queue it for processing
                 if ( info.nodePath != null ) {
-                    try {
-                        this.queue.put(info);
-                    } catch (InterruptedException e) {
-                        // this should never happen
-                        this.ignoreException(e);
+                    this.queueJob(info);
+                }
+            }
+        }
+    }
+
+    /**
+     * Put the job into the correct queue.
+     */
+    private void queueJob(final EventInfo info) {
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Received new job {}", EventUtil.toString(info.event));
+        }
+        // check for local only jobs and remove them from the queue if they're meant
+        // for another application node
+        final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
+        if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
+            && appId != null && !this.applicationId.equals(appId) ) {
+            if ( logger.isDebugEnabled() ) {
+                 logger.debug("Discarding job {} : local job for a different application node.", EventUtil.toString(info.event));
+            }
+        } else {
+
+            // check if we should put this into a separate queue
+            boolean queued = false;
+            if ( info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
+                final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
+                synchronized ( this.jobQueues ) {
+                    BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
+                    if ( jobQueue == null ) {
+                        // check if we have exceeded the maximum number of job queues
+                        if ( this.jobQueues.size() >= this.maxJobQueues ) {
+                            this.logger.warn("Unable to create new job queue named {} as there are already {} job queues." +
+                                    " Try to increase the maximum number of job queues!", queueName, this.jobQueues.size());
+                        } else {
+                            final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
+                            final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
+                            jobQueue = jq;
+                            this.jobQueues.put(queueName, jq);
+                            // Start background thread
+                            this.threadPool.execute(new Runnable() {
+
+                                /**
+                                 * @see java.lang.Runnable#run()
+                                 */
+                                public void run() {
+                                    while ( running && !jq.isFinished() ) {
+                                        logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
+                                        try {
+                                            runJobQueue(queueName, jq);
+                                        } catch (Throwable t) {
+                                            logger.error("Job queue stopped with exception: " + t.getMessage() + ". Restarting.", t);
+                                        }
+                                    }
+                                }
+
+                            });
+                        }
                     }
+                    if ( jobQueue != null ) {
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Queuing job {} into queue {}.", EventUtil.toString(info.event), queueName);
+                        }
+                        try {
+                            jobQueue.put(info);
+                        } catch (InterruptedException e) {
+                            // this should never happen
+                            this.ignoreException(e);
+                        }
+                        // don't put into main queue
+                        queued = true;
+                    }
+                }
+            }
+            if ( !queued ) {
+                try {
+                    this.queue.put(info);
+                } catch (InterruptedException e) {
+                    // this should never happen
+                    this.ignoreException(e);
                 }
             }
         }
@@ -552,6 +628,7 @@ public class JobEventHandler
      * This method runs in the background and processes the local queue.
      */
     protected void runInBackground() throws RepositoryException {
+        // create the background session and register a listener
         this.backgroundSession = this.createSession();
         this.backgroundSession.getWorkspace().getObservationManager()
                 .addEventListener(this,
@@ -562,7 +639,6 @@ public class JobEventHandler
                                   null,
                                   new String[] {this.getEventNodeType()},
                                   true);
-        // load unprocessed jobs from repository
         if ( this.running ) {
             logger.info("Apache Sling Job Event Handler started.");
             logger.debug("Job Handler Configuration: (sleepTime={} secs, maxJobRetries={}," +
@@ -578,6 +654,7 @@ public class JobEventHandler
                 ctx.disableComponent(name);
             }
         }
+        // This is the main queue
         while ( this.running ) {
             // so let's wait/get the next job from the queue
             EventInfo info = null;
@@ -589,76 +666,8 @@ public class JobEventHandler
             }
 
             if ( info != null && this.running ) {
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug("Received new job {}", EventUtil.toString(info.event));
-                }
-                // check for local only jobs and remove them from the queue if they're meant
-                // for another application node
-                final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
-                if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
-                    && appId != null && !this.applicationId.equals(appId) ) {
-                    if ( logger.isDebugEnabled() ) {
-                         logger.debug("Discarding job {} : local job for a different application node.", EventUtil.toString(info.event));
-                    }
-                    info = null;
-                }
-
-                // check if we should put this into a separate queue
-                if ( info != null && info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
-                    final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
-                    synchronized ( this.jobQueues ) {
-                        BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
-                        if ( jobQueue == null ) {
-                            // check if we have exceeded the maximum number of job queues
-                            if ( this.jobQueues.size() >= this.maxJobQueues ) {
-                                this.logger.warn("Unable to create new job queue named {} as there are already {} job queues." +
-                                        " Try to increase the maximum number of job queues!", queueName, this.jobQueues.size());
-                            } else {
-                                final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
-                                final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
-                                jobQueue = jq;
-                                this.jobQueues.put(queueName, jq);
-                                // Start background thread
-                                this.threadPool.execute(new Runnable() {
-
-                                    /**
-                                     * @see java.lang.Runnable#run()
-                                     */
-                                    public void run() {
-                                        while ( running && !jq.isFinished() ) {
-                                            logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
-                                            try {
-                                                runJobQueue(queueName, jq);
-                                            } catch (Throwable t) {
-                                                logger.error("Job queue stopped with exception: " + t.getMessage() + ". Restarting.", t);
-                                            }
-                                        }
-                                    }
-
-                                });
-                            }
-                        }
-                        if ( jobQueue != null ) {
-                            if ( logger.isDebugEnabled() ) {
-                                logger.debug("Queuing job {} into queue {}.", EventUtil.toString(info.event), queueName);
-                            }
-                            try {
-                                jobQueue.put(info);
-                            } catch (InterruptedException e) {
-                                // this should never happen
-                                this.ignoreException(e);
-                            }
-                            // don't process this here
-                            info = null;
-                        }
-                    }
-                }
-
-                // if we still have a job, process it
-                if ( info != null ) {
-                    if ( this.executeJob(info, null) == Status.RESCHEDULE ) {
-                        this.putBackIntoMainQueue(info, true);
-                    }
+                if ( this.executeJob(info, null) == Status.RESCHEDULE ) {
+                    this.putBackIntoMainQueue(info, true);
                 }
             }
         }
@@ -719,6 +728,61 @@ public class JobEventHandler
         }
     }
 
+    /**
+     * Check the precondition for the job.
+     * This method handles the parallel settings and returns <code>true</code>
+     * if the job can be run. If <code>false</code> is returned, we have to
+     * wait for another job to finish first.
+     */
+    private boolean checkPrecondition(final ParallelInfo parInfo, final String jobTopic) {
+        // check how we can process this job:
+        // if the job should not be processed in parallel, we have to check
+        //     if another job with the same topic is currently running
+        // if parallel processing is allowed, we have to check for the number
+        //     of max allowed parallel jobs for this topic
+        boolean process = parInfo.processParallel;
+        if ( !parInfo.processParallel ) {
+            synchronized ( this.processingMap ) {
+                final Boolean value = this.processingMap.get(jobTopic);
+                if ( value == null || !value.booleanValue() ) {
+                    this.processingMap.put(jobTopic, Boolean.TRUE);
+                    process = true;
+                }
+            }
+        } else {
+            if ( parInfo.maxParallelJob > 1 ) {
+                synchronized ( this.parallelProcessingMap ) {
+                    final Integer value = this.parallelProcessingMap.get(jobTopic);
+                    final int currentValue = (value == null ? 0 : value.intValue());
+                    if ( currentValue < parInfo.maxParallelJob ) {
+                        this.parallelProcessingMap.put(jobTopic, currentValue + 1);
+                    } else {
+                        process = false;
+                    }
+                }
+            }
+        }
+        return process;
+    }
+
+    /**
+     * Unlock the parallel job processing state.
+     */
+    private void unlockState(final ParallelInfo parInfo, final String jobTopic) {
+        if ( !parInfo.processParallel ) {
+            synchronized ( this.processingMap ) {
+                this.processingMap.put(jobTopic, Boolean.FALSE);
+            }
+        } else {
+            if ( parInfo.maxParallelJob > 1 ) {
+                synchronized ( this.parallelProcessingMap ) {
+                    final Integer value = this.parallelProcessingMap.get(jobTopic);
+                    this.parallelProcessingMap.put(jobTopic, value.intValue() - 1);
+                }
+            }
+        }
+    }
+
     public enum Status {
         FAILED,
         RESCHEDULE,
@@ -730,7 +794,6 @@ public class JobEventHandler
      */
     private Status executeJob(final EventInfo info, final BlockingQueue<EventInfo> jobQueue) {
         boolean putback = false;
-        boolean wait = false;
         synchronized (this.backgroundLock) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Executing job {}.", EventUtil.toString(info.event));
@@ -739,45 +802,30 @@ public class JobEventHandler
                 this.backgroundSession.refresh(false);
                 // check if the node still exists
                 if ( this.backgroundSession.itemExists(info.nodePath)
-                     && !this.backgroundSession.itemExists(info.nodePath + "/" + EventHelper.NODE_PROPERTY_FINISHED)) {
+                     && !this.backgroundSession.itemExists(info.nodePath + '/' + EventHelper.NODE_PROPERTY_FINISHED)) {
                     final Event event = info.event;
                     final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
                     final ParallelInfo parInfo = ParallelInfo.getParallelInfo(event);
 
-                    // check how we can process this job:
-                    // if the job should not be processed in parallel, we have to check
-                    //     if another job with the same topic is currently running
-                    // if parallel processing is allowed, we have to check for the number
-                    //     of max allowed parallel jobs for this topic
-                    boolean process = parInfo.processParallel;
-                    if ( !parInfo.processParallel ) {
-                        synchronized ( this.processingMap ) {
-                            final Boolean value = this.processingMap.get(jobTopic);
-                            if ( value == null || !value.booleanValue() ) {
-                                this.processingMap.put(jobTopic, Boolean.TRUE);
-                                process = true;
-                            }
-                        }
-                    } else {
-                        if ( parInfo.maxParallelJob > 1 ) {
-                            synchronized ( this.parallelProcessingMap ) {
-                                final Integer value = this.parallelProcessingMap.get(jobTopic);
-                                final int currentValue = (value == null ? 0 : value.intValue());
-                                if ( currentValue < parInfo.maxParallelJob ) {
-                                    this.parallelProcessingMap.put(jobTopic, currentValue + 1);
-                                } else {
-                                    process = false;
-                                }
-                            }
-                        }
-                    }
+                    final boolean process = checkPrecondition(parInfo, jobTopic);
                     // check number of parallel jobs for main queue
                     if ( process && jobQueue == null && this.parallelJobCount >= this.maximumParallelJobs ) {
                         if ( logger.isDebugEnabled() ) {
-                            logger.debug("Rescheduling job {} - maximum parallel job count of {} reached!", EventUtil.toString(info.event), this.maximumParallelJobs);
+                            logger.debug("Waiting with executing job {} - maximum parallel job count of {} reached!",
+                                    EventUtil.toString(info.event), this.maximumParallelJobs);
                         }
-                        process = false;
-                        wait = true;
+                        try {
+                            this.backgroundLock.wait();
+                        } catch (InterruptedException e) {
+                            this.ignoreException(e);
+                        }
+                        // let's check if we're still running
+                        if ( !this.running ) {
+                            return Status.FAILED;
+                        }
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Continuing with executing job {}.", EventUtil.toString(info.event));
+                        }
                     }
                     if ( process ) {
                         boolean unlock = true;
@@ -789,31 +837,18 @@ public class JobEventHandler
                                     eventNode.lock(false, true);
                                 } catch (RepositoryException re) {
                                     // lock failed which means that the node is locked by someone else, so we don't have to requeue
-                                    process = false;
+                                    return Status.FAILED;
                                 }
-                                if ( process ) {
-                                    unlock = false;
-                                    this.processJob(info.event, eventNode, jobQueue == null);
-                                    return Status.SUCCESS;
-                                }
+                                unlock = false;
+                                this.processJob(info.event, eventNode, jobQueue == null, parInfo);
+                                return Status.SUCCESS;
                             }
                         } catch (RepositoryException e) {
                             // ignore
                             this.ignoreException(e);
                         } finally {
                             if ( unlock ) {
-                                if ( !parInfo.processParallel ) {
-                                    synchronized ( this.processingMap ) {
-                                        this.processingMap.put(jobTopic, Boolean.FALSE);
-                                    }
-                                } else {
-                                    if ( parInfo.maxParallelJob > 1 ) {
-                                        synchronized ( this.parallelProcessingMap ) {
-                                            final Integer value = this.parallelProcessingMap.get(jobTopic);
-                                            this.parallelProcessingMap.put(jobTopic, value.intValue() - 1);
-                                        }
-                                    }
-                                }
+                                unlockState(parInfo, jobTopic);
                             }
                         }
                     } else {
@@ -833,17 +868,6 @@ public class JobEventHandler
                 this.ignoreException(re);
             }
 
-        }
-        // if this is the main queue and we have reached the max number of parallel jobs
-        // we wait a little bit before continuing
-        if ( wait ) {
-            logger.debug("Sleeping for {} seconds as the maximum number of parallel threads is reached.", sleepTime);
-            try {
-                Thread.sleep(sleepTime * 1000);
-            } catch (InterruptedException ie) {
-                // ignore
-                ignoreException(ie);
-            }
         }
         // if we have to put back the job, we return this status
         if ( putback ) {
@@ -886,7 +910,7 @@ public class JobEventHandler
                         this.ignoreException(e);
                     }
                 } else {
-                    this.logger.warn("Event does not contain job topic: {}", event);
+                    this.logger.warn("Event does not contain job topic: {}", EventUtil.toString(event));
                 }
 
             } else {
@@ -912,22 +936,7 @@ public class JobEventHandler
                                         try {
                                             if ( s.itemExists(path) ) {
                                                 final Node eventNode = (Node) s.getItem(path);
-                                                if ( !eventNode.isLocked() ) {
-                                                    try {
-                                                        final EventInfo info = new EventInfo();
-                                                        info.event = readEvent(eventNode);
-                                                        info.nodePath = path;
-                                                        try {
-                                                            queue.put(info);
-                                                        } catch (InterruptedException e) {
-                                                            // we ignore this exception as this should never occur
-                                                            ignoreException(e);
-                                                        }
-                                                    } catch (ClassNotFoundException cnfe) {
-                                                        newUnloadedJobs.add(path);
-                                                        ignoreException(cnfe);
-                                                    }
-                                                }
+                                                tryToLoadJob(eventNode, newUnloadedJobs);
                                             }
                                         } catch (RepositoryException re) {
                                             // we ignore this and readd
@@ -956,46 +965,15 @@ public class JobEventHandler
     }
 
     /**
-     * Create a unique node path (folder and name) for the job.
-     */
-    private String getNodePath(final String jobTopic, final String jobId) {
-        final StringBuilder sb = new StringBuilder(jobTopic.replace('/', '.'));
-        sb.append('/');
-        if ( jobId != null ) {
-            // we create an md from the job id - we use the first 6 bytes to
-            // create sub directories
-            final String md5 = EventHelper.md5(jobId);
-            sb.append(md5.substring(0, 2));
-            sb.append('/');
-            sb.append(md5.substring(2, 4));
-            sb.append('/');
-            sb.append(md5.substring(4, 6));
-            sb.append('/');
-            sb.append(EventHelper.filter(jobId));
-        } else {
-            // create a path from the uuid - we use the first 6 bytes to
-            // create sub directories
-            final String uuid = UUID.randomUUID().toString();
-            sb.append(uuid.substring(0, 2));
-            sb.append('/');
-            sb.append(uuid.substring(2, 4));
-            sb.append('/');
-            sb.append(uuid.substring(5, 7));
-            sb.append("/Job_");
-            sb.append(uuid.substring(8, 17));
-        }
-        return sb.toString();
-    }
-
-    /**
      * Process a job and unlock the node in the repository.
      * @param event The original event.
      * @param eventNode The node in the repository where the job is stored.
      * @param isMainQueue Is this the main queue?
      */
-    private void processJob(Event event, Node eventNode, boolean isMainQueue)  {
-        final ParallelInfo parInfo = ParallelInfo.getParallelInfo(event);
-        final boolean parallelProcessing = parInfo.processParallel;
+    private void processJob(final Event event,
+                            final Node eventNode,
+                            final boolean isMainQueue,
+                            final ParallelInfo parInfo)  {
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         if ( logger.isDebugEnabled() ) {
             logger.debug("Starting job {}", EventUtil.toString(event));
@@ -1034,18 +1012,7 @@ public class JobEventHandler
                 if ( isMainQueue ) {
                     this.parallelJobCount--;
                 }
-                if ( !parallelProcessing ) {
-                    synchronized ( this.processingMap ) {
-                        this.processingMap.put(jobTopic, Boolean.FALSE);
-                    }
-                } else {
-                    if ( parInfo.maxParallelJob > 1 ) {
-                        synchronized ( this.parallelProcessingMap ) {
-                            final Integer value = this.parallelProcessingMap.get(jobTopic);
-                            this.parallelProcessingMap.put(jobTopic, value.intValue() - 1);
-                        }
-                    }
-                }
+                this.unlockState(parInfo, jobTopic);
 
                 // unlock node
                 try {
@@ -1137,25 +1104,7 @@ public class JobEventHandler
                                     s = this.createSession();
                                 }
                                 final Node eventNode = (Node) s.getItem(nodePath);
-                                if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
-                                    try {
-                                        final EventInfo info = new EventInfo();
-                                        info.event = this.readEvent(eventNode);
-                                        info.nodePath = nodePath;
-                                        try {
-                                            this.queue.put(info);
-                                        } catch (InterruptedException e) {
-                                            // we ignore this exception as this should never occur
-                                            this.ignoreException(e);
-                                        }
-                                    } catch (ClassNotFoundException cnfe) {
-                                        // store path for lazy loading
-                                        synchronized ( this.unloadedJobs ) {
-                                            this.unloadedJobs.add(nodePath);
-                                        }
-                                        this.ignoreException(cnfe);
-                                    }
-                                }
+                                tryToLoadJob(eventNode, this.unloadedJobs);
                             }
                         }
                     } catch (RepositoryException re) {
@@ -1215,34 +1164,26 @@ public class JobEventHandler
                 long count = 0;
                 while ( result.hasNext() && count < maxLoad ) {
                     final Node eventNode = result.nextNode();
-                    if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
+                    eventCreated = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
+                    if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
                         count++;
-                        eventCreated = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
-                        final String nodePath = eventNode.getPath();
-                        try {
-                            final Event event = this.readEvent(eventNode);
-                            final EventInfo info = new EventInfo();
-                            info.event = event;
-                            info.nodePath = nodePath;
-                            try {
-                                this.queue.put(info);
-                            } catch (InterruptedException e) {
-                                // we ignore this exception as this should never occur
-                                this.ignoreException(e);
-                            }
-                        } catch (ClassNotFoundException cnfe) {
-                            // store path for lazy loading
-                            synchronized ( this.unloadedJobs ) {
-                                this.unloadedJobs.add(nodePath);
-                            }
-                            this.ignoreException(cnfe);
-                        } catch (RepositoryException re) {
-                            this.logger.error("Unable to load stored job from " + nodePath, re);
+                    }
+                }
+                // now we have to add all jobs with the same created time!
+                boolean done = false;
+                while ( result.hasNext() && !done ) {
+                    final Node eventNode = result.nextNode();
+                    final long created = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
+                    if ( created == eventCreated ) {
+                        if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
+                            count++;
                         }
+                    } else {
+                        done = true;
                     }
                 }
                 // have we processed all jobs?
-                if ( !result.hasNext() ) {
+                if ( !done && !result.hasNext() ) {
                     eventCreated = -1;
                 }
                 logger.debug("Loaded {} jobs and new since {}", count, eventCreated);
@@ -1251,6 +1192,33 @@ public class JobEventHandler
             }
         }
         return eventCreated;
+    }
+
+    private boolean tryToLoadJob(final Node eventNode, final Set<String> unloadedJobSet) {
+        try {
+            if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
+                final String nodePath = eventNode.getPath();
+                try {
+                    final Event event = this.readEvent(eventNode);
+                    final EventInfo info = new EventInfo();
+                    info.event = event;
+                    info.nodePath = nodePath;
+                    this.queueJob(info);
+                } catch (ClassNotFoundException cnfe) {
+                    // store path for lazy loading
+                    synchronized ( unloadedJobSet ) {
+                        unloadedJobSet.add(nodePath);
+                    }
+                    this.ignoreException(cnfe);
+                } catch (RepositoryException re) {
+                    this.logger.error("Unable to load stored job from " + nodePath, re);
+                }
+                return true;
+            }
+        } catch (RepositoryException re) {
+            this.logger.error("Unable to load stored job from " + eventNode, re);
+        }
+        return false;
     }
 
     /**
@@ -1322,7 +1290,6 @@ public class JobEventHandler
             this.sendNotification(EventUtil.TOPIC_JOB_FINISHED, job);
         }
         final ParallelInfo parInfo = ParallelInfo.getParallelInfo(job);
-        final boolean parallelProcessing = parInfo.processParallel;
         EventInfo putback = null;
         // we have to use the same session for unlocking that we used for locking!
         synchronized ( this.backgroundLock ) {
@@ -1370,20 +1337,11 @@ public class JobEventHandler
                     this.logger.error("Exception during job finishing.", re);
                 } finally {
                     final String jobTopic = (String)job.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-                    if ( !parallelProcessing) {
-                        synchronized ( this.processingMap ) {
-                            this.processingMap.put(jobTopic, Boolean.FALSE);
-                        }
-                    } else {
-                        if ( parInfo.maxParallelJob > 1 ) {
-                            synchronized ( this.parallelProcessingMap ) {
-                                final Integer value = this.parallelProcessingMap.get(jobTopic);
-                                this.parallelProcessingMap.put(jobTopic, value.intValue() - 1);
-                            }
-                        }
-                    }
+                    this.unlockState(parInfo, jobTopic);
+
                     if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) == null ) {
                         this.parallelJobCount--;
+                        this.backgroundLock.notify();
                     }
 
                     if ( unlock ) {
@@ -1422,19 +1380,7 @@ public class JobEventHandler
                     if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
                         checkForNotify(job, info);
                     } else {
-
-                        // delay rescheduling?
-                        if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
-                            putback = info;
-                        } else {
-                            // put directly into queue
-                            try {
-                                queue.put(info);
-                            } catch (InterruptedException e) {
-                                // this should never happen
-                                this.ignoreException(e);
-                            }
-                        }
+                        putback = info;
                     }
                 } else {
                     // if this is an own job queue, we simply signal the queue to continue
@@ -1456,17 +1402,6 @@ public class JobEventHandler
     }
 
     private void putBackIntoMainQueue(final EventInfo info, final boolean useSleepTime) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Putting job {} back into the queue.", EventUtil.toString(info.event));
-        }
-        final Date fireDate = new Date();
-        if ( useSleepTime ) {
-            fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
-        } else {
-            final long delay = (Long)info.event.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
-            fireDate.setTime(System.currentTimeMillis() + delay);
-        }
-
         final Runnable t = new Runnable() {
             public void run() {
                 try {
@@ -1477,21 +1412,42 @@ public class JobEventHandler
                 }
             }
         };
-        try {
-            this.scheduler.fireJobAt(null, t, null, fireDate);
-        } catch (Exception e) {
-            // we ignore the exception and just put back the job in the queue
-            ignoreException(e);
-            if ( useSleepTime ) {
+
+        final long delay;
+        if ( useSleepTime ) {
+            delay = this.sleepTime * 1000;
+        } else {
+            final Long obj = (Long)info.event.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
+            delay = (obj == null) ? -1 : obj.longValue();
+        }
+        if ( delay == -1 ) {
+            // put directly without waiting
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Putting job {} back into the queue.", EventUtil.toString(info.event));
+            }
+            t.run();
+        } else {
+            // schedule the put
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Putting job {} back into the queue after {}ms.", EventUtil.toString(info.event), delay);
+            }
+            final Date fireDate = new Date();
+            fireDate.setTime(System.currentTimeMillis() + delay);
+
+            try {
+                this.scheduler.fireJobAt(null, t, null, fireDate);
+            } catch (Exception e) {
+                // we ignore the exception and just put back the job in the queue
+                ignoreException(e);
                 // then wait for the time and readd the job
                 try {
-                    Thread.sleep(sleepTime * 1000);
+                    Thread.sleep(delay);
                 } catch (InterruptedException ie) {
                     // ignore
                     ignoreException(ie);
                 }
+                t.run();
             }
-            t.run();
         }
     }
 
@@ -1666,7 +1622,7 @@ public class JobEventHandler
      */
     public void cancelJob(String topic, String jobId) {
         if ( jobId != null && topic != null ) {
-            this.cancelJob(this.getNodePath(topic, jobId));
+            this.cancelJob(JobUtil.getUniquePath(topic, jobId));
         }
     }
 
