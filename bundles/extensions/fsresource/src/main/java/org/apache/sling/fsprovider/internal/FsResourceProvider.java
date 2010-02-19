@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * The <code>FsResourceProvider</code> is a resource provider which maps
@@ -48,12 +49,13 @@ import org.osgi.framework.BundleContext;
  *                label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  *                configurationFactory="true"
- * @scr.service
+ * @scr.service interface="ResourceProvider"
  * @scr.property name="service.description" value="Sling Filesystem Resource
  *               Provider"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef="ResourceProvider.ROOTS"
  * @scr.property nameRef="PROP_PROVIDER_FILE"
+ * @scr.property nameRef="PROP_PROVIDER_CHECKINTERVAL" valueRef="DEFAULT_CHECKINTERVAL"
  */
 public class FsResourceProvider implements ResourceProvider {
 
@@ -64,6 +66,14 @@ public class FsResourceProvider implements ResourceProvider {
      */
     public static final String PROP_PROVIDER_FILE = "provider.file";
 
+    /**
+     * The name of the configuration property providing the check interval
+     * for file changes (value is "provider.checkinterval").
+     */
+    public static final String PROP_PROVIDER_CHECKINTERVAL = "provider.checkinterval";
+
+    public static long DEFAULT_CHECKINTERVAL = 1000;
+
     // The location in the resource tree where the resources are mapped
     private String providerRoot;
 
@@ -72,6 +82,12 @@ public class FsResourceProvider implements ResourceProvider {
 
     // The "root" file or folder in the file system
     private File providerFile;
+
+    /** The monitor to detect file changes. */
+    private FileMonitor monitor;
+
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private EventAdmin eventAdmin;
 
     /**
      * Same as {@link #getResource(ResourceResolver, String)}, i.e. the
@@ -199,12 +215,37 @@ public class FsResourceProvider implements ResourceProvider {
         this.providerRoot = providerRoot;
         this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = getProviderFile(providerFileName, bundleContext);
+        // start background monitor if check interval is higher than 100
+        long checkInterval = DEFAULT_CHECKINTERVAL;
+        final Object interval = props.get(PROP_PROVIDER_CHECKINTERVAL);
+        if ( interval != null && interval instanceof Long ) {
+            checkInterval = (Long)interval;
+        }
+        if ( checkInterval > 100 ) {
+            this.monitor = new FileMonitor(this, checkInterval);
+        }
     }
 
     protected void deactivate() {
+        if ( this.monitor != null ) {
+            this.monitor.stop();
+            this.monitor = null;
+        }
         this.providerRoot = null;
         this.providerRootPrefix = null;
         this.providerFile = null;
+    }
+
+    EventAdmin getEventAdmin() {
+        return this.eventAdmin;
+    }
+
+    File getRootFile() {
+        return this.providerFile;
+    }
+
+    String getProviderRoot() {
+        return this.providerRoot;
     }
 
     // ---------- internal
