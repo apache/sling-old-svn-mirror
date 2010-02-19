@@ -42,13 +42,13 @@ public class FsResource extends SlingAdaptable implements Resource {
      * The resource type for file system files mapped into the resource tree by
      * the {@link FsResourceProvider} (value is "nt:file").
      */
-    private static final String RESOURCE_TYPE_FILE = "nt:file";
+    static final String RESOURCE_TYPE_FILE = "nt:file";
 
     /**
      * The resource type for file system folders mapped into the resource tree
      * by the {@link FsResourceProvider} (value is "nt:folder").
      */
-    private static final String RESOURCE_TYPE_FOLDER = "nt:folder";
+    static final String RESOURCE_TYPE_FOLDER = "nt:folder";
 
     // default log, assigned on demand
     private Logger log;
