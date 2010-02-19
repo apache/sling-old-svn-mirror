@@ -67,6 +67,10 @@ public class SlingPropertyValueHandler {
      */
     private final Calendar now = Calendar.getInstance();
 
+    // hard-coding WEAKREFERENCE as propertyType = 10 because we don'
+    // want to depend upon jcr 2 api just for the constant.
+    private static final int PROPERTY_TYPE_WEAKREFERENCE = 10;
+
     /**
      * Constructs a propert value handler
      */
@@ -243,7 +247,7 @@ public class SlingPropertyValueHandler {
                         }
                         return;
                     }
-                } else if (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE) {
+                } else if (isReferencePropertyType(type)) {
                     Node n = referenceParser.parse(values[0]);
                     if (n != null) {
                         if ( prop.hasMultiValueTypeHint() ) {
@@ -290,7 +294,7 @@ public class SlingPropertyValueHandler {
                     ));
                     return;
                 }
-            } else if (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE) {
+            } else if (isReferencePropertyType(type)) {
                 // try conversion
                 ValueFactory valFac = parent.getSession().getValueFactory();
                 Value[] n = referenceParser.parse(values, valFac);
@@ -310,6 +314,10 @@ public class SlingPropertyValueHandler {
             }
             changes.add(Modification.onModified(p.getPath()));
         }
+    }
+
+    private boolean isReferencePropertyType(int propertyType) {
+        return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
     }
 
     /**
