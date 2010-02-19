@@ -92,6 +92,8 @@ public class JsonReader implements ContentReader {
     private static final Pattern jsonDate = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}[-+]{1}[0-9]{2}[:]{0,1}[0-9]{2}$");
     private static final String REFERENCE = "jcr:reference:";
     private static final String PATH = "jcr:path:";
+    private static final String NAME = "jcr:name:";
+    private static final String URI = "jcr:uri:";
 
     private static final Set<String> ignoredNames = new HashSet<String>();
     static {
@@ -235,6 +237,8 @@ public class JsonReader implements ContentReader {
         } else if (object instanceof String) {
             if (name.startsWith(REFERENCE)) return PropertyType.REFERENCE;
             if (name.startsWith(PATH)) return PropertyType.PATH;
+            if (name.startsWith(NAME)) return PropertyType.NAME;
+            if (name.startsWith(URI)) return PropertyType.URI;
             if (jsonDate.matcher((String) object).matches()) return PropertyType.DATE;
         }
 
@@ -245,6 +249,8 @@ public class JsonReader implements ContentReader {
     protected String getName(String name) {
         if (name.startsWith(REFERENCE)) return name.substring(REFERENCE.length());
         if (name.startsWith(PATH)) return name.substring(PATH.length());
+        if (name.startsWith(NAME)) return name.substring(NAME.length());
+        if (name.startsWith(URI)) return name.substring(URI.length());
         return name;
     }
 
