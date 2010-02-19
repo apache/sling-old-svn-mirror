@@ -52,6 +52,10 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         return this.context;
     }
 
+    /**
+     * Simple setup test which checks if the session and the session listener
+     * is registered.
+     */
     @org.junit.Test public void testSetup() throws RepositoryException {
         assertEquals(this.handler.applicationId, SLING_ID);
         assertEquals(this.handler.repositoryPath, REPO_PATH);
@@ -65,6 +69,9 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertTrue("Handler is not registered as event listener.", found);
     }
 
+    /**
+     * Helper method to create a job event.
+     */
     private Event getJobEvent() {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(EventUtil.PROPERTY_JOB_TOPIC, "sling/test");
@@ -73,6 +80,10 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         return new Event(EventUtil.TOPIC_JOB, props);
     }
 
+    /**
+     * Test simple job execution.
+     * The job is executed once and finished successfully.
+     */
     @org.junit.Test public void testSimpleJobExecution() throws Exception {
         final JobEventHandler jeh = (JobEventHandler)this.handler;
         jeh.handleEvent(getJobEvent());
@@ -92,6 +103,10 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertFalse("Unexpected event received in the given time.", cb.block(5));
     }
 
+    /**
+     * Reschedule test.
+     * The job is rescheduled two times before it fails.
+     */
     @org.junit.Test public void testStartJobAndReschedule() throws Exception {
         final JobEventHandler jeh = (JobEventHandler)this.handler;
         jeh.handleEvent(getJobEvent());
@@ -103,7 +118,6 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                             EventUtil.rescheduleJob(event);
                             cb.block();
                         }
-
                     }
                 });
         assertTrue("No event received in the given time.", cb.block(5));
