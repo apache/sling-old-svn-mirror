@@ -388,7 +388,11 @@ public class DefaultContentCreator implements ContentCreator {
             }
 
         } else {
-            node.setProperty(name, values, propertyType);
+            if (propertyType == PropertyType.UNDEFINED) {
+                node.setProperty(name, values);
+            } else {
+                node.setProperty(name, values, propertyType);
+            }
         }
     }
 
