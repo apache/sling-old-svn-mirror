@@ -19,7 +19,9 @@ package org.apache.sling.jcr.jackrabbit.accessmanager.post;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -134,19 +136,23 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 
 		List<String> grantedPrivilegeNames = new ArrayList<String>();
 		List<String> deniedPrivilegeNames = new ArrayList<String>();
+		//SLING-997: keep track of the privilege names that were posted, so the others can be preserved
+		Set<String> postedPrivilegeNames = new HashSet<String>();
 		Enumeration parameterNames = request.getParameterNames();
 		while (parameterNames.hasMoreElements()) {
 			Object nextElement = parameterNames.nextElement();
 			if (nextElement instanceof String) {
 				String paramName = (String)nextElement;
 				if (paramName.startsWith("privilege@")) {
+					String privilegeName = paramName.substring(10);
+					//keep track of which privileges should be changed
+					postedPrivilegeNames.add(privilegeName); 
+					
 					String parameterValue = request.getParameter(paramName);
 					if (parameterValue != null && parameterValue.length() > 0) {
 						if ("granted".equals(parameterValue)) {
-							String privilegeName = paramName.substring(10);
 							grantedPrivilegeNames.add(privilegeName);
 						} else if ("denied".equals(parameterValue)) {
-							String privilegeName = paramName.substring(10);
 							deniedPrivilegeNames.add(privilegeName);
 						}
 					}
@@ -165,6 +171,9 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 				newPrivileges = new StringBuilder();
 			}
 
+			List<Privilege> preserveGrantedPrivileges = new ArrayList<Privilege>();
+			List<Privilege> preserveDeniedPrivileges = new ArrayList<Privilege>();
+			
 			//keep track of the existing Aces for the target principal
 			AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
 			List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
@@ -175,20 +184,25 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 					}
 					oldAces.add(ace);
 
-					if (log.isDebugEnabled()) {
-						//collect the information for debug logging
-						boolean isAllow = AccessControlUtil.isAllow(ace);
-						Privilege[] privileges = ace.getPrivileges();
-						for (Privilege privilege : privileges) {
+					boolean isAllow = AccessControlUtil.isAllow(ace);
+					Privilege[] privileges = ace.getPrivileges();
+					for (Privilege privilege : privileges) {
+						String privilegeName = privilege.getName();
+						if (!postedPrivilegeNames.contains(privilegeName)) {
+							//this privilege was not posted, so record the existing state to be 
+							// preserved when the ACE is re-created below
+							if (isAllow) {
+								preserveGrantedPrivileges.add(privilege);
+							} else {
+								preserveDeniedPrivileges.add(privilege);
+							}
+						}
+
+						if (log.isDebugEnabled()) {
+							//collect the information for debug logging
 							if (oldPrivileges.length() > 0) {
 								oldPrivileges.append(", "); //separate entries by commas
 							}
-							if (isAllow) {
-								oldPrivileges.append("granted=");
-							} else {
-								oldPrivileges.append("denied=");
-							}
-							oldPrivileges.append(privilege.getName());
 						}
 					}
 				}
@@ -209,15 +223,20 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 				}
 				Privilege privilege = accessControlManager.privilegeFromName(name);
 				grantedPrivilegeList.add(privilege);
+			}
+			//add the privileges that should be preserved
+			grantedPrivilegeList.addAll(preserveGrantedPrivileges);
 
-				if (log.isDebugEnabled()) {
+			if (log.isDebugEnabled()) {
+				for (Privilege privilege : grantedPrivilegeList) {
 					if (newPrivileges.length() > 0) {
 						newPrivileges.append(", "); //separate entries by commas
 					}
 					newPrivileges.append("granted=");
 					newPrivileges.append(privilege.getName());
-				}
+				}				
 			}
+
 			if (grantedPrivilegeList.size() > 0) {
 				Principal principal = authorizable.getPrincipal();
 				updatedAcl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
@@ -233,8 +252,12 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 					}
 					Privilege privilege = accessControlManager.privilegeFromName(name);
 					deniedPrivilegeList.add(privilege);
-
-					if (log.isDebugEnabled()) {
+				}
+				//add the privileges that should be preserved
+				deniedPrivilegeList.addAll(preserveDeniedPrivileges);
+				
+				if (log.isDebugEnabled()) {
+					for (Privilege privilege : deniedPrivilegeList) {
 						if (newPrivileges.length() > 0) {
 							newPrivileges.append(", "); //separate entries by commas
 						}
@@ -242,6 +265,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 						newPrivileges.append(privilege.getName());
 					}
 				}
+				
 				if (deniedPrivilegeList.size() > 0) {
 					Principal principal = authorizable.getPrincipal();
 					AccessControlUtil.addEntry(updatedAcl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
