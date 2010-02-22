@@ -122,7 +122,6 @@
         <module>bundles/extensions/httpauth</module>
         <module>bundles/extensions/openidauth</module>
         <module>bundles/extensions/threaddump</module>
-        <module>bundles/extensions/systemstatus</module>
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/groovy</module>
 
