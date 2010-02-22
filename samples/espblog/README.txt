@@ -31,11 +31,11 @@ To verify that the bundle is correctly installed:
 HOW TO TEST
 -----------
 Start by logging in at http://localhost:8888/?sling:authRequestLogin=true,
-using username=admin and password=admin (TODO: there should be a link for
-that on the sling index.html page).
+using username=admin and password=admin (or use the "login" link on the 
+/index.html page).
 
-Once logged in, this should display the "Welcome to the Sling Launchpad"
-index.html page.
+Once logged in, /index.html should say "you are currently logged in as
+user "admin" to workspace "default".
 
 Then, http://localhost:8888/content/espblog/*.html should display the "Sling ESP
 blog sample" page, with the Home/Admin/New Post/... menu.
