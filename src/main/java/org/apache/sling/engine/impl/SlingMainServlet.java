@@ -60,7 +60,6 @@ import org.apache.sling.commons.auth.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.ResponseUtil;
-import org.apache.sling.engine.SystemStatus;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
@@ -167,9 +166,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private AdapterManager adapterManager;
-
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private SystemStatus systemStatus;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private AuthenticationSupport authenticationSupport;
@@ -289,25 +285,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 errorMessage = "Missing ResourceResolver";
             }
 
-            // system ready?
-            if(errorMessage == null && systemStatus != null) {
-                try {
-                    systemStatus.checkSystemReady();
-                } catch(Exception e) {
-                    errorMessage = e.toString();
-                }
-            }
-
             if (errorMessage != null) {
                 final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
                 log.error("{} , sending status {}", errorMessage, status);
                 sendError(status, errorMessage, null, servletRequest, servletResponse);
-                return;
-            }
-
-            // status request?
-            if(SystemStatus.STATUS_PATH.equals(request.getPathInfo()) && systemStatus != null) {
-                systemStatus.doGet(request, response);
                 return;
             }
 
