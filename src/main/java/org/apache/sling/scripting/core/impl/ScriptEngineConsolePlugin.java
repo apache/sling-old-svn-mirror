@@ -18,7 +18,6 @@
  */
 package org.apache.sling.scripting.core.impl;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -27,17 +26,13 @@ import java.util.List;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class ScriptEngineConsolePlugin extends HttpServlet {
-
-    private static final String LABEL = "scriptengines";
+public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
 
     // --------- setup and shutdown
 
@@ -73,64 +68,39 @@ public class ScriptEngineConsolePlugin extends HttpServlet {
         this.scriptAdapterFactory = scriptAdapterFactory;
     }
 
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse res)
-            throws IOException {
-        PrintWriter pw = res.getWriter();
+    public String getTitle() {
+        return "Script Engines";
+    }
 
-        pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+    public void printConfiguration(final PrintWriter pw) {
+        pw.println("Available Script Engines");
+        pw.println("========================");
 
         ScriptEngineManager manager = scriptAdapterFactory.getScriptEngineManager();
         List<?> factories = manager.getEngineFactories();
         for (Iterator<?> fi = factories.iterator(); fi.hasNext();) {
 
-            ScriptEngineFactory factory = (ScriptEngineFactory) fi.next();
+            final ScriptEngineFactory factory = (ScriptEngineFactory) fi.next();
 
-            pw.println("<tr class='content'>");
-            pw.println("<th colspan='3'class='content container'>");
+            pw.println();
             pw.print(factory.getEngineName());
-            pw.print(", ");
+            pw.print(" ");
             pw.println(factory.getEngineVersion());
-            pw.println("</th>");
-            pw.println("</tr>");
-
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content'>Language</td>");
-            pw.println("<td class='content'>");
+            pw.println("-------------------------------------");
+            pw.print("- Language : ");
             pw.print(factory.getLanguageName());
             pw.print(", ");
             pw.println(factory.getLanguageVersion());
-            pw.println("</td>");
-            pw.println("</tr>");
 
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content'>Extensions</td>");
-            pw.println("<td class='content'>");
+            pw.print("- Extensions : ");
             printArray(pw, factory.getExtensions());
-            pw.println("</td>");
-            pw.println("</tr>");
 
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content'>MIME Types</td>");
-            pw.println("<td class='content'>");
+            pw.print("- MIME Types : ");
             printArray(pw, factory.getMimeTypes());
-            pw.println("</td>");
-            pw.println("</tr>");
 
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content'>Names</td>");
-            pw.println("<td class='content'>");
+            pw.print("- Names : ");
             printArray(pw, factory.getNames());
-            pw.println("</td>");
-            pw.println("</tr>");
-
         }
-
-        pw.println("</table>");
     }
 
     private void printArray(PrintWriter pw, List<?> values) {
@@ -153,11 +123,9 @@ public class ScriptEngineConsolePlugin extends HttpServlet {
             "Web Console Plugin for ScriptEngine implementations");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
-        props.put("felix.webconsole.label", LABEL);
-        props.put("felix.webconsole.title", "Script Engines");
 
         serviceRegistration = context.registerService(
-            "javax.servlet.Servlet", this, props);
+            ConfigurationPrinter.class.getName(), this, props);
     }
 
     public void deactivate() {
