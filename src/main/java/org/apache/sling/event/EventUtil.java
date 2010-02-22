@@ -244,6 +244,7 @@ public abstract class EventUtil {
      * If this method returns <code>false</code> this means someone else is already
      * processing this job, and the caller should not process the event anymore.
      * @return Returns <code>true</code> if the acknowledge could be sent
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      * @since 2.3
      */
     public static boolean acknowledgeJob(Event job) {
@@ -262,6 +263,7 @@ public abstract class EventUtil {
 
     /**
      * Notify a finished job.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static void finishedJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
@@ -273,6 +275,7 @@ public abstract class EventUtil {
     /**
      * Notify a failed job.
      * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static boolean rescheduleJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
@@ -285,6 +288,7 @@ public abstract class EventUtil {
     /**
      * Process a job in the background and notify its success.
      * This method also sends an acknowledge message to the job event handler.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static void processJob(final Event job, final JobProcessor processor) {
         // first check for a notifier context to send an acknowledge
