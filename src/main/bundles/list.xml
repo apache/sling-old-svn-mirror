@@ -55,11 +55,6 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.systemstatus</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.httpauth</artifactId>
             <version>2.0.5-SNAPSHOT</version>
         </bundle>
