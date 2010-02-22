@@ -43,6 +43,7 @@ import javax.jcr.ValueFactory;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
+import org.apache.sling.event.impl.job.JobStatusNotifier;
 import org.osgi.service.event.Event;
 
 
@@ -85,7 +86,7 @@ public abstract class EventHelper {
         EventUtil.PROPERTY_DISTRIBUTE,
         EventUtil.PROPERTY_APPLICATION,
         JobStatusProvider.PROPERTY_EVENT_ID,
-        EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME
+        JobStatusNotifier.CONTEXT_PROPERTY_NAME
     };
 
     /** List of ignored prefixes to read from the repository. */

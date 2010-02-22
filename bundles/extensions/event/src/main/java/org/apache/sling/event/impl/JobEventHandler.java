@@ -56,6 +56,7 @@ import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.apache.sling.event.impl.job.JobBlockingQueue;
+import org.apache.sling.event.impl.job.JobStatusNotifier;
 import org.apache.sling.event.impl.job.JobUtil;
 import org.apache.sling.event.impl.job.ParallelInfo;
 import org.osgi.framework.Constants;
@@ -91,7 +92,7 @@ import org.osgi.service.event.EventConstants;
 })
 public class JobEventHandler
     extends AbstractRepositoryEventHandler
-    implements EventUtil.JobStatusNotifier, JobStatusProvider, Runnable {
+    implements JobStatusNotifier, JobStatusProvider, Runnable {
 
     /** A map for keeping track of currently processed job topics. */
     private final Map<String, Boolean> processingMap = new HashMap<String, Boolean>();
@@ -1036,8 +1037,8 @@ public class JobEventHandler
         final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         final Dictionary<String, Object> properties = new EventPropertiesMap(e);
         // put properties for finished job callback
-        properties.put(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME,
-                new EventUtil.JobStatusNotifier.NotifierContext(this, nodePath));
+        properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME,
+                new JobStatusNotifier.NotifierContext(this, nodePath));
         return new Event(eventTopic, properties);
     }
 

@@ -22,9 +22,9 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
 import org.apache.sling.event.impl.AbstractRepositoryEventHandler;
 import org.apache.sling.event.impl.JobEventHandler;
+import org.apache.sling.event.impl.job.JobStatusNotifier;
 import org.osgi.service.event.Event;
 import org.slf4j.LoggerFactory;
 
@@ -230,7 +230,7 @@ public abstract class EventUtil {
         if ( !isJobEvent(job) ) {
             return null;
         }
-        final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
+        final JobStatusNotifier.NotifierContext ctx = (JobStatusNotifier.NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
             throw new IllegalArgumentException("JobStatusNotifier context is not available in event properties.");
         }
@@ -338,46 +338,6 @@ public abstract class EventUtil {
             // allows to call this method for other background processing.
             new Thread(task).start();
         }
-    }
-
-    /**
-     * This is a private interface which is only public for import reasons.
-     */
-    public static interface JobStatusNotifier {
-
-        String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
-
-        public static final class NotifierContext {
-            public final JobStatusNotifier notifier;
-            public final String eventNodePath;
-
-            public NotifierContext(JobStatusNotifier n, String path) {
-                this.notifier = n;
-                this.eventNodePath = path;
-            }
-        }
-
-        /**
-         * Send an acknowledge message that someone is processing the job.
-         * @param job The job.
-         * @param eventNodePath The storage node in the repository.
-         * @return <code>true</code> if the ack is ok, <code>false</code> otherwise (e.g. if
-         *   someone else already send an ack for this job.
-         */
-        boolean sendAcknowledge(Event job, String eventNodePath);
-
-        /**
-         * Notify that the job is finished.
-         * If the job is not rescheduled, a return value of <code>false</code> indicates an error
-         * during the processing. If the job should be rescheduled, <code>true</code> indicates
-         * that the job could be rescheduled. If an error occurs or the number of retries is
-         * exceeded, <code>false</code> will be returned.
-         * @param job The job.
-         * @param eventNodePath The storage node in the repository.
-         * @param reschedule Should the event be rescheduled?
-         * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
-         */
-        boolean finishedJob(Event job, String eventNodePath, boolean reschedule);
     }
 
     /**
