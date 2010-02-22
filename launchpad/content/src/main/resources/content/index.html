@@ -22,6 +22,7 @@
   <head>
     <title>Welcome to the Sling Launchpad</title>
     <link rel="stylesheet" type="text/css" href="sling.css"/>
+    <script src="../system/sling.js"/></script>
   </head>
   <body>
   	<div class="title">
@@ -39,8 +40,8 @@
 	    <h1>Welcome to the Sling Launchpad</h1>
 	    
 		<p>
-			Apache Sling (currently in incubation) is a web framework that uses a Java Content Repository, 
-			such as Apache Jackrabbit, to store and manage content.
+			<a href="http://sling.apache.org">Apache Sling</a> is a web framework that uses a Java Content Repository, 
+			such as <a href="http://jackrabbit.apache.org">Apache Jackrabbit</a>, to store and manage content.
 
 			Sling applications use either scripts or Java servlets, selected based on simple name conventions, 
 			to process HTTP requests in a RESTful way.
@@ -69,6 +70,20 @@
 			Note that you can mount the repository via WebDAV to explore or modify content,
 			simply use the <a href="./">root URL</a> as the WebDAV server URL.
 		</p>
+        <p>
+           You are currently logged in as user <b id="username">????</b> to workspace <b id="workspace">????</b>. 
+        </p>
+        <p>
+            To login with a different username (use <em>admin/admin</em> to be allowed to write to the repository),
+            use <a href="../?sling:authRequestLogin=1">this link</a>.
+        </p>
+        <script language="javascript">
+            var info = Sling.getSessionInfo();
+            document.getElementById("username").innerHTML = info.userID;
+            document.getElementById("workspace").innerHTML = info.workspace;
+        </script>
+        
+        <h2>More info</h2>
 		<p>
 			Use our 
 			<a href="http://sling.apache.org/site/project-information.html#ProjectInformation-lists">
@@ -76,15 +91,12 @@
 			</a> to contact the Sling developers team.
 		</p>	
 	    <p>
-	    	The Sling OSGi management console is available at <a href="system/console">system/console</a>.
+	    	The Sling OSGi management console is available at <a href="system/console">system/console</a>,
+	    	use <em>admin/admin</em> to login.
 	    </p>
 	    <p>
 	    	The Sling client library tests are available at 
 	    	<a href="sling-test/sling/sling-test.html">sling-test/sling/sling-test.html</a>.
-	    </p>
-	    <p>
-                You can <a href="../?sling:authRequestLogin=1">login</a> to Sling, even though this
-                page is accessible to the anonymous user.
 	    </p>
     </div>
   </body>
