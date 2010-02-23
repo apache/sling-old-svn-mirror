@@ -44,11 +44,6 @@
     </scm>
 
     <properties>
-        <!--
-            Jetty default port (override with -D)
-        -->
-        <http.port>8888</http.port>
-
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
 
@@ -102,6 +97,25 @@
                         </fileset>
                     </filesets>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
