@@ -47,8 +47,7 @@ public class PostRedirectTest extends HttpTestBase {
     public void testDefaultRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
         params.put(":redirect", null);
-        final String location = testClient.createNode(postUrl, null, null,
-            false);
+        final String location = testClient.createNode(postUrl, null);
         assertTrue("With no headers or parameters, redirect (" + location
             + ") must point to created node (path=" + postPath + ")",
             location.contains(postPath));
