@@ -58,10 +58,10 @@ public class ReferenceTypeHintTest extends HttpTestBase {
         props.add("w@TypeHint", "WeakReference");
         props.add("rs", firstPath);
         props.add("rs", secondPath);
-        props.add("rs@TypeHint", "Reference");
+        props.add("rs@TypeHint", "Reference[]");
         props.add("ws", firstPath);
         props.add("ws", secondPath);
-        props.add("ws@TypeHint", "WeakReference");
+        props.add("ws@TypeHint", "WeakReference[]");
         final String referencingNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX,
                 props, null, false);
 
