@@ -27,7 +27,6 @@
     <name>Sample In-Place Integration Test</name>
     <description>Sling Integration Test Demo Project</description>
     <properties>
-        <http.port>8888</http.port>
         <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
         <jetty.sling.home>target/sling</jetty.sling.home>
         <test.host>localhost</test.host>
@@ -44,6 +43,25 @@
     </scm>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>

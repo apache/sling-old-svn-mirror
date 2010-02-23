@@ -310,6 +310,11 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                         </signature>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
