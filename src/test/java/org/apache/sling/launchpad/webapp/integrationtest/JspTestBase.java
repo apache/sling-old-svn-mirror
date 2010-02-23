@@ -19,7 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 /** Base class for tests that use JSP - configures the JSP
  *  scripting engine in a test-friendly way
  */
-public class JspTestBase extends RenderingTestBase {
+public abstract class JspTestBase extends RenderingTestBase {
 
     public static final String SCRIPT = "serverscripts/jsp-engine-setup.jsp";
     private static boolean jspEngineConfigured;
