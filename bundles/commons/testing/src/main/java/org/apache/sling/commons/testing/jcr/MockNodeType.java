@@ -21,6 +21,7 @@ package org.apache.sling.commons.testing.jcr;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 
 public class MockNodeType implements NodeType {
@@ -95,4 +96,40 @@ public class MockNodeType implements NodeType {
         return false;
     }
 
+    // JCR 2.0 methods
+
+    public boolean canRemoveNode(String nodeName) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public boolean canRemoveProperty(String propertyName) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public NodeTypeIterator getDeclaredSubtypes() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public NodeTypeIterator getSubtypes() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String[] getDeclaredSupertypeNames() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public boolean isAbstract() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public boolean isQueryable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }

@@ -19,8 +19,10 @@
 package org.apache.sling.commons.testing.jcr;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
+import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -35,15 +37,16 @@ public class MockValue implements Value {
     private long longValue;
     private InputStream stream;
     private int propertyType;
-    
+    private BigDecimal decimal;
+
     public MockValue() {
     }
-    
+
     public MockValue(String str) {
         stringValue = str;
         propertyType = PropertyType.STRING;
     }
-    
+
     public boolean getBoolean() throws ValueFormatException, IllegalStateException, RepositoryException {
         return booleanValue;
     }
@@ -95,5 +98,17 @@ public class MockValue implements Value {
 
     public void setValue(InputStream stream) {
       this.stream = stream;
+    }
+
+    public void setDecimal(BigDecimal value) {
+        this.decimal = value;
+    }
+
+    public Binary getBinary() throws RepositoryException {
+        return null;
+    }
+
+    public BigDecimal getDecimal() throws ValueFormatException, RepositoryException {
+        return decimal;
     }
 }
