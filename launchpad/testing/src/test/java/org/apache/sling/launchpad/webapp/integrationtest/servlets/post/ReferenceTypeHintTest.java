@@ -19,14 +19,13 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Integration test of type hints in the post servlet.
+ * Integration test of reference type hints in the post servlet.
  */
-public class TypeHintTest extends HttpTestBase {
+public class ReferenceTypeHintTest extends HttpTestBase {
     public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
 
@@ -41,22 +40,31 @@ public class TypeHintTest extends HttpTestBase {
         props.put("a", "");
         props.put("jcr:mixinTypes", "mix:referenceable");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
-        String uuid = getProperty(createdNodeUrl, "jcr:uuid");
-        String path = getPath(createdNodeUrl);
+        final String firstCreatedNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String firstUuid = getProperty(firstCreatedNodeUrl, "jcr:uuid");
+        final String firstPath = getPath(firstCreatedNodeUrl);
+
+        final String secondCreatedNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String secondUuid = getProperty(firstCreatedNodeUrl, "jcr:uuid");
+        final String secondPath = getPath(firstCreatedNodeUrl);
 
         props.clear();
-        props.put("a", path);
+        props.put("a", firstPath);
         props.put("a@TypeHint", "Reference");
-        props.put("b", path);
+        props.put("b", firstPath);
         props.put("b@TypeHint", "WeakReference");
-        final String referencingNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        props.put("as", firstPath);
+        props.put("as@TypeHint", "Reference");
+        props.put("bs", firstPath);
+        props.put("bs@TypeHint", "WeakReference");
+        final String referencingNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX,
+                props);
 
         String refCreatedValue = getProperty(referencingNodeUrl, "a");
         String weakrefCreatedValue = getProperty(referencingNodeUrl, "b");
 
-        assertEquals(uuid, refCreatedValue);
-        assertEquals(uuid, weakrefCreatedValue);
+        assertEquals(firstUuid, refCreatedValue);
+        assertEquals(firstUuid, weakrefCreatedValue);
     }
 
     private String getPath(String url) {
@@ -64,8 +72,6 @@ public class TypeHintTest extends HttpTestBase {
     }
 
     private String getProperty(String url, String name) throws Exception {
-        String content = getContent(url + ".json", CONTENT_TYPE_JSON);
-        JSONObject jo = new JSONObject(content);
-        return jo.getString(name);
+        return getContent(url + "/" + name + ".txt", CONTENT_TYPE_PLAIN);
     }
 }
