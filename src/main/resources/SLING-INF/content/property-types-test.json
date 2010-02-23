@@ -1,8 +1,17 @@
 {
 	"test-node" : {
 		"jcr:primaryType" : "sling:propertySetTestNodeType",
+		"string" : "Sling",
+		"strings" : ["Apache", "Sling"],
+		"long" : 42,
+		"longs" : [4, 8, 15, 16, 23, 42],
+		"boolean" : true,
+		"booleans" : [true, false],
 		"uri" : "http://www.google.com/",
+		"uris" : ["http://sling.apache.org/", "http://www.google.com/"],
 		"name" : "sling:test",
-		"path" : "/sling-test/initial-content-folder/folder-content-test"
+		"names" : ["jcr:base", "sling:test"],
+		"path" : "/sling-test/initial-content-folder/folder-content-test",
+		"paths" : ["/sling-test/initial-content-folder/folder-content-test", "/apps"]
 	}
 }

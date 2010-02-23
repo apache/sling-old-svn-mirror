@@ -19,6 +19,19 @@
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
 [sling:propertySetTestNodeType] > nt:base
+ - string (string)
+ - long (long)
+ - boolean (boolean)
  - uri (uri)
  - path (path)
  - name (name)
+ - ref (reference)
+ - weakref (weakreference)
+ - strings (string) multiple
+ - longs (long) multiple
+ - booleans (boolean) multiple
+ - uris (uri) multiple
+ - paths (path) multiple
+ - names (name) multiple
+ - refs (reference) multiple
+ - weakrefs (weakreference) multiple
