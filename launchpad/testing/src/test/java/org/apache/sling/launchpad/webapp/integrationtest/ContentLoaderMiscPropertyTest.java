@@ -21,55 +21,34 @@ import java.io.IOException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /**
- * Test that name, path, and (in JCR 2, uri) properties are set correctly.
+ * Test that property types are supported in initial content.
  */
 public class ContentLoaderMiscPropertyTest extends HttpTestBase {
 
     /**
-     * Verify that the test node's node type is set correctly.
+     * Verify that the test node's properties are set correctly.
      */
-    public void testLoadedNodeType() throws IOException {
-        final String expected = "sling:propertySetTestNodeType";
+    public void testLoaded() throws IOException {
         final String content = getContent(
                 HTTP_BASE_URL + "/sling-test/property-types-test/test-node.txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
+
+        assertPropertyValue(content, "Resource type", "sling:propertySetTestNodeType");
+        assertPropertyValue(content, "string", "Sling");
+        assertPropertyValue(content, "strings", "[Apache, Sling]");
+        assertPropertyValue(content, "long", "42");
+        assertPropertyValue(content, "longs", "[4, 8, 15, 16, 23, 42]");
+        assertPropertyValue(content, "boolean", "true");
+        assertPropertyValue(content, "booleans", "[true, false]");
+        assertPropertyValue(content, "uri", "http://www.google.com/");
+        assertPropertyValue(content, "uris", "[http://sling.apache.org/, http://www.google.com/]");
+        assertPropertyValue(content, "name", "sling:test");
+        assertPropertyValue(content, "names", "[jcr:base, sling:test]");
+        assertPropertyValue(content, "path", "/sling-test/initial-content-folder/folder-content-test");
+        assertPropertyValue(content, "paths", "[/sling-test/initial-content-folder/folder-content-test, /apps]");
     }
 
-    /**
-     * Verify that the URI-type property loaded correctly.
-     *
-     * This test is only really useful post-JCR 2 upgrade.
-     */
-    public void testLoadedURI() throws IOException {
-        final String expected = "http://www.google.com/";
-        final String content = getContent(
-                HTTP_BASE_URL + "/sling-test/property-types-test/test-node/uri.txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
-    }
-
-    /**
-     * Verify that the Name-type property loaded correctly.
-     *
-     * This test is only really useful post-JCR 2 upgrade.
-     */
-
-    public void testLoadedName() throws IOException {
-        final String expected = "sling:test";
-        final String content = getContent(
-                HTTP_BASE_URL + "/sling-test/property-types-test/test-node/name.txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
-    }
-
-    /**
-     * Verify that the Path-type property loaded correctly.
-     *
-     * This test is only really useful post-JCR 2 upgrade.
-     */
-
-    public void testLoadedPath() throws IOException {
-        final String expected = "/sling-test/initial-content-folder/folder-content-test";
-        final String content = getContent(
-                HTTP_BASE_URL + "/sling-test/property-types-test/test-node/path.txt", CONTENT_TYPE_PLAIN);
+    private void assertPropertyValue(String content, String name, String value) {
+        final String expected = String.format("%s: %s", name, value);
         assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
     }
 
