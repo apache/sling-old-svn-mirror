@@ -125,12 +125,14 @@ public class SlingIntegrationTestClient {
         NameValuePairList nodeProperties = new NameValuePairList(clientNodeProperties);
 
         // add sling specific properties
-        nodeProperties.addOrReplace(":redirect", "*");
-        nodeProperties.addOrReplace(":displayExtension", "");
-        nodeProperties.addOrReplace(":status", "browser");
+        nodeProperties.prependIfNew(":redirect", "*");
+        nodeProperties.prependIfNew(":displayExtension", "");
+        nodeProperties.prependIfNew(":status", "browser");
 
         // add fake property - otherwise the node is not created
-        nodeProperties.addIfNew("jcr:created", "");
+        if (clientNodeProperties == null) {
+            nodeProperties.add("jcr:created", "");
+        }
 
         // force form encoding to UTF-8, which is what we use to convert the
         // string parts into stream data

@@ -30,7 +30,7 @@ public class NameValuePairList implements Iterable<NameValuePair> {
     private final List<NameValuePair> delegate;
 
     public NameValuePairList() {
-       delegate = new ArrayList<NameValuePair>();
+        delegate = new ArrayList<NameValuePair>();
     }
 
     public NameValuePairList(List<NameValuePair> init) {
@@ -43,14 +43,16 @@ public class NameValuePairList implements Iterable<NameValuePair> {
 
     public NameValuePairList(Map<String, String> clientNodeProperties) {
         this();
-        for (Map.Entry<String,String> e : clientNodeProperties.entrySet()) {
-            add(e.getKey(), e.getValue());
+        if (clientNodeProperties != null) {
+            for (Map.Entry<String, String> e : clientNodeProperties.entrySet()) {
+                add(e.getKey(), e.getValue());
+            }
         }
     }
 
     public void add(String name, String value) {
         delegate.add(new NameValuePair(name, value));
-     }
+    }
 
     public void addIfNew(String name, String value) {
         boolean found = false;
@@ -87,12 +89,34 @@ public class NameValuePairList implements Iterable<NameValuePair> {
         }
     }
 
+    public void addOrReplaceAll(NameValuePairList other) {
+        for (NameValuePair nvp : other) {
+            addOrReplace(nvp.getName(), nvp.getValue());
+        }
+    }
+
     public void clear() {
         delegate.clear();
     }
 
     public Iterator<NameValuePair> iterator() {
         return delegate.iterator();
+    }
+
+    public void prependIfNew(String name, String value) {
+        boolean found = false;
+        for (ListIterator<NameValuePair> li = delegate.listIterator(); li.hasNext();) {
+            NameValuePair current = li.next();
+            if (current.getName().equals(name)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            delegate.add(0, new NameValuePair(name, value));
+        }
+
     }
 
     public int size() {
