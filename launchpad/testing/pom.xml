@@ -44,6 +44,9 @@
     </scm>
 
     <properties>
+        <!-- HTTP port to use when running mvn jetty:run -->
+        <jetty.http.port>8888</jetty.http.port>
+
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
 
@@ -154,7 +157,7 @@
 
                     <connectors>
                         <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-                            <port>${http.port}</port>
+                            <port>${jetty.http.port}</port>
                             <maxIdleTime>60000</maxIdleTime>
                         </connector>
                     </connectors>
