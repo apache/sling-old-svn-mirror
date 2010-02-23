@@ -107,43 +107,48 @@ public class SlingIntegrationTestClient {
      */
     public String createNode(String url, Map<String,String> clientNodeProperties, Map<String,String> requestHeaders,boolean multiPart)
     throws IOException {
+        return createNode(url, new NameValuePairList(clientNodeProperties), requestHeaders, multiPart);
+    }
+
+    /** Create a node under given path, using a POST to Sling
+     *  @param url under which node is created
+     *  @param multiPart if true, does a multipart POST
+     *  @return the URL that Sling provides to display the node
+     */
+    public String createNode(String url, NameValuePairList clientNodeProperties, Map<String,String> requestHeaders, boolean multiPart)
+    throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
 
         // create a private copy of the properties to not tamper with
         // the properties of the client
-        Map<String, String> nodeProperties = new HashMap<String, String>();
+        NameValuePairList nodeProperties = new NameValuePairList(clientNodeProperties);
 
         // add sling specific properties
-        nodeProperties.put(":redirect", "*");
-        nodeProperties.put(":displayExtension", "");
-        nodeProperties.put(":status", "browser");
+        nodeProperties.addOrReplace(":redirect", "*");
+        nodeProperties.addOrReplace(":displayExtension", "");
+        nodeProperties.addOrReplace(":status", "browser");
 
-        // take over any client provided properties
-        if (clientNodeProperties != null) {
-            nodeProperties.putAll(clientNodeProperties);
-        } else {
-            // add fake property - otherwise the node is not created
-            nodeProperties.put("jcr:created", "");
-        }
+        // add fake property - otherwise the node is not created
+        nodeProperties.addIfNew("jcr:created", "");
 
         // force form encoding to UTF-8, which is what we use to convert the
         // string parts into stream data
-        nodeProperties.put("_charset_", "UTF-8");
+        nodeProperties.addOrReplace("_charset_", "UTF-8");
 
         if( nodeProperties.size() > 0) {
             if(multiPart) {
                 final List<Part> partList = new ArrayList<Part>();
-                for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
+                for(NameValuePair e : nodeProperties) {
                     if (e.getValue() != null) {
-                        partList.add(new StringPart(e.getKey().toString(), e.getValue().toString(), "UTF-8"));
+                        partList.add(new StringPart(e.getName(), e.getValue(), "UTF-8"));
                     }
                 }
                 final Part [] parts = partList.toArray(new Part[partList.size()]);
                 post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
             } else {
-                for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
-                    post.addParameter(e.getKey(),e.getValue());
+                for(NameValuePair e : nodeProperties) {
+                    post.addParameter(e.getName(),e.getValue());
                 }
             }
         }
@@ -204,7 +209,7 @@ public class SlingIntegrationTestClient {
             	partsList.add(typeHintPart);
             }
 		}
-    	
+
         final Part[] parts = partsList.toArray(new Part[partsList.size()]);
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
