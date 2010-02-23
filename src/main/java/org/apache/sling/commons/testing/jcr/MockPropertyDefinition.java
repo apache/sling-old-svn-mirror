@@ -25,10 +25,10 @@ import javax.jcr.nodetype.PropertyDefinition;
 public class MockPropertyDefinition implements PropertyDefinition {
 
     private boolean multiple;
-    
+
     public MockPropertyDefinition(boolean multiple) {
         this.multiple = multiple;
-        
+
     }
     public Value[] getDefaultValues() {
         return null;
@@ -70,4 +70,18 @@ public class MockPropertyDefinition implements PropertyDefinition {
         return false;
     }
 
+    // JCR 2.0 methods
+
+    public String[] getAvailableQueryOperators() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    public boolean isFullTextSearchable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    public boolean isQueryOrderable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }

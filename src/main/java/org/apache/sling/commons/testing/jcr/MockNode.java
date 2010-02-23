@@ -18,15 +18,16 @@
  */
 package org.apache.sling.commons.testing.jcr;
 
-import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.Binary;
+import javax.jcr.InvalidLifecycleTransitionException;
 import javax.jcr.Item;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
@@ -35,16 +36,20 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 
 // simple mock implementation of a node
 public class MockNode implements Node {
@@ -181,7 +186,7 @@ public class MockNode implements Node {
     public PropertyIterator getProperties(String namePattern) throws RepositoryException {
         PropertyIterator iterator = getProperties();
         List<Property> properties = new ArrayList<Property>();
-    
+
         while (iterator.hasNext()) {
             Property p = iterator.nextProperty();
             String name = p.getName();
@@ -189,7 +194,7 @@ public class MockNode implements Node {
                 properties.add(p);
             }
         }
-    
+
         return new MockPropertyIterator(properties.iterator());
     }
 
@@ -370,7 +375,7 @@ public class MockNode implements Node {
     public Session getSession() {
         return this.session;
     }
-    
+
     public void setSession(Session session) {
       this.session = session;
     }
@@ -396,4 +401,89 @@ public class MockNode implements Node {
     public void save() {
     }
 
+    // JCR 2.0 methods
+
+    public void followLifecycleTransition(String transition)
+            throws UnsupportedRepositoryOperationException,
+            InvalidLifecycleTransitionException, RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public String[] getAllowedLifecycleTransistions()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String getIdentifier() throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public PropertyIterator getProperties(String[] nameGlobs)
+            throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public PropertyIterator getReferences(String name)
+            throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public NodeIterator getSharedSet() throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public PropertyIterator getWeakReferences() throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public PropertyIterator getWeakReferences(String name)
+            throws RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void removeShare() throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void removeSharedSet() throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void setPrimaryType(String nodeTypeName)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public Property setProperty(String name, BigDecimal value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Property setProperty(String name, Binary value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

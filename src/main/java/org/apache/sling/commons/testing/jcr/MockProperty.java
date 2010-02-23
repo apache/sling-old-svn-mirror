@@ -19,9 +19,11 @@
 package org.apache.sling.commons.testing.jcr;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
@@ -45,11 +47,11 @@ public class MockProperty implements Property {
 
     private Value [] values = {};
     private final String name;
-    
+
     public MockProperty(String name) {
         this.name = name;
     }
-    
+
     public boolean getBoolean() throws ValueFormatException, RepositoryException {
         if (values.length > 1) {
             throw new ValueFormatException();
@@ -245,4 +247,41 @@ public class MockProperty implements Property {
             NoSuchNodeTypeException, RepositoryException {
     }
 
+    // JCR 2.0 methods
+
+    public Binary getBinary() throws ValueFormatException, RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public BigDecimal getDecimal() throws ValueFormatException,
+            RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Property getProperty() throws ItemNotFoundException,
+            ValueFormatException, RepositoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public boolean isMultiple() throws RepositoryException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public void setValue(BigDecimal value) throws ValueFormatException,
+            VersionException, LockException, ConstraintViolationException,
+            RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void setValue(Binary value) throws ValueFormatException,
+            VersionException, LockException, ConstraintViolationException,
+            RepositoryException {
+        // TODO Auto-generated method stub
+
+    }
 }

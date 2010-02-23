@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
+import java.io.InputStreamReader;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -29,14 +29,11 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.Workspace;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.naming.Context;
-import javax.naming.InitialContext;
+import javax.jcr.Value;
 import javax.naming.NamingException;
 
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /**
@@ -45,116 +42,96 @@ import org.apache.sling.jcr.api.SlingRepository;
  */
 public class RepositoryUtil {
 
-    public static final String REPOSITORY_NAME = "repositoryTest";
-
     public static final String ADMIN_NAME = "admin";
 
     public static final String ADMIN_PASSWORD = "admin";
 
-    public static final String CONTEXT_FACTORY = "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory";
-
-    public static final String PROVIDER_URL = "localhost";
+    public static final String HOME_DIR = "target/repository";
 
     public static final String CONFIG_FILE = "jackrabbit-test-config.xml";
 
-    public static final String HOME_DIR = "target/repository";
+    private static SlingRepository repository;
 
-    protected static InitialContext getInitialContext() throws NamingException {
-        final Hashtable<String, String> env = new Hashtable<String, String>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, CONTEXT_FACTORY);
-        env.put(Context.PROVIDER_URL, PROVIDER_URL);
-        return new InitialContext(env);
-    }
+    private static Session adminSession;
 
     /**
      * Start a new repository
      *
      * @throws RepositoryException when it is not possible to start the
      *             repository.
-     * @throws NamingException
      */
-    public static void startRepository() throws RepositoryException,
-            NamingException {
-
-        // copy the repository configuration file to the repository HOME_DIR
-        InputStream ins = RepositoryUtil.class.getClassLoader().getResourceAsStream(
-            CONFIG_FILE);
-        if (ins == null) {
-            throw new RepositoryException("Cannot get " + CONFIG_FILE);
-        }
-
-        File configFile = new File(HOME_DIR, CONFIG_FILE);
-        configFile.getParentFile().mkdirs();
-
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(configFile);
-            byte[] buf = new byte[1024];
-            int rd;
-            while ((rd = ins.read(buf)) >= 0) {
-                out.write(buf, 0, rd);
+    public static void startRepository() throws RepositoryException {
+        if ( adminSession == null ) {
+            // copy the repository configuration file to the repository HOME_DIR
+            InputStream ins = RepositoryUtil.class.getClassLoader().getResourceAsStream(
+                CONFIG_FILE);
+            if (ins == null) {
+                throw new RepositoryException("Cannot get " + CONFIG_FILE);
             }
-        } catch (IOException ioe) {
-            throw new RepositoryException("Cannot copy configuration file to "
-                + configFile);
-        } finally {
+
+            File configFile = new File(HOME_DIR, "repository.xml");
+            configFile.getParentFile().mkdirs();
+
+            FileOutputStream out = null;
             try {
-                ins.close();
-            } catch (IOException ignore) {
-            }
-            if (out != null) {
+                out = new FileOutputStream(configFile);
+                byte[] buf = new byte[1024];
+                int rd;
+                while ((rd = ins.read(buf)) >= 0) {
+                    out.write(buf, 0, rd);
+                }
+            } catch (IOException ioe) {
+                throw new RepositoryException("Cannot copy configuration file to "
+                    + configFile);
+            } finally {
                 try {
-                    out.close();
+                    ins.close();
                 } catch (IOException ignore) {
                 }
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (IOException ignore) {
+                    }
+                }
             }
-        }
 
-        // somewhat dirty hack to have the derby.log file in a sensible
-        // location, but don't overwrite anything already set
-        if (System.getProperty("derby.stream.error.file") == null) {
-            String derbyLog = HOME_DIR + "/derby.log";
-            System.setProperty("derby.stream.error.file", derbyLog);
-        }
+            // somewhat dirty hack to have the derby.log file in a sensible
+            // location, but don't overwrite anything already set
+            if (System.getProperty("derby.stream.error.file") == null) {
+                String derbyLog = HOME_DIR + "/derby.log";
+                System.setProperty("derby.stream.error.file", derbyLog);
+            }
 
-        RegistryHelper.registerRepository(getInitialContext(), REPOSITORY_NAME,
-            configFile.getPath(), HOME_DIR, true);
+            final File f = new File(HOME_DIR);
+            repository = new RepositoryWrapper(JcrUtils.getRepository(f.toURI().toString()));
+            adminSession = repository.loginAdministrative(null);
+        }
     }
 
     /**
      * Stop a repository.
-     *
-     * @throws NamingException when it is not possible to stop the repository
-     * @throws NamingException
      */
     public static void stopRepository() throws NamingException {
-        RegistryHelper.unregisterRepository(getInitialContext(),
-            REPOSITORY_NAME);
+        if ( adminSession != null ) {
+            adminSession.logout();
+            adminSession = null;
+            repository = null;
+        }
     }
 
     /**
      * Get a repository
      *
      * @return a JCR repository reference
-     * @throws NamingException when it is not possible to get the repository.
-     *             Before calling this method, the repository has to be
-     *             registered (@see RepositoryUtil#registerRepository(String,
-     *             String, String)
-     * @throws NamingException
      */
-    public static SlingRepository getRepository() throws NamingException {
-        return new RepositoryWrapper((Repository) getInitialContext().lookup(
-            REPOSITORY_NAME));
+    public static SlingRepository getRepository() {
+        return repository;
     }
 
     /**
      * Registers node types from the CND file read from the <code>source</code>
      * with the node type manager available from the given <code>session</code>.
-     * <p>
-     * The <code>NodeTypeManager</code> returned by the <code>session</code>'s
-     * workspace is expected to be of type
-     * <code>org.apache.jackrabbit.api.JackrabbitNodeTypeManager</code> for
-     * the node type registration to succeed.
      * <p>
      * This method is not synchronized. It is up to the calling method to
      * prevent paralell execution.
@@ -167,36 +144,13 @@ public class RepositoryUtil {
      */
     public static boolean registerNodeType(Session session, InputStream source)
             throws IOException, RepositoryException {
-
-        Workspace workspace = session.getWorkspace();
-        NodeTypeManager ntm = workspace.getNodeTypeManager();
-        if (ntm instanceof JackrabbitNodeTypeManager) {
-            JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
-            try {
-                jntm.registerNodeTypes(source,
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
-                return true;
-            } catch (RepositoryException re) {
-                Throwable t = re.getCause();
-                if (t != null
-                    && t.getClass().getName().endsWith(
-                        ".InvalidNodeTypeDefException")) {
-                    // hacky wacky: interpret message to check whether it is for
-                    // duplicate node type -> very bad, that this is the only
-                    // way to check !!!
-                    if (re.getCause().getMessage().indexOf("already exists") >= 0) {
-                        // alright, node types are already registered, ignore
-                        // this
-                        return true;
-                    }
-                }
-
-                // get here to rethrow the RepositoryException
-                throw re;
-            }
+        try {
+            CndImporter.registerNodeTypes(new InputStreamReader(source, "UTF-8"), session);
+            return true;
+        } catch (Exception e) {
+            // ignore
+            return false;
         }
-
-        return false;
     }
 
     public static void registerSlingNodeTypes(Session adminSession) throws IOException, RepositoryException {
@@ -232,7 +186,7 @@ public class RepositoryUtil {
         public Session login(Credentials credentials, String workspaceName)
                 throws LoginException, NoSuchWorkspaceException,
                 RepositoryException {
-            return wrapped.login(credentials, workspaceName);
+            return wrapped.login(credentials, (workspaceName == null ? getDefaultWorkspace() : workspaceName));
         }
 
         public Session login(Credentials credentials) throws LoginException,
@@ -242,18 +196,34 @@ public class RepositoryUtil {
 
         public Session login(String workspaceName) throws LoginException,
                 NoSuchWorkspaceException, RepositoryException {
-            return wrapped.login(workspaceName);
+            return wrapped.login((workspaceName == null ? getDefaultWorkspace() : workspaceName));
         }
 
         public String getDefaultWorkspace() {
             return "default";
         }
 
-        public Session loginAdministrative(String workspace)
+        public Session loginAdministrative(String workspaceName)
                 throws RepositoryException {
             final Credentials credentials = new SimpleCredentials(ADMIN_NAME,
                 ADMIN_PASSWORD.toCharArray());
-            return this.login(credentials, workspace);
+            return this.login(credentials, (workspaceName == null ? getDefaultWorkspace() : workspaceName));
+        }
+
+        public Value getDescriptorValue(String key) {
+            return wrapped.getDescriptorValue(key);
+        }
+
+        public Value[] getDescriptorValues(String key) {
+            return wrapped.getDescriptorValues(key);
+        }
+
+        public boolean isSingleValueDescriptor(String key) {
+            return wrapped.isSingleValueDescriptor(key);
+        }
+
+        public boolean isStandardDescriptor(String key) {
+            return wrapped.isStandardDescriptor(key);
         }
 
     }
