@@ -100,7 +100,6 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 	/* (non-Javadoc)
 	 * @see org.apache.sling.jackrabbit.accessmanager.post.AbstractAccessPostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void handleOperation(SlingHttpServletRequest request,
 			HtmlResponse htmlResponse, List<Modification> changes)
@@ -133,145 +132,46 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
     		}
     	}
 
-
-		List<String> grantedPrivilegeNames = new ArrayList<String>();
-		List<String> deniedPrivilegeNames = new ArrayList<String>();
-		//SLING-997: keep track of the privilege names that were posted, so the others can be preserved
-		Set<String> postedPrivilegeNames = new HashSet<String>();
-		Enumeration parameterNames = request.getParameterNames();
-		while (parameterNames.hasMoreElements()) {
-			Object nextElement = parameterNames.nextElement();
-			if (nextElement instanceof String) {
-				String paramName = (String)nextElement;
-				if (paramName.startsWith("privilege@")) {
-					String privilegeName = paramName.substring(10);
-					//keep track of which privileges should be changed
-					postedPrivilegeNames.add(privilegeName); 
-					
-					String parameterValue = request.getParameter(paramName);
-					if (parameterValue != null && parameterValue.length() > 0) {
-						if ("granted".equals(parameterValue)) {
-							grantedPrivilegeNames.add(privilegeName);
-						} else if ("denied".equals(parameterValue)) {
-							deniedPrivilegeNames.add(privilegeName);
-						}
-					}
-				}
-			}
-		}
-
 		try {
 			AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
+
+			//SLING-997: keep track of the privilege names that were posted, so the others can be preserved
+			PrivilegesState privilegesInfo = new PrivilegesState(log.isDebugEnabled());
+			
+			//calculate which privileges were POSTed.
+			collectPostedPrivilegeNames(request, 
+					accessControlManager,
+					privilegesInfo);	
+
+			//find the existing ACL
 			AccessControlList updatedAcl = getAccessControlList(accessControlManager, resourcePath, true);
 
-			StringBuilder oldPrivileges = null;
-			StringBuilder newPrivileges = null;
-			if (log.isDebugEnabled()) {
-				oldPrivileges = new StringBuilder();
-				newPrivileges = new StringBuilder();
-			}
-
-			List<Privilege> preserveGrantedPrivileges = new ArrayList<Privilege>();
-			List<Privilege> preserveDeniedPrivileges = new ArrayList<Privilege>();
+			//keep track of the existing ACEs for the target principal
+			List<AccessControlEntry> oldAces = processExistingAccessControlEntries(resourcePath, 
+					authorizable, 
+					accessControlManager, 
+					updatedAcl, 
+					privilegesInfo); 
 			
-			//keep track of the existing Aces for the target principal
-			AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
-			List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
-			for (AccessControlEntry ace : accessControlEntries) {
-				if (principalId.equals(ace.getPrincipal().getName())) {
-					if (log.isDebugEnabled()) {
-						log.debug("Found Existing ACE for principal {0} on resource: ", new Object[] {principalId, resourcePath});
-					}
-					oldAces.add(ace);
-
-					boolean isAllow = AccessControlUtil.isAllow(ace);
-					Privilege[] privileges = ace.getPrivileges();
-					for (Privilege privilege : privileges) {
-						String privilegeName = privilege.getName();
-						if (!postedPrivilegeNames.contains(privilegeName)) {
-							//this privilege was not posted, so record the existing state to be 
-							// preserved when the ACE is re-created below
-							if (isAllow) {
-								preserveGrantedPrivileges.add(privilege);
-							} else {
-								preserveDeniedPrivileges.add(privilege);
-							}
-						}
-
-						if (log.isDebugEnabled()) {
-							//collect the information for debug logging
-							if (oldPrivileges.length() > 0) {
-								oldPrivileges.append(", "); //separate entries by commas
-							}
-						}
-					}
-				}
-			}
-
-			//remove the old aces
+			//remove the old ACEs.  Re-created below.
 			if (!oldAces.isEmpty()) {
 				for (AccessControlEntry ace : oldAces) {
 					updatedAcl.removeAccessControlEntry(ace);
 				}
 			}
-
-			//add a fresh ACE with the granted privileges
-			List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
-			for (String name : grantedPrivilegeNames) {
-				if (name.length() == 0) {
-					continue; //empty, skip it.
-				}
-				Privilege privilege = accessControlManager.privilegeFromName(name);
-				grantedPrivilegeList.add(privilege);
-			}
-			//add the privileges that should be preserved
-			grantedPrivilegeList.addAll(preserveGrantedPrivileges);
-
-			if (log.isDebugEnabled()) {
-				for (Privilege privilege : grantedPrivilegeList) {
-					if (newPrivileges.length() > 0) {
-						newPrivileges.append(", "); //separate entries by commas
-					}
-					newPrivileges.append("granted=");
-					newPrivileges.append(privilege.getName());
-				}				
-			}
-
-			if (grantedPrivilegeList.size() > 0) {
-				Principal principal = authorizable.getPrincipal();
-				updatedAcl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
-			}
-
-			//if the authorizable is a user (not a group) process any denied privileges
-			if (!authorizable.isGroup()) {
-				//add a fresh ACE with the denied privileges
-				List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
-				for (String name : deniedPrivilegeNames) {
-					if (name.length() == 0) {
-						continue; //empty, skip it.
-					}
-					Privilege privilege = accessControlManager.privilegeFromName(name);
-					deniedPrivilegeList.add(privilege);
-				}
-				//add the privileges that should be preserved
-				deniedPrivilegeList.addAll(preserveDeniedPrivileges);
-				
-				if (log.isDebugEnabled()) {
-					for (Privilege privilege : deniedPrivilegeList) {
-						if (newPrivileges.length() > 0) {
-							newPrivileges.append(", "); //separate entries by commas
-						}
-						newPrivileges.append("denied=");
-						newPrivileges.append(privilege.getName());
-					}
-				}
-				
-				if (deniedPrivilegeList.size() > 0) {
-					Principal principal = authorizable.getPrincipal();
-					AccessControlUtil.addEntry(updatedAcl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
-				}
-			}
-
+			
+			//re-aggregate the granted/denied privileges into the best matched aggregate privilege
+			reaggregatePrivileges(resourcePath,
+					accessControlManager,
+					privilegesInfo);
+			
+			//add fresh ACEs with the granted privileges
+			buildFreshAccessControlEntries(authorizable, 
+					accessControlManager, 
+					updatedAcl, 
+					privilegesInfo);
+			
+			//store the updated ACL
 			accessControlManager.setPolicy(resourcePath, updatedAcl);
 			if (session.hasPendingChanges()) {
 				session.save();
@@ -279,11 +179,260 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 
 			if (log.isDebugEnabled()) {
 				log.debug("Updated ACE for principalId {0} for resource {1) from {2} to {3}", new Object [] {
-						authorizable.getID(), resourcePath, oldPrivileges.toString(), newPrivileges.toString()
+						authorizable.getID(), resourcePath, privilegesInfo.oldPrivileges.toString(), privilegesInfo.newPrivileges.toString()
 				});
 			}
 		} catch (RepositoryException re) {
 			throw new RepositoryException("Failed to create ace.", re);
+		}
+	}
+
+
+	/**
+	 * Collect the privileges to assign from the http request.
+	 */
+	private void collectPostedPrivilegeNames(SlingHttpServletRequest request,
+			AccessControlManager accessControlManager,
+			PrivilegesState privilegesInfo) throws RepositoryException {
+
+		Enumeration<?> parameterNames = request.getParameterNames();
+		while (parameterNames.hasMoreElements()) {
+			Object nextElement = parameterNames.nextElement();
+			if (nextElement instanceof String) {
+				String paramName = (String)nextElement;
+				if (paramName.startsWith("privilege@")) {
+					String privilegeName = paramName.substring(10);
+					//keep track of which privileges should be changed
+					privilegesInfo.postedPrivilegeNames.add(privilegeName); 
+					
+					String parameterValue = request.getParameter(paramName);
+					if (parameterValue != null && parameterValue.length() > 0) {
+						if ("granted".equals(parameterValue)) {
+							Privilege privilege = accessControlManager.privilegeFromName(privilegeName);
+							if (privilege.isAggregate()) {
+								Privilege[] aggregatePrivileges = privilege.getAggregatePrivileges();
+								for (Privilege privilege2 : aggregatePrivileges) {
+									privilegesInfo.grantedPrivilegeNames.add(privilege2.getName());
+								}
+							} else {
+								privilegesInfo.grantedPrivilegeNames.add(privilegeName);
+							}
+						} else if ("denied".equals(parameterValue)) {
+							Privilege privilege = accessControlManager.privilegeFromName(privilegeName);
+							if (privilege.isAggregate()) {
+								Privilege[] aggregatePrivileges = privilege.getAggregatePrivileges();
+								for (Privilege privilege2 : aggregatePrivileges) {
+									privilegesInfo.deniedPrivilegeNames.add(privilege2.getName());
+								}
+							} else {
+								privilegesInfo.deniedPrivilegeNames.add(privilegeName);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Process the existing ACL to determine which privileges to preserve.
+	 */
+	private List<AccessControlEntry> processExistingAccessControlEntries(
+			String resourcePath,
+			Authorizable authorizable,
+			AccessControlManager accessControlManager,
+			AccessControlList updatedAcl,
+			PrivilegesState privilegesInfo) throws RepositoryException {
+		
+		String principalId = authorizable.getPrincipal().getName();
+		AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
+		List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
+		for (AccessControlEntry ace : accessControlEntries) {
+			if (principalId.equals(ace.getPrincipal().getName())) {
+				if (log.isDebugEnabled()) {
+					log.debug("Found Existing ACE for principal {0} on resource: ", new Object[] {principalId, resourcePath});
+				}
+				oldAces.add(ace);
+
+				boolean isAllow = AccessControlUtil.isAllow(ace);
+				Privilege[] privileges = ace.getPrivileges();
+
+				//build a list of (merged and expanded) privileges 
+				Set<Privilege> mergedExistingPrivileges = new HashSet<Privilege>();
+				for (Privilege privilege : privileges) {
+					if (privilege.isAggregate()) {
+						Privilege[] aggregatePrivileges = privilege.getAggregatePrivileges();
+						for (Privilege privilege2 : aggregatePrivileges) {
+							mergedExistingPrivileges.add(privilege2);
+						}
+					} else {
+						mergedExistingPrivileges.add(privilege);
+					}
+				}
+				
+				//now process the merged privileges set
+				for (Privilege privilege : mergedExistingPrivileges) {
+					String privilegeName = privilege.getName();
+					if (!privilegesInfo.postedPrivilegeNames.contains(privilegeName)) {
+						//this privilege was not posted, so record the existing state to be 
+						// preserved when the ACE is re-created below
+						if (isAllow) {
+							privilegesInfo.grantedPrivilegeNames.add(privilegeName);
+						} else {
+							privilegesInfo.deniedPrivilegeNames.add(privilegeName);
+						}
+					}
+
+					if (log.isDebugEnabled()) {
+						//collect the information for debug logging
+						if (privilegesInfo.oldPrivileges.length() > 0) {
+							privilegesInfo.oldPrivileges.append(", "); //separate entries by commas
+						}
+						if (isAllow) {
+							privilegesInfo.oldPrivileges.append("granted=");
+						} else {
+							privilegesInfo.oldPrivileges.append("denied=");
+						}
+						privilegesInfo.oldPrivileges.append(privilege.getName());
+					}
+				}
+			}
+		}
+		
+		return oldAces;
+	}
+	
+	/**
+	 * Given the set of granted/denied privileges, try to combine them
+	 * into the best aggregate Privilege that contains them all.
+	 */
+	private void reaggregatePrivileges(
+			String resourcePath,
+			AccessControlManager accessControlManager,
+			PrivilegesState privilegesInfo) throws RepositoryException {
+		Privilege[] supportedPrivileges = accessControlManager.getSupportedPrivileges(resourcePath);
+		for (Privilege privilege : supportedPrivileges) {
+			if (privilege.isAggregate()) {
+				boolean grantedAggregatePrivilege = true;
+				boolean deniedAggregatePrivilege = true;
+				Privilege[] aggregatePrivileges = privilege.getAggregatePrivileges();
+				for (Privilege privilege2 : aggregatePrivileges) {
+					String name = privilege2.getName();
+					if (!privilegesInfo.grantedPrivilegeNames.contains(name)) {
+						grantedAggregatePrivilege = false;
+					}
+					if (!privilegesInfo.deniedPrivilegeNames.contains(name)) {
+						deniedAggregatePrivilege = false;
+					}
+				}
+				
+				if (grantedAggregatePrivilege) {
+					//add the aggregate privilege and remove the containing parts
+					privilegesInfo.grantedPrivilegeNames.add(privilege.getName());
+					for (Privilege privilege2 : aggregatePrivileges) {
+						String name = privilege2.getName();
+						privilegesInfo.grantedPrivilegeNames.remove(name);
+					}						
+				}
+
+				if (deniedAggregatePrivilege) {
+					//add the aggregate privilege and remove the containing parts
+					privilegesInfo.deniedPrivilegeNames.add(privilege.getName());
+					for (Privilege privilege2 : aggregatePrivileges) {
+						String name = privilege2.getName();
+						privilegesInfo.deniedPrivilegeNames.remove(name);
+					}						
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Create new ACE for the granted and denied privileges.
+	 */
+	private void buildFreshAccessControlEntries(
+			Authorizable authorizable,
+			AccessControlManager accessControlManager,			
+			AccessControlList updatedAcl,
+			PrivilegesState privilegesInfo) throws RepositoryException {
+		List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
+		for (String name : privilegesInfo.grantedPrivilegeNames) {
+			if (name.length() == 0) {
+				continue; //empty, skip it.
+			}
+			Privilege privilege = accessControlManager.privilegeFromName(name);
+			grantedPrivilegeList.add(privilege);
+		}
+		
+		if (log.isDebugEnabled()) {
+			for (Privilege privilege : grantedPrivilegeList) {
+				if (privilegesInfo.newPrivileges.length() > 0) {
+					privilegesInfo.newPrivileges.append(", "); //separate entries by commas
+				}
+				privilegesInfo.newPrivileges.append("granted=");
+				privilegesInfo.newPrivileges.append(privilege.getName());
+			}				
+		}
+
+		if (grantedPrivilegeList.size() > 0) {
+			Principal principal = authorizable.getPrincipal();
+			updatedAcl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
+		}
+
+		//if the authorizable is a user (not a group) process any denied privileges
+		if (!authorizable.isGroup()) {
+			//add a fresh ACE with the denied privileges
+			List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
+			for (String name : privilegesInfo.deniedPrivilegeNames) {
+				if (name.length() == 0) {
+					continue; //empty, skip it.
+				}
+				Privilege privilege = accessControlManager.privilegeFromName(name);
+				deniedPrivilegeList.add(privilege);
+			}
+			
+			if (log.isDebugEnabled()) {
+				for (Privilege privilege : deniedPrivilegeList) {
+					if (privilegesInfo.newPrivileges.length() > 0) {
+						privilegesInfo.newPrivileges.append(", "); //separate entries by commas
+					}
+					privilegesInfo.newPrivileges.append("denied=");
+					privilegesInfo.newPrivileges.append(privilege.getName());
+				}
+			}
+			
+			if (deniedPrivilegeList.size() > 0) {
+				Principal principal = authorizable.getPrincipal();
+				AccessControlUtil.addEntry(updatedAcl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
+			}
+		}
+	}
+	
+	/**
+	 * Contains the information about the privilege state as it 
+	 * progresses through the update process. 
+	 */
+	private static class PrivilegesState {
+		//stores the names of the privileges that were POSTed
+		Set<String> postedPrivilegeNames = new HashSet<String>();
+		
+		//stores the names of the privileges to be granted 
+		Set<String> grantedPrivilegeNames = new HashSet<String>();
+
+		//stores the names of the privileges to be denied 
+		Set<String> deniedPrivilegeNames = new HashSet<String>();
+
+		//collects debug information about the previous privileges
+		StringBuilder oldPrivileges = null;
+		
+		//collects debug information about the new privileges
+		StringBuilder newPrivileges = null;
+
+		public PrivilegesState(boolean isDebugEnabled) {
+			if (isDebugEnabled) {
+				oldPrivileges = new StringBuilder();
+				newPrivileges = new StringBuilder();
+			}
 		}
 	}
 }
