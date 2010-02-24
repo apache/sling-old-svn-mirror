@@ -112,6 +112,7 @@ public class AuthenticationFormServlet extends HttpServlet {
 
         form = form.replace("${resource}", getResource(request));
         form = form.replace("${j_reason}", getReason(request));
+        form = form.replace("${requestContextPath}", request.getContextPath());
 
         return form;
     }
