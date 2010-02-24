@@ -55,7 +55,7 @@ public abstract class BaseBundleList {
     public void merge(BundleList bundleList) {
         for (StartLevel sl : bundleList.getStartLevels()) {
             for (Bundle bnd : sl.getBundles()) {
-                add(bnd);
+                add(sl, bnd);
             }
         }
     }
@@ -67,11 +67,25 @@ public abstract class BaseBundleList {
      * @param newBnd the bundle to add
      */
     public void add(Bundle newBnd) {
+       add(null, newBnd);
+    }
+
+    /**
+     * Merge bundle into a start level using the supplied level if present.
+     * @param mergeStartLevel
+     * @param newBnd
+     */
+    private void add(StartLevel mergeStartLevel, Bundle newBnd) {
         Bundle current = get(newBnd, false);
         if (current != null) {
 
         } else {
-            StartLevel startLevel = getOrCreateStartLevel(newBnd.getStartLevel());
+            StartLevel startLevel = null;
+            if ( mergeStartLevel == null || newBnd.getStartLevel() > 0) {
+                startLevel = getOrCreateStartLevel(newBnd.getStartLevel());
+            } else {
+                startLevel = getOrCreateStartLevel(mergeStartLevel.getLevel());
+            }
             startLevel.getBundles().add(newBnd);
         }
 
