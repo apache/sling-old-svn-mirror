@@ -85,13 +85,13 @@ class ScalaScriptEngineFactory extends ScriptEngineFactory {
     case _ => null
   }
   
-  def getMethodCallSyntax(obj: String, method: String, args: Array[String]): String =
+  def getMethodCallSyntax(obj: String, method: String, args: String*): String =
     obj + "." + method + "(" + args.mkString(",") + ")"
 
   def getOutputStatement(toDisplay: String): String =
     "println(\""+ toDisplay+ "\")"
 
-  def getProgram(statements: Array[String]): String = {
+  def getProgram(statements: String*): String = {
     def packageOf(className: String ) = {
       val i = className.lastIndexOf('.')
       if (i >= 0) className.substring(0, i)

@@ -99,15 +99,12 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
     try {
       val bindings = context.getBindings(ScriptContext.ENGINE_SCOPE)
       val scalaBindings = ScalaBindings()
-      
+
       import _root_.scala.collection.jcl.Conversions._
-      for (val key <- bindings.keySet) key match {
-        case name: String => {
-          val value = bindings.get(name)
-          if (value == null) log.debug("{} has null value. skipping", name)
-          else scalaBindings.putValue(makeIdentifier(name), value)
-        }
-        case x => log.debug("Bindings contain invalid key {}. skipping", x) 
+      for (val key <- bindings.keySet) {
+        val value = bindings.get(key)
+        if (value == null) log.debug("{} has null value. skipping", key)
+        else scalaBindings.putValue(makeIdentifier(key), value)
       }
 
       val scriptClass = scriptInfo.getScriptClass(script, context)
