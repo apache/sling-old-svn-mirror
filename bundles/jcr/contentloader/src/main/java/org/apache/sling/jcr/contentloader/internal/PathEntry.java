@@ -142,7 +142,7 @@ public class PathEntry {
         this.ignoreImportProviders = new ArrayList<String>();
         final String expandValue = entry.getDirectiveValue(IGNORE_IMPORT_PROVIDERS_DIRECTIVE);
         if ( expandValue != null && expandValue.length() > 0 ) {
-            final StringTokenizer st = new StringTokenizer(expandValue, "/");
+            final StringTokenizer st = new StringTokenizer(expandValue, ",");
             while ( st.hasMoreTokens() ) {
                 this.ignoreImportProviders.add(st.nextToken());
             }
