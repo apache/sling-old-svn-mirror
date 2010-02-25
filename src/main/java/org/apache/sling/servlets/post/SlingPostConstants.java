@@ -108,7 +108,7 @@ public interface SlingPostConstants {
      * to indicate how to send the actual response status.
      */
     public static final String OPERATION_NOP = "nop";
-    
+
     /**
      * Name of the request parameter used to indicate the resource to apply the
      * operation to (value is ":applyTo").
@@ -189,7 +189,7 @@ public interface SlingPostConstants {
     /**
      * Prefix for properties addressing repository items with an absolute path
      * (value is "/").
-     * 
+     *
      * @see #ITEM_PREFIX_RELATIVE_CURRENT
      */
     public static final String ITEM_PREFIX_ABSOLUTE = "/";
@@ -214,7 +214,7 @@ public interface SlingPostConstants {
     /**
      * Prefix for properties addressing repository items with a path relative to
      * the parent of the request item (value is "../").
-     * 
+     *
      * @see #ITEM_PREFIX_RELATIVE_CURRENT
      */
     public static final String ITEM_PREFIX_RELATIVE_PARENT = "../";
@@ -239,7 +239,7 @@ public interface SlingPostConstants {
      * standard HTTP status codes. This value is assumed as the default value
      * for the {@link #RP_STATUS} parameter if the parameter is missing or not
      * any of the two supported values.
-     * 
+     *
      * @see #RP_STATUS
      * @see #STATUS_VALUE_BROWSER
      */
@@ -250,7 +250,7 @@ public interface SlingPostConstants {
      * requesting to not report success or failure of request processing using
      * standard HTTP status codes but instead alwas set the status to 200/OK and
      * only report the real success or failure status in the XHTML response.
-     * 
+     *
      * @see #RP_STATUS
      * @see #STATUS_VALUE_STANDARD
      */
@@ -264,21 +264,21 @@ public interface SlingPostConstants {
      * valid HTTP status code. If this parameter is missing or the parameter
      * value cannot be converted to a HTTP status code (integer in the range
      * [100..999]), the default status code 200/OK is returned.
-     * 
+     *
      * @see #OPERATION_NOP
      * @see #RP_STATUS
      */
     public static final String RP_NOP_STATUS = RP_PREFIX + "nopstatus";
-    
+
     /**
      * The default response status sent back by a {@link #OPERATION_NOP} if the
      * {@link #RP_NOP_STATUS} parameter is not provided or the parameter value
      * cannot be converted into a valid response status code (value is 200).
-     * 
+     *
      * @see #RP_NOP_STATUS
      */
     public static final int NOPSTATUS_VALUE_DEFAULT = 200;
-    
+
     /**
      * Optional request parameter: if provided, added at the end of the computed
      * (or supplied) redirect URL
@@ -334,4 +334,10 @@ public interface SlingPostConstants {
      * parameter.
      */
     public static final String SUFFIX_COPY_FROM = "@CopyFrom";
+
+    /**
+     * Suffix indicating that blank value or values for this property will be
+     * ignored.
+     */
+    public static final String SUFFIX_IGNORE_BLANKS = "@IgnoreBlanks";
 }

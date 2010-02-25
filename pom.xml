@@ -102,6 +102,7 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -142,6 +143,12 @@
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.4-incubator</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>junit-addons</groupId>
+        	<artifactId>junit-addons</artifactId>
+        	<version>1.4</version>
+        	<scope>test</scope>
         </dependency>
     </dependencies>
 

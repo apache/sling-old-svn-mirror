@@ -16,6 +16,10 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -56,6 +60,8 @@ public class RequestProperty {
 
     private boolean isRepositoryResourceMove;
 
+    private boolean ignoreBlanks;
+
     public RequestProperty(String path) {
         assert path.startsWith("/");
         this.path = ResourceUtil.normalize(path);
@@ -94,7 +100,11 @@ public class RequestProperty {
     }
 
     public boolean hasValues() {
-        return values != null;
+        if (ignoreBlanks) {
+            return values != null && getStringValues().length > 0;
+        } else {
+            return values != null;
+        }
     }
 
     public RequestParameter[] getValues() {
@@ -155,23 +165,31 @@ public class RequestProperty {
             if (values.length > 1) {
                 // TODO: how the default values work for MV props is not very
                 // clear
-                stringValues = new String[values.length];
-                for (int i = 0; i < stringValues.length; i++) {
-                    stringValues[i] = values[i].getString();
+                List<String> stringValueList = new ArrayList<String>(values.length);
+                for (int i = 0; i < values.length; i++) {
+                    String value = values[i].getString();
+                    if ((!ignoreBlanks) || value.length() > 0) {
+                        stringValueList.add(value);
+                    }
                 }
+                stringValues = stringValueList.toArray(new String[stringValueList.size()]);
             } else {
                 String value = values[0].getString();
                 if (value.equals("")) {
-                    if (defaultValues.length == 1) {
-                        String defValue = defaultValues[0].getString();
-                        if (defValue.equals(DEFAULT_IGNORE)) {
-                            // ignore means, do not create empty values
-                            return new String[0];
-                        } else if (defValue.equals(DEFAULT_NULL)) {
-                            // null means, remove property if exist
-                            return null;
+                    if (ignoreBlanks) {
+                        return new String[0];
+                    } else {
+                        if (defaultValues.length == 1) {
+                            String defValue = defaultValues[0].getString();
+                            if (defValue.equals(DEFAULT_IGNORE)) {
+                                // ignore means, do not create empty values
+                                return new String[0];
+                            } else if (defValue.equals(DEFAULT_NULL)) {
+                                // null means, remove property if exist
+                                return null;
+                            }
+                            value = defValue;
                         }
-                        value = defValue;
                     }
                 }
                 stringValues = new String[] { value };
@@ -251,5 +269,9 @@ public class RequestProperty {
      */
     public String getRepositorySource() {
         return repositoryResourcePath;
+    }
+
+    public void setIgnoreBlanks(boolean b) {
+        ignoreBlanks = b;
     }
 }
