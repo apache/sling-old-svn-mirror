@@ -570,6 +570,26 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 continue;
             }
 
+            // SLING-1412: @IgnoreBlanks
+            // @Ignore example:
+            // <input name="./Text" type="hidden" value="test" />
+            // <input name="./Text" type="hidden" value="" />
+            // <input name="./Text@String[]" type="hidden" value="true" />
+            // <input name="./Text@IgnoreBlanks" type="hidden" value="true" />
+            // causes the JCR Text property to be set by copying the /tmp/path
+            // property to Text.
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_IGNORE_BLANKS)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.SUFFIX_IGNORE_BLANKS);
+
+                if (e.getValue().length == 1) {
+                    prop.setIgnoreBlanks(true);
+                }
+
+                continue;
+            }
+
             // plain property, create from values
             RequestProperty prop = getOrCreateRequestProperty(reqProperties,
                 propPath, null);
