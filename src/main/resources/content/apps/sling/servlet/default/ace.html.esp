@@ -87,7 +87,7 @@
             %>
             <tr>
                <td align="left" width="<%=isUser ? '70%' : '55%'%>"><%=p.getName()%></td>
-               <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="" <%=granted.contains(p) || denied.contains(p) ? "" : "checked"%> /></td>
+               <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="none" <%=granted.contains(p) || denied.contains(p) ? "" : "checked"%> /></td>
                <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="granted" <%=granted.contains(p) ? "checked" : ""%> /></td>
                <% if (isUser) { %>
                <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="denied" <%=denied.contains(p) ? "checked" : ""%> /></td>
