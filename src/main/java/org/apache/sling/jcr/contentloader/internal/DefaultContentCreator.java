@@ -18,6 +18,13 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
+
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -26,11 +33,9 @@ import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,18 +52,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
-
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.sling.jcr.base.util.AccessControlUtil;
 
 /**
  * The <code>ContentLoader</code> creates the nodes and properties.
@@ -810,120 +803,17 @@ public class DefaultContentCreator implements ContentCreator {
 			throws RepositoryException {
 		final Node parentNode = this.parentNodeStack.peek();
 		Session session = parentNode.getSession();
-
-		UserManager userManager = AccessControlUtil.getUserManager(session);
-		Authorizable authorizable = userManager.getAuthorizable(principalId);
-		if (authorizable == null) {
+		PrincipalManager principalManager = AccessControlUtil.getPrincipalManager(session);
+		Principal principal = principalManager.getPrincipal(principalId);
+		if (principal == null) {
 			throw new RepositoryException("No principal found for id: " + principalId);
 		}
-
 		String resourcePath = parentNode.getPath();
 
-		AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
-		AccessControlList updatedAcl = null;
-		AccessControlPolicy[] policies = accessControlManager.getPolicies(resourcePath);
-		for (AccessControlPolicy policy : policies) {
-		  if (policy instanceof AccessControlList) {
-		    updatedAcl = (AccessControlList)policy;
-		    break;
-		  }
+		if ((grantedPrivilegeNames != null) || (deniedPrivilegeNames != null)) {
+			AccessControlUtil.replaceAccessControlEntry(session, resourcePath, principal,
+					grantedPrivilegeNames, deniedPrivilegeNames, null);
 		}
-		if (updatedAcl == null) {
-		  AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
-		  while (applicablePolicies.hasNext()) {
-		    AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
-		    if (policy instanceof AccessControlList) {
-		      updatedAcl = (AccessControlList)policy;
-		    }
-		  }
-		}
-		if (updatedAcl == null) {
-			throw new RepositoryException("Unable to find or create an access control policy to update for " + resourcePath);
-		}
-
-		Set<String> postedPrivilegeNames = new HashSet<String>();
-		if (grantedPrivilegeNames != null) {
-			postedPrivilegeNames.addAll(Arrays.asList(grantedPrivilegeNames));
-		}
-		if (deniedPrivilegeNames != null) {
-			postedPrivilegeNames.addAll(Arrays.asList(deniedPrivilegeNames));
-		}
-
-		List<Privilege> preserveGrantedPrivileges = new ArrayList<Privilege>();
-		List<Privilege> preserveDeniedPrivileges = new ArrayList<Privilege>();
-
-		//keep track of the existing Aces for the target principal
-		AccessControlEntry[] accessControlEntries = updatedAcl.getAccessControlEntries();
-		List<AccessControlEntry> oldAces = new ArrayList<AccessControlEntry>();
-		for (AccessControlEntry ace : accessControlEntries) {
-			if (principalId.equals(ace.getPrincipal().getName())) {
-				oldAces.add(ace);
-
-				boolean isAllow = AccessControlUtil.isAllow(ace);
-				Privilege[] privileges = ace.getPrivileges();
-				for (Privilege privilege : privileges) {
-					String privilegeName = privilege.getName();
-					if (!postedPrivilegeNames.contains(privilegeName)) {
-						//this privilege was not posted, so record the existing state to be
-						// preserved when the ACE is re-created below
-						if (isAllow) {
-							preserveGrantedPrivileges.add(privilege);
-						} else {
-							preserveDeniedPrivileges.add(privilege);
-						}
-					}
-				}
-			}
-		}
-
-		//remove the old aces
-		if (!oldAces.isEmpty()) {
-			for (AccessControlEntry ace : oldAces) {
-				updatedAcl.removeAccessControlEntry(ace);
-			}
-		}
-
-		//add a fresh ACE with the granted privileges
-		List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
-		if (grantedPrivilegeNames != null) {
-		  for (String name : grantedPrivilegeNames) {
-			  if (name.length() == 0) {
-				  continue; //empty, skip it.
-			  }
-			  Privilege privilege = accessControlManager.privilegeFromName(name);
-			  grantedPrivilegeList.add(privilege);
-	    }
-		}
-		//add the privileges that should be preserved
-		grantedPrivilegeList.addAll(preserveGrantedPrivileges);
-
-		if (grantedPrivilegeList.size() > 0) {
-			Principal principal = authorizable.getPrincipal();
-			updatedAcl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
-		}
-
-		//if the authorizable is a user (not a group) process any denied privileges
-		if (!authorizable.isGroup()) {
-			//add a fresh ACE with the denied privileges
-			List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
-			if (deniedPrivilegeNames != null) {
-			  for (String name : deniedPrivilegeNames) {
-				  if (name.length() == 0) {
-					  continue; //empty, skip it.
-				  }
-				  Privilege privilege = accessControlManager.privilegeFromName(name);
-				  deniedPrivilegeList.add(privilege);
-			  }
-			}
-			//add the privileges that should be preserved
-			deniedPrivilegeList.addAll(preserveDeniedPrivileges);
-			if (deniedPrivilegeList.size() > 0) {
-				Principal principal = authorizable.getPrincipal();
-				AccessControlUtil.addEntry(updatedAcl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
-			}
-		}
-
-		accessControlManager.setPolicy(resourcePath, updatedAcl);
 	}
 
 	/**
