@@ -78,6 +78,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "bogus")); //invalid value should be ignored.
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
@@ -97,10 +98,12 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		
 		JSONArray grantedArray = aceObject.getJSONArray("granted");
 		assertNotNull(grantedArray);
+		assertEquals(1, grantedArray.length());
 		assertEquals("jcr:read", grantedArray.getString(0));
 
 		JSONArray deniedArray = aceObject.getJSONArray("denied");
 		assertNotNull(deniedArray);
+		assertEquals(1, deniedArray.length());
 		assertEquals("jcr:write", deniedArray.getString(0));
 	}
 
@@ -115,6 +118,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("principalId", testGroupId));
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "bogus")); //invalid value should be ignored.
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
@@ -134,6 +138,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		
 		JSONArray grantedArray = aceObject.getJSONArray("granted");
 		assertNotNull(grantedArray);
+		assertEquals(1, grantedArray.length());
 		assertEquals("jcr:read", grantedArray.getString(0));
 
 		//denied rights are not applied for groups, so make sure it is not there
