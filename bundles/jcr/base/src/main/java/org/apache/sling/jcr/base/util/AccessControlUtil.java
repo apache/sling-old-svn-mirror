@@ -18,10 +18,22 @@
  */
 package org.apache.sling.jcr.base.util;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -31,11 +43,9 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
-
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.UserManager;
 
 /**
  * A simple utility class providing utilities with respect to
@@ -60,7 +70,7 @@ public class AccessControlUtil {
     // the name of the JackrabbitAccessControlEntry method
     private static final String METHOD_JACKRABBIT_ACE_IS_ALLOW = "isAllow";
 
-
+    private static final Logger log = LoggerFactory.getLogger(AccessControlUtil.class);
 
     // ---------- SessionImpl methods -----------------------------------------------------
 
@@ -201,6 +211,141 @@ public class AccessControlUtil {
     	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
 		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
+    
+    /**
+     * Replaces existing access control entries in the ACL for the specified
+     * <code>principal</code> and <code>resourcePath</code>. Any existing granted
+     * or denied privileges which do not conflict with the specified privileges
+     * are maintained. Where conflicts exist, existing privileges are dropped.
+     * The end result will be at most two ACEs for the principal: one for grants
+     * and one for denies. Aggregate privileges are disaggregated before checking
+     * for conflicts.
+     * @param session
+     * @param resourcePath
+     * @param principal
+     * @param grantedPrivilegeNames
+     * @param deniedPrivilegeNames
+     * @param removedPrivilegeNames privileges which, if they exist, should be
+     * removed for this principal and resource
+     * @throws RepositoryException
+     */
+    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal, 
+    			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames)
+        		throws RepositoryException {
+    	AccessControlManager accessControlManager = getAccessControlManager(session);
+    	Set<String> specifiedPrivilegeNames = new HashSet<String>();
+    	Set<String> newGrantedPrivilegeNames = disaggregateToPrivilegeNames(accessControlManager, grantedPrivilegeNames, specifiedPrivilegeNames);
+    	Set<String> newDeniedPrivilegeNames = disaggregateToPrivilegeNames(accessControlManager, deniedPrivilegeNames, specifiedPrivilegeNames);
+    	disaggregateToPrivilegeNames(accessControlManager, removedPrivilegeNames, specifiedPrivilegeNames);
+
+    	// Get or create the ACL for the node.
+    	AccessControlList acl = null;
+    	AccessControlPolicy[] policies = accessControlManager.getPolicies(resourcePath);
+    	for (AccessControlPolicy policy : policies) {
+    		if (policy instanceof AccessControlList) {
+    			acl = (AccessControlList) policy;
+    			break;
+    		}
+    	}
+    	if (acl == null) {
+    		AccessControlPolicyIterator applicablePolicies = accessControlManager.getApplicablePolicies(resourcePath);
+    		while (applicablePolicies.hasNext()) {
+    			AccessControlPolicy policy = applicablePolicies.nextAccessControlPolicy();
+    			if (policy instanceof AccessControlList) {
+    				acl = (AccessControlList) policy;
+    				break;
+    			}
+    		}
+    	}
+    	if (acl == null) {
+    		throw new RepositoryException("Could not obtain ACL for resource " + resourcePath);
+    	}
+    	// Used only for logging.
+    	Set<Privilege> oldGrants = null;
+    	Set<Privilege> oldDenies = null;
+    	if (log.isDebugEnabled()) {
+    		oldGrants = new HashSet<Privilege>();
+    		oldDenies = new HashSet<Privilege>();
+    	}
+      
+    	// Combine all existing ACEs for the target principal.
+    	AccessControlEntry[] accessControlEntries = acl.getAccessControlEntries();
+    	for (AccessControlEntry ace : accessControlEntries) {
+    		if (principal.equals(ace.getPrincipal())) {
+    			if (log.isDebugEnabled()) {
+    				log.debug("Found Existing ACE for principal {} on resource {}", new Object[] {principal.getName(), resourcePath});
+    			}
+    			boolean isAllow = isAllow(ace);
+    			Privilege[] privileges = ace.getPrivileges();
+    			if (log.isDebugEnabled()) {
+    				if (isAllow) {
+    					oldGrants.addAll(Arrays.asList(privileges));
+    				} else {
+    					oldDenies.addAll(Arrays.asList(privileges));
+    				}
+    			}
+    			for (Privilege privilege : privileges) {
+    				Set<String> maintainedPrivileges = disaggregateToPrivilegeNames(privilege);
+    				// If there is any overlap with the newly specified privileges, then
+    				// break the existing privilege down; otherwise, maintain as is.
+    				if (!maintainedPrivileges.removeAll(specifiedPrivilegeNames)) {
+    					// No conflicts, so preserve the original.
+    					maintainedPrivileges.clear();
+    					maintainedPrivileges.add(privilege.getName());
+    				}
+    				if (!maintainedPrivileges.isEmpty()) {
+    					if (isAllow) {
+    						newGrantedPrivilegeNames.addAll(maintainedPrivileges);
+    					} else {
+    						newDeniedPrivilegeNames.addAll(maintainedPrivileges);
+    					}
+    				}
+    			}
+    			// Remove the old ACE.
+    			acl.removeAccessControlEntry(ace);
+    		}
+    	}
+
+    	//add a fresh ACE with the granted privileges
+    	List<Privilege> grantedPrivilegeList = new ArrayList<Privilege>();
+    	for (String name : newGrantedPrivilegeNames) {
+    		Privilege privilege = accessControlManager.privilegeFromName(name);
+    		grantedPrivilegeList.add(privilege);
+    	}
+    	if (grantedPrivilegeList.size() > 0) {
+    		acl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
+    	}
+
+    	//if the authorizable is a user (not a group) process any denied privileges
+    	UserManager userManager = getUserManager(session);
+    	Authorizable authorizable = userManager.getAuthorizable(principal);
+    	if (!authorizable.isGroup()) {
+    		//add a fresh ACE with the denied privileges
+    		List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
+    		for (String name : newDeniedPrivilegeNames) {
+    			Privilege privilege = accessControlManager.privilegeFromName(name);
+    			deniedPrivilegeList.add(privilege);
+    		}        
+    		if (deniedPrivilegeList.size() > 0) {
+    			addEntry(acl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
+    		}
+    	}
+
+    	accessControlManager.setPolicy(resourcePath, acl);
+    	if (log.isDebugEnabled()) {
+    		List<String> oldGrantedNames = new ArrayList<String>(oldGrants.size());
+    		for (Privilege privilege : oldGrants) {
+    			oldGrantedNames.add(privilege.getName());
+    		}
+    		List<String> oldDeniedNames = new ArrayList<String>(oldDenies.size());
+    		for (Privilege privilege : oldDenies) {
+    			oldDeniedNames.add(privilege.getName());
+    		}
+    		log.debug("Updated ACE for principalId {} for resource {} from grants {}, denies {} to grants {}, denies {}", new Object [] {
+    				authorizable.getID(), resourcePath, oldGrantedNames, oldDeniedNames, newGrantedPrivilegeNames, newDeniedPrivilegeNames
+    			});
+    	}
+	}
 
     // ---------- AccessControlEntry methods -----------------------------------------------
 
@@ -263,5 +408,41 @@ public class AccessControlUtil {
 			return (JackrabbitSession) session;
 		else
 			return null;
+	}
+  
+	/**
+	 * Helper routine to transform an input array of privilege names into a set in
+	 * a null-safe way while also adding its disaggregated privileges to an input set.
+	 */
+	private static Set<String> disaggregateToPrivilegeNames(AccessControlManager accessControlManager, 
+			String[] privilegeNames, Set<String> disaggregatedPrivilegeNames)
+      throws RepositoryException {
+		Set<String> originalPrivilegeNames = new HashSet<String>();
+		if (privilegeNames != null) {
+			for (String privilegeName : privilegeNames) {
+				originalPrivilegeNames.add(privilegeName);
+				Privilege privilege = accessControlManager.privilegeFromName(privilegeName);
+				disaggregatedPrivilegeNames.addAll(disaggregateToPrivilegeNames(privilege));
+			}
+		}
+		return originalPrivilegeNames;
+	}
+
+	/**
+	 * Transform an aggregated privilege into a set of disaggregated privilege
+	 * names. If the privilege is not an aggregate, the set will contain the
+	 * original name.
+	 */
+	private static Set<String> disaggregateToPrivilegeNames(Privilege privilege) {
+		Set<String> disaggregatedPrivilegeNames = new HashSet<String>();
+		if (privilege.isAggregate()) {
+			Privilege[] privileges = privilege.getAggregatePrivileges();
+			for (Privilege disaggregate : privileges) {
+				disaggregatedPrivilegeNames.add(disaggregate.getName());
+			}
+		} else {
+			disaggregatedPrivilegeNames.add(privilege.getName());
+		}
+		return disaggregatedPrivilegeNames;
 	}
 }
