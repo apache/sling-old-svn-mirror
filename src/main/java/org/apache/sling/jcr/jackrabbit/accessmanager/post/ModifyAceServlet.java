@@ -132,7 +132,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 							grantedPrivilegeNames.add(privilegeName);
 						} else if ("denied".equals(parameterValue)) {
 							deniedPrivilegeNames.add(privilegeName);
-						} else {
+						} else if ("none".equals(parameterValue)){
 							removedPrivilegeNames.add(privilegeName);
 						}
 					}
