@@ -398,10 +398,9 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		postParams2.add(new NameValuePair("principalId", testUserId));
 		//jcr:read is not posted, so it should remain in the granted ACE
 		
-		//post the remaining privileges that when combined, correspond to the jcr:write aggregate privilege
-		postParams2.add(new NameValuePair("privilege@jcr:addChildNodes", "denied")); //add a new privilege
-		postParams2.add(new NameValuePair("privilege@jcr:removeChildNodes", "denied")); //add a new privilege
-		postParams2.add(new NameValuePair("privilege@jcr:modifyProperties", "denied")); //add a new privilege
+		//deny the full jcr:write aggregate privilege, which should merge with the
+		//existing part.
+		postParams2.add(new NameValuePair("privilege@jcr:write", "denied")); //add a new privilege
 		
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams2, null);
 		
