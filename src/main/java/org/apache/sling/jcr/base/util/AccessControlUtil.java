@@ -316,20 +316,18 @@ public class AccessControlUtil {
     		acl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
     	}
 
-    	//if the authorizable is a user (not a group) process any denied privileges
+    	//process any denied privileges
     	UserManager userManager = getUserManager(session);
     	Authorizable authorizable = userManager.getAuthorizable(principal);
-    	if (!authorizable.isGroup()) {
-    		//add a fresh ACE with the denied privileges
-    		List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
-    		for (String name : newDeniedPrivilegeNames) {
-    			Privilege privilege = accessControlManager.privilegeFromName(name);
-    			deniedPrivilegeList.add(privilege);
-    		}        
-    		if (deniedPrivilegeList.size() > 0) {
-    			addEntry(acl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
-    		}
-    	}
+   		//add a fresh ACE with the denied privileges
+   		List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
+   		for (String name : newDeniedPrivilegeNames) {
+   			Privilege privilege = accessControlManager.privilegeFromName(name);
+   			deniedPrivilegeList.add(privilege);
+   		}        
+   		if (deniedPrivilegeList.size() > 0) {
+   			addEntry(acl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
+   		}
 
     	accessControlManager.setPolicy(resourcePath, acl);
     	if (log.isDebugEnabled()) {
