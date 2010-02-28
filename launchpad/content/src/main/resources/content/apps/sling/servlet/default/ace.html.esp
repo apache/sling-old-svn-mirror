@@ -5,14 +5,12 @@
       response.sendError(404);
    } else {
       var principalId = request.getParameter("pid");
-      var isUser = false;
       var isValidPrincipal = false;
       if (principalId != null && principalId != "") {
          var userManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getUserManager(currentNode.session);
          if (userManager != null) {
             var authorizable = userManager.getAuthorizable(principalId);
             if (authorizable != null) {
-               isUser = !authorizable.isGroup();
                isValidPrincipal = true;
             } else {
                //no user/group matches the supplied principal id
@@ -72,12 +70,10 @@
          <table width="100%">
             <thead>
                <tr>
-                  <th align="left" width="<%=isUser ? '70%' : '55%'%>">Privilege</th>
+                  <th align="left" width="55%">Privilege</th>
                   <th align="center" width="15%">Ignored</th>
                   <th align="center" width="15%">Granted</th>
-                  <% if (isUser) { %>
                   <th align="center" width="15%">Denied</th>
-                  <% } %>
                </tr>
             </thead>
             <tbody>
@@ -86,12 +82,10 @@
                   var p = supported[i];
             %>
             <tr>
-               <td align="left" width="<%=isUser ? '70%' : '55%'%>"><%=p.getName()%></td>
+               <td align="left" width="55%"><%=p.getName()%></td>
                <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="none" <%=granted.contains(p) || denied.contains(p) ? "" : "checked"%> /></td>
                <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="granted" <%=granted.contains(p) ? "checked" : ""%> /></td>
-               <% if (isUser) { %>
                <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="denied" <%=denied.contains(p) ? "checked" : ""%> /></td>
-               <% } %>
             </tr>      
             <%      
                }
@@ -99,7 +93,7 @@
             </tbody>
             <tfoot>
                <tr>
-                  <td colspan="<%=isUser ? '3' : '2'%>"></td>
+                  <td colspan="3"></td>
                   <td align="center" width="15%">
                      <button accesskey="a" id="applyButton" class="form-button" type="submit">Apply</button>
                   </td>

@@ -141,8 +141,9 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		assertEquals(1, grantedArray.length());
 		assertEquals("jcr:read", grantedArray.getString(0));
 
-		//denied rights are not applied for groups, so make sure it is not there
-		assertTrue(aceObject.isNull("denied"));
+		JSONArray deniedArray = aceObject.getJSONArray("denied");
+		assertNotNull(deniedArray);
+		assertEquals("jcr:write", deniedArray.getString(0));
 	}
 	
 	/**
