@@ -65,6 +65,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.6.1</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -246,7 +247,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                                 http://sling.apache.org
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <_versionpolicy>$${version;===;${@}}</_versionpolicy>
                         </instructions>
                     </configuration>
