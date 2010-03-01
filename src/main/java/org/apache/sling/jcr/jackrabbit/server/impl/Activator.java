@@ -264,12 +264,12 @@ public class Activator implements BundleActivator, ServiceListener {
         if (homeDir == null)
         	return;
 
-        File configFile = getConfigFile(bundleContext, homeDir);
+        String configFileUrl = getConfigFileUrl(bundleContext, homeDir);
 
         // default config values
         props.put(SLING_CONTEXT, slingContext);
         props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
-            configFile.getPath());
+            configFileUrl);
         props.put(SlingServerRepository.REPOSITORY_HOME_DIR,
             homeDir.getPath());
         props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
@@ -307,30 +307,29 @@ public class Activator implements BundleActivator, ServiceListener {
     	return homeDir;
     }
 
-    private File getConfigFile(BundleContext bundleContext, File homeDir) throws IOException {
-    	File configFile;
-
+    private String getConfigFileUrl(BundleContext bundleContext, File homeDir) throws IOException {
     	String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
     	if (repoConfigFileUrl != null) {
     		// the repository config file is set
     		URL configFileUrl = null;
 			try {
+			    // verify it is a good url
 				configFileUrl = new URL(repoConfigFileUrl);
+				return repoConfigFileUrl;
 			} catch (MalformedURLException e) {
 				// this not an url, trying with "file:"
 				configFileUrl = new URL("file:///" + repoConfigFileUrl);
+				File configFile = new File(configFileUrl.getFile());
+				if (configFile.canRead()) {
+				    return configFileUrl.toString();
+				}
 			}
-
-    		// local support only
-    		configFile = new File(configFileUrl.getFile());
-    		if (configFile.canRead())
-    			return configFile;
     	}
 
         // ensure the configuration file (inside the home Dir !)
-        configFile = new File(homeDir, "repository.xml");
+        File configFile = new File(homeDir, "repository.xml");
         SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
-    	return configFile;
+    	return configFile.toURI().toURL().toString();
     }
 
 }
