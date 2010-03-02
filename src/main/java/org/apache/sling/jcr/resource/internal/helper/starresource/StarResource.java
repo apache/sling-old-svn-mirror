@@ -18,16 +18,12 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.starresource;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
@@ -63,22 +59,9 @@ public class StarResource extends SyntheticResource {
         return res.getPath().endsWith(SLASH_STAR);
     }
 
-    public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider[] jcrProviders) throws SlingException {
-        super(resourceResolver, getResourceMetadata(path), getResourceType(jcrProviders, path));
+    public StarResource(ResourceResolver resourceResolver, String path) {
+        super(resourceResolver, getResourceMetadata(path), DEFAULT_RESOURCE_TYPE);
         resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
-    }
-
-    /** adaptTo(Node) returns a Fake node, that returns empty values
-     *  for everything except the Node path */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <Type> Type adaptTo(Class<Type> type) {
-        if(type == Node.class) {
-            return (Type) new FakeNode(getPath());
-        } else if(type == String.class) {
-        	return (Type)"";
-        }
-        return null;
     }
 
     /**
@@ -106,28 +89,5 @@ public class StarResource extends SyntheticResource {
             result.setResolutionPath(path);
         }
         return result;
-    }
-
-    /** Get the resource type for the given path */
-    static String getResourceType(final JcrResourceTypeProvider[] jcrProviders,
-                                  final String path) {
-        // The only way we can set a meaningful resource type is via the drtp
-        final Node n = new FakeNode(getResourceMetadata(path).getResolutionPath());
-        String resourceType = null;
-        if (jcrProviders != null) {
-            try {
-                int index = 0;
-                while ( resourceType == null && index < jcrProviders.length ) {
-                    resourceType = jcrProviders[index].getResourceTypeForNode(n);
-                    index++;
-                }
-            } catch (RepositoryException re) {
-                throw new SyntheticStarResourceException("getResourceTypeForNode failed", re);
-            }
-        }
-        if (resourceType == null) {
-            resourceType = DEFAULT_RESOURCE_TYPE;
-        }
-        return resourceType;
     }
 }

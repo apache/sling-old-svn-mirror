@@ -205,8 +205,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
                 log.debug("resolve: Mapped path {} is a Star Resource",
                     realPath);
-                res = new StarResource(this, ensureAbsPath(realPath),
-                    factory.getJcrResourceTypeProviders());
+                res = new StarResource(this, ensureAbsPath(realPath));
 
             } else
 
