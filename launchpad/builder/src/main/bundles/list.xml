@@ -29,7 +29,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.1.5-SNAPSHOT</version>
+            <version>2.1.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -111,7 +111,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.fsresource</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </bundle>
 
         <!-- Launchpad initial content -->
@@ -130,7 +130,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.11-SNAPSHOT</version>
+            <version>2.0.10</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
