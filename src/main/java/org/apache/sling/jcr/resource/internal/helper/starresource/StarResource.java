@@ -76,6 +76,15 @@ public class StarResource extends SyntheticResource {
         return resourceSuperType;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <Type> Type adaptTo(Class<Type> type) {
+        if ( type == String.class ) {
+            return (Type)"";
+        }
+        return super.adaptTo(type);
+    }
+
     /** Get our ResourceMetadata for given path */
     static ResourceMetadata getResourceMetadata(String path) {
     	ResourceMetadata result = new ResourceMetadata();
