@@ -392,7 +392,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     private Reader getWrapperReader(final Reader scriptReader, final String method, final Object... args) {
-        final StringBuffer buffer = new StringBuffer(method);
+        final StringBuilder buffer = new StringBuilder(method);
         buffer.append('(');
         for(Object o : args) {
             buffer.append('"');
