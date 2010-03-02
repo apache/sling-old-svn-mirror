@@ -100,7 +100,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             traversor.check();
         } catch (RecursionTooDeepException e) {
             allowDump = false;
-            allowedLevel = Integer.parseInt(e.getMessage()); // this is to avoid depending on a SNAPSHOT version of the SLing API. 
+            allowedLevel = Integer.parseInt(e.getMessage()); // this is to avoid depending on a SNAPSHOT version of the SLing API.
         } catch (RepositoryException e) {
             reportException(e);
         } catch (JSONException e) {
@@ -109,12 +109,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         try {
             // Check if we can dump the resource.
             if (allowDump) {
-              if (tidy) {
-                resp.getWriter().write(traversor.getJSONObject().toString(2));
-              } else {
-                resp.getWriter().write(traversor.getJSONObject().toString());
-              }
-               
+                if (tidy) {
+                    resp.getWriter().write(traversor.getJSONObject().toString(2));
+                } else {
+                    resp.getWriter().write(traversor.getJSONObject().toString());
+                }
+
             } else {
                 // We are not allowed to do the dump.
                 // Send a 300
@@ -123,11 +123,10 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                 JSONWriter writer = new JSONWriter(resp.getWriter());
                 writer.array();
                 while (allowedLevel >= 0) {
-                  writer.value(r.getResourceMetadata().getResolutionPath() + "." + tidyUrl + allowedLevel + ".json");
-                  allowedLevel--;
+                    writer.value(r.getResourceMetadata().getResolutionPath() + "." + tidyUrl + allowedLevel + ".json");
+                    allowedLevel--;
                 }
                 writer.endArray();
-                return;
             }
         } catch (JSONException je) {
             reportException(je);
