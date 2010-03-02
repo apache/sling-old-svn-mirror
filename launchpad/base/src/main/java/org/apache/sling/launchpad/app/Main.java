@@ -411,7 +411,7 @@ public class Main extends Thread implements Notifiable {
 
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Sling (uses -j)");
-            System.out.println("    start         check whether Sling is running (uses-j)");
+            System.out.println("    status        check whether Sling is running (uses -j)");
             System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default localhost:63000)");
             System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
