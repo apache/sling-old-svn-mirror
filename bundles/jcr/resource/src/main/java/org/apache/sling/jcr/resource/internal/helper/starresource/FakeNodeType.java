@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource.internal.helper.starresource;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /** Fake NodeType when only some methods work, as needed to support
@@ -29,11 +30,11 @@ import javax.jcr.nodetype.PropertyDefinition;
 class FakeNodeType implements NodeType {
 
     private final String name;
-    
+
     FakeNodeType(String name) {
         this.name = name;
     }
-    
+
     public boolean canAddChildNode(String arg0) {
         return false;
     }
@@ -95,6 +96,34 @@ class FakeNodeType implements NodeType {
     }
 
     public boolean isNodeType(String arg0) {
+        return false;
+    }
+
+    public boolean canRemoveNode(String nodeName) {
+        return false;
+    }
+
+    public boolean canRemoveProperty(String propertyName) {
+        return false;
+    }
+
+    public NodeTypeIterator getDeclaredSubtypes() {
+        return null;
+    }
+
+    public NodeTypeIterator getSubtypes() {
+        return null;
+    }
+
+    public String[] getDeclaredSupertypeNames() {
+        return null;
+    }
+
+    public boolean isAbstract() {
+        return false;
+    }
+
+    public boolean isQueryable() {
         return false;
     }
 }

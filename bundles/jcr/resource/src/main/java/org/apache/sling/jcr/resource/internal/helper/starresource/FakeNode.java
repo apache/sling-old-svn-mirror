@@ -19,11 +19,14 @@
 package org.apache.sling.jcr.resource.internal.helper.starresource;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.NoSuchElementException;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidLifecycleTransitionException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -59,7 +62,7 @@ import javax.jcr.version.VersionHistory;
 class FakeNode implements Node {
 
     protected final String path;
-    
+
     static class EmptyRangeIterator implements RangeIterator {
         public long getPosition() {
             return 0;
@@ -83,23 +86,23 @@ class FakeNode implements Node {
         public void remove() {
         }
     }
-    
+
     static class EmptyNodeIterator extends EmptyRangeIterator implements NodeIterator {
         public Node nextNode() {
             throw new NoSuchElementException();
         }
     }
-    
+
     static class EmptyPropertyIterator extends EmptyRangeIterator implements PropertyIterator {
         public Property nextProperty() {
             throw new NoSuchElementException();
         }
     }
-    
+
     FakeNode(String path) {
         this.path = path;
     }
-    
+
     public void addMixin(String mixinName) throws NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
     }
@@ -403,5 +406,71 @@ class FakeNode implements Node {
     public void save() throws AccessDeniedException, ItemExistsException, ConstraintViolationException,
             InvalidItemStateException, ReferentialIntegrityException, VersionException, LockException,
             NoSuchNodeTypeException, RepositoryException {
+    }
+
+    public void followLifecycleTransition(String transition)
+            throws UnsupportedRepositoryOperationException,
+            InvalidLifecycleTransitionException, RepositoryException {
+    }
+
+    public String[] getAllowedLifecycleTransistions()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        return null;
+    }
+
+    public String getIdentifier() throws RepositoryException {
+        return null;
+    }
+
+    public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
+        return null;
+    }
+
+    public PropertyIterator getProperties(String[] nameGlobs)
+            throws RepositoryException {
+        return null;
+    }
+
+    public PropertyIterator getReferences(String name)
+            throws RepositoryException {
+        return null;
+    }
+
+    public NodeIterator getSharedSet() throws RepositoryException {
+        return null;
+    }
+
+    public PropertyIterator getWeakReferences() throws RepositoryException {
+        return null;
+    }
+
+    public PropertyIterator getWeakReferences(String name)
+            throws RepositoryException {
+        return null;
+    }
+
+    public void removeShare() throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+    }
+
+    public void removeSharedSet() throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+    }
+
+    public void setPrimaryType(String nodeTypeName)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+    }
+
+    public Property setProperty(String name, BigDecimal value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return null;
+    }
+
+    public Property setProperty(String name, Binary value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        return null;
     }
 }
