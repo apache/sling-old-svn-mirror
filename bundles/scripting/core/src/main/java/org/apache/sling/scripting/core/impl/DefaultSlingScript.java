@@ -134,6 +134,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     // ---------- SlingScript interface ----------------------------------------
 
+    /**
+     * @see org.apache.sling.api.scripting.SlingScript#getScriptResource()
+     */
     public Resource getScriptResource() {
         final ResourceResolver resolver = requestResourceResolver.get();
         if ( resolver == null ) {
@@ -202,8 +205,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.setWriter((Writer) bindings.get(OUT));
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 
-            // set the current resource resolver
-            requestResourceResolver.set(props.getRequest().getResourceResolver());
+            // set the current resource resolver if a request is available from the bindings
+            if ( props.getRequest() != null ) {
+                requestResourceResolver.set(props.getRequest().getResourceResolver());
+            }
 
             // set the script resource resolver as an attribute
             ctx.setAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
@@ -451,9 +456,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         };
     }
 
-    private Bindings verifySlingBindings(SlingBindings slingBindings) throws IOException {
+    private Bindings verifySlingBindings(final SlingBindings slingBindings) throws IOException {
 
-    	Bindings bindings = new SimpleBindings();
+    	final Bindings bindings = new SimpleBindings();
 
         final SlingHttpServletRequest request = slingBindings.getRequest();
 
@@ -473,9 +478,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         bindings.put(SLING, sling);
 
         if (request != null) {
-            //throw fail(REQUEST, "Missing or wrong type");
-
-        	SlingHttpServletResponse response = slingBindings.getResponse();
+        	final SlingHttpServletResponse response = slingBindings.getResponse();
             if (response == null) {
                 throw fail(RESPONSE, "Missing or wrong type");
             }
