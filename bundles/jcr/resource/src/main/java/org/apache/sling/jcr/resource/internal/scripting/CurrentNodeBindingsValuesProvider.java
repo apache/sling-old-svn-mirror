@@ -38,10 +38,11 @@ public class CurrentNodeBindingsValuesProvider implements BindingsValuesProvider
      */
     public void addBindings(Bindings bindings) {
         Resource resource = (Resource) bindings.get("resource");
-        Node node = resource.adaptTo(Node.class);
-        if (node != null) {
-            bindings.put("currentNode", node);
+        if(resource != null) {
+            Node node = resource.adaptTo(Node.class);
+            if (node != null) {
+                bindings.put("currentNode", node);
+            }
         }
-
     }
 }
