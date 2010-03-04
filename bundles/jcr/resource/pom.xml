@@ -60,6 +60,7 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
+                            javax.script.*;
                             org.apache.sling.scripting.api.*;resolution:=optional,
                             org.apache.felix.webconsole;resolution:=optional,
                             *
