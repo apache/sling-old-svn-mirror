@@ -24,12 +24,12 @@ public class StandaloneScriptExecutionTest extends HttpTestBase {
 	 */
 	public void testScriptExecution() throws Exception {
 		final String scriptPath = TEST_PATH + "/" + getClass().getSimpleName();
-		final String script = "standalone-test.js";
+		final String script = "standalone-test.ecma";
 		testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
 		final String scriptUrl = uploadTestScript(scriptPath, script, script);
 		
 		{
-			final String content = getContent(scriptUrl, "application/javascript");
+			final String content = getContent(scriptUrl, CONTENT_TYPE_DONTCARE);
 			assertTrue("Expecting script URL to return raw script contents (" + content + ")", 
 					content.contains("TEST_SCRIPT"));
 		}
