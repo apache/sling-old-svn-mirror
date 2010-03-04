@@ -74,7 +74,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         final Session session;
         try {
             if ( credentials == null ) {
-                session = this.repository.loginAdministrative(workspace);
+                session = this.repository.login(workspace);
             } else {
                 session = this.repository.login(credentials, workspace);
             }
