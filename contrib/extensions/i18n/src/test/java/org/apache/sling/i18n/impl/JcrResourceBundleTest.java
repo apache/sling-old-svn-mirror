@@ -159,6 +159,9 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                 return null;
             }
 
+            public void close() {
+                // nothing to do
+            }
         };
 
         createTestContent();

@@ -159,4 +159,8 @@ public class MockResourceResolver implements ResourceResolver {
     public Resource resolve(HttpServletRequest request, String absPath) {
         throw new UnsupportedOperationException("Not implemented");
     }
+
+    public void close() {
+        // nothing to do
+    }
 }

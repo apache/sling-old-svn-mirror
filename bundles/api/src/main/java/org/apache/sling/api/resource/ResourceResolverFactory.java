@@ -24,8 +24,11 @@ import java.util.Map;
  * The <code>ResourceResolverFactory</code> defines the service API to
  * get and create <code>ResourceResolver</code>s.
  * <p>
+ * As soon as the resource resolver is not used anymore, {@link ResourceResolver#close()}
+ * should be called.
  *
  * WORK IN PROGRESS - see SLING-1262
+ * @since 2.1
  */
 public interface ResourceResolverFactory {
 
@@ -39,6 +42,4 @@ public interface ResourceResolverFactory {
     ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo);
 
     ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo);
-
-    void dispose(ResourceResolver resolver);
 }

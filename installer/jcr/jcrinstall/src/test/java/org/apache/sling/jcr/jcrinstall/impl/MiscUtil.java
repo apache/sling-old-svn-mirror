@@ -96,6 +96,10 @@ class MiscUtil {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> arg0) {
             return null;
         }
+
+        public void close() {
+            // nothing to do
+        }
     }
 
     /** Set a non-public Field */
