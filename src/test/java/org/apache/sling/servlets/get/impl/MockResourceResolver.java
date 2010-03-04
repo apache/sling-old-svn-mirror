@@ -81,4 +81,7 @@ public class MockResourceResolver implements ResourceResolver {
         return null;
     }
 
+    public void close() {
+        // nothing to do
+    }
 }
