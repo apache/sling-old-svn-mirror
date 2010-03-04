@@ -97,6 +97,13 @@ public class JcrResourceResolver extends SlingAdaptable implements
         this.resourceMapper = resourceMapper;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#close()
+     */
+    public void close() {
+        // TODO - Implement this
+    }
+
     // ---------- resolving resources
 
     public Resource resolve(String absPath) {

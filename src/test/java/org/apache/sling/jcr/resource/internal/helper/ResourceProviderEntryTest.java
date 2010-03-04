@@ -255,6 +255,9 @@ public class ResourceProviderEntryTest extends TestCase {
             return Arrays.toString(roots);
         }
 
+        public void close() {
+            // nothing to do
+        }
     }
 
     private static class TestResource implements Resource {
