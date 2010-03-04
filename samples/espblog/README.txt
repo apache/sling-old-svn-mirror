@@ -1,6 +1,14 @@
 Sling ESP blog sample
 ---------------------
 
+***** WARNING SLING-1420 ********
+See SLING-1420, this sample is currently broken due to a regression in
+the StarResource class.
+Until this is fixed (check http://issues.apache.org/jira/browse/SLING-1420) 
+the sample should work if you use revision 795864, i.e. use 
+svn export -r 795864 instead of svn checkout.
+***** WARNING SLING-1420 ********
+
 WHY THIS SAMPLE?
 ----------------
 This demonstrates the use of ESP server-side javascript to implement a simple
