@@ -214,24 +214,25 @@ public class JcrResourceResolver extends SlingAdaptable implements
                     realPath);
                 res = new StarResource(this, ensureAbsPath(realPath));
 
-            } else
-
-            if (realPath.startsWith("/")) {
-
-                // let's check it with a direct access first
-                log.debug("resolve: Try absolute mapped path {}", realPath);
-                res = resolveInternal(realPath);
-
             } else {
 
-                String[] searchPath = getSearchPath();
-                for (int spi = 0; res == null && spi < searchPath.length; spi++) {
-                    log.debug(
-                        "resolve: Try relative mapped path with search path entry {}",
-                        searchPath[spi]);
-                    res = resolveInternal(searchPath[spi] + realPath);
-                }
+                if (realPath.startsWith("/")) {
 
+                    // let's check it with a direct access first
+                    log.debug("resolve: Try absolute mapped path {}", realPath);
+                    res = resolveInternal(realPath);
+
+                } else {
+
+                    String[] searchPath = getSearchPath();
+                    for (int spi = 0; res == null && spi < searchPath.length; spi++) {
+                        log.debug(
+                            "resolve: Try relative mapped path with search path entry {}",
+                            searchPath[spi]);
+                        res = resolveInternal(searchPath[spi] + realPath);
+                    }
+
+                }
             }
 
         }
