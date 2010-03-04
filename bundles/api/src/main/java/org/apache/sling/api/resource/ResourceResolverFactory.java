@@ -39,7 +39,9 @@ public interface ResourceResolverFactory {
      */
     String SUDO_USER_ID = "sudo.user.id";
 
-    ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo);
+    ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo)
+    throws LoginException;
 
-    ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo);
+    ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo)
+    throws LoginException;
 }
