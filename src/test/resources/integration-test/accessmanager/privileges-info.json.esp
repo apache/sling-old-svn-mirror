@@ -1,0 +1,11 @@
+{
+<% 
+   var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+%>
+	"canAddChildren" : <%=privilegesInfo.canAddChildren(currentNode)%>,
+	"canDeleteChildren" : <%=privilegesInfo.canDeleteChildren(currentNode)%>,
+	"canDelete" : <%=privilegesInfo.canDelete(currentNode)%>,
+	"canModifyProperties" : <%=privilegesInfo.canModifyProperties(currentNode)%>,
+	"canReadAccessControl" : <%=privilegesInfo.canReadAccessControl(currentNode)%>,
+	"canModifyAccessControl" : <%=privilegesInfo.canModifyAccessControl(currentNode)%>
+}

@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -151,12 +152,12 @@ public abstract class AbstractAccessManagerTest extends HttpTestBase {
     }
     
     
-    protected static int counter = 1;
+    protected static Random random = new Random(System.currentTimeMillis());
     
 	protected String createTestUser() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-		String testUserId = "testUser" + (counter++);
+		String testUserId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
@@ -169,7 +170,7 @@ public abstract class AbstractAccessManagerTest extends HttpTestBase {
 	protected String createTestGroup() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
-		String testGroupId = "testGroup" + (counter++);
+		String testGroupId = "testGroup" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
 		
@@ -181,7 +182,7 @@ public abstract class AbstractAccessManagerTest extends HttpTestBase {
 	}
 	
 	protected String createTestFolder() throws IOException {
-        String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + "testFolder" + (counter++);
+        String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + "testFolder" + random.nextInt();
 
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
