@@ -444,7 +444,15 @@ public class PrivilegesInfo {
 		try {
 			AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
 			
-			String parentPath = absPath.substring(0, absPath.lastIndexOf('/'));
+			String parentPath;
+			int lastSlash = absPath.lastIndexOf('/');
+			if (lastSlash == 0) {
+				//the parent is the root folder.
+				parentPath = "/";
+			} else {
+				//strip the last segment
+				parentPath = absPath.substring(0, lastSlash);
+			}
 			boolean canDelete = accessControlManager.hasPrivileges(absPath, new Privilege[] {
 							accessControlManager.privilegeFromName(Privilege.JCR_REMOVE_NODE)
 						}) && canDeleteChildren(session, parentPath);
