@@ -280,7 +280,7 @@ public abstract class EventUtil {
     public static boolean rescheduleJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
-           return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
+            return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
         }
         return false;
     }

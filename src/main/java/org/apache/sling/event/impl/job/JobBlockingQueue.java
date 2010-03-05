@@ -75,9 +75,10 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         this.isWaiting = true;
         this.markForCleanUp = false;
         this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
-        this.lock.wait();
+        while ( this.isWaiting ) {
+            this.lock.wait();
+        }
         this.logger.debug("Job queue {} is continuing.", this.queueName);
-        this.isWaiting = false;
         final EventInfo object = this.eventInfo;
         this.eventInfo = null;
         return object;
@@ -109,9 +110,10 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
             this.isWaiting = true;
             this.markForCleanUp = false;
             this.logger.debug("Job queue {} is processing {} job - waiting for a free slot.", this.queueName, jobCount);
-            this.lock.wait();
+            while ( this.isWaiting ) {
+                this.lock.wait();
+            }
             this.logger.debug("Job queue {} is continuing.", this.queueName);
-            this.isWaiting = false;
         }
         jobCount++;
     }
@@ -123,6 +125,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
         jobCount--;
         if ( this.isWaiting ) {
             this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
+            this.isWaiting = false;
             this.lock.notify();
         }
     }
@@ -140,6 +143,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
     public void notifyFinish(EventInfo i) {
         this.eventInfo = i;
         this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
+        this.isWaiting = false;
         this.lock.notify();
     }
 
