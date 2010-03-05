@@ -1227,15 +1227,15 @@ public class JobEventHandler
      * @see org.apache.sling.event.impl.job.JobStatusNotifier#sendAcknowledge(org.osgi.service.event.Event, java.lang.String)
      */
     public boolean sendAcknowledge(Event job, String eventNodePath) {
+        final Object ack;
         synchronized ( this.processingEventsList ) {
-            // if the event is still in the processing list, we confirm the ack
-            final Object ack = this.processingEventsList.remove(eventNodePath);
-            if ( ack != null ) {
-                this.sendNotification(EventUtil.TOPIC_JOB_STARTED, job);
-            }
-            return ack != null;
+            ack = this.processingEventsList.remove(eventNodePath);
         }
-
+        // if the event is still in the processing list, we confirm the ack
+        if ( ack != null ) {
+            this.sendNotification(EventUtil.TOPIC_JOB_STARTED, job);
+        }
+        return ack != null;
     }
 
     public static final class RescheduleInfo {
