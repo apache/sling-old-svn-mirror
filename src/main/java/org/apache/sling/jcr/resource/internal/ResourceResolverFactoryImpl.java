@@ -84,6 +84,15 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return factory.getResourceResolver(handleSudo(session, authenticationInfo));
     }
 
+    /**
+     * Create a login exception from a repository exception.
+     * If the repository exception is a  {@link javax.jcr.LoginException}
+     * a {@link LoginException} is created with the same information.
+     * Otherwise a {@link LoginException} is created which wraps the
+     * repository exception.
+     * @param re The repository exception.
+     * @return The login exception.
+     */
     private LoginException getLoginException(final RepositoryException re) {
         if ( re instanceof javax.jcr.LoginException ) {
             return new LoginException(re.getMessage(), re.getCause());
@@ -91,6 +100,13 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return new LoginException("Unable to login " + re.getMessage(), re);
     }
 
+    /**
+     * Return the workspace name.
+     * If the workspace name is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Optional authentication info.
+     * @return The configured workspace name or <code>null</code>
+     */
     private String getWorkspace(final Map<String, Object> authenticationInfo) {
         if ( authenticationInfo != null ) {
             return (String) authenticationInfo.get("user.jcr.workspace");
@@ -98,6 +114,13 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return null;
     }
 
+    /**
+     * Return the sudo user information.
+     * If the sudo user info is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Optional authentication info.
+     * @return The configured sudo user information or <code>null</code>
+     */
     private String getSudoUser(final Map<String, Object> authenticationInfo) {
         if ( authenticationInfo != null ) {
             return (String) authenticationInfo.get(ResourceResolverFactory.SUDO_USER_ID);
@@ -105,6 +128,18 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return null;
     }
 
+    /**
+     * Handle the sudo if configured.
+     * If the authentication info does not contain a sudo info, this method simply returns
+     * the passed in session.
+     * If a sudo user info is available, the session is tried to be impersonated. The new
+     * impersonated session is returned. The original session is closed. The session is
+     * also closed if the impersonation fails.
+     * @param session The session.
+     * @param authenticationInfo The optional authentication info.
+     * @return The original session or impersonated session.
+     * @throws LoginException If something goes wrong.
+     */
     private Session handleSudo(final Session session, final Map<String, Object> authenticationInfo)
     throws LoginException {
         final String sudoUser = getSudoUser(authenticationInfo);
@@ -121,6 +156,19 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return session;
     }
 
+    /**
+     * Create a credentials object from the provided authentication info.
+     * If no map is provided, <code>null</code> is returned.
+     * If a map is provided and contains a credentials object, this object is
+     * returned.
+     * If a map is provided but does not contain a credentials object nor a
+     * user, <code>null</code> is returned.
+     * if a map is provided with a user name but without a credentials object
+     * a new credentials object is created and all values from the authentication
+     * info are added as attributes.
+     * @param authenticationInfo Optional authentication info
+     * @return A credentials object or <code>null</code>
+     */
     private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
         if ( authenticationInfo == null ) {
             return null;
@@ -131,9 +179,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
             final String userId = (String) authenticationInfo.get("user.name");
             if (userId != null) {
                 final char[] password = (char[]) authenticationInfo.get("user.password");
-                credentials = new SimpleCredentials(userId, (password == null)
-                        ? new char[0]
-                        : password);
+                credentials = new SimpleCredentials(userId, (password == null ? new char[0] : password));
 
                 // add attributes
                 final Iterator<Map.Entry<String, Object>> i = authenticationInfo.entrySet().iterator();
