@@ -22,7 +22,6 @@ import static junit.framework.Assert.failNotEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.jcr.Credentials;
@@ -76,7 +75,7 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         assertNull(info.getUser());
         assertNull(info.getPassword());
-        assertNull(info.getWorkspaceName());
+        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -85,7 +84,7 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertNull(info.getPassword());
-        assertNull(info.getWorkspaceName());
+        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -96,7 +95,7 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertSame(pwd, info.getPassword());
-        assertNull(info.getWorkspaceName());
+        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -107,7 +106,7 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertSame(pwd, info.getPassword());
-        Assert.assertEquals("wsp", info.getWorkspaceName());
+        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -189,16 +188,16 @@ public class AuthenticationInfoTest {
     public void testSetWorkspaceName() {
         final AuthenticationInfo info = new AuthenticationInfo("test", "user",
             new char[0], "wsp");
-        Assert.assertEquals("wsp", info.getWorkspaceName());
+        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
 
-        info.setWorkspaceName(null);
-        Assert.assertEquals("wsp", info.getWorkspaceName());
+        info.remove(AuthenticationInfo.WORKSPACE);
+        Assert.assertEquals(null, info.get(AuthenticationInfo.WORKSPACE));
 
-        info.setWorkspaceName("dummy");
-        Assert.assertEquals("dummy", info.getWorkspaceName());
+        info.put(AuthenticationInfo.WORKSPACE, "dummy");
+        Assert.assertEquals("dummy", info.get(AuthenticationInfo.WORKSPACE));
 
-        info.setWorkspaceName("");
-        Assert.assertEquals("", info.getWorkspaceName());
+        info.put(AuthenticationInfo.WORKSPACE, "");
+        Assert.assertEquals("", info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -206,10 +205,10 @@ public class AuthenticationInfoTest {
         final AuthenticationInfo info = new AuthenticationInfo("test");
         info.put(AuthenticationInfo.WORKSPACE, "wsp");
 
-        Assert.assertEquals("wsp", info.getWorkspaceName());
+        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
         Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
         Assert.assertEquals(info.get(AuthenticationInfo.WORKSPACE),
-            info.getWorkspaceName());
+                info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -217,40 +216,32 @@ public class AuthenticationInfoTest {
         final Credentials creds = new SimpleCredentials("user", new char[0]);
         final AuthenticationInfo info = new AuthenticationInfo("test");
 
-        info.put("user.jcr.credentials", creds);
-        Assert.assertSame(creds, info.getCredentials());
+        info.put(AuthenticationInfo.CREDENTIALS, creds);
+        Assert.assertSame(creds, info.get(AuthenticationInfo.CREDENTIALS));
 
-        info.setCredentials(null);
-        Assert.assertSame(creds, info.getCredentials());
+        info.remove(AuthenticationInfo.WORKSPACE);
+        Assert.assertSame(creds, info.get(AuthenticationInfo.CREDENTIALS));
     }
 
     @Test
     public void testGetCredentials() {
         final AuthenticationInfo info = new AuthenticationInfo("test");
 
-        assertNull(info.getCredentials());
+        assertNull(info.get(AuthenticationInfo.CREDENTIALS));
         assertFalse(info.containsKey(AuthenticationInfo.CREDENTIALS));
 
         final Credentials creds = new SimpleCredentials("user", new char[0]);
-        info.put("user.jcr.credentials", creds);
+        info.put(AuthenticationInfo.CREDENTIALS, creds);
 
-        assertSame(creds, info.getCredentials());
         assertSame(creds, info.get(AuthenticationInfo.CREDENTIALS));
-        assertSame(info.get(AuthenticationInfo.CREDENTIALS),
-            info.getCredentials());
 
         final String user = "user";
         final char[] pwd = new char[5];
         final AuthenticationInfo infoCred = new AuthenticationInfo("TEST",
             user, pwd);
 
-        // credentials auto-generated but not stored in the object
-        assertTrue(infoCred.getCredentials() instanceof SimpleCredentials);
+        // credentials not stored in the object
         assertFalse(infoCred.containsKey(AuthenticationInfo.CREDENTIALS));
-
-        final SimpleCredentials generated = (SimpleCredentials) infoCred.getCredentials();
-        assertSame(user, generated.getUserID());
-        assertEquals(pwd, generated.getPassword());
     }
 
     @Test
@@ -275,7 +266,8 @@ public class AuthenticationInfoTest {
     public void testPutStringObject() {
         final AuthenticationInfo info = new AuthenticationInfo("test", "user",
             new char[2], "wsp");
-        info.setCredentials(new SimpleCredentials("user", new char[2]));
+        info.put(AuthenticationInfo.CREDENTIALS,
+                new SimpleCredentials("user", new char[2]));
 
         test_put_fail(info, AuthenticationInfo.AUTH_TYPE, null);
         test_put_fail(info, AuthenticationInfo.USER, null);

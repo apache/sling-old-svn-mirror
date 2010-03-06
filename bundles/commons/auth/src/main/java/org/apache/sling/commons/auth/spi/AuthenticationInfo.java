@@ -21,9 +21,6 @@ package org.apache.sling.commons.auth.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.Credentials;
-import javax.jcr.SimpleCredentials;
-
 /**
  * The <code>AuthenticationInfo</code> conveys any authentication credentials
  * and/or details extracted by the
@@ -250,59 +247,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
-     * @param workspaceName The name of the workspace to connect to. If this is
-     *            <code>null</code> the current workspace name is not replaced.
-     */
-    public final void setWorkspaceName(String workspaceName) {
-        putIfNotNull(WORKSPACE, workspaceName);
-    }
-
-    /**
-     * Returns the workspace name stored as the {@link #WORKSPACE} property or
-     * <code>null</code> if the workspace name is not set in this map.
-     */
-    public final String getWorkspaceName() {
-        return (String) get(WORKSPACE);
-    }
-
-    /**
-     * @param credentials The <code>Credentials</code> to authenticate with. If
-     *            this is <code>null</code> the currently set credentials are
-     *            not replaced.
-     */
-    public final void setCredentials(Credentials credentials) {
-        putIfNotNull(CREDENTIALS, credentials);
-    }
-
-    /**
-     * Returns the JCR credentials stored as the {@link #CREDENTIALS} property.
-     * If the {@link #CREDENTIALS} object is not set but the user ID (
-     * {@link #USER}) is set, <code>SimpleCredentials</code> object is returned
-     * based on that user ID and the (optional) {@link #PASSWORD}. If the userID
-     * is not set, this method returns <code>null</code>.
-     */
-    public final Credentials getCredentials() {
-
-        // return credentials explicitly set
-        final Credentials creds = (Credentials) get(CREDENTIALS);
-        if (creds != null) {
-            return creds;
-        }
-
-        // otherwise try to create SimpleCredentials if the userId is set
-        final String userId = getUser();
-        if (userId != null) {
-            final char[] password = getPassword();
-            return new SimpleCredentials(userId, (password == null)
-                    ? new char[0]
-                    : password);
-        }
-
-        // finally, we cannot create credentials to return
-        return null;
-    }
-
-    /**
      * Sets or resets a property with the given <code>key</code> to a new
      * <code>value</code>. Some keys have special meanings and their values are
      * required to have predefined as listed in the following table:
@@ -359,7 +303,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
                 + " property must be a char[]");
         }
 
-        if (CREDENTIALS.equals(key) && !(value instanceof Credentials)) {
+        if (CREDENTIALS.equals(key) && !isCredentialsObject(value)) {
             throw new IllegalArgumentException(CREDENTIALS
                 + " property must be a javax.jcr.Credentials instance");
         }
@@ -370,6 +314,24 @@ public class AuthenticationInfo extends HashMap<String, Object> {
         }
 
         return super.put(key, value);
+    }
+
+    /** We do this check in order to avoid an import to the javax.jcr.* package */
+    private boolean isCredentialsObject(final Object value) {
+        if ( value == null ) {
+            return false;
+        }
+        Class<?> checkClass = value.getClass();
+        do {
+            final Class<?>[] interfaces = value.getClass().getInterfaces();
+            for(final Class<?> current : interfaces) {
+                if ( current.getName().equals("javax.jcr.Credentials") ) {
+                    return true;
+                }
+            }
+            checkClass = checkClass.getSuperclass();
+        } while ( checkClass != null );
+        return false;
     }
 
     /**
