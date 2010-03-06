@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -521,6 +523,41 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     /**
+     * Create a credentials object from the provided authentication info.
+     * If no map is provided, <code>null</code> is returned.
+     * If a map is provided and contains a credentials object, this object is
+     * returned.
+     * If a map is provided but does not contain a credentials object nor a
+     * user, <code>null</code> is returned.
+     * if a map is provided with a user name but without a credentials object
+     * a new credentials object is created and all values from the authentication
+     * info are added as attributes.
+     * @param authenticationInfo Optional authentication info
+     * @return A credentials object or <code>null</code>
+     */
+    private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
+        if ( authenticationInfo == null ) {
+            return null;
+        }
+        Credentials credentials = (Credentials) authenticationInfo.get(AuthenticationInfo.CREDENTIALS);
+        if ( credentials == null ) {
+            // otherwise try to create SimpleCredentials if the userId is set
+            final String userId = (String) authenticationInfo.get(AuthenticationInfo.USER);
+            if (userId != null) {
+                final char[] password = (char[]) authenticationInfo.get(AuthenticationInfo.PASSWORD);
+                credentials = new SimpleCredentials(userId, (password == null ? new char[0] : password));
+
+                // add attributes
+                final Iterator<Map.Entry<String, Object>> i = authenticationInfo.entrySet().iterator();
+                while  (i.hasNext() ) {
+                    final Map.Entry<String, Object> current = i.next();
+                    ((SimpleCredentials)credentials).setAttribute(current.getKey(), current.getValue());
+                }
+            }
+        }
+        return credentials;
+    }
+    /**
      * Try to acquire an Session as indicated by authInfo
      *
      * @return <code>true</code> if request processing should continue assuming
@@ -537,8 +574,8 @@ public class SlingAuthenticator implements Authenticator,
 
         // try to connect
         try {
-            Session session = repository.login(authInfo.getCredentials(),
-                authInfo.getWorkspaceName());
+            Session session = repository.login(getCredentials(authInfo),
+                (String)authInfo.get(AuthenticationInfo.WORKSPACE));
 
             // handle impersonation
             session = handleImpersonation(request, response, session);
