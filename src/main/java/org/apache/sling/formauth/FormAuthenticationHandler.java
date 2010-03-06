@@ -493,7 +493,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             final AuthenticationInfo authInfo) {
 
         // get current authentication data, may be missing after first login
-        String authData = getCookieAuthData(authInfo.getCredentials());
+        String authData = getCookieAuthData((Credentials)authInfo.get(AuthenticationInfo.CREDENTIALS));
 
         // check whether we have to "store" or create the data
         final boolean refreshCookie = needsRefresh(authData,
@@ -596,7 +596,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
 
         final AuthenticationInfo info = new AuthenticationInfo(
             HttpServletRequest.FORM_AUTH, userId);
-        info.setCredentials(cookieAuthCredentials);
+        info.put(AuthenticationInfo.CREDENTIALS, cookieAuthCredentials);
 
         return info;
     }
