@@ -572,7 +572,7 @@ public class OpenIDAuthenticationHandler implements
 
     private AuthenticationInfo getAuthInfoFromUser(OpenIdUser user) {
     	final AuthenticationInfo info = new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE);
-        info.setCredentials(new OpenIdCredentials(user));
+        info.put(AuthenticationInfo.CREDENTIALS, new OpenIdCredentials(user));
         return info;
     }
 
