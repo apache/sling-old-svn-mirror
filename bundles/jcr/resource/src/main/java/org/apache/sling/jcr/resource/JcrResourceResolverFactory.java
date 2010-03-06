@@ -30,13 +30,16 @@ import org.apache.sling.api.resource.ResourceResolver;
  * This interface is not intended to be implemented by client applications. It
  * is implemented by this bundle and the implementation registered as a service
  * for use by client applications.
+ *
+ * @deprecated Use the {@link org.apache.sling.api.resource.ResourceResolverFactory}
  */
+@Deprecated
 public interface JcrResourceResolverFactory {
 
     /**
      * Returns a <code>ResourceResolver</code> for the given session. Calling
      * this method repeatedly returns a new instance on each call.
-     * 
+     *
      * @param session The JCR <code>Session</code> used by the created
      *            resource manager to access the repository.
      */
