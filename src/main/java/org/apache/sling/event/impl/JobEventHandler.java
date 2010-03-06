@@ -1309,6 +1309,7 @@ public class JobEventHandler
 
         // if this is set after the synchronized block we have an error
         Boolean errorOccured = null;
+        // we have to use the same session for unlocking that we used for locking!
         synchronized ( this.backgroundLock ) {
             // get the parallel info and unlock
             final ParallelInfo parInfo = ParallelInfo.getParallelInfo(job);
@@ -1319,7 +1320,7 @@ public class JobEventHandler
                 this.parallelJobCount--;
                 this.backgroundLock.notify();
             }
-            // we have to use the same session for unlocking that we used for locking!
+            Node eventNode = null;
             try {
                 // we might get here asnyc while this service has already been shutdown!
                 if ( this.backgroundSession == null ) {
@@ -1330,51 +1331,46 @@ public class JobEventHandler
                     // check if the job has been cancelled
                     if ( !this.backgroundSession.itemExists(eventNodePath) ) {
                         errorOccured = true;
-                    }
-                }
-                if ( errorOccured == null ) {
-                    synchronized ( this.deletedJobs ) {
-                        this.deletedJobs.add(eventNodePath);
-                    }
-                    final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
-                    // unlock node
-                    try {
-                        eventNode.unlock();
-                    } catch (RepositoryException e) {
-                        // if unlock fails, we silently ignore this
-                        this.ignoreException(e);
-                    }
-                    // update status in repository
-                    if ( !reschedule ) {
-                        try {
-                            final String jobId = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
-                            if ( jobId == null ) {
-                                // remove node from repository if no job id is set
-                                eventNode.remove();
-                            } else {
-                                // set finished date - if job id is set
-                                eventNode.setProperty(EventHelper.NODE_PROPERTY_FINISHED, Calendar.getInstance());
-                            }
-                            this.backgroundSession.save();
-                        } catch (RepositoryException re) {
-                            // if an exception occurs, we just log
-                            this.logger.error("Exception during finished job update.", re);
-                        }
                     } else {
-                        // update retry count and retries in the repository
-                        try {
-                            eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRIES, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRIES));
-                            eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT));
-                            this.backgroundSession.save();
-                        } catch (RepositoryException re) {
-                            // if an exception occurs, we just log
-                            this.logger.error("Exception during job updating job rescheduling information.", re);
-                        }
+                        eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
                     }
                 }
             } catch (RepositoryException re) {
                 this.logger.error("Unable to access repository to check job node.", re);
                 errorOccured = false;
+            }
+            if ( eventNode != null ) {
+                synchronized ( this.deletedJobs ) {
+                    this.deletedJobs.add(eventNodePath);
+                }
+                // unlock node
+                try {
+                    eventNode.unlock();
+                } catch (RepositoryException e) {
+                    // if unlock fails, we silently ignore this
+                    this.ignoreException(e);
+                }
+                // update status in repository
+                try {
+                    if ( !reschedule ) {
+                        final String jobId = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
+                        if ( jobId == null ) {
+                            // remove node from repository if no job id is set
+                            eventNode.remove();
+                        } else {
+                            // set finished date - if job id is set
+                            eventNode.setProperty(EventHelper.NODE_PROPERTY_FINISHED, Calendar.getInstance());
+                        }
+                    } else {
+                        // update retry count and retries in the repository
+                        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRIES, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRIES));
+                        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT));
+                    }
+                    this.backgroundSession.save();
+                } catch (RepositoryException re) {
+                    // if an exception occurs, we just log
+                    this.logger.error("Exception during finished job update.", re);
+                }
             }
         }
         // check for error
@@ -1387,16 +1383,8 @@ public class JobEventHandler
             final EventInfo putback = new EventInfo();
             putback.event = job;
             putback.nodePath = eventNodePath;
-            // if this is an own job queue, we simply signal the queue to continue
-            // it will pick up the event and either reschedule or wait
-            if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
-                checkForNotify(job, putback);
-            } else {
-                this.putBackIntoMainQueue(putback, false);
-            }
+            checkForNotify(job, putback);
         } else {
-            // if this is an own job queue, we simply signal the queue to continue
-            // it will pick up the event and continue with the next event
             checkForNotify(job, null);
         }
         // if we shouldn't reschedule - we always return true as everything went fine
@@ -1458,6 +1446,8 @@ public class JobEventHandler
     }
 
     private void checkForNotify(final Event job, final EventInfo info) {
+        // if this is an own job queue, we simply signal the queue to continue
+        // it will pick up the event and either reschedule or wait
         if ( job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
             // we know the queue exists
             final JobBlockingQueue jobQueue;
@@ -1474,6 +1464,10 @@ public class JobEventHandler
                 } else {
                     jobQueue.freeSlot();
                 }
+            }
+        } else {
+            if ( info != null ) {
+                this.putBackIntoMainQueue(info, false);
             }
         }
     }
