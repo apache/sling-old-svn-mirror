@@ -33,7 +33,7 @@ import org.osgi.service.log.LogService;
  *
  * @scr.component label="%repository.name" description="%repository.description"
  *          name="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository"
- *          configurationFactory="true" configuration-policy="require"
+ *          configurationFactory="true" policy="require"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
