@@ -33,7 +33,7 @@ import org.osgi.service.component.ComponentContext;
  *
  * @scr.component label="%request.log.service.name"
  *                description="%request.log.service.description"
- *                factory="org.apache.sling.engine.impl.log.RequestLoggerService"
+ *                configurationFactory="true" policy="require"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Factory for configuration
  *               based request/access loggers"
