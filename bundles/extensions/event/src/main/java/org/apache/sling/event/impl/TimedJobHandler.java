@@ -214,7 +214,7 @@ public class TimedJobHandler
                 if ( foundNode != null ) {
                     try {
                         foundNode.remove();
-                        parentNode.save();
+                        writerSession.save();
                     } catch (LockException le) {
                         // if someone else has the lock this is fine
                     }
@@ -226,7 +226,7 @@ public class TimedJobHandler
                 if ( foundNode != null ) {
                     try {
                         foundNode.remove();
-                        parentNode.save();
+                        writerSession.save();
                     } catch (LockException le) {
                         // if someone else has the lock this is fine
                     }
@@ -333,7 +333,6 @@ public class TimedJobHandler
         // we create an own session here
         Session s = null;
         try {
-            s = this.createSession();
             while ( iter.hasNext() ) {
                 final javax.jcr.observation.Event event = iter.nextEvent();
                 if ( event.getType() == javax.jcr.observation.Event.PROPERTY_CHANGED
@@ -346,6 +345,9 @@ public class TimedJobHandler
                     // we are only interested in unlocks
                     if ( "jcr:lockOwner".equals(propertyName) ) {
                         try {
+                            if ( s == null ) {
+                                s = this.createSession();
+                            }
                             final Node eventNode = (Node) s.getItem(nodePath);
                             if ( !eventNode.isLocked() ) {
                                 try {
@@ -490,7 +492,7 @@ public class TimedJobHandler
                     if ( eventNode != null ) {
                         try {
                             eventNode.remove();
-                            parentNode.save();
+                            s.save();
                         } catch (RepositoryException re) {
                             // we ignore the exception if removing fails
                             ignoreException(re);
@@ -761,10 +763,9 @@ public class TimedJobHandler
                 // we should remove the node from the repository
                 // if there is no node someone else was faster and we can ignore this
                 if ( foundNode != null ) {
-                    final Node parentNode = foundNode.getParent();
                     try {
                         foundNode.remove();
-                        parentNode.save();
+                        writerSession.save();
                     } catch (LockException le) {
                         // if someone else has the lock this is fine
                     }
