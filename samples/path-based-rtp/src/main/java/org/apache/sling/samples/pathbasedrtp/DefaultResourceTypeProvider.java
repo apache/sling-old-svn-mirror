@@ -22,8 +22,11 @@ import java.util.Dictionary;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceDecorator;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,64 +34,101 @@ import org.slf4j.LoggerFactory;
 /**
  *  Default resource type provider that uses a component of the node path
  *  to define the default resource type.
- *  
- *  A number of mappings can be configured, for example "/content:2" would 
- *  cause a node at /content/foo/bar to get the "foo" resource type if it 
+ *
+ *  A number of mappings can be configured, for example "/content:2" would
+ *  cause a node at /content/foo/bar to get the "foo" resource type if it
  *  doesn't have a default one: "/content" is used to select nodes to which the
  *  mapping applies, and "2" is the (1-based) index of the path component to
  *  use as the resource type.
- *  
+ *
  * @scr.component immediate="true" label="%defaultRtp.name"
  *                description="%defaultRtp.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Default Resource Type Provider"
+ * @scr.property name="service.description" value="Sling Sample Resource Decorator"
  * @scr.service
  */
-public class DefaultResourceTypeProvider implements JcrResourceTypeProvider {
+public class DefaultResourceTypeProvider implements ResourceDecorator {
 
     /**
      *  Name of the configurable property name that defines mappings. The default values
      *  specify the use of path component 2 for the /content path, and add a similar
-     *  definition for the /sling-test-pbrt path that is used in integration testing.     
-     *  
-     * @scr.property 
-     *  values.1="/content:2" 
+     *  definition for the /sling-test-pbrt path that is used in integration testing.
+     *
+     * @scr.property
+     *  values.1="/content:2"
      *  values.2="/sling-test-pbrt:2"
      */
     private static final String PROP_PATH_MAPPING = "path.mapping";
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private Mapping [] mappings;
-    
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceDecorator#decorate(org.apache.sling.api.resource.Resource, javax.servlet.http.HttpServletRequest)
+     */
+    public Resource decorate(Resource resource, HttpServletRequest request) {
+        return this.decorate(resource);
+    }
+
     /** Return a resource type for given node, if we have a mapping that applies */
-    public String getResourceTypeForNode(Node node) throws RepositoryException {
+    public Resource decorate(Resource resource) {
         String result = null;
-        
-        if(mappings!=null) {
-            final String nt = node.getPrimaryNodeType().getName();
-            final String path = node.getPath();
-            for(Mapping m : mappings) {
-                result = m.getResourceType(path, nt);
-                if(result != null) {
-                    log.debug("Default resource type {} used for Node {}", result, path);
-                    break;
+
+        if (mappings!=null) {
+            // let's check when we should apply the mapping
+            // 1. if the resource is a star resource
+            boolean apply = false;
+            String resourceType = null;
+            if ( resource.getPath().endsWith("/*") ) {
+                apply = true;
+            } else {
+                // 2. if the resource is adaptable to a node
+                //    and the primary node type equals the resource type
+                try {
+                    final Node node = resource.adaptTo(Node.class);
+                    if ( node != null && node.getPrimaryNodeType().equals(resource.getResourceType()) ) {
+                        apply = true;
+                        resourceType = resource.getResourceType();
+                    }
+                } catch (RepositoryException re) {
+                    // we ignore this
+                }
+            }
+            if ( apply ) {
+                final String path = resource.getPath();
+                for(Mapping m : mappings) {
+                    result = m.getResourceType(path, resourceType);
+                    if (result != null) {
+                        log.debug("Default resource type {} used for resource {}", result, path);
+                        break;
+                    }
                 }
             }
         }
-        
-        if(result==null) {
-            log.debug("No Mapping applies to node {}, no resource type provided", node.getPath());
+
+        if (result==null && log.isDebugEnabled()) {
+            log.debug("No Mapping applies to node {}, no resource type provided", resource.getPath());
         }
-        
-        return result;
+        if ( result != null ) {
+            final String resourceType = result;
+            return new ResourceWrapper(resource) {
+
+                @Override
+                public String getResourceType() {
+                    return resourceType;
+                }
+
+            };
+        }
+        return resource;
     }
-    
+
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         final Dictionary<?, ?> properties = componentContext.getProperties();
         final String[] mappingList = (String[]) properties.get(PROP_PATH_MAPPING);
-        
+
         if(mappingList== null || mappingList.length == 0) {
             mappings = null;
         } else {
