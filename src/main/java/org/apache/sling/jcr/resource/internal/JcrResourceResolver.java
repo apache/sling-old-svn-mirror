@@ -184,8 +184,10 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
                     // external redirect
                     log.debug("resolve: Returning external redirect");
-                    return new RedirectResource(this, absPath, mappedPath[0],
-                        mapEntry.getStatus());
+                    return this.factory.getResourceDecoratorTracker().decorate(
+                            new RedirectResource(this, absPath, mappedPath[0],
+                                   mapEntry.getStatus()),
+                             request);
                 }
             }
 
@@ -279,7 +281,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             log.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
 
-        return res;
+        return this.factory.getResourceDecoratorTracker().decorate(res, request);
     }
 
     /**
@@ -476,7 +478,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
         // if the path is absolute, normalize . and .. segements and get res
         if (path.startsWith("/")) {
             path = ResourceUtil.normalize(path);
-            return (path != null) ? getResourceInternal(path) : null;
+            final Resource result = (path != null) ? getResourceInternal(path) : null;
+            if ( result != null ) {
+                return this.factory.getResourceDecoratorTracker().decorate(result, null);
+            }
+            return null;
         }
 
         // otherwise we have to apply the search path
@@ -510,7 +516,8 @@ public class JcrResourceResolver extends SlingAdaptable implements
      */
     public Iterator<Resource> listChildren(Resource parent) {
         checkClosed();
-        return rootProvider.listChildren(parent);
+        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
+                rootProvider.listChildren(parent));
     }
 
     // ---------- Querying resources
@@ -524,8 +531,9 @@ public class JcrResourceResolver extends SlingAdaptable implements
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
-            return new JcrNodeResourceIterator(this, res.getNodes(),
-                rootProvider.getResourceTypeProviders(), factory.getDynamicClassLoader());
+            return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
+                    new JcrNodeResourceIterator(this, res.getNodes(),
+                     factory.getDynamicClassLoader()));
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language,
                 iqe);

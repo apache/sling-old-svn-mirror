@@ -25,7 +25,6 @@ import java.util.List;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
 public class JcrResourceProviderEntry extends ResourceProviderEntry {
@@ -39,26 +38,18 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     private final Session session;
 
-    private final JcrResourceTypeProvider[] resourceTypeProviders;
-
     public JcrResourceProviderEntry(Session session,
             ResourceProviderEntry delegatee,
-            JcrResourceTypeProvider[] resourceTypeProviders,
             final ClassLoader dynamicClassLoader) {
         super("/", new ResourceProvider[] { new JcrResourceProvider(session,
-                resourceTypeProviders, dynamicClassLoader) });
+                dynamicClassLoader) });
 
         this.delegatee = delegatee;
         this.session = session;
-        this.resourceTypeProviders = resourceTypeProviders;
     }
 
     public Session getSession() {
         return session;
-    }
-
-    public JcrResourceTypeProvider[] getResourceTypeProviders() {
-        return resourceTypeProviders;
     }
 
     @Override
