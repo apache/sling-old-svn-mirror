@@ -151,5 +151,6 @@ public class OsgiUtilTest extends TestCase {
         map1.put(Constants.SERVICE_RANKING, "hello");
         assertEquals(-1, OsgiUtil.getComparableForServiceRanking(map1).compareTo(map2));
         assertEquals(1, OsgiUtil.getComparableForServiceRanking(map2).compareTo(map1));
+        assertEquals(1, OsgiUtil.getComparableForServiceRanking(map2).compareTo(OsgiUtil.getComparableForServiceRanking(map1)));
     }
 }
