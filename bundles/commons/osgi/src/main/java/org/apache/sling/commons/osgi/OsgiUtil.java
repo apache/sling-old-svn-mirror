@@ -300,50 +300,60 @@ public class OsgiUtil {
      * @since 2.0.6
      */
     public static Comparable<Object> getComparableForServiceRanking(final Map<String, Object> props) {
-
-        return new Comparable<Object>() {
-
-            @SuppressWarnings("unchecked")
-            public int compareTo(Object reference) {
-                final Long otherId;
-                Object otherRankObj;
-                if ( reference instanceof ServiceReference ) {
-                    final ServiceReference other = (ServiceReference) reference;
-                    otherId = (Long) other.getProperty(Constants.SERVICE_ID);
-                    otherRankObj = other.getProperty(Constants.SERVICE_RANKING);
-                } else {
-                    final Map<String, Object> otherProps = (Map<String, Object>)reference;
-                    otherId = (Long) otherProps.get(Constants.SERVICE_ID);
-                    otherRankObj = otherProps.get(Constants.SERVICE_RANKING);
-                }
-                final Long id = (Long) props.get(Constants.SERVICE_ID);
-                if (id.equals(otherId)) {
-                    return 0; // same service
-                }
-
-                Object rankObj = props.get(Constants.SERVICE_RANKING);
-
-                // If no rank, then spec says it defaults to zero.
-                rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-                otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
-
-                // If rank is not Integer, then spec says it defaults to zero.
-                Integer rank = (rankObj instanceof Integer)
-                    ? (Integer) rankObj : new Integer(0);
-                Integer otherRank = (otherRankObj instanceof Integer)
-                    ? (Integer) otherRankObj : new Integer(0);
-
-                // Sort by rank in ascending order.
-                if (rank.compareTo(otherRank) < 0) {
-                    return -1; // lower rank
-                } else if (rank.compareTo(otherRank) > 0) {
-                    return 1; // higher rank
-                }
-
-                // If ranks are equal, then sort by service id in descending order.
-                return (id.compareTo(otherId) < 0) ? 1 : -1;
-            }
-        };
+        return new ComparableImplementation(props);
     }
 
+    private static final class ComparableImplementation implements Comparable<Object> {
+
+        private final Map<String, Object> props;
+
+        private ComparableImplementation(Map<String, Object> props) {
+            this.props = props;
+        }
+
+        @SuppressWarnings("unchecked")
+        public int compareTo(Object reference) {
+            final Long otherId;
+            Object otherRankObj;
+            if ( reference instanceof ServiceReference ) {
+                final ServiceReference other = (ServiceReference) reference;
+                otherId = (Long) other.getProperty(Constants.SERVICE_ID);
+                otherRankObj = other.getProperty(Constants.SERVICE_RANKING);
+            } else if (reference instanceof Map){
+                final Map<String, Object> otherProps = (Map<String, Object>)reference;
+                otherId = (Long) otherProps.get(Constants.SERVICE_ID);
+                otherRankObj = otherProps.get(Constants.SERVICE_RANKING);
+            } else {
+                final ComparableImplementation other = (ComparableImplementation)reference;
+                otherId = (Long) other.props.get(Constants.SERVICE_ID);
+                otherRankObj = other.props.get(Constants.SERVICE_RANKING);
+            }
+            final Long id = (Long) props.get(Constants.SERVICE_ID);
+            if (id.equals(otherId)) {
+                return 0; // same service
+            }
+
+            Object rankObj = props.get(Constants.SERVICE_RANKING);
+
+            // If no rank, then spec says it defaults to zero.
+            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
+            otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
+
+            // If rank is not Integer, then spec says it defaults to zero.
+            Integer rank = (rankObj instanceof Integer)
+                ? (Integer) rankObj : new Integer(0);
+            Integer otherRank = (otherRankObj instanceof Integer)
+                ? (Integer) otherRankObj : new Integer(0);
+
+            // Sort by rank in ascending order.
+            if (rank.compareTo(otherRank) < 0) {
+                return -1; // lower rank
+            } else if (rank.compareTo(otherRank) > 0) {
+                return 1; // higher rank
+            }
+
+            // If ranks are equal, then sort by service id in descending order.
+            return (id.compareTo(otherId) < 0) ? 1 : -1;
+        }
+    }
 }
