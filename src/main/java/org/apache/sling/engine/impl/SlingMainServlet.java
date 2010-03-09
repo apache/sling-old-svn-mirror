@@ -33,7 +33,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -370,14 +369,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             // FIXME: This must be removed
             // SLING-1270 Temporary solution to ensure session is logged out
             if (resolver != null) {
-                Session session = resolver.adaptTo(Session.class);
-                if (session != null && session.isLive()) {
-                    try {
-                        session.logout();
-                    } catch (Throwable t) {
-                        // ignore
-                    }
-                }
+                resolver.close();
             }
             // END SLING-1270 Temporary solution to ensure session is logged out
         }
