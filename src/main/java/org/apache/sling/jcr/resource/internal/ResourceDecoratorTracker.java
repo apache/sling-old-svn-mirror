@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.apache.sling.commons.osgi.OsgiUtil;
 
 /**
  * Helper class to track the resource decorators and keep
@@ -79,29 +77,20 @@ public class ResourceDecoratorTracker {
         return this.resourceDecoratorsArray;
     }
 
-    protected void addResourceDecorator(final ServiceReference reference) {
-    }
-
     protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         synchronized (this.resourceDecorators) {
-            final Long id = (Long) props.get(Constants.SERVICE_ID);
-            long ranking = -1;
-            if (props.get(Constants.SERVICE_RANKING) != null) {
-                ranking = (Long) props.get(Constants.SERVICE_RANKING);
-            }
-            this.resourceDecorators.add(new ResourceDecoratorEntry(id, ranking, decorator));
-            Collections.sort(this.resourceDecorators, ResourceDecoratorEntry.COMPARATOR);
+            this.resourceDecorators.add(new ResourceDecoratorEntry(decorator, OsgiUtil.getComparableForServiceRanking(props)));
+            Collections.sort(this.resourceDecorators);
             updateResourceDecoratorsArray();
         }
     }
 
     protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         synchronized (this.resourceDecorators) {
-            final long id = (Long) props.get(Constants.SERVICE_ID);
             final Iterator<ResourceDecoratorEntry> i = this.resourceDecorators.iterator();
             while (i.hasNext()) {
                 final ResourceDecoratorEntry current = i.next();
-                if (current.serviceId == id) {
+                if (current.decorator == decorator) {
                     i.remove();
                     break;
                 }
@@ -131,41 +120,20 @@ public class ResourceDecoratorTracker {
     /**
      * Internal class to keep track of the resource decorators.
      */
-    private static final class ResourceDecoratorEntry {
+    private static final class ResourceDecoratorEntry implements Comparable<ResourceDecoratorEntry> {
 
-        final long serviceId;
-
-        final long ranking;
+        final Comparable<Object> comparable;
 
         final ResourceDecorator decorator;
 
-        public ResourceDecoratorEntry(final long id,
-               final long ranking,
-               final ResourceDecorator d) {
-            this.serviceId = id;
-            this.ranking = ranking;
+        public ResourceDecoratorEntry(final ResourceDecorator d,
+                final Comparable<Object> comparable) {
+            this.comparable = comparable;
             this.decorator = d;
         }
 
-        public static Comparator<ResourceDecoratorEntry> COMPARATOR =
-
-            new Comparator<ResourceDecoratorEntry>() {
-
-                public int compare(ResourceDecoratorEntry o1,
-                        ResourceDecoratorEntry o2) {
-                    if (o1.ranking < o2.ranking) {
-                        return 1;
-                    } else if (o1.ranking > o2.ranking) {
-                        return -1;
-                    } else {
-                        if (o1.serviceId < o2.serviceId) {
-                            return -1;
-                        } else if (o1.serviceId > o2.serviceId) {
-                            return 1;
-                        }
-                    }
-                    return 0;
-                }
-            };
+        public int compareTo(ResourceDecoratorEntry o) {
+            return comparable.compareTo(o.comparable);
+        }
     }
 }
