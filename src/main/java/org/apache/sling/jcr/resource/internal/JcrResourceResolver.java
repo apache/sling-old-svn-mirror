@@ -90,6 +90,9 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     private final MapEntries resourceMapper;
 
+    /** Closed marker. */
+    private volatile boolean closed = false;
+
     public JcrResourceResolver(JcrResourceProviderEntry rootProvider,
             JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
         this.rootProvider = rootProvider;
@@ -101,21 +104,41 @@ public class JcrResourceResolver extends SlingAdaptable implements
      * @see org.apache.sling.api.resource.ResourceResolver#close()
      */
     public void close() {
-        // TODO - Implement this
+        if ( !this.closed ) {
+            this.closed = true;
+            getSession().logout();
+        }
     }
 
+    private void checkClosed() {
+        if ( this.closed ) {
+            throw new IllegalStateException("Resource resolver is already closed.");
+        }
+    }
     // ---------- resolving resources
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#resolve(java.lang.String)
+     */
     public Resource resolve(String absPath) {
+        checkClosed();
         return resolve(null, absPath);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
+     */
     public Resource resolve(HttpServletRequest request) {
+        checkClosed();
         // throws NPE if request is null as required
         return resolve(request, request.getPathInfo());
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest, java.lang.String)
+     */
     public Resource resolve(HttpServletRequest request, String absPath) {
+        checkClosed();
 
         // make sure abspath is not null and is absolute
         if (absPath == null) {
@@ -259,16 +282,24 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return res;
     }
 
-    // calls map(HttpServletRequest, String) as map(null, resourcePath)
+    /**
+     * calls map(HttpServletRequest, String) as map(null, resourcePath)
+     * @see org.apache.sling.api.resource.ResourceResolver#map(java.lang.String)
+     */
     public String map(String resourcePath) {
+        checkClosed();
         return map(null, resourcePath);
     }
 
-    // full implementation
-    //   - apply sling:alias from the resource path
-    //   - apply /etc/map mappings (inkl. config backwards compat)
-    //   - return absolute uri if possible
+    /**
+     * full implementation
+     *   - apply sling:alias from the resource path
+     *   - apply /etc/map mappings (inkl. config backwards compat)
+     *   - return absolute uri if possible
+     * @see org.apache.sling.api.resource.ResourceResolver#map(javax.servlet.http.HttpServletRequest, java.lang.String)
+     */
     public String map(final HttpServletRequest request, final String resourcePath) {
+        checkClosed();
 
         // find a fragment or query
         int fragmentQueryMark = resourcePath.indexOf('#');
@@ -426,13 +457,21 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     // ---------- search path for relative resoures
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getSearchPath()
+     */
     public String[] getSearchPath() {
+        checkClosed();
         return factory.getSearchPath().clone();
     }
 
     // ---------- direct resource access without resolution
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getResource(java.lang.String)
+     */
     public Resource getResource(String path) {
+        checkClosed();
 
         // if the path is absolute, normalize . and .. segements and get res
         if (path.startsWith("/")) {
@@ -453,7 +492,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return null;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getResource(org.apache.sling.api.resource.Resource, java.lang.String)
+     */
     public Resource getResource(Resource base, String path) {
+        checkClosed();
 
         if (!path.startsWith("/") && base != null) {
             path = base.getPath() + "/" + path;
@@ -462,14 +505,22 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return getResource(path);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#listChildren(org.apache.sling.api.resource.Resource)
+     */
     public Iterator<Resource> listChildren(Resource parent) {
+        checkClosed();
         return rootProvider.listChildren(parent);
     }
 
     // ---------- Querying resources
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#findResources(java.lang.String, java.lang.String)
+     */
     public Iterator<Resource> findResources(String query, String language)
             throws SlingException {
+        checkClosed();
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
@@ -483,8 +534,12 @@ public class JcrResourceResolver extends SlingAdaptable implements
         }
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#queryResources(java.lang.String, java.lang.String)
+     */
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) throws SlingException {
+        checkClosed();
         try {
             QueryResult result = JcrResourceUtil.query(getSession(), query,
                 language);
@@ -528,8 +583,12 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     // ---------- Adaptable interface
 
+    /**
+     * @see org.apache.sling.adapter.SlingAdaptable#adaptTo(java.lang.Class)
+     */
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        checkClosed();
         if (type == Session.class) {
             return (AdapterType) getSession();
         }
