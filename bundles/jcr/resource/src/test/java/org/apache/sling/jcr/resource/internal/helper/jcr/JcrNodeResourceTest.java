@@ -45,7 +45,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         file = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, file, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, file, null);
 
         assertEquals(file.getPath(), jnr.getPath());
 
@@ -63,7 +63,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         file = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, file, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, file, null);
 
         assertEquals(file.getPath(), jnr.getPath());
 
@@ -79,7 +79,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, res, null);
 
         assertEquals(res.getPath(), jnr.getPath());
 
@@ -95,7 +95,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, res, null);
 
         assertEquals(res.getPath(), jnr.getPath());
 
@@ -108,14 +108,14 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
         getSession().save();
 
-        JcrNodeResource jnr = new JcrNodeResource(null, node, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, node, null);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
 
         String typeName = "some/resource/type";
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(null, node, null, null);
+        jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
     }
 
@@ -127,7 +127,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
 
-        Resource jnr = new JcrNodeResource(resourceResolver, node, null, null);
+        Resource jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
 
         // default super type is null
@@ -138,7 +138,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null, null);
+        jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(superTypeName, ResourceUtil.findResourceSuperType(jnr));
 
@@ -147,7 +147,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, otherSuperTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null, null);
+        jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(otherSuperTypeName, jnr.getResourceSuperType());
 
@@ -155,7 +155,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).remove();
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null, null);
+        jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
         assertNull(jnr.getResourceSuperType());
     }
@@ -168,7 +168,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         getSession().save();
 
         res = rootNode.getNode(name);
-        JcrNodeResource jnr = new JcrNodeResource(null, res, null, null);
+        JcrNodeResource jnr = new JcrNodeResource(null, res, null);
 
         final Map<?, ?> props = jnr.adaptTo(Map.class);
 

@@ -16,21 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource;
+package org.apache.sling.jcr.resource.internal;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
+import java.util.Iterator;
+
+import org.apache.sling.api.resource.Resource;
 
 /**
- * Provide a resource type for repository nodes which do not have
- * a sling:resourceType property.
+ * Resource iterator handling the decoration of resources.
  */
-public interface JcrResourceTypeProvider {
+public class ResourceIteratorDecorator implements Iterator<Resource> {
 
-    /**
-     * Return the resource type to use for the node.
-     * @param n The node.
-     * @return The resource type to use or null.
-     */
-    String getResourceTypeForNode(Node n) throws RepositoryException;
+    private final ResourceDecoratorTracker tracker;
+
+    private final Iterator<Resource> iterator;
+
+    public ResourceIteratorDecorator(final ResourceDecoratorTracker tracker,
+            final Iterator<Resource> iterator) {
+        this.tracker = tracker;
+        this.iterator = iterator;
+    }
+
+    public boolean hasNext() {
+        return this.iterator.hasNext();
+    }
+
+    public Resource next() {
+        return this.tracker.decorate(this.iterator.next(), null);
+    }
+
+    public void remove() {
+        this.iterator.remove();
+    }
 }

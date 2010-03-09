@@ -19,13 +19,11 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.jcr.Session;
@@ -33,13 +31,13 @@ import javax.jcr.Session;
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
@@ -65,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  * @scr.component immediate="true" label="%resource.resolver.name"
- *                description="%resource.resolver.description"
+ *                description="%resource.resolver.description" specVersion="1.1"
  * @scr.property name="service.description"
  *                value="Sling JcrResourceResolverFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -73,8 +71,8 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="ResourceProvider"
  *                interface="org.apache.sling.api.resource.ResourceProvider"
  *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="JcrResourceTypeProvider"
- *                interface="org.apache.sling.jcr.resource.JcrResourceTypeProvider"
+ * @scr.reference name="ResourceDecorator"
+ *                interface="org.apache.sling.api.resource.ResourceDecorator"
  *                cardinality="0..n" policy="dynamic"
  */
 public class JcrResourceResolverFactoryImpl implements
@@ -159,27 +157,13 @@ public class JcrResourceResolverFactoryImpl implements
     private SlingRepository repository;
 
     /**
-     * The (optional) resource type providers, working copy.
-     */
-    protected final List<JcrResourceTypeProviderEntry> jcrResourceTypeProviders = new ArrayList<JcrResourceTypeProviderEntry>();
-
-    /**
-     * An array of the above, updates when changes are created.
-     */
-    private JcrResourceTypeProvider[] jcrResourceTypeProvidersArray;
-
-    /**
      * List of ResourceProvider services bound before activation of the
      * component.
      */
     private final List<ServiceReference> delayedResourceProviders = new LinkedList<ServiceReference>();
 
-    /**
-     * List of JcrResourceTypeProvider services bound before activation of the
-     * component.
-     */
-    protected List<ServiceReference> delayedJcrResourceTypeProviders = new LinkedList<ServiceReference>();
-
+    /** Tracker for the resource decorators. */
+    private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
     protected ComponentContext componentContext;
 
@@ -222,6 +206,10 @@ public class JcrResourceResolverFactoryImpl implements
 
     }
 
+    public ResourceDecoratorTracker getResourceDecoratorTracker() {
+        return this.resourceDecoratorTracker;
+    }
+
     // ---------- JcrResourceResolverFactory -----------------------------------
 
     /**
@@ -230,14 +218,10 @@ public class JcrResourceResolverFactoryImpl implements
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry, getJcrResourceTypeProviders(),
+            session, rootProviderEntry,
             this.getDynamicClassLoader());
 
         return new JcrResourceResolver(sessionRoot, this, mapEntries);
-    }
-
-    protected JcrResourceTypeProvider[] getJcrResourceTypeProviders() {
-        return jcrResourceTypeProvidersArray;
     }
 
     // ---------- Implementation helpers --------------------------------------
@@ -307,7 +291,7 @@ public class JcrResourceResolverFactoryImpl implements
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(final ComponentContext componentContext) {
         // setup tracker first as this is used in the bind/unbind methods
         this.eventAdminTracker = new ServiceTracker(componentContext.getBundleContext(),
                 EventAdmin.class.getName(), null);
@@ -375,7 +359,6 @@ public class JcrResourceResolverFactoryImpl implements
             bindResourceProvider(reference);
         }
         delayedResourceProviders.clear();
-        this.processDelayedJcrResourceTypeProviders();
 
         // set up the map entries from configuration
         try {
@@ -407,7 +390,7 @@ public class JcrResourceResolverFactoryImpl implements
     private JcrResourceResolverWebConsolePlugin plugin;
 
     /** Deativates this component, called by SCR to take out of service */
-    protected void deactivate(ComponentContext componentContext) {
+    protected void deactivate(final ComponentContext componentContext) {
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
@@ -426,49 +409,7 @@ public class JcrResourceResolverFactoryImpl implements
             this.resourceListener = null;
         }
         this.componentContext = null;
-    }
-
-    protected void processDelayedJcrResourceTypeProviders() {
-        synchronized (this.jcrResourceTypeProviders) {
-            for (ServiceReference reference : delayedJcrResourceTypeProviders) {
-                this.addJcrResourceTypeProvider(reference);
-            }
-            delayedJcrResourceTypeProviders.clear();
-            updateJcrResourceTypeProvidersArray();
-
-        }
-    }
-
-    protected void addJcrResourceTypeProvider(final ServiceReference reference) {
-        final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
-        long ranking = -1;
-        if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
-            ranking = (Long) reference.getProperty(Constants.SERVICE_RANKING);
-        }
-        this.jcrResourceTypeProviders.add(new JcrResourceTypeProviderEntry(id,
-            ranking,
-            (JcrResourceTypeProvider) this.componentContext.locateService(
-                "JcrResourceTypeProvider", reference)));
-        Collections.sort(this.jcrResourceTypeProviders,
-            new Comparator<JcrResourceTypeProviderEntry>() {
-
-                public int compare(JcrResourceTypeProviderEntry o1,
-                        JcrResourceTypeProviderEntry o2) {
-                    if (o1.ranking < o2.ranking) {
-                        return 1;
-                    } else if (o1.ranking > o2.ranking) {
-                        return -1;
-                    } else {
-                        if (o1.serviceId < o2.serviceId) {
-                            return -1;
-                        } else if (o1.serviceId > o2.serviceId) {
-                            return 1;
-                        }
-                    }
-                    return 0;
-                }
-            });
-
+        this.resourceDecoratorTracker.close();
     }
 
     protected void bindResourceProvider(ServiceReference reference) {
@@ -568,48 +509,12 @@ public class JcrResourceResolverFactoryImpl implements
         log.debug("unbindResourceProvider: Unbound {}", serviceName);
     }
 
-    protected void bindJcrResourceTypeProvider(ServiceReference reference) {
-        synchronized (this.jcrResourceTypeProviders) {
-            if (componentContext == null) {
-                delayedJcrResourceTypeProviders.add(reference);
-            } else {
-                this.addJcrResourceTypeProvider(reference);
-                updateJcrResourceTypeProvidersArray();
-            }
-        }
+    protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
+        this.resourceDecoratorTracker.bindResourceDecorator(decorator, props);
     }
 
-    protected void unbindJcrResourceTypeProvider(ServiceReference reference) {
-        synchronized (this.jcrResourceTypeProviders) {
-            delayedJcrResourceTypeProviders.remove(reference);
-            final long id = (Long) reference.getProperty(Constants.SERVICE_ID);
-            final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
-            while (i.hasNext()) {
-                final JcrResourceTypeProviderEntry current = i.next();
-                if (current.serviceId == id) {
-                    i.remove();
-                }
-            }
-            updateJcrResourceTypeProvidersArray();
-        }
-    }
-
-    /**
-     * Updates the JcrResourceTypeProviders array, this method is not thread safe and should only be
-     * called from a synchronized block.
-     */
-    protected void updateJcrResourceTypeProvidersArray() {
-        JcrResourceTypeProvider[] providers = null;
-        if (this.jcrResourceTypeProviders.size() > 0) {
-            providers = new JcrResourceTypeProvider[this.jcrResourceTypeProviders.size()];
-            int index = 0;
-            final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
-            while (i.hasNext()) {
-                providers[index] = i.next().provider;
-                index++;
-            }
-        }
-        jcrResourceTypeProvidersArray = providers;
+    protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
+        this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
     }
 
     // ---------- internal helper ----------------------------------------------
@@ -617,21 +522,6 @@ public class JcrResourceResolverFactoryImpl implements
     /** Returns the JCR repository used by this factory */
     protected SlingRepository getRepository() {
         return repository;
-    }
-
-    protected static final class JcrResourceTypeProviderEntry {
-        final long serviceId;
-
-        final long ranking;
-
-        final JcrResourceTypeProvider provider;
-
-        public JcrResourceTypeProviderEntry(final long id, final long ranking,
-                final JcrResourceTypeProvider p) {
-            this.serviceId = id;
-            this.ranking = ranking;
-            this.provider = p;
-        }
     }
 
     private String getServiceName(ServiceReference reference) {

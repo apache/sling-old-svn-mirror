@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,16 +72,14 @@ public class JcrNodeResource extends JcrItemResource {
      * Constructor
      * @param resourceResolver
      * @param node
-     * @param resourceTypeProviders
      * @param dynamicClassLoader Dynamic class loader for loading serialized objects.
      * @throws RepositoryException
      */
     public JcrNodeResource(final ResourceResolver resourceResolver,
                            final Node node,
-                           final JcrResourceTypeProvider[] resourceTypeProviders,
                            final ClassLoader dynamicClassLoader)
     throws RepositoryException {
-        super(resourceResolver, node.getPath(), resourceTypeProviders);
+        super(resourceResolver, node.getPath());
         this.dynamicClassLoader = dynamicClassLoader;
         this.node = node;
         resourceType = getResourceTypeForNode(node);
@@ -236,7 +233,7 @@ public class JcrNodeResource extends JcrItemResource {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes(), this.resourceTypeProviders, this.dynamicClassLoader);
+                    getNode().getNodes(), this.dynamicClassLoader);
             }
         } catch (RepositoryException re) {
             log.error("listChildren: Cannot get children of " + this, re);

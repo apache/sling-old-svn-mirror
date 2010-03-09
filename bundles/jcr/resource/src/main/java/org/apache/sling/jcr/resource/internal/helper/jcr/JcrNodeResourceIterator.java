@@ -25,7 +25,6 @@ import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +48,6 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
 
-    private final JcrResourceTypeProvider[] resourceTypeProviders;
-
     private final ClassLoader dynamicClassLoader;
 
     /**
@@ -59,11 +56,9 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final NodeIterator nodes,
-                                   final JcrResourceTypeProvider[] resourceTypeProviders,
                                    final ClassLoader dynamicClassLoader) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
-        this.resourceTypeProviders = resourceTypeProviders;
         this.nextResult = seek();
         this.dynamicClassLoader = dynamicClassLoader;
     }
@@ -94,7 +89,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         while (nodes.hasNext()) {
             try {
                 Resource resource = new JcrNodeResource(resourceResolver,
-                    nodes.nextNode(), resourceTypeProviders, dynamicClassLoader);
+                    nodes.nextNode(), dynamicClassLoader);
                 log.debug("seek: Returning Resource {}", resource);
                 return resource;
             } catch (Throwable t) {
