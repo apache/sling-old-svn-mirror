@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
@@ -290,4 +291,31 @@ public class OsgiUtil {
         return new Event(topic, table);
     }
 
+    /**
+     * Return the service ranking
+     * @param props A property map
+     * @return The service ranking.
+     * @since 2.0.6
+     */
+    public static int getServiceRanking(final Map<String, Object> props) {
+        int ranking = 0;
+        if ( props != null && props.get(Constants.SERVICE_RANKING) instanceof Integer) {
+            ranking = (Integer)props.get(Constants.SERVICE_RANKING);
+        }
+        return ranking;
+    }
+
+    /**
+     * Return the service ranking
+     * @param ref The service reference.
+     * @return The service ranking.
+     * @since 2.0.6
+     */
+    public static int getServiceRanking(final ServiceReference ref) {
+        int ranking = 0;
+        if ( ref.getProperty(Constants.SERVICE_RANKING) instanceof Integer) {
+            ranking = (Integer)ref.getProperty(Constants.SERVICE_RANKING);
+        }
+        return ranking;
+    }
 }

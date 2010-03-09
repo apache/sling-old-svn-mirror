@@ -19,11 +19,14 @@
 package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
+
+import org.osgi.framework.Constants;
 
 public class OsgiUtilTest extends TestCase {
 
@@ -128,5 +131,13 @@ public class OsgiUtilTest extends TestCase {
                 fail("Expected " + a[i] + " at index " + i + ", but is " + b[i]);
             }
         }
+    }
+
+    public void testRanking() {
+        assertEquals(0, OsgiUtil.getServiceRanking((Map<String, Object>)null));
+        final Map<String, Object> stringMap = Collections.singletonMap(Constants.SERVICE_RANKING, (Object)"1");
+        assertEquals(0, OsgiUtil.getServiceRanking(stringMap));
+        final Map<String, Object> intMap = Collections.singletonMap(Constants.SERVICE_RANKING, (Object)1);
+        assertEquals(1, OsgiUtil.getServiceRanking(intMap));
     }
 }
