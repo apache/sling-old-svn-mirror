@@ -19,7 +19,6 @@
 package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,10 +133,23 @@ public class OsgiUtilTest extends TestCase {
     }
 
     public void testRanking() {
-        assertEquals(0, OsgiUtil.getServiceRanking((Map<String, Object>)null));
-        final Map<String, Object> stringMap = Collections.singletonMap(Constants.SERVICE_RANKING, (Object)"1");
-        assertEquals(0, OsgiUtil.getServiceRanking(stringMap));
-        final Map<String, Object> intMap = Collections.singletonMap(Constants.SERVICE_RANKING, (Object)1);
-        assertEquals(1, OsgiUtil.getServiceRanking(intMap));
+        final Map<String, Object> map1 = new HashMap<String, Object>();
+        map1.put(Constants.SERVICE_ID, 1L);
+        map1.put(Constants.SERVICE_RANKING, 7);
+
+        final Map<String, Object> map2 = new HashMap<String, Object>();
+        map2.put(Constants.SERVICE_ID, 1L);
+        map2.put(Constants.SERVICE_RANKING, 5);
+
+        assertEquals(0, OsgiUtil.getComparableForServiceRanking(map1).compareTo(map2));
+        assertEquals(0, OsgiUtil.getComparableForServiceRanking(map1).compareTo(map1));
+        assertEquals(0, OsgiUtil.getComparableForServiceRanking(map2).compareTo(map2));
+        map2.put(Constants.SERVICE_ID, 2L);
+        assertEquals(1, OsgiUtil.getComparableForServiceRanking(map1).compareTo(map2));
+        assertEquals(-1, OsgiUtil.getComparableForServiceRanking(map2).compareTo(map1));
+
+        map1.put(Constants.SERVICE_RANKING, "hello");
+        assertEquals(-1, OsgiUtil.getComparableForServiceRanking(map1).compareTo(map2));
+        assertEquals(1, OsgiUtil.getComparableForServiceRanking(map2).compareTo(map1));
     }
 }
