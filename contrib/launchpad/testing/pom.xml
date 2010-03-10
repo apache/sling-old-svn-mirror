@@ -52,6 +52,9 @@
     </scm>
 
     <properties>
+        <!-- HTTP port to use when running mvn jetty:run -->
+        <jetty.http.port>8888</jetty.http.port>
+
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
 
@@ -62,30 +65,29 @@
         <test.host>localhost</test.host>
 
         <!--
-            Disable Jetty webapp rescan (override with -D) 
+            Disable Jetty webapp rescan (override with -D)
         -->
         <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
 
-        <!-- 
+        <!--
             Sling home directory when starting with jetty:run
         -->
         <jetty.sling.home>target/sling</jetty.sling.home>
 
-        <!-- 
+        <!--
             Defines which tests are for the "integration-testing" phase
         -->
         <integration.test.code.path>
             **/launchpad/webapp/integrationtest
         </integration.test.code.path>
 
-        <!-- 
+        <!--
             Set this to true to stop mvn once the integration test Jetty instance is
             started. Useful to manually test the integration testing webapp.
         -->
         <integration.test.wait>false</integration.test.wait>
-        
+
         <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
-        <sling.modules.start.level>15</sling.modules.start.level>
     </properties>
 
     <build>
@@ -126,6 +128,25 @@
                 </executions>
             </plugin>
             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-antrun-plugin</artifactId>
+                 <executions>
+                     <execution>
+                         <id>delete-sling-folder</id>
+                         <phase>package</phase>
+                         <goals>
+                             <goal>run</goal>
+                         </goals>
+                         <configuration>
+                             <tasks>
+                                 <echo>SLING-845 - delete parent sling folder before integration tests</echo>
+                                 <delete dir="../../sling" />
+                             </tasks>
+                        </configuration>
+                     </execution>
+                 </executions>
+             </plugin>
+            <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>maven-jetty-plugin</artifactId>
                 <configuration>
@@ -149,12 +170,12 @@
 
                     <connectors>
                         <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-                            <port>${http.port}</port>
+                            <port>${jetty.http.port}</port>
                             <maxIdleTime>60000</maxIdleTime>
                         </connector>
                     </connectors>
 
-                    <!-- 
+                    <!--
                         Use target/... as the webapp source, as we unpack stuff there from the
                         Sling launcher modules
                     -->
@@ -177,30 +198,14 @@
                             <defaultBundleList>
                                 <version>6-SNAPSHOT</version>
                             </defaultBundleList>
-
-                            <additionalBundles>
-                                <additionalBundle>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.test-services</artifactId>
-                                    <version>2.0.7-SNAPSHOT</version>
-                                    <startLevel>0</startLevel>
-                                </additionalBundle>
-                                <additionalBundle>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
-                                    <version>2.0.7-SNAPSHOT</version>
-                                    <type>war</type>
-                                    <startLevel>0</startLevel>
-                                </additionalBundle>
-                            </additionalBundles>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- 
-              Include sling-app launcher classes and resources, but no Sling 
-              bundles (we want to specify our own versions) 
+            <!--
+              Include sling-app launcher classes and resources, but no Sling
+              bundles (we want to specify our own versions)
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -216,7 +221,7 @@
                         </resource>
                         <!-- Legal stuff -->
                         <resource>
-                            <directory>src/main/resources/META-INF</directory>
+                            <directory>${basedir}</directory>
                             <targetPath>META-INF</targetPath>
                             <includes>
                                 <include>LICENSE*</include>
@@ -232,12 +237,12 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
-                        <!-- 
+                        <!--
                             WARNING: make sure these URLs are consistent with the
                             cargo-maven2-plugin settings: AFAIK Maven does not
                             expand variables in the <value> element.
                             And WARNING: these properties are duplicated somewhere in this
-                            POM with slightly different values...there must be a better way. 
+                            POM with slightly different values...there must be a better way.
                         -->
                         <property>
                             <name>launchpad.http.server.url</name>
@@ -304,12 +309,12 @@
                                         </include>
                                     </includes>
                                     <systemProperties>
-                                        <!-- 
+                                        <!--
                                             WARNING: make sure these URLs are consistent with the
                                             cargo-maven2-plugin settings: AFAIK Maven does not
                                             expand variables in the <value> element.
                                             And WARNING: these properties are duplicated somewhere in this
-                                            POM with slightly different values...there must be a better way. 
+                                            POM with slightly different values...there must be a better way.
                                         -->
                                         <property>
                                             <name>
@@ -327,6 +332,7 @@
                                                 http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
                                             </value>
                                         </property>
+
                                     </systemProperties>
                                 </configuration>
                             </execution>
@@ -368,7 +374,7 @@
                                     <cargo.servlet.port>
                                         ${http.port}
                                     </cargo.servlet.port>
-                                    <!-- 
+                                    <!--
                                         <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
                                     -->
                                 </properties>
@@ -410,7 +416,7 @@
     </profiles>
 
     <dependencies>
-    
+
         <!--  The basic Sling WebApp -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -421,39 +427,6 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- additional bundles for integration tests -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.python</artifactId>
-            <version>2.0.3-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.scala.script</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.scala.config</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang-osgi</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>2.7.7</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang-osgi</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>2.7.7</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- JCR Install - needs to be in a profile -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
@@ -466,38 +439,12 @@
             <scope>test</scope>
         </dependency>
 		
-		<!-- XML Processing bundle -->
-		<dependency>
-			<groupId>org.apache.sling</groupId>
-			<artifactId>org.apache.sling.scripting.xproc</artifactId>
-    		<version>2.0.0-SNAPSHOT</version>
-    		<scope>provided</scope>
-		</dependency>
-		
         <!-- Dependencies for the Test Build and Run -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.5-SNAPSHOT</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.apt.servlet</artifactId>
-            <version>2.0.3-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.apt.parser</artifactId>
-            <version>2.0.3-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling.samples</groupId>
-            <artifactId>org.apache.sling.samples.path-based.rtp</artifactId>
-            <version>2.0.5-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
