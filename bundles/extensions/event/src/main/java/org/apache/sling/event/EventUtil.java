@@ -165,8 +165,8 @@ public abstract class EventUtil {
      * @param properties
      * @return An OSGi event.
      */
-    public static Event createDistributableEvent(String topic,
-                                                 Dictionary<String, Object> properties) {
+    public static Event createDistributableEvent(final String topic,
+                                                 final Dictionary<String, Object> properties) {
         final Dictionary<String, Object> newProperties;
         // create a new dictionary
         newProperties = new Hashtable<String, Object>();
@@ -187,7 +187,7 @@ public abstract class EventUtil {
      * @param event
      * @return <code>true</code> if the event should be distributed.
      */
-    public static boolean shouldDistribute(Event event) {
+    public static boolean shouldDistribute(final Event event) {
         return event.getProperty(PROPERTY_DISTRIBUTE) != null;
     }
 
@@ -196,7 +196,7 @@ public abstract class EventUtil {
      * @param event
      * @return <code>true</code> if this is a local event
      */
-    public static boolean isLocal(Event event) {
+    public static boolean isLocal(final Event event) {
         final String appId = getApplicationId(event);
         return appId == null || appId.equals(AbstractRepositoryEventHandler.APPLICATION_ID);
     }
@@ -206,7 +206,7 @@ public abstract class EventUtil {
      * @param event
      * @return The application id or null if the event has been created locally.
      */
-    public static String getApplicationId(Event event) {
+    public static String getApplicationId(final Event event) {
         return (String)event.getProperty(PROPERTY_APPLICATION);
     }
 
@@ -217,7 +217,7 @@ public abstract class EventUtil {
      * @param event The event to check.
      * @return <code>true></code> if this is a job event.
      */
-    public static boolean isJobEvent(Event event) {
+    public static boolean isJobEvent(final Event event) {
         return event.getProperty(PROPERTY_JOB_TOPIC) != null;
     }
 
@@ -247,7 +247,7 @@ public abstract class EventUtil {
      * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      * @since 2.3
      */
-    public static boolean acknowledgeJob(Event job) {
+    public static boolean acknowledgeJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
             if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
@@ -265,7 +265,7 @@ public abstract class EventUtil {
      * Notify a finished job.
      * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
-    public static void finishedJob(Event job) {
+    public static void finishedJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
             ctx.notifier.finishedJob(job, ctx.eventNodePath, false);
@@ -277,7 +277,7 @@ public abstract class EventUtil {
      * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
      * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
-    public static boolean rescheduleJob(Event job) {
+    public static boolean rescheduleJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
             return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);

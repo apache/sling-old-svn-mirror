@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.event;
+package org.apache.sling.event.impl;
 
 /**
  * The eventing thread pool is a special thread pool used for the eventing.

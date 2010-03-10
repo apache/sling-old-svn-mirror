@@ -37,7 +37,6 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.JobStatusProvider;
-import org.apache.sling.event.ThreadPool;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.service.component.ComponentContext;

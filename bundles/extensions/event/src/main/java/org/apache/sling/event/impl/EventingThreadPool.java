@@ -26,7 +26,6 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.event.ThreadPool;
 import org.osgi.service.component.ComponentContext;
 
 
