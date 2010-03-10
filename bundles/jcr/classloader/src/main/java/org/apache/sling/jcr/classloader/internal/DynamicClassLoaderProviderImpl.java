@@ -144,15 +144,13 @@ public class DynamicClassLoaderProviderImpl
      */
     public boolean delete(String name) {
         name = cleanPath(name);
-        Node parentNode = null;
         Session session = null;
         try {
             session = getSession();
             if (session.itemExists(name)) {
                 Item fileItem = session.getItem(name);
-                parentNode = fileItem.getParent();
                 fileItem.remove();
-                parentNode.save();
+                session.save();
                 return true;
             }
         } catch (RepositoryException re) {
