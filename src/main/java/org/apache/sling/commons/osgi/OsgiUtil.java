@@ -355,5 +355,18 @@ public class OsgiUtil {
             // If ranks are equal, then sort by service id in descending order.
             return (id.compareTo(otherId) < 0) ? 1 : -1;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if ( obj instanceof ComparableImplementation ) {
+                return this.props.equals(((ComparableImplementation)obj).props);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return this.props.hashCode();
+        }
     }
 }
