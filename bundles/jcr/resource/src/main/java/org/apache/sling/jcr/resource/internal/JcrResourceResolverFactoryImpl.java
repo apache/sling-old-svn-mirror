@@ -20,19 +20,23 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
-import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -40,10 +44,9 @@ import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
+import org.apache.sling.jcr.resource.internal.helper.RootResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -66,15 +69,19 @@ import org.slf4j.LoggerFactory;
  *                value="Sling JcrResourceResolverFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceResolverFactory"
+ * @scr.service interface="org.apache.sling.api.resource.ResourceResolverFactory"
  * @scr.reference name="ResourceProvider"
  *                interface="org.apache.sling.api.resource.ResourceProvider"
  *                cardinality="0..n" policy="dynamic"
  * @scr.reference name="ResourceDecorator"
  *                interface="org.apache.sling.api.resource.ResourceDecorator"
  *                cardinality="0..n" policy="dynamic"
+ *
+ * First attempt of an resource resolver factory implementation.
+ * WORK IN PROGRESS - see SLING-1262
  */
 public class JcrResourceResolverFactoryImpl implements
-        JcrResourceResolverFactory {
+        JcrResourceResolverFactory, ResourceResolverFactory {
 
     public final static class ResourcePattern {
         public final Pattern pattern;
@@ -175,7 +182,7 @@ public class JcrResourceResolverFactoryImpl implements
     // the root location of the /etc/map entries
     private String mapRoot;
 
-    private ResourceProviderEntry rootProviderEntry;
+    private final RootResourceProviderEntry rootProviderEntry;
 
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
@@ -188,11 +195,11 @@ public class JcrResourceResolverFactoryImpl implements
     private ServiceTracker eventAdminTracker;
 
     /** The dynamic class loader
-     * @scr.reference */
+     * @scr.reference cardinality="0..1" policy="dynamic" */
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public JcrResourceResolverFactoryImpl() {
-        this.rootProviderEntry = new ResourceProviderEntry("/", null);
+        this.rootProviderEntry = new RootResourceProviderEntry();
 
     }
 
@@ -205,6 +212,8 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * Returns a new <code>ResourceResolve</code> for the given session. Note
      * that each call to this method returns a new resource manager instance.
+     *
+     * @see org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(javax.jcr.Session)
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
@@ -394,81 +403,11 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-
-        final String serviceName = getServiceName(provider, props);
-
-        log.debug("bindResourceProvider: Binding {}", serviceName);
-
-        String[] roots = OsgiUtil.toStringArray(props.get(ResourceProvider.ROOTS));
-        if (roots != null && roots.length > 0) {
-            final EventAdmin localEA = (EventAdmin) ( this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
-
-            // synchronized insertion of new resource providers into
-            // the tree to not inadvertently loose an entry
-            synchronized (this) {
-
-                for (String root : roots) {
-                    // cut off trailing slash
-                    if (root.endsWith("/") && root.length() > 1) {
-                        root = root.substring(0, root.length() - 1);
-                    }
-
-                    rootProviderEntry.addResourceProvider(root,
-                        provider, OsgiUtil.getComparableForServiceRanking(props));
-
-                    log.debug("bindResourceProvider: {}={} ({})",
-                        new Object[] { root, provider, serviceName });
-                    if ( localEA != null ) {
-                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
-                                eventProps));
-                    }
-                }
-            }
-        }
-
-        log.debug("bindResourceProvider: Bound {}", serviceName);
+        this.rootProviderEntry.bindResourceProvider(provider, props, this.eventAdminTracker);
     }
 
     protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
-
-        final String serviceName = getServiceName(provider, props);
-
-        log.debug("unbindResourceProvider: Unbinding {}", serviceName);
-
-        String[] roots = OsgiUtil.toStringArray(props.get(ResourceProvider.ROOTS));
-        if (roots != null && roots.length > 0) {
-
-            final EventAdmin localEA = (EventAdmin) ( this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
-
-            // synchronized insertion of new resource providers into
-            // the tree to not inadvertently loose an entry
-            synchronized (this) {
-                for (String root : roots) {
-                    // cut off trailing slash
-                    if (root.endsWith("/") && root.length() > 1) {
-                        root = root.substring(0, root.length() - 1);
-                    }
-
-                    // TODO: Do not remove this path, if another resource
-                    // owns it. This may be the case if adding the provider
-                    // yielded an ResourceProviderEntryException
-                    rootProviderEntry.removeResourceProvider(root, provider, OsgiUtil.getComparableForServiceRanking(props));
-
-                    log.debug("unbindResourceProvider: root={} ({})", root,
-                        serviceName);
-                    if ( localEA != null ) {
-                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
-                                eventProps));
-                    }
-                }
-            }
-        }
-
-        log.debug("unbindResourceProvider: Unbound {}", serviceName);
+        this.rootProviderEntry.unbindResourceProvider(provider, props, this.eventAdminTracker);
     }
 
     protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
@@ -486,17 +425,148 @@ public class JcrResourceResolverFactoryImpl implements
         return repository;
     }
 
-    private String getServiceName(final ResourceProvider provider, final Map<String, Object> props) {
-        if (log.isDebugEnabled()) {
-            StringBuilder snBuilder = new StringBuilder(64);
-            snBuilder.append('{');
-            snBuilder.append(provider.toString());
-            snBuilder.append('/');
-            snBuilder.append(props.get(Constants.SERVICE_ID));
-            snBuilder.append('}');
-            return snBuilder.toString();
-        }
+    // ---------- Resource Resolver Factory ------------------------------------
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
+     */
+    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
+    throws LoginException {
+        final String workspace = getWorkspace(authenticationInfo);
+        final Session session;
+        try {
+            session = this.getRepository().loginAdministrative(workspace);
+        } catch (RepositoryException re) {
+            throw getLoginException(re);
+        }
+        return this.getResourceResolver(handleSudo(session, authenticationInfo));
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
+     */
+    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo)
+    throws LoginException {
+        final Credentials credentials = getCredentials(authenticationInfo);
+        final String workspace = getWorkspace(authenticationInfo);
+        final Session session;
+        try {
+            if ( credentials == null ) {
+                session = this.getRepository().login(workspace);
+            } else {
+                session = this.getRepository().login(credentials, workspace);
+            }
+        } catch (RepositoryException re) {
+            throw getLoginException(re);
+        }
+        return this.getResourceResolver(handleSudo(session, authenticationInfo));
+    }
+
+    /**
+     * Create a login exception from a repository exception.
+     * If the repository exception is a  {@link javax.jcr.LoginException}
+     * a {@link LoginException} is created with the same information.
+     * Otherwise a {@link LoginException} is created which wraps the
+     * repository exception.
+     * @param re The repository exception.
+     * @return The login exception.
+     */
+    private LoginException getLoginException(final RepositoryException re) {
+        if ( re instanceof javax.jcr.LoginException ) {
+            return new LoginException(re.getMessage(), re.getCause());
+        }
+        return new LoginException("Unable to login " + re.getMessage(), re);
+    }
+
+    /**
+     * Return the workspace name.
+     * If the workspace name is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Optional authentication info.
+     * @return The configured workspace name or <code>null</code>
+     */
+    private String getWorkspace(final Map<String, Object> authenticationInfo) {
+        if ( authenticationInfo != null ) {
+            return (String) authenticationInfo.get("user.jcr.workspace");
+        }
         return null;
+    }
+
+    /**
+     * Return the sudo user information.
+     * If the sudo user info is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Optional authentication info.
+     * @return The configured sudo user information or <code>null</code>
+     */
+    private String getSudoUser(final Map<String, Object> authenticationInfo) {
+        if ( authenticationInfo != null ) {
+            return (String) authenticationInfo.get(ResourceResolverFactory.SUDO_USER_ID);
+        }
+        return null;
+    }
+
+    /**
+     * Handle the sudo if configured.
+     * If the authentication info does not contain a sudo info, this method simply returns
+     * the passed in session.
+     * If a sudo user info is available, the session is tried to be impersonated. The new
+     * impersonated session is returned. The original session is closed. The session is
+     * also closed if the impersonation fails.
+     * @param session The session.
+     * @param authenticationInfo The optional authentication info.
+     * @return The original session or impersonated session.
+     * @throws LoginException If something goes wrong.
+     */
+    private Session handleSudo(final Session session, final Map<String, Object> authenticationInfo)
+    throws LoginException {
+        final String sudoUser = getSudoUser(authenticationInfo);
+        if ( sudoUser != null ) {
+            try {
+                final SimpleCredentials creds = new SimpleCredentials(sudoUser, new char[0]);
+                return session.impersonate(creds);
+            } catch ( RepositoryException re) {
+                throw getLoginException(re);
+            } finally {
+                session.logout();
+            }
+        }
+        return session;
+    }
+
+    /**
+     * Create a credentials object from the provided authentication info.
+     * If no map is provided, <code>null</code> is returned.
+     * If a map is provided and contains a credentials object, this object is
+     * returned.
+     * If a map is provided but does not contain a credentials object nor a
+     * user, <code>null</code> is returned.
+     * if a map is provided with a user name but without a credentials object
+     * a new credentials object is created and all values from the authentication
+     * info are added as attributes.
+     * @param authenticationInfo Optional authentication info
+     * @return A credentials object or <code>null</code>
+     */
+    private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
+        if ( authenticationInfo == null ) {
+            return null;
+        }
+        Credentials credentials = (Credentials) authenticationInfo.get("user.jcr.credentials");
+        if ( credentials == null ) {
+            // otherwise try to create SimpleCredentials if the userId is set
+            final String userId = (String) authenticationInfo.get("user.name");
+            if (userId != null) {
+                final char[] password = (char[]) authenticationInfo.get("user.password");
+                credentials = new SimpleCredentials(userId, (password == null ? new char[0] : password));
+
+                // add attributes
+                final Iterator<Map.Entry<String, Object>> i = authenticationInfo.entrySet().iterator();
+                while  (i.hasNext() ) {
+                    final Map.Entry<String, Object> current = i.next();
+                    ((SimpleCredentials)credentials).setAttribute(current.getKey(), current.getValue());
+                }
+            }
+        }
+        return credentials;
     }
 }
