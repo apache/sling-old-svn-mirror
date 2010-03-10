@@ -20,7 +20,7 @@ package org.apache.sling.jcr.classloader.internal;
 
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
+import java.security.SecureClassLoader;
 import java.util.Enumeration;
 
 import javax.jcr.RepositoryException;
@@ -31,12 +31,10 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>RepositoryClassLoaderFacade</code> TODO
  */
-class RepositoryClassLoaderFacade extends URLClassLoader {
+class RepositoryClassLoaderFacade extends SecureClassLoader {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
-
-    private static final URL[] NO_URLS = new URL[0];
 
     private DynamicClassLoaderProviderImpl classLoaderProvider;
     private ClassLoader parent;
@@ -49,21 +47,11 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
             String[] classPath) {
 
         // no parent class loader, we delegate to repository class loaders
-        super(NO_URLS, null);
+        super(null);
 
         this.classLoaderProvider = classLoaderProvider;
         this.parent = parent;
         this.classPath = classPath;
-    }
-
-    @Override
-    public URL[] getURLs() {
-        try {
-            return getDelegateClassLoader().getURLs();
-        } catch (RepositoryException re) {
-            log.error("Cannot get repository class loader to get URLs", re);
-            return NO_URLS;
-        }
     }
 
     protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {

@@ -19,9 +19,9 @@ package org.apache.sling.jcr.classloader.internal;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -32,8 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
@@ -65,10 +63,7 @@ import org.slf4j.LoggerFactory;
  * same, though.
  */
 public final class DynamicRepositoryClassLoader
-    extends URLClassLoader implements EventListener {
-
-    /** An empty list of url paths to call superclass constructor */
-    private static final URL[] NULL_PATH = {};
+    extends SecureClassLoader implements EventListener {
 
     /**
      * The special resource representing a resource which could not be
@@ -170,7 +165,7 @@ public final class DynamicRepositoryClassLoader
                                         final String[] classPath,
                                         final ClassLoader parent) {
         // initialize the super class with an empty class path
-        super(NULL_PATH, parent);
+        super(parent);
 
         // check session and handles
         if (session == null) {
@@ -211,7 +206,7 @@ public final class DynamicRepositoryClassLoader
                                          final DynamicRepositoryClassLoader old,
                                          final ClassLoader parent) {
         // initialize the super class with an empty class path
-        super(NULL_PATH, parent);
+        super(parent);
 
         // check session and handles
         if (session == null) {
@@ -381,43 +376,6 @@ public final class DynamicRepositoryClassLoader
 
         // return the enumeration on the list
         return Collections.enumeration(list);
-    }
-
-    /**
-     * Returns the search path of URLs for loading classes and resources.
-     * This includes the original list of URLs specified to the constructor,
-     * along with any URLs subsequently appended by the {@link #addURL(URL)}.
-     *
-     * @return the search path of URLs for loading classes and resources. The
-     *      list is empty, if this class loader has already been destroyed.
-     * @see java.net.URLClassLoader#getURLs()
-     */
-    public URL[] getURLs() {
-        if (destroyed) {
-            log.warn("Destroyed class loader has no URLs any more");
-            return NULL_PATH;
-        }
-
-        List<URL> urls = new ArrayList<URL>();
-        for (int i=0; i < repository.length; i++) {
-            URL url = repository[i].toURL();
-            if (url != null) {
-                urls.add(url);
-            }
-        }
-        return urls.toArray(new URL[urls.size()]);
-    }
-
-    /**
-     * We don't allow to add new urls at runtime.
-     * @see java.net.URLClassLoader#addURL(java.net.URL)
-     */
-    protected void addURL(URL url) {
-        if (destroyed) {
-            log.warn("Cannot add URL to destroyed class loader");
-        } else {
-            log.warn("addURL: {} unable to add URL at runtime, ignored", url);
-        }
     }
 
     //---------- Property access ----------------------------------------------
@@ -617,72 +575,12 @@ public final class DynamicRepositoryClassLoader
 
         Class<?> clazz = res.getLoadedClass();
         if (clazz == null) {
-
-            /**
-             * This following code for packages is duplicate from URLClassLoader
-             * because it is private there. I would like to not be forced to
-             * do this, but I still have to find a way ... -fmeschbe
-             */
-
-            // package support
-            int i = name.lastIndexOf('.');
-            if (i != -1) {
-                String pkgname = name.substring(0, i);
-                // Check if package already loaded.
-                Package pkg = getPackage(pkgname);
-                URL url = res.getCodeSourceURL();
-                Manifest man = res.getManifest();
-                if (pkg != null) {
-                    // Package found, so check package sealing.
-                    boolean ok;
-                    if (pkg.isSealed()) {
-                        // Verify that code source URL is the same.
-                        ok = pkg.isSealed(url);
-                    } else {
-                        // Make sure we are not attempting to seal the package
-                        // at this code source URL.
-                        ok = (man == null) || !isSealed(pkgname, man);
-                    }
-                    if (!ok) {
-                        throw new SecurityException("sealing violation");
-                    }
-                } else {
-                    if (man != null) {
-                        definePackage(pkgname, man, url);
-                    } else {
-                        definePackage(pkgname, null, null, null, null, null, null, null);
-                    }
-                }
-            }
-
-            byte[] data = res.getBytes();
+            final byte[] data = res.getBytes();
             clazz = defineClass(name, data, 0, data.length);
             res.setLoadedClass(clazz);
         }
 
         return clazz;
-    }
-
-    /**
-     * Returns true if the specified package name is sealed according to the
-     * given manifest
-     * <p>
-     * This code is duplicate from <code>URLClassLoader.isSealed</code> because
-     * the latter has private access and we need the method here.
-     */
-    private boolean isSealed(String name, Manifest man) {
-         String path = name.replace('.', '/').concat("/");
-         Attributes attr = man.getAttributes(path);
-         String sealed = null;
-         if (attr != null) {
-             sealed = attr.getValue(Attributes.Name.SEALED);
-         }
-         if (sealed == null) {
-             if ((attr = man.getMainAttributes()) != null) {
-                 sealed = attr.getValue(Attributes.Name.SEALED);
-             }
-         }
-         return "true".equalsIgnoreCase(sealed);
     }
 
     //---------- reload support ------------------------------------------------
