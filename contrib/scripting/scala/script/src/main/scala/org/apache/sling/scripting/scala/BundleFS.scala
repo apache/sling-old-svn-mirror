@@ -97,6 +97,7 @@ object BundleFS {
       def elements: Iterator[AbstractFile] = {
         new Iterator[AbstractFile]() {
           val dirs = bundle.getEntryPaths(fullName)
+          
           var nextEntry = prefetch()
           
           def hasNext() = {
@@ -118,7 +119,7 @@ object BundleFS {
           }
           
           private def prefetch() = {
-            if (dirs.hasMoreElements) {
+            if (dirs != null && dirs.hasMoreElements) {
               val entry = dirs.nextElement.asInstanceOf[String]
               var entryUrl = bundle.getResource("/" + entry)
 
