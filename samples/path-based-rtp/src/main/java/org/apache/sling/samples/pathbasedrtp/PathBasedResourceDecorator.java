@@ -82,6 +82,7 @@ public class PathBasedResourceDecorator implements ResourceDecorator {
             String resourceType = null;
             if ( resource.getPath().endsWith("/*") ) {
                 apply = true;
+                resourceType = Mapping.DEFAULT_NODE_TYPE;
             } else {
                 // 2. if the resource is adaptable to a node
                 //    and the primary node type equals the resource type
