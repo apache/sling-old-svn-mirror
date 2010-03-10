@@ -21,7 +21,6 @@ package org.apache.sling.jcr.resource.internal;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -43,7 +42,6 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -156,18 +154,10 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private SlingRepository repository;
 
-    /**
-     * List of ResourceProvider services bound before activation of the
-     * component.
-     */
-    private final List<ServiceReference> delayedResourceProviders = new LinkedList<ServiceReference>();
-
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
-    protected ComponentContext componentContext;
-
-    // helper for the new JcrResourceResolver2
+    // helper for the new JcrResourceResolver
     private MapEntries mapEntries = MapEntries.EMPTY;
 
     /** all mappings */
@@ -297,9 +287,7 @@ public class JcrResourceResolverFactoryImpl implements
                 EventAdmin.class.getName(), null);
         this.eventAdminTracker.open();
 
-        this.componentContext = componentContext;
-
-        Dictionary<?, ?> properties = componentContext.getProperties();
+        final Dictionary<?, ?> properties = componentContext.getProperties();
 
         BidiMap virtuals = new TreeBidiMap();
         String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
@@ -354,12 +342,6 @@ public class JcrResourceResolverFactoryImpl implements
         mapRoot = OsgiUtil.toString(properties.get(PROP_MAP_LOCATION),
             MapEntries.DEFAULT_MAP_ROOT);
 
-        // bind resource providers not bound yet
-        for (ServiceReference reference : delayedResourceProviders) {
-            bindResourceProvider(reference);
-        }
-        delayedResourceProviders.clear();
-
         // set up the map entries from configuration
         try {
             mapEntries = new MapEntries(this, getRepository());
@@ -408,68 +390,54 @@ public class JcrResourceResolverFactoryImpl implements
             this.resourceListener.dispose();
             this.resourceListener = null;
         }
-        this.componentContext = null;
         this.resourceDecoratorTracker.close();
     }
 
-    protected void bindResourceProvider(ServiceReference reference) {
+    protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
 
-        String serviceName = getServiceName(reference);
+        final String serviceName = getServiceName(provider, props);
 
-        if (componentContext == null) {
+        log.debug("bindResourceProvider: Binding {}", serviceName);
 
-            log.debug("bindResourceProvider: Delaying {}", serviceName);
+        String[] roots = OsgiUtil.toStringArray(props.get(ResourceProvider.ROOTS));
+        if (roots != null && roots.length > 0) {
+            final EventAdmin localEA = (EventAdmin) ( this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
 
-            // delay binding resource providers if called before activation
-            delayedResourceProviders.add(reference);
+            // synchronized insertion of new resource providers into
+            // the tree to not inadvertently loose an entry
+            synchronized (this) {
 
-        } else {
+                for (String root : roots) {
+                    // cut off trailing slash
+                    if (root.endsWith("/") && root.length() > 1) {
+                        root = root.substring(0, root.length() - 1);
+                    }
 
-            log.debug("bindResourceProvider: Binding {}", serviceName);
+                    rootProviderEntry.addResourceProvider(root,
+                        provider, OsgiUtil.getComparableForServiceRanking(props));
 
-            String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
-            if (roots != null && roots.length > 0) {
-                final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
-
-                ResourceProvider provider = (ResourceProvider) componentContext.locateService(
-                    "ResourceProvider", reference);
-
-                // synchronized insertion of new resource providers into
-                // the tree to not inadvertently loose an entry
-                synchronized (this) {
-
-                    for (String root : roots) {
-                        // cut off trailing slash
-                        if (root.endsWith("/") && root.length() > 1) {
-                            root = root.substring(0, root.length() - 1);
-                        }
-
-                        rootProviderEntry.addResourceProvider(root,
-                            provider, reference);
-
-                        log.debug("bindResourceProvider: {}={} ({})",
-                            new Object[] { root, provider, serviceName });
-                        if ( localEA != null ) {
-                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                            props.put(SlingConstants.PROPERTY_PATH, root);
-                            localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
-                                    props));
-                        }
+                    log.debug("bindResourceProvider: {}={} ({})",
+                        new Object[] { root, provider, serviceName });
+                    if ( localEA != null ) {
+                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
+                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
+                                eventProps));
                     }
                 }
             }
-
-            log.debug("bindResourceProvider: Bound {}", serviceName);
         }
+
+        log.debug("bindResourceProvider: Bound {}", serviceName);
     }
 
-    protected void unbindResourceProvider(ServiceReference reference) {
+    protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
 
-        String serviceName = getServiceName(reference);
+        final String serviceName = getServiceName(provider, props);
 
         log.debug("unbindResourceProvider: Unbinding {}", serviceName);
 
-        String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
+        String[] roots = OsgiUtil.toStringArray(props.get(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
 
             final EventAdmin localEA = (EventAdmin) ( this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
@@ -477,11 +445,6 @@ public class JcrResourceResolverFactoryImpl implements
             // synchronized insertion of new resource providers into
             // the tree to not inadvertently loose an entry
             synchronized (this) {
-               if ( componentContext != null ) {
-                ResourceProvider provider = (ResourceProvider) componentContext.locateService(
-                   "ResourceProvider", reference);
-
-
                 for (String root : roots) {
                     // cut off trailing slash
                     if (root.endsWith("/") && root.length() > 1) {
@@ -491,18 +454,17 @@ public class JcrResourceResolverFactoryImpl implements
                     // TODO: Do not remove this path, if another resource
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
-                    rootProviderEntry.removeResourceProvider(root, provider, reference);
+                    rootProviderEntry.removeResourceProvider(root, provider, OsgiUtil.getComparableForServiceRanking(props));
 
                     log.debug("unbindResourceProvider: root={} ({})", root,
                         serviceName);
                     if ( localEA != null ) {
-                        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                        props.put(SlingConstants.PROPERTY_PATH, root);
+                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
                         localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
-                                props));
+                                eventProps));
                     }
                 }
-               }
             }
         }
 
@@ -524,25 +486,17 @@ public class JcrResourceResolverFactoryImpl implements
         return repository;
     }
 
-    private String getServiceName(ServiceReference reference) {
+    private String getServiceName(final ResourceProvider provider, final Map<String, Object> props) {
         if (log.isDebugEnabled()) {
             StringBuilder snBuilder = new StringBuilder(64);
             snBuilder.append('{');
-            snBuilder.append(reference.toString());
+            snBuilder.append(provider.toString());
             snBuilder.append('/');
-            snBuilder.append(reference.getProperty(Constants.SERVICE_ID));
+            snBuilder.append(props.get(Constants.SERVICE_ID));
             snBuilder.append('}');
             return snBuilder.toString();
         }
 
         return null;
-    }
-
-
-    public void run() {
-        String stat = rootProviderEntry.getResolutionStats();
-        if ( stat != null ) {
-            log.info(stat);
-        }
     }
 }
