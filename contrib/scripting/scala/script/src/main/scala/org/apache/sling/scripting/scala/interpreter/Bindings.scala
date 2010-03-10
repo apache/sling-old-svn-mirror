@@ -63,7 +63,7 @@ trait Bindings extends Map[String, AnyRef] {
     def getInterfacesUpTo(clazz: Class[_], bound: Class[_]) = {
       def getInterfacesUpTo(intfs: mutable.Set[Class[_]], clazz: Class[_], bound: Class[_]): mutable.Set[Class[_]] = 
         if (clazz == bound) intfs
-        else getInterfacesUpTo(intfs ++ clazz.getInterfaces, clazz.getSuperclass, bound)
+        else getInterfacesUpTo(intfs ++ clazz.getInterfaces.filter(accessible(_)), clazz.getSuperclass, bound)
       
       getInterfacesUpTo(mutable.Set.empty, clazz, bound)
     }
@@ -71,7 +71,7 @@ trait Bindings extends Map[String, AnyRef] {
     def accessible(clazz: Class[_]) = {
       try {
         Class.forName(clazz.getName)
-        true
+        (clazz.getModifiers & 1) == 1
       } 
       catch { case _ => false }
     }

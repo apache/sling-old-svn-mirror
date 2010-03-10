@@ -22,19 +22,19 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 public class ScalaScriptingTest extends HttpTestBase {
 
+    /**
+     * The first request on a fresh Sling instance always fails with
+     * javax.script.ScriptException: ERROR : error while loading ScriptHelper,
+     * class file 'org/apache/sling/scripting/core/ScriptHelper.class' is broken
+     * (class org.osgi.framework.BundleContext not found.)
+     *
+     * For the time being this is a known issue. Until this is fixed this test
+     * is here to catch this first request and make subsequent tests pass.
+     * @throws IOException
+     */
     public void testIgnore() throws IOException {
-        try {
-            String url = HTTP_BASE_URL + "/content/helloworld.html";
-            getContent(url, CONTENT_TYPE_HTML);
-        }
-        catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (AssertionError e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        String url = HTTP_BASE_URL + "/content/helloworld.html";
+        getContent(url, CONTENT_TYPE_HTML);
     }
 
     public void testHelloWorldApp() throws IOException {

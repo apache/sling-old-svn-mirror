@@ -18,5 +18,6 @@ package helloworld
 
 class htmlVars {
   val currentNode: javax.jcr.Node = null
+  val resource: org.apache.sling.api.adapter.Adaptable = null
 }
 

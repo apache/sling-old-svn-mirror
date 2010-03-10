@@ -129,6 +129,11 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
           def write(b: Int) {
             writer.write(b)
           }
+          
+          @throws(classOf[IOException])
+          override def flush() {
+            writer.flush()
+          }
         }
         
         val inputStream = new InputStream {
