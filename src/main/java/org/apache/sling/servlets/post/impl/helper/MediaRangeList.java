@@ -145,7 +145,8 @@ public class MediaRangeList extends TreeSet<MediaRangeList.MediaRange> {
         for (String mediaRange : mediaRanges) {
             ranges.add(new MediaRange(mediaRange));
         }
-        return prefer(ranges).toString();
+        final MediaRange preferred = prefer(ranges);
+        return(preferred == null ? null : preferred.toString());
     }
 
     /**

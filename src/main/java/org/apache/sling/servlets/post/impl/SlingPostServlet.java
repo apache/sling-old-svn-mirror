@@ -215,7 +215,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         MediaRangeList mediaRangeList = new MediaRangeList(req);
-        if (mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE).equals(JSONResponse.RESPONSE_CONTENT_TYPE)) {
+        if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE))) {
             return new JSONResponse();
         } else {
             return new HtmlResponse();
