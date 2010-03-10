@@ -20,8 +20,11 @@ package org.apache.sling.servlets.post.impl;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.impl.helper.JSONResponse;
+import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 
 public class SlingPostServletTest extends TestCase {
 
@@ -53,6 +56,22 @@ public class SlingPostServletTest extends TestCase {
             servlet.isSetStatus(req));
     }
 
+    public void testGetJsonResponse() {
+        MockSlingHttpServletRequest req = new MockSlingHttpServletRequest(null, null, null, null, null) {
+            @Override
+            public String getHeader(String name) {
+                return name.equals(MediaRangeList.HEADER_ACCEPT) ? "application/json" : super.getHeader(name);
+            }
+
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+                return null;
+            }
+        };
+        SlingPostServlet servlet = new SlingPostServlet();
+        HtmlResponse result = servlet.createHtmlResponse(req);
+        assertTrue(result instanceof JSONResponse);
+    }
+
     private static class StatusParamSlingHttpServletRequest extends
             MockSlingHttpServletRequest {
 
@@ -74,6 +93,10 @@ public class SlingPostServletTest extends TestCase {
 
         void setStatusParam(String statusParam) {
             this.statusParam = statusParam;
+        }
+
+        public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+            return null;
         }
     }
 }

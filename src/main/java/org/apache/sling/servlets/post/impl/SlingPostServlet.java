@@ -37,6 +37,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
+import org.apache.sling.servlets.post.impl.helper.JSONResponse;
+import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
@@ -156,7 +158,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             SlingHttpServletResponse response) throws IOException {
 
         // prepare the response
-        HtmlResponse htmlResponse = new HtmlResponse();
+        HtmlResponse htmlResponse = createHtmlResponse(request);
         htmlResponse.setReferer(request.getHeader("referer"));
 
         SlingPostOperation operation = getSlingPostOperation(request);
@@ -197,6 +199,27 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         // create a html response and send if unsuccessful or no redirect
         htmlResponse.send(response, isSetStatus(request));
+    }
+
+    /**
+     * Creates an instance of a HtmlResponse.
+     * @param req The request being serviced
+     * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
+     * <ul>
+     *   <li> the request has an <code>Accept</code> header of <code>application/json</code></li>
+     *   <li>the request is a JSON POST request (see SLING-1172)</li>
+     *   <li>the request has a request parameter <code>:accept=application/json</code></li>
+     * </ul>
+     * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
+     */
+     HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
+        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
+        MediaRangeList mediaRangeList = new MediaRangeList(req);
+        if (mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE).equals(JSONResponse.RESPONSE_CONTENT_TYPE)) {
+            return new JSONResponse();
+        } else {
+            return new HtmlResponse();
+        }
     }
 
     private SlingPostOperation getSlingPostOperation(
