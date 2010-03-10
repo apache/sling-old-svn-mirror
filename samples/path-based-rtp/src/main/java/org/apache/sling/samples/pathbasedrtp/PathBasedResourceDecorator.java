@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.description" value="Sling Sample Resource Decorator"
  * @scr.service
  */
-public class DefaultResourceTypeProvider implements ResourceDecorator {
+public class PathBasedResourceDecorator implements ResourceDecorator {
 
     /**
      *  Name of the configurable property name that defines mappings. The default values
@@ -87,7 +87,7 @@ public class DefaultResourceTypeProvider implements ResourceDecorator {
                 //    and the primary node type equals the resource type
                 try {
                     final Node node = resource.adaptTo(Node.class);
-                    if ( node != null && node.getPrimaryNodeType().equals(resource.getResourceType()) ) {
+                    if ( node != null && node.getPrimaryNodeType().getName().equals(resource.getResourceType()) ) {
                         apply = true;
                         resourceType = resource.getResourceType();
                     }
