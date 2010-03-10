@@ -399,6 +399,14 @@ public class JspServletWrapper {
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
         } catch (ServletException ex) {
+            // WORKAROUND for SLING-1435
+            // To create a new classloader which reloads the class
+            // we simply remove the old class!
+            if ( ex.getRootCause() instanceof NoClassDefFoundError ) {
+                this.setReload(true);
+                this.ctxt.getCompiler().removeGeneratedClassFiles();
+                this.lastModificationTest = 0;
+            }
             throw handleJspException(ex);
         } catch (IOException ex) {
             throw handleJspException(ex);
