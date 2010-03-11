@@ -61,13 +61,6 @@ class PackageAdminClassLoader extends ClassLoader {
     }
 
     /**
-     * Clear the negative cache.
-     */
-    public void clearNegativeCache() {
-        negativeClassCache.clear();
-    }
-
-    /**
      * Find the bundle for a given package.
      * @param pckName The package name.
      * @return The bundle or <code>null</code>
@@ -180,12 +173,14 @@ class PackageAdminClassLoader extends ClassLoader {
         try {
             clazz = super.loadClass(name, resolve);
         } catch (ClassNotFoundException cnfe) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
+            final String pckName = getPackageFromClassName(name);
+            final Bundle bundle = this.findBundleForPackage(pckName);
             if ( bundle != null ) {
                 try {
                     clazz = bundle.loadClass(name);
                 } catch (ClassNotFoundException inner) {
                     negativeClassCache.add(name);
+                    this.factory.addUnresolvedPackage(pckName);
                     throw inner;
                 }
                 this.factory.addUsedBundle(bundle);
@@ -193,6 +188,8 @@ class PackageAdminClassLoader extends ClassLoader {
         }
         if ( clazz == null ) {
             negativeClassCache.add(name);
+            final String pckName = getPackageFromClassName(name);
+            this.factory.addUnresolvedPackage(pckName);
             throw new ClassNotFoundException("Class not found " + name);
         }
         this.classCache.put(name, clazz);
