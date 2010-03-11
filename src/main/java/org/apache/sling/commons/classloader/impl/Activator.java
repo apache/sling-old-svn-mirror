@@ -108,17 +108,15 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
     public void bundleChanged(BundleEvent event) {
-        final long bundleId = event.getBundle().getBundleId();
-        boolean needsUpdate = this.service.isBundleUsed(bundleId);
-        if ( needsUpdate ) {
+        boolean reload = false;
+        if ( event.getType() == BundleEvent.RESOLVED ) {
+            reload = this.service.hasUnresolvedPackages(event.getBundle());
+        } else if ( this.service.isBundleUsed(event.getBundle().getBundleId()) ) {
+            reload = true;
+        }
+        if ( reload ) {
             this.unregisterManagerFactory();
             this.registerManagerFactory();
-        } else {
-            // if a new bundle has been added (=resolved), we should
-            // clear the negative cache (see SLING-1302)
-            if ( event.getType() == BundleEvent.RESOLVED ) {
-                this.service.clearNegativeCaches();
-            }
         }
     }
 }
