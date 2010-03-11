@@ -70,13 +70,6 @@ public class DynamicClassLoaderManagerImpl
         this.facade = new ClassLoaderFacade(this);
     }
 
-    /**
-     * Clear the negative cache
-     */
-    public void clearNegativeCache() {
-        this.pckAdminCL.clearNegativeCache();
-    }
-
     private synchronized void updateCache() {
         if ( this.trackingCount < this.getTrackingCount() ) {
             final ServiceReference[] refs = this.getServiceReferences();

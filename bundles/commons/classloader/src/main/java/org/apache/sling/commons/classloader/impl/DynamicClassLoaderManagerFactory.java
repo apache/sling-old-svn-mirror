@@ -16,16 +16,15 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
@@ -42,8 +41,7 @@ public class DynamicClassLoaderManagerFactory
 
     private final Set<Long> usedBundles = Collections.synchronizedSet(new HashSet<Long>());
 
-    /** All created managers. */
-    private final List<DynamicClassLoaderManagerImpl> managers = new ArrayList<DynamicClassLoaderManagerImpl>();
+    private final Set<String> unresolvedPackages = Collections.synchronizedSet(new HashSet<String>());
 
     /**
      * Create a new service instance
@@ -63,9 +61,6 @@ public class DynamicClassLoaderManagerFactory
                              final ServiceRegistration registration) {
         final DynamicClassLoaderManagerImpl manager =  new DynamicClassLoaderManagerImpl(this.context,
                 this.pckAdmin, new BundleProxyClassLoader(bundle), this);
-        synchronized ( managers ) {
-            managers.add(manager);
-        }
         return manager;
     }
 
@@ -76,9 +71,6 @@ public class DynamicClassLoaderManagerFactory
                              final ServiceRegistration registration,
                              final Object service) {
         if ( service != null ) {
-            synchronized ( managers ) {
-                managers.remove(service);
-            }
             ((DynamicClassLoaderManagerImpl)service).deactivate();
         }
     }
@@ -102,13 +94,30 @@ public class DynamicClassLoaderManagerFactory
     }
 
     /**
-     * Clear the negative caches of all registered managers.
+     * Notify that a package is not found during class loading.
+     * @param pckName The package name.
      */
-    public void clearNegativeCaches() {
-        synchronized ( this.managers ) {
-            for(final DynamicClassLoaderManagerImpl manager : this.managers) {
-                manager.clearNegativeCache();
+    public void addUnresolvedPackage(final String pckName) {
+        this.unresolvedPackages.add(pckName);
+    }
+
+    /**
+     * Check if an exported package from the bundle has not been
+     * found during previous class loading attempts.
+     * @param bundle The bundle to check
+     * @return <code>true</code> if a package has not be found before
+     */
+    public boolean hasUnresolvedPackages(final Bundle bundle) {
+        if ( !this.unresolvedPackages.isEmpty() ) {
+            final ExportedPackage[] pcks = this.pckAdmin.getExportedPackages(bundle);
+            if ( pcks != null ) {
+                for(final ExportedPackage pck : pcks ) {
+                    if ( this.unresolvedPackages.contains(pck.getName()) ) {
+                        return true;
+                    }
+                }
             }
         }
+        return false;
     }
 }
