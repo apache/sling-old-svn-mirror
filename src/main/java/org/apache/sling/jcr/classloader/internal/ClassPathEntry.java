@@ -42,8 +42,7 @@ import org.slf4j.LoggerFactory;
 public final class ClassPathEntry {
 
     /** default logging */
-    private static final Logger log =
-        LoggerFactory.getLogger(ClassPathEntry.class);
+    private static final Logger log = LoggerFactory.getLogger(ClassPathEntry.class);
 
     /** The session assigned to this class path entry */
     protected final Session session;

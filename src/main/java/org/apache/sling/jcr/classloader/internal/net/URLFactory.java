@@ -65,35 +65,4 @@ public final class URLFactory {
             new FileParts(session, path, null).toString(),
             new JCRURLHandler(session));
     }
-
-    /**
-     * Creates a new JCRJar URL for the given session, archive and entry.
-     *
-     * @param session The repository session providing access to the archive.
-     * @param path The absolute path to the archive. This must either be the
-     *      property containing the archive or an item which resolves to such
-     *      a property through its primary item chain. This must be an absolute
-     *      path with a leading slash character. If this is <code>null</code>
-     *      the root node path - <code>/</code> - is assumed.
-     * @param entry The entry within the archive. If <code>null</code>, the URL
-     *      provides access to the archive itself.
-     *
-     * @return The JCRJar URL
-     *
-     * @throws MalformedURLException If an error occurrs creating the
-     *      <code>URL</code> instance.
-     */
-    public static URL createJarURL(Session session, String path, String entry)
-        throws MalformedURLException {
-
-        JCRJarURLHandler handler = new JCRJarURLHandler(session);
-        String file = createURL(session, path).toExternalForm();
-
-        // append entry spec if not null
-        if (entry != null) {
-            file += "!/" + entry;
-        }
-
-        return new URL(REPOSITORY_JAR_SCHEME, "", -1, file, handler);
-    }
 }

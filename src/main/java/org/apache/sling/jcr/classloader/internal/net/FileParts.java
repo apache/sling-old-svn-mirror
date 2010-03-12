@@ -132,7 +132,7 @@ class FileParts {
         this.workspace = decode(file.substring(slash0, slash1));
 
         String fullPath = file.substring(slash1);
-        int bangSlash = JCRJarURLHandler.indexOfBangSlash(fullPath);
+        int bangSlash = indexOfBangSlash(fullPath);
         if (bangSlash < 0) {
             this.path = fullPath;
             this.entryPath = null;
@@ -140,6 +140,20 @@ class FileParts {
             this.path = fullPath.substring(0, bangSlash-1);
             this.entryPath = fullPath.substring(bangSlash+1);
         }
+    }
+
+    /**
+     * Finds the position of the bang slash (!/) in the file part of the URL.
+     */
+    static int indexOfBangSlash(String file) {
+
+        for (int i = file.length(); (i = file.lastIndexOf('!', i)) != -1; i--) {
+            if (i != file.length() - 1 && file.charAt(i + 1) == '/') {
+                return i + 1;
+            }
+        }
+
+        return -1;
     }
 
     /**
