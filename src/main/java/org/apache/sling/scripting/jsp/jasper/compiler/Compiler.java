@@ -154,7 +154,7 @@ public abstract class Compiler {
                 errDispatcher.jspError("jsp.error.needAlternateJavaEncoding",
                         javaEncoding);
             } catch (IOException ioe) {
-                throw new FileNotFoundException(ioe.getMessage());
+                throw (IOException)new FileNotFoundException(ioe.getMessage()).initCause(ioe);
             }
 
             writer = new ServletWriter(new PrintWriter(osw));
@@ -209,8 +209,12 @@ public abstract class Compiler {
 
             // generate servlet .java file
             Generator.generate(writer, this, pageNodes);
-            writer.close();
+
+            // we have to use a temporary variable in order to not
+            // close the writer twice if close() throws an exception
+            final ServletWriter w = writer;
             writer = null;
+            w.close();
 
             // The writer is only used during the compile, dereference
             // it in the JspCompilationContext when done to allow it
@@ -358,10 +362,6 @@ public abstract class Compiler {
             return false;
         }
         String jsp = ctxt.getJspFile();
-
-        if (jsw != null) {
-            jsw.setLastModificationTest(System.currentTimeMillis());
-        }
 
         long jspRealLastModified = 0;
         try {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * This is what is used to generate servlets. 
+ * This is what is used to generate servlets.
  *
  * @author Anil K. Vijendran
  * @author Kin-man Chung
@@ -35,7 +35,7 @@ public class ServletWriter {
 
     // The sink writer:
     PrintWriter writer;
-    
+
     // servlet line numbers start from 1
     private int javaLine = 1;
 
@@ -45,10 +45,13 @@ public class ServletWriter {
     }
 
     public void close() throws IOException {
-	writer.close();
+        final boolean hasErrors = this.writer.checkError();
+        writer.close();
+        if ( hasErrors ) {
+            throw new IOException("IOException during writing.");
+        }
     }
 
-    
     // -------------------- Access informations --------------------
 
     public int getJavaLine() {
@@ -72,15 +75,15 @@ public class ServletWriter {
 
     /**
      * Print a standard comment for echo outputed chunk.
-     * @param start The starting position of the JSP chunk being processed. 
-     * @param stop  The ending position of the JSP chunk being processed. 
+     * @param start The starting position of the JSP chunk being processed.
+     * @param stop  The ending position of the JSP chunk being processed.
      */
     public void printComment(Mark start, Mark stop, char[] chars) {
         if (start != null && stop != null) {
             println("// from="+start);
             println("//   to="+stop);
         }
-        
+
         if (chars != null)
             for(int i = 0; i < chars.length;) {
                 printin();

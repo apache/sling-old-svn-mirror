@@ -152,6 +152,8 @@ public class JspServletWrapper {
                         throw new JasperException(e);
                     } catch (InstantiationException e) {
                         throw new JasperException(e);
+                    } catch (IOException e) {
+                        throw e;
                     } catch (Exception e) {
                         throw new JasperException(e);
                     }
@@ -211,8 +213,9 @@ public class JspServletWrapper {
             }
             if (firstTime || this.lastModificationTest == 0) {
                 synchronized (this) {
-                    firstTime = false;
                     ctxt.compile();
+                    firstTime = false;
+                    this.lastModificationTest = System.currentTimeMillis();
                 }
             } else {
                 if (compileException != null) {
@@ -224,11 +227,11 @@ public class JspServletWrapper {
                 tagHandlerClass = ctxt.load();
                 reload = false;
             }
-        } catch (FileNotFoundException ex) {
+        } catch (IOException ex) {
             throw new JasperException(ex);
-	}
+	    }
 
-	return tagHandlerClass;
+	    return tagHandlerClass;
     }
 
     /**
@@ -315,16 +318,20 @@ public class JspServletWrapper {
              */
             if (firstTime || this.lastModificationTest == 0 ) {
                 synchronized (this) {
-                    firstTime = false;
+                    if (firstTime || this.lastModificationTest == 0 ) {
+                        // The following sets reload to true, if necessary
+                        ctxt.compile();
+                        this.lastModificationTest = System.currentTimeMillis();
+                        firstTime = false;
+                    } else if ( compileException != null ) {
+                        // Throw cached compilation exception
+                        throw compileException;
 
-                    // The following sets reload to true, if necessary
-                    ctxt.compile();
+                    }
                 }
-            } else {
-                if (compileException != null) {
-                    // Throw cached compilation exception
-                    throw compileException;
-                }
+            } else if (compileException != null) {
+                // Throw cached compilation exception
+                throw compileException;
             }
 
             /*
@@ -355,6 +362,7 @@ public class JspServletWrapper {
                        ex.getMessage()),
               ex);
             }
+            return;
         } catch (ServletException ex) {
             throw handleJspException(ex);
         } catch (IOException ex) {
@@ -398,6 +406,7 @@ public class JspServletWrapper {
             response.sendError
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
+            return;
         } catch (ServletException ex) {
             throw handleJspException(ex);
         } catch (IOException ex) {
@@ -432,10 +441,10 @@ public class JspServletWrapper {
         return lastModificationTest;
     }
     /**
-     * @param lastModificationTest The lastModificationTest to set.
+     *Clea the lastModificationTest.
      */
-    public void setLastModificationTest(long lastModificationTest) {
-        this.lastModificationTest = lastModificationTest;
+    public void clearLastModificationTest() {
+        this.lastModificationTest = 0;
     }
 
     /**

@@ -603,7 +603,7 @@ public class JspCompilationContext {
 
     // ==================== Compile and reload ====================
 
-    public void compile() throws JasperException, FileNotFoundException {
+    public void compile() throws JasperException, IOException, FileNotFoundException {
         createCompiler();
         if (isPackagedTagFile || jspCompiler.isOutDated()) {
             try {
@@ -617,6 +617,13 @@ public class JspCompilationContext {
                 // Cache compilation exception
                 jsw.setCompilationException(ex);
                 throw ex;
+            } catch (IOException ioe) {
+                JasperException je = new JasperException(
+                        Localizer.getMessage("jsp.error.unable.compile"),
+                        ioe);
+                // Cache compilation exception
+                jsw.setCompilationException(je);
+                throw ioe;
             } catch (Exception ex) {
                 JasperException je = new JasperException(
                             Localizer.getMessage("jsp.error.unable.compile"),
