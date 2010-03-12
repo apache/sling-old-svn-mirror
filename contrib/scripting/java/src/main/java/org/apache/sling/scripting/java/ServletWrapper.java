@@ -50,13 +50,9 @@ public class ServletWrapper {
     /** The servlet config. */
     private ServletConfig config;
 
-    /** Reload flag. */
-    private boolean reload = true;
-
     private Servlet theServlet;
     private long available = 0L;
-    private boolean firstTime = true;
-    private ServletException compileException;
+    private Exception compileException;
     private CompilationContext ctxt;
 
     /**
@@ -73,53 +69,38 @@ public class ServletWrapper {
                 ioProvider, servletCache, this);
     }
 
-    /**
-     * Set the reload flag.
-     * @param reload
-     */
-    public void setReload(boolean reload) {
-        this.reload = reload;
-    }
-
     public CompilationContext getCompilationContext() {
         return this.ctxt;
     }
 
     /**
      * Get the servlet.
-     * @return The servlet.
      * @throws ServletException
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private Servlet getServlet()
-    throws ServletException, IOException, FileNotFoundException {
-        if (reload) {
-            synchronized (this) {
-                if (reload) {
-                    destroy();
+    private void getServlet()
+    throws ServletException {
+        destroy();
 
-                    Servlet servlet = null;
+        Servlet servlet = null;
 
-                    try {
-                        final Class<?> servletClass = ctxt.load();
-                        servlet = (Servlet) servletClass.newInstance();
-                    } catch (IllegalAccessException e) {
-                        throw new ServletException(e);
-                    } catch (InstantiationException e) {
-                        throw new ServletException(e);
-                    } catch (Exception e) {
-                        throw new ServletException(e);
-                    }
-
-                    servlet.init(config);
-
-                    theServlet = servlet;
-                    reload = false;
-                }
-            }
+        try {
+            final Class<?> servletClass = ctxt.load();
+            servlet = (Servlet) servletClass.newInstance();
+        } catch (IllegalAccessException e) {
+            throw new ServletException(e);
+        } catch (InstantiationException e) {
+            throw new ServletException(e);
+        } catch (ServletException se) {
+            throw se;
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
-        return theServlet;
+
+        servlet.init(config);
+
+        theServlet = servlet;
     }
 
     /**
@@ -127,7 +108,7 @@ public class ServletWrapper {
      *
      * @param je The compilation exception
      */
-    public void setCompilationException(ServletException je) {
+    public void setCompilationException(final Exception je) {
         this.compileException = je;
     }
 
@@ -164,10 +145,9 @@ public class ServletWrapper {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public void service(HttpServletRequest request,
+    private void service(HttpServletRequest request,
                         HttpServletResponse response)
-    throws ServletException, IOException, FileNotFoundException {
-
+    throws ServletException, IOException {
         try {
 
             if (ctxt.isRemoved()) {
@@ -180,43 +160,43 @@ public class ServletWrapper {
                     response.sendError
                         (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                          "Servlet unavailable.");
+                    logger.error("Java servlet {} is unavailable.", this.servletUri);
                     return;
                 }
                 // Wait period has expired. Reset.
                 available = 0;
             }
 
-            /*
-             * (1) Compile
-             */
-            if (firstTime || ctxt.getLastModificationTest() == 0 ) {
+            // check for compilation
+            if (ctxt.getLastModificationTest() == 0 ) {
                 synchronized (this) {
-                    firstTime = false;
+                    if (ctxt.getLastModificationTest() == 0 ) {
+                        if ( ctxt.compile() ) {
+                            // (re)load the servlet class
+                            getServlet();
+                        }
 
-                    // The following sets reload to true, if necessary
-                    ctxt.compile();
+                    } else if (compileException != null) {
+                        // Throw cached compilation exception
+                        throw compileException;
+                    }
                 }
-            } else {
-                if (compileException != null) {
-                    // Throw cached compilation exception
-                    throw compileException;
-                }
+            } else if (compileException != null) {
+                // Throw cached compilation exception
+                throw compileException;
             }
-
-            /*
-             * (2) (Re)load servlet class file
-             */
-            getServlet();
 
         } catch (FileNotFoundException ex) {
             ctxt.incrementRemoved();
             try {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND,
                                   ex.getMessage());
+                logger.error("Java servlet {} not found.", this.servletUri);
             } catch (IllegalStateException ise) {
                 logger.error("Java servlet source not found." +
                        ex.getMessage(), ex);
             }
+            return;
         } catch (SlingException ex) {
             throw ex;
         } catch (ServletException ex) {
@@ -231,9 +211,7 @@ public class ServletWrapper {
 
         try {
 
-            /*
-             * (3) Service request
-             */
+            // invoke the servlet
             if (theServlet instanceof SingleThreadModel) {
                // sync on the wrapper so that the freshness
                // of the page is determined right before servicing
@@ -254,6 +232,8 @@ public class ServletWrapper {
             response.sendError
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
+            logger.error("Java servlet {} is unavailable.", this.servletUri);
+            return;
         } catch (SlingException ex) {
             throw ex;
         } catch (ServletException ex) {

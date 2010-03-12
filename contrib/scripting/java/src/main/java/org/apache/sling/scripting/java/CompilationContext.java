@@ -16,7 +16,6 @@
  */
 package org.apache.sling.scripting.java;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -135,8 +134,8 @@ public class CompilationContext {
         return this.lastModificationTest;
     }
 
-    public void setLastModificationTest(final long value) {
-        this.lastModificationTest = value;
+    public void clearLastModificationTest() {
+        this.lastModificationTest = 0;
     }
 
     /**
@@ -146,8 +145,6 @@ public class CompilationContext {
         if ( this.lastModificationTest > 0 ) {
             return false;
         }
-        this.lastModificationTest = System.currentTimeMillis();
-
         final long sourceLastModified = this.ioProvider.lastModified(getSourcePath());
 
         final long targetLastModified = this.ioProvider.lastModified(getCompleteClassPath());
@@ -173,33 +170,32 @@ public class CompilationContext {
 
     // ==================== Compile and reload ====================
 
-    public void compile() throws ServletException, FileNotFoundException {
+    public boolean compile() throws Exception {
         if (this.isOutDated()) {
             try {
                 final List<CompilerError> errors = this.compiler.compile();
                 if ( errors != null ) {
-                    //this.ioProvider.delete(getCompleteClassPath());
                     throw CompilerException.create(errors);
                 }
-                this.wrapper.setReload(true);
                 this.wrapper.setCompilationException(null);
-            } catch (ServletException se) {
-                this.wrapper.setCompilationException(se);
-                throw se;
+                return true;
             } catch (Exception ex) {
-                final ServletException se = new ServletException("Unable to compile servlet.", ex);
                 // Cache compilation exception
-                this.wrapper.setCompilationException(se);
-                throw se;
+                this.wrapper.setCompilationException(ex);
+                throw ex;
+            } finally {
+                this.lastModificationTest = System.currentTimeMillis();
             }
         }
+        this.lastModificationTest = System.currentTimeMillis();
+        return false;
     }
 
     /**
      * Load the class.
      */
     public Class<?> load()
-    throws ServletException, FileNotFoundException {
+    throws ServletException {
         final String name = this.getClassFilePath().substring(1).replace('/', '.');
         try {
             servletClass = this.options.getClassLoader().loadClass(name);
