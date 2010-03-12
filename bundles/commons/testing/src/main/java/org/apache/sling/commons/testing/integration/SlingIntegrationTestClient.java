@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -161,9 +160,10 @@ public class SlingIntegrationTestClient {
             }
         }
 
+        final int expected = 302;
         final int status = httpClient.executeMethod(post);
-        if(status!=302) {
-            throw new HttpStatusCodeException(302, status, "POST", url);
+        if(status!=expected) {
+            throw new HttpStatusCodeException(expected, status, "POST", url, HttpTestBase.getResponseBodyAsStream(post, 0));
         }
         String location = post.getResponseHeader("Location").getValue();
         post.releaseConnection();
@@ -193,8 +193,9 @@ public class SlingIntegrationTestClient {
         post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
 
         final int status = httpClient.executeMethod(post);
-        if(status!=200) { // fmeschbe: The default sling status is 200, not 302
-            throw new HttpStatusCodeException(200, status, "POST", url);
+        final int expected = 200;
+        if(status!=expected) {
+            throw new HttpStatusCodeException(expected, status, "POST", HttpTestBase.getResponseBodyAsStream(post, 0));
         }
     }
 
@@ -217,9 +218,10 @@ public class SlingIntegrationTestClient {
         post.setFollowRedirects(false);
         post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
 
+        final int expected = 200;
         final int status = httpClient.executeMethod(post);
-        if(status!=200) { // fmeschbe: The default sling status is 200, not 302
-            throw new HttpStatusCodeException(200, status, "POST", url);
+        if(status!=expected) {
+            throw new HttpStatusCodeException(expected, status, "POST", HttpTestBase.getResponseBodyAsStream(post, 0));
         }
     }
 }
