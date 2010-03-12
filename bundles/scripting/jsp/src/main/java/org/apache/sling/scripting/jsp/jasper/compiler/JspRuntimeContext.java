@@ -184,7 +184,7 @@ public final class JspRuntimeContext {
     }
 
     private void invalidate(final JspServletWrapper jsw) {
-        jsw.setLastModificationTest(0);
+        jsw.clearLastModificationTest();
     }
 
     public void handleModification(final String scriptName) {
