@@ -29,10 +29,15 @@ public class HttpStatusCodeException extends IOException {
     
     public HttpStatusCodeException(int expectedStatus, int actualStatus,
             String method, String url) {
+        this(expectedStatus, actualStatus, method, url, null);
+    }
 
+    public HttpStatusCodeException(int expectedStatus, int actualStatus,
+            String method, String url, String content) {
         super("Expected status code " + expectedStatus + " for " + method
-            + ", got " + actualStatus + ", URL=" + url);
-
+                + ", got " + actualStatus + ", URL=" + url 
+                + (content != null ? ", Content=[" + content + "]" : "")
+                );
         this.expectedStatus = expectedStatus;
         this.actualStatus = actualStatus;
     }

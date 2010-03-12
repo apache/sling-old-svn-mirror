@@ -36,6 +36,7 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -310,14 +311,7 @@ public class HttpTestBase extends TestCase {
             get.setQueryString(params.toArray(nvp));
         }
         final int status = httpClient.executeMethod(get);
-        final InputStream is = get.getResponseBodyAsStream();
-        final StringBuffer content = new StringBuffer();
-        final String charset = get.getResponseCharSet();
-        final byte [] buffer = new byte[16384];
-        int n = 0;
-        while( (n = is.read(buffer, 0, buffer.length)) > 0) {
-            content.append(new String(buffer, 0, n, charset));
-        }
+        final String content = getResponseBodyAsStream(get, 0);
         assertEquals("Expected status " + expectedStatusCode + " for " + url + " (content=" + content + ")",
                 expectedStatusCode,status);
         final Header h = get.getResponseHeader("Content-Type");
@@ -431,5 +425,23 @@ public class HttpTestBase extends TestCase {
                     + (testInfo==null ? "" : ", test info=" + testInfo)
             );
         }
+    }
+
+    /** Return m's response body as a string, optionally limiting the length that we read
+     * @param maxLength if 0, no limit
+     */
+    public static String getResponseBodyAsStream(HttpMethodBase m, int maxLength) throws IOException {
+        final InputStream is = m.getResponseBodyAsStream();
+        final StringBuilder content = new StringBuilder();
+        final String charset = m.getResponseCharSet();
+        final byte [] buffer = new byte[16384];
+        int n = 0;
+        while( (n = is.read(buffer, 0, buffer.length)) > 0) {
+            content.append(new String(buffer, 0, n, charset));
+            if(maxLength != 0 && content.length() > maxLength) {
+                throw new IllegalArgumentException("Response body size is over maxLength (" + maxLength + ")");
+            }
+        }
+        return content.toString();
     }
 }
