@@ -168,10 +168,13 @@ public class JavaScriptEngineFactory
             this.eventHandlerRegistration.unregister();
             this.eventHandlerRegistration = null;
         }
+        if ( this.servletCache != null ) {
+            this.servletCache.destroy();
+            this.servletCache = null;
+        }
         ioProvider = null;
         javaServletContext = null;
         servletConfig = null;
-        servletCache = null;
         compilerOptions = null;
     }
 
@@ -279,7 +282,7 @@ public class JavaScriptEngineFactory
     private void handleModification(final String scriptName) {
         final ServletWrapper wrapper = this.servletCache.getWrapper(scriptName);
         if ( wrapper != null ) {
-            wrapper.getCompilationContext().setLastModificationTest(0);
+            wrapper.getCompilationContext().clearLastModificationTest();
         }
     }
 
