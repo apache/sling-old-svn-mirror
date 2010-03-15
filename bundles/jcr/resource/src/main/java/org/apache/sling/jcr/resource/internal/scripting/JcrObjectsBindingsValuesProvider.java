@@ -17,13 +17,14 @@
 package org.apache.sling.jcr.resource.internal.scripting;
 
 import javax.jcr.Node;
+import javax.jcr.Session;
 import javax.script.Bindings;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 
 /**
- * BindingsValuesProvider for currentNode object.
+ * BindingsValuesProvider for currentNode and currentSession object.
  *
  * @scr.component metatype="no"
  * @scr.service
@@ -31,17 +32,27 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
  * @scr.property name="service.description" value="Apache Sling CurrentNode BindingsValuesProvider"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class CurrentNodeBindingsValuesProvider implements BindingsValuesProvider {
+public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider {
+
+
+    private static final String PROP_CURRENT_NODE = "currentNode";
+    private static final String PROP_CURRENT_SESSION = "currentSession";
 
     /**
      * {@inheritDoc}
      */
     public void addBindings(Bindings bindings) {
         Resource resource = (Resource) bindings.get("resource");
-        if(resource != null) {
+        if (resource != null) {
             Node node = resource.adaptTo(Node.class);
             if (node != null) {
-                bindings.put("currentNode", node);
+                bindings.put(PROP_CURRENT_NODE, node);
+            }
+            if ( bindings.get(PROP_CURRENT_SESSION) == null ) {
+                final Session session = resource.getResourceResolver().adaptTo(Session.class);
+                if ( session != null ) {
+                    bindings.put(PROP_CURRENT_SESSION, session);
+                }
             }
         }
     }
