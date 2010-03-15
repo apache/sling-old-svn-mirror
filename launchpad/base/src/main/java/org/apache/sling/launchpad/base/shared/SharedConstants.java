@@ -76,6 +76,13 @@ public interface SharedConstants {
      */
     public static final String DISABLE_PACKAGE_BUNDLE_LOADING = "org.apache.sling.launchpad.disable.package.bundle.loading";
 
+    /**
+     * True or false value which controls whether sling will load bundles which
+     * are contained in the resources/# path locations in the sling jar or war <br/>
+     * regardless of the modification time of the Launchpad JAR.
+     */
+    public static final String FORCE_PACKAGE_BUNDLE_LOADING = "org.apache.sling.launchpad.force.package.bundle.loading";
+
 
     /**
      * The name of the configuration property defining the Sling properties file
@@ -92,4 +99,5 @@ public interface SharedConstants {
      * @since 2.2
      */
     public static final String SLING_PROPERTIES_URL = "sling.properties.url";
+
 }

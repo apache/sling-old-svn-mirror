@@ -204,7 +204,17 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
         cmd.execute(context);
 
-        if (!isAlreadyInstalled(context, slingStartupDir)) {
+        boolean shouldInstall = false;
+
+        // see if the loading of bundles from the package is forced
+        String fpblString = context.getProperty(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING);
+        if (Boolean.valueOf(fpblString)) {
+            shouldInstall = true;
+        } else {
+            shouldInstall = !isAlreadyInstalled(context, slingStartupDir);
+        }
+
+        if (shouldInstall) {
             // only run the deployment package stuff and war/jar copies when this war/jar is new/changed
 
             // register deployment package support
