@@ -68,6 +68,8 @@ public class HttpTestBase extends TestCase {
 	public static final String EXECUTE_RESOURCE_TYPE = "SlingTesting" + HttpTestBase.class.getSimpleName();
 	private static int executeCounter;
 
+    public static final int READY_TIMEOUT_SECONDS = Integer.getInteger("HttpTestBase.readyTimeoutSeconds", 60);
+
     protected SlingIntegrationTestClient testClient;
     protected HttpClient httpClient;
 
@@ -162,12 +164,12 @@ public class HttpTestBase extends TestCase {
         }
         slingStartupOk = false;
 
-        System.err.println("Checking if the required Sling services are started...");
+        System.err.println("Checking if the required Sling services are started (timeout " + READY_TIMEOUT_SECONDS + " seconds)...");
         System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + ")");
 
         // Try creating a node on server, every 500msec, until ok, with timeout
         final List<String> exceptionMessages = new LinkedList<String>();
-        final long maxMsecToWait = 60 * 1000L;
+        final long maxMsecToWait = READY_TIMEOUT_SECONDS * 1000L;
         final long startupTime = System.currentTimeMillis();
 
         while(!slingStartupOk && (System.currentTimeMillis() < startupTime + maxMsecToWait) ) {
