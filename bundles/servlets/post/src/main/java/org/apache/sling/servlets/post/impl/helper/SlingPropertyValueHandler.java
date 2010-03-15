@@ -17,7 +17,6 @@
 
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -317,17 +316,6 @@ public class SlingPropertyValueHandler {
             changes.add(Modification.onModified(p.getPath()));
         }
     }
-
-    private String[] filterBlanks(String[] values) {
-        List<String> filteredValues = new ArrayList<String>(values.length);
-        for (String s : values) {
-            if (s.trim().length() > 0) {
-                filteredValues.add(s);
-            }
-        }
-        return filteredValues.toArray(new String[filteredValues.size()]);
-    }
-
 
     private boolean isReferencePropertyType(int propertyType) {
         return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
