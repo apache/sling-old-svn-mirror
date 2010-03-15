@@ -23,10 +23,10 @@ import java.io.Writer;
 
 /** Response-related utilities */
 public class ResponseUtil {
-    
+
     private static class XmlEscapingWriter extends Writer {
         private final Writer target;
-        
+
         XmlEscapingWriter(Writer target) {
             this.target = target;
         }
@@ -76,14 +76,14 @@ public class ResponseUtil {
             write(str.toCharArray());
         }
     }
-    
+
     /** Escape xml text */
     public static String escapeXml(String input) {
         if(input == null) {
             return null;
         }
-        
-        final StringBuffer b = new StringBuffer(input.length());
+
+        final StringBuilder b = new StringBuilder(input.length());
         for(int i = 0;i  < input.length(); i++) {
             final char c = input.charAt(i);
             if(c == '&') {
@@ -98,7 +98,7 @@ public class ResponseUtil {
         }
         return b.toString();
     }
-    
+
     /** Return a Writer that writes escaped XML text to target
      */
     public static Writer getXmlEscapingWriter(Writer target) {
