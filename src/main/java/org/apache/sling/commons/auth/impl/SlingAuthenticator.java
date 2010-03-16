@@ -45,6 +45,7 @@ import org.apache.sling.commons.auth.impl.engine.EngineAuthenticationHandlerHold
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.commons.auth.spi.AuthenticationInfoPostProcessor;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -190,6 +191,11 @@ public class SlingAuthenticator implements Authenticator,
      */
     private ServiceTracker engineAuthHandlerTracker;
 
+    /**
+     * ServiceTracker tracking AuthenticationInfoPostProcessor services
+     */
+    private ServiceTracker authInfoPostProcessorTracker;
+
     // ---------- SCR integration
 
     @SuppressWarnings("unused")
@@ -216,6 +222,8 @@ public class SlingAuthenticator implements Authenticator,
             authHandlerCache);
         engineAuthHandlerTracker = new EngineAuthenticationHandlerTracker(
             bundleContext, authHandlerCache);
+        authInfoPostProcessorTracker = new ServiceTracker(bundleContext, AuthenticationInfoPostProcessor.SERVICE_NAME, null);
+        authInfoPostProcessorTracker.open();
     }
 
     private void modified(Map<String, Object> properties) {
@@ -348,9 +356,12 @@ public class SlingAuthenticator implements Authenticator,
             return false;
 
         } else if (authInfo == null) {
+            // create an empty authentication info object which can be used with the post processors
+            AuthenticationInfo anonInfo = new AuthenticationInfo("anonymous");
+            postProcess(anonInfo, request, response);
 
             log.debug("handleSecurity: No credentials in the request, anonymous");
-            return getAnonymousSession(request, response);
+            return getAnonymousSession(request, response, anonInfo);
 
         } else {
 
@@ -508,6 +519,9 @@ public class SlingAuthenticator implements Authenticator,
                     request, response);
 
                 if (authInfo != null) {
+                    // post process the AuthenticationInfo object
+                    postProcess(authInfo, request, response);
+
                     // add the feedback handler to the info (may be null)
                     authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER,
                         holder.getFeedbackHandler());
@@ -521,6 +535,17 @@ public class SlingAuthenticator implements Authenticator,
         log.debug("getAuthenticationInfo: no handler could extract credentials");
         return null;
     }
+
+    /**
+     * Run through the available post processors.
+     */
+    private void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response) {
+        Object[] services = authInfoPostProcessorTracker.getServices();
+        for (Object serviceObj : services) {
+            ((AuthenticationInfoPostProcessor)serviceObj).postProcess(info, request, response);
+        }
+    }
+
 
     /**
      * Create a credentials object from the provided authentication info.
@@ -627,7 +652,7 @@ public class SlingAuthenticator implements Authenticator,
 
     /** Try to acquire an anonymous Session */
     private boolean getAnonymousSession(final HttpServletRequest request,
-            final HttpServletResponse response) {
+            final HttpServletResponse response, AuthenticationInfo anonInfo) {
 
         // Get an anonymous session if allowed, or if we are handling
         // a request for the login servlet
@@ -635,7 +660,7 @@ public class SlingAuthenticator implements Authenticator,
 
             try {
 
-                Session session = repository.login();
+                Session session = repository.login((String)anonInfo.get(AuthenticationInfo.WORKSPACE));
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
