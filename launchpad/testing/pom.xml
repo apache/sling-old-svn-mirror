@@ -184,13 +184,13 @@
                         <goals>
                             <goal>prepare-package</goal>
                         </goals>
-                        <configuration>
-                            <defaultBundleList>
-                                <version>6-SNAPSHOT</version>
-                            </defaultBundleList>
-                        </configuration>
                     </execution>
-                </executions>
+                </executions>    
+                <configuration>
+                    <defaultBundleList>
+                        <version>6-SNAPSHOT</version>
+                    </defaultBundleList>
+                </configuration>
             </plugin>
 
             <!--
