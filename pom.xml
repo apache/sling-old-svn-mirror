@@ -190,6 +190,7 @@
                     <defaultBundleList>
                         <version>6-SNAPSHOT</version>
                     </defaultBundleList>
+                    <httpPort>${jetty.http.port}</httpPort>
                 </configuration>
             </plugin>
 
