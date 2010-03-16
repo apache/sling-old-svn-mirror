@@ -144,6 +144,12 @@ public class SlingAuthenticator implements Authenticator,
     private static final String REQUEST_ATTRIBUTE_SESSION = "javax.jcr.Session";
 
     /**
+     * The name of the request attribute providing access to the AuthenticationInfo
+     * object.
+     */
+    private static final String REQUEST_ATTRIBUTE_AUTH_INFO = "org.apache.sling.commons.auth.spi.AuthenticationInfo";
+
+    /**
      * The name of the {@link AuthenticationInfo} property providing the option
      * {@link org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler}
      * handler to be called back on login failure or success.
@@ -342,6 +348,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // 1. Ask all authentication handlers to try to extract credentials
         AuthenticationInfo authInfo = getAuthenticationInfo(request, response);
+        request.setAttribute(REQUEST_ATTRIBUTE_AUTH_INFO, authInfo);
 
         // 3. Check Credentials
         if (authInfo == AuthenticationInfo.DOING_AUTH) {
@@ -359,6 +366,8 @@ public class SlingAuthenticator implements Authenticator,
             // create an empty authentication info object which can be used with the post processors
             AuthenticationInfo anonInfo = new AuthenticationInfo("anonymous");
             postProcess(anonInfo, request, response);
+
+            request.setAttribute(REQUEST_ATTRIBUTE_AUTH_INFO, authInfo);
 
             log.debug("handleSecurity: No credentials in the request, anonymous");
             return getAnonymousSession(request, response, anonInfo);
