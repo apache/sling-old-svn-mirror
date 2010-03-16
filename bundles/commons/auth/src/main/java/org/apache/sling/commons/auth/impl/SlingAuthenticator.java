@@ -550,8 +550,10 @@ public class SlingAuthenticator implements Authenticator,
      */
     private void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response) {
         Object[] services = authInfoPostProcessorTracker.getServices();
-        for (Object serviceObj : services) {
-            ((AuthenticationInfoPostProcessor)serviceObj).postProcess(info, request, response);
+        if (services != null) {
+            for (Object serviceObj : services) {
+                ((AuthenticationInfoPostProcessor)serviceObj).postProcess(info, request, response);
+            }
         }
     }
 
