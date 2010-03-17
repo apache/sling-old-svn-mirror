@@ -59,7 +59,7 @@
                         </Bundle-Category>
                         <Export-Package>
                             org.apache.sling.jcr.base;
-                            org.apache.sling.jcr.base.util;version=2.0.4
+                            org.apache.sling.jcr.base.util;version=2.1.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.base.internal.*
