@@ -88,7 +88,6 @@ public class LoginServlet extends SlingAllMethodsServlet {
                 // set the login resource to select the authenticator
                 request.setAttribute(Authenticator.LOGIN_RESOURCE,
                     (resourcePath != null) ? resourcePath : "/");
-
                 authenticator.login(request, response);
                 return;
 
