@@ -313,7 +313,7 @@ public abstract class EventUtil {
                 boolean result = false;
                 try {
                     result = processor.process(job);
-                } catch (Throwable t) {
+                } catch (Throwable t) { //NOSONAR
                     LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
                     // we don't reschedule if an exception occurs
                     result = true;
