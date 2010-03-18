@@ -131,7 +131,7 @@ public abstract class AbstractRepositoryEventHandler
                 }
                 try {
                     processWriteQueue();
-                } catch (Throwable t) {
+                } catch (Throwable t) { //NOSONAR
                     logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
                     running = false;
                 }
@@ -142,7 +142,7 @@ public abstract class AbstractRepositoryEventHandler
             public void run() {
                 try {
                     runInBackground();
-                } catch (Throwable t) {
+                } catch (Throwable t) { //NOSONAR
                     logger.error("Background thread stopped with exception: " + t.getMessage(), t);
                     running = false;
                 }

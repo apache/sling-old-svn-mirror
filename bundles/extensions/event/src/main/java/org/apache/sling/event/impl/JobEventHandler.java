@@ -589,7 +589,7 @@ public class JobEventHandler
                                         logger.info("Starting {}job queue {}", (orderedQueue ? "ordered " : ""), queueName);
                                         try {
                                             runJobQueue(queueName, jq);
-                                        } catch (Throwable t) {
+                                        } catch (Throwable t) { //NOSONAR
                                             logger.error("Job queue stopped with exception: " + t.getMessage() + ". Restarting.", t);
                                         }
                                     }
