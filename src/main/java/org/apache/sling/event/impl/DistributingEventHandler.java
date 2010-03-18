@@ -75,8 +75,7 @@ public class DistributingEventHandler
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
      */
-    protected void activate(ComponentContext context)
-    throws Exception {
+    protected void activate(ComponentContext context) {
         @SuppressWarnings("unchecked")
         final Dictionary<String, Object> props = context.getProperties();
         this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);

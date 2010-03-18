@@ -111,8 +111,7 @@ public abstract class AbstractRepositoryEventHandler
      * @param context
      * @throws RepositoryException
      */
-    protected void activate(final ComponentContext context)
-    throws Exception {
+    protected void activate(final ComponentContext context) {
         this.applicationId = this.settingsService.getSlingId();
         APPLICATION_ID = this.applicationId;
         this.repositoryPath = OsgiUtil.toString(context.getProperties().get(

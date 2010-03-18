@@ -59,11 +59,7 @@ public class EventingThreadPool implements ThreadPool {
      * Activate this component.
      * @param context
      */
-    protected void activate(final ComponentContext ctx) throws Exception {
-        // start background threads
-        if ( this.threadPoolManager == null ) {
-            throw new Exception("No ThreadPoolManager found.");
-        }
+    protected void activate(final ComponentContext ctx) {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
         config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MIN_POOL_SIZE), DEFAULT_MIN_POOL_SIZE));
         config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
