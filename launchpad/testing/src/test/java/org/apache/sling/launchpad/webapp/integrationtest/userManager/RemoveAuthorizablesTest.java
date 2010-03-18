@@ -87,4 +87,29 @@ public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
 		getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_NOT_FOUND, null); //make sure the profile request returns some data
 	}
+	
+	/**
+	 * Test the problem reported as SLING-1237
+	 */
+	public void testRemoveGroupWithMembers() throws IOException {
+		String groupId = createTestGroup();
+		String userId = createTestUser();
+		
+        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+        String addMemberPostUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".update.html";
+		List<NameValuePair> addMemberPostParams = new ArrayList<NameValuePair>();
+		addMemberPostParams.add(new NameValuePair(":member", userId));
+		assertAuthenticatedPostStatus(creds, addMemberPostUrl, HttpServletResponse.SC_OK, addMemberPostParams, null);
+
+		String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
+		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
+
+		String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".delete.html";
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		
+		getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
+		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_NOT_FOUND, null); //make sure the profile request returns some data
+	}
+	
 }
