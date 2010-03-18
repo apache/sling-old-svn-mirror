@@ -229,10 +229,8 @@ public class JobEventHandler
     /**
      * Activate this component.
      * @param context
-     * @throws RepositoryException
      */
-    protected void activate(final ComponentContext context)
-    throws Exception {
+    protected void activate(final ComponentContext context) {
         @SuppressWarnings("unchecked")
         final Dictionary<String, Object> props = context.getProperties();
         this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
