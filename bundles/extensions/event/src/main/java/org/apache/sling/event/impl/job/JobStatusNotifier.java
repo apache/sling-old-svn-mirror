@@ -24,7 +24,7 @@ public interface JobStatusNotifier {
 
     String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
 
-    public static final class NotifierContext {
+    class NotifierContext {
         public final JobStatusNotifier notifier;
         public final String eventNodePath;
 

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.event.impl;
 
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.concurrent.BlockingQueue;
@@ -235,7 +234,6 @@ public abstract class AbstractRepositoryEventHandler
      * @param e The event
      * @param suggestName A suggest name/path for the node.
      * @throws RepositoryException
-     * @throws IOException
      */
     protected Node writeEvent(Event e, String suggestedName)
     throws RepositoryException {
@@ -262,7 +260,7 @@ public abstract class AbstractRepositoryEventHandler
 
         EventHelper.writeEventProperties(eventNode, e);
         this.addNodeProperties(eventNode, e);
-        rootNode.save();
+        writerSession.save();
 
         return eventNode;
     }
@@ -271,7 +269,6 @@ public abstract class AbstractRepositoryEventHandler
      * Read an event from the repository.
      * @return
      * @throws RepositoryException
-     * @throws IOException
      * @throws ClassNotFoundException
      */
     protected Event readEvent(Node eventNode)
