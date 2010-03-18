@@ -352,7 +352,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 	 * Test for SLING-997, preserve privileges that were not posted with the modifyAce 
 	 * request.
 	 */
-	public void testMergeAceForUserCombineAggregatePrincipal() throws IOException, JSONException {
+	public void testMergeAceForUserCombineAggregatePrivilege() throws IOException, JSONException {
 		testUserId = createTestUser();
 		testFolderUrl = createTestFolder();
 		
@@ -439,6 +439,91 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
 		assertTrue(deniedPrivilegeNames2.contains("jcr:write"));
+	}
+
+	
+	/**
+	 * Test ACE update with a deny privilege for an ACE that already contains
+	 * a grant privilege 
+	 */
+	public void testMergeAceForUserDenyPrivilegeAfterGrantPrivilege() throws IOException, JSONException {
+		testUserId = createTestUser();
+		testFolderUrl = createTestFolder();
+		
+        String postUrl = testFolderUrl + ".modifyAce.html";
+
+        //1. create an initial set of privileges
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
+		
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		
+		//fetch the JSON for the acl to verify the settings.
+		String getUrl = testFolderUrl + ".acl.json";
+
+		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		assertNotNull(json);
+		JSONObject jsonObj = new JSONObject(json);
+		String aceString = jsonObj.getString(testUserId);
+		assertNotNull(aceString);
+		
+		JSONObject aceObject = new JSONObject(aceString); 
+		assertNotNull(aceObject);
+		
+		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		assertNotNull(grantedArray);
+		assertEquals(1, grantedArray.length());
+		Set<String> grantedPrivilegeNames = new HashSet<String>();
+		for (int i=0; i < grantedArray.length(); i++) {
+			grantedPrivilegeNames.add(grantedArray.getString(i));
+		}
+		assertTrue(grantedPrivilegeNames.contains("jcr:write"));
+
+		assertFalse(aceObject.has("denied"));
+		
+		
+        //2. post a new set of privileges to merge with the existing privileges
+		List<NameValuePair> postParams2 = new ArrayList<NameValuePair>();
+		postParams2.add(new NameValuePair("principalId", testUserId));
+		//jcr:write is not posted, so it should remain in the granted ACE
+		
+		//deny the jcr:nodeTypeManagement privilege, which should merge with the
+		//existing ACE.
+		postParams2.add(new NameValuePair("privilege@jcr:nodeTypeManagement", "denied")); //add a new privilege
+		
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams2, null);
+		
+		
+		//fetch the JSON for the acl to verify the settings.
+		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		
+		assertNotNull(json2);
+		JSONObject jsonObj2 = new JSONObject(json2);
+		String aceString2 = jsonObj2.getString(testUserId);
+		assertNotNull(aceString2);
+		
+		JSONObject aceObject2 = new JSONObject(aceString2); 
+		assertNotNull(aceObject2);
+		
+		JSONArray grantedArray2 = aceObject2.getJSONArray("granted");
+		assertNotNull(grantedArray2);
+		assertEquals(1, grantedArray2.length());
+		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
+		for (int i=0; i < grantedArray2.length(); i++) {
+			grantedPrivilegeNames2.add(grantedArray2.getString(i));
+		}
+		assertTrue(grantedPrivilegeNames2.contains("jcr:write"));
+
+		JSONArray deniedArray2 = aceObject2.getJSONArray("denied");
+		assertNotNull(deniedArray2);
+		assertEquals(1, deniedArray2.length());
+		Set<String> deniedPrivilegeNames2 = new HashSet<String>();
+		for (int i=0; i < deniedArray2.length(); i++) {
+			deniedPrivilegeNames2.add(deniedArray2.getString(i));
+		}
+		assertTrue(deniedPrivilegeNames2.contains("jcr:nodeTypeManagement"));
 	}
 	
 }
