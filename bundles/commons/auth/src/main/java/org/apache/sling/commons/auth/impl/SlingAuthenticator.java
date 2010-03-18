@@ -126,6 +126,19 @@ public class SlingAuthenticator implements Authenticator,
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
 
     /**
+     * The name of the configuration property used to set the Realm of the
+     * built-in HTTP Basic authentication handler.
+     *
+     * @scr.property valueRef="DEFAULT_REALM"
+     */
+    public static final String PAR_REALM_NAME = "auth.http.realm";
+
+    /**
+     * The default realm for the built-in HTTP Basic authentication handler.
+     */
+    private static final String DEFAULT_REALM = "Sling (Development)";
+
+    /**
      * The name of the session attribute which is set if the session created by
      * the {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}
      * method is an impersonated session. The value of this attribute is the
@@ -177,6 +190,9 @@ public class SlingAuthenticator implements Authenticator,
 
     /** Cache control flag */
     private boolean cacheControl;
+
+    /** HTTP Basic authentication handler */
+    private HttpBasicAuthenticationHandler httpBasicHandler;
 
     /** Web Console Plugin service registration */
     private ServiceRegistration webConsolePlugin;
@@ -286,6 +302,14 @@ public class SlingAuthenticator implements Authenticator,
         if (serviceListener != null) {
             serviceListener.registerServices();
         }
+
+        // register as a service !
+        final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME),
+            DEFAULT_REALM);
+        final boolean forceRequestCredentials = true;
+        final boolean forceDropCredentials = false;
+        httpBasicHandler = new HttpBasicAuthenticationHandler(realm,
+            forceRequestCredentials, forceDropCredentials);
     }
 
     @SuppressWarnings("unused")
@@ -359,6 +383,8 @@ public class SlingAuthenticator implements Authenticator,
         } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
 
             log.debug("handleSecurity: Credentials present but not valid, request authentication again");
+            // FIXME: ensure resource is not set !!!
+            request.setAttribute(LOGIN_RESOURCE, request.getRequestURI());
             doLogin(request, response);
             return false;
 
@@ -427,6 +453,11 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
+        // fall back to HTTP Basic handler (if not done already)
+        if (!done) {
+            done = httpBasicHandler.requestCredentials(request, response);
+        }
+
         // no handler could send an authentication request, throw
         if (!done) {
             log.info("login: No handler for request ({} handlers available)",
@@ -464,6 +495,8 @@ public class SlingAuthenticator implements Authenticator,
                 }
             }
         }
+
+        httpBasicHandler.dropCredentials(request, response);
 
         redirectAfterLogout(request, response);
     }
@@ -538,6 +571,14 @@ public class SlingAuthenticator implements Authenticator,
                     return authInfo;
                 }
             }
+        }
+
+        // check whether the HTTP Basic handler can extract the header
+        final AuthenticationInfo authInfo = httpBasicHandler.extractCredentials(
+            request, response);
+        if (authInfo != null) {
+            authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER, httpBasicHandler);
+            return authInfo;
         }
 
         // no handler found for the request ....
