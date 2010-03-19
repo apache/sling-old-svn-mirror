@@ -16,16 +16,26 @@
  */
 package org.apache.sling.commons.compiler;
 
+import java.io.IOException;
+import java.io.Reader;
+
 /**
- *
+ * This interface describes a compilation unit - usually a java class.
+ * @since 2.0
  */
-public interface ClassWriter {
+public interface CompilationUnit {
 
     /**
-     *
-     * @param className
-     * @param data
-     * @throws Exception
+     * Return an input stream for the contents.
+     * The compiler will close this stream in all cases!
      */
-    void write(String className, byte[] data) throws Exception;
+    Reader getSource()
+    throws IOException;
+
+    /**
+     * Returns the name of the top level public type.
+     * This name includes the package.
+     * @return the name of the top level public type.
+     */
+    String getMainClassName();
 }

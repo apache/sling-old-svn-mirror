@@ -17,17 +17,16 @@
 package org.apache.sling.commons.compiler.impl;
 
 import java.io.ByteArrayOutputStream;
-import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.commons.compiler.ClassWriter;
-import org.apache.sling.commons.compiler.CompileUnit;
-import org.apache.sling.commons.compiler.CompilerEnvironment;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.Options;
 
@@ -35,13 +34,18 @@ import org.apache.sling.commons.compiler.Options;
  * Test case for java 5 support
  */
 public class CompilerJava5Test extends TestCase
-        implements CompilerEnvironment, ErrorHandler, ClassWriter {
+        implements ErrorHandler, ClassLoaderWriter {
 
     public void testJava5Support() throws Exception {
         String sourceFile = "Java5Test";
 
-        CompileUnit unit = createCompileUnit(sourceFile);
-        new EclipseJavaCompiler().compile(new CompileUnit[]{unit}, this, this, this, new Options(Options.VERSION_1_5, true));
+        CompilationUnit unit = createCompileUnit(sourceFile);
+        final Options options = new Options();
+        options.put(Options.KEY_SOURCE_VERSION, Options.VERSION_1_5);
+        options.put(Options.KEY_CLASS_LOADER_WRITER, this);
+        options.put(Options.KEY_CLASS_LOADER, this.getClass().getClassLoader());
+
+        assertTrue(new EclipseJavaCompiler().compile(new CompilationUnit[]{unit}, this, options));
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -54,102 +58,62 @@ public class CompilerJava5Test extends TestCase
         System.out.println("Warning in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
     }
 
-    //--------------------------------------------------< CompilerEnvironment >
-
-    public byte[] findClass(String className) throws Exception {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        InputStream in = cl.getResourceAsStream(className.replace('.', '/') + ".class");
-        if (in == null) {
-            return null;
-        }
-        ByteArrayOutputStream out = new ByteArrayOutputStream(0x7fff);
-
-        try {
-            byte[] buffer = new byte[0x1000];
-            int read = 0;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
-        } finally {
-            //out.close();
-            in.close();
-        }
-
-        return out.toByteArray();
-    }
-
-    public char[] findSource(String className) throws Exception {
-        return new char[0];
-    }
-
-    public boolean isPackage(String packageName) {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        InputStream in = cl.getResourceAsStream(packageName.replace('.', '/') + ".class");
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException ignore) {
-            }
-            return false;
-        }
-        return true;
-    }
-
-    public void cleanup() {
-    }
-
-    //----------------------------------------------------------< ClassWriter >
-
-    public void write(String className, byte[] data) throws Exception {
-        // nothing to do
-    }
+    //----------------------------------------------------------< ClassLoaderWriter >
 
     //--------------------------------------------------------< misc. helpers >
 
-    private CompileUnit createCompileUnit(final String sourceFile) throws Exception {
-        final char[] chars = readTextResource(sourceFile);
+    private CompilationUnit createCompileUnit(final String sourceFile) throws Exception {
+        return new CompilationUnit() {
 
-        return new CompileUnit() {
-
-            public String getSourceFileName() {
-                return sourceFile;
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getMainClassName()
+             */
+            public String getMainClassName() {
+                return "org.apache.sling.commons.compiler.test." + sourceFile;
             }
 
-            public char[] getSourceFileContents() {
-                return chars;
-            }
-
-            public String getMainTypeName() {
-                String className;
-                int pos = sourceFile.lastIndexOf(".java");
-                if (pos != -1) {
-                    className = sourceFile.substring(0, pos).trim();
-                } else {
-                    className = sourceFile.trim();
-                }
-                pos = className.lastIndexOf('/');
-                return (pos == -1) ? className : className.substring(pos);
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getSource()
+             */
+            public Reader getSource() throws IOException {
+                InputStream in = getClass().getClassLoader().getResourceAsStream(sourceFile);
+                return new InputStreamReader(in, "UTF-8");
             }
         };
     }
 
-    private char[] readTextResource(String resourcePath) throws IOException {
-        InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath);
-        if (in == null) {
-            throw new IOException("resource not found");
-        }
-        Reader reader = new InputStreamReader(in);
-        CharArrayWriter writer = new CharArrayWriter(0x7fff);
-        try {
-            char[] buffer = new char[0x1000];
-            int read = 0;
-            while ((read = reader.read(buffer)) > 0) {
-                writer.write(buffer, 0, read);
-            }
-            return writer.toCharArray();
-        } finally {
-            //writer.close();
-            reader.close();
-        }
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
+     */
+    public boolean delete(String path) {
+        return false;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
+     */
+    public InputStream getInputStream(String path) throws IOException {
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
+     */
+    public long getLastModified(String path) {
+        return 0;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
+     */
+    public OutputStream getOutputStream(String path) {
+        return new ByteArrayOutputStream();
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
+     */
+    public boolean rename(String oldPath, String newPath) {
+        return false;
     }
 }

@@ -17,16 +17,22 @@
 package org.apache.sling.commons.compiler.impl;
 
 import java.io.BufferedReader;
-import java.io.CharArrayReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.sling.commons.compiler.ClassWriter;
-import org.apache.sling.commons.compiler.CompileUnit;
-import org.apache.sling.commons.compiler.CompilerEnvironment;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
@@ -48,122 +54,194 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>EclipseJavaCompiler</code> provides platform independant Java Compilation
- * support using the Eclipse Java Compiler (org.eclipse.jdt).
+ * The <code>EclipseJavaCompiler</code> provides platform independant
+ * Java compilation support using the Eclipse Java Compiler (org.eclipse.jdt).
  *
- * @scr.component metatype="no"
- * @scr.service interface="org.apache.sling.commons.compiler.JavaCompiler"
  */
+@Component
+@Service(value=JavaCompiler.class)
 public class EclipseJavaCompiler implements JavaCompiler {
 
     /** Logger instance */
-    private static final Logger log = LoggerFactory.getLogger(EclipseJavaCompiler.class);
+    private final Logger logger = LoggerFactory.getLogger(EclipseJavaCompiler.class);
 
-    // the static problem factory
-    private static IProblemFactory PROBLEM_FACTORY =
-        new DefaultProblemFactory(Locale.getDefault());
+    @Reference
+    private ClassLoaderWriter classLoaderWriter;
 
-    public EclipseJavaCompiler() {
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    private ClassLoader classLoader;
+
+    /** the static problem factory */
+    private IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
+
+    /** the static policy. */
+    private final IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
+
+    /**
+     * Bind the class load provider.
+     * @param repositoryClassLoaderProvider the new provider
+     */
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.classLoader != null ) {
+            this.ungetClassLoader();
+        }
+        this.getClassLoader(rclp);
     }
 
     /**
-     * @see org.apache.sling.commons.compiler.JavaCompiler#compile(org.apache.sling.commons.compiler.CompileUnit[], org.apache.sling.commons.compiler.CompilerEnvironment, org.apache.sling.commons.compiler.ClassWriter, org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
+     * Unbind the class loader provider.
+     * @param repositoryClassLoaderProvider the old provider
      */
-    public boolean compile(CompileUnit[] units, CompilerEnvironment env,
-            ClassWriter classWriter, ErrorHandler errorHandler,
-            Options options) {
-
-        IErrorHandlingPolicy policy =
-            DefaultErrorHandlingPolicies.proceedWithAllProblems();
-
-        // output for non-error log messages
-        PrintWriter logWriter = null;
-
-        if (options == null) {
-            options = new Options();
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
+            this.ungetClassLoader();
         }
+    }
 
-        Map<String, String> props = new HashMap<String, String>();
+    /**
+     * Get the class loader
+     */
+    private void getClassLoader(final DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.classLoader = rclp.getDynamicClassLoader();
+    }
+
+    /**
+     * Unget the class loader
+     */
+    private void ungetClassLoader() {
+        this.classLoader = null;
+        this.dynamicClassLoaderManager = null;
+    }
+
+    /**
+     * @see org.apache.sling.commons.compiler.JavaCompiler#compile(org.apache.sling.commons.compiler.CompilationUnit[], org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
+     */
+    public boolean compile(final CompilationUnit[] units,
+                           final ErrorHandler errorHandler,
+                           final Options compileOptions) {
+        // make sure we have an options object (to avoid null checks all over the place)
+        final Options options = (compileOptions != null ? compileOptions : new Options());
+
+        // create properties for the settings object
+        final Map<String, String> props = new HashMap<String, String>();
         if (options.isGenerateDebugInfo()) {
             props.put("org.eclipse.jdt.core.compiler.debug.localVariable", "generate");
             props.put("org.eclipse.jdt.core.compiler.debug.lineNumber", "generate");
             props.put("org.eclipse.jdt.core.compiler.debug.sourceFile", "generate");
         }
-        String sourceVersion = options.getSourceVersion();
-        if (sourceVersion != null) {
-            props.put("org.eclipse.jdt.core.compiler.source", sourceVersion);
-            //options.put("org.eclipse.jdt.core.compiler.compliance", sourceVersion);
-            //options.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", sourceVersion);
+        if (options.getSourceVersion() != null) {
+            props.put("org.eclipse.jdt.core.compiler.source", options.getSourceVersion());
+            //props.put("org.eclipse.jdt.core.compiler.compliance", options.getSourceVersion());
+            //props.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", options.getSourceVersion());
         }
-        //options.put("org.eclipse.jdt.core.encoding", "UTF8");
-        CompilerOptions settings = new CompilerOptions(props);
+        if (options.getTargetVersion() != null) {
+            props.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", options.getTargetVersion());
+        }
+        props.put("org.eclipse.jdt.core.encoding", "UTF8");
 
-        CompileContext context = new CompileContext(units, env, errorHandler, classWriter);
+        // create the settings
+        final CompilerOptions settings = new CompilerOptions(props);
+        logger.debug("Compiling with settings {}.", settings);
 
-        if (log.isDebugEnabled()) {
-            log.debug(settings.toString());
+        // classloader
+        final ClassLoader loader;
+        if ( options.get(Options.KEY_CLASS_LOADER) != null ) {
+            loader = (ClassLoader)options.get(Options.KEY_CLASS_LOADER);
+        } else if ( options.get(Options.KEY_ADDITIONAL_CLASS_LOADER) != null ) {
+            final ClassLoader additionalClassLoader = (ClassLoader)options.get(Options.KEY_ADDITIONAL_CLASS_LOADER);
+            loader = new ClassLoader(this.classLoader) {
+                protected Class<?> findClass(String name)
+                throws ClassNotFoundException {
+                    return additionalClassLoader.loadClass(name);
+                }
+
+                protected URL findResource(String name) {
+                    return additionalClassLoader.getResource(name);
+                }
+            };
+        } else {
+            loader = this.classLoader;
         }
 
-        org.eclipse.jdt.internal.compiler.Compiler compiler =
+        // classloader writer
+        final ClassLoaderWriter writer = (options.get(Options.KEY_CLASS_LOADER_WRITER) != null ?
+                (ClassLoaderWriter)options.get(Options.KEY_CLASS_LOADER_WRITER) : this.classLoaderWriter);
+
+        // create the context
+        final CompileContext context = new CompileContext(units, errorHandler, writer, loader);
+
+        // create the compiler
+        final org.eclipse.jdt.internal.compiler.Compiler compiler =
                 new org.eclipse.jdt.internal.compiler.Compiler(
                         context,
-                        policy,
+                        this.policy,
                         settings,
                         context,
-                        PROBLEM_FACTORY,
-                        logWriter);
+                        this.problemFactory,
+                        null);
 
-        compiler.compile(context.sourceUnits());
+        // compile
+        compiler.compile(context.getSourceUnits());
 
-        context.cleanup();
-
-        return !context.hadErrors;
+        return !context.hasErrors;
     }
 
     //--------------------------------------------------------< inner classes >
 
-    private class CompileContext implements ICompilerRequestor, INameEnvironment {
+    private class CompileContext implements ICompilerRequestor, INameEnvironment, ErrorHandler {
 
-        boolean hadErrors;
-        HashMap<String,ICompilationUnit> compUnits;
+        private final Map<String,ICompilationUnit> compUnits;
 
-        ErrorHandler errorHandler;
-        ClassWriter classWriter;
+        private final ErrorHandler errorHandler;
+        private final ClassLoaderWriter classLoaderWriter;
+        private final ClassLoader classLoader;
 
-        CompilerEnvironment compEnv;
+        /** Flag indicating if we have an error. */
+        private boolean hasErrors = false;
 
-        CompileContext(CompileUnit[] units,
-        		CompilerEnvironment compEnv,
-        		ErrorHandler errorHandler,
-        		ClassWriter classWriter) {
-
-        	compUnits = new HashMap<String,ICompilationUnit>(units.length);
+        public CompileContext(final CompilationUnit[] units,
+         		              final ErrorHandler errorHandler,
+        		              final ClassLoaderWriter classWriter,
+        		              final ClassLoader classLoader) {
+        	this.compUnits = new HashMap<String,ICompilationUnit>();
             for (int i = 0; i < units.length; i++) {
-                CompilationUnitAdapter cua = new CompilationUnitAdapter(units[i]);
+                CompilationUnitAdapter cua = new CompilationUnitAdapter(units[i], this);
                 char[][] compoundName = CharOperation.arrayConcat(cua.getPackageName(), cua.getMainTypeName());
-                compUnits.put(CharOperation.toString(compoundName), new CompilationUnitAdapter(units[i]));
+                this.compUnits.put(CharOperation.toString(compoundName), new CompilationUnitAdapter(units[i], this));
             }
 
-        	this.compEnv = compEnv;
         	this.errorHandler = errorHandler;
-            this.classWriter = classWriter;
-            hadErrors = false;
+            this.classLoaderWriter = classWriter;
+            this.classLoader = classLoader;
         }
 
-        ICompilationUnit[] sourceUnits() {
+        /**
+         * @see org.apache.sling.commons.compiler.ErrorHandler#onError(java.lang.String, java.lang.String, int, int)
+         */
+        public void onError(String msg, String sourceFile, int line, int position) {
+            this.errorHandler.onError(msg, sourceFile, line, position);
+            this.hasErrors = true;
+        }
+
+        /**
+         * @see org.apache.sling.commons.compiler.ErrorHandler#onWarning(java.lang.String, java.lang.String, int, int)
+         */
+        public void onWarning(String msg, String sourceFile, int line, int position) {
+            this.errorHandler.onWarning(msg, sourceFile, line, position);
+        }
+
+        public ICompilationUnit[] getSourceUnits() {
         	return compUnits.values().toArray(
         			new ICompilationUnit[compUnits.size()]);
         }
 
-        //---------------------------------------------------< ICompilerRequestor >
         /**
-         * {@inheritDoc}
+         * @see org.eclipse.jdt.internal.compiler.ICompilerRequestor#acceptResult(org.eclipse.jdt.internal.compiler.CompilationResult)
          */
         public void acceptResult(CompilationResult result) {
-            if (result.hasErrors()) {
-                hadErrors = true;
-            }
-
             if (result.hasProblems()) {
                 CategorizedProblem[] problems = result.getProblems();
                 for (int i = 0; i < problems.length; i++) {
@@ -174,11 +252,11 @@ public class EclipseJavaCompiler implements JavaCompiler {
                     int pos = problem.getSourceStart();
 
                     if (problem.isError()) {
-                        errorHandler.onError(msg, fileName, line, pos);
+                        this.onError(msg, fileName, line, pos);
                     } else if (problem.isWarning()) {
-                        errorHandler.onWarning(msg, fileName, line, pos);
+                        this.onWarning(msg, fileName, line, pos);
                     } else {
-                        log.debug("unknown problem category: " + problem.toString());
+                        logger.debug("unknown problem category: {}", problem);
                     }
                 }
             }
@@ -187,16 +265,15 @@ public class EclipseJavaCompiler implements JavaCompiler {
                 ClassFile classFile = classFiles[i];
                 String className = CharOperation.toString(classFile.getCompoundName());
                 try {
-                    classWriter.write(className, classFile.getBytes());
-                } catch (Exception e) {
-                    log.error("failed to persist class " + className, e);
+                    this.write(className, classFile.getBytes());
+                } catch (IOException e) {
+                    this.onError("Unable to write class file: " + e.getMessage(), className, 0, 0);
                 }
             }
         }
 
-        //-------------------------------------------------< INameEnvironment >
         /**
-         * {@inheritDoc}
+         * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#findType(char[][])
          */
         public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
             // check 1st if type corresponds with any of current compilation units
@@ -208,7 +285,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
 
             // locate the class through the class loader
             try {
-                byte[] bytes = compEnv.findClass(CharOperation.toString(compoundTypeName));
+                byte[] bytes = this.findClass(CharOperation.toString(compoundTypeName));
                 if (bytes == null) {
                     return null;
                 }
@@ -221,78 +298,145 @@ public class EclipseJavaCompiler implements JavaCompiler {
         }
 
         /**
-         * {@inheritDoc}
+         * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#findType(char[], char[][])
          */
         public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName) {
             return findType(CharOperation.arrayConcat(packageName, typeName));
         }
 
         /**
-         * {@inheritDoc}
+         * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#isPackage(char[][], char[])
          */
         public boolean isPackage(char[][] parentPackageName, char[] packageName) {
             String fqn = CharOperation.toString(
                     CharOperation.arrayConcat(parentPackageName, packageName));
-            return compUnits.get(fqn) == null && compEnv.isPackage(fqn);
+            return compUnits.get(fqn) == null && this.isPackage(fqn);
         }
 
         /**
-         * {@inheritDoc}
+         * @see org.eclipse.jdt.internal.compiler.env.INameEnvironment#cleanup()
          */
         public void cleanup() {
-            compEnv.cleanup();
+            // nothing to do
+        }
+
+        /**
+         * Write the classfile
+         */
+        private void write(String name, byte[] data) throws IOException {
+            final OutputStream os = this.classLoaderWriter.getOutputStream('/' + name.replace('.', '/') + ".class");
+            os.write(data);
+            os.close();
+        }
+
+        private boolean isPackage(String result) {
+            String resourceName = result.replace('.', '/') + ".class";
+            if ( resourceName.startsWith("/") ) {
+                resourceName = resourceName.substring(1);
+            }
+            final InputStream is = this.classLoader.getResourceAsStream(resourceName);
+            if ( is != null ) {
+                try {
+                    is.close();
+                } catch (IOException ignore) {}
+            }
+            return is == null;
+        }
+
+        private byte[] findClass(String name) throws Exception {
+            final String resourceName = name.replace('.', '/') + ".class";
+            final InputStream is = this.classLoader.getResourceAsStream(resourceName);
+            if (is != null) {
+                try {
+                    byte[] buf = new byte[8192];
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream(buf.length);
+                    int count;
+                    while ((count = is.read(buf, 0, buf.length)) > 0) {
+                        baos.write(buf, 0, count);
+                    }
+                    baos.flush();
+                    return baos.toByteArray();
+                } finally {
+                    try {
+                        is.close();
+                    } catch (IOException ignore) {}
+                }
+            }
+            return null;
         }
     }
 
     private class CompilationUnitAdapter implements ICompilationUnit {
 
-        CompileUnit compUnit;
-        char[][] packageName;
+        private final ErrorHandler errorHandler;
+        private final CompilationUnit compUnit;
+        private final String mainTypeName;
+        private final String packageName;
 
-        CompilationUnitAdapter(CompileUnit compUnit) {
+        public CompilationUnitAdapter(final CompilationUnit compUnit, final ErrorHandler errorHandler) {
             this.compUnit = compUnit;
+            this.errorHandler = errorHandler;
+            final int pos = compUnit.getMainClassName().lastIndexOf('.');
+            if ( pos == -1 ) {
+                this.packageName = "";
+                this.mainTypeName = compUnit.getMainClassName();
+            } else {
+                this.packageName = compUnit.getMainClassName().substring(0, pos);
+                this.mainTypeName = compUnit.getMainClassName().substring(pos + 1);
+            }
         }
 
-        String extractPackageName(char[] contents) {
-            BufferedReader reader = new BufferedReader(new CharArrayReader(contents));
+        /**
+         * @see org.eclipse.jdt.internal.compiler.env.ICompilationUnit#getContents()
+         */
+        public char[] getContents() {
+            Reader fr = null;
             try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (line.startsWith("package")) {
-                        line = line.substring("package".length());
-                        line = line.substring(0, line.lastIndexOf(';'));
-                        return line.trim();
+                fr = this.compUnit.getSource();
+                final Reader reader = new BufferedReader(fr);
+                try {
+                    char[] chars = new char[8192];
+                    StringBuilder buf = new StringBuilder();
+                    int count;
+                    while ((count = reader.read(chars, 0, chars.length)) > 0) {
+                        buf.append(chars, 0, count);
                     }
+                    final char[] result = new char[buf.length()];
+                    buf.getChars(0, result.length, result, 0);
+                    return result;
+                } finally {
+                    reader.close();
                 }
             } catch (IOException e) {
-                // should never get here...
+                this.errorHandler.onError("Unable to read source file " + this.compUnit.getMainClassName() + " : " + e.getMessage(),
+                        this.compUnit.getMainClassName(), 0, 0);
+                return null;
+            } finally {
+                if ( fr != null ) {
+                    try { fr.close(); } catch (IOException ignore) {}
+                }
             }
-
-            // no package declaration found
-            return "";
         }
 
-        //-------------------------------------------------< ICompilationUnit >
-
-        public char[] getContents() {
-            return compUnit.getSourceFileContents();
-        }
-
+        /**
+         * @see org.eclipse.jdt.internal.compiler.env.ICompilationUnit#getMainTypeName()
+         */
         public char[] getMainTypeName() {
-            return compUnit.getMainTypeName().toCharArray();
+            return this.mainTypeName.toCharArray();
         }
 
+        /**
+         * @see org.eclipse.jdt.internal.compiler.env.ICompilationUnit#getPackageName()
+         */
         public char[][] getPackageName() {
-            if (packageName == null) {
-                String s = extractPackageName(compUnit.getSourceFileContents());
-                packageName = CharOperation.splitOn('.', s.toCharArray());
-            }
-            return packageName;
+            return CharOperation.splitOn('.', this.packageName.toCharArray());
         }
 
+        /**
+         * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
+         */
         public char[] getFileName() {
-            return compUnit.getSourceFileName().toCharArray();
+            return (this.mainTypeName + ".java").toCharArray();
         }
     }
 }
