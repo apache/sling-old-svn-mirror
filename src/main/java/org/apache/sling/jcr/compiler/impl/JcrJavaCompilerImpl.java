@@ -16,252 +16,146 @@
  */
 package org.apache.sling.jcr.compiler.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.CharArrayWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URL;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.commons.compiler.ClassWriter;
-import org.apache.sling.commons.compiler.CompileUnit;
-import org.apache.sling.commons.compiler.CompilerEnvironment;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.compiler.JcrJavaCompiler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>JcrJavaCompilerImpl</code> ...
  *
- * @scr.component metatype="no"
- * @scr.service interface="org.apache.sling.jcr.compiler.JcrJavaCompiler"
  */
+@Component
+@Service(value=JcrJavaCompiler.class)
 public class JcrJavaCompilerImpl implements JcrJavaCompiler {
 
-    /** Logger instance */
-    private final Logger log = LoggerFactory.getLogger(JcrJavaCompilerImpl.class);
-
-    /** @scr.reference */
+    @Reference
     protected JavaCompiler compiler;
 
-    /** @scr.reference */
-    protected DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    /** The class loader used to compile the classes. */
-    protected ClassLoader javaClassLoader;
-
-    /** @scr.reference */
+    @Reference
     protected SlingRepository repository;
 
-    /** The session. */
-    private Session session;
-
-    //------------------------------------------------------< JcrJavaCompiler >
-
-    /* (non-Javadoc)
-     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], java.lang.String, org.apache.sling.commons.compiler.ErrorHandler, boolean, java.lang.String)
+    /**
+     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], java.lang.String, org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
      */
-    public boolean compile(String[] srcFiles, String outputDir,
-            ErrorHandler errorHandler, boolean generateDebug, String javaVersion)
-            throws Exception {
-        return compile(srcFiles, outputDir, errorHandler, generateDebug, javaVersion, null);
-    }
+    public boolean compile(final String[] srcFiles,
+                           final String outputDir,
+                           final ErrorHandler errorHandler,
+                           final Options compilerOptions) {
+        // make sure we have options
+        final Options options = (compilerOptions == null ? new Options() : new Options(compilerOptions));
+        // open session
+        Session session = null;
+        try {
+            session = this.repository.loginAdministrative(null);
 
-
-    /* (non-Javadoc)
-     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], java.lang.String, org.apache.sling.commons.compiler.ErrorHandler, boolean, java.lang.String, java.lang.ClassLoader complementaryClassLoader)
-     */
-    public boolean compile(String[] srcFiles, String outputDir,
-            ErrorHandler errorHandler, boolean generateDebug,
-            String javaVersion, final ClassLoader complementaryClassLoader)
-            throws Exception {
-
-        final ClassLoader currentClassLoader = javaClassLoader;
-        final CompilerEnvironment compilerEnvironment;
-        if (complementaryClassLoader == null) {
-            compilerEnvironment = new JcrCompilerEnvironment(currentClassLoader);
-        } else {
-            ClassLoader loader = new ClassLoader(currentClassLoader) {
-                protected Class<?> findClass(String name)
-                        throws ClassNotFoundException {
-                    return complementaryClassLoader.loadClass(name);
+            // create class loader write if output dir is specified
+            ClassLoaderWriter classWriter;
+            if ( outputDir == null ) {
+                classWriter = null;
+            } else if (outputDir.startsWith("file://")) {
+                // write class files to local file system;
+                // only subdirectories of the system temp dir
+                // will be accepted
+                File tempDir = new File(System.getProperty("java.io.tmpdir"));
+                File outDir = new File(outputDir.substring("file://".length()));
+                if (!outDir.isAbsolute()) {
+                    outDir = new File(tempDir, outputDir.substring("file://".length()));
                 }
-
-                protected URL findResource(String name) {
-                    return complementaryClassLoader.getResource(name);
+                if (!outDir.getCanonicalPath().startsWith(tempDir.getCanonicalPath())) {
+                    throw new IOException("illegal outputDir (not a temp dir): " + outputDir);
                 }
-            };
-            compilerEnvironment = new JcrCompilerEnvironment(loader);
-        }
-
-        return compileInternal(srcFiles, outputDir, compilerEnvironment,
-            errorHandler, generateDebug, javaVersion);
-    }
-
-    public boolean compileInternal(String[] srcFiles,
-            String outputDir, CompilerEnvironment compilerEnvironment,
-            ErrorHandler errorHandler, boolean generateDebug, String javaVersion)
-            throws Exception {
-
-        if (javaVersion == null) {
-            javaVersion = System.getProperty("java.specification.version");
-        }
-
-        if (outputDir == null) {
-            throw new Exception("outputDir can not be null");
-        }
-
-        ErrorHandlerWrapper handler = new ErrorHandlerWrapper(errorHandler);
-
-        ClassWriter classWriter;
-        if (outputDir.startsWith("file://")) {
-            // write class files to local file system;
-            // only subdirectories of the system temp dir
-            // will be accepted
-            File tempDir = new File(System.getProperty("java.io.tmpdir"));
-            File outDir = new File(outputDir.substring("file://".length()));
-            if (!outDir.isAbsolute()) {
-                outDir = new File(tempDir, outputDir.substring("file://".length()));
-            }
-            if (!outDir.getCanonicalPath().startsWith(tempDir.getCanonicalPath())) {
-                throw new Exception("illegal outputDir (not a temp dir): " + outputDir);
-            }
-            outDir.mkdir();
-            classWriter = new FileClassWriter(outDir);
-        } else {
-            // write class files to the repository  (default)
-            if (!session.itemExists(outputDir)) {
-                throw new Exception("outputDir does not exist: " + outputDir);
-            }
-
-            Item item = session.getItem(outputDir);
-            if (item.isNode()) {
-                Node folder = (Node) item;
-                if (!folder.isNodeType("nt:folder")) {
-                    throw new Exception("outputDir must be a node of type nt:folder");
-                }
-                classWriter = new JcrClassWriter(folder);
+                outDir.mkdir();
+                classWriter = new FileClassWriter(outDir);
             } else {
-                throw new Exception("outputDir must be a node of type nt:folder");
-            }
-        }
-
-        CompileUnit[] units = new CompileUnit[srcFiles.length];
-        for (int i = 0; i < units.length; i++) {
-            units[i] = createCompileUnit(srcFiles[i]);
-        }
-
-        compiler.compile(units, compilerEnvironment, classWriter, handler,
-                new Options(javaVersion, generateDebug));
-
-        return handler.getNumErrors() == 0;
-    }
-
-    //--------------------------------------------------< CompilerEnvironment >
-
-    private static class JcrCompilerEnvironment implements CompilerEnvironment {
-
-        private final ClassLoader classLoader;
-
-        JcrCompilerEnvironment(final ClassLoader classLoader) {
-            this.classLoader = classLoader;
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * org.apache.sling.commons.compiler.CompilerEnvironment#findClass(java
-         * .lang.String)
-         */
-        public byte[] findClass(String className) throws Exception {
-            InputStream in = this.classLoader.getResourceAsStream(className.replace(
-                '.', '/')
-                + ".class");
-            if (in == null) {
-                return null;
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream(0x7fff);
-
-            try {
-                byte[] buffer = new byte[0x1000];
-                int read = 0;
-                while ((read = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, read);
+                // write class files to the repository  (default)
+                if (!session.itemExists(outputDir)) {
+                    throw new IOException("outputDir does not exist: " + outputDir);
                 }
-            } finally {
-                // out.close();
-                in.close();
-            }
 
-            return out.toByteArray();
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see
-         * org.apache.sling.commons.compiler.CompilerEnvironment#isPackage(java
-         * .lang.String)
-         */
-        public boolean isPackage(String packageName) {
-            InputStream in = this.classLoader.getResourceAsStream(packageName.replace(
-                '.', '/')
-                + ".class");
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignore) {
-                }
-                return false;
-            }
-            // FIXME need a better way to determine whether a name resolves
-            // to a package
-            int pos = packageName.lastIndexOf('.');
-            if (pos != -1) {
-                if (Character.isUpperCase(packageName.substring(pos + 1).charAt(
-                    0))) {
-                    return false;
+                Item item = session.getItem(outputDir);
+                if (item.isNode()) {
+                    Node folder = (Node) item;
+                    if (!folder.isNodeType("nt:folder")) {
+                        throw new IOException("outputDir must be a node of type nt:folder");
+                    }
+                    classWriter = new JcrClassWriter(folder);
+                } else {
+                    throw new IOException("outputDir must be a node of type nt:folder");
                 }
             }
-            return true;
-        }
 
-        /*
-         * (non-Javadoc)
-         * @see org.apache.sling.commons.compiler.CompilerEnvironment#cleanup()
-         */
-        public void cleanup() {
-        }
+            // create compilation units
+            CompilationUnit[] units = new CompilationUnit[srcFiles.length];
+            for (int i = 0; i < units.length; i++) {
+                units[i] = createCompileUnit(srcFiles[i], session);
+            }
 
+            if ( classWriter != null ) {
+                options.put(Options.KEY_CLASS_LOADER_WRITER, classWriter);
+            }
+
+            // and compile
+            return compiler.compile(units, errorHandler, options);
+        } catch (final IOException ioe) {
+            errorHandler.onError("Error while accessing repository: " + ioe.getMessage(),
+                    srcFiles[0], 0, 0);
+            return false;
+        } catch (final RepositoryException re) {
+            errorHandler.onError("Error while accessing repository: " + re.getMessage(),
+                    srcFiles[0], 0, 0);
+            return false;
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
+        }
     }
 
     //--------------------------------------------------------< misc. helpers >
 
-    private CompileUnit createCompileUnit(final String sourceFile) throws Exception {
-        final char[] chars = readTextResource(sourceFile);
+    private CompilationUnit createCompileUnit(final String sourceFile, final Session session)
+    throws RepositoryException, IOException {
+        final String source = readTextResource(sourceFile, session);
+        final String packageName = extractPackageName(source);
 
-        return new CompileUnit() {
+        return new CompilationUnit() {
 
-            public String getSourceFileName() {
-                return sourceFile;
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getMainClassName()
+             */
+            public String getMainClassName() {
+                return packageName + '.' + this.getMainTypeName();
             }
 
-            public char[] getSourceFileContents() {
-                return chars;
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getSource()
+             */
+            public Reader getSource() throws IOException {
+                return new StringReader(source);
             }
 
-            public String getMainTypeName() {
+            private String getMainTypeName() {
                 String className;
                 int pos = sourceFile.lastIndexOf(".java");
                 if (pos != -1) {
@@ -275,118 +169,42 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
         };
     }
 
-    private char[] readTextResource(String resourcePath)
-            throws RepositoryException, IOException {
-        String relPropPath = resourcePath.substring(1)
-                + "/jcr:content/jcr:data";
-        InputStream in = session.getRootNode().getProperty(relPropPath).getStream();
-        Reader reader = new InputStreamReader(in);
-        CharArrayWriter writer = new CharArrayWriter(0x7fff);
+    private String extractPackageName(final String contents) {
+        BufferedReader reader = new BufferedReader(new StringReader(contents));
         try {
-            char[] buffer = new char[0x1000];
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("package")) {
+                    line = line.substring("package".length());
+                    line = line.substring(0, line.lastIndexOf(';'));
+                    return line.trim();
+                }
+            }
+        } catch (IOException e) {
+            // should never get here...
+        }
+
+        // no package declaration found
+        return "";
+    }
+
+    private String readTextResource(final String resourcePath, final Session session)
+    throws RepositoryException, IOException {
+        final String relPropPath = resourcePath.substring(1) + "/jcr:content/jcr:data";
+        final InputStream in = session.getRootNode().getProperty(relPropPath).getStream();
+        final Reader reader = new InputStreamReader(in, "UTF-8");
+        final StringWriter writer = new StringWriter();
+        try {
+            final char[] buffer = new char[2048];
             int read = 0;
             while ((read = reader.read(buffer)) > 0) {
                 writer.write(buffer, 0, read);
             }
-            return writer.toCharArray();
+            writer.close();
+            return writer.toString();
         } finally {
-            //writer.close();
-            reader.close();
-        }
-    }
-
-    //--------------------------------------------------------< inner classes >
-
-    class ErrorHandlerWrapper implements ErrorHandler {
-
-        ErrorHandler handler;
-        int errors;
-        int warnings;
-
-        ErrorHandlerWrapper(ErrorHandler handler) {
-            this.handler = handler;
-            errors = 0;
-            warnings = 0;
-        }
-
-        int getNumErrors() {
-            return errors;
-        }
-
-        int getNumWarnings() {
-            return warnings;
-        }
-
-        public void onError(String msg, String sourceFile, int line, int position) {
-            log.debug("Error in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
-            errors++;
-            handler.onError(msg, sourceFile, line, position);
-        }
-
-        public void onWarning(String msg, String sourceFile, int line, int position) {
-            log.debug("Warning in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
-            warnings++;
-            handler.onWarning(msg, sourceFile, line, position);
-        }
-    }
-
-    /**
-     * Bind the class load provider.
-     * @param rclp the new provider
-     */
-    protected void bindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
-        if ( this.javaClassLoader != null ) {
-            this.ungetClassLoader();
-        }
-        this.getClassLoader(rclp);
-    }
-
-    /**
-     * Unbind the class loader provider.
-     * @param rclp the old provider
-     */
-    protected void unbindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoaderManager == rclp ) {
-            this.ungetClassLoader();
-        }
-    }
-
-    /**
-     * Get the class loader
-     */
-    private void getClassLoader(DynamicClassLoaderManager rclp) {
-        this.dynamicClassLoaderManager = rclp;
-        this.javaClassLoader = rclp.getDynamicClassLoader();
-    }
-
-    /**
-     * Unget the class loader
-     */
-    private void ungetClassLoader() {
-        this.dynamicClassLoaderManager = null;
-        this.javaClassLoader = null;
-    }
-
-    protected void bindRepository(final SlingRepository repo) {
-        if ( this.session != null ) {
-            this.session.logout();
-            this.session = null;
-        }
-        try {
-            this.session = repo.loginAdministrative(null);
-        } catch (RepositoryException re) {
-            log.error("Unable to open admin session.", re);
-        }
-        this.repository = repo;
-    }
-
-    protected void unbindRepository(final SlingRepository repo) {
-        if ( this.repository == repo ) {
-            if ( this.session != null ) {
-                this.session.logout();
-                this.session = null;
-            }
-            this.repository = null;
+            try { reader.close(); } catch (IOException ignore) {}
         }
     }
 }

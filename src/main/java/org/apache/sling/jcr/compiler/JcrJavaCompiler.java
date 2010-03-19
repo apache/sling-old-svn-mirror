@@ -17,6 +17,7 @@
 package org.apache.sling.jcr.compiler;
 
 import org.apache.sling.commons.compiler.ErrorHandler;
+import org.apache.sling.commons.compiler.Options;
 
 /**
  * The <code>JcrJavaCompiler</code> compiles Java source code stored in the
@@ -24,11 +25,15 @@ import org.apache.sling.commons.compiler.ErrorHandler;
  */
 public interface JcrJavaCompiler {
 
-    boolean compile(String[] srcFiles, String outputDir, ErrorHandler errorHandler,
-                    boolean generateDebug, String javaVersion) throws Exception;
-
-    boolean compile(String[] srcFiles, String outputDir,
-                           ErrorHandler errorHandler, boolean generateDebug,
-                           String javaVersion, ClassLoader complementaryClassLoader)
-            throws Exception;
+    /**
+     * @param srcFiles
+     * @param outputDir - optional
+     * @param errorHandler
+     * @param options - optional
+     * @since 2.0
+     */
+    boolean compile(String[] srcFiles,
+                    String   outputDir,
+                    ErrorHandler errorHandler,
+                    Options options);
 }
