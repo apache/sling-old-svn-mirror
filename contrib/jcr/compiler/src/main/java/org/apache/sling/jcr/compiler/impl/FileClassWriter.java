@@ -19,47 +19,69 @@ package org.apache.sling.jcr.compiler.impl;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import org.apache.sling.commons.compiler.ClassWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 
-class FileClassWriter implements ClassWriter {
-    
-    /** Logger instance */
-    private static final Logger log = LoggerFactory.getLogger(FileClassWriter.class);
+class FileClassWriter implements ClassLoaderWriter {
 
-    private File outputDir;
-    
+    private final File outputDir;
+
     FileClassWriter(File outputDir) {
         this.outputDir = outputDir;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.commons.compiler.ClassWriter#write(java.lang.String, byte[])
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
-    public void write(String className, byte[] data) throws Exception {
-        File classFile = new File(outputDir, className.replace('.', '/') + ".class");
+    public OutputStream getOutputStream(final String path) {
+        final String fileName;
+        if ( path.startsWith("/") ) {
+            fileName = path.substring(1);
+        } else {
+            fileName = path;
+        }
+        File classFile = new File(outputDir, fileName.replace('/', File.separatorChar));
         if (!classFile.getParentFile().exists()) {
             classFile.getParentFile().mkdirs();
         }
-        FileOutputStream out = new FileOutputStream(classFile);
-        boolean succeeded = false;
         try {
-            out.write(data);
-            succeeded = true;
-        } catch (IOException e) {
-            log.error("Failed to persist " + className + " at path " + classFile.getPath(), e);
-            // re-throw
-            throw e;
-        } finally {
-            try {
-                out.close();
-            } catch (IOException ignore) {
-            }
-            if (!succeeded) {
-                classFile.delete();
-            }
+            return new FileOutputStream(classFile);
+        } catch (IOException ioe) {
+            return null;
         }
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
+     */
+    public boolean delete(String path) {
+        // we don't need to implement this one
+        return false;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
+     */
+    public InputStream getInputStream(String path) throws IOException {
+        // we don't need to implement this one
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
+     */
+    public long getLastModified(String path) {
+        // we don't need to implement this one
+        return 0;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
+     */
+    public boolean rename(String oldPath, String newPath) {
+        // we don't need to implement this one
+        return false;
     }
 }

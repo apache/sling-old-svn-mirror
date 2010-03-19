@@ -17,65 +17,219 @@
 package org.apache.sling.jcr.compiler.impl;
 
 import java.io.ByteArrayInputStream;
-import java.util.Calendar;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-import org.apache.sling.commons.compiler.ClassWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 
-class JcrClassWriter implements ClassWriter {
-    
-    /** Logger instance */
-    private static final Logger log = LoggerFactory.getLogger(JcrClassWriter.class);
+class JcrClassWriter implements ClassLoaderWriter {
 
-    private Node outputFolder;
-    
+    private final Node outputFolder;
+
+    private static final String NT_FOLDER = "nt:folder";
+
     JcrClassWriter(Node outputFolder) {
         this.outputFolder = outputFolder;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.commons.compiler.ClassWriter#write(java.lang.String, byte[])
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
-    public void write(String className, byte[] data) throws Exception {
-        synchronized (outputFolder.getSession()) {
-            boolean succeeded = false;
-            try {
-                Node folder = outputFolder;
-                String[] names = className.split("\\.");
-                for (int i = 0; i < names.length - 1; i++) {
-                    if (folder.hasNode(names[i])) {
-                        folder = folder.getNode(names[i]);
-                    } else {
-                        folder = folder.addNode(names[i], "nt:folder");
+    public OutputStream getOutputStream(String path) {
+        return new RepositoryOutputStream(this.outputFolder, path);
+    }
+
+    /**
+     * Creates a folder hierarchy in the repository.
+     * We synchronize this method to reduce potential conflics.
+     * Although each write uses its own session it might occur
+     * that more than one session tries to create the same path
+     * (or parent path) at the same time. By synchronizing this
+     * we avoid this situation - however this method is written
+     * in a failsafe manner anyway.
+     */
+    private static boolean mkdirs(final Session session, String path) {
+        try {
+            // quick test
+            if (session.itemExists(path) && session.getItem(path).isNode()) {
+                return true;
+            }
+
+            // check path walking it down
+            Node current = session.getRootNode();
+            String[] names = path.split("/");
+            for (int i = 0; i < names.length; i++) {
+                if (names[i] == null || names[i].length() == 0) {
+                    continue;
+                } else if (current.hasNode(names[i])) {
+                    current = current.getNode(names[i]);
+                } else {
+                    final Node parentNode = current;
+                    try {
+                        // adding the node could cause an exception
+                        // for example if another thread tries to
+                        // create the node "at the same time"
+                        current = parentNode.addNode(names[i], NT_FOLDER);
+                        session.save();
+                    } catch (RepositoryException re) {
+                        // let's first refresh the session
+                        // we don't catch an exception here, because if
+                        // session refresh fails, we might have a serious problem!
+                        session.refresh(false);
+                        // let's check if the node is available now
+                        if ( parentNode.hasNode(names[i]) ) {
+                            current = parentNode.getNode(names[i]);
+                        } else {
+                            // we try it one more time to create the node - and fail otherwise
+                            current = parentNode.addNode(names[i], NT_FOLDER);
+                            session.save();
+                        }
                     }
                 }
-                String classFileName = names[names.length - 1] + ".class";
-                if (folder.hasNode(classFileName)) {
-                    folder.getNode(classFileName).remove();
-                }
-                Node file = folder.addNode(classFileName, "nt:file");
-                Node content = file.addNode("jcr:content", "nt:resource");
+            }
 
-                content.setProperty("jcr:mimeType", "application/octet-stream");
-                content.setProperty("jcr:data", new ByteArrayInputStream(data));
-                content.setProperty("jcr:lastModified", Calendar.getInstance());
-                succeeded = true;
+            return true;
+
+        } catch (RepositoryException re) {
+            // discard changes
+            try {
+                session.refresh(false);
             } catch (RepositoryException e) {
-                String p = outputFolder.getPath() + "/" + className.replace('.', '/') + ".class";
-                log.error("Failed to persist " + className + " at path " + p, e);
-                // re-throw
-                throw e;
-            } finally {
-                if (succeeded) {
-                    outputFolder.save();
-                } else {
-                    outputFolder.refresh(false);
-                }
+                // we simply ignore this
             }
         }
+
+        // false in case of error or no need to create
+        return false;
+    }
+
+    private static final class RepositoryOutputStream extends ByteArrayOutputStream {
+
+        private final String fileName;
+
+        private final Node outputFolder;
+
+        RepositoryOutputStream(final Node outputFolder,
+                               final String fileName) {
+            this.outputFolder = outputFolder;
+            this.fileName = fileName;
+        }
+
+        /**
+         * @see java.io.ByteArrayOutputStream#close()
+         */
+        public void close() throws IOException {
+            super.close();
+
+            try {
+                String fullPath = this.outputFolder.getPath();
+                if ( !fileName.startsWith("/") ) {
+                    fullPath = fullPath + '/';
+                }
+                fullPath = fullPath + fileName;
+
+                final int lastPos = fullPath.lastIndexOf('/');
+                final String path = (lastPos == -1 ? null : fullPath.substring(0, lastPos));
+                final String name = (lastPos == -1 ? fullPath : fullPath.substring(lastPos + 1));
+                if ( lastPos != -1 ) {
+                    if ( !JcrClassWriter.mkdirs(outputFolder.getSession(), path) ) {
+                        throw new IOException("Unable to create path for " + path);
+                    }
+                }
+                Node fileNode = null;
+                Node contentNode = null;
+                Node parentNode = null;
+                if (outputFolder.getSession().itemExists(fullPath)) {
+                    final Item item = outputFolder.getSession().getItem(fullPath);
+                    if (item.isNode()) {
+                        final Node node = item.isNode() ? (Node) item : item.getParent();
+                        if ("jcr:content".equals(node.getName())) {
+                            // replace the content properties of the jcr:content
+                            // node
+                            parentNode = node;
+                            contentNode = node;
+                        } else if (node.isNodeType("nt:file")) {
+                            // try to set the content properties of jcr:content
+                            // node
+                            parentNode = node;
+                            contentNode = node.getNode("jcr:content");
+                        } else { // fileName is a node
+                            // try to set the content properties of the node
+                            parentNode = node;
+                            contentNode = node;
+                        }
+                    } else {
+                        // replace property with an nt:file node (if possible)
+                        parentNode = item.getParent();
+                        item.remove();
+                        outputFolder.getSession().save();
+                        fileNode = parentNode.addNode(name, "nt:file");
+                    }
+                } else {
+                    if (lastPos <= 0) {
+                        parentNode = outputFolder.getSession().getRootNode();
+                    } else {
+                        Item parent = outputFolder.getSession().getItem(path);
+                        if (!parent.isNode()) {
+                            throw new IOException("Parent at " + path + " is not a node.");
+                        }
+                        parentNode = (Node) parent;
+                    }
+                    fileNode = parentNode.addNode(name, "nt:file");
+                }
+
+                // if we have a file node, create the contentNode
+                if (fileNode != null) {
+                    contentNode = fileNode.addNode("jcr:content", "nt:resource");
+                }
+
+                contentNode.setProperty("jcr:lastModified", System.currentTimeMillis());
+                contentNode.setProperty("jcr:data", new ByteArrayInputStream(buf, 0, size()));
+                contentNode.setProperty("jcr:mimeType", "application/octet-stream");
+
+                outputFolder.getSession().save();
+            } catch (RepositoryException re) {
+                throw (IOException)new IOException("Cannot write file " + fileName + ", reason: " + re.toString()).initCause(re);
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
+     */
+    public boolean delete(String path) {
+        // we don't need to implement this one
+        return false;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
+     */
+    public InputStream getInputStream(String path) throws IOException {
+        // we don't need to implement this one
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
+     */
+    public long getLastModified(String path) {
+        // we don't need to implement this one
+        return 0;
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
+     */
+    public boolean rename(String oldPath, String newPath) {
+        // we don't need to implement this one
+        return false;
     }
 }
