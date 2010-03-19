@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.scripting.java;
+package org.apache.sling.scripting.java.impl;
 
 import java.util.Iterator;
 import java.util.Map;

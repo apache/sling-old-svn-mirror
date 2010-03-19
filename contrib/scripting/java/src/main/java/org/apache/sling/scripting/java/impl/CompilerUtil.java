@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scripting.java;
+package org.apache.sling.scripting.java.impl;
 
 public class CompilerUtil {
 
@@ -38,27 +38,13 @@ public class CompilerUtil {
     }
 
     /**
-     * Create the class name from the source name
-     * @param sourcePath The source path
-     * @return The corresponding class file path.
-     */
-    public static String makeClassPath(String sourcePath) {
-        String str = sourcePath;
-        if (str.endsWith(".java")) {
-            str = str.substring(0, str.length() - 5);
-        }
-        return str;
-    }
-
-
-    /**
      * Converts the given identifier to a legal Java identifier
      *
      * @param identifier Identifier to convert
      *
      * @return Legal Java identifier corresponding to the given identifier
      */
-    public static final String makeJavaIdentifier(String identifier) {
+    private static final String makeJavaIdentifier(String identifier) {
         StringBuilder modifiedIdentifier =
             new StringBuilder(identifier.length());
         if (!Character.isJavaIdentifierStart(identifier.charAt(0))) {
@@ -83,7 +69,7 @@ public class CompilerUtil {
     /**
      * Mangle the specified character to create a legal Java class name.
      */
-    public static final String mangleChar(char ch) {
+    private static final String mangleChar(char ch) {
         char[] result = new char[5];
         result[0] = '_';
         result[1] = Character.forDigit((ch >> 12) & 0xf, 16);
@@ -108,7 +94,7 @@ public class CompilerUtil {
     /**
      * Test whether the argument is a Java keyword
      */
-    public static boolean isJavaKeyword(String key) {
+    private static boolean isJavaKeyword(String key) {
         int i = 0;
         int j = javaKeywords.length;
         while (i < j) {

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scripting.java;
+package org.apache.sling.scripting.java.impl;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +40,43 @@ import org.slf4j.LoggerFactory;
  */
 public class SlingIOProvider  {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
+    /** Default logger */
+    private final Logger logger = LoggerFactory.getLogger(SlingIOProvider.class);
 
     private ThreadLocal<ResourceResolver> requestResourceResolver;
 
     private final ClassLoaderWriter classLoaderWriter;
 
-    SlingIOProvider(final ClassLoaderWriter classLoaderWriter) {
+    private final JavaCompiler compiler;
+
+    private final CompilerOptions options;
+
+    /**
+     * Classloader
+     */
+    private final ClassLoader classLoader;
+
+    /**
+     * Servlet cache.
+     */
+    private final ServletCache servletCache = new ServletCache();
+
+    /**
+     * Constructor.
+     */
+    SlingIOProvider(final ClassLoaderWriter classLoaderWriter,
+                    final JavaCompiler compiler,
+                    final ClassLoader classLoader,
+                    final CompilerOptions options) {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
         this.classLoaderWriter = classLoaderWriter;
+        this.compiler = compiler;
+        this.classLoader = classLoader;
+        this.options = options;
+    }
+
+    void destroy() {
+        this.servletCache.destroy();
     }
 
     void setRequestResourceResolver(ResourceResolver resolver) {
@@ -61,6 +89,22 @@ public class SlingIOProvider  {
 
     // ---------- IOProvider interface -----------------------------------------
 
+    public JavaCompiler getCompiler() {
+        return this.compiler;
+    }
+
+    public ClassLoader getClassLoader() {
+        return this.classLoader;
+    }
+
+    public CompilerOptions getOptions() {
+        return this.options;
+    }
+
+    public ServletCache getServletCache() {
+        return this.servletCache;
+    }
+
     /**
      * Returns an InputStream for the file name which is looked up with the
      * ResourceProvider and retrieved from the Resource if the StreamProvider
@@ -68,11 +112,7 @@ public class SlingIOProvider  {
      */
     public InputStream getInputStream(String fileName)
     throws FileNotFoundException, IOException {
-        if ( fileName.startsWith(":") ) {
-            return this.classLoaderWriter.getInputStream(fileName.substring(1));
-        }
         try {
-
             Resource resource = getResourceInternal(fileName);
             if (resource == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
@@ -98,8 +138,8 @@ public class SlingIOProvider  {
      * returned.
      */
     public long lastModified(String fileName) {
-        if ( fileName.startsWith(":") ) {
-            return this.classLoaderWriter.getLastModified(fileName.substring(1));
+        if ( fileName.endsWith(".class") ) {
+            return this.classLoaderWriter.getLastModified(fileName);
         }
         try {
             Resource resource = getResourceInternal(fileName);
@@ -110,7 +150,7 @@ public class SlingIOProvider  {
             }
 
         } catch (SlingException se) {
-            log.error("Cannot get last modification time for " + fileName, se);
+            logger.error("Cannot get last modification time for " + fileName, se);
         }
 
         // fallback to "non-existant" in case of problems
@@ -121,36 +161,31 @@ public class SlingIOProvider  {
      * Returns an output stream to write to the repository.
      */
     public OutputStream getOutputStream(String fileName) {
-        return this.classLoaderWriter.getOutputStream(fileName.substring(1));
+        return this.classLoaderWriter.getOutputStream(fileName);
     }
 
-    /* package */URL getURL(String path) throws MalformedURLException {
+    public URL getURL(String path) throws MalformedURLException {
         try {
-            Resource resource = getResourceInternal(path);
-            return (resource != null) ? resource.adaptTo(URL.class) : null;
+            final Resource resource = getResourceInternal(path);
+            return resource != null ? resource.adaptTo(URL.class) : null;
         } catch (SlingException se) {
             throw (MalformedURLException) new MalformedURLException(
                 "Cannot get URL for " + path).initCause(se);
         }
     }
 
-    /* package */Set<String> getResourcePaths(String path) {
-        Set<String> paths = new HashSet<String>();
-
-        ResourceResolver resolver = requestResourceResolver.get();
-        if (resolver != null) {
-            try {
-                Resource resource = resolver.getResource(cleanPath(path));
-                if (resource != null) {
-                    Iterator<Resource> entries = resolver.listChildren(resource);
-                    while (entries.hasNext()) {
-                        paths.add(entries.next().getPath());
-                    }
+    public Set<String> getResourcePaths(final String path) {
+        final Set<String> paths = new HashSet<String>();
+        try {
+            final Resource resource = getResourceInternal(path);
+            if (resource != null) {
+                final Iterator<Resource> entries = resource.getResourceResolver().listChildren(resource);
+                while (entries.hasNext()) {
+                    paths.add(entries.next().getPath());
                 }
-            } catch (SlingException se) {
-                log.warn("getResourcePaths: Cannot list children of " + path,
-                    se);
             }
+        } catch (SlingException se) {
+            logger.warn("Unable to get resource at path " + path, se);
         }
 
         return paths.isEmpty() ? null : paths;
@@ -159,23 +194,10 @@ public class SlingIOProvider  {
     private Resource getResourceInternal(String path) throws SlingException {
         ResourceResolver resolver = requestResourceResolver.get();
         if (resolver != null) {
-            return resolver.getResource(cleanPath(path));
+            return resolver.getResource(path);
         }
 
         return null;
     }
 
-    // ---------- internal -----------------------------------------------------
-
-    private String cleanPath(String path) {
-        // replace backslash by slash
-        path = path.replace('\\', '/');
-
-        // cut off trailing slash
-        while (path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-
-        return path;
-    }
 }
