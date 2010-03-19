@@ -16,8 +16,6 @@
  */
 package org.apache.sling.jcr.jackrabbit.accessmanager;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,7 +35,6 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 
 /**
@@ -564,61 +561,4 @@ public class PrivilegesInfo {
 		}
 	}
 
-
-	/**
-	 * Checks whether the current user has been granted privileges
-	 * to update the properties of the specified principal.
-	 *  
-	 * @param session the JCR session for the current user
-	 * @param principalID the id of the principal to check
-	 * @return true if the current user has the privileges, false otherwise
-	 */
-	public boolean canUpdateAuthorizable(Session session, String principalID) {
-		try {
-			PrincipalManager principalManager = AccessControlUtil.getPrincipalManager(session);
-			Principal principal = principalManager.getPrincipal(principalID);
-			if (principal == null) {
-				return false;
-			}
-
-			String path = getAuthorizableItemPath(principal);
-			return canModifyProperties(session, path);
-		} catch (Exception e) {
-			//just eat it.
-			return false;
-		}
-	}
-	private String getAuthorizableItemPath(Principal principal)
-			throws NoSuchMethodException, IllegalAccessException,
-			InvocationTargetException {
-		//should check if principal implements ItemBasedPrincipal, but it is not visible here so use reflection instead
-		Method method = principal.getClass().getMethod("getPath");
-		String path = (String)method.invoke(principal);
-		return path;
-	}
-	
-	/**
-	 * Checks whether the current user has been granted privileges
-	 * to delete the specified principal.
-	 *  
-	 * @param session the JCR session for the current user
-	 * @param principalID the id of the principal to check
-	 * @return true if the current user has the privileges, false otherwise
-	 */
-	public boolean canDeleteAuthorizable(Session session, String principalID) {
-		try {
-			PrincipalManager principalManager = AccessControlUtil.getPrincipalManager(session);
-			Principal principal = principalManager.getPrincipal(principalID);
-			if (principal == null) {
-				return false;
-			}
-			
-			//should check if principal implements ItemBasedPrincipal, but it is not visible here so use reflection instead
-			String path = getAuthorizableItemPath(principal);
-			return canDelete(session, path);
-		} catch (Exception e) {
-			//just eat it.
-			return false;
-		}
-	}
 }
