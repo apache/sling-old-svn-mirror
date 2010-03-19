@@ -52,21 +52,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            !org.eclipse.*, *
-                        </Import-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.java,
-                            org.apache.sling.scripting.java.jdt,
-                            org.eclipse.jdt.*
+                            org.apache.sling.scripting.java.impl
                         </Private-Package>
-
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
-
-                        <Embed-Dependency>
-                            jasper*
-                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -78,9 +68,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                  <!-- No javadocs -->
+                     <!-- No javadocs -->
                     <excludePackageNames>
-                        org.apache.sling.scripting
+                        org.apache.sling.scripting.java.impl
                     </excludePackageNames>
                 </configuration>
             </plugin>
@@ -92,23 +82,26 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.0.8</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.api</artifactId>
             <version>2.0.2-incubator</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
             <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
 
-     <!-- We use the same eclipse jdt as the jsp bundle -->
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>jasper-jdt</artifactId>
-            <version>6.0.18</version>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.compiler</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
