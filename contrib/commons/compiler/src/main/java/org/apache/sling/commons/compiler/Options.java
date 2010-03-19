@@ -71,6 +71,13 @@ public class Options extends HashMap<String, Object> {
         this.put(KEY_GENERATE_DEBUG_INFO, true);
     }
 
+    /**
+     * Create a new options object based on an existing one.
+     */
+    public Options(final Options options) {
+        super(options);
+    }
+
     public String getSourceVersion() {
         return (String) this.get(KEY_SOURCE_VERSION);
     }
