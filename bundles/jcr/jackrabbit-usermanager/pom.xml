@@ -60,8 +60,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+						<Export-Package>
+                            org.apache.sling.jackrabbit.usermanager;version=${pom.version},
+						</Export-Package>
                         <Private-Package>
-                            org.apache.sling.jackrabbit.usermanager.*
+                            org.apache.sling.jackrabbit.usermanager.impl.*
                         </Private-Package>
                     </instructions>
                 </configuration>

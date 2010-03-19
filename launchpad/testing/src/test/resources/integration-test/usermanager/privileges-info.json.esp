@@ -1,0 +1,11 @@
+{
+<% 
+   var privilegesInfo = sling.getService(Packages.org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo);
+   var authorizable = resource.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Authorizable);
+%>
+	"canAddUser" : <%=privilegesInfo.canAddUser(currentSession)%>,
+	"canAddGroup" : <%=privilegesInfo.canAddGroup(currentSession)%>,
+	"canUpdateProperties" : <%=privilegesInfo.canUpdateProperties(currentSession, authorizable.getID())%>,
+	"canRemove" : <%=privilegesInfo.canRemove(currentSession, authorizable.getID())%>,
+	"canUpdateGroupMembers" : <%=privilegesInfo.canUpdateGroupMembers(currentSession, authorizable.getID())%>
+}
