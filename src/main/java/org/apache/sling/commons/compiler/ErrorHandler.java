@@ -17,25 +17,25 @@
 package org.apache.sling.commons.compiler;
 
 /**
- *
+ * The error handler for the compilation.
  */
 public interface ErrorHandler {
 
     /**
-     *
-     * @param msg
-     * @param sourceFile
-     * @param line
-     * @param position
+     * Notify the handler of an error.
+     * @param msg The error message.
+     * @param sourceFile The source file the error occured in
+     * @param line The source line number
+     * @param position The column
      */
     void onError(String msg, String sourceFile, int line, int position);
 
     /**
-     *
-     * @param msg
-     * @param sourceFile
-     * @param line
-     * @param position
+     * Notify the handler of a warning.
+     * @param msg The warning message.
+     * @param sourceFile The source file the warning occured in
+     * @param line The source line number
+     * @param position The column
      */
     void onWarning(String msg, String sourceFile, int line, int position);
 }

@@ -16,7 +16,21 @@
  */
 package org.apache.sling.commons.compiler;
 
-public class Options {
+import java.util.HashMap;
+
+/**
+ * Options for the compilation process.
+ */
+public class Options extends HashMap<String, Object> {
+
+    /** The key for the source version. */
+    public static final String KEY_SOURCE_VERSION = "sourceVersion";
+
+    /** The key for the target version. */
+    public static final String KEY_TARGET_VERSION = "targetVersion";
+
+    /** The key for the generate debug info flag. */
+    public static final String KEY_GENERATE_DEBUG_INFO = "generateDebugInfo";
 
     public static final String VERSION_RUNTIME = null;
     public static final String VERSION_1_1 = "1.1";
@@ -24,33 +38,54 @@ public class Options {
     public static final String VERSION_1_3 = "1.3";
     public static final String VERSION_1_4 = "1.4";
     public static final String VERSION_1_5 = "1.5";
-    public static final String VERSION_1_6 = "1.6"; 
+    public static final String VERSION_1_6 = "1.6";
+    public static final String VERSION_1_7 = "1.7";
 
-    protected String sourceVersion;
-    protected boolean generateDebugInfo;
+    /** The key for the class loader writer.
+     * By default the registered class loader writer service is used. */
+    public static final String KEY_CLASS_LOADER_WRITER = "classLoaderWriter";
 
+    /**
+     * The key for the class loader.
+     * By default the commons dynamic classloader is used.
+     * This property overrides the classloader and ignores the
+     * {@link #KEY_ADDITIONAL_CLASS_LOADER} completly!
+     */
+    public static final String KEY_CLASS_LOADER = "classLoader";
+
+    /**
+     * The key for the additional class loader.
+     * By default the commons dynamic classloader is used.
+     * If this property is used and the {@link #KEY_CLASS_LOADER}
+     * property is not defined, a classloader with the dynamic
+     * class loader (default) and the class loader specified here
+     * is used.
+     */
+    public static final String KEY_ADDITIONAL_CLASS_LOADER = "classLoader";
+
+    /**
+     * Default options with the following presets:
+     * - generate debug info : true
+     */
     public Options() {
-        this(VERSION_RUNTIME, true);
-    }
-    
-    public Options(String sourceVersion, boolean generateDebugInfo) {
-        this.sourceVersion = sourceVersion;
-        this.generateDebugInfo = generateDebugInfo;
+        this.put(KEY_GENERATE_DEBUG_INFO, true);
     }
 
     public String getSourceVersion() {
-        return sourceVersion;
+        return (String) this.get(KEY_SOURCE_VERSION);
     }
 
-    public void setSourceVersion(String sourceVersion) {
-        this.sourceVersion = sourceVersion;
+    /**
+     * @since 2.0
+     */
+    public String getTargetVersion() {
+        return (String) this.get(KEY_TARGET_VERSION);
     }
 
     public boolean isGenerateDebugInfo() {
-        return generateDebugInfo;
-    }
-
-    public void setGenerateDebugInfo(boolean generateDebugInfo) {
-        this.generateDebugInfo = generateDebugInfo;
+        if ( this.get(KEY_GENERATE_DEBUG_INFO) != null ) {
+            return (Boolean) this.get(KEY_GENERATE_DEBUG_INFO);
+        }
+        return false;
     }
 }
