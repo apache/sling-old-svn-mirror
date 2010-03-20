@@ -60,6 +60,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ContentLoaderService implements SynchronousBundleListener {
 
+    /** The manifest header to specify the workspace for initial content loading. */
+    public static final String CONTENT_WORKSPACE_HEADER = "Sling-Initial-Content-Workspace";
+
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
     private static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
     private static final String PROPERTY_CONTENT_LOADED_BY = "content-loaded-by";
@@ -135,20 +138,21 @@ public class ContentLoaderService implements SynchronousBundleListener {
         //
 
         Session session = null;
+        final Bundle bundle = event.getBundle();
         switch (event.getType()) {
             case BundleEvent.STARTING:
                 // register content when the bundle content is available
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
                 try {
-                    session = this.getSession();
-                    final boolean isUpdate = this.updatedBundles.remove(event.getBundle().getSymbolicName());
-                    initialContentLoader.registerBundle(session, event.getBundle(), isUpdate);
+                    session = this.getSession(bundle);
+                    final boolean isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
+                    initialContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
-                            + event.getBundle().getSymbolicName() + " ("
-                            + event.getBundle().getBundleId() + ")", t);
+                            + bundle.getSymbolicName() + " ("
+                            + bundle.getBundleId() + ")", t);
                 } finally {
                     this.ungetSession(session);
                 }
@@ -156,17 +160,17 @@ public class ContentLoaderService implements SynchronousBundleListener {
             case BundleEvent.UPDATED:
                 // we just add the symbolic name to the list of updated bundles
                 // we will use this info when the new start event is triggered
-                this.updatedBundles.add(event.getBundle().getSymbolicName());
+                this.updatedBundles.add(bundle.getSymbolicName());
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
-                    session = this.getSession();
-                    initialContentLoader.unregisterBundle(session, event.getBundle());
+                    session = this.getSession(bundle);
+                    initialContentLoader.unregisterBundle(session, bundle);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem unloading initial content of bundle "
-                            + event.getBundle().getSymbolicName() + " ("
-                            + event.getBundle().getBundleId() + ")", t);
+                            + bundle.getSymbolicName() + " ("
+                            + bundle.getBundleId() + ")", t);
                 } finally {
                     this.ungetSession(session);
                 }
@@ -247,10 +251,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
         }
 
-        Session session = null;
         try {
-            session = this.getSession();
-            this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
@@ -259,6 +260,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                    Session session = getSession(bundle);
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
                     try {
@@ -269,9 +271,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                                 + bundle.getSymbolicName() + " ("
                                 + bundle.getBundleId() + ")", t);
                     } finally {
-                        if ( session.hasPendingChanges() ) {
-                            session.refresh(false);
-                        }
+                        this.ungetSession(session);
                     }
                 } else {
                     ignored++;
@@ -287,8 +287,6 @@ public class ContentLoaderService implements SynchronousBundleListener {
         } catch (Throwable t) {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
-        } finally {
-            this.ungetSession(session);
         }
     }
 
@@ -311,11 +309,14 @@ public class ContentLoaderService implements SynchronousBundleListener {
     }
 
     /**
-     * Returns an administrative session to the default workspace.
+     * Returns an administrative session to the workspace
+     * specified in the bundle or, if none specified,
+     * the default workspace
      */
-    private Session getSession()
+    private Session getSession(Bundle bundle)
     throws RepositoryException {
-        return getRepository().loginAdministrative(null);
+        String workspace = (String) bundle.getHeaders().get(CONTENT_WORKSPACE_HEADER);
+        return getRepository().loginAdministrative(workspace);
     }
 
     /**

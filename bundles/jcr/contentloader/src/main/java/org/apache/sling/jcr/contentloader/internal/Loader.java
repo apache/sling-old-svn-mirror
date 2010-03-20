@@ -107,10 +107,12 @@ public class Loader {
      *
      * @param session
      * @param bundle
+     * @throws RepositoryException
      */
     public void registerBundle(final Session session,
                                final Bundle bundle,
-                               final boolean isUpdate) {
+                               final boolean isUpdate) throws RepositoryException {
+
         // if this is an update, we have to uninstall the old content first
         if ( isUpdate ) {
             this.unregisterBundle(session, bundle);
@@ -157,6 +159,7 @@ public class Loader {
         }
 
         try {
+            jcrContentHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
             // check if the content has already been loaded
             final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
@@ -225,6 +228,8 @@ public class Loader {
 
         } else {
             try {
+                jcrContentHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+
                 final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
                         session, bundle, false);
 
