@@ -154,7 +154,7 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
             pathMap.put(name, path);
         }
 
-        ResourceCollector lu = ResourceCollector.create(request);
+        ResourceCollector lu = ResourceCollector.create(request, "default");
         Collection<Resource> res = lu.getServlets(request.getResource().getResourceResolver());
         Iterator<Resource> rIter = res.iterator();
 

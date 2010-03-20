@@ -18,14 +18,15 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Workspace;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 
@@ -82,20 +83,27 @@ public class SlingServletResolverTest {
         };
 
         servlet = new MockSlingRequestHandlerServlet();
-        servletResolver = new SlingServletResolver();
-        // set resource resolver factory
-        final Field resolverField = servletResolver.getClass().getDeclaredField("resourceResolverFactory");
-        resolverField.setAccessible(true);
-        resolverField.set(servletResolver, factory);
+        servletResolver = new SlingServletResolver() {
+
+            @Override
+            String getWorkspaceName(SlingHttpServletRequest request) {
+                return getRequestWorkspaceName();
+            }
+
+        };
+
         // set sling repository
         final SlingRepository repository = this.context.mock(SlingRepository.class);
-        final Session session = this.context.mock(Session.class);
-        this.context.checking(new Expectations() {{
-            allowing(repository).loginAdministrative(with(aNull(String.class)));
-            will(returnValue(session));
-        }});
+        addExpectations(repository);
 
-        final Field repositoryField = servletResolver.getClass().getDeclaredField("repository");
+        Class<?> resolverClass = servletResolver.getClass().getSuperclass();
+
+        // set resource resolver factory
+        final Field resolverField = resolverClass.getDeclaredField("resourceResolverFactory");
+        resolverField.setAccessible(true);
+        resolverField.set(servletResolver, factory);
+
+        final Field repositoryField = resolverClass.getDeclaredField("repository");
         repositoryField.setAccessible(true);
         repositoryField.set(servletResolver, repository);
 
@@ -112,6 +120,8 @@ public class SlingServletResolverTest {
             ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
             SERVLET_EXTENSION);
         mockComponentContext.locateService(SERVLET_NAME, serviceReference);
+
+        configureComponentContext(mockComponentContext);
 
         servletResolver.bindServlet(serviceReference);
         servletResolver.activate(mockComponentContext);
@@ -132,6 +142,27 @@ public class SlingServletResolverTest {
         List<Resource> childRes = new ArrayList<Resource>();
         childRes.add(res);
         mockResourceResolver.addChildren(parent, childRes);
+    }
+
+    protected String getRequestWorkspaceName() {
+        return "fromRequest";
+    }
+
+    protected void configureComponentContext(MockComponentContext mockComponentContext) {
+    }
+
+    protected void addExpectations(final SlingRepository repository)
+            throws RepositoryException {
+        final Session session = this.context.mock(Session.class);
+        final Workspace workspace = this.context.mock(Workspace.class);
+        this.context.checking(new Expectations() {{
+            one(repository).loginAdministrative(with(aNull(String.class)));
+            will(returnValue(session));
+            one(session).getWorkspace();
+            will(returnValue(workspace));
+            one(workspace).getName();
+            will(returnValue("default"));
+        }});
     }
 
     @Test public void testAcceptsRequest() {
@@ -158,6 +189,7 @@ public class SlingServletResolverTest {
      *
      * @see org.apache.sling.api.servlets.OptingServlet#accepts
      */
+    @SuppressWarnings("serial")
     private static class MockSlingRequestHandlerServlet extends HttpServlet
             implements OptingServlet {
 
