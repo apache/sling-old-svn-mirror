@@ -52,4 +52,10 @@ public class JcrResourceConstants {
      * the primary node type is used as the resource super type.
      */
     public static final String SLING_RESOURCE_SUPER_TYPE_PROPERTY = "sling:resourceSuperType";
+
+    /**
+     * The name of the event property holding the workspace name.
+     * @since 2.0.8
+     */
+    public static final String PROPERTY_WORKSPACE = "workspace";
 }

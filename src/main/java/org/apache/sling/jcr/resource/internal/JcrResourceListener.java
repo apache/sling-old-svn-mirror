@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -50,6 +51,9 @@ public class JcrResourceListener implements EventListener {
 
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
+
+    /** The workspace for observation. */
+    private final String workspaceName;
 
     /** The session for observation. */
     private final Session session;
@@ -69,6 +73,7 @@ public class JcrResourceListener implements EventListener {
     /**
      * Constructor.
      * @param repository The repository to observe.
+     * @param workspaceName The workspace name to observe
      * @param factory    The resource resolver factory.
      * @param startPath  The observation root path
      * @param mountPrefix The mount path in the repository
@@ -76,12 +81,14 @@ public class JcrResourceListener implements EventListener {
      * @throws RepositoryException
      */
     public JcrResourceListener(final SlingRepository repository,
+                               final String workspaceName,
                                final JcrResourceResolverFactory factory,
                                final String startPath,
                                final String mountPrefix,
                                final ServiceTracker eventAdminTracker)
     throws RepositoryException {
-        this.session = repository.loginAdministrative(null);
+        this.workspaceName = workspaceName;
+        this.session = repository.loginAdministrative(workspaceName);
         this.resolver = factory.getResourceResolver(this.session);
         this.startPath = startPath;
         this.eventAdminTracker = eventAdminTracker;
@@ -184,6 +191,9 @@ public class JcrResourceListener implements EventListener {
                 }
                 final Dictionary<String, String> properties = new Hashtable<String, String>();
                 properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
+                if (workspaceName != null) {
+                    properties.put(JcrResourceConstants.PROPERTY_WORKSPACE, workspaceName);
+                }
                 final String resourceType = resource.getResourceType();
                 if ( resourceType != null ) {
                     properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());

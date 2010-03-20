@@ -19,10 +19,14 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.jcr.Credentials;
@@ -95,6 +99,12 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /**
+     * Special value which, if passed to listener.workspaces, will have resource
+     * events fired for all workspaces.
+     */
+    public static final String ALL_WORKSPACES = "*";
+
+    /**
      * @scr.property values.1="/apps" values.2="/libs"
      */
     public static final String PROP_PATH = "resource.resolver.searchpath";
@@ -151,6 +161,11 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
+    /**
+     * @scr.property cardinality="+"
+     */
+    private static final String PROP_LISTENER_WORKSPACES = "resource.resolver.listener.workspaces";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -187,8 +202,8 @@ public class JcrResourceResolverFactoryImpl implements
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
 
-    /** The resource listenr for the observation events. */
-    private JcrResourceListener resourceListener;
+    /** The resource listeners for the observation events. */
+    private Set<JcrResourceListener> resourceListeners;
 
     /** The service tracker for the event admin
      */
@@ -360,9 +375,24 @@ public class JcrResourceResolverFactoryImpl implements
                 e);
         }
 
+        String[] listenerWorkspaces = OsgiUtil.toStringArray(properties.get(PROP_LISTENER_WORKSPACES));
+
         // start observation listener
         try {
-            this.resourceListener = new JcrResourceListener(this.repository, this, "/", "/", this.eventAdminTracker);
+            if (listenerWorkspaces == null) {
+                this.resourceListeners =
+                    Collections.singleton(new JcrResourceListener(this.repository, null, this, "/", "/", this.eventAdminTracker));
+            } else {
+                if (Arrays.asList(listenerWorkspaces).contains(ALL_WORKSPACES)) {
+                    listenerWorkspaces = getAllWorkspaces();
+                }
+
+                this.resourceListeners = new HashSet<JcrResourceListener>(listenerWorkspaces.length);
+                for (String wspName : listenerWorkspaces) {
+                    this.resourceListeners.add(
+                            new JcrResourceListener(this.repository, wspName, this, "/", "/", this.eventAdminTracker));
+                }
+            }
         } catch (Exception e) {
             log.error(
                 "activate: Cannot create resource listener; resource events for JCR resources will be disabled.",
@@ -395,9 +425,11 @@ public class JcrResourceResolverFactoryImpl implements
             this.eventAdminTracker.close();
             this.eventAdminTracker = null;
         }
-        if ( this.resourceListener != null ) {
-            this.resourceListener.dispose();
-            this.resourceListener = null;
+        if ( this.resourceListeners != null && !this.resourceListeners.isEmpty() ) {
+            for ( JcrResourceListener resourceListener : this.resourceListeners ) {
+                resourceListener.dispose();
+            }
+            this.resourceListeners = null;
         }
         this.resourceDecoratorTracker.close();
     }
@@ -476,6 +508,21 @@ public class JcrResourceResolverFactoryImpl implements
             return new LoginException(re.getMessage(), re.getCause());
         }
         return new LoginException("Unable to login " + re.getMessage(), re);
+    }
+
+    /**
+     * Get an array of all workspaces.
+     */
+    private String[] getAllWorkspaces() throws RepositoryException {
+        Session session =  null;
+        try {
+            session = repository.loginAdministrative(null);
+            return session.getWorkspace().getAccessibleWorkspaceNames();
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
+        }
     }
 
     /**
