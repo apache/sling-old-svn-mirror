@@ -67,7 +67,7 @@ public class ScriptSelectionTest extends HelperTestBase {
 
         // Create mock request and get scripts from ResourceCollector
         final MockSlingHttpServletRequest req = makeRequest(method, selectors, extension);
-        final ResourceCollector u = ResourceCollector.create(req);
+        final ResourceCollector u = ResourceCollector.create(req, "default");
         final Collection<Resource> s = u.getServlets(req.getResource().getResourceResolver());
 
         if(expectedScript == null) {

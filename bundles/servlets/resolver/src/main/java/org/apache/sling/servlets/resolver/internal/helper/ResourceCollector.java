@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
+import org.apache.sling.servlets.resolver.internal.WorkspaceResourceResolver;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
 /**
@@ -79,6 +80,8 @@ public class ResourceCollector {
 
     private final String resourceSuperType;
 
+    private final String workspaceName;
+
     /**
      * Creates a <code>ResourceCollector</code> for the given
      * <code>request</code>. If the request is a GET or HEAD request, a
@@ -89,11 +92,12 @@ public class ResourceCollector {
      *
      * @param request The <code>SlingHttpServletRequest</code> for which to
      *            return a <code>ResourceCollector</code>.
+     * @param scriptResolver
      * @return The <code>ResourceCollector</code> to find servlets and scripts
      *         suitable for handling the <code>request</code>.
      */
-    public static ResourceCollector create(SlingHttpServletRequest request) {
-        return new ResourceCollector(request);
+    public static ResourceCollector create(SlingHttpServletRequest request, String workspaceName) {
+        return new ResourceCollector(request, workspaceName);
     }
 
     /**
@@ -109,7 +113,7 @@ public class ResourceCollector {
      *            is assumed.
      * @param resource the resource to invoke, the resource type and resource super type are taken from this resource.
      */
-    public ResourceCollector(String methodName, String baseResourceType, Resource resource) {
+    public ResourceCollector(String methodName, String baseResourceType, Resource resource, String workspaceName) {
         this.methodName = methodName;
         this.baseResourceType = (baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME);
         this.requestSelectors = new String[0];
@@ -119,9 +123,12 @@ public class ResourceCollector {
         this.isHtml = false;
         this.resourceType = resource.getResourceType();
         this.resourceSuperType = resource.getResourceSuperType();
+
+        this.workspaceName = workspaceName;
         // create the hash code once
         final String key = methodName + ':' + baseResourceType + ':' + extension + "::" +
-            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType);
+            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType) +
+            ':' + (this.workspaceName == null ? "" : this.workspaceName);
         this.hashCode = key.hashCode();
     }
 
@@ -131,13 +138,14 @@ public class ResourceCollector {
      *
      * @param methodName The <code>methodName</code> used to find scripts for.
      *            This must not be <code>null</code>.
+     * @param workspaceName The <code>workspaceName</code>.
      * @param baseResourceType The basic resource type to use as a final
      *            resource super type. If this is <code>null</code> the
      *            default value
      *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
      */
-    private ResourceCollector(SlingHttpServletRequest request) {
+    private ResourceCollector(SlingHttpServletRequest request, String workspaceName) {
         this.methodName = request.getMethod();
         this.baseResourceType = ServletResolverConstants.DEFAULT_SERVLET_NAME;
         this.resourceType = request.getResource().getResourceType();
@@ -151,9 +159,12 @@ public class ResourceCollector {
 
         isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
         isHtml = isGet && "html".equals(extension);
+
+        this.workspaceName = workspaceName;
         // create the hash code once
         final String key = methodName + ':' + baseResourceType + ':' + extension + ':' + requestpaInfo.getSelectorString() + ':' +
-            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType);
+            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType) +
+            ':' + (this.workspaceName == null ? "" : this.workspaceName);
         this.hashCode = key.hashCode();
     }
 
