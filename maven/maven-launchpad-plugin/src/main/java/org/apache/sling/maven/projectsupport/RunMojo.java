@@ -19,10 +19,12 @@ package org.apache.sling.maven.projectsupport;
 import static org.apache.felix.framework.util.FelixConstants.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,8 +33,12 @@ import java.util.Properties;
 
 import org.apache.felix.framework.Logger;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Notifiable;
@@ -62,6 +68,7 @@ public class RunMojo extends AbstractBundleListMojo implements Notifiable {
      * listens
      */
     private static final String PROP_PORT = "org.osgi.service.http.port";
+
     /** Return the log level code for the string */
     private static int toLogLevelInt(String level, int defaultLevel) {
         for (int i = 0; i < logLevels.length; i++) {
@@ -90,6 +97,24 @@ public class RunMojo extends AbstractBundleListMojo implements Notifiable {
      * @parameter expression="${felix.log.level}"
      */
     private String logLevel;
+
+    /**
+     * @parameter expression="${propertiesFile}"
+     *            default-value="src/test/config/sling.properties"
+     */
+    private File propertiesFile;
+
+    /**
+     * @component
+     */
+    private MavenFileFilter mavenFileFilter;
+
+    /**
+     * @parameter expression="${session}"
+     * @required
+     * @readonly
+     */
+    private MavenSession mavenSession;
 
     private ResourceProvider resourceProvider = new ResourceProvider() {
 
@@ -233,6 +258,27 @@ public class RunMojo extends AbstractBundleListMojo implements Notifiable {
             // prevent tons of needless WARN from the framework
             Logger logger = new Logger();
             logger.setLogLevel(Logger.LOG_ERROR);
+
+            if (propertiesFile.exists()) {
+                File tmp = null;
+                try {
+                    tmp = File.createTempFile("sling", "props");
+                    mavenFileFilter.copyFile(propertiesFile, tmp, true, project, null, true, System
+                            .getProperty("file.encoding"), mavenSession);
+                    Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
+                    for (Object key : loadedProps.keySet()) {
+                        props.put((String) key, (String) loadedProps.get(key));
+                    }
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Unable to create filtered properties file", e);
+                } catch (MavenFilteringException e) {
+                    throw new MojoExecutionException("Unable to create filtered properties file", e);
+                } finally {
+                    if (tmp != null) {
+                        tmp.delete();
+                    }
+                }
+            }
 
             // creating the instance launches the framework and we are done here
             sling = new Sling(this, logger, resourceProvider, props);
