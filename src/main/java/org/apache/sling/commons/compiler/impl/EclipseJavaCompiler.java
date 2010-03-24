@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -64,10 +65,10 @@ public class EclipseJavaCompiler implements JavaCompiler {
     /** Logger instance */
     private final Logger logger = LoggerFactory.getLogger(EclipseJavaCompiler.class);
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC)
     private ClassLoaderWriter classLoaderWriter;
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC)
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private ClassLoader classLoader;
@@ -197,7 +198,13 @@ public class EclipseJavaCompiler implements JavaCompiler {
 
         // get classloader and classloader writer
         final ClassLoader loader = this.getClassLoader(options);
+        if ( loader == null ) {
+            return new CompilationResultImpl("Class loader for compilation is not available.");
+        }
         final ClassLoaderWriter writer = this.getClassLoaderWriter(options);
+        if ( writer == null ) {
+            return new CompilationResultImpl("Class loader writer for compilation is not available.");
+        }
 
         // check sources for compilation
         boolean needsCompilation = isForceCompilation(options);

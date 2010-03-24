@@ -37,6 +37,13 @@ public class CompilationResultImpl implements CompilationResult {
 
     private final ClassLoader classLoader;
 
+    public CompilationResultImpl(final String errorMessage) {
+        this.ignoreWarnings = true;
+        this.classLoader = null;
+        this.compilationRequired = false;
+        this.onError(errorMessage, "<General>", 0, 0);
+    }
+
     public CompilationResultImpl(final ClassLoader classLoader) {
         this.ignoreWarnings = true;
         this.classLoader = classLoader;
