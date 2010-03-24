@@ -19,7 +19,6 @@ package org.apache.sling.scripting.java.impl;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
@@ -30,7 +29,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,16 +43,9 @@ public class SlingIOProvider  {
 
     private ThreadLocal<ResourceResolver> requestResourceResolver;
 
-    private final ClassLoaderWriter classLoaderWriter;
-
     private final JavaCompiler compiler;
 
     private final CompilerOptions options;
-
-    /**
-     * Classloader
-     */
-    private final ClassLoader classLoader;
 
     /**
      * Servlet cache.
@@ -64,14 +55,10 @@ public class SlingIOProvider  {
     /**
      * Constructor.
      */
-    SlingIOProvider(final ClassLoaderWriter classLoaderWriter,
-                    final JavaCompiler compiler,
-                    final ClassLoader classLoader,
+    SlingIOProvider(final JavaCompiler compiler,
                     final CompilerOptions options) {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-        this.classLoaderWriter = classLoaderWriter;
         this.compiler = compiler;
-        this.classLoader = classLoader;
         this.options = options;
     }
 
@@ -93,10 +80,6 @@ public class SlingIOProvider  {
         return this.compiler;
     }
 
-    public ClassLoader getClassLoader() {
-        return this.classLoader;
-    }
-
     public CompilerOptions getOptions() {
         return this.options;
     }
@@ -113,12 +96,12 @@ public class SlingIOProvider  {
     public InputStream getInputStream(String fileName)
     throws FileNotFoundException, IOException {
         try {
-            Resource resource = getResourceInternal(fileName);
+            final Resource resource = getResourceInternal(fileName);
             if (resource == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
             }
 
-            InputStream stream = resource.adaptTo(InputStream.class);
+            final InputStream stream = resource.adaptTo(InputStream.class);
             if (stream == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
             }
@@ -138,14 +121,11 @@ public class SlingIOProvider  {
      * returned.
      */
     public long lastModified(String fileName) {
-        if ( fileName.endsWith(".class") ) {
-            return this.classLoaderWriter.getLastModified(fileName);
-        }
         try {
-            Resource resource = getResourceInternal(fileName);
+            final Resource resource = getResourceInternal(fileName);
             if (resource != null) {
-                ResourceMetadata meta = resource.getResourceMetadata();
-                long modTime = meta.getModificationTime();
+                final ResourceMetadata meta = resource.getResourceMetadata();
+                final long modTime = meta.getModificationTime();
                 return (modTime > 0) ? modTime : 0;
             }
 
@@ -155,13 +135,6 @@ public class SlingIOProvider  {
 
         // fallback to "non-existant" in case of problems
         return -1;
-    }
-
-    /**
-     * Returns an output stream to write to the repository.
-     */
-    public OutputStream getOutputStream(String fileName) {
-        return this.classLoaderWriter.getOutputStream(fileName);
     }
 
     public URL getURL(String path) throws MalformedURLException {
