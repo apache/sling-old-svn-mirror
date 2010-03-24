@@ -41,8 +41,6 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -79,23 +77,10 @@ public class JavaScriptEngineFactory
     /**
      * @scr.reference
      */
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    /**
-     * @scr.reference
-     */
     private JavaCompiler javaCompiler;
-
-    /**
-     * The class loader
-     */
-    private ClassLoader javaClassLoader;
 
     /** @scr.reference */
     private ServletContext slingServletContext;
-
-    /** @scr.reference */
-    private ClassLoaderWriter classLoaderWriter;
 
     private SlingIOProvider ioProvider;
 
@@ -141,9 +126,7 @@ public class JavaScriptEngineFactory
      */
     @SuppressWarnings("unchecked")
     protected void activate(final ComponentContext componentContext) {
-        this.ioProvider = new SlingIOProvider(this.classLoaderWriter,
-                                              this.javaCompiler,
-                                              this.javaClassLoader,
+        this.ioProvider = new SlingIOProvider(this.javaCompiler,
                                               CompilerOptions.createOptions(componentContext.getProperties()));
         this.javaServletContext = new JavaServletContext(ioProvider,
             slingServletContext);
@@ -246,44 +229,6 @@ public class JavaScriptEngineFactory
             return wrapper;
         }
     }
-
-    /**
-     * Bind the class load provider.
-     * @param repositoryClassLoaderProvider the new provider
-     */
-    protected void bindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
-        if ( this.javaClassLoader != null ) {
-            this.ungetClassLoader();
-        }
-        this.getClassLoader(rclp);
-    }
-
-    /**
-     * Unbind the class loader provider.
-     * @param repositoryClassLoaderProvider the old provider
-     */
-    protected void unbindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoaderManager == rclp ) {
-            this.ungetClassLoader();
-        }
-    }
-
-    /**
-     * Get the class loader
-     */
-    private void getClassLoader(DynamicClassLoaderManager rclp) {
-        this.dynamicClassLoaderManager = rclp;
-        this.javaClassLoader = rclp.getDynamicClassLoader();
-    }
-
-    /**
-     * Unget the class loader
-     */
-    private void ungetClassLoader() {
-        this.dynamicClassLoaderManager = null;
-        this.javaClassLoader = null;
-    }
-    // ---------- Internal -----------------------------------------------------
 
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)

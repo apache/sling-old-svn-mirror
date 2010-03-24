@@ -17,7 +17,6 @@
 
 package org.apache.sling.scripting.java.impl;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,7 +28,8 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.compiler.CompileUnit;
+import org.apache.sling.commons.compiler.CompilationResult;
+import org.apache.sling.commons.compiler.CompilerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,23 +77,6 @@ public class ServletWrapper {
     }
 
     /**
-     * Get the servlet.
-     * @throws ServletException
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    private void getServlet()
-    throws IllegalAccessException, InstantiationException, ClassNotFoundException, ServletException {
-        destroy();
-
-        this.servletClass = this.ioProvider.getClassLoader().loadClass(this.className);
-        final Servlet servlet = (Servlet) servletClass.newInstance();
-        servlet.init(config);
-
-        theServlet = servlet;
-    }
-
-    /**
      * Call the servlet.
      * @param request The current request.
      * @param response The current response.
@@ -122,12 +105,9 @@ public class ServletWrapper {
                 synchronized (this) {
                     if (this.lastModificationTest == 0 ) {
                         try {
-                            if ( this.compile() || this.theServlet == null ) {
-                                // clear exception
-                                this.compileException = null;
-                                // (re)load the servlet class
-                                getServlet();
-                            }
+                            // clear exception
+                            this.compileException = null;
+                            this.compile();
                         } catch (Exception ex) {
                             // store exception for futher access attempts
                             this.compileException = ex;
@@ -186,48 +166,38 @@ public class ServletWrapper {
         this.lastModificationTest = 0;
     }
 
-    /**
-     * Check if the compiled class file is older than the source file
-     */
-    private boolean isOutDated() {
-        if ( this.lastModificationTest > 0 ) {
-            return false;
+    private void compile() throws Exception {
+        final CompilationUnit unit = new CompilationUnit(this.sourcePath, className, ioProvider);
+        final CompilationResult result = this.ioProvider.getCompiler().compile(new org.apache.sling.commons.compiler.CompilationUnit[] {unit},
+                ioProvider.getOptions());
+
+        final List<CompilerMessage> errors = result.getErrors();
+        if ( errors != null && errors.size() > 0 ) {
+            throw CompilerException.create(errors);
         }
-        final long sourceLastModified = this.ioProvider.lastModified(this.sourcePath);
+        if ( result.didCompile() || this.theServlet == null ) {
+            destroy();
 
-        final long targetLastModified = this.ioProvider.lastModified('/' + this.className.replace('.', '/') + ".class");
-        if (targetLastModified < 0) {
-            return true;
+            this.servletClass = result.loadCompiledClass(this.className);
+            final Servlet servlet = (Servlet) servletClass.newInstance();
+            servlet.init(config);
+
+            theServlet = servlet;
+
         }
-
-        return targetLastModified < sourceLastModified;
-    }
-
-    private boolean compile() throws Exception {
-        if (this.isOutDated()) {
-            final CompilationUnit unit = new CompilationUnit(this.sourcePath, className, ioProvider);
-            this.ioProvider.getCompiler().compile(new CompileUnit[] {unit}, unit, unit, unit, ioProvider.getOptions());
-
-            final List<CompilerError> errors = unit.getErrors();
-            if ( errors != null && errors.size() > 0 ) {
-                throw CompilerException.create(errors);
-            }
-            return true;
-        }
-        return false;
     }
 
     protected final static class CompilerException extends ServletException {
 
-        public static CompilerException create(List<CompilerError> errors) {
+        public static CompilerException create(List<CompilerMessage> errors) {
             final StringBuilder buffer = new StringBuilder();
             buffer.append("Compilation errors:\n");
-            for(final CompilerError e : errors) {
+            for(final CompilerMessage e : errors) {
                 buffer.append(e.getFile());
                 buffer.append(", line ");
-                buffer.append(e.getStartLine());
+                buffer.append(e.getLine());
                 buffer.append(", column ");
-                buffer.append(e.getStartColumn());
+                buffer.append(e.getColumn());
                 buffer.append(" : " );
                 buffer.append(e.getMessage());
                 buffer.append("\n");

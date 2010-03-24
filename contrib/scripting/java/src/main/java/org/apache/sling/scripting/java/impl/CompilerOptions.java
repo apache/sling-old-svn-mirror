@@ -32,13 +32,15 @@ public class CompilerOptions extends Options {
         CompilerOptions opts = new CompilerOptions();
 
         final Boolean classDebugInfo = (Boolean)props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO);
-        opts.setGenerateDebugInfo(classDebugInfo != null ? classDebugInfo : true);
+        opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo != null ? classDebugInfo : true);
 
         final String sourceVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M);
-        opts.setSourceVersion(sourceVM != null && sourceVM.length() > 0 ? sourceVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+        opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.length() > 0 ? sourceVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
 
         final String encoding = (String) props.get(JavaScriptEngineFactory.PROPERTY_ENCODING);
         opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
+
+        opts.put(Options.KEY_IGNORE_WARNINGS, true);
 
         return opts;
     }
