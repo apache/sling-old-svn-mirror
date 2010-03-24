@@ -1,5 +1,3 @@
-package org.apache.sling.event.impl.job;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.sling.event.impl.job;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.event.impl.job;
+
 import java.util.UUID;
 
 import org.apache.sling.event.impl.EventHelper;
