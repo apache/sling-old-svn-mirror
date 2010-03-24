@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -298,6 +299,8 @@ public abstract class EventHelper {
                             array = new Double[values.length];
                         } else if ( firstObject instanceof Long ) {
                             array = new Long[values.length];
+                        } else if ( firstObject instanceof BigDecimal) {
+                            array = new BigDecimal[values.length];
                         } else {
                             array = new String[values.length];
                         }
@@ -348,6 +351,8 @@ public abstract class EventHelper {
             val = valueFactory.createValue(((Double)eventValue).doubleValue());
         } else if (eventValue instanceof Boolean) {
             val = valueFactory.createValue((Boolean) eventValue);
+        } else if (eventValue instanceof BigDecimal) {
+            val = valueFactory.createValue((BigDecimal) eventValue);
         } else if (eventValue instanceof String) {
             val = valueFactory.createValue((String)eventValue);
         } else {
@@ -376,6 +381,8 @@ public abstract class EventHelper {
                 o = value.getLong(); break;
             case PropertyType.STRING:
                 o = value.getString(); break;
+            case PropertyType.DECIMAL:
+                o = value.getDecimal(); break;
             default: // this should never happen - we convert to a string...
                 o = value.getString();
         }
