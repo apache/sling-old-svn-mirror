@@ -24,8 +24,9 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
@@ -62,7 +63,39 @@ public class SlingRequestDispatcher implements RequestDispatcher {
     public void include(ServletRequest request, ServletResponse sResponse)
             throws ServletException, IOException {
 
-        // TODO: set the javax.servlet.include.* attributes
+        // guard access to the request and content data: If the request is
+        // not (wrapping) a SlingHttpServletRequest, accessing the request Data
+        // throws an IllegalArgumentException and we cannot continue
+        final ContentData cd;
+        try {
+            cd = RequestData.getRequestData(request).getContentData();
+        } catch (IllegalArgumentException iae) {
+            throw new ServletException(iae.getMessage());
+        }
+
+        // ClassCastException is not expected here because we operate in
+        // HTTP requests only (it cannot be excluded though if some client
+        // code uses a ServletRequestWrapper rather than an
+        // HttpServletRequestWrapper ...)
+        final HttpServletRequest hRequest = (HttpServletRequest) request;
+
+        // set the inclusion request attributes from the current request
+        final Object v1 = setAttribute(request,
+            SlingConstants.ATTR_REQUEST_CONTENT, cd.getResource());
+        final Object v2 = setAttribute(request,
+            SlingConstants.ATTR_REQUEST_SERVLET, cd.getServlet());
+        final Object v3 = setAttribute(request,
+            SlingConstants.ATTR_REQUEST_PATH_INFO, cd.getRequestPathInfo());
+        final Object v4 = setAttribute(request,
+            SlingConstants.ATTR_INCLUDE_CONTEXT_PATH, hRequest.getContextPath());
+        final Object v5 = setAttribute(request,
+            SlingConstants.ATTR_INCLUDE_PATH_INFO, hRequest.getPathInfo());
+        final Object v6 = setAttribute(request,
+            SlingConstants.ATTR_INCLUDE_QUERY_STRING, hRequest.getQueryString());
+        final Object v7 = setAttribute(request,
+            SlingConstants.ATTR_INCLUDE_REQUEST_URI, hRequest.getRequestURI());
+        final Object v8 = setAttribute(request,
+            SlingConstants.ATTR_INCLUDE_SERVLET_PATH, hRequest.getServletPath());
 
         try {
 
@@ -70,10 +103,17 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
         } finally {
 
-            // TODO: reset the javax.servlet.include.* attributes
+            // reset inclusion request attributes to previous values
+            request.setAttribute(SlingConstants.ATTR_REQUEST_CONTENT, v1);
+            request.setAttribute(SlingConstants.ATTR_REQUEST_SERVLET, v2);
+            request.setAttribute(SlingConstants.ATTR_REQUEST_PATH_INFO, v3);
+            request.setAttribute(SlingConstants.ATTR_INCLUDE_CONTEXT_PATH, v4);
+            request.setAttribute(SlingConstants.ATTR_INCLUDE_PATH_INFO, v5);
+            request.setAttribute(SlingConstants.ATTR_INCLUDE_QUERY_STRING, v6);
+            request.setAttribute(SlingConstants.ATTR_INCLUDE_REQUEST_URI, v7);
+            request.setAttribute(SlingConstants.ATTR_INCLUDE_SERVLET_PATH, v8);
 
         }
-
     }
 
     public void forward(ServletRequest request, ServletResponse response)
@@ -88,6 +128,16 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         // if already committed, which will not be the case because
         // we already tested for this condition
         response.reset();
+
+        // ensure inclusion information attributes are not set
+        request.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
+        request.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
+        request.removeAttribute(SlingConstants.ATTR_REQUEST_PATH_INFO);
+        request.removeAttribute(SlingConstants.ATTR_INCLUDE_CONTEXT_PATH);
+        request.removeAttribute(SlingConstants.ATTR_INCLUDE_PATH_INFO);
+        request.removeAttribute(SlingConstants.ATTR_INCLUDE_QUERY_STRING);
+        request.removeAttribute(SlingConstants.ATTR_INCLUDE_REQUEST_URI);
+        request.removeAttribute(SlingConstants.ATTR_INCLUDE_SERVLET_PATH);
 
         // now just include as normal
         dispatch(request, response);
@@ -115,8 +165,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         return uri + '/' + path;
     }
 
-    private void dispatch(ServletRequest request,
-            ServletResponse sResponse) throws ServletException, IOException {
+    private void dispatch(ServletRequest request, ServletResponse sResponse)
+            throws ServletException, IOException {
 
         /**
          * TODO: I have made some quick fixes in this method for SLING-221 and
@@ -176,6 +226,13 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             info);
     }
 
+    private Object setAttribute(final ServletRequest request,
+            final String name, final Object value) {
+        final Object oldValue = request.getAttribute(name);
+        request.setAttribute(name, value);
+        return oldValue;
+    }
+
     private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
 
         /** marker value for the resourceSupertType before trying to evaluate */
@@ -203,8 +260,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         @Override
         public String getResourceSuperType() {
             if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-                resourceSuperType = ResourceUtil.getResourceSuperType(this.getResourceResolver(),
-                        this.resourceType);
+                resourceSuperType = ResourceUtil.getResourceSuperType(
+                    this.getResourceResolver(), this.resourceType);
             }
             return resourceSuperType;
         }

@@ -53,9 +53,9 @@ public class SlingConstants {
     /**
      * The name of the request attribute containing the <code>Servlet</code>
      * which included the servlet currently being active (value is
-     * "org.apache.sling.api.include.servlet"). This attribute is
-     * <code>null</code> if the current servlet is the servlet handling the
-     * client request.
+     * "org.apache.sling.api.include.servlet"). This attribute is only set if
+     * the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
      * <p>
      * The type of the attribute value is <code>javax.servlet.Servlet</code>.
      */
@@ -63,16 +63,127 @@ public class SlingConstants {
 
     /**
      * The name of the request attribute containing the <code>Resource</code>
-     * underlying the <code>Servlet</code> which included the servlet
-     * currently being active (value is
-     * "org.apache.sling.api.include.resource"). This attribute is
-     * <code>null</code> if the current servlet is the servlet handling the
-     * client request.
+     * underlying the <code>Servlet</code> which included the servlet currently
+     * being active (value is "org.apache.sling.api.include.resource"). This
+     * attribute is only set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
      * <p>
      * The type of the attribute value is
      * <code>org.apache.sling.api.resource.Resource</code>.
      */
     public static final String ATTR_REQUEST_CONTENT = "org.apache.sling.api.include.resource";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>RequestPathInfo</code> underlying the <code>Servlet</code> which
+     * included the servlet currently being active (value is
+     * "org.apache.sling.api.include.request_path_info"). This attribute is only
+     * set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is
+     * <code>org.apache.sling.api.request.RequestPathInfo</code>.
+     */
+    public static final String ATTR_REQUEST_PATH_INFO = "org.apache.sling.api.include.request_path_info";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>HttpServletRequest.getRequestURI()</code> of the request which
+     * included the servlet currently being active underlying the
+     * <code>Servlet</code> which included the servlet currently being active
+     * (value is "javax.servlet.include.request_uri"). This attribute is only
+     * set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is <code>String</code>.
+     * <p>
+     * <b>Note:</b> In Sling, the
+     * <code>HttpServletRequest.getRequestURI()</code> method will always return
+     * the same result regardless of whether it is called from the client
+     * request processing servlet or script or from an included servlet or
+     * script. This request attribute is set for compatibility with the Servlet
+     * API specification.
+     */
+    public static final String ATTR_INCLUDE_REQUEST_URI = "javax.servlet.include.request_uri";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>HttpServletRequest.getContextPath()</code> of the request which
+     * included the servlet currently being active underlying the
+     * <code>Servlet</code> which included the servlet currently being active
+     * (value is "javax.servlet.include.context_path"). This attribute is only
+     * set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is <code>String</code>.
+     * <p>
+     * <b>Note:</b> In Sling, the
+     * <code>HttpServletRequest.getContextPath()</code> method will always
+     * return the same result regardless of whether it is called from the client
+     * request processing servlet or script or from an included servlet or
+     * script. This request attribute is set for compatibility with the Servlet
+     * API specification.
+     */
+    public static final String ATTR_INCLUDE_CONTEXT_PATH = "javax.servlet.include.context_path";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>HttpServletRequest.getServletPath()</code> of the request which
+     * included the servlet currently being active underlying the
+     * <code>Servlet</code> which included the servlet currently being active
+     * (value is "javax.servlet.include.servlet_path"). This attribute is only
+     * set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is <code>String</code>.
+     * <p>
+     * <b>Note:</b> In Sling, the
+     * <code>HttpServletRequest.getServletPath()</code> method will always
+     * return the same result regardless of whether it is called from the client
+     * request processing servlet or script or from an included servlet or
+     * script. This request attribute is set for compatibility with the Servlet
+     * API specification.
+     */
+    public static final String ATTR_INCLUDE_SERVLET_PATH = "javax.servlet.include.servlet_path";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>HttpServletRequest.getPathInfo()</code> of the request which
+     * included the servlet currently being active underlying the
+     * <code>Servlet</code> which included the servlet currently being active
+     * (value is "javax.servlet.include.path_info"). This attribute is only set
+     * if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is <code>String</code>.
+     * <p>
+     * <b>Note:</b> In Sling, the <code>HttpServletRequest.getPathInfo()</code>
+     * method will always return the same result regardless of whether it is
+     * called from the client request processing servlet or script or from an
+     * included servlet or script. This request attribute is set for
+     * compatibility with the Servlet API specification.
+     */
+    public static final String ATTR_INCLUDE_PATH_INFO = "javax.servlet.include.path_info";
+
+    /**
+     * The name of the request attribute containing the
+     * <code>HttpServletRequest.getQueryString()</code> of the request which
+     * included the servlet currently being active underlying the
+     * <code>Servlet</code> which included the servlet currently being active
+     * (value is "javax.servlet.include.query_string"). This attribute is only
+     * set if the serlvet or script is included via
+     * <code>RequestDispatcher.include</code> from another servlet or script.
+     * <p>
+     * The type of the attribute value is <code>String</code>.
+     * <p>
+     * <b>Note:</b> In Sling, the
+     * <code>HttpServletRequest.getQueryString()</code> method will always
+     * return the same result regardless of whether it is called from the client
+     * request processing servlet or script or from an included servlet or
+     * script. This request attribute is set for compatibility with the Servlet
+     * API specification.
+     */
+    public static final String ATTR_INCLUDE_QUERY_STRING = "javax.servlet.include.query_string";
 
     // ---------- Error handling -----------------------------------------------
 

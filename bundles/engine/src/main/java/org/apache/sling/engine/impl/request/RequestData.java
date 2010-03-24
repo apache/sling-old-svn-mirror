@@ -18,8 +18,6 @@
  */
 package org.apache.sling.engine.impl.request;
 
-import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_CONTENT;
-import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_SERVLET;
 import static org.apache.sling.engine.EngineConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.BufferedReader;
@@ -109,7 +107,7 @@ public class RequestData implements BufferProvider {
      * not be too small to prevent request aborts.
      */
     private static int maxCallCounter = DEFAULT_MAX_CALL_COUNTER;
-    
+
     /** The SlingMainServlet used for request dispatching and other stuff */
     private final SlingMainServlet slingMainServlet;
 
@@ -146,7 +144,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * The name of the currently active serlvet.
-     * 
+     *
      * @see #setActiveServletName(String)
      * @see #getActiveServletName()
      */
@@ -508,7 +506,7 @@ public class RequestData implements BufferProvider {
             if (requestData.servletCallCounter >= maxCallCounter) {
                 throw new TooManyCallsException(name);
             }
-            
+
             // replace the current servlet name in the request
             Object oldValue = request.getAttribute(SLING_CURRENT_SERVLET_NAME);
             request.setAttribute(SLING_CURRENT_SERVLET_NAME, name);
@@ -549,12 +547,6 @@ public class RequestData implements BufferProvider {
                     requestPathInfo.getResourcePath());
             }
 
-            // set the request attributes of the include content data
-            servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
-                currentContentData.getResource());
-            servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
-                currentContentData.getServlet());
-
             contentDataStack.add(currentContentData);
             parent = currentContentData;
         } else {
@@ -574,23 +566,6 @@ public class RequestData implements BufferProvider {
         if (contentDataStack != null && !contentDataStack.isEmpty()) {
             // remove the topmost content data object
             currentContentData = contentDataStack.removeLast();
-
-            if (contentDataStack.isEmpty()) {
-
-                // remove the request attributes if the stack is empty now
-                servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
-                servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
-
-            } else {
-
-                // otherwise reset the attributes of the including content data
-                ContentData including = contentDataStack.getLast();
-                servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
-                    including.getResource());
-                servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
-                    including.getServlet());
-
-            }
 
         } else {
             currentContentData = null;
@@ -649,7 +624,7 @@ public class RequestData implements BufferProvider {
     public AdapterManager getAdapterManager() {
         return slingMainServlet.getAdapterManager();
     }
-    
+
     // ---------- BufferProvider -----------------------------------------
 
     public BufferProvider getBufferProvider() {
