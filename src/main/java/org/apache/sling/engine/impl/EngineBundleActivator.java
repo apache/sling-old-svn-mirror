@@ -48,9 +48,10 @@ public class EngineBundleActivator implements BundleActivator {
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Settings Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = context.registerService(SlingSettingsService.class.getName(),
-                                                      service,
-                                                      props);
+        serviceRegistration = context.registerService(new String[] {
+                                               org.apache.sling.api.services.SlingSettingsService.class.getName(),
+                                               SlingSettingsService.class.getName()},
+                                           service, props);
         try {
             RequestHistoryConsolePlugin.initPlugin(context);
         } catch (Throwable ignore) {
