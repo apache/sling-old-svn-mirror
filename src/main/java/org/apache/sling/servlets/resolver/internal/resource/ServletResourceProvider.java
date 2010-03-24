@@ -69,7 +69,7 @@ public class ServletResourceProvider implements ResourceProvider {
         return resourcePaths.iterator();
     }
 
-    public String[] getSerlvetPaths() {
+    public String[] getServletPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
 
@@ -78,6 +78,6 @@ public class ServletResourceProvider implements ResourceProvider {
     public String toString() {
     	return getClass().getSimpleName()
     	+ ": servlet=" + servlet.getClass().getName()
-    	+ ", paths=" + Arrays.toString(getSerlvetPaths());
+    	+ ", paths=" + Arrays.toString(getServletPaths());
     }
 }
