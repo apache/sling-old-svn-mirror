@@ -95,7 +95,7 @@ public class SlingSettingsServiceImpl implements SlingSettingsService {
     }
 
     /**
-     * @see org.apache.sling.engine.SlingSettingsService#getSlingId()
+     * @see org.apache.sling.api.services.SlingSettingsService#getSlingId()
      */
     public String getSlingId() {
         return this.slingId;

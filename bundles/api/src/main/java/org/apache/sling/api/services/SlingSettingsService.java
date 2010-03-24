@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine;
+package org.apache.sling.api.services;
 
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
- * @deprecated Use the {@link org.apache.sling.api.services.SlingSettingsService}
+ *
+ * @since 2.1
  */
-@Deprecated
-public interface SlingSettingsService
-    extends org.apache.sling.api.services.SlingSettingsService {
+public interface SlingSettingsService {
 
     /**
      * The identifier of the running Sling instance.
