@@ -24,13 +24,17 @@ public interface JavaCompiler {
 
     /**
      * Compile the compilation units.
+     * This method checks if the compilation is necessary by using
+     * last modified check of the source to compile and the class
+     * file (if available).
+     * The compiler compiles all sources if at least one of the
+     * class files is out dated!
+     *
      * @param units The compilation units.
-     * @param errorHandler The error handler - this object is mandatory
      * @param options The compilation options - this object is optional
-     * @return <code>true</code> if compilation was successful
+     * @return The compilation result with more information.
      * @since 2.0
      */
-    boolean compile(CompilationUnit[] units,
-                    ErrorHandler errorHandler,
-                    Options options);
+    CompilationResult compile(CompilationUnit[] units,
+                              Options options);
 }

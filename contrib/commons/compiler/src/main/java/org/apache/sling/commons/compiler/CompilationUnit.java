@@ -38,4 +38,11 @@ public interface CompilationUnit {
      * @return the name of the top level public type.
      */
     String getMainClassName();
+
+    /**
+     * Return the last modified for the compilation unit.
+     * @return The last modified information or <code>-1</code> if
+     *         the information can't be detected.
+     */
+    long getLastModified();
 }

@@ -26,15 +26,15 @@ import java.io.Reader;
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
-import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.Options;
 
 /**
  * Test case for java 5 support
  */
 public class CompilerJava5Test extends TestCase
-        implements ErrorHandler, ClassLoaderWriter {
+        implements ClassLoaderWriter {
 
     public void testJava5Support() throws Exception {
         String sourceFile = "Java5Test";
@@ -45,20 +45,10 @@ public class CompilerJava5Test extends TestCase
         options.put(Options.KEY_CLASS_LOADER_WRITER, this);
         options.put(Options.KEY_CLASS_LOADER, this.getClass().getClassLoader());
 
-        assertTrue(new EclipseJavaCompiler().compile(new CompilationUnit[]{unit}, this, options));
+        final CompilationResult result = new EclipseJavaCompiler().compile(new CompilationUnit[]{unit}, options);
+        assertNotNull(result);
+        assertNull(result.getErrors());
     }
-
-    //---------------------------------------------------------< ErrorHandler >
-
-    public void onError(String msg, String sourceFile, int line, int position) {
-        System.out.println("Error in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
-    }
-
-    public void onWarning(String msg, String sourceFile, int line, int position) {
-        System.out.println("Warning in " + sourceFile + ", line " + line + ", pos. " + position + ": " + msg);
-    }
-
-    //----------------------------------------------------------< ClassLoaderWriter >
 
     //--------------------------------------------------------< misc. helpers >
 
@@ -78,6 +68,13 @@ public class CompilerJava5Test extends TestCase
             public Reader getSource() throws IOException {
                 InputStream in = getClass().getClassLoader().getResourceAsStream(sourceFile);
                 return new InputStreamReader(in, "UTF-8");
+            }
+
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getLastModified()
+             */
+            public long getLastModified() {
+                return 0;
             }
         };
     }
@@ -100,7 +97,7 @@ public class CompilerJava5Test extends TestCase
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
     public long getLastModified(String path) {
-        return 0;
+        return -1;
     }
 
     /**
