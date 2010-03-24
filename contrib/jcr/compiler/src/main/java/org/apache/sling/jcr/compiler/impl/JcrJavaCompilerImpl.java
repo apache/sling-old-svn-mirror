@@ -27,6 +27,7 @@ import java.io.StringWriter;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -34,8 +35,8 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
-import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -56,12 +57,12 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
     protected SlingRepository repository;
 
     /**
-     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], java.lang.String, org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
+     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], java.lang.String, org.apache.sling.commons.compiler.Options)
      */
-    public boolean compile(final String[] srcFiles,
-                           final String outputDir,
-                           final ErrorHandler errorHandler,
-                           final Options compilerOptions) {
+    public CompilationResult compile(final String[] srcFiles,
+                                     final String outputDir,
+                                     final Options compilerOptions)
+    throws Exception {
         // make sure we have options
         final Options options = (compilerOptions == null ? new Options() : new Options(compilerOptions));
         // open session
@@ -116,15 +117,7 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
             }
 
             // and compile
-            return compiler.compile(units, errorHandler, options);
-        } catch (final IOException ioe) {
-            errorHandler.onError("Error while accessing repository: " + ioe.getMessage(),
-                    srcFiles[0], 0, 0);
-            return false;
-        } catch (final RepositoryException re) {
-            errorHandler.onError("Error while accessing repository: " + re.getMessage(),
-                    srcFiles[0], 0, 0);
-            return false;
+            return compiler.compile(units, options);
         } finally {
             if ( session != null ) {
                 session.logout();
@@ -136,8 +129,8 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
 
     private CompilationUnit createCompileUnit(final String sourceFile, final Session session)
     throws RepositoryException, IOException {
-        final String source = readTextResource(sourceFile, session);
-        final String packageName = extractPackageName(source);
+        final Source source = readTextResource(sourceFile, session);
+        final String packageName = extractPackageName(source.contents);
 
         return new CompilationUnit() {
 
@@ -152,7 +145,14 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
              * @see org.apache.sling.commons.compiler.CompilationUnit#getSource()
              */
             public Reader getSource() throws IOException {
-                return new StringReader(source);
+                return new StringReader(source.contents);
+            }
+
+            /**
+             * @see org.apache.sling.commons.compiler.CompilationUnit#getLastModified()
+             */
+            public long getLastModified() {
+                return source.lastModified;
             }
 
             private String getMainTypeName() {
@@ -189,8 +189,9 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
         return "";
     }
 
-    private String readTextResource(final String resourcePath, final Session session)
+    private Source readTextResource(final String resourcePath, final Session session)
     throws RepositoryException, IOException {
+        final Source source = new Source();
         final String relPropPath = resourcePath.substring(1) + "/jcr:content/jcr:data";
         final InputStream in = session.getRootNode().getProperty(relPropPath).getStream();
         final Reader reader = new InputStreamReader(in, "UTF-8");
@@ -202,9 +203,17 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
                 writer.write(buffer, 0, read);
             }
             writer.close();
-            return writer.toString();
+            source.contents = writer.toString();
+            final String lastModPath = resourcePath + "/jcr:content/jcr:lastModified";
+            source.lastModified = session.itemExists(lastModPath) ? ((Property)session.getItem(lastModPath)).getLong() : -1;
+            return source;
         } finally {
             try { reader.close(); } catch (IOException ignore) {}
         }
+    }
+
+    private static final class Source {
+        public String contents;
+        public long lastModified;
     }
 }

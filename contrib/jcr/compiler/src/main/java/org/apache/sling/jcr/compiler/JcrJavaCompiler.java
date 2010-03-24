@@ -16,7 +16,7 @@
  */
 package org.apache.sling.jcr.compiler;
 
-import org.apache.sling.commons.compiler.ErrorHandler;
+import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.Options;
 
 /**
@@ -32,8 +32,8 @@ public interface JcrJavaCompiler {
      * @param options - optional
      * @since 2.0
      */
-    boolean compile(String[] srcFiles,
-                    String   outputDir,
-                    ErrorHandler errorHandler,
-                    Options options);
+    CompilationResult compile(String[] srcFiles,
+                              String   outputDir,
+                              Options options)
+    throws Exception;
 }
