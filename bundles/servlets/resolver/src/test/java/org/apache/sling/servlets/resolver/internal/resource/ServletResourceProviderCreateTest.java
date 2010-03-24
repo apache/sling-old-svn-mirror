@@ -60,7 +60,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(srp);
         srp.setServlet(TEST_SERVLET);
 
-        String[] paths = srp.getSerlvetPaths();
+        String[] paths = srp.getServletPaths();
         assertNotNull(paths);
         assertEquals(2, paths.length);
 
@@ -88,7 +88,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(srp);
         srp.setServlet(TEST_SERVLET);
 
-        String[] paths = srp.getSerlvetPaths();
+        String[] paths = srp.getServletPaths();
         assertNotNull(paths);
         assertEquals(1, paths.length);
 
@@ -115,7 +115,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(srp);
         srp.setServlet(TEST_SERVLET);
 
-        String[] paths = srp.getSerlvetPaths();
+        String[] paths = srp.getServletPaths();
         assertNotNull(paths);
         assertEquals(3, paths.length);
 
@@ -145,7 +145,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(srp);
         srp.setServlet(TEST_SERVLET);
 
-        String[] paths = srp.getSerlvetPaths();
+        String[] paths = srp.getServletPaths();
         assertNotNull(paths);
         assertEquals(1, paths.length);
 

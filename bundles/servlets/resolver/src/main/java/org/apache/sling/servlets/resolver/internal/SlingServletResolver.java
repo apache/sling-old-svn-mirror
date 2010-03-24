@@ -827,9 +827,9 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
 
         Dictionary<String, Object> params = new Hashtable<String, Object>();
-        params.put(ResourceProvider.ROOTS, provider.getSerlvetPaths());
+        params.put(ResourceProvider.ROOTS, provider.getServletPaths());
         params.put(Constants.SERVICE_DESCRIPTION, "ServletResourceProvider for Servlets at "
-                + Arrays.asList(provider.getSerlvetPaths()));
+                + Arrays.asList(provider.getServletPaths()));
 
         ServiceRegistration reg = context.getBundleContext().registerService(ResourceProvider.SERVICE_NAME, provider,
                 params);
