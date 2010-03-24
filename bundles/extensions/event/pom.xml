@@ -87,7 +87,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        org.apache.sling.event.impl
+                        org.apache.sling.event.impl,org.apache.sling.event.impl.job
                     </excludePackageNames>
                 </configuration>
             </plugin>
