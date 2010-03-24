@@ -32,14 +32,13 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
-import org.apache.sling.commons.compiler.ErrorHandler;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
@@ -101,7 +100,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
     }
 
     /**
-     * Get the class loader
+     * Get the commons dynamic class loader
      */
     private void getClassLoader(final DynamicClassLoaderManager rclp) {
         this.dynamicClassLoaderManager = rclp;
@@ -109,7 +108,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
     }
 
     /**
-     * Unget the class loader
+     * Unget the commons dynamic class loader
      */
     private void ungetClassLoader() {
         this.classLoader = null;
@@ -117,13 +116,109 @@ public class EclipseJavaCompiler implements JavaCompiler {
     }
 
     /**
-     * @see org.apache.sling.commons.compiler.JavaCompiler#compile(org.apache.sling.commons.compiler.CompilationUnit[], org.apache.sling.commons.compiler.ErrorHandler, org.apache.sling.commons.compiler.Options)
+     * Get the classloader for the compilation.
      */
-    public boolean compile(final CompilationUnit[] units,
-                           final ErrorHandler errorHandler,
-                           final Options compileOptions) {
+    private ClassLoader getClassLoader(final Options options) {
+        final ClassLoader loader;
+        if ( options.get(Options.KEY_CLASS_LOADER) != null ) {
+            loader = (ClassLoader)options.get(Options.KEY_CLASS_LOADER);
+        } else if ( options.get(Options.KEY_ADDITIONAL_CLASS_LOADER) != null ) {
+            final ClassLoader additionalClassLoader = (ClassLoader)options.get(Options.KEY_ADDITIONAL_CLASS_LOADER);
+            loader = new ClassLoader(this.classLoader) {
+                protected Class<?> findClass(String name)
+                throws ClassNotFoundException {
+                    return additionalClassLoader.loadClass(name);
+                }
+
+                protected URL findResource(String name) {
+                    return additionalClassLoader.getResource(name);
+                }
+            };
+        } else {
+            loader = this.classLoader;
+        }
+        return loader;
+    }
+
+    /**
+     * Get the class loader writer for the compilation.
+     */
+    private ClassLoaderWriter getClassLoaderWriter(final Options options) {
+        if (options.get(Options.KEY_CLASS_LOADER_WRITER) != null ) {
+            return (ClassLoaderWriter)options.get(Options.KEY_CLASS_LOADER_WRITER);
+        }
+        return this.classLoaderWriter;
+    }
+
+    /**
+     * Check if the compiled class file is older than the source file
+     */
+    private boolean isOutDated(final CompilationUnit unit,
+                               final ClassLoaderWriter writer) {
+        final long targetLastModified = writer.getLastModified('/' + unit.getMainClassName().replace('.', '/') + ".class");
+        if (targetLastModified < 0) {
+            return true;
+        }
+
+        return targetLastModified < unit.getLastModified();
+    }
+
+    /**
+     * Return the force compilation value
+     */
+    private boolean isForceCompilation(final Options options) {
+        final Boolean flag = (Boolean)options.get(Options.KEY_FORCE_COMPILATION);
+        if ( flag != null ) {
+            return flag;
+        }
+        return false;
+    }
+
+    /**
+     * Return the ignore warnings value
+     */
+    private boolean isIgnoreWarnings(final Options options) {
+        final Boolean flag = (Boolean)options.get(Options.KEY_IGNORE_WARNINGS);
+        if ( flag != null ) {
+            return flag;
+        }
+        return false;
+    }
+
+    private static final Options EMPTY_OPTIONS = new Options();
+
+    /**
+     * @see org.apache.sling.commons.compiler.JavaCompiler#compile(org.apache.sling.commons.compiler.CompilationUnit[], org.apache.sling.commons.compiler.Options)
+     */
+    public CompilationResult compile(final CompilationUnit[] units,
+                                     final Options compileOptions) {
         // make sure we have an options object (to avoid null checks all over the place)
-        final Options options = (compileOptions != null ? compileOptions : new Options());
+        final Options options = (compileOptions != null ? compileOptions : EMPTY_OPTIONS);
+
+        // get classloader and classloader writer
+        final ClassLoader loader = this.getClassLoader(options);
+        final ClassLoaderWriter writer = this.getClassLoaderWriter(options);
+
+        // check sources for compilation
+        boolean needsCompilation = isForceCompilation(options);
+        if ( !needsCompilation ) {
+            for(final CompilationUnit unit : units) {
+                if ( this.isOutDated(unit, writer) ) {
+                    needsCompilation = true;
+                    break;
+                }
+            }
+        }
+        if ( !needsCompilation ) {
+            logger.debug("All source files are recent - no compilation required.");
+            return new CompilationResultImpl(loader);
+        }
+
+        // delete old class files
+        for(final CompilationUnit unit : units) {
+            final String name = '/' + unit.getMainClassName().replace('.', '/') + ".class";
+            writer.delete(name);
+        }
 
         // create properties for the settings object
         final Map<String, String> props = new HashMap<String, String>();
@@ -146,32 +241,10 @@ public class EclipseJavaCompiler implements JavaCompiler {
         final CompilerOptions settings = new CompilerOptions(props);
         logger.debug("Compiling with settings {}.", settings);
 
-        // classloader
-        final ClassLoader loader;
-        if ( options.get(Options.KEY_CLASS_LOADER) != null ) {
-            loader = (ClassLoader)options.get(Options.KEY_CLASS_LOADER);
-        } else if ( options.get(Options.KEY_ADDITIONAL_CLASS_LOADER) != null ) {
-            final ClassLoader additionalClassLoader = (ClassLoader)options.get(Options.KEY_ADDITIONAL_CLASS_LOADER);
-            loader = new ClassLoader(this.classLoader) {
-                protected Class<?> findClass(String name)
-                throws ClassNotFoundException {
-                    return additionalClassLoader.loadClass(name);
-                }
-
-                protected URL findResource(String name) {
-                    return additionalClassLoader.getResource(name);
-                }
-            };
-        } else {
-            loader = this.classLoader;
-        }
-
-        // classloader writer
-        final ClassLoaderWriter writer = (options.get(Options.KEY_CLASS_LOADER_WRITER) != null ?
-                (ClassLoaderWriter)options.get(Options.KEY_CLASS_LOADER_WRITER) : this.classLoaderWriter);
-
+        // create the result
+        final CompilationResultImpl result = new CompilationResultImpl(isIgnoreWarnings(options), loader);
         // create the context
-        final CompileContext context = new CompileContext(units, errorHandler, writer, loader);
+        final CompileContext context = new CompileContext(units, result, writer, loader);
 
         // create the compiler
         final org.eclipse.jdt.internal.compiler.Compiler compiler =
@@ -186,51 +259,33 @@ public class EclipseJavaCompiler implements JavaCompiler {
         // compile
         compiler.compile(context.getSourceUnits());
 
-        return !context.hasErrors;
+        return result;
     }
 
     //--------------------------------------------------------< inner classes >
 
-    private class CompileContext implements ICompilerRequestor, INameEnvironment, ErrorHandler {
+    private class CompileContext implements ICompilerRequestor, INameEnvironment {
 
         private final Map<String,ICompilationUnit> compUnits;
 
-        private final ErrorHandler errorHandler;
+        private final CompilationResultImpl errorHandler;
         private final ClassLoaderWriter classLoaderWriter;
         private final ClassLoader classLoader;
 
-        /** Flag indicating if we have an error. */
-        private boolean hasErrors = false;
-
         public CompileContext(final CompilationUnit[] units,
-         		              final ErrorHandler errorHandler,
+         		              final CompilationResultImpl errorHandler,
         		              final ClassLoaderWriter classWriter,
         		              final ClassLoader classLoader) {
         	this.compUnits = new HashMap<String,ICompilationUnit>();
             for (int i = 0; i < units.length; i++) {
-                CompilationUnitAdapter cua = new CompilationUnitAdapter(units[i], this);
+                CompilationUnitAdapter cua = new CompilationUnitAdapter(units[i], errorHandler);
                 char[][] compoundName = CharOperation.arrayConcat(cua.getPackageName(), cua.getMainTypeName());
-                this.compUnits.put(CharOperation.toString(compoundName), new CompilationUnitAdapter(units[i], this));
+                this.compUnits.put(CharOperation.toString(compoundName), new CompilationUnitAdapter(units[i], errorHandler));
             }
 
         	this.errorHandler = errorHandler;
             this.classLoaderWriter = classWriter;
             this.classLoader = classLoader;
-        }
-
-        /**
-         * @see org.apache.sling.commons.compiler.ErrorHandler#onError(java.lang.String, java.lang.String, int, int)
-         */
-        public void onError(String msg, String sourceFile, int line, int position) {
-            this.errorHandler.onError(msg, sourceFile, line, position);
-            this.hasErrors = true;
-        }
-
-        /**
-         * @see org.apache.sling.commons.compiler.ErrorHandler#onWarning(java.lang.String, java.lang.String, int, int)
-         */
-        public void onWarning(String msg, String sourceFile, int line, int position) {
-            this.errorHandler.onWarning(msg, sourceFile, line, position);
         }
 
         public ICompilationUnit[] getSourceUnits() {
@@ -241,7 +296,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         /**
          * @see org.eclipse.jdt.internal.compiler.ICompilerRequestor#acceptResult(org.eclipse.jdt.internal.compiler.CompilationResult)
          */
-        public void acceptResult(CompilationResult result) {
+        public void acceptResult(org.eclipse.jdt.internal.compiler.CompilationResult result) {
             if (result.hasProblems()) {
                 CategorizedProblem[] problems = result.getProblems();
                 for (int i = 0; i < problems.length; i++) {
@@ -252,9 +307,9 @@ public class EclipseJavaCompiler implements JavaCompiler {
                     int pos = problem.getSourceStart();
 
                     if (problem.isError()) {
-                        this.onError(msg, fileName, line, pos);
+                        this.errorHandler.onError(msg, fileName, line, pos);
                     } else if (problem.isWarning()) {
-                        this.onWarning(msg, fileName, line, pos);
+                        this.errorHandler.onWarning(msg, fileName, line, pos);
                     } else {
                         logger.debug("unknown problem category: {}", problem);
                     }
@@ -267,7 +322,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
                 try {
                     this.write(className, classFile.getBytes());
                 } catch (IOException e) {
-                    this.onError("Unable to write class file: " + e.getMessage(), className, 0, 0);
+                    this.errorHandler.onError("Unable to write class file: " + e.getMessage(), className, 0, 0);
                 }
             }
         }
@@ -368,12 +423,12 @@ public class EclipseJavaCompiler implements JavaCompiler {
 
     private class CompilationUnitAdapter implements ICompilationUnit {
 
-        private final ErrorHandler errorHandler;
+        private final CompilationResultImpl errorHandler;
         private final CompilationUnit compUnit;
         private final String mainTypeName;
         private final String packageName;
 
-        public CompilationUnitAdapter(final CompilationUnit compUnit, final ErrorHandler errorHandler) {
+        public CompilationUnitAdapter(final CompilationUnit compUnit, final CompilationResultImpl errorHandler) {
             this.compUnit = compUnit;
             this.errorHandler = errorHandler;
             final int pos = compUnit.getMainClassName().lastIndexOf('.');

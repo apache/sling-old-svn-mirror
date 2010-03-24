@@ -63,6 +63,16 @@ public class Options extends HashMap<String, Object> {
      */
     public static final String KEY_ADDITIONAL_CLASS_LOADER = "classLoader";
 
+    /** The key to force the compilation - even if the class files are more recent.
+     * The value should be of type Boolean. */
+    public static final String KEY_FORCE_COMPILATION = "forceCompilation";
+
+    /** The key to ignore warnings - if this option is turned on, the
+     * resulting compilation result does not get the warnings issued
+     * by the compiler.
+     * The value should be of type Boolean. */
+    public static final String KEY_IGNORE_WARNINGS = "ignoreWarnings";
+
     /**
      * Default options with the following presets:
      * - generate debug info : true
