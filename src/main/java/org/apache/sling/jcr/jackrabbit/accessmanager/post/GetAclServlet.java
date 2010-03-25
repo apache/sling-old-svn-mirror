@@ -18,8 +18,10 @@ package org.apache.sling.jcr.jackrabbit.accessmanager.post;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -41,6 +43,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.slf4j.Logger;
@@ -191,13 +194,15 @@ public class GetAclServlet extends SlingAllMethodsServlet {
         	response.setContentType("application/json");
         	response.setCharacterEncoding("UTF-8");
 
-        	JSONObject jsonObj = new JSONObject();
+        	List<JSONObject> aclList = new ArrayList<JSONObject>();
         	Set<Entry<String, Map<String, Set<String>>>> entrySet = aclMap.entrySet();
         	for (Entry<String, Map<String, Set<String>>> entry : entrySet) {
         		String principalName = entry.getKey();
         		Map<String, Set<String>> value = entry.getValue();
-        		
-        		JSONObject aceObject = new JSONObject();
+
+            	JSONObject aceObject = new JSONObject();
+            	aceObject.put("principal", principalName);
+
         		Set<String> grantedSet = value.get("granted");
         		if (grantedSet != null) {
             		aceObject.put("granted", grantedSet);
@@ -208,12 +213,12 @@ public class GetAclServlet extends SlingAllMethodsServlet {
         			aceObject.put("denied", deniedSet);
         		}
 
-        		jsonObj.put(principalName, aceObject);
+        		aclList.add(aceObject);
 			}
-        	
+        	JSONArray jsonAclArray = new JSONArray(aclList);
 
             // do the dump
-        	jsonObj.write(response.getWriter());
+        	jsonAclArray.write(response.getWriter());
         } catch (AccessDeniedException ade) {
         	response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (ResourceNotFoundException rnfe) {
