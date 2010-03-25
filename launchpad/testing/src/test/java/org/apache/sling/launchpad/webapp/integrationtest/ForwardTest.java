@@ -103,6 +103,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         final String content = getContent(nodeUrlA + ".html", CONTENT_TYPE_HTML);
         assertTrue("Content includes ESP marker",content.contains("ESP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
+        IncludeTest.assertNoIncludeRequestAttributes(content);
     }
 
     public void testWithForward() throws IOException {
@@ -110,6 +111,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content includes ESP marker",content.contains("ESP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertTrue("Text of node A is not included (" + content + ")",!content.contains(testTextB));
+        IncludeTest.assertNoIncludeRequestAttributes(content);
     }
 
     public void testWithForwardAndExtension() throws IOException {
@@ -117,6 +119,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content includes ESP marker",content.contains("ESP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertTrue("Text of node A is not included (" + content + ")",!content.contains(testTextB));
+        IncludeTest.assertNoIncludeRequestAttributes(content);
     }
 
     public void testInfiniteLoopDetection() throws IOException {
@@ -141,5 +144,6 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertTrue("Text of node A is included (" + content + ")",!content.contains(testTextB));
         assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + forcedResourceType));
+        IncludeTest.assertNoIncludeRequestAttributes(content);
     }
 }
