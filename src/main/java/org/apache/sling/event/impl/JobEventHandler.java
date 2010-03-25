@@ -1579,13 +1579,6 @@ public class JobEventHandler
     }
 
     /**
-     * This is deprecated.
-     */
-    public Collection<Event> scheduledJobs(String topic) {
-        return this.getScheduledJobs(topic);
-    }
-
-    /**
      * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String)
      */
     public Collection<Event> getScheduledJobs(String topic) {

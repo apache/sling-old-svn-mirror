@@ -34,12 +34,6 @@ public interface JobStatusProvider {
     String PROPERTY_EVENT_ID = "slingevent:eventId";
 
     /**
-     * @deprecated Use {@link #getScheduledJobs(String)} instead.
-     */
-    @Deprecated
-    Collection<Event> scheduledJobs(String topic);
-
-    /**
      * Return a list of currently schedulded jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @return A non null collection.
