@@ -379,4 +379,14 @@ public class SlingConstants {
      * @since 2.1
      */
     public static final String SLING_HOME_URL = "sling.home.url";
+
+    /**
+     * The name of the request attribute providing the name of the currently
+     * executing servlet (value is "sling.core.current.servletName"). This
+     * attribute is set immediately before calling the
+     * <code>Servlet.service()</code> method and reset to any previously
+     * stored value after the service method returns.
+     * @since 2.1
+     */
+    public static final String SLING_CURRENT_SERVLET_NAME = "sling.core.current.servletName";
 }

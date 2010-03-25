@@ -64,7 +64,9 @@ public class EngineConstants {
      * attribute is set immediately before calling the
      * <code>Servlet.service()</code> method and reset to any previously
      * stored value after the service method returns.
+     * @deprecated Use {@link org.apache.sling.api.SlingConstants#SLING_CURRENT_SERVLET_NAME}
      */
+    @Deprecated
     public static final String SLING_CURRENT_SERVLET_NAME = "sling.core.current.servletName";
 
     /**
