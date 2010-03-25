@@ -102,6 +102,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content includes ESP marker",content.contains("ESP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertFalse("Nothing has been included",content.contains("<p>Including"));
+        assertNoIncludeRequestAttributes(content);
     }
 
     public void testWithInclude() throws IOException {
@@ -110,6 +111,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
+        assertIncludeRequestAttributes(content);
     }
 
     public void testWithIncludeAndExtension() throws IOException {
@@ -118,6 +120,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
+        assertIncludeRequestAttributes(content);
     }
 
     public void testInfiniteLoopDetection() throws IOException {
@@ -143,5 +146,47 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
         assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + testTextA));
+        assertIncludeRequestAttributes(content);
+    }
+
+    // also used by ForwardTest
+    static void assertIncludeRequestAttributes(final String content) {
+        assertIncludeRequestAttributes(content, "");
+    }
+
+    // also used by ForwardTest
+    static void assertNoIncludeRequestAttributes(final String content) {
+        assertIncludeRequestAttributes(content, "no");
+    }
+
+    private static void assertIncludeRequestAttributes(final String content, final String tag) {
+
+        // Servlet API attributes set on include
+        // except javax.servlet.include.query_string which not be set in request
+
+        assertRequestAttribute(content, tag,
+            "javax.servlet.include.request_uri");
+        assertRequestAttribute(content, tag,
+            "javax.servlet.include.context_path");
+        assertRequestAttribute(content, tag,
+            "javax.servlet.include.servlet_path");
+        assertRequestAttribute(content, tag, "javax.servlet.include.path_info");
+        assertRequestAttribute(content, tag,
+            "javax.servlet.include.request_uri");
+        assertRequestAttribute(content, tag,
+            "javax.servlet.include.request_uri");
+        assertRequestAttribute(content, tag,
+            "org.apache.sling.api.include.servlet");
+        assertRequestAttribute(content, tag,
+            "org.apache.sling.api.include.resource");
+        assertRequestAttribute(content, tag,
+            "org.apache.sling.api.include.request_path_info");
+    }
+
+    private static void assertRequestAttribute(final String content,
+            final String tag,
+            final String attrName) {
+        assertTrue("Expected content contains '-" + tag + "-" + attrName + "-'",
+            content.contains("-" + tag + "-" + attrName + "-"));
     }
 }

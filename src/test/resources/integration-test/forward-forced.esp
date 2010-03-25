@@ -19,6 +19,11 @@
  * under the License.
  */
  
+function testRequestAttribute(/* String */ name) {
+    var tag = (request.getAttribute(name) != null) ? "" : "no";
+    out.println("<p>-" + tag + "-" + name + "-</p>");
+}
+
 // used by ForwardTest
 %><html>
 	<body>
@@ -27,5 +32,20 @@
 		<div>
 		  Forced resource type:<%= resource.resourceType %></p>. 
 		</div>
+        <%
+          // Servlet API request include attributes
+          testRequestAttribute( "javax.servlet.include.request_uri" );
+          testRequestAttribute( "javax.servlet.include.context_path" );
+          testRequestAttribute( "javax.servlet.include.servlet_path" );
+          testRequestAttribute( "javax.servlet.include.path_info" );
+          testRequestAttribute( "javax.servlet.include.query_string" );
+          testRequestAttribute( "javax.servlet.include.request_uri" );
+          testRequestAttribute( "javax.servlet.include.request_uri" );
+          
+          // Sling API request include attributes
+          testRequestAttribute( "org.apache.sling.api.include.servlet" );
+          testRequestAttribute( "org.apache.sling.api.include.resource" );
+          testRequestAttribute( "org.apache.sling.api.include.request_path_info" );
+        %>
 	</body>
 </html>
