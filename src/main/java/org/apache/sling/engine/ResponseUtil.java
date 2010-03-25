@@ -21,7 +21,11 @@ package org.apache.sling.engine;
 import java.io.IOException;
 import java.io.Writer;
 
-/** Response-related utilities */
+/**
+ * Response-related utilities.
+ * @deprecated Use {@link org.apache.sling.api.request.ResponseUtil}
+ */
+@Deprecated
 public class ResponseUtil {
 
     private static class XmlEscapingWriter extends Writer {

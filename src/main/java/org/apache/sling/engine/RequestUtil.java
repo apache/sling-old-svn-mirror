@@ -25,19 +25,23 @@ import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * @deprecated Use {@link org.apache.sling.api.request.RequestUtil}
+ */
+@Deprecated
 public class RequestUtil {
 
     /**
      * Parses a header of the form:
-     * 
+     *
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; Parameter } .
      *            Paramter = name [ &quot;=&quot; value ] .
      * </pre>
-     * 
+     *
      * "," and ";" are not allowed within name and value
-     * 
+     *
      * @param value
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
@@ -69,15 +73,15 @@ public class RequestUtil {
 
     /**
      * Parses an <code>Accept-*</code> header of the form:
-     * 
+     *
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; &quot;q&quot; [ &quot;=&quot; value ] } .
      *            Paramter =  .
      * </pre>
-     * 
+     *
      * "," and ";" are not allowed within name and value
-     * 
+     *
      * @param value
      * @return A Map indexed by the Token names where the values are
      *         <code>Double</code> instances providing the value of the
@@ -139,7 +143,7 @@ public class RequestUtil {
     /**
      * Sets the named request attribute to the new value and returns the
      * previous value.
-     * 
+     *
      * @param request The request object whose attribute is to be set.
      * @param name The name of the attribute to be set.
      * @param value The new value of the attribute. If this is <code>null</code>
