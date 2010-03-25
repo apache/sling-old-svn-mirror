@@ -799,7 +799,8 @@ public class DefaultContentCreator implements ContentCreator {
 	 * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createAce(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[])
 	 */
 	public void createAce(String principalId,
-			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames)
+			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames,
+			String order)
 			throws RepositoryException {
 		final Node parentNode = this.parentNodeStack.peek();
 		Session session = parentNode.getSession();
@@ -812,7 +813,7 @@ public class DefaultContentCreator implements ContentCreator {
 
 		if ((grantedPrivilegeNames != null) || (deniedPrivilegeNames != null)) {
 			AccessControlUtil.replaceAccessControlEntry(session, resourcePath, principal,
-					grantedPrivilegeNames, deniedPrivilegeNames, null);
+					grantedPrivilegeNames, deniedPrivilegeNames, null, order);
 		}
 	}
 

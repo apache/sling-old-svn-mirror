@@ -140,12 +140,15 @@ public class ModifyAceServlet extends AbstractAccessPostServlet {
 			}
 		}
 
+		String order = request.getParameter("order");
+		
 		// Make the actual changes.
 		try {
 			AccessControlUtil.replaceAccessControlEntry(session, resourcePath, principal,
 					grantedPrivilegeNames.toArray(new String[grantedPrivilegeNames.size()]),
 					deniedPrivilegeNames.toArray(new String[deniedPrivilegeNames.size()]),
-					removedPrivilegeNames.toArray(new String[removedPrivilegeNames.size()]));
+					removedPrivilegeNames.toArray(new String[removedPrivilegeNames.size()]),
+					order);
 			if (session.hasPendingChanges()) {
 				session.save();
 			}

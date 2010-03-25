@@ -162,8 +162,17 @@ public interface ContentCreator {
      * @param principal the user or group id for the ACE
      * @param grantedPrivileges the set of privileges to grant the principal
      * @param deniedPrivileges the set of privileges to deny the principal (for users only)
+     * @param order specifies the position of the ACE in the containing ACL. (may be null)
+     *         Value should be one of these:
+     *         <table>
+     * 			<tr><td>first</td><td>Place the target ACE as the first amongst its siblings</td></tr>
+	 *			<tr><td>last</td><td>Place the target ACE as the last amongst its siblings</td></tr>
+	 * 			<tr><td>before xyz</td><td>Place the target ACE immediately before the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>after xyz</td><td>Place the target ACE immediately after the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>numeric</td><td>Place the target ACE at the specified index</td></tr>
+	 *         </table>
      * @throws RepositoryException
      */
-    void createAce(String principal, String [] grantedPrivileges, String [] deniedPrivileges )
+    void createAce(String principal, String [] grantedPrivileges, String [] deniedPrivileges, String order )
     throws RepositoryException;
 }

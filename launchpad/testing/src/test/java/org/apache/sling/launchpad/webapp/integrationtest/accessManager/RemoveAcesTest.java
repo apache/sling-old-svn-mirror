@@ -95,29 +95,36 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObj = new JSONObject(json);
-		String aceString = jsonObj.getString(testUserId);
-		assertNotNull(aceString);
-
-		JSONObject aceObject = new JSONObject(aceString);
+		JSONArray jsonArray = new JSONArray(json);
+		
+		if (addGroupAce) {
+			assertEquals(2, jsonArray.length());
+		} else {
+			assertEquals(1, jsonArray.length());
+		}
+		
+		JSONObject aceObject = jsonArray.optJSONObject(0);
 		assertNotNull(aceObject);
 		
-		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		String principalString = aceObject.optString("principal");
+		assertEquals(testUserId, principalString);
+		
+		JSONArray grantedArray = aceObject.optJSONArray("granted");
 		assertNotNull(grantedArray);
 		assertEquals("jcr:read", grantedArray.getString(0));
 
-		JSONArray deniedArray = aceObject.getJSONArray("denied");
+		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNotNull(deniedArray);
 		assertEquals("jcr:write", deniedArray.getString(0));
 
 		if (addGroupAce) {
-			aceString = jsonObj.getString(testGroupId);
-			assertNotNull(aceString);
-
-			aceObject = new JSONObject(aceString);
+			aceObject = jsonArray.optJSONObject(1);
 			assertNotNull(aceObject);
+			
+			principalString = aceObject.optString("principal");
+			assertEquals(testGroupId, principalString);
 
-			grantedArray = aceObject.getJSONArray("granted");
+			grantedArray = aceObject.optJSONArray("granted");
 			assertNotNull(grantedArray);
 			assertEquals("jcr:read", grantedArray.getString(0));
 		}
@@ -142,8 +149,9 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObj = new JSONObject(json);
-		assertTrue(jsonObj.isNull(testUserId));
+		JSONArray jsonArray = new JSONArray(json);
+		assertNotNull(jsonArray);
+		assertEquals(0, jsonArray.length());
 	}
 
 	//test removing multiple aces
@@ -164,8 +172,8 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObj = new JSONObject(json);
-		assertTrue(jsonObj.isNull(testUserId));
-		assertTrue(jsonObj.isNull(testGroupId));
+		JSONArray jsonArray = new JSONArray(json);
+		assertNotNull(jsonArray);
+		assertEquals(0, jsonArray.length());
 	}
 }

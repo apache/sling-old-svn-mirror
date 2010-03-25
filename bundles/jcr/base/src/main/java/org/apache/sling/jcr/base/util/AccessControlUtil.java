@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.base.util;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -211,7 +212,7 @@ public class AccessControlUtil {
     	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
 		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
-    
+
     /**
      * Replaces existing access control entries in the ACL for the specified
      * <code>principal</code> and <code>resourcePath</code>. Any existing granted
@@ -228,9 +229,50 @@ public class AccessControlUtil {
      * @param removedPrivilegeNames privileges which, if they exist, should be
      * removed for this principal and resource
      * @throws RepositoryException
+     * @deprecated use @link {@link #replaceAccessControlEntry(Session, String, Principal, String[], String[], String[], String)} instead.
      */
     public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal, 
-    			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames)
+			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames)
+    		throws RepositoryException {
+    	replaceAccessControlEntry(session, 
+    			resourcePath, 
+    			principal, 
+    			grantedPrivilegeNames, 
+    			deniedPrivilegeNames, 
+    			removedPrivilegeNames, 
+    			null);
+    }    
+    
+    /**
+     * Replaces existing access control entries in the ACL for the specified
+     * <code>principal</code> and <code>resourcePath</code>. Any existing granted
+     * or denied privileges which do not conflict with the specified privileges
+     * are maintained. Where conflicts exist, existing privileges are dropped.
+     * The end result will be at most two ACEs for the principal: one for grants
+     * and one for denies. Aggregate privileges are disaggregated before checking
+     * for conflicts.
+     * @param session
+     * @param resourcePath
+     * @param principal
+     * @param grantedPrivilegeNames
+     * @param deniedPrivilegeNames
+     * @param removedPrivilegeNames privileges which, if they exist, should be
+     * removed for this principal and resource
+     * @param order where the access control entry should go in the list.  
+     *         Value should be one of these:
+     *         <table>
+     *          <tr><td>null</td><td>If the ACE for the principal doesn't exist add at the end, otherwise leave the ACE at it's current position.</td></tr>
+     * 			<tr><td>first</td><td>Place the target ACE as the first amongst its siblings</td></tr>
+	 *			<tr><td>last</td><td>Place the target ACE as the last amongst its siblings</td></tr>
+	 * 			<tr><td>before xyz</td><td>Place the target ACE immediately before the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>after xyz</td><td>Place the target ACE immediately after the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>numeric</td><td>Place the target ACE at the specified numeric index</td></tr>
+	 *         </table>
+     * @throws RepositoryException
+     */
+    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal, 
+    			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames,
+    			String order)
         		throws RepositoryException {
     	AccessControlManager accessControlManager = getAccessControlManager(session);
     	Set<String> specifiedPrivilegeNames = new HashSet<String>();
@@ -270,11 +312,17 @@ public class AccessControlUtil {
       
     	// Combine all existing ACEs for the target principal.
     	AccessControlEntry[] accessControlEntries = acl.getAccessControlEntries();
-    	for (AccessControlEntry ace : accessControlEntries) {
+    	for (int i=0; i < accessControlEntries.length; i++) {
+    		AccessControlEntry ace = accessControlEntries[i];
     		if (principal.equals(ace.getPrincipal())) {
     			if (log.isDebugEnabled()) {
     				log.debug("Found Existing ACE for principal {} on resource {}", new Object[] {principal.getName(), resourcePath});
     			}
+    			if (order == null || order.length() == 0) {
+    				//order not specified, so keep track of the original ACE position.
+    				order = String.valueOf(i);
+    			}
+    			
     			boolean isAllow = isAllow(ace);
     			Privilege[] privileges = ace.getPrivileges();
     			if (log.isDebugEnabled()) {
@@ -329,6 +377,10 @@ public class AccessControlUtil {
    			addEntry(acl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
    		}
 
+   		
+   		//order the ACL
+   		reorderAccessControlEntries(acl, principal, order);
+   		
     	accessControlManager.setPolicy(resourcePath, acl);
     	if (log.isDebugEnabled()) {
     		List<String> oldGrantedNames = new ArrayList<String>(oldGrants.size());
@@ -442,5 +494,129 @@ public class AccessControlUtil {
 			disaggregatedPrivilegeNames.add(privilege.getName());
 		}
 		return disaggregatedPrivilegeNames;
+	}
+
+	/**
+	 * Move the ACE(s) for the specified principal to the position specified by the 'order'
+	 * parameter. 
+	 * 
+	 * @param acl the acl of the node containing the ACE to position
+	 * @param principal the user or group of the ACE to position
+     * @param order where the access control entry should go in the list.  
+     *         Value should be one of these:
+     *         <table>
+     * 			<tr><td>first</td><td>Place the target ACE as the first amongst its siblings</td></tr>
+	 *			<tr><td>last</td><td>Place the target ACE as the last amongst its siblings</td></tr>
+	 * 			<tr><td>before xyz</td><td>Place the target ACE immediately before the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>after xyz</td><td>Place the target ACE immediately after the sibling whose name is xyz</td></tr>
+	 * 			<tr><td>numeric</td><td>Place the target ACE at the specified index</td></tr>
+	 *         </table>
+	 * @throws RepositoryException 
+	 * @throws UnsupportedRepositoryOperationException 
+	 * @throws AccessControlException 
+	 */
+	private static void reorderAccessControlEntries(AccessControlList acl, 
+														Principal principal, 
+														String order) 
+							throws RepositoryException {
+		if (order == null || order.length() == 0) {
+			return; //nothing to do
+		}
+		if (acl instanceof JackrabbitAccessControlList) {
+			JackrabbitAccessControlList jacl = (JackrabbitAccessControlList)acl;
+			
+			AccessControlEntry[] accessControlEntries = jacl.getAccessControlEntries();
+			if (accessControlEntries.length <= 1) {
+				return; //only one ACE, so nothing to reorder.
+			}
+
+			AccessControlEntry beforeEntry = null;
+			if ("first".equals(order)) {
+				beforeEntry = accessControlEntries[0];
+			} else if ("last".equals(order)) {
+				beforeEntry = null;
+			} else if (order.startsWith("before ")) {
+				String beforePrincipalName = order.substring(7);
+				
+				//find the index of the ACE of the 'before' principal
+				for (int i=0; i < accessControlEntries.length; i++) {
+					if (beforePrincipalName.equals(accessControlEntries[i].getPrincipal().getName())) {
+						//found it!
+						beforeEntry = accessControlEntries[i];
+						break;
+					} 
+				}
+				
+				if (beforeEntry == null) {
+					//didn't find an ACE that matched the 'before' principal
+					throw new IllegalArgumentException("No ACE was found for the specified principal: " + beforePrincipalName);
+				}
+			} else if (order.startsWith("after ")) {
+				String afterPrincipalName = order.substring(6);
+				
+				//find the index of the ACE of the 'after' principal
+				for (int i = accessControlEntries.length - 1; i >= 0; i--) {
+					if (afterPrincipalName.equals(accessControlEntries[i].getPrincipal().getName())) {
+						//found it!
+						
+						// the 'before' ACE is the next one after the 'after' ACE
+						if (i >= accessControlEntries.length - 1) {
+							//the after is the last one in the list
+							beforeEntry = null;
+						} else {
+							beforeEntry = accessControlEntries[i + 1];
+						}
+						break;
+					} 
+				}
+				
+				if (beforeEntry == null) {
+					//didn't find an ACE that matched the 'after' principal
+					throw new IllegalArgumentException("No ACE was found for the specified principal: " + afterPrincipalName);
+				}
+			} else {
+				try {
+					int index = Integer.parseInt(order);
+					if (index > accessControlEntries.length) {
+						//invalid index
+						throw new IndexOutOfBoundsException("Index value is too large: " + index);
+					}
+					
+					if (index == 0) {
+						beforeEntry = accessControlEntries[0];
+					} else {
+						//the index value is the index of the principal.  A principal may have more
+						// than one ACEs (deny + grant), so we need to compensate.
+						Set<Principal> processedPrincipals = new HashSet<Principal>();
+						for (int i = 0; i < accessControlEntries.length; i++) {
+							Principal principal2 = accessControlEntries[i].getPrincipal();
+							if (processedPrincipals.size() == index &&
+									!processedPrincipals.contains(principal2)) {
+								//we are now at the correct position in the list
+								beforeEntry = accessControlEntries[i];
+								break;
+							}
+
+							processedPrincipals.add(principal2);
+						}					
+					}
+				} catch (NumberFormatException nfe) {
+					//not a number.
+					throw new IllegalArgumentException("Illegal value for the order parameter: " + order);
+				}
+			}
+			
+			//now loop through the entries to move the affected ACEs to the specified
+			// position.
+			for (int i = accessControlEntries.length - 1; i >= 0; i--) {
+				AccessControlEntry ace = accessControlEntries[i];
+				if (principal.equals(ace.getPrincipal())) {
+					//this ACE is for the specified principal.
+					jacl.orderBefore(ace, beforeEntry);
+				}
+			}
+		} else {
+			throw new IllegalArgumentException("The acl must be an instance of JackrabbitAccessControlList");
+		}
 	}
 }
