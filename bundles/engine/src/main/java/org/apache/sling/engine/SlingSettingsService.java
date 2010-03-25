@@ -23,8 +23,7 @@ package org.apache.sling.engine;
  * @deprecated Use the {@link org.apache.sling.api.services.SlingSettingsService}
  */
 @Deprecated
-public interface SlingSettingsService
-    extends org.apache.sling.api.services.SlingSettingsService {
+public interface SlingSettingsService {
 
     /**
      * The identifier of the running Sling instance.

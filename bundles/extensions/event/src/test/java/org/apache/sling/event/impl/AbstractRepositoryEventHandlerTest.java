@@ -20,6 +20,7 @@ package org.apache.sling.event.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -87,6 +88,14 @@ public abstract class AbstractRepositoryEventHandlerTest {
         this.handler.settingsService = new SlingSettingsService() {
             public String getSlingId() {
                 return SLING_ID;
+            }
+
+            public URL getSlingHome() {
+                return null;
+            }
+
+            public String getSlingHomePath() {
+                return null;
             }
         };
 

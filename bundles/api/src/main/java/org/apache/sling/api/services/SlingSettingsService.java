@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.services;
 
+import java.net.URL;
+
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
  *
@@ -29,4 +31,16 @@ public interface SlingSettingsService {
      * The identifier of the running Sling instance.
      */
     String getSlingId();
+
+    /**
+     * Returns the value of the {@link org.apache.sling.api.SlingConstants#SLING_HOME}
+     * property.
+     */
+    String getSlingHomePath();
+
+    /**
+     * Returns the value of the {@link org.apache.sling.api.SlingConstants#SLING_HOME_URL}
+     * property.
+     */
+    URL getSlingHome();
 }
