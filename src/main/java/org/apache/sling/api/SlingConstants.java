@@ -349,4 +349,34 @@ public class SlingConstants {
      * @since 2.0.6
      */
     public static final String PROPERTY_ADAPTER_CLASSES = "adapters";
+
+    /**
+     * The name of the framework property defining the Sling home directory
+     * (value is "sling.home"). This is a Platform file system directory below
+     * which all runtime data, such as the Felix bundle archives, logfiles, the
+     * repository, etc., is located.
+     * <p>
+     * This property is available calling the
+     * <code>BundleContext.getProperty(String)</code> method.
+     *
+     * @see #SLING_HOME_URL
+     * @since 2.1
+     */
+    public static final String SLING_HOME = "sling.home";
+
+    /**
+     * The name of the framework property defining the Sling home directory as
+     * an URL (value is "sling.home.url").
+     * <p>
+     * The value of this property is assigned the value of
+     * <code>new File(${sling.home}).toURI().toString()</code> before
+     * resolving the property variables.
+     * <p>
+     * This property is available calling the
+     * <code>BundleContext.getProperty(String)</code> method.
+     *
+     * @see #SLING_HOME
+     * @since 2.1
+     */
+    public static final String SLING_HOME_URL = "sling.home.url";
 }
