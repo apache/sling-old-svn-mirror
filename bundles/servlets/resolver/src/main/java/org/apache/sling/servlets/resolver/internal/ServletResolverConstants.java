@@ -115,4 +115,9 @@ public class ServletResolverConstants {
      */
     public static final String ERROR_HANDLER_PATH = "sling/servlet/errorhandler";
 
+    /**
+     * The "method" name of an error handler used as the default (value is
+     * "default").
+     */
+    public static final String DEFAULT_ERROR_HANDLER_NAME = "default";
 }
