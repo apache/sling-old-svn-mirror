@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine;
+package org.apache.sling.api.request;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,9 +26,8 @@ import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @deprecated Use {@link org.apache.sling.api.request.RequestUtil}
+ * @since 2.1
  */
-@Deprecated
 public class RequestUtil {
 
     /**

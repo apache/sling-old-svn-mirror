@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine;
+package org.apache.sling.api.request;
 
 import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Response-related utilities.
- * @deprecated Use {@link org.apache.sling.api.request.ResponseUtil}
+ * Response-related utilities
+ * @since 2.1
  */
-@Deprecated
 public class ResponseUtil {
 
     private static class XmlEscapingWriter extends Writer {
