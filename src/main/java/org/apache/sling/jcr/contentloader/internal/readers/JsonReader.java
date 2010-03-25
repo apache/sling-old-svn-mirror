@@ -427,8 +427,10 @@ public class JsonReader implements ContentReader {
 			}
 		}
 
+		String order = ace.optString("order", null);
+		
 		//do the work.
-		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges);
+		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);
     }
 
 }

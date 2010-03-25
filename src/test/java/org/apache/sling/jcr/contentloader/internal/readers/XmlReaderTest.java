@@ -145,7 +145,8 @@ public class XmlReaderTest extends TestCase {
         }
 
 		public void createAce(String principal,
-				String[] grantedPrivileges, String[] deniedPrivileges)
+				String[] grantedPrivileges, String[] deniedPrivileges,
+				String order)
 				throws RepositoryException {
 		}
 
