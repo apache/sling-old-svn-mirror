@@ -22,8 +22,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.engine.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.LoggerFactory;
@@ -31,7 +34,8 @@ import org.slf4j.LoggerFactory;
 /**
  * This is the basic implementation of the sling settings service.
  */
-public class SlingSettingsServiceImpl implements SlingSettingsService {
+public class SlingSettingsServiceImpl
+    implements SlingSettingsService, org.apache.sling.api.services.SlingSettingsService {
 
     /** The logger */
     private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -39,7 +43,22 @@ public class SlingSettingsServiceImpl implements SlingSettingsService {
     /** The sling instance id. */
     private String slingId;
 
+    /** The sling home */
+    private final String slingHome;
+
+    /** The sling home url */
+    private URL slingHomeUrl;
+
     public SlingSettingsServiceImpl(final BundleContext context) {
+        this.slingHome = context.getProperty(SlingConstants.SLING_HOME);
+        final String url = context.getProperty(SlingConstants.SLING_HOME_URL);
+        if ( url != null ) {
+            try {
+                this.slingHomeUrl = new URL(url);
+            } catch (MalformedURLException e) {
+                logger.error("Sling home url is not a url: {}", url);
+            }
+        }
         // try to read the id from the id file first
         File idFile = context.getDataFile("sling.id.file");
         if ( idFile == null ) {
@@ -99,5 +118,19 @@ public class SlingSettingsServiceImpl implements SlingSettingsService {
      */
     public String getSlingId() {
         return this.slingId;
+    }
+
+    /**
+     * @see org.apache.sling.api.services.SlingSettingsService#getSlingHome()
+     */
+    public URL getSlingHome() {
+        return this.slingHomeUrl;
+    }
+
+    /**
+     * @see org.apache.sling.api.services.SlingSettingsService#getSlingHomePath()
+     */
+    public String getSlingHomePath() {
+        return this.slingHome;
     }
 }
