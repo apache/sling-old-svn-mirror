@@ -36,13 +36,21 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>DefaultErrorHandlerServlet</code> TODO
+ *
+ * @scr.component metatype="no" immediate="true"
+ * @scr.service interface="javax.servlet.Servlet"
+ *
+ * This is the default error handler servlet registered at the end of the
+ * global search path
+ * @scr.property name="sling.servlet.paths" value="sling/servlet/errorhandler/default"
+ * @scr.property name="sling.servlet.prefix" value="-1"
  */
 @SuppressWarnings("serial")
 public class DefaultErrorHandlerServlet extends GenericServlet {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(DefaultErrorHandlerServlet.class);
-    
+    private final Logger log = LoggerFactory.getLogger(DefaultErrorHandlerServlet.class);
+
     @Override
     public void service(ServletRequest req, ServletResponse res)
             throws IOException {
@@ -66,8 +74,11 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             statusMessage, requestUri, servletName);
 
         // write the exception message
+        final PrintWriter escapingWriter = new PrintWriter(
+            ResponseUtil.getXmlEscapingWriter(pw));
+
+        // dump the stack trace
         if (req.getAttribute(SlingConstants.ERROR_EXCEPTION) instanceof Throwable) {
-            final PrintWriter escapingWriter = new PrintWriter(ResponseUtil.getXmlEscapingWriter(pw));
             Throwable throwable = (Throwable) req.getAttribute(SlingConstants.ERROR_EXCEPTION);
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
@@ -75,16 +86,17 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             printStackTrace(escapingWriter, throwable);
             escapingWriter.flush();
             pw.println("</pre>");
-            
-            if (req instanceof SlingHttpServletRequest) {
-                RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
-                pw.println("<h3>Request Progress:</h3>");
-                pw.println("<pre>");
-                pw.flush();
-                tracker.dump(escapingWriter);
-                escapingWriter.flush();
-                pw.println("</pre>");
-            }
+        }
+
+        // dump the request progress tracker
+        if (req instanceof SlingHttpServletRequest) {
+            RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
+            pw.println("<h3>Request Progress:</h3>");
+            pw.println("<pre>");
+            pw.flush();
+            tracker.dump(escapingWriter);
+            escapingWriter.flush();
+            pw.println("</pre>");
         }
 
         // conclude the response message
@@ -128,13 +140,13 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             throws IOException {
 
         final String statusMessage = ResponseUtil.escapeXml(statusMessageIn);
-        
+
         // set the status code and content type in the response
         final PrintWriter pw = response.getWriter();
         if(!response.isCommitted()) {
             response.setStatus(statusCode);
             response.setContentType("text/html; charset=UTF-8");
-    
+
             pw.println("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
             pw.println("<html>");
             pw.println("<head>");
@@ -167,6 +179,7 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
         pw.println("<hr>");
         pw.println("<address>" + getServletContext().getServerInfo()
             + "</address>");
+
         pw.println("</body>");
         pw.println("</html>");
     }

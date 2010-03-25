@@ -182,7 +182,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     // the default error handler servlet if no other error servlet applies for
     // a request. This field is set on demand by getDefaultErrorServlet()
-    private Servlet defaultErrorServlet;
+    private Servlet fallbackErrorServlet;
 
     private Map<ResourceCollector, Servlet> cache;
 
@@ -341,7 +341,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
             // fall back to default servlet if none
             if (servlet == null) {
-                servlet = getDefaultErrorServlet();
+                servlet = getDefaultErrorServlet(request, scriptResolver,
+                    resource);
             }
 
             // set the message properties
@@ -401,7 +402,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             }
 
             if (servlet == null) {
-                servlet = getDefaultErrorServlet();
+                servlet = getDefaultErrorServlet(request, scriptResolver,
+                    resource);
             }
 
             // set the message properties
@@ -573,22 +575,48 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /**
      * Returns the default error handler servlet, which is called in case there
      * is no other - better matching - servlet registered to handle an error or
-     * exception. As it is expected, that most of the time, there will be no
-     * such more specific servlet, the default error handler servlet is quite
-     * complete.
+     * exception.
+     * <p>
+     * The default error handler servlet is registered for the resource type
+     * "sling/servlet/errorhandler" and method "default". This may be
+     * overwritten by applications globally or according to the resource type
+     * hierarchy of the resource.
+     * <p>
+     * If no default error handler servlet can be found an adhoc error handler
+     * is used as a final fallback.
      */
-    private Servlet getDefaultErrorServlet() {
-        if (defaultErrorServlet == null) {
+    private Servlet getDefaultErrorServlet(
+            final SlingHttpServletRequest request,
+            final WorkspaceResourceResolver scriptResolver,
+            final Resource resource) {
+
+        // find a default error handler according to the resource type
+        // tree of the given resource
+        final ResourceCollector locationUtil = new ResourceCollector(
+            ServletResolverConstants.DEFAULT_ERROR_HANDLER_NAME,
+            ServletResolverConstants.ERROR_HANDLER_PATH, resource,
+            scriptResolver.getWorkspaceName());
+        final Servlet servlet = getServlet(locationUtil, request,
+            scriptResolver);
+        if (servlet != null) {
+            return servlet;
+        }
+
+        // if no registered default error handler could be found use
+        // the DefaultErrorHandlerServlet as an ad-hoc fallback
+        if (fallbackErrorServlet == null) {
+            // fall back to an adhoc instance of the DefaultErrorHandlerServlet
+            // if the actual service is not registered (yet ?)
             try {
-                Servlet servlet = new DefaultErrorHandlerServlet();
-                servlet.init(new SlingServletConfig(servletContext, null, "Sling Default Error Handler Servlet"));
-                defaultErrorServlet = servlet;
+                final Servlet defaultServlet = new DefaultErrorHandlerServlet();
+                defaultServlet.init(new SlingServletConfig(servletContext,
+                    null, "Sling (Ad Hoc) Default Error Handler Servlet"));
+                fallbackErrorServlet = defaultServlet;
             } catch (ServletException se) {
                 log.error("Failed to initialize error servlet", se);
             }
         }
-
-        return defaultErrorServlet;
+        return fallbackErrorServlet;
     }
 
     private void handleError(Servlet errorHandler, HttpServletRequest request, HttpServletResponse response)
@@ -739,6 +767,17 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         Collection<ServiceReference> refs;
         synchronized (this) {
             refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
+        }
+
+        // destroy the fallback error handler servlet
+        if (fallbackErrorServlet != null) {
+            try {
+                fallbackErrorServlet.destroy();
+            } catch (Throwable t) {
+                // ignore
+            } finally {
+                fallbackErrorServlet = null;
+            }
         }
 
         // destroy all servlets
