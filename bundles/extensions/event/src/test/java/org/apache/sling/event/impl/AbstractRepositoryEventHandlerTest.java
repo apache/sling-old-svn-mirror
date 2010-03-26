@@ -30,6 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.services.SlingSettingsService;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -75,7 +76,12 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
     @org.junit.Before public void setup() throws Exception {
         this.handler.repository = RepositoryTestUtil.getSlingRepository();
+        this.handler.classLoaderManager = new DynamicClassLoaderManager() {
 
+            public ClassLoader getDynamicClassLoader() {
+                return this.getClass().getClassLoader();
+            }
+        };
         // the event admin
         final EventAdmin eventAdmin = this.getMockery().mock(EventAdmin.class);
         this.handler.eventAdmin = eventAdmin;

@@ -142,6 +142,44 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     }
 
     /**
+     * Test cancelling a job
+     * The job execution always fails
+     */
+    @org.junit.Test public void testCancelJob() throws Exception {
+        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final Barrier cb = new Barrier(2);
+        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+                new EventHandler[] {
+                    new EventHandler() {
+                        public void handleEvent(Event event) {
+                            EventUtil.acknowledgeJob(event);
+                            cb.block();
+                            try {
+                                Thread.sleep(400);
+                            } catch (InterruptedException e) {
+                                // ignore
+                            }
+                            EventUtil.rescheduleJob(event);
+                        }
+
+                    }
+                });
+        jeh.handleEvent(getJobEvent(null, "myid", null));
+        assertEquals(1, jeh.getAllJobs("sling/test").size());
+        cb.block();
+        // job is currently sleeping, therefore cancel fails
+        assertFalse(jeh.cancelJob("sling/test", "myid"));
+        try {
+            Thread.sleep(800);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        // the job is now in the queue again
+        assertTrue(jeh.cancelJob("sling/test", "myid"));
+        assertEquals(0, jeh.getAllJobs("sling/test").size());
+    }
+
+    /**
      * Reschedule test.
      * The job is rescheduled two times before it fails.
      */
