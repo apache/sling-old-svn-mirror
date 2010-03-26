@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -1164,22 +1163,28 @@ public class JobEventHandler
                 long count = 0;
                 while ( result.hasNext() && count < maxLoad ) {
                     final Node eventNode = result.nextNode();
-                    eventCreated = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
-                    if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
-                        count++;
+                    final String propPath = eventNode.getPath() + '/' + EventHelper.NODE_PROPERTY_CREATED;
+                    if ( this.backgroundSession.itemExists(propPath) ) {
+                        eventCreated = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
+                        if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
+                            count++;
+                        }
                     }
                 }
                 // now we have to add all jobs with the same created time!
                 boolean done = false;
                 while ( result.hasNext() && !done ) {
                     final Node eventNode = result.nextNode();
-                    final long created = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
-                    if ( created == eventCreated ) {
-                        if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
-                            count++;
+                    final String propPath = eventNode.getPath() + '/' + EventHelper.NODE_PROPERTY_CREATED;
+                    if ( this.backgroundSession.itemExists(propPath) ) {
+                        final long created = eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getLong();
+                        if ( created == eventCreated ) {
+                            if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
+                                count++;
+                            }
+                        } else {
+                            done = true;
                         }
-                    } else {
-                        done = true;
                     }
                 }
                 // have we processed all jobs?
@@ -1611,34 +1616,46 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String, java.lang.String)
      */
-    public void cancelJob(String topic, String jobId) {
+    public boolean cancelJob(String topic, String jobId) {
         if ( jobId != null && topic != null ) {
-            this.cancelJob(JobUtil.getUniquePath(topic, jobId));
+            try {
+                final String uniqueJobId = this.getWriterRootNode().getPath() + '/' + JobUtil.getUniquePath(topic, jobId);
+                return this.cancelJob(uniqueJobId);
+            } catch (RepositoryException e) {
+                // this only happens if getPath() throws which really should not happen
+                this.ignoreException(e);
+            }
         }
+        return true;
     }
 
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String)
      */
-    public void cancelJob(String jobId) {
+    public boolean cancelJob(String jobId) {
         if ( jobId != null ) {
-            synchronized ( this.writeLock ) {
+            synchronized ( this.backgroundLock ) {
                 try {
-                    this.writerSession.refresh(false);
+                    this.backgroundSession.refresh(false);
                 } catch (RepositoryException e) {
                     this.ignoreException(e);
                 }
                 try {
-                    if ( this.writerSession.itemExists(jobId) ) {
-                        final Item item = this.writerSession.getItem(jobId);
-                        item.remove();
-                        this.writerSession.save();
+                    if ( this.backgroundSession.itemExists(jobId) ) {
+                        final Node eventNode = (Node) this.backgroundSession.getItem(jobId);
+                        if ( eventNode.isLocked() ) {
+                            this.logger.info("Attempted to cancel a running job at {}", jobId);
+                            return false;
+                        }
+                        eventNode.remove();
+                        this.backgroundSession.save();
                     }
                 } catch (RepositoryException e) {
                     this.logger.error("Error during cancelling job at " + jobId, e);
                 }
             }
         }
+        return true;
     }
 
 

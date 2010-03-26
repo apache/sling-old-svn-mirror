@@ -83,17 +83,23 @@ public interface JobStatusProvider {
 
     /**
      * Cancel this job.
+     * Cancelling a job might fail if the job is currently in processing.
      * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
+     * @return <code>true</code> if the job could be cancelled or does not exist anymore.
+     *         <code>false</code> otherwise.
      */
-    void cancelJob(String jobId);
+    boolean cancelJob(String jobId);
 
     /**
      * Cancel this job.
+     * Cancelling a job might fail if the job is currently in processing.
      * This method can be used if the topic and the provided job id is known.
      * @param topic The job topic as put into the property {@link EventUtil#PROPERTY_JOB_TOPIC}.
      * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
+     * @return <code>true</code> if the job could be cancelled or does not exist anymore.
+     *         <code>false</code> otherwise.
      */
-    void cancelJob(String topic, String jobId);
+    boolean cancelJob(String topic, String jobId);
 
     /**
      * Wake up the named job queue.
