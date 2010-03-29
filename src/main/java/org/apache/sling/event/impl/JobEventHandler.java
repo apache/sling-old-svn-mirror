@@ -1647,6 +1647,15 @@ public class JobEventHandler
                             this.logger.info("Attempted to cancel a running job at {}", jobId);
                             return false;
                         }
+                        // try to load job to send notification
+                        try {
+                            final Event job = this.readEvent(eventNode);
+                            this.sendNotification(EventUtil.TOPIC_JOB_CANCELLED, job);
+                        } catch (RepositoryException ignore) {
+                            this.ignoreException(ignore);
+                        } catch (ClassNotFoundException cnfe) {
+                            this.ignoreException(cnfe);
+                        }
                         eventNode.remove();
                         this.backgroundSession.save();
                     }
