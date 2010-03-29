@@ -33,6 +33,7 @@ import javax.servlet.jsp.tagext.TagInfo;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
@@ -364,13 +365,13 @@ public class JspServletWrapper {
             }
             return;
         } catch (ServletException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (IOException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (IllegalStateException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (Exception ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         }
 
         try {
@@ -408,13 +409,13 @@ public class JspServletWrapper {
                  ex.getMessage());
             return;
         } catch (ServletException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (IOException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (IllegalStateException ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         } catch (Exception ex) {
-            throw handleJspException(ex);
+            handleJspException(ex);
         }
     }
 
@@ -458,9 +459,22 @@ public class JspServletWrapper {
      *</p>
      *
      * @param ex the exception that was the cause of the problem.
-     * @return a JasperException with more detailed information
+     * @throws a ServletException with more detailed information
      */
-    protected JasperException handleJspException(Exception ex) {
+    protected void handleJspException(Exception ex)
+    throws ServletException {
+        final Exception jspEx = handleJspExceptionInternal(ex);
+        if ( jspEx instanceof ServletException ) {
+            throw (ServletException)jspEx;
+        }
+        throw (SlingException)jspEx;
+    }
+
+    /**
+     * Returns only a ServletException or a SlingException
+     */
+    private Exception handleJspExceptionInternal(Exception ex)
+    throws ServletException {
         Throwable realException = ex;
         String exMessage = "";
         if (ex instanceof ServletException) {
@@ -493,7 +507,10 @@ public class JspServletWrapper {
             if (jspFrame == null) {
                 // If we couldn't find a frame in the stack trace corresponding
                 // to the generated servlet class, we can't really add anything
-                return new JasperException(exMessage, realException);
+                if ( ex instanceof ServletException ) {
+                    return ex;
+                }
+                return new SlingException(ex) {};
             }
             int javaLineNumber = jspFrame.getLineNumber();
             JavacErrorDetail detail = ErrorDispatcher.createJavacError(
@@ -507,26 +524,29 @@ public class JspServletWrapper {
             // where in the JSP things went wrong
             int jspLineNumber = detail.getJspBeginLineNumber();
             if (jspLineNumber < 1) {
-                return new JasperException(exMessage, realException);
+                if ( realException instanceof ServletException ) {
+                    return (ServletException)realException;
+                }
+                return new SlingException(exMessage, realException);
             }
 
-            if (options.getDisplaySourceFragment()) {
-                return new JasperException(Localizer.getMessage
+            if (options.getDisplaySourceFragment() && detail.getJspExtract() != null ) {
+                return new SlingException(Localizer.getMessage
                         ("jsp.exception", detail.getJspFileName(),
                                 "" + jspLineNumber) +
                                 "\n\n" + detail.getJspExtract() +
                                 "\n", realException);
 
             }
-            return new JasperException(Localizer.getMessage
+            return new SlingException(Localizer.getMessage
                     ("jsp.exception", detail.getJspFileName(),
                             "" + jspLineNumber), realException);
         } catch (Exception je) {
             // If anything goes wrong, just revert to the original behaviour
-            if (realException instanceof JasperException) {
-                return (JasperException) realException;
+            if (realException instanceof ServletException) {
+                return (ServletException)realException;
             }
-            return new JasperException(exMessage, realException);
+            return new SlingException(exMessage, realException);
         }
     }
 
