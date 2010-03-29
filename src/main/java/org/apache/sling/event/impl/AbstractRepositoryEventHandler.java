@@ -31,6 +31,7 @@ import javax.jcr.observation.EventListener;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.services.SlingSettingsService;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -87,7 +88,7 @@ public abstract class AbstractRepositoryEventHandler
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC)
     protected DynamicClassLoaderManager classLoaderManager;
 
     /**
@@ -151,6 +152,15 @@ public abstract class AbstractRepositoryEventHandler
     protected abstract void runInBackground() throws RepositoryException;
 
     protected abstract void processWriteQueue();
+
+    protected ClassLoader getDynamicClassLoader() {
+        final DynamicClassLoaderManager dclm = this.classLoaderManager;
+        if ( dclm != null ) {
+            return dclm.getDynamicClassLoader();
+        }
+        // if we don't have a dynamic classloader, we return our classloader
+        return this.getClass().getClassLoader();
+    }
 
     /**
      * Deactivate this component.
@@ -274,8 +284,8 @@ public abstract class AbstractRepositoryEventHandler
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
         final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
-        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode,
-                this.classLoaderManager.getDynamicClassLoader());
+        final ClassLoader cl = this.getDynamicClassLoader();
+        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode, cl);
 
         eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
         this.addEventProperties(eventNode, eventProps);
