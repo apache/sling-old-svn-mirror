@@ -157,7 +157,7 @@ public class JspServletOptions implements Options {
      * Should we include a source fragment in exception messages, which could be
      * displayed to the developer ?
      */
-    private boolean displaySourceFragments = true;
+    private boolean displaySourceFragments = false;
 
     public String getProperty(String name) {
         return this.settings.getProperty(name);

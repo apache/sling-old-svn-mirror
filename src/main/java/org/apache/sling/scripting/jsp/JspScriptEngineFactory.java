@@ -78,7 +78,7 @@ import org.slf4j.LoggerFactory;
    @Property(name="jasper.keepgenerated",boolValue=true),
    @Property(name="jasper.mappedfile",boolValue=true),
    @Property(name="jasper.trimSpaces",boolValue=false),
-   @Property(name="jasper.displaySourceFragments",boolValue=true)
+   @Property(name="jasper.displaySourceFragments",boolValue=false)
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
