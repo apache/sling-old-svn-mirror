@@ -17,12 +17,12 @@
 
 package org.apache.sling.jcr.jackrabbit.server.impl.security;
 
-import org.apache.jackrabbit.core.security.authentication.Authentication;
-
 import java.security.Principal;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.security.authentication.Authentication;
 
 /**
  *
@@ -30,16 +30,16 @@ import javax.jcr.RepositoryException;
 public abstract class TrustedCredentials implements Credentials {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 5153578149776402602L;
 
     private Principal principal;
-    
+
     private Authentication authentication;
 
     /**
-     * @param adminUser
+     * @param userId
      */
     public TrustedCredentials(final String userId) {
         principal = getPrincipal(userId);
@@ -59,14 +59,15 @@ public abstract class TrustedCredentials implements Credentials {
     }
 
     /**
-     * @param userId 
+     * @param userId
      * @return
      */
     protected abstract Principal getPrincipal(String userId);
-    
+
     public Principal getPrincipal() {
         return principal;
     }
+
     /**
      * @return
      */
@@ -75,7 +76,7 @@ public abstract class TrustedCredentials implements Credentials {
     }
 
     /**
-     * @return
+     * @return null
      */
     public Object getImpersonator() {
         return null;
