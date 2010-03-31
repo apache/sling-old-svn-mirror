@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
@@ -56,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PluggableDefaultAccessManager extends DefaultAccessManager {
 
-    /** @scr.reference */ 
+    /** @scr.reference */
     private AccessManagerPlugin accessManagerPlugin;
     private NamePathResolver namePathResolver;
     private static final Logger log = LoggerFactory.getLogger(PluggableDefaultAccessManager.class);

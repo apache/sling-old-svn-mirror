@@ -71,16 +71,16 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         super.doInit(callbackHandler, session, options);
         this.pluggableCallackHander = callbackHandler;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see org.apache.jackrabbit.core.security.authentication.AbstractLoginModule#initialize(javax.security.auth.Subject, javax.security.auth.callback.CallbackHandler, java.util.Map, java.util.Map)
      */
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
-            Map sharedState, Map options) {
+            Map<String, ?> sharedState, Map<String, ?> options) {
         CallbackHandlerWrapper wrappedCallbackHandler = new CallbackHandlerWrapper(subject, callbackHandler);
-        
+
         super.initialize(subject, wrappedCallbackHandler, sharedState, options);
     }
 
@@ -103,7 +103,7 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
 
         return super.getPrincipal(creds);
     }
-    
+
     /**
      * @see org.apache.jackrabbit.core.security.authentication.AbstractLoginModule#getPrincipals
      */
@@ -164,8 +164,8 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
 
         return super.impersonate(principal, creds);
     }
-    
-    
+
+
     /**
      * Since the AbstractLoginModule getCredentials does not know anything about TrustedCredentials we have to re-try here.
      */
@@ -184,7 +184,7 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
                 log.warn("Credentials-Callback not supported try Name-Callback");
             } catch (IOException e) {
                 log.error("Credentials-Callback failed: " + e.getMessage() + ": try Name-Callback");
-            }        
+            }
         }
         return creds;
     }
