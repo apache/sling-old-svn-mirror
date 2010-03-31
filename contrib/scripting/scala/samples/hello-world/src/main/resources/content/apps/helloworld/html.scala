@@ -16,7 +16,7 @@
  */
 package helloworld {
 
-class html(vars: htmlVars) { 
+class html(args: htmlArgs) { 
   import scala.xml.NodeSeq
   import java.util.Calendar
   import javax.jcr.Node
@@ -49,7 +49,7 @@ class html(vars: htmlVars) {
   }
 
   
-  import vars._
+  import args._
   
   val node: Node = currentNode
   

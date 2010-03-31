@@ -29,7 +29,7 @@ trait Tests {
   var interpreterHelper: InterpreterHelper
   
   def testEvalString {
-    val code = "package a { class Testi(vars: TestiVars) { print(1 + 2) }}"
+    val code = "package a { class Testi(args: TestiArgs) { print(1 + 2) }}"
     assertEquals("3", interpreterHelper.eval("a.Testi", code, Bindings()))
   }
 
@@ -46,7 +46,7 @@ trait Tests {
   
   def testError {
     val err = "Some error here";
-    val code = "package a { class Testi(vars: TestiVars) { throw new Error(\"" + err + "\") }}"
+    val code = "package a { class Testi(args: TestiArgs) { throw new Error(\"" + err + "\") }}"
     try {
       interpreterHelper.eval("a.Testi", code, Bindings())
       fail("Expecting Exception")
@@ -61,7 +61,7 @@ trait Tests {
     val time = java.util.Calendar.getInstance.getTime
     bindings.putValue("msg", "Hello world")
     bindings.putValue("time", time)
-    val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
+    val code = "package a { class Testi(args: TestiArgs) {import args._; print(msg + \": \" + time)}}"
     val result = interpreterHelper.eval("a.Testi", code, bindings)
     assertEquals("Hello world: " + time, result)
   }
@@ -75,7 +75,7 @@ trait Tests {
     bindings.putValue("msg", "Hello world")
     bindings.putValue("time", time)
 
-    val code = "package a { class Testi(vars: TestiVars) {import vars._; print(msg + \": \" + time)}}"
+    val code = "package a { class Testi(args: TestiArgs) {import args._; print(msg + \": \" + time)}}"
     val src = srcDir.fileNamed("Testi.scala")
     val writer = new PrintWriter(src.output)
     writer.print(code)
@@ -83,7 +83,9 @@ trait Tests {
 
     val out = new java.io.ByteArrayOutputStream
     var result = interpreter.compile("a.Testi", src, bindings)
-    assertFalse(result.hasErrors)
+    if (result.hasErrors) {
+      fail(result.toString)
+    }
 
     result = interpreter.execute("a.Testi", bindings, None, Some(out))
     assertFalse(result.hasErrors)

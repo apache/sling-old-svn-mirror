@@ -16,10 +16,10 @@
  */
 package forum {
   
-class search(vars: searchVars) {
+class search(args: searchArgs) {
   import javax.jcr.Node
   import utils.RichJCR._
-  import vars._
+  import args._
   
   def javascript(function: String, args: String*) = 
     args.mkString("javascript:" + function + "('", "', '", "')")

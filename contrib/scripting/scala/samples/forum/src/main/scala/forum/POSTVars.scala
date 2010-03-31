@@ -16,4 +16,4 @@
  */
 package forum 
 
-class POSTVars extends MockBindings 
+class POSTArgs extends MockBindings 

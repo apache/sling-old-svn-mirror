@@ -16,7 +16,7 @@
  */
 package forum { 
 
-class POST(vars: POSTVars) {
+class POST(args: POSTArgs) {
   import java.util.Date
   import java.io.ByteArrayInputStream
   import java.util.Calendar
@@ -24,7 +24,7 @@ class POST(vars: POSTVars) {
   import javax.jcr.Node
   import org.apache.sling.api.resource.ResourceUtil
   import utils.RichJCR._
-  import vars._
+  import args._
   
   /**
    * Add a child node inclusive all intermediate nodes to a node

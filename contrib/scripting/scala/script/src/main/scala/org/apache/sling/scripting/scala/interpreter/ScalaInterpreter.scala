@@ -125,7 +125,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
 
     code + NL + 
     packageDeclaration + " {" + NL + 
-    "  class " + className + "Vars(bindings: org.apache.sling.scripting.scala.interpreter.Bindings) { " + NL +
+    "  class " + className + "Args(bindings: org.apache.sling.scripting.scala.interpreter.Bindings) { " + NL +
          bindings.map(bind).mkString(NL) + NL + 
     "  } " + NL + 
     "  object " + className + "Runner {" + NL +
@@ -134,7 +134,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
     "             stdOut: java.io.OutputStream) {" + NL +
     "      Console.withIn(stdIn) {" + NL +
     "        Console.withOut(stdOut) {" + NL +
-    "          new " + className + "(new " + className + "Vars(bindings))" + NL +
+    "          new " + className + "(new " + className + "Args(bindings))" + NL +
     "          stdOut.flush" + NL +
     "        }" + NL +
     "      }" + NL +

@@ -16,13 +16,13 @@
  */
 package forum {
 
-class thread(vars: threadVars) {
+class thread(args: threadArgs) {
   import scala.xml.NodeSeq  
   import scala.xml.NodeSeq.Empty
   import javax.jcr.Node
   import utils._
   import utils.RichJCR._
-  import vars._
+  import args._
 
   def javascript(function: String, args: String*) = 
     args.mkString("javascript:" + function + "('", "', '", "')")

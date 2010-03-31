@@ -66,7 +66,7 @@ class InterpreterWithJcrTest extends TestCase with Tests {
   }
 
   def testNodeAccess() {
-    val code = "package a { class Testi(vars: TestiVars) { import vars._; print(n.getPath)}}"
+    val code = "package a { class Testi(args: TestiArgs) { import args._; print(n.getPath)}}"
     val bindings = Bindings()
     bindings.putValue("n", workNode)
     assertEquals(workNode.getPath, interpreterHelper.eval("a.Testi", code, bindings))

@@ -19,7 +19,7 @@ package forum
 import slingscala.jcr.{MockNode, MockItem, MockSlingHttpServletRequest, 
                        MockHttpServletRequest, MockServletRequest}
 
-class htmlVars extends MockBindings {
+class htmlArgs extends MockBindings {
   override def currentNode = new MockNode with MockItem
   override def request = new MockSlingHttpServletRequest with MockHttpServletRequest with MockServletRequest
 }

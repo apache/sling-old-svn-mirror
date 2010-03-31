@@ -17,5 +17,5 @@
 package forum
 
 object Test extends Application {
-  new forum.html(new htmlVars)
+  new forum.html(new htmlArgs)
 }

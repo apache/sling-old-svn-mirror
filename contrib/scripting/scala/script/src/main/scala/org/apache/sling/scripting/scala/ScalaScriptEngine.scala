@@ -40,8 +40,8 @@ object ScalaScriptEngine {
  * 
  * <pre>
  * package my.cool.script
- * class foo(vars: fooVars) {
- *   import vars._ // import the bindings
+ * class foo(args: fooArgs) {
+ *   import args._ // import the bindings
  *
  *   println("bar:" + bar)
  * }
@@ -50,14 +50,14 @@ object ScalaScriptEngine {
  * Here it is assumed that the {@Bindings} passed for script evaluation contains a 
  * value for the name <em>bar</em>.
  * 
- * The parameter <code>vars</code> contains statically typed bindings generated from the 
+ * The parameter <code>args</code> contains statically typed bindings generated from the 
  * <code>Bindings</code> passed to the script engine. The individual values in 
- * <code>vars</code> appear to be of all visible types. This is achieved using implicit 
+ * <code>args</code> appear to be of all visible types. This is achieved using implicit 
  * conversion when necessary: for a value v of type T let S be the smallest super type of T 
  * which is accessible (i.e. class loading succeeds). Then v is exposed with static type 
- * S in <code>vars</code>. Let further be J the set of interface implemented by T which 
+ * S in <code>args</code>. Let further be J the set of interface implemented by T which 
  * are not implemented by S already. For each interface I in J which has no super type 
- * I' of I in J an implicit conversion from S to I is included in <code>vars</code>. 
+ * I' of I in J an implicit conversion from S to I is included in <code>args</code>. 
  */
 class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInfo) 
     extends AbstractScriptEngine {

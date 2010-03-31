@@ -16,4 +16,4 @@
  */
 package forum 
 
-class threadVars extends MockBindings
+class threadArgs extends MockBindings

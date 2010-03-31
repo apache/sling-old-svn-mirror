@@ -206,11 +206,11 @@ object ThreadOverview {
   
 }
 
-class html(vars: htmlVars) {
+class html(args: htmlArgs) {
   import java.util.Calendar
   import javax.jcr.Node
   import utils.RichJCR._
-  import vars._
+  import args._
   
   val node: Node = currentNode
     

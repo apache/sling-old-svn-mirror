@@ -109,7 +109,7 @@ class ScalaScriptEngineFactory extends ScriptEngineFactory {
     val className = classOf(qClassName);
 
     "package " + packageName + " {" + NL +
-    "  class " + className + "(vars: " + className + "Vars) {" + NL +
+    "  class " + className + "(args: " + className + "Args) {" + NL +
     statements.mkString(NL) + 
     "  }" + NL + 
     "}" + NL;

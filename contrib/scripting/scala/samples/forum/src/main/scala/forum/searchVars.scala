@@ -16,4 +16,4 @@
  */
 package forum 
 
-class searchVars extends MockBindings
+class searchArgs extends MockBindings

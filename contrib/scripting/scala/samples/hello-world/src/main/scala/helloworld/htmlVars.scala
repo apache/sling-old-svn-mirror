@@ -16,7 +16,7 @@
  */
 package helloworld
 
-class htmlVars {
+class htmlArgs {
   val currentNode: javax.jcr.Node = null
   val resource: org.apache.sling.api.adapter.Adaptable = null
 }
