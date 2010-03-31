@@ -31,7 +31,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
-import org.apache.sling.servlets.resolver.internal.WorkspaceResourceResolver;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
 /**
@@ -92,7 +91,7 @@ public class ResourceCollector {
      *
      * @param request The <code>SlingHttpServletRequest</code> for which to
      *            return a <code>ResourceCollector</code>.
-     * @param scriptResolver
+     * @param workspaceName
      * @return The <code>ResourceCollector</code> to find servlets and scripts
      *         suitable for handling the <code>request</code>.
      */
@@ -359,7 +358,8 @@ public class ResourceCollector {
              && stringEquals(resourceSuperType, o.resourceSuperType)
              && stringEquals(extension, o.extension)
              && stringEquals(baseResourceType, o.baseResourceType)
-             && stringEquals(methodName, o.methodName) ) {
+             && stringEquals(methodName, o.methodName)
+             && stringEquals(workspaceName, o.workspaceName)) {
             // now compare selectors
             for(int i=0;i<numRequestSelectors;i++) {
                 if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
