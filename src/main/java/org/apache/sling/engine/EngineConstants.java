@@ -23,7 +23,10 @@ package org.apache.sling.engine;
  * for well known constant strings in Sling. Even though these constants will
  * never change, it is recommended that applications refer to the symbolic
  * constants instead of code the strings themselves.
+ *
+ * @deprecated All constants have alternatives to use
  */
+@Deprecated
 public class EngineConstants {
 
     /**
@@ -76,7 +79,9 @@ public class EngineConstants {
      * <code>component.name</code> property or the <code>service.pid</code>
      * is used. If none of the three properties is defined, the Servlet is
      * ignored.
+     * @deprecated
      */
+    @Deprecated
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
 
     /**
