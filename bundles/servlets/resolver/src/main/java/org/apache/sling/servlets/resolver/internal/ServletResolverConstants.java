@@ -120,4 +120,14 @@ public class ServletResolverConstants {
      * "default").
      */
     public static final String DEFAULT_ERROR_HANDLER_NAME = "default";
+
+    /**
+     * The name of the service registration property of a Servlet registered as
+     * a service containing the name of the servlet (value is
+     * "sling.core.servletName"). If this property is missing or empty, the
+     * <code>component.name</code> property or the <code>service.pid</code>
+     * is used. If none of the three properties is defined, the Servlet is
+     * ignored.
+     */
+    public static final String SLING_SERLVET_NAME = "sling.core.servletName";
 }

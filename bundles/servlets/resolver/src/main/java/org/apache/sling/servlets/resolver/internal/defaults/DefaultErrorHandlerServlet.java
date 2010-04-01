@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
-import org.apache.sling.engine.ResponseUtil;
+import org.apache.sling.api.request.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
