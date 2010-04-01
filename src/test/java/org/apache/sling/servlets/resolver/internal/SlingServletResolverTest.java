@@ -18,7 +18,9 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
-import static org.junit.Assert.*;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -41,7 +43,6 @@ import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.resolver.internal.resource.MockServletResource;
@@ -112,7 +113,7 @@ public class SlingServletResolverTest {
             bundle, SlingServletResolverTest.this.servlet);
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
-        serviceReference.setProperty(EngineConstants.SLING_SERLVET_NAME,
+        serviceReference.setProperty(SLING_SERLVET_NAME,
             SERVLET_NAME);
         serviceReference.setProperty(
             ServletResolverConstants.SLING_SERVLET_PATHS, SERVLET_PATH);

@@ -21,7 +21,11 @@ package org.apache.sling.servlets.resolver.internal;
 import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
-import static org.apache.sling.engine.EngineConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
+import static org.osgi.framework.Constants.SERVICE_ID;
+import static org.osgi.framework.Constants.SERVICE_PID;
+import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +53,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.api.request.RequestUtil;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -58,8 +63,6 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.engine.RequestUtil;
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
@@ -825,7 +828,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     private boolean createServlet(ServletContext servletContext, ServiceReference reference) {
 
         // check for a name, this is required
-        String name = AbstractServiceReferenceConfig.getName(reference);
+        final String name = getName(reference);
         if (name == null) {
             log.error("bindServlet: Cannot register servlet {} without a servlet name", reference);
             return false;
@@ -942,5 +945,26 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 this.cache.clear();
             }
         }
+    }
+
+    /** The list of property names checked by {@link #getName(ServiceReference)} */
+    private static final String[] NAME_PROPERTIES = { SLING_SERLVET_NAME,
+        COMPONENT_NAME, SERVICE_PID, SERVICE_ID };
+
+    /**
+     * Looks for a name value in the service reference properties. See the
+     * class comment at the top for the list of properties checked by this
+     * method.
+     */
+    private static String getName(ServiceReference reference) {
+        String servletName = null;
+        for (int i = 0; i < NAME_PROPERTIES.length
+            && (servletName == null || servletName.length() == 0); i++) {
+            Object prop = reference.getProperty(NAME_PROPERTIES[i]);
+            if (prop != null) {
+                servletName = String.valueOf(prop);
+            }
+        }
+        return servletName;
     }
 }

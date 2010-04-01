@@ -18,20 +18,70 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.osgi.framework.ServiceReference;
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+public class SlingServletConfig implements ServletConfig {
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+    /** The <code>ServletContext</code> of this configuration object */
+    private final ServletContext servletContext;
+
+    /** The <code>ServiceReference</code> providing the properties */
+    private final ServiceReference reference;
+
+    /** The name of this configuration object */
+    private final String name;
+
+    /**
+     * Sets up this base configuration object.
+     *
+     * @param servletContext The <code>ServletContext</code> attached to this
+     *            configuration.
+     * @param reference The service reference providing the initialization
+     *            parameter values.
+     * @param name The name of this configuration.
+     */
+    public SlingServletConfig(final ServletContext servletContext,
+            final ServiceReference reference, final String name) {
+        this.servletContext = servletContext;
+        this.reference = reference;
+        this.name = name;
     }
 
+    /**
+     * @see javax.servlet.ServletConfig#getInitParameter(java.lang.String)
+     */
+    public String getInitParameter(String name) {
+        Object prop = reference.getProperty(name);
+        return (prop == null) ? null : String.valueOf(prop);
+    }
+
+    /**
+     * @see javax.servlet.ServletConfig#getInitParameterNames()
+     */
+    public Enumeration<?> getInitParameterNames() {
+        List<?> keys = Arrays.asList(reference.getPropertyKeys());
+        return Collections.enumeration(keys);
+    }
+
+    /**
+     * @see javax.servlet.ServletConfig#getServletContext()
+     */
+    public ServletContext getServletContext() {
+        return servletContext;
+    }
+
+    /**
+     * @see javax.servlet.ServletConfig#getServletName()
+     */
     public String getServletName() {
-        return getName();
+        return this.name;
     }
 }

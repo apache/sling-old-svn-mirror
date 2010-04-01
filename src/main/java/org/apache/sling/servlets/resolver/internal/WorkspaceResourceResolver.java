@@ -104,4 +104,7 @@ public class WorkspaceResourceResolver implements ResourceResolver {
         return workspaceName;
     }
 
+    public void close() {
+        delegate.close();
+    }
 }
