@@ -23,7 +23,10 @@ package org.apache.sling.engine;
  * providers of destinations for request log information. To be able to any
  * request log service writing to output type <i>RequestLog Service</i> the
  * respective services must be registered with the OSGi service registry.
+ *
+ * @deprecated Use the request progress tracker instead.
  */
+@Deprecated
 public interface RequestLog {
 
     /**
