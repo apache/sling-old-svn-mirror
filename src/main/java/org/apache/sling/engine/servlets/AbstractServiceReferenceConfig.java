@@ -53,7 +53,10 @@ import org.osgi.framework.ServiceReference;
  * framework service registry. This property is guaranteed to always be set by
  * the OSGi specification.
  * </ol>
+ *
+ * @deprecated
  */
+@Deprecated
 public abstract class AbstractServiceReferenceConfig {
 
     /** The list of property names checked by {@link #getName(ServiceReference)} */
