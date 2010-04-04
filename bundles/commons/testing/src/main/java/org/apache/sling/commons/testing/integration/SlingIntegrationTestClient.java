@@ -62,7 +62,7 @@ public class SlingIntegrationTestClient {
     /** Create the given directory via WebDAV, if needed, under given URL */
     public void mkdir(String url) throws IOException {
         int status = 0;
-        status = httpClient.executeMethod(new GetMethod(url));
+        status = httpClient.executeMethod(new GetMethod(url + ".txt"));
         if(status != 200) {
             status = httpClient.executeMethod(new HttpAnyMethod("MKCOL",url));
             if(status!=201) {
