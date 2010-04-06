@@ -413,7 +413,15 @@ public class ResourceUtil {
     }
 
     /**
-     * @param <T>
+     * Return an iterator for objecs of the specified type.
+     * A new iterator is returned which tries to adapt the provided resources
+     * to the given type (using {@link Resource#adaptTo(Class)}.
+     * If a resource in the original iterator is not adaptable to the given
+     * class, this object is skipped. This implies that the number of objects
+     * returned by the new iterator might be less than the number of resource
+     * objects.
+     * @param iterator A resource iterator.
+     * @param <T> The adapted type
      * @since 2.0.6
      */
     public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator, final Class<T> type) {
