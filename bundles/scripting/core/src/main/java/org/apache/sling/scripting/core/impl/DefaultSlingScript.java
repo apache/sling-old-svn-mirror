@@ -143,11 +143,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             // if we don't have a request resolver we directly return the script resource
             return scriptResource;
         }
-        Resource rsrc = resolver.getResource(this.scriptName);
-        if ( rsrc == null ) {
-            rsrc = new SyntheticResource(resolver, this.scriptName, this.scriptResource.getResourceType());
-        }
-        return rsrc;
+        return new LazyScriptResource(this.scriptName,
+                this.scriptResource.getResourceType(), resolver);
     }
 
     /**
@@ -668,5 +665,78 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             return delegatee;
         }
 
+    }
+
+    /**
+     * This is a lazy implementation of the script resource which
+     * just returns the path, resource type and resource resolver directly.
+     */
+    private static final class LazyScriptResource implements Resource {
+
+        private final String path;
+
+        private final String resourceType;
+
+        private final ResourceResolver resolver;
+
+        private Resource delegatee;
+
+        public LazyScriptResource(final String path, final String resourceType, final ResourceResolver resolver) {
+            this.path = path;
+            this.resourceType = resourceType;
+            this.resolver = resolver;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getPath()
+         */
+        public String getPath() {
+            return this.path;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceType()
+         */
+        public String getResourceType() {
+            return this.resourceType;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+         */
+        public ResourceResolver getResourceResolver() {
+            return this.resolver;
+        }
+
+        private Resource getResource() {
+            if ( this.delegatee == null ) {
+                this.delegatee = this.resolver.getResource(this.path);
+                if ( this.delegatee == null ) {
+                    this.delegatee = new SyntheticResource(resolver, this.path, this.resourceType);
+                }
+            }
+            return this.delegatee;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+         */
+        public ResourceMetadata getResourceMetadata() {
+            return this.getResource().getResourceMetadata();
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+         */
+        public String getResourceSuperType() {
+            return this.getResource().getResourceSuperType();
+        }
+
+        /**
+         * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+         */
+        public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+            return this.getResource().adaptTo(type);
+        }
     }
 }
