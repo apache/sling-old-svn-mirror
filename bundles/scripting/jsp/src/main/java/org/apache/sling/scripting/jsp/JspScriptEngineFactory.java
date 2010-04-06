@@ -158,7 +158,8 @@ public class JspScriptEngineFactory
         if ( resolver == null ) {
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
-        ioProvider.setRequestResourceResolver(resolver);
+        final SlingIOProvider io = this.ioProvider;
+        io.setRequestResourceResolver(resolver);
         try {
             final JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
             // create a SlingBindings object
@@ -166,7 +167,7 @@ public class JspScriptEngineFactory
             slingBindings.putAll(bindings);
             jsp.service(slingBindings);
         } finally {
-            ioProvider.resetRequestResourceResolver();
+            io.resetRequestResourceResolver();
         }
     }
 
