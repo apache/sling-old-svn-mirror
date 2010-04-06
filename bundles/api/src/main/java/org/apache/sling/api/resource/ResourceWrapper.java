@@ -26,7 +26,7 @@ package org.apache.sling.api.resource;
  */
 public class ResourceWrapper implements Resource {
 
-    // the wrapped resource
+    /** the wrapped resource */
     private final Resource resource;
 
     /**
@@ -39,35 +39,58 @@ public class ResourceWrapper implements Resource {
 
     /**
      * Returns the <code>Resource</code> wrapped by this instance.
+     * This method can be overwritten by subclasses if required. All
+     * other methods use this method to get the resource object.
      */
     public Resource getResource() {
         return resource;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getPath()
+     */
     public String getPath() {
-        return resource.getPath();
+        return getResource().getPath();
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+     */
     public ResourceMetadata getResourceMetadata() {
-        return resource.getResourceMetadata();
+        return getResource().getResourceMetadata();
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+     */
     public ResourceResolver getResourceResolver() {
-        return resource.getResourceResolver();
+        return getResource().getResourceResolver();
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     */
     public String getResourceType() {
-        return resource.getResourceType();
+        return getResource().getResourceType();
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+     */
     public String getResourceSuperType() {
-        return resource.getResourceSuperType();
-    }
-    
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return resource.adaptTo(type);
+        return getResource().getResourceSuperType();
     }
 
+    /**
+     * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+     */
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return getResource().adaptTo(type);
+    }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";
