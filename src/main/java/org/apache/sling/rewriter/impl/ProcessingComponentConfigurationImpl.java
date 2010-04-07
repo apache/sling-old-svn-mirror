@@ -16,6 +16,7 @@
  */
 package org.apache.sling.rewriter.impl;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,9 +48,9 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
      * @param type The type of the component.
      * @param config The configuration or null if no config is available.
      */
-    public ProcessingComponentConfigurationImpl(final String type, final Map<String, Object> config) {
+    public ProcessingComponentConfigurationImpl(final String type, final ValueMap config) {
         this.type = type;
-        this.configuration = (config == null ? EMPTY_CONFIG : new ValueMapDecorator(config));
+        this.configuration = (config == null ? EMPTY_CONFIG : config);
         final StringBuilder sb = new StringBuilder();
         sb.append("Config(type=");
         sb.append(this.type);
@@ -82,4 +83,15 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
         return this.descText;
     }
 
+    void printConfiguration(final PrintWriter pw) {
+        pw.print(this.type);
+        if ( this.configuration == null ) {
+            pw.println();
+        } else {
+            pw.print(" : ");
+            final Map<String, Object> map = new HashMap<String, Object>(this.configuration);
+            map.remove("jcr:primaryType");
+            pw.println(map);
+        }
+    }
 }

@@ -18,7 +18,6 @@ package org.apache.sling.rewriter.impl;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -206,20 +205,28 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
             pw.println("Pipeline : ");
             pw.println("    Generator : ");
             pw.print("        ");
-            pw.println(this.generatorConfiguration);
+            printConfiguration(pw, this.generatorConfiguration);
             pw.println("    Transformers : ");
             for(int i=0; i<this.transformerConfigurations.length; i++) {
                 pw.print("        ");
-                pw.println(this.transformerConfigurations[i]);
+                printConfiguration(pw, this.transformerConfigurations[i]);
             }
             pw.println("    Serializer : ");
             pw.print("        ");
-            pw.println(this.serializerConfiguration);
+            printConfiguration(pw, this.serializerConfiguration);
         } else {
             pw.print("Configuration : ");
-            pw.println(this.processorConfig);
+            printConfiguration(pw, this.processorConfig);
         }
 
+    }
+
+    private void printConfiguration(final PrintWriter pw, final ProcessingComponentConfiguration config) {
+        if ( config instanceof ProcessingComponentConfigurationImpl ) {
+            ((ProcessingComponentConfigurationImpl)config).printConfiguration(pw);
+        } else {
+            pw.println(config);
+        }
     }
 
     private String buildDescString() {
@@ -303,10 +310,10 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                     final String secondResourceName = prefix + '-' + (i+1);
                     childResource = configResource.getResourceResolver().getResource(configResource, secondResourceName);
                 }
-                final Map<String, Object> config;
+                final ValueMap config;
                 if ( childResource != null ) {
                     final ValueMap childProps = ResourceUtil.getValueMap(childResource);
-                    config = new HashMap<String, Object>(childProps);
+                    config = childProps;
                 } else {
                     config = null;
                 }
