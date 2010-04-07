@@ -416,6 +416,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, Calendar.getInstance());
                 bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_BY, this.slingId);
+                bcNode.setProperty(PROPERTY_UNINSTALL_PATHS, (String[])null);
                 bcNode.save();
             }
         } catch (RepositoryException re) {
