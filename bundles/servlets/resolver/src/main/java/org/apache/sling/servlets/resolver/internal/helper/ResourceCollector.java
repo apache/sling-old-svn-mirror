@@ -179,7 +179,7 @@ public class ResourceCollector {
             // get the location resource, use a synthetic resource if there
             // is no real location. There may still be children at this
             // location
-            Resource locationRes = getResource(resolver, null, location);
+            Resource locationRes = getResource(resolver, location);
             getWeightedResources(resources, locationRes);
         }
 
@@ -303,37 +303,23 @@ public class ResourceCollector {
     }
 
     /**
-     * Returns a resource for the given <code>path</code>. If the
-     * <code>path</code> is relative, the resource is accessed relative to the
-     * <code>base</code> resource. If no resource exists at the given path -
-     * absolute or relative to the base resource - a
+     * Returns a resource for the given <code>path</code>.
+     * If no resource exists at the given path a
      * <code>SyntheticResource</code> is returned.
      *
      * @param resolver The <code>ResourceResolver</code> used to access the
      *            resource.
-     * @param base The (optional) base resource. This may be <code>null</code>
-     *            if the <code>path</code> is absolute.
-     * @param path The absolute or relative (to the base resource) path of the
-     *            resource to return.
+     * @param path The absolute path of the resource to return.
      * @return The actual resource at the given <code>path</code> or a
      *         synthetic resource representing the path location.
      */
     protected final Resource getResource(ResourceResolver resolver,
-            Resource base, String path) {
-        Resource res;
-        if (base == null) {
-            res = resolver.getResource(path);
-        } else {
-            res = resolver.getResource(base, path);
-        }
+            String path) {
+        Resource res = resolver.getResource(path);
 
         if (res == null) {
             if (!path.startsWith("/")) {
-                if (base == null) {
-                    path = "/".concat(path);
-                } else {
-                    path = base.getPath() + "/" + path;
-                }
+                path = "/".concat(path);
             }
 
             res = new SyntheticResource(resolver, path, "$synthetic$");
