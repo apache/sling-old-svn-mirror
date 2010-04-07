@@ -85,7 +85,7 @@ public class ProcessingComponentConfigurationImpl implements ProcessingComponent
 
     void printConfiguration(final PrintWriter pw) {
         pw.print(this.type);
-        if ( this.configuration == null ) {
+        if ( this.configuration == EMPTY_CONFIG ) {
             pw.println();
         } else {
             pw.print(" : ");
