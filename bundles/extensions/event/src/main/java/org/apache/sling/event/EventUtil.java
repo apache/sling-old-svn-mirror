@@ -91,6 +91,25 @@ public abstract class EventUtil {
      */
     public static final String PROPERTY_JOB_QUEUE_ORDERED = "event.job.queueordered";
 
+    /** This property allows to override the priority for the thread used to start this job.
+     * The property is evaluated by the {@link #processJob(Event, JobProcessor)} method.
+     * If another way of executing the job is used, it is up to the client to ensure
+     * the job priority.
+     * For possible values see {@link JobPriority}.
+     * @since 2.4
+     */
+    public static final String PROPERTY_JOB_PRIORITY = "event.job.priority";
+
+    /**
+     * The priority for jobs.
+     * @since 2.4
+     */
+    public enum JobPriority {
+        NORM,
+        MIN,
+        MAX
+    };
+
     /** The topic for jobs. */
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
 
@@ -302,6 +321,7 @@ public abstract class EventUtil {
                 notify = false;
             }
         }
+        final JobPriority priority = (JobPriority) job.getProperty(PROPERTY_JOB_PRIORITY);
         final boolean notifyResult = notify;
 
         final Runnable task = new Runnable() {
@@ -310,6 +330,18 @@ public abstract class EventUtil {
              * @see java.lang.Runnable#run()
              */
             public void run() {
+                // update priority
+                final int oldPriority = Thread.currentThread().getPriority();
+                if ( priority != null ) {
+                    switch ( priority ) {
+                        case NORM : Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+                                    break;
+                        case MIN  : Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                                    break;
+                        case MAX  : Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+                                    break;
+                    }
+                }
                 boolean result = false;
                 try {
                     result = processor.process(job);
@@ -318,6 +350,7 @@ public abstract class EventUtil {
                     // we don't reschedule if an exception occurs
                     result = true;
                 } finally {
+                    Thread.currentThread().setPriority(oldPriority);
                     if ( notifyResult ) {
                         if ( result ) {
                             EventUtil.finishedJob(job);

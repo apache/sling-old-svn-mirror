@@ -20,12 +20,14 @@ package org.apache.sling.event.impl;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
 import org.osgi.service.component.ComponentContext;
 
 
@@ -55,6 +57,11 @@ public class EventingThreadPool implements ThreadPool {
     @Property(intValue=DEFAULT_QUEUE_SIZE)
     private static final String PROPERTY_QUEUE_SIZE = "queueSize";
 
+    @Property(value="NORM",
+            options={@PropertyOption(name="NORM",value="Norm"),
+                     @PropertyOption(name="MIN",value="Min"),
+                     @PropertyOption(name="MAX",value="Max")})
+    private static final String PROPERTY_PRIORITY = "priority";
     /**
      * Activate this component.
      * @param context
@@ -65,6 +72,7 @@ public class EventingThreadPool implements ThreadPool {
         config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
         config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUE_SIZE), DEFAULT_QUEUE_SIZE));
         config.setShutdownGraceful(true);
+        config.setPriority(ThreadPriority.valueOf(OsgiUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
         this.threadPool = threadPoolManager.create(config);
     }
 
