@@ -16,6 +16,7 @@
  */
 package org.apache.sling.rewriter.impl;
 
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -174,6 +175,51 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
             this.isValid = (this.processorConfig != null);
         }
         this.descString = this.buildDescString();
+    }
+
+    void printConfiguration(final PrintWriter pw) {
+        if ( this.contentTypes != null ) {
+            pw.print("Content Types : ");
+            pw.println(Arrays.toString(this.contentTypes));
+        }
+        if ( this.resourceTypes != null ) {
+            pw.print("Resource Types : ");
+            pw.println(Arrays.toString(this.resourceTypes));
+        }
+        if ( this.paths != null ) {
+            pw.print("Paths : ");
+            pw.println(Arrays.toString(this.paths));
+        }
+        if ( this.extensions != null ) {
+            pw.print("Extensions : ");
+            pw.println(Arrays.toString(this.extensions));
+        }
+        pw.print("Order : ");
+        pw.println(this.order);
+        pw.print("Active : ");
+        pw.println(this.isActive);
+        pw.print("Valid : ");
+        pw.println(this.isValid);
+        pw.print("Process Error Response : ");
+        pw.println(this.processErrorResponse);
+        if ( this.isPipeline ) {
+            pw.println("Pipeline : ");
+            pw.println("    Generator : ");
+            pw.print("        ");
+            pw.println(this.generatorConfiguration);
+            pw.println("    Transformers : ");
+            for(int i=0; i<this.transformerConfigurations.length; i++) {
+                pw.print("        ");
+                pw.println(this.transformerConfigurations[i]);
+            }
+            pw.println("    Serializer : ");
+            pw.print("        ");
+            pw.println(this.serializerConfiguration);
+        } else {
+            pw.print("Configuration : ");
+            pw.println(this.processorConfig);
+        }
+
     }
 
     private String buildDescString() {

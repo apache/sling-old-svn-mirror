@@ -17,6 +17,7 @@
 package org.apache.sling.rewriter.impl;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -131,6 +132,11 @@ public class ProcessorManagerImpl implements ProcessorManager {
         this.initProcessors();
 
         this.factoryCache.start();
+        try {
+            WebConsoleConfigPrinter.register(this.bundleContext, this);
+        } catch (Exception ignore) {
+            // ignore
+        }
     }
 
     /**
@@ -151,6 +157,11 @@ public class ProcessorManagerImpl implements ProcessorManager {
             listeners.clear();
             this.adminSession.logout();
             this.adminSession = null;
+        }
+        try {
+            WebConsoleConfigPrinter.unregister();
+        } catch (Exception ignore) {
+            // ignore
         }
         this.bundleContext = null;
     }
@@ -284,6 +295,45 @@ public class ProcessorManagerImpl implements ProcessorManager {
                 this.updateProcessor(path);
             } catch (RepositoryException e) {
                 log.error("Error during modification: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void printConfiguration(final PrintWriter pw, final ConfigEntry entry) {
+        if ( entry.config instanceof ProcessorConfigurationImpl ) {
+            ((ProcessorConfigurationImpl)entry.config).printConfiguration(pw);
+        } else {
+            pw.println(entry.config.toString());
+        }
+        pw.print("Resource path: ");
+        pw.println(entry.path);
+    }
+
+    synchronized void printConfiguration(final PrintWriter pw) {
+        pw.println("Current Apache Sling Rewriter Configuration");
+        pw.println("=================================================================");
+        pw.println("Active Configurations");
+        pw.println("-----------------------------------------------------------------");
+        // we process the configs in their order
+        for(final ProcessorConfiguration config : this.orderedProcessors) {
+            // search the corresponding full config
+            for(final Map.Entry<String, ConfigEntry[]> entry : this.processors.entrySet()) {
+                if ( entry.getValue().length > 0 && entry.getValue()[0].config == config ) {
+                    pw.print("Configuration ");
+                    pw.println(entry.getKey());
+                    pw.println();
+                    printConfiguration(pw, entry.getValue()[0]);
+                    if ( entry.getValue().length > 1 ) {
+                        pw.println("Overriding configurations from the following resource paths: ");
+                        for(int i=1; i < entry.getValue().length; i++) {
+                            pw.print("- ");
+                            pw.println(entry.getValue()[i].path);
+                        }
+                    }
+                    pw.println();
+                    pw.println();
+                    break;
+                }
             }
         }
     }
