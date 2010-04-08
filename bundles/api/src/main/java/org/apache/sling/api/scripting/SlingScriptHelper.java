@@ -203,6 +203,9 @@ public interface SlingScriptHelper {
     /**
      * Dispose the helper. This method can be used to clean up the script helper
      * after the script is run.
+     * @deprecated This method is deprecated since version 2.1 and will be removed.
+     *             It should never be called by clients.
      */
+    @Deprecated
     void dispose();
 }
