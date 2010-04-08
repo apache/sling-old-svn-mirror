@@ -21,6 +21,8 @@ package org.apache.sling.api.servlets;
 import javax.servlet.Servlet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * The <code>ServletResolver</code> defines the API for a service capable of
@@ -47,7 +49,7 @@ public interface ServletResolver {
      * implementing the {@link OptingServlet} interface and returning
      * <code>false</code> when the
      * {@link OptingServlet#accepts(SlingHttpServletRequest)} method is called.
-     * 
+     *
      * @param request The {@link SlingHttpServletRequest} object used to drive
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
@@ -58,5 +60,60 @@ public interface ServletResolver {
      *             request.
      */
     Servlet resolveServlet(SlingHttpServletRequest request);
+
+    /**
+     * Resolves a <code>javax.servlet.Servlet</code> whose
+     * <code>service</code> method may be used to handle a request.
+     * <p>
+     * The returned servlet must be assumed to be initialized and ready to run.
+     * That is, the <code>init</code> nor the <code>destroy</code> methods
+     * must <em>NOT</em> be called on the returned servlet.
+     * <p>
+     * This method skips all {@link OptingServlet}s as there is no
+     * request object available.
+     *
+     * Basically this method searches a script with the <code>scriptName</code>
+     * for the resource type defined by the <code>resource</code>
+     * @param resource The {@link Resource} object used to drive
+     *            selection of the servlet.
+     * @param scriptName The name of the script - the script might have an
+     *                   extension. In this case only a script with the
+     *                   matching extension is used.
+     * @return The servlet whose <code>service</code> method may be called to
+     *         handle the request.
+     * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
+     *             while trying to find an appropriate servlet to handle the
+     *             request or if no servlet could be resolved to handle the
+     *             request.
+     * @since 2.1
+     */
+    Servlet resolveServlet(Resource resource, String scriptName);
+
+    /**
+     * Resolves a <code>javax.servlet.Servlet</code> whose
+     * <code>service</code> method may be used to handle a request.
+     * <p>
+     * The returned servlet must be assumed to be initialized and ready to run.
+     * That is, the <code>init</code> nor the <code>destroy</code> methods
+     * must <em>NOT</em> be called on the returned servlet.
+     * <p>
+     * This method skips all {@link OptingServlet}s as there is no
+     * request object available.
+     *
+     * Basically this method searches a script with the <code>scriptName</code>
+     * @param resolver The {@link ResourceResolver} object used to drive
+     *            selection of the servlet.
+     * @param scriptName The name of the script - the script might have an
+     *                   extension. In this case only a script with the
+     *                   matching extension is used.
+     * @return The servlet whose <code>service</code> method may be called to
+     *         handle the request.
+     * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
+     *             while trying to find an appropriate servlet to handle the
+     *             request or if no servlet could be resolved to handle the
+     *             request.
+     * @since 2.1
+     */
+    Servlet resolveServlet(ResourceResolver resolver, String scriptName);
 
 }
