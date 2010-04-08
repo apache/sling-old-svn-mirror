@@ -408,4 +408,61 @@ public class LocationIteratorTest extends HelperTestBase {
         // 6. finished
         assertFalse(li.hasNext());
     }
+
+    public void testScriptNameWithoutResourceType() {
+        String root0 = "/apps";
+        String root1 = "/libs";
+        resourceResolver.setSearchPath(root0, root1);
+        LocationIterator li = new LocationIterator("",
+                null,
+                "",
+                resourceResolver);
+        assertTrue(li.hasNext());
+        assertEquals("/apps/", li.next());
+        assertTrue(li.hasNext());
+        assertEquals("/libs/", li.next());
+        assertFalse(li.hasNext());
+    }
+
+    public void testScriptNameWithResourceType() {
+        String root0 = "/apps";
+        String root1 = "/libs";
+        resourceResolver.setSearchPath(root0, root1);
+        LocationIterator li = new LocationIterator("a/b",
+                null,
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
+        assertTrue(li.hasNext());
+        assertEquals(root0 + "/a/b", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/a/b", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertFalse(li.hasNext());
+    }
+
+    public void testScriptNameWithResourceTypeAndSuperType() {
+        String root0 = "/apps";
+        String root1 = "/libs";
+        resourceResolver.setSearchPath(root0, root1);
+        LocationIterator li = new LocationIterator("a/b",
+                "c/d",
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
+        assertTrue(li.hasNext());
+        assertEquals(root0 + "/a/b", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/a/b", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root0 + "/c/d", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/c/d", li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertFalse(li.hasNext());
+    }
 }
