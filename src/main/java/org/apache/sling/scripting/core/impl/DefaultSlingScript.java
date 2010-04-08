@@ -164,6 +164,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     public Object call(SlingBindings props, String method, Object... args) {
         Bindings bindings = null;
         Reader reader = null;
+        boolean disposeScriptHelper = !props.containsKey(SLING);
         try {
             bindings = verifySlingBindings(props);
 
@@ -248,13 +249,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 cause);
 
         } finally {
-            // dispose of the SlingScriptHelper
-            if ( bindings != null ) {
-                final SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SLING);
-                if ( helper != null ) {
-                    helper.dispose();
-                }
-            }
+            requestResourceResolver.remove();
 
             // close the script reader (SLING-380)
             if (reader != null) {
@@ -264,7 +259,15 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     // don't care
                 }
             }
-            requestResourceResolver.remove();
+
+            // dispose of the SlingScriptHelper
+            if ( bindings != null && disposeScriptHelper ) {
+                final ScriptHelper helper = (ScriptHelper) bindings.get(SLING);
+                if ( helper != null ) {
+                    helper.cleanup();
+                }
+            }
+
         }
     }
 

@@ -41,6 +41,7 @@ import org.apache.sling.scripting.core.impl.helper.OnDemandWriterResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple script helper providing access to the (wrapped) response, the
@@ -208,9 +209,9 @@ public class ScriptHelper implements SlingScriptHelper {
     }
 
     /**
-     * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
+     * Clean up this instance.
      */
-    public void dispose() {
+    public void cleanup() {
         final Iterator<ServiceReference> i = this.references.iterator();
         while (i.hasNext()) {
             final ServiceReference ref = i.next();
@@ -218,5 +219,12 @@ public class ScriptHelper implements SlingScriptHelper {
         }
         this.references.clear();
         this.services.clear();
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
+     */
+    public void dispose() {
+        LoggerFactory.getLogger(this.getClass()).error("ScriptHelper#dispose has been called. This method is deprecated and should never be called by clients!");
     }
 }
