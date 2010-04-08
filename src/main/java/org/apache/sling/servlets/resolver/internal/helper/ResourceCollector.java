@@ -18,18 +18,14 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
@@ -39,7 +35,7 @@ import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvi
  * of <code>Resource</code> instances which may be used to find a servlet or
  * script to handle a request to the given resource.
  */
-public class ResourceCollector {
+public class ResourceCollector extends AbstractResourceCollector {
 
     /**
      * The special value returned by
@@ -53,10 +49,6 @@ public class ResourceCollector {
     // the request method name used to indicate the script name
     private final String methodName;
 
-    // the most generic resource type to use. This may be null in which
-    // case the default servlet name will be used as the base name
-    private final String baseResourceType;
-
     // the request selectors as a string converted to a realtive path or
     // null if the request has no selectors
     private final String[] requestSelectors;
@@ -64,20 +56,11 @@ public class ResourceCollector {
     // the number of request selectors of the request or 0 if none
     private final int numRequestSelectors;
 
-    // the request extension or null if the request has no extension
-    private final String extension;
-
     // request is GET or HEAD
     private final boolean isGet;
 
     // request is GET or HEAD and extension is html
     private final boolean isHtml;
-
-    private final int hashCode;
-
-    private final String resourceType;
-
-    private final String resourceSuperType;
 
     private final String workspaceName;
 
@@ -113,15 +96,15 @@ public class ResourceCollector {
      * @param resource the resource to invoke, the resource type and resource super type are taken from this resource.
      */
     public ResourceCollector(String methodName, String baseResourceType, Resource resource, String workspaceName) {
+        super((baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME),
+                resource.getResourceType(),
+                resource.getResourceSuperType(),
+                null);
         this.methodName = methodName;
-        this.baseResourceType = (baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME);
         this.requestSelectors = new String[0];
         this.numRequestSelectors = 0;
-        this.extension = null;
         this.isGet = false;
         this.isHtml = false;
-        this.resourceType = resource.getResourceType();
-        this.resourceSuperType = resource.getResourceSuperType();
 
         this.workspaceName = workspaceName;
         // create the hash code once
@@ -145,16 +128,16 @@ public class ResourceCollector {
      *            is assumed.
      */
     private ResourceCollector(SlingHttpServletRequest request, String workspaceName) {
+        super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
+                request.getResource().getResourceType(),
+                request.getResource().getResourceSuperType(),
+                request.getRequestPathInfo().getExtension());
         this.methodName = request.getMethod();
-        this.baseResourceType = ServletResolverConstants.DEFAULT_SERVLET_NAME;
-        this.resourceType = request.getResource().getResourceType();
-        this.resourceSuperType = request.getResource().getResourceSuperType();
 
         RequestPathInfo requestpaInfo = request.getRequestPathInfo();
 
         requestSelectors = requestpaInfo.getSelectors();
         numRequestSelectors = requestSelectors.length;
-        extension = request.getRequestPathInfo().getExtension();
 
         isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
         isHtml = isGet && "html".equals(extension);
@@ -167,27 +150,8 @@ public class ResourceCollector {
         this.hashCode = key.hashCode();
     }
 
-    public final Collection<Resource> getServlets(ResourceResolver resolver) {
-
-        SortedSet<Resource> resources = new TreeSet<Resource>();
-
-        Iterator<String> locations = new LocationIterator(resourceType, resourceSuperType,
-            baseResourceType, resolver);
-        while (locations.hasNext()) {
-            String location = locations.next();
-
-            // get the location resource, use a synthetic resource if there
-            // is no real location. There may still be children at this
-            // location
-            Resource locationRes = getResource(resolver, location);
-            getWeightedResources(resources, locationRes);
-        }
-
-        return resources;
-    }
-
-    protected void getWeightedResources(Set<Resource> resources,
-            Resource location) {
+    protected void getWeightedResources(final Set<Resource> resources,
+                                        Resource location) {
 
         ResourceResolver resolver = location.getResourceResolver();
         Resource current = location;
@@ -281,53 +245,6 @@ public class ResourceCollector {
         }
     }
 
-    /**
-     * Creates a {@link WeightedResource} and adds it to the set of resources.
-     * The number of resources already present in the set is used as the ordinal
-     * number for the newly created resource.
-     *
-     * @param resources The set of resource to which the
-     *            {@link WeightedResource} is added.
-     * @param resource The <code>Resource</code> on which the
-     *            {@link WeightedResource} is based.
-     * @param numSelectors The number of request selectors which are matched by
-     *            the name of the resource.
-     * @param methodPrefixWeight The method/prefix weight assigned to the
-     *            resource according to the resource name.
-     */
-    protected final void addWeightedResource(Set<Resource> resources,
-            Resource resource, int numSelectors, int methodPrefixWeight) {
-        WeightedResource lr = new WeightedResource(resources.size(), resource,
-            numSelectors, methodPrefixWeight);
-        resources.add(lr);
-    }
-
-    /**
-     * Returns a resource for the given <code>path</code>.
-     * If no resource exists at the given path a
-     * <code>SyntheticResource</code> is returned.
-     *
-     * @param resolver The <code>ResourceResolver</code> used to access the
-     *            resource.
-     * @param path The absolute path of the resource to return.
-     * @return The actual resource at the given <code>path</code> or a
-     *         synthetic resource representing the path location.
-     */
-    protected final Resource getResource(ResourceResolver resolver,
-            String path) {
-        Resource res = resolver.getResource(path);
-
-        if (res == null) {
-            if (!path.startsWith("/")) {
-                path = "/".concat(path);
-            }
-
-            res = new SyntheticResource(resolver, path, "$synthetic$");
-        }
-
-        return res;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if ( !(obj instanceof ResourceCollector) ) {
@@ -336,42 +253,22 @@ public class ResourceCollector {
         if ( obj == this ) {
             return true;
         }
-        final ResourceCollector o = (ResourceCollector)obj;
-        if ( isGet == o.isGet
-             && isHtml == o.isHtml
-             && numRequestSelectors == o.numRequestSelectors
-             && stringEquals(resourceType, o.resourceType)
-             && stringEquals(resourceSuperType, o.resourceSuperType)
-             && stringEquals(extension, o.extension)
-             && stringEquals(baseResourceType, o.baseResourceType)
-             && stringEquals(methodName, o.methodName)
-             && stringEquals(workspaceName, o.workspaceName)) {
-            // now compare selectors
-            for(int i=0;i<numRequestSelectors;i++) {
-                if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
-                    return false;
+        if ( super.equals(obj) ) {
+            final ResourceCollector o = (ResourceCollector)obj;
+            if ( isGet == o.isGet
+                 && isHtml == o.isHtml
+                 && numRequestSelectors == o.numRequestSelectors
+                 && stringEquals(methodName, o.methodName)
+                 && stringEquals(workspaceName, o.workspaceName)) {
+                // now compare selectors
+                for(int i=0;i<numRequestSelectors;i++) {
+                    if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         }
         return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return this.hashCode;
-    }
-
-    /**
-     * Helper method to compare two strings which can possibly be <code>null</code>
-     */
-    private boolean stringEquals(final String s1, final String s2) {
-        if ( s1 == null && s2 == null ) {
-            return true;
-        }
-        if ( s1 == null || s2 == null ) {
-            return false;
-        }
-        return s1.equals(s2);
     }
 }
