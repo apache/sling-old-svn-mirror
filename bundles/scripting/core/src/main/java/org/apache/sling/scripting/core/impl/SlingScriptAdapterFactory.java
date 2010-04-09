@@ -120,6 +120,11 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      */
     private Map<String, Map<Object, BindingsValuesProvider>> langBindingsValuesProviders;
 
+    /**
+     * The service cache for script execution.
+     */
+    private ServiceCache serviceCache;
+
     // ---------- AdapterFactory -----------------------------------------------
 
     @SuppressWarnings("unchecked")
@@ -133,7 +138,8 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
         if (engine != null) {
             Collection<BindingsValuesProvider> bindingsValuesProviders = getBindingsValuesProviders(engine.getFactory());
             // unchecked cast
-            return (AdapterType) new DefaultSlingScript(this.bundleContext, resource, engine, bindingsValuesProviders);
+            return (AdapterType) new DefaultSlingScript(this.bundleContext,
+                    resource, engine, bindingsValuesProviders, this.serviceCache);
         }
 
         return null;
@@ -322,9 +328,12 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
         } catch (Throwable t) {
             // so what ?
         }
+        this.serviceCache = new ServiceCache(this.bundleContext);
     }
 
     protected void deactivate(ComponentContext context) {
+        this.serviceCache.dispose();
+        this.serviceCache = null;
 
         try {
             org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.destroyPlugin();

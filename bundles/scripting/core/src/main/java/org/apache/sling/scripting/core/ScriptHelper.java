@@ -54,72 +54,88 @@ import org.slf4j.LoggerFactory;
  */
 public class ScriptHelper implements SlingScriptHelper {
 
+    /** The corresponding script. */
     private final SlingScript script;
 
+    /** The current request or <code>null</code>. */
     private final SlingHttpServletRequest request;
 
+    /** The current response or <code>null</code>. */
     private final SlingHttpServletResponse response;
 
+    /** The bundle context. */
     protected final BundleContext bundleContext;
 
     /**
      * The list of references - we don't need to synchronize this as we are
      * running in one single request.
      */
-    protected final List<ServiceReference> references = new ArrayList<ServiceReference>();
+    protected List<ServiceReference> references;
 
     /** A map of found services. */
-    protected final Map<String, Object> services = new HashMap<String, Object>();
+    protected Map<String, Object> services;
 
-    public ScriptHelper(BundleContext ctx, SlingScript script) {
+    public ScriptHelper(final BundleContext ctx, final SlingScript script) {
         if (ctx == null ) {
             throw new IllegalArgumentException("Bundle context must not be null.");
         }
-        this.bundleContext = ctx;
         this.request = null;
         this.response = null;
         this.script = script;
+        this.bundleContext = ctx;
     }
 
-    public ScriptHelper(BundleContext ctx, SlingScript script, SlingHttpServletRequest request,
-            SlingHttpServletResponse response) {
+    public ScriptHelper(final BundleContext ctx,
+            final SlingScript script,
+            final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response) {
         if (ctx == null ) {
             throw new IllegalArgumentException("Bundle context must not be null.");
         }
-        this.bundleContext = ctx;
         this.script = script;
         this.request = new OnDemandReaderRequest(request);
         this.response = new OnDemandWriterResponse(response);
+        this.bundleContext = ctx;
     }
 
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#getScript()
+     */
     public SlingScript getScript() {
         return script;
     }
 
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#getRequest()
+     */
     public SlingHttpServletRequest getRequest() {
         return request;
     }
 
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#getResponse()
+     */
     public SlingHttpServletResponse getResponse() {
         return response;
     }
 
     /**
-     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
-     *        while handling the include.
-     * @throws SlingServletException Wrapping a <code>ServletException</code>
-     *             thrown while handling the include.
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#include(java.lang.String)
      */
     public void include(String path) {
         include(path, (RequestDispatcherOptions) null);
     }
 
-    /** Include the output of another request, using specified options */
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#include(java.lang.String, java.lang.String)
+     */
     public void include(String path, String options) {
         include(path, new RequestDispatcherOptions(options));
     }
 
-    /** Include the output of another request, using specified options */
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#include(java.lang.String, org.apache.sling.api.request.RequestDispatcherOptions)
+     */
     public void include(String path, RequestDispatcherOptions options) {
         final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
             path, options);
@@ -135,17 +151,23 @@ public class ScriptHelper implements SlingScriptHelper {
         }
     }
 
-    /** Forward the request to another resource, using no options */
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(java.lang.String)
+     */
     public void forward(String path) {
         forward(path, (RequestDispatcherOptions) null);
     }
 
-    /** Forward the request to another resource, using specified options */
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(java.lang.String, java.lang.String)
+     */
     public void forward(String path, String options) {
         forward(path, new RequestDispatcherOptions(options));
     }
 
-    /** Forward the request to another resource, using specified options */
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(java.lang.String, org.apache.sling.api.request.RequestDispatcherOptions)
+     */
     public void forward(String path, RequestDispatcherOptions options) {
         final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
             path, options);
@@ -162,16 +184,29 @@ public class ScriptHelper implements SlingScriptHelper {
     }
 
     /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
+     */
+    public void dispose() {
+        LoggerFactory.getLogger(this.getClass()).error("ScriptHelper#dispose has been called. This method is deprecated and should never be called by clients!");
+    }
+
+    /**
      * @see org.apache.sling.api.scripting.SlingScriptHelper#getService(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
     public <ServiceType> ServiceType getService(Class<ServiceType> type) {
-        ServiceType service = (ServiceType) this.services.get(type.getName());
+        ServiceType service = (this.services == null ? null : (ServiceType) this.services.get(type.getName()));
         if (service == null) {
             final ServiceReference ref = this.bundleContext.getServiceReference(type.getName());
             if (ref != null) {
                 service = (ServiceType) this.bundleContext.getService(ref);
                 if ( service != null ) {
+                    if ( this.services == null ) {
+                        this.services = new HashMap<String, Object>();
+                    }
+                    if ( this.references == null ) {
+                        this.references = new ArrayList<ServiceReference>();
+                    }
                     this.references.add(ref);
                     this.services.put(type.getName(), service);
                 }
@@ -194,9 +229,12 @@ public class ScriptHelper implements SlingScriptHelper {
             if (refs != null) {
                 final List<ServiceType> objects = new ArrayList<ServiceType>();
                 for (int i = 0; i < refs.length; i++) {
-                    this.references.add(refs[i]);
                     final ServiceType service = (ServiceType) this.bundleContext.getService(refs[i]);
                     if (service != null) {
+                        if ( this.references == null ) {
+                            this.references = new ArrayList<ServiceReference>();
+                        }
+                        this.references.add(refs[i]);
                         objects.add(service);
                     }
                 }
@@ -215,19 +253,16 @@ public class ScriptHelper implements SlingScriptHelper {
      * Clean up this instance.
      */
     public void cleanup() {
-        final Iterator<ServiceReference> i = this.references.iterator();
-        while (i.hasNext()) {
-            final ServiceReference ref = i.next();
-            this.bundleContext.ungetService(ref);
+        if ( this.references != null ) {
+            final Iterator<ServiceReference> i = this.references.iterator();
+            while (i.hasNext()) {
+                final ServiceReference ref = i.next();
+                this.bundleContext.ungetService(ref);
+            }
+            this.references.clear();
         }
-        this.references.clear();
-        this.services.clear();
-    }
-
-    /**
-     * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
-     */
-    public void dispose() {
-        LoggerFactory.getLogger(this.getClass()).error("ScriptHelper#dispose has been called. This method is deprecated and should never be called by clients!");
+        if ( this.services != null ) {
+            this.services.clear();
+        }
     }
 }
