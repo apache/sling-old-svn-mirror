@@ -1143,7 +1143,7 @@ public class JobEventHandler
                     final String dateString = ISO8601.format(beforeDate);
                     buffer.append(" and @");
                     buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-                    buffer.append(" >= xs:dateTime('");
+                    buffer.append(" > xs:dateTime('");
                     buffer.append(dateString);
                     buffer.append("')");
                 }
