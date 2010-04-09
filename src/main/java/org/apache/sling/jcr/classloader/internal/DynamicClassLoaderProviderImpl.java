@@ -183,7 +183,8 @@ public class DynamicClassLoaderProviderImpl
             newName = cleanPath(newName);
 
             session = this.getSession();
-            session.getWorkspace().move(oldName, newName);
+            session.move(oldName, newName);
+            session.save();
             return true;
         } catch (RepositoryException re) {
             log.error("Cannot rename " + oldName + " to " + newName, re);
