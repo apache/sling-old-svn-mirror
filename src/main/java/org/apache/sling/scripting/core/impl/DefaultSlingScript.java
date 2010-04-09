@@ -68,7 +68,6 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
-import org.apache.sling.scripting.core.ScriptHelper;
 import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -106,18 +105,27 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The ScriptBindingsValuesProviders. */
     private final Collection<BindingsValuesProvider> bindingsValuesProviders;
 
+    /** The cache for services. */
+    private final ServiceCache cache;
+
     /**
      * Constructor
      * @param bundleContext The bundle context
      * @param scriptResource The script resource
      * @param scriptEngine The script engine
+     * @param bindingsValuesProviders additional bindings values providers
+     * @param cache serviceCache
      */
-    DefaultSlingScript(BundleContext bundleContext, Resource scriptResource, ScriptEngine scriptEngine,
-            Collection<BindingsValuesProvider> bindingsValuesProviders) {
+    DefaultSlingScript(final BundleContext bundleContext,
+            final Resource scriptResource,
+            final ScriptEngine scriptEngine,
+            final Collection<BindingsValuesProvider> bindingsValuesProviders,
+            final ServiceCache cache) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
         this.bundleContext = bundleContext;
         this.bindingsValuesProviders = bindingsValuesProviders;
+        this.cache = cache;
         this.scriptName = this.scriptResource.getPath();
         // Now know how to get the input stream, we still have to decide
         // on the encoding of the stream's data. Primarily we assume it is
@@ -262,7 +270,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // dispose of the SlingScriptHelper
             if ( bindings != null && disposeScriptHelper ) {
-                final ScriptHelper helper = (ScriptHelper) bindings.get(SLING);
+                final InternalScriptHelper helper = (InternalScriptHelper) bindings.get(SLING);
                 if ( helper != null ) {
                     helper.cleanup();
                 }
@@ -467,9 +475,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         if (slingObject == null) {
 
             if ( request != null ) {
-                slingObject = new ScriptHelper(this.bundleContext, this, request, slingBindings.getResponse());
+                slingObject = new InternalScriptHelper(this.bundleContext, this, request, slingBindings.getResponse(), this.cache);
             } else {
-                slingObject = new ScriptHelper(this.bundleContext, this);
+                slingObject = new InternalScriptHelper(this.bundleContext, this, this.cache);
             }
         } else if (!(slingObject instanceof SlingScriptHelper) ) {
             throw fail(SLING, "Wrong type");
