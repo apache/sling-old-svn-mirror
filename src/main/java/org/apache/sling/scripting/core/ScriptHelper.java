@@ -48,6 +48,9 @@ import org.slf4j.LoggerFactory;
  * on-demand writer and a simple API for request inclusion. Instances of this
  * class are made available to the scripts as the global <code>sling</code>
  * variable.
+ *
+ * Client code using this object should take care to call {@link #cleanup()}
+ * when the object is not used anymore!
  */
 public class ScriptHelper implements SlingScriptHelper {
 
