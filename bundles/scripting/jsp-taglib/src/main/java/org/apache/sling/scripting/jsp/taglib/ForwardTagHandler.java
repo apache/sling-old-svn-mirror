@@ -30,6 +30,8 @@ import javax.servlet.jsp.JspTagException;
  */
 public class ForwardTagHandler extends AbstractDispatcherTagHandler {
 
+    private static final long serialVersionUID = 4516800311593983971L;
+
     protected void dispatch(RequestDispatcher dispatcher,
             ServletRequest request, ServletResponse response)
             throws IOException, ServletException, JspTagException {
