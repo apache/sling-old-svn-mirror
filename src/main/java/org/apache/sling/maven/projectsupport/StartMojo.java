@@ -24,51 +24,28 @@ import org.apache.sling.launchpad.base.impl.Sling;
 import org.osgi.framework.BundleException;
 
 /**
- * Run a Launchpad application.
+ * Start a Launchpad application.
  *
- * @goal run
+ * @goal start
  * @requiresDependencyResolution test
  *
  */
-public class RunMojo extends AbstractLaunchpadStartingPlugin {
+public class StartMojo extends AbstractLaunchpadStartingPlugin {
 
+    /**
+     * @parameter expression="${sling.control.port}" default-value="63000"
+     */
+    private int controlPort;
 
-
-    private Thread shutdown = new Thread() {
-        /**
-         * Called when the Java VM is being terminiated, for example because the
-         * KILL signal has been sent to the process. This method calls stop on
-         * the launched Sling instance to terminate the framework before
-         * returning.
-         */
-        @Override
-        public void run() {
-            getLog().info("Java VM is shutting down", null);
-            shutdown();
-        }
-
-        // ---------- Shutdown support for control listener and shutdown hook
-
-        void shutdown() {
-            // remove the shutdown hook, will fail if called from the
-            // shutdown hook itself. Otherwise this prevents shutdown
-            // from being called again
-            try {
-                Runtime.getRuntime().removeShutdownHook(this);
-            } catch (Throwable t) {
-                // don't care for problems removing the hook
-            }
-
-            stopSling();
-        }
-    };
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected Sling startSling(ResourceProvider resourceProvider, final Map<String, String> props, Logger logger)
             throws BundleException {
-        Runtime.getRuntime().addShutdownHook(shutdown);
+        new ControlListener(this, getLog(), null, controlPort).listen();
 
-        // creating the instance launches the framework and we are done here
-        Sling mySling = new Sling(this, logger, resourceProvider, props) {
+        return new Sling(this, logger, resourceProvider, props) {
 
             // overwrite the loadPropertiesOverride method to inject the
             // mojo arguments unconditionally. These will not be persisted
@@ -80,17 +57,6 @@ public class RunMojo extends AbstractLaunchpadStartingPlugin {
                 }
             }
         };
-
-        // TODO this seems hacky!
-        try {
-            while (mySling != null) {
-                Thread.sleep(100);
-            }
-        } catch (InterruptedException e) {
-        }
-
-        return mySling;
     }
-
 
 }
