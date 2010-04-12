@@ -31,6 +31,8 @@ import javax.servlet.jsp.tagext.BodyContent;
  */
 public class IncludeTagHandler extends AbstractDispatcherTagHandler {
 
+    private static final long serialVersionUID = 2835586777145471683L;
+
     /** flush argument */
     private boolean flush = false;
 
