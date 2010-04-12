@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <version>6-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing</name>
@@ -45,7 +45,7 @@
 
     <properties>
         <!-- HTTP port to use when running mvn jetty:run -->
-        <jetty.http.port>8888</jetty.http.port>
+        <run.http.port>8888</run.http.port>
 
         <!-- Timeout when checking for Sling readyness before starting tests -->
         <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
@@ -58,16 +58,6 @@
 
         <!-- hostname for integration tests -->
         <test.host>localhost</test.host>
-
-        <!--
-            Disable Jetty webapp rescan (override with -D)
-        -->
-        <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
-
-        <!--
-            Sling home directory when starting with jetty:run
-        -->
-        <jetty.sling.home>target/sling</jetty.sling.home>
 
         <!--
             Defines which tests are for the "integration-testing" phase
@@ -87,7 +77,6 @@
 
     <build>
         <plugins>
-
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>2.2</version>
@@ -99,6 +88,7 @@
                                 <include>derby.log</include>
                                 <include>cachedir</include>
                                 <include>sling</include>
+                                <include>jackrabbit</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -140,41 +130,21 @@
                         </configuration>
                      </execution>
                  </executions>
-             </plugin>
+            </plugin>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <contextPath>/</contextPath>
-                    <scanIntervalSeconds>
-                        ${jetty.scan.interval.seconds}
-                    </scanIntervalSeconds>
-
-                    <systemProperties>
-                        <systemProperty>
-                            <name>sling.home</name>
-                            <value>${jetty.sling.home}</value>
-                        </systemProperty>
-
-                    </systemProperties>
-
-                    <connectors>
-                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-                            <port>${jetty.http.port}</port>
-                            <maxIdleTime>60000</maxIdleTime>
-                        </connector>
-                    </connectors>
-
-                    <!--
-                        Use target/... as the webapp source, as we unpack stuff there from the
-                        Sling launcher modules
-                    -->
-                    <webAppSourceDirectory>
-                        target/${artifactId}-${pom.version}
-                    </webAppSourceDirectory>
+                    <archive>
+    	                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        <manifest>
+                            <addDefaultImplementationEntries>
+                                true
+                            </addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-launchpad-plugin</artifactId>
@@ -185,42 +155,17 @@
                             <goal>prepare-package</goal>
                         </goals>
                     </execution>
-                </executions>    
+                    <execution>
+                        <id>default-cli</id>
+                        <configuration>
+                            <httpPort>${run.http.port}</httpPort>
+                        </configuration>
+                    </execution>
+                </executions>
                 <configuration>
                     <defaultBundleList>
-                        <version>6-SNAPSHOT</version>
+                        <version>${project.version}</version>
                     </defaultBundleList>
-                    <httpPort>${jetty.http.port}</httpPort>
-                </configuration>
-            </plugin>
-
-            <!--
-              Include sling-app launcher classes and resources, but no Sling
-              bundles (we want to specify our own versions)
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <webResources>
-                        <!-- the configuration resources -->
-                        <resource>
-                            <directory>
-                                ${project.build.directory}/launchpad-bundles
-                            </directory>
-                            <targetPath>WEB-INF</targetPath>
-                        </resource>
-                        <!-- Legal stuff -->
-                        <resource>
-                            <directory>${basedir}</directory>
-                            <targetPath>META-INF</targetPath>
-                            <includes>
-                                <include>LICENSE*</include>
-                                <include>NOTICE*</include>
-                                <include>DISCLAIMER</include>
-                            </includes>
-                        </resource>
-                    </webResources>
                 </configuration>
             </plugin>
 
@@ -230,11 +175,8 @@
                 <configuration>
                     <systemProperties>
                         <!--
-                            WARNING: make sure these URLs are consistent with the
-                            cargo-maven2-plugin settings: AFAIK Maven does not
-                            expand variables in the <value> element.
-                            And WARNING: these properties are duplicated somewhere in this
-                            POM with slightly different values...there must be a better way.
+                            These settings are used when running the integration against a different
+                            instance of Sling. See README.txt for more information.
                         -->
                         <property>
                             <name>launchpad.http.server.url</name>
@@ -252,8 +194,8 @@
                             <name>HttpTestBase.readyTimeoutSeconds</name>
                             <value>
                                 ${HttpTestBase.readyTimeoutSeconds}
-                            </value>
-                        </property>
+                             </value>
+                         </property>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -277,9 +219,9 @@
     <profiles>
         <profile>
             <!--
-                Run the cargo-based integration tests.
+                Run the integration tests.
             -->
-            <id>cargoIntegrationTesting</id>
+            <id>integrationTesting</id>
             <activation>
                 <property>
                     <name>!maven.test.skip</name>
@@ -319,7 +261,7 @@
                                                 launchpad.http.server.url
                                             </name>
                                             <value>
-                                                http://${test.host}:${http.port}/${project.build.finalName}
+                                                http://${test.host}:${http.port}/
                                             </value>
                                         </property>
                                         <property>
@@ -327,7 +269,7 @@
                                                 launchpad.webdav.server.url
                                             </name>
                                             <value>
-                                                http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
+                                                http://${test.host}:${http.port}/${webdav.workspace.path}
                                             </value>
                                         </property>
                                         <property>
@@ -342,8 +284,8 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.codehaus.cargo</groupId>
-                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-launchpad-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>start-container</id>
@@ -361,27 +303,13 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <wait>${integration.test.wait}</wait>
-                            <container>
-                                <containerId>jetty6x</containerId>
-                                <type>embedded</type>
-                                <systemProperties>
-                                    <sling.home>
-                                        ${basedir}/target/it/sling
-                                    </sling.home>
-                                </systemProperties>
-                            </container>
-                            <configuration>
-                                <home>${project.build.directory}/cargo</home>
-                                <properties>
-                                    <cargo.servlet.port>
-                                        ${http.port}
-                                    </cargo.servlet.port>
-                                    <!--
-                                        <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
-                                    -->
-                                </properties>
-                            </configuration>
+                            <httpPort>${http.port}</httpPort>
+                            <controlHost>${test.host}</controlHost>
+                            <jarWebSupport>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.0.4</version>
+                            </jarWebSupport>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -416,6 +344,24 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>pax-web</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-launchpad-plugin</artifactId>
+                        <configuration>
+                            <jarWebSupport>
+                                <groupId>org.ops4j.pax.web</groupId>
+                                <artifactId>pax-web-service</artifactId>
+                                <version>0.6.0</version>
+                            </jarWebSupport>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>
@@ -425,9 +371,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
             <version>2.1.1-SNAPSHOT</version>
-            <classifier>webapp</classifier>
-            <type>war</type>
-            <scope>runtime</scope>
+            <classifier>app</classifier>
         </dependency>
 
         <!-- JCR Install - needs to be in a profile -->
