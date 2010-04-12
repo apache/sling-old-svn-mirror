@@ -196,6 +196,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             Map<String, String> props = loadConfigProperties(slingHome);
 
             Logger logger = new ServletContextLogger(getServletContext());
+            logger.log(Logger.LOG_ERROR, "msg without exception");
             ResourceProvider rp = new ServletContextResourceProvider(
                 getServletContext());
             tmpSling = new SlingBridge(notifiable, logger, rp, props, getServletContext());
@@ -434,7 +435,11 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
                     servletContext.log("DEBUG: " + s);
                     break;
                 case LOG_ERROR:
-                    servletContext.log("ERROR: " + s, throwable);
+                    if (throwable == null) {
+                        servletContext.log("ERROR: " + s);
+                    } else {
+                        servletContext.log("ERROR: " + s, throwable);
+                    }
                     break;
                 case LOG_INFO:
                     servletContext.log("INFO: " + s);
