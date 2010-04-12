@@ -51,13 +51,12 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
             resourceSuperType = null;
             baseResourceType = "";
         }
-        final int pos = name.indexOf('.');
+        scriptName = name;
+        final int pos = name.lastIndexOf('.');
         if ( pos == -1 ) {
             extension = null;
-            scriptName = name;
         } else {
             extension = name.substring(pos);
-            scriptName = name.substring(0, pos);
         }
         return new NamedScriptResourceCollector(baseResourceType,
                 resourceType,
@@ -83,43 +82,40 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
     protected void getWeightedResources(final Set<Resource> resources,
                                         final Resource location) {
         final ResourceResolver resolver = location.getResourceResolver();
-        // if extension is set, we just check the exact script
+        // if extension is set, we first check for an exact script match
         if ( this.extension != null ) {
-            final String path = location.getPath() + '/' + this.scriptName + this.extension;
+            final String path = location.getPath() + '/' + this.scriptName;
             final Resource current = resolver.getResource(path);
             if ( current != null ) {
                 this.addWeightedResource(resources, current, 0, WeightedResource.WEIGHT_EXTENSION);
             }
+        }
+        // if the script name denotes a path we have to get the denoted resource
+        // first
+        final Resource current;
+        final String name;
+        final int pos = this.scriptName.lastIndexOf('/');
+        if ( pos == -1 ) {
+            current = location;
+            name = this.scriptName;
         } else {
-            // if the script name denotes a path we have to get the denoted resource
-            // first
-            final Resource current;
-            final String name;
-            final int pos = this.scriptName.lastIndexOf('/');
-            if ( pos == -1 ) {
-                current = location;
-                name = this.scriptName;
-            } else {
-                current = getResource(resolver, location.getPath() + '/' + this.scriptName.substring(0, pos));
-                name = this.scriptName.substring(pos + 1);
+            current = getResource(resolver, location.getPath() + '/' + this.scriptName.substring(0, pos));
+            name = this.scriptName.substring(pos + 1);
+        }
+        final Iterator<Resource> children = resolver.listChildren(current);
+        while (children.hasNext()) {
+            final Resource child = children.next();
+
+            final String currentScriptName = ResourceUtil.getName(child);
+            final int lastDot = currentScriptName.lastIndexOf('.');
+            if (lastDot < 0) {
+                // no extension in the name, this is not a script
+                continue;
             }
-            final Iterator<Resource> children = resolver.listChildren(current);
-            while (children.hasNext()) {
-                final Resource child = children.next();
 
-                String scriptName = ResourceUtil.getName(child);
-                final int lastDot = scriptName.lastIndexOf('.');
-                if (lastDot < 0) {
-                    // no extension in the name, this is not a script
-                    continue;
-                }
-
-                scriptName = scriptName.substring(0, lastDot);
-
-                if ( scriptName.equals(name) ) {
-                    this.addWeightedResource(resources, child, 0, WeightedResource.WEIGHT_PREFIX);
-                    continue;
-                }
+            if ( currentScriptName.substring(0, lastDot).equals(name) ) {
+                this.addWeightedResource(resources, child, 0, WeightedResource.WEIGHT_PREFIX);
+                continue;
             }
         }
     }
