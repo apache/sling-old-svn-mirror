@@ -26,11 +26,11 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,17 +235,10 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
     private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
 
-        /** marker value for the resourceSupertType before trying to evaluate */
-        private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
-
         private final String resourceType;
-
-        private String resourceSuperType;
-
         TypeOverwritingResourceWrapper(Resource delegatee, String resourceType) {
             super(delegatee);
             this.resourceType = resourceType;
-            this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
         }
 
         public String getResourceType() {
@@ -253,17 +246,12 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         /**
-         * Overwrite this here because the wrapped resource will return a super
-         * type based on the resource type of the wrapped resource instead of
-         * the resource type overwritten here
+         * Overwrite this here because the wrapped resource will return null as
+         * a super type instead of the resource type overwritten here
          */
         @Override
         public String getResourceSuperType() {
-            if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-                resourceSuperType = ResourceUtil.getResourceSuperType(
-                    this.getResourceResolver(), this.resourceType);
-            }
-            return resourceSuperType;
+        return null;
         }
     }
 }
