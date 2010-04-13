@@ -1014,7 +1014,10 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
                 // if the path of the event is a sub path of a search path
                 // we flush the whole cache
-                final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+                String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+                if (path.contains(":")) {
+                    path = path.substring(path.indexOf(":") + 1);
+                }
                 final String[] searchPaths = this.searchPath;
                 int index = 0;
                 while (!flushCache && index < searchPaths.length) {
