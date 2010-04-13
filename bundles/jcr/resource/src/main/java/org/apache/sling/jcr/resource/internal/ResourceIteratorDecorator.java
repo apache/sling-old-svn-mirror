@@ -29,12 +29,16 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
 
     private final ResourceDecoratorTracker tracker;
 
+    private final String workspaceName;
+
     private final Iterator<Resource> iterator;
 
     public ResourceIteratorDecorator(final ResourceDecoratorTracker tracker,
+            final String workspaceName,
             final Iterator<Resource> iterator) {
         this.tracker = tracker;
         this.iterator = iterator;
+        this.workspaceName = workspaceName;
     }
 
     public boolean hasNext() {
@@ -42,7 +46,7 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
     }
 
     public Resource next() {
-        return this.tracker.decorate(this.iterator.next(), null);
+        return this.tracker.decorate(this.iterator.next(), workspaceName, null);
     }
 
     public void remove() {

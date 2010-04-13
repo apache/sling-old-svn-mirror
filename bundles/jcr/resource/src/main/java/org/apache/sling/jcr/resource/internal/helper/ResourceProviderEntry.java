@@ -114,7 +114,7 @@ public class ResourceProviderEntry implements
 
         // this will consume slightly more memory but ensures read is fast.
         storageMap.setFast(true);
-        
+
     }
 
     /**

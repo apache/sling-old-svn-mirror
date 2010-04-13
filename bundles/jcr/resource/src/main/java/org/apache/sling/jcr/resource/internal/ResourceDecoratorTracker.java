@@ -55,8 +55,8 @@ public class ResourceDecoratorTracker {
         }
     }
 
-    /** Decorate a resource. */
-    public Resource decorate(final Resource resource, final HttpServletRequest request) {
+    /** Decorate a resource.  */
+    public Resource decorate(final Resource resource, String workspaceName, final HttpServletRequest request) {
         Resource result = resource;
         final ResourceDecorator[] decorators = this.resourceDecoratorsArray;
         for(final ResourceDecorator decorator : decorators) {
@@ -69,6 +69,9 @@ public class ResourceDecoratorTracker {
             if ( result == null ) {
                 result = original;
             }
+        }
+        if (workspaceName != null) {
+            result = new WorkspaceDecoratedResource(result, workspaceName);
         }
         return result;
     }
