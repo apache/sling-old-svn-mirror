@@ -38,12 +38,17 @@ public class StartMojo extends AbstractLaunchpadStartingPlugin {
     private int controlPort;
 
     /**
+     * @parameter expression="${sling.control.host}"
+     */
+    private String controlHost;
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected Sling startSling(ResourceProvider resourceProvider, final Map<String, String> props, Logger logger)
             throws BundleException {
-        new ControlListener(this, getLog(), null, controlPort).listen();
+        new ControlListener(this, getLog(), controlHost, controlPort).listen();
 
         return new Sling(this, logger, resourceProvider, props) {
 
