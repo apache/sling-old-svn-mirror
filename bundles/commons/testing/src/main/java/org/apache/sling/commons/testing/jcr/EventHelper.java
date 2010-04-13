@@ -53,7 +53,7 @@ public class EventHelper implements EventListener {
 	}
 
     public void onEvent(EventIterator it) {
-    	eventCount++;
+        eventCount++;
     }
 
     /** To make sure observation events have been delivered,
@@ -81,5 +81,15 @@ public class EventHelper implements EventListener {
     	if(eventCount < targetEventCount) {
     		throw new IllegalStateException("Event counter did not reach " + targetEventCount + ", waited " + timeoutMsec + " msec");
     	}
+    }
+
+    /**
+     * Remove the event listener from the observation listener.
+     */
+    public void dispose() {
+        try {
+            session.getWorkspace().getObservationManager().removeEventListener(this);
+        } catch (RepositoryException e) {
+        }
     }
 }
