@@ -78,11 +78,20 @@ with the Sling webapp mounted under /foo:
     -Dtest=**/integrationtest/**/*Test.java
 
 The  -s /dev/null parameter disables all your local Maven settings, to make sure
-they don't interfere. Feel free to remove that if you know what you're doing.
+they don't interfere (and it's different under Windows). Feel free to remove that 
+if you know what you're doing.
 
-To run a single test, other values can be used for the "-Dtest" parameter.
+To run a single test, other values can be used for the "-Dtest" parameter. To
+leave this launchpad/testing instance running and run individual tests again
+it, for example, use:
 
-This is very useful during development: you can leave a Sling webapp instance
+  mvn launchpad:run
+
+and in another terminal:
+
+  mvn test -Dhttp.port=8888 -Dtest=TestClassSelectionNamePattern
+
+This is very useful during development: you can leave a Sling instance
 running, update bundles in it using the mvn autoInstallBundle profile, and run
 specific integration tests quickly from another terminal.
 
