@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -36,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
@@ -43,6 +45,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
@@ -90,14 +93,27 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     private final MapEntries resourceMapper;
 
+    private boolean isAdmin;
+
+    private final Map<String, Object> originalAuthInfo;
+
+    private final String defaultWorkspaceName;
+
+    private final Map<String,ResourceResolver> createdResolvers = new HashMap<String,ResourceResolver>();
+
     /** Closed marker. */
     private volatile boolean closed = false;
 
     public JcrResourceResolver(JcrResourceProviderEntry rootProvider,
-            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
+            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper,
+            boolean isAdmin, Map<String, Object> originalAuthInfo,
+            String defaultWorkspaceName) {
         this.rootProvider = rootProvider;
         this.factory = factory;
         this.resourceMapper = resourceMapper;
+        this.isAdmin = isAdmin;
+        this.originalAuthInfo = originalAuthInfo;
+        this.defaultWorkspaceName = defaultWorkspaceName;
     }
 
     /**
@@ -107,6 +123,9 @@ public class JcrResourceResolver extends SlingAdaptable implements
         if ( !this.closed ) {
             this.closed = true;
             getSession().logout();
+            for (ResourceResolver resolver : createdResolvers.values()) {
+                resolver.close();
+            }
         }
     }
 
@@ -186,7 +205,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                     log.debug("resolve: Returning external redirect");
                     return this.factory.getResourceDecoratorTracker().decorate(
                             new RedirectResource(this, absPath, mappedPath[0],
-                                   mapEntry.getStatus()),
+                                   mapEntry.getStatus()), null,
                              request);
                 }
             }
@@ -281,7 +300,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             log.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
 
-        return this.factory.getResourceDecoratorTracker().decorate(res, request);
+        return this.factory.getResourceDecoratorTracker().decorate(res, null, request);
     }
 
     /**
@@ -475,22 +494,47 @@ public class JcrResourceResolver extends SlingAdaptable implements
     public Resource getResource(String path) {
         checkClosed();
 
+        if (path.contains(":")) {
+            String[] parts = path.split(":");
+            String workspaceName = parts[0];
+            if (workspaceName.equals(getSession().getWorkspace().getName())) {
+                path = parts[1];
+            } else {
+                try {
+                    ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                    return wsResolver.getResource(parts[1]);
+                } catch (LoginException e) {
+                    // requested a resource in a workspace I don't have access to.
+                    // TODO
+                }
+            }
+        }
+
         // if the path is absolute, normalize . and .. segements and get res
         if (path.startsWith("/")) {
             path = ResourceUtil.normalize(path);
-            final Resource result = (path != null) ? getResourceInternal(path) : null;
+            Resource result = (path != null) ? getResourceInternal(path) : null;
             if ( result != null ) {
-                return this.factory.getResourceDecoratorTracker().decorate(result, null);
+                String workspacePrefix = null;
+                if ( !getSession().getWorkspace().getName().equals(defaultWorkspaceName) ) {
+                    workspacePrefix = getSession().getWorkspace().getName();
+                }
+
+                result = this.factory.getResourceDecoratorTracker().decorate(result, workspacePrefix, null);
+                return result;
             }
             return null;
         }
 
         // otherwise we have to apply the search path
         // (don't use this.getSearchPath() to save a few cycle for not cloning)
-        for (String prefix : factory.getSearchPath()) {
-            Resource res = getResource(prefix + path);
-            if (res != null) {
-                return res;
+        String[] paths = factory.getSearchPath();
+        if (paths != null) {
+            for (String prefix : factory.getSearchPath()) {
+                Resource res = getResource(prefix + path);
+                if (res != null) {
+                    return res;
+                }
             }
         }
 
@@ -516,7 +560,29 @@ public class JcrResourceResolver extends SlingAdaptable implements
      */
     public Iterator<Resource> listChildren(Resource parent) {
         checkClosed();
-        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
+        String path = parent.getPath();
+        if (path.contains(":")) {
+            String[] parts = path.split(":");
+            String workspaceName = parts[0];
+            if (workspaceName.equals(getSession().getWorkspace().getName())) {
+                path = parts[1];
+            } else {
+                try {
+                    ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                    return wsResolver.listChildren(parent);
+                } catch (LoginException e) {
+                    // requested a resource in a workspace I don't have access to.
+                    // TODO
+                }
+            }
+        }
+
+        String workspacePrefix = null;
+        if ( !getSession().getWorkspace().getName().equals(defaultWorkspaceName) ) {
+            workspacePrefix = getSession().getWorkspace().getName();
+        }
+
+        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), workspacePrefix,
                 rootProvider.listChildren(parent));
     }
 
@@ -531,7 +597,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
-            return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
+            return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), null,
                     new JcrNodeResourceIterator(this, res.getNodes(),
                      factory.getDynamicClassLoader()));
         } catch (javax.jcr.query.InvalidQueryException iqe) {
@@ -613,6 +679,24 @@ public class JcrResourceResolver extends SlingAdaptable implements
      */
     private Session getSession() {
         return rootProvider.getSession();
+    }
+
+    // TODO - add some double-checked locking here.
+    private synchronized ResourceResolver getResolverForWorkspace(String workspaceName) throws LoginException {
+        ResourceResolver wsResolver = createdResolvers.get(workspaceName);
+        if (wsResolver == null) {
+            if (isAdmin) {
+                Map<String,Object> newAuthInfo = new HashMap<String,Object>();
+                newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+                wsResolver = factory.getAdministrativeResourceResolver(newAuthInfo);
+            } else {
+                Map<String,Object> newAuthInfo = new HashMap<String,Object>(originalAuthInfo);
+                newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+                wsResolver = factory.getResourceResolver(newAuthInfo);
+            }
+            createdResolvers.put(workspaceName, wsResolver);
+        }
+        return wsResolver;
     }
 
     /**

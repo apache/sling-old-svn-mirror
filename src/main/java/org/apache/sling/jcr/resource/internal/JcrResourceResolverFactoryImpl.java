@@ -44,6 +44,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
@@ -231,11 +232,7 @@ public class JcrResourceResolverFactoryImpl implements
      * @see org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(javax.jcr.Session)
      */
     public ResourceResolver getResourceResolver(Session session) {
-        JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry,
-            this.getDynamicClassLoader());
-
-        return new JcrResourceResolver(sessionRoot, this, mapEntries);
+        return getResourceResolver(session, true, null);
     }
 
     // ---------- Implementation helpers --------------------------------------
@@ -375,22 +372,27 @@ public class JcrResourceResolverFactoryImpl implements
                 e);
         }
 
-        String[] listenerWorkspaces = OsgiUtil.toStringArray(properties.get(PROP_LISTENER_WORKSPACES));
 
         // start observation listener
         try {
-            if (listenerWorkspaces == null) {
-                this.resourceListeners =
-                    Collections.singleton(new JcrResourceListener(this.repository, null, this, "/", "/", this.eventAdminTracker));
-            } else {
-                if (Arrays.asList(listenerWorkspaces).contains(ALL_WORKSPACES)) {
-                    listenerWorkspaces = getAllWorkspaces();
-                }
+            this.resourceListeners = new HashSet<JcrResourceListener>();
 
+            // first - add a listener for the default workspace
+            this.resourceListeners.add(new JcrResourceListener(this.repository, null, this, "/", "/", this.eventAdminTracker));
+
+            // then, iterate through any workspaces which are configured
+            String[] listenerWorkspaces = OsgiUtil.toStringArray(properties.get(PROP_LISTENER_WORKSPACES));
+            if (Arrays.asList(listenerWorkspaces).contains(ALL_WORKSPACES)) {
+                listenerWorkspaces = getAllWorkspaces();
+            }
+
+            if (listenerWorkspaces != null) {
                 this.resourceListeners = new HashSet<JcrResourceListener>(listenerWorkspaces.length);
                 for (String wspName : listenerWorkspaces) {
-                    this.resourceListeners.add(
+                    if (!wspName.equals(this.repository.getDefaultWorkspace())) {
+                        this.resourceListeners.add(
                             new JcrResourceListener(this.repository, wspName, this, "/", "/", this.eventAdminTracker));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -471,7 +473,19 @@ public class JcrResourceResolverFactoryImpl implements
         } catch (RepositoryException re) {
             throw getLoginException(re);
         }
-        return this.getResourceResolver(handleSudo(session, authenticationInfo));
+        return this.getResourceResolver(handleSudo(session, authenticationInfo), true, authenticationInfo);
+    }
+
+    /**
+     * Create a new ResourceResolver wrapping a Session object. Carries map of
+     * authentication info in order to create a new resolver as needed.
+     */
+    private ResourceResolver getResourceResolver(Session session, boolean isAdmin, Map<String, Object> authenticationInfo) {
+        JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
+            session, rootProviderEntry,
+            this.getDynamicClassLoader());
+
+        return new JcrResourceResolver(sessionRoot, this, mapEntries, isAdmin, authenticationInfo, repository.getDefaultWorkspace());
     }
 
     /**
@@ -491,7 +505,7 @@ public class JcrResourceResolverFactoryImpl implements
         } catch (RepositoryException re) {
             throw getLoginException(re);
         }
-        return this.getResourceResolver(handleSudo(session, authenticationInfo));
+        return this.getResourceResolver(handleSudo(session, authenticationInfo), false, authenticationInfo);
     }
 
     /**
@@ -534,7 +548,7 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private String getWorkspace(final Map<String, Object> authenticationInfo) {
         if ( authenticationInfo != null ) {
-            return (String) authenticationInfo.get("user.jcr.workspace");
+            return (String) authenticationInfo.get(JcrResourceConstants.AUTH_INFO_WORKSPACE);
         }
         return null;
     }

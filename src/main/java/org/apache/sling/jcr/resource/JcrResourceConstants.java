@@ -54,8 +54,9 @@ public class JcrResourceConstants {
     public static final String SLING_RESOURCE_SUPER_TYPE_PROPERTY = "sling:resourceSuperType";
 
     /**
-     * The name of the event property holding the workspace name.
+     * The name of the authentication info property containing the workspace name.
+     *
      * @since 2.0.8
      */
-    public static final String PROPERTY_WORKSPACE = "workspace";
+    public static final String AUTH_INFO_WORKSPACE = "user.jcr.workspace";
 }

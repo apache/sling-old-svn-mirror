@@ -21,12 +21,14 @@ package org.apache.sling.jcr.resource.internal;
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.Session;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
@@ -60,6 +62,12 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private ResourceResolver resResolver;
 
     private MapEntries mapEntries;
+
+    private Session ws2Session;
+
+    private ResourceResolver ws2Resolver;
+
+    private Node rootWs2Node;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -128,6 +136,15 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
 
         resResolver = resFac.getResourceResolver(session);
+
+        ws2Session = getRepository().loginAdministrative("ws2");
+
+        rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
+        ws2Session.save();
+
+        ws2Resolver = resFac.getAdministrativeResourceResolver(Collections.singletonMap(JcrResourceConstants.AUTH_INFO_WORKSPACE, (Object) "ws2"));
+
+
     }
 
     @Override
@@ -140,11 +157,18 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             rootNode.remove();
         }
 
+        if (rootWs2Node != null) {
+            rootWs2Node.remove();
+        }
+
         if (mapRoot != null) {
             mapRoot.remove();
         }
 
         session.save();
+        ws2Session.save();
+
+        ws2Resolver.close();
 
         super.tearDown();
     }
@@ -219,6 +243,40 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // missing resource
         String path = rootPath + "/missing";
+        res = resResolver.getResource(path);
+        assertNull(res);
+    }
+
+    public void testGetResourceFromWs2ViaWs2Resolver() throws Exception {
+        // existing resource
+        Resource res = ws2Resolver.getResource("ws2:" + rootPath);
+        assertNotNull(res);
+        assertEquals("ws2:" + rootPath, res.getPath());
+        assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
+            res.getResourceType());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+
+        // missing resource
+        String path = "ws2:" + rootPath + "/missing";
+        res = resResolver.getResource(path);
+        assertNull(res);
+    }
+
+    public void testGetResourceFromWs2ViaDefaultResolver() throws Exception {
+        // existing resource
+        Resource res = resResolver.getResource("ws2:" + rootPath);
+        assertNotNull(res);
+        assertEquals("ws2:" + rootPath, res.getPath());
+        assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
+            res.getResourceType());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+
+        // missing resource
+        String path = "ws2:" + rootPath + "/missing";
         res = resResolver.getResource(path);
         assertNull(res);
     }
@@ -903,12 +961,12 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
     }
-    
+
     public void testMapURLEscaping() throws Exception {
 
         final String mapHostInternal = "internal.host.com";
         final String mapRootInternal = "/content/internal";
-        
+
         Node internalRedirect = mapRoot.getNode("map/http").addNode(
             mapHostInternal + ".80", "sling:Mapping");
         internalRedirect.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
@@ -919,7 +977,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         final String path = "/sample with spaces";
         final String escapedPath = "/sample%20with%20spaces";
-        
+
         // ---------------------------------------------------------------------
         // internal redirect
 
@@ -937,11 +995,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // => only return path, escaped, because request host/port matches (cut off host part)
         mapped = resResolver.map(new ResourceResolverTestRequest(null, mapHostInternal, -1, rootPath), mapRootInternal + path);
         assertEquals(escapedPath, mapped);
-        
+
         // ---------------------------------------------------------------------
         // no mapping config
         // => return only escaped path
-        
+
         final String unmappedRoot = "/unmappedRoot";
 
         // a) test map(String)
@@ -953,7 +1011,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(unmappedRoot + escapedPath, mapped);
 
     }
-    
+
     public void testMapNamespaceMangling() throws Exception {
 
         final String mapHost = "virtual.host.com";

@@ -19,8 +19,10 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -31,12 +33,13 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -82,14 +85,16 @@ public class JcrResourceListener implements EventListener {
      */
     public JcrResourceListener(final SlingRepository repository,
                                final String workspaceName,
-                               final JcrResourceResolverFactory factory,
+                               final ResourceResolverFactory factory,
                                final String startPath,
                                final String mountPrefix,
                                final ServiceTracker eventAdminTracker)
-    throws RepositoryException {
+    throws LoginException, RepositoryException {
         this.workspaceName = workspaceName;
-        this.session = repository.loginAdministrative(workspaceName);
-        this.resolver = factory.getResourceResolver(this.session);
+        Map<String,Object> authInfo = new HashMap<String,Object>();
+        authInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+        this.resolver = factory.getAdministrativeResourceResolver(authInfo);
+        this.session = resolver.adaptTo(Session.class);
         this.startPath = startPath;
         this.eventAdminTracker = eventAdminTracker;
         this.mountPrefix = (mountPrefix.equals("/") ? null : mountPrefix);
@@ -107,7 +112,7 @@ public class JcrResourceListener implements EventListener {
         } catch (RepositoryException e) {
             logger.warn("Unable to remove session listener: " + this, e);
         }
-        this.session.logout();
+        this.resolver.close();
     }
 
     /**
@@ -163,14 +168,23 @@ public class JcrResourceListener implements EventListener {
         // send events for removed
         for(final String path : removedPaths) {
             final Dictionary<String, String> properties = new Hashtable<String, String>();
-            properties.put(SlingConstants.PROPERTY_PATH, path);
+            properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(path));
 
             localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
         }
     }
 
+    private String createWorkspacePath(String path) {
+        if (workspaceName == null) {
+            return path;
+        } else {
+            return workspaceName+":"+path;
+        }
+    }
+
     private void sendEvents(final Set<String> paths, final String topic, final EventAdmin localEA) {
-        for(final String path : paths) {
+        for(String path : paths) {
+            path = createWorkspacePath(path);
             Resource resource = this.resolver.getResource(path);
             if ( resource != null ) {
                 // check for nt:file nodes
@@ -191,9 +205,6 @@ public class JcrResourceListener implements EventListener {
                 }
                 final Dictionary<String, String> properties = new Hashtable<String, String>();
                 properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
-                if (workspaceName != null) {
-                    properties.put(JcrResourceConstants.PROPERTY_WORKSPACE, workspaceName);
-                }
                 final String resourceType = resource.getResourceType();
                 if ( resourceType != null ) {
                     properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
