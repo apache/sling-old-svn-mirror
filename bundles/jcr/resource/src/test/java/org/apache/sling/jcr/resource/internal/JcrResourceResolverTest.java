@@ -137,6 +137,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         resResolver = resFac.getResourceResolver(session);
 
+        try {
+            getSession().getWorkspace().createWorkspace("ws2");
+        } catch (Exception e) {
+            if (!e.getMessage().equals("workspace 'ws2' already exists.")) {
+                throw e;
+            }
+        }
+
         ws2Session = getRepository().loginAdministrative("ws2");
 
         rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
