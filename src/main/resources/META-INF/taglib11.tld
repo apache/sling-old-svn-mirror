@@ -23,9 +23,9 @@
     version="2.0">
 
     <description>A supporting tab library for Apache Sling</description>
-    <tlib-version>1.0</tlib-version>
+    <tlib-version>1.1</tlib-version>
     <short-name>sling</short-name>
-    <uri>http://sling.apache.org/taglibs/sling/1.0</uri>
+    <uri>http://sling.apache.org/taglibs/sling/1.1</uri>
 
     <tag>
         <description>
@@ -233,6 +233,72 @@
             <name>slingName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+
+    <tag>
+        <description>
+            Evaluates a script invocation and includes the result
+            in the current page.
+        </description>
+        <name>eval</name>
+        <tag-class>
+            org.apache.sling.scripting.jsp.taglib.EvalTagHandler
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                Whether to flush the output before including the target
+            </description>
+            <name>flush</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>
+                The path to the script object to include in the current
+                request processing. By default, the current resource
+                is used for script resolving. This behaviour can 
+                be changed by specifying either resource, resourceType
+                or ignoreResourceTypeHierarchy.
+            </description>
+            <name>script</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The resource object to include in the current request
+                processing. This attribute is optional. If it is
+                specified, resourceType should not be used. If both
+                are used, resource takes precedence.
+            </description>
+            <name>resource</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>org.apache.sling.api.resource.Resource</type>
+        </attribute>
+        <attribute>
+            <description>
+                The resource type of a resource to include. This
+                attribute is optional. If it is specified, resource
+                should not be used. If bot are used, resource
+                takes precedence.
+            </description>
+            <name>resourceType</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                Prevents using the resource type hierarchy for searching
+                a script.
+            </description>
+            <name>ignoreResourceTypeHierarchy</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
         </attribute>
     </tag>
 </taglib>
