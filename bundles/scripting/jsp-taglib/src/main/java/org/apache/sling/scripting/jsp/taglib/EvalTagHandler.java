@@ -111,7 +111,7 @@ public class EvalTagHandler extends TagSupport {
         }
 
         if (servlet == null) {
-            throw new JspException("Could not find script " + script);
+            throw new JspException("Could not find script '" + script + "' referenced in jsp " + scriptHelper.getScript().getScriptResource().getPath());
         }
 
         try {
