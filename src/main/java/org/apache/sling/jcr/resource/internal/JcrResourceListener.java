@@ -38,7 +38,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -75,7 +74,6 @@ public class JcrResourceListener implements EventListener {
 
     /**
      * Constructor.
-     * @param repository The repository to observe.
      * @param workspaceName The workspace name to observe
      * @param factory    The resource resolver factory.
      * @param startPath  The observation root path
@@ -83,16 +81,17 @@ public class JcrResourceListener implements EventListener {
      * @param eventAdminTracker The service tracker for the event admin.
      * @throws RepositoryException
      */
-    public JcrResourceListener(final SlingRepository repository,
-                               final String workspaceName,
+    public JcrResourceListener(final String workspaceName,
                                final ResourceResolverFactory factory,
                                final String startPath,
                                final String mountPrefix,
                                final ServiceTracker eventAdminTracker)
     throws LoginException, RepositoryException {
         this.workspaceName = workspaceName;
-        Map<String,Object> authInfo = new HashMap<String,Object>();
-        authInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+        final Map<String,Object> authInfo = new HashMap<String,Object>();
+        if ( workspaceName != null ) {
+            authInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+        }
         this.resolver = factory.getAdministrativeResourceResolver(authInfo);
         this.session = resolver.adaptTo(Session.class);
         this.startPath = startPath;
@@ -174,12 +173,11 @@ public class JcrResourceListener implements EventListener {
         }
     }
 
-    private String createWorkspacePath(String path) {
+    private String createWorkspacePath(final String path) {
         if (workspaceName == null) {
             return path;
-        } else {
-            return workspaceName+":"+path;
         }
+        return workspaceName + ":" + path;
     }
 
     private void sendEvents(final Set<String> paths, final String topic, final EventAdmin localEA) {

@@ -381,7 +381,7 @@ public class JcrResourceResolverFactoryImpl implements
             this.resourceListeners = new HashSet<JcrResourceListener>();
 
             // first - add a listener for the default workspace
-            this.resourceListeners.add(new JcrResourceListener(this.repository, null, this, "/", "/", this.eventAdminTracker));
+            this.resourceListeners.add(new JcrResourceListener(null, this, "/", "/", this.eventAdminTracker));
 
             // then, iterate through any workspaces which are configured
             String[] listenerWorkspaces = OsgiUtil.toStringArray(properties.get(PROP_LISTENER_WORKSPACES));
@@ -390,11 +390,10 @@ public class JcrResourceResolverFactoryImpl implements
             }
 
             if (listenerWorkspaces != null) {
-                this.resourceListeners = new HashSet<JcrResourceListener>(listenerWorkspaces.length);
-                for (String wspName : listenerWorkspaces) {
+                for (final String wspName : listenerWorkspaces) {
                     if (!wspName.equals(this.repository.getDefaultWorkspace())) {
                         this.resourceListeners.add(
-                            new JcrResourceListener(this.repository, wspName, this, "/", "/", this.eventAdminTracker));
+                            new JcrResourceListener(wspName, this, "/", "/", this.eventAdminTracker));
                     }
                 }
             }
