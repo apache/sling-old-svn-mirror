@@ -27,7 +27,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -494,15 +493,15 @@ public class JcrResourceResolver extends SlingAdaptable implements
     public Resource getResource(String path) {
         checkClosed();
 
-        if (path.contains(":")) {
-            String[] parts = path.split(":");
-            String workspaceName = parts[0];
+        final int wsSepPos = path.indexOf(":/");
+        if (wsSepPos != -1) {
+            final String workspaceName = path.substring(0, wsSepPos);
             if (workspaceName.equals(getSession().getWorkspace().getName())) {
-                path = parts[1];
+                path = path.substring(wsSepPos + 1);
             } else {
                 try {
                     ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
-                    return wsResolver.getResource(parts[1]);
+                    return wsResolver.getResource(path.substring(wsSepPos + 1));
                 } catch (LoginException e) {
                     // requested a resource in a workspace I don't have access to.
                     // TODO
@@ -558,15 +557,13 @@ public class JcrResourceResolver extends SlingAdaptable implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#listChildren(org.apache.sling.api.resource.Resource)
      */
-    public Iterator<Resource> listChildren(Resource parent) {
+    public Iterator<Resource> listChildren(final Resource parent) {
         checkClosed();
-        String path = parent.getPath();
-        if (path.contains(":")) {
-            String[] parts = path.split(":");
-            String workspaceName = parts[0];
-            if (workspaceName.equals(getSession().getWorkspace().getName())) {
-                path = parts[1];
-            } else {
+        final String path = parent.getPath();
+        final int wsSepPos = path.indexOf(":/");
+        if (wsSepPos != -1) {
+            final String workspaceName = path.substring(0, wsSepPos);
+            if (!workspaceName.equals(getSession().getWorkspace().getName())) {
                 try {
                     ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
                     return wsResolver.listChildren(parent);
