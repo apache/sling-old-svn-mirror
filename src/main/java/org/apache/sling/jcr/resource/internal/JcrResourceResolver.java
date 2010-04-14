@@ -46,7 +46,6 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
@@ -58,8 +57,11 @@ import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JcrResourceResolver extends SlingAdaptable implements
-        ResourceResolver {
+public class JcrResourceResolver
+    extends SlingAdaptable implements ResourceResolver {
+
+    /** default logger */
+    private final Logger LOGGER = LoggerFactory.getLogger(JcrResourceResolver.class);
 
     private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
 
@@ -83,36 +85,32 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
+    /** The root provider for the resource tree. */
     private final JcrResourceProviderEntry rootProvider;
 
+    /** The factory which created this resource resolver. */
     private final JcrResourceResolverFactoryImpl factory;
 
-    private final MapEntries resourceMapper;
+    /** Is this a resource resolver for an admin? */
+    private final boolean isAdmin;
 
-    private boolean isAdmin;
-
+    /** The original authentication information - this is used for further resource resolver creations. */
     private final Map<String, Object> originalAuthInfo;
 
-    private final String defaultWorkspaceName;
-
-    private final Map<String,ResourceResolver> createdResolvers = new HashMap<String,ResourceResolver>();
+    /** Resolvers for different workspaces. */
+    private Map<String,ResourceResolver> createdResolvers;
 
     /** Closed marker. */
     private volatile boolean closed = false;
 
-    public JcrResourceResolver(JcrResourceProviderEntry rootProvider,
-            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper,
-            boolean isAdmin, Map<String, Object> originalAuthInfo,
-            String defaultWorkspaceName) {
+    public JcrResourceResolver(final JcrResourceProviderEntry rootProvider,
+                               final JcrResourceResolverFactoryImpl factory,
+                               final boolean isAdmin,
+                               final Map<String, Object> originalAuthInfo) {
         this.rootProvider = rootProvider;
         this.factory = factory;
-        this.resourceMapper = resourceMapper;
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
-        this.defaultWorkspaceName = defaultWorkspaceName;
     }
 
     /**
@@ -122,12 +120,17 @@ public class JcrResourceResolver extends SlingAdaptable implements
         if ( !this.closed ) {
             this.closed = true;
             getSession().logout();
-            for (ResourceResolver resolver : createdResolvers.values()) {
-                resolver.close();
+            if ( this.createdResolvers != null ) {
+                for (final ResourceResolver resolver : createdResolvers.values()) {
+                    resolver.close();
+                }
             }
         }
     }
 
+    /** Check if the resource resolver is already closed.
+     * @throws IllegalStateException If the resolver is already closed
+     */
     private void checkClosed() {
         if ( this.closed ) {
             throw new IllegalStateException("Resource resolver is already closed.");
@@ -178,7 +181,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             requestPath = getMapPath("http", "localhost", 80, absPath);
         }
 
-        log.debug("resolve: Resolving request path {}", requestPath);
+        LOGGER.debug("resolve: Resolving request path {}", requestPath);
 
         // loop while finding internal or external redirect into the
         // content out of the virtual host mapping tree
@@ -187,21 +190,21 @@ public class JcrResourceResolver extends SlingAdaptable implements
         for (int i = 0; i < 100; i++) {
 
             String[] mappedPath = null;
-            for (MapEntry mapEntry : resourceMapper.getResolveMaps()) {
+            for (MapEntry mapEntry : this.factory.getMapEntries().getResolveMaps()) {
                 mappedPath = mapEntry.replace(requestPath);
                 if (mappedPath != null) {
-                    log.debug(
+                    LOGGER.debug(
                         "resolve: MapEntry {} matches, mapped path is {}",
                         mapEntry, mappedPath);
 
                     if (mapEntry.isInternal()) {
                         // internal redirect
-                        log.debug("resolve: Redirecting internally");
+                        LOGGER.debug("resolve: Redirecting internally");
                         break;
                     }
 
                     // external redirect
-                    log.debug("resolve: Returning external redirect");
+                    LOGGER.debug("resolve: Returning external redirect");
                     return this.factory.getResourceDecoratorTracker().decorate(
                             new RedirectResource(this, absPath, mappedPath[0],
                                    mapEntry.getStatus()), null,
@@ -212,7 +215,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // if there is no virtual host based path mapping, abort
             // and use the original realPath
             if (mappedPath == null) {
-                log.debug(
+                LOGGER.debug(
                     "resolve: Request path {} does not match any MapEntry",
                     requestPath);
                 break;
@@ -220,7 +223,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
             // if the mapped path is not an URL, use this path to continue
             if (!mappedPath[0].contains("://")) {
-                log.debug("resolve: Mapped path is for resource tree");
+                LOGGER.debug("resolve: Mapped path is for resource tree");
                 realPathList = mappedPath;
                 break;
             }
@@ -233,7 +236,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                     uri.getPort(), uri.getPath());
                 realPathList = new String[] { uri.getPath() };
 
-                log.debug(
+                LOGGER.debug(
                     "resolve: Mapped path is an URL, using new request path {}",
                     requestPath);
             } catch (URIException use) {
@@ -253,7 +256,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // first check whether the requested resource is a StarResource
             if (StarResource.appliesTo(realPath)) {
 
-                log.debug("resolve: Mapped path {} is a Star Resource",
+                LOGGER.debug("resolve: Mapped path {} is a Star Resource",
                     realPath);
                 res = new StarResource(this, ensureAbsPath(realPath));
 
@@ -262,14 +265,14 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 if (realPath.startsWith("/")) {
 
                     // let's check it with a direct access first
-                    log.debug("resolve: Try absolute mapped path {}", realPath);
+                    LOGGER.debug("resolve: Try absolute mapped path {}", realPath);
                     res = resolveInternal(realPath);
 
                 } else {
 
                     String[] searchPath = getSearchPath();
                     for (int spi = 0; res == null && spi < searchPath.length; spi++) {
-                        log.debug(
+                        LOGGER.debug(
                             "resolve: Try relative mapped path with search path entry {}",
                             searchPath[spi]);
                         res = resolveInternal(searchPath[spi] + realPath);
@@ -283,7 +286,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
             final String resourcePath = ensureAbsPath(realPathList[0]);
-            log.debug(
+            LOGGER.debug(
                 "resolve: Path {} does not resolve, returning NonExistingResource at {}",
                    absPath, resourcePath);
 
@@ -296,7 +299,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 res.getResourceMetadata().setResolutionPathInfo(resourcePath.substring(index));
             }
         } else {
-            log.debug("resolve: Path {} resolves to Resource {}", absPath, res);
+            LOGGER.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
 
         return this.factory.getResourceDecoratorTracker().decorate(res, null, request);
@@ -333,7 +336,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         if (fragmentQueryMark >= 0) {
             fragmentQuery = resourcePath.substring(fragmentQueryMark);
             mappedPath = resourcePath.substring(0, fragmentQueryMark);
-            log.debug("map: Splitting resource path '{}' into '{}' and '{}'",
+            LOGGER.debug("map: Splitting resource path '{}' into '{}' and '{}'",
                 new Object[] { resourcePath, mappedPath, fragmentQuery });
         } else {
             fragmentQuery = null;
@@ -347,13 +350,13 @@ public class JcrResourceResolver extends SlingAdaptable implements
             schemehostport = MapEntry.getURI(request.getScheme(),
                 request.getServerName(), request.getServerPort(), "/");
 
-            log.debug("map: Mapping path {} for {}", resourcePath,
+            LOGGER.debug("map: Mapping path {} for {}", resourcePath,
                 schemehostport);
 
         } else {
 
             schemehostport = null;
-            log.debug("map: Mapping path {} for default", resourcePath);
+            LOGGER.debug("map: Mapping path {} for default", resourcePath);
 
         }
 
@@ -363,7 +366,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // keep, what we might have cut off in internal resolution
             final String resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
 
-            log.debug("map: Path maps to resource {} with path info {}", res,
+            LOGGER.debug("map: Path maps to resource {} with path info {}", res,
                 resolutionPathInfo);
 
             // find aliases for segments
@@ -400,26 +403,26 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // and then we have the mapped path to work on
             mappedPath = buf.toString();
 
-            log.debug("map: Alias mapping resolves to path {}", mappedPath);
+            LOGGER.debug("map: Alias mapping resolves to path {}", mappedPath);
 
         }
 
         boolean mappedPathIsUrl = false;
-        for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
-            String[] mappedPaths = mapEntry.replace(mappedPath);
+        for (final MapEntry mapEntry : this.factory.getMapEntries().getMapMaps()) {
+            final String[] mappedPaths = mapEntry.replace(mappedPath);
             if (mappedPaths != null) {
 
-                log.debug("map: Match for Entry {}", mapEntry);
+                LOGGER.debug("map: Match for Entry {}", mapEntry);
 
                 mappedPath = mappedPaths[0];
                 mappedPathIsUrl = !mapEntry.isInternal();
 
                 if (mappedPathIsUrl && schemehostport != null) {
-                    for (String candidate : mappedPaths) {
+                    for (final String candidate : mappedPaths) {
                         if (candidate.startsWith(schemehostport)) {
                             mappedPath = candidate.substring(schemehostport.length() - 1);
                             mappedPathIsUrl = false;
-                            log.debug(
+                            LOGGER.debug(
                                 "map: Found host specific mapping {} resolving to {}",
                                 candidate, mappedPath);
                             break;
@@ -427,7 +430,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                     }
                 }
 
-                log.debug(
+                LOGGER.debug(
                     "resolve: MapEntry {} matches, mapped path is {}",
                     mapEntry, mappedPath);
 
@@ -460,11 +463,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
             mappedPath = uri.toString();
         } catch (URIException e) {
-            log.warn("map: Unable to mangle namespaces for " + mappedPath
+            LOGGER.warn("map: Unable to mangle namespaces for " + mappedPath
                     + " returning unmangled", e);
         }
 
-        log.debug("map: Returning URL {} as mapping for path {}",
+        LOGGER.debug("map: Returning URL {} as mapping for path {}",
             mappedPath, resourcePath);
 
         // reappend fragment and/or query
@@ -515,7 +518,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             Resource result = (path != null) ? getResourceInternal(path) : null;
             if ( result != null ) {
                 String workspacePrefix = null;
-                if ( !getSession().getWorkspace().getName().equals(defaultWorkspaceName) ) {
+                if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
                     workspacePrefix = getSession().getWorkspace().getName();
                 }
 
@@ -575,7 +578,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         }
 
         String workspacePrefix = null;
-        if ( !getSession().getWorkspace().getName().equals(defaultWorkspaceName) ) {
+        if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
             workspacePrefix = getSession().getWorkspace().getName();
         }
 
@@ -588,18 +591,15 @@ public class JcrResourceResolver extends SlingAdaptable implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#findResources(java.lang.String, java.lang.String)
      */
-    public Iterator<Resource> findResources(String query, String language)
-            throws SlingException {
+    public Iterator<Resource> findResources(final String query, final String language)
+    throws SlingException {
         checkClosed();
         try {
-            QueryResult res = JcrResourceUtil.query(getSession(), query,
-                language);
+            final QueryResult res = JcrResourceUtil.query(getSession(), query, language);
             return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), null,
-                    new JcrNodeResourceIterator(this, res.getNodes(),
-                     factory.getDynamicClassLoader()));
+                    new JcrNodeResourceIterator(this, res.getNodes(), factory.getDynamicClassLoader()));
         } catch (javax.jcr.query.InvalidQueryException iqe) {
-            throw new QuerySyntaxException(iqe.getMessage(), query, language,
-                iqe);
+            throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
         } catch (RepositoryException re) {
             throw new SlingException(re.getMessage(), re);
         }
@@ -608,8 +608,9 @@ public class JcrResourceResolver extends SlingAdaptable implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#queryResources(java.lang.String, java.lang.String)
      */
-    public Iterator<Map<String, Object>> queryResources(String query,
-            String language) throws SlingException {
+    public Iterator<Map<String, Object>> queryResources(final String query,
+                                                        final String language)
+    throws SlingException {
         checkClosed();
         try {
             QueryResult result = JcrResourceUtil.query(getSession(), query,
@@ -633,7 +634,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                             }
                         }
                     } catch (RepositoryException re) {
-                        log.error(
+                        LOGGER.error(
                             "queryResources$next: Problem accessing row values",
                             re);
                     }
@@ -678,17 +679,21 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return rootProvider.getSession();
     }
 
-    // TODO - add some double-checked locking here.
-    private synchronized ResourceResolver getResolverForWorkspace(String workspaceName) throws LoginException {
+    /** We don't need to synchronize this method as a resource resolver
+     * is expected to be used by a single session (like the underlying session).
+     */
+    private ResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
+        if ( createdResolvers == null ) {
+            createdResolvers = new HashMap<String,ResourceResolver>();
+        }
         ResourceResolver wsResolver = createdResolvers.get(workspaceName);
         if (wsResolver == null) {
+            final Map<String,Object> newAuthInfo =
+                originalAuthInfo == null ? new HashMap<String, Object>() : new HashMap<String,Object>(originalAuthInfo);
+            newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
             if (isAdmin) {
-                Map<String,Object> newAuthInfo = new HashMap<String,Object>();
-                newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
                 wsResolver = factory.getAdministrativeResourceResolver(newAuthInfo);
             } else {
-                Map<String,Object> newAuthInfo = new HashMap<String,Object>(originalAuthInfo);
-                newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
                 wsResolver = factory.getResourceResolver(newAuthInfo);
             }
             createdResolvers.put(workspaceName, wsResolver);
@@ -764,7 +769,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             String rpi = absPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
 
-            log.debug(
+            LOGGER.debug(
                 "resolveInternal: Found resource {} with path info {} for {}",
                 new Object[] { resource, rpi, absPath });
 
@@ -817,7 +822,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 resource.getResourceMetadata().setResolutionPath(path);
                 resource.getResourceMetadata().setResolutionPathInfo(pathInfo);
 
-                log.debug(
+                LOGGER.debug(
                     "resolveInternal: Found resource {} with path info {} for {}",
                     new Object[] { resource, pathInfo, absPath });
             }
@@ -832,7 +837,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             String alias = getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
                 // TODO: might be a redirect ??
-                log.warn(
+                LOGGER.warn(
                     "getChildInternal: Internal redirect to {} for Resource {} is not supported yet, ignoring",
                     alias, child);
             }
@@ -848,7 +853,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             child = children.next();
             String alias = getProperty(child, PROP_ALIAS);
             if (childName.equals(alias)) {
-                log.debug(
+                LOGGER.debug(
                     "getChildInternal: Found Resource {} with alias {} to use",
                     child, childName);
                 return child;
@@ -856,7 +861,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         }
 
         // no match for the childName found
-        log.debug("getChildInternal: Resource {} has no child {}", parent,
+        LOGGER.debug("getChildInternal: Resource {} has no child {}", parent,
             childName);
         return null;
     }
@@ -872,7 +877,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             return resource;
         }
 
-        log.debug(
+        LOGGER.debug(
             "getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;
     }
@@ -884,7 +889,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         if (props != null) {
             String prop = props.get(propName, String.class);
             if (prop != null) {
-                log.debug("getProperty: Resource {} has property {}={}",
+                LOGGER.debug("getProperty: Resource {} has property {}={}",
                     new Object[] { res, propName, prop });
                 return prop;
             }
@@ -954,13 +959,13 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 } catch (NamespaceException ne) {
 
                     // not a valid prefix
-                    log.debug(
+                    LOGGER.debug(
                         "unmangleNamespaces: '{}' is not a prefix, not unmangling",
                         namespace);
 
                 } catch (RepositoryException re) {
 
-                    log.warn(
+                    LOGGER.warn(
                         "unmangleNamespaces: Problem checking namespace '{}'",
                         namespace, re);
 

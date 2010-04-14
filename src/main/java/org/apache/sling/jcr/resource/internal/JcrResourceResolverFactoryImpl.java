@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -288,6 +287,10 @@ public class JcrResourceResolverFactoryImpl implements
         return mapEntries;
     }
 
+    String getDefaultWorkspaceName() {
+        return this.repository.getDefaultWorkspace();
+    }
+
     /**
      * Getter for rootProviderEntry, making it easier to extend
      * JcrResourceResolverFactoryImpl. See <a
@@ -480,12 +483,14 @@ public class JcrResourceResolverFactoryImpl implements
      * Create a new ResourceResolver wrapping a Session object. Carries map of
      * authentication info in order to create a new resolver as needed.
      */
-    private ResourceResolver getResourceResolver(Session session, boolean isAdmin, Map<String, Object> authenticationInfo) {
-        JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
+    private ResourceResolver getResourceResolver(final Session session,
+                                                 final boolean isAdmin,
+                                                 final Map<String, Object> authenticationInfo) {
+        final JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry,
             this.getDynamicClassLoader());
 
-        return new JcrResourceResolver(sessionRoot, this, mapEntries, isAdmin, authenticationInfo, repository.getDefaultWorkspace());
+        return new JcrResourceResolver(sessionRoot, this, isAdmin, authenticationInfo);
     }
 
     /**
