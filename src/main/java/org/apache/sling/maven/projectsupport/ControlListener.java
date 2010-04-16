@@ -124,8 +124,8 @@ class ControlListener implements Runnable {
                         }
                         writeLine(s, RESPONSE_OK);
 
-                        log.info("Sling shut down, exiting Java VM");
-                        System.exit(0);
+                        log.info("Sling shut down, stopping Sling.");
+                        mojo.stopSling();
 
                     } else if (COMMAND_STATUS.equals(command)) {
                         writeLine(s, RESPONSE_OK);
