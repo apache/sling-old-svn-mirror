@@ -76,7 +76,11 @@ public class NodeTypeLoader {
         } catch (IOException ioe) {
             log.error("Cannot register node types from " + source, ioe);
         } catch (RepositoryException re) {
-            log.error("Cannot register node types from " + source, re);
+            if(isReRegisterBuiltinNodeType(re)) {
+                log.debug("Attempt to re-register built-in node type from " + source, re);
+            } else {
+                log.error("Cannot register node types from " + source, re);
+            }
         } finally {
             if (ins != null) {
                 try {
@@ -118,9 +122,22 @@ public class NodeTypeLoader {
         try {
             Workspace wsp = session.getWorkspace();
             CndImporter.registerNodeTypes(reader, systemId, wsp.getNodeTypeManager(), wsp.getNamespaceRegistry(), session.getValueFactory(), reregisterExisting);
+        } catch(RepositoryException re) {
+            if(isReRegisterBuiltinNodeType(re)) {
+                log.debug("Attempt to re-register built-in node type, RepositoryException ignored", re);
+            } else {
+                throw re;
+            }
         } catch (ParseException e) {
             throw new IOException("Unable to parse CND Input: " + e.getMessage());
         }
         return true;
+    }
+    
+    /** True if we think e was caused by an attempt to reregister a built-in node type */
+    static boolean isReRegisterBuiltinNodeType(Exception e) {
+        return 
+            (e instanceof RepositoryException)
+            & (e.getMessage() != null && e.getMessage().contains("reregister built-in node type"));
     }
 }
