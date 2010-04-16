@@ -21,7 +21,6 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -33,10 +32,10 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class SynchronousJcrResourceListener extends JcrResourceListener implements SynchronousEventListener {
 
-    public SynchronousJcrResourceListener(SlingRepository repository, String workspaceName,
+    public SynchronousJcrResourceListener(String workspaceName,
             ResourceResolverFactory factory, String startPath, String mountPrefix, ServiceTracker eventAdminTracker)
             throws LoginException, RepositoryException {
-        super(repository, workspaceName, factory, startPath, mountPrefix, eventAdminTracker);
+        super(workspaceName, factory, startPath, mountPrefix, eventAdminTracker);
     }
 
 }

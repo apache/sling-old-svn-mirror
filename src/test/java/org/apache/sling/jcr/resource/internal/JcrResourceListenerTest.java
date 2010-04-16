@@ -16,7 +16,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,7 +139,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         final ServiceTracker tracker = mock(ServiceTracker.class);
         when(tracker.getService()).thenReturn(mockEA);
 
-        JcrResourceListener listener = new SynchronousJcrResourceListener(getRepository(), workspaceName, factory, "/",
+        JcrResourceListener listener = new SynchronousJcrResourceListener(workspaceName, factory, "/",
                 "/", tracker);
 
         createdPath = createTestPath();
