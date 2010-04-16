@@ -19,7 +19,6 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -162,9 +161,11 @@ public class JcrResourceResolverFactoryImpl implements
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
     /**
-     * @scr.property cardinality="+"
+     * @scr.property valueRef="DEFAULT_MULTIWORKSPACE"
      */
-    private static final String PROP_LISTENER_WORKSPACES = "resource.resolver.listener.workspaces";
+    private static final String PROP_MULTIWORKSPACE = "resource.resolver.multiworkspace";
+
+    private static final boolean DEFAULT_MULTIWORKSPACE = false;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -383,13 +384,10 @@ public class JcrResourceResolverFactoryImpl implements
             // first - add a listener for the default workspace
             this.resourceListeners.add(new JcrResourceListener(null, this, "/", "/", this.eventAdminTracker));
 
-            // then, iterate through any workspaces which are configured
-            String[] listenerWorkspaces = OsgiUtil.toStringArray(properties.get(PROP_LISTENER_WORKSPACES));
-            if (Arrays.asList(listenerWorkspaces).contains(ALL_WORKSPACES)) {
-                listenerWorkspaces = getAllWorkspaces();
-            }
-
-            if (listenerWorkspaces != null) {
+            // check if multi workspace support is enabled
+            final boolean useMultiWorkspaces = OsgiUtil.toBoolean(properties.get(PROP_MULTIWORKSPACE), DEFAULT_MULTIWORKSPACE);
+            if (useMultiWorkspaces) {
+                final String[] listenerWorkspaces = getAllWorkspaces();
                 for (final String wspName : listenerWorkspaces) {
                     if (!wspName.equals(this.repository.getDefaultWorkspace())) {
                         this.resourceListeners.add(
