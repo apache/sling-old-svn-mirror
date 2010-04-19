@@ -212,7 +212,12 @@ public class ResourceUtil {
      *         <code>org.apache.sling.resource.SyntheticResource</code> class.
      */
     public static boolean isSyntheticResource(Resource res) {
-        return res instanceof SyntheticResource;
+        if(res instanceof SyntheticResource) {
+        	return true;
+        } else if(res instanceof ResourceWrapper) {
+        	return ((ResourceWrapper)res).getResource() instanceof SyntheticResource;
+        }
+        return false;
     }
 
     /**

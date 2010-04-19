@@ -377,4 +377,35 @@ public class ResourceUtilTest {
         }
         return count;
     }
+    
+    @Test public void testIsStarResource() {
+		final Resource nonStar = context.mock(Resource.class);
+		final String starPath = "/foo/*";
+		final Resource star = context.mock(Resource.class);
+		final String nonStarPath = "/foo/*";
+        this.context.checking(new Expectations() {{
+        	allowing(star).getPath(); will(returnValue(starPath));
+        	allowing(nonStar).getPath(); will(returnValue(nonStarPath));
+        }});
+        
+		assertTrue("expecting star==true for path" + starPath, 
+				ResourceUtil.isStarResource(star));
+		assertTrue("expecting star==false for path" + starPath, 
+				ResourceUtil.isStarResource(nonStar));
+    }
+    @Test public void testIsSyntheticResource() {
+		final Resource synth = new SyntheticResource(null, "foo", "bar");
+		final Resource star = context.mock(Resource.class);
+        this.context.checking(new Expectations() {{
+        	allowing(star).getPath(); will(returnValue("/foo/*"));
+        }});
+        final Resource wrapped = new ResourceWrapper(synth);
+        
+		assertTrue("expecting synthetic==true for SyntheticResource", 
+				ResourceUtil.isSyntheticResource(synth));
+		assertFalse("expecting synthetic==false for star resource", 
+				ResourceUtil.isSyntheticResource(star));
+		assertTrue("expecting synthetic==true for wrapped Resource", 
+				ResourceUtil.isSyntheticResource(wrapped));
+    }
 }
