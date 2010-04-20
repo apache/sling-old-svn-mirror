@@ -17,53 +17,25 @@
 package org.apache.sling.jcr.resource.internal;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceWrapper;
 
 /**
  * Decorated resource which prepends the workspace name to
  * a delegate resource's path.
  */
-class WorkspaceDecoratedResource implements Resource {
+class WorkspaceDecoratedResource extends ResourceWrapper {
 
-    private final Resource delegate;
     private final String workspaceName;
 
     WorkspaceDecoratedResource(Resource resource, String workspaceName) {
-        this.delegate = resource;
+        super(resource);
         this.workspaceName = workspaceName;
-    }
-
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return delegate.adaptTo(type);
     }
 
     public String getPath() {
         if (workspaceName != null) {
-            return workspaceName + ":" + delegate.getPath();
-        } else {
-            return delegate.getPath();
+            return workspaceName + ":" + super.getPath();
         }
+        return super.getPath();
     }
-
-    public ResourceMetadata getResourceMetadata() {
-        return delegate.getResourceMetadata();
-    }
-
-    public ResourceResolver getResourceResolver() {
-        return delegate.getResourceResolver();
-    }
-
-    public String getResourceSuperType() {
-        return delegate.getResourceSuperType();
-    }
-
-    public String getResourceType() {
-        return delegate.getResourceType();
-    }
-
-    public String toString() {
-        return delegate.toString();
-    }
-
 }
