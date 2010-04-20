@@ -151,7 +151,7 @@
                             <includes>
                                 <include>org/apache/sling/launchpad/base/shared/**</include>
                                 <include>org/apache/sling/launchpad/app/**</include>
-                                <include>org/apache/sling/commons/osgi/**</include>
+                                <include>org/apache/sling/commons/osgi/bundleversion/**</include>
                                 <include>org/osgi/framework/Version*</include>
                                 <include>META-INF/**</include>
                             </includes>
@@ -181,7 +181,7 @@
                                 META-INF/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/webapp/**,
-                                WEB-INF/classes/org/apache/sling/commons/osgi/**,
+                                WEB-INF/classes/org/apache/sling/commons/osgi/bundleversion/**,
                                 WEB-INF/classes/org/osgi/framework/Version*,
                                 WEB-INF/resources/**
                             </packagingIncludes>
