@@ -33,6 +33,8 @@ import org.slf4j.Logger;
  */
 public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
 
+    private static final long serialVersionUID = -1874643704782461425L;
+
     private volatile EventInfo eventInfo;
 
     private final Object lock = new Object();

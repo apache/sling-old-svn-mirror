@@ -38,6 +38,8 @@ public class EventPropertiesMap
     extends Dictionary<String, Object>
     implements Map<String, Object>, Serializable {
 
+    private static final long serialVersionUID = 835179638502569708L;
+
     private final Map<String, Object> delegatee;
 
     /**

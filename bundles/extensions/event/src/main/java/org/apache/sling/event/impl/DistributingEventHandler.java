@@ -27,13 +27,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.EventUtil;
 import org.osgi.service.component.ComponentContext;
@@ -83,24 +83,26 @@ public class DistributingEventHandler
     }
 
     /**
-     * Return the query string for the clean up.
+     * Return the query for the clean up.
      */
-    protected String getCleanUpQueryString() {
+    protected Query getCleanUpQuery(final Session s)
+    throws RepositoryException {
+        final String selectorName = "nodetype";
         final Calendar deleteBefore = Calendar.getInstance();
         deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
-        final String dateString = ISO8601.format(deleteBefore);
 
-        final StringBuilder buffer = new StringBuilder("/jcr:root");
-        buffer.append(this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(getEventNodeType());
-        buffer.append(")[@");
-        buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-        buffer.append(" < xs:dateTime('");
-        buffer.append(dateString);
-        buffer.append("')]");
+        final QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
 
-        return buffer.toString();
+        final Query q = qomf.createQuery(
+                qomf.selector(getEventNodeType(), selectorName),
+                qomf.and(qomf.descendantNode(selectorName, this.repositoryPath),
+                         qomf.comparison(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED),
+                                       QueryObjectModelFactory.JCR_OPERATOR_LESS_THAN,
+                                       qomf.literal(s.getValueFactory().createValue(deleteBefore)))),
+                null,
+                null
+        );
+        return q;
     }
 
     /**
@@ -111,14 +113,14 @@ public class DistributingEventHandler
         if ( this.cleanupPeriod > 0 ) {
             this.logger.debug("Cleaning up repository, removing all entries older than {} minutes.", this.cleanupPeriod);
 
-            final String queryString = this.getCleanUpQueryString();
             // we create an own session for concurrency issues
             Session s = null;
             try {
                 s = this.createSession();
-                final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                logger.debug("Executing query {}", queryString);
-                final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                final Query q = this.getCleanUpQuery(s);
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Executing query {}", q.getStatement());
+                }
                 final NodeIterator iter = q.execute().getNodes();
                 int count = 0;
                 while ( iter.hasNext() ) {
@@ -126,7 +128,7 @@ public class DistributingEventHandler
                     eventNode.remove();
                     count++;
                 }
-                parentNode.save();
+                s.save();
                 logger.debug("Removed {} entries from the repository.", count);
 
             } catch (RepositoryException e) {

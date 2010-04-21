@@ -38,16 +38,20 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
-import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -304,24 +308,26 @@ public class JobEventHandler
     }
 
     /**
-     * Return the query string for the clean up.
+     * Return the query for the clean up.
      */
-    private String getCleanUpQueryString() {
+    private Query getCleanUpQuery(final Session s)
+    throws RepositoryException {
+        final String selectorName = "nodetype";
         final Calendar deleteBefore = Calendar.getInstance();
         deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
-        final String dateString = ISO8601.format(deleteBefore);
 
-        final StringBuilder buffer = new StringBuilder("/jcr:root");
-        buffer.append(this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(getEventNodeType());
-        buffer.append(")[@");
-        buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
-        buffer.append(" < xs:dateTime('");
-        buffer.append(dateString);
-        buffer.append("')]");
+        final QueryObjectModelFactory qomf = s.getWorkspace().getQueryManager().getQOMFactory();
 
-        return buffer.toString();
+        final Query q = qomf.createQuery(
+                qomf.selector(getEventNodeType(), selectorName),
+                qomf.and(qomf.descendantNode(selectorName, this.repositoryPath),
+                         qomf.comparison(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_FINISHED),
+                                       QueryObjectModelFactory.JCR_OPERATOR_LESS_THAN,
+                                       qomf.literal(s.getValueFactory().createValue(deleteBefore)))),
+                null,
+                null
+        );
+        return q;
     }
 
     private void loadJobsInTheBackground() {
@@ -375,13 +381,14 @@ public class JobEventHandler
             if ( this.cleanupPeriod > 0 ) {
                 this.logger.debug("Cleaning up repository, removing all finished jobs older than {} minutes.", this.cleanupPeriod);
 
-                final String queryString = this.getCleanUpQueryString();
                 // we create an own session for concurrency issues
                 Session s = null;
                 try {
                     s = this.createSession();
-                    logger.debug("Executing query {}", queryString);
-                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                    final Query q = this.getCleanUpQuery(s);
+                    if ( logger.isDebugEnabled() ) {
+                        logger.debug("Executing query {}", q.getStatement());
+                    }
                     final NodeIterator iter = q.execute().getNodes();
                     int count = 0;
                     while ( iter.hasNext() ) {
@@ -833,7 +840,7 @@ public class JobEventHandler
                             if ( !eventNode.isLocked() ) {
                                 // lock node
                                 try {
-                                    eventNode.lock(false, true);
+                                    this.backgroundSession.getWorkspace().getLockManager().lock(info.nodePath, false, true, Long.MAX_VALUE, "JobEventHandler");
                                 } catch (RepositoryException re) {
                                     // lock failed which means that the node is locked by someone else, so we don't have to requeue
                                     return Status.FAILED;
@@ -985,7 +992,7 @@ public class JobEventHandler
             final String nodePath = eventNode.getPath();
             final Event jobEvent = this.getJobEvent(event, nodePath);
             eventNode.setProperty(EventHelper.NODE_PROPERTY_PROCESSOR, this.applicationId);
-            eventNode.save();
+            eventNode.getSession().save();
             final EventAdmin localEA = this.eventAdmin;
             if ( localEA != null ) {
                 final StartedJobInfo jobInfo = new StartedJobInfo(jobEvent, nodePath, System.currentTimeMillis());
@@ -1015,7 +1022,7 @@ public class JobEventHandler
 
                 // unlock node
                 try {
-                    eventNode.unlock();
+                    eventNode.getSession().getWorkspace().getLockManager().unlock(eventNode.getPath());
                 } catch (RepositoryException e) {
                     // if unlock fails, we silently ignore this
                     this.ignoreException(e);
@@ -1130,35 +1137,34 @@ public class JobEventHandler
             logger.debug("Loading from repository since {} and max {}", since, maxLoad);
             try {
                 final QueryManager qManager = this.backgroundSession.getWorkspace().getQueryManager();
-                final StringBuilder buffer = new StringBuilder("/jcr:root");
-                buffer.append(this.repositoryPath);
-                buffer.append("//element(*, ");
-                buffer.append(this.getEventNodeType());
-                buffer.append(") [not(@");
-                buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
-                buffer.append(")");
+                final ValueFactory vf = this.backgroundSession.getValueFactory();
+                final String selectorName = "nodetype";
+                final Calendar startDate = Calendar.getInstance();
+                startDate.setTimeInMillis(this.startTime);
+
+                final QueryObjectModelFactory qomf = qManager.getQOMFactory();
+
+                Constraint constraint = qomf.and(
+                        qomf.descendantNode(selectorName, this.repositoryPath),
+                        qomf.not(qomf.propertyExistence(selectorName, EventHelper.NODE_PROPERTY_FINISHED)));
+                constraint = qomf.and(constraint,
+                        qomf.comparison(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED),
+                                QueryObjectModelFactory.JCR_OPERATOR_LESS_THAN,
+                                qomf.literal(vf.createValue(startDate))));
                 if ( since != -1 ) {
                     final Calendar beforeDate = Calendar.getInstance();
                     beforeDate.setTimeInMillis(since);
-                    final String dateString = ISO8601.format(beforeDate);
-                    buffer.append(" and @");
-                    buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-                    buffer.append(" > xs:dateTime('");
-                    buffer.append(dateString);
-                    buffer.append("')");
+                    constraint = qomf.and(constraint,
+                            qomf.comparison(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED),
+                                    QueryObjectModelFactory.JCR_OPERATOR_GREATER_THAN,
+                                    qomf.literal(vf.createValue(beforeDate))));
                 }
-                final Calendar startDate = Calendar.getInstance();
-                startDate.setTimeInMillis(this.startTime);
-                final String dateString = ISO8601.format(startDate);
-                buffer.append(" and @");
-                buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-                buffer.append(" < xs:dateTime('");
-                buffer.append(dateString);
-                buffer.append("')");
-                buffer.append("] order by @");
-                buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-                buffer.append(" ascending");
-                final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
+                final Query q = qomf.createQuery(
+                        qomf.selector(getEventNodeType(), selectorName),
+                        constraint,
+                        new Ordering[] {qomf.ascending(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED))},
+                        null
+                );
                 final NodeIterator result = q.execute().getNodes();
                 long count = 0;
                 while ( result.hasNext() && count < maxLoad ) {
@@ -1348,7 +1354,7 @@ public class JobEventHandler
                 }
                 // unlock node
                 try {
-                    eventNode.unlock();
+                    eventNode.getSession().getWorkspace().getLockManager().unlock(eventNode.getPath());
                 } catch (RepositoryException e) {
                     // if unlock fails, we silently ignore this
                     this.ignoreException(e);
@@ -1492,34 +1498,33 @@ public class JobEventHandler
         try {
             s = this.createSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
-            final StringBuilder buffer = new StringBuilder("/jcr:root");
-            buffer.append(this.repositoryPath);
-            if ( topic != null ) {
-                buffer.append('/');
-                buffer.append(topic.replace('/', '.'));
+            final String selectorName = "nodetype";
+
+            final QueryObjectModelFactory qomf = qManager.getQOMFactory();
+
+            final String path;
+            if ( topic == null ) {
+                path = this.repositoryPath;
+            } else {
+                path = this.repositoryPath + '/' + topic.replace('/', '.');
             }
-            buffer.append("//element(*, ");
-            buffer.append(this.getEventNodeType());
-            buffer.append(") [not(@");
-            buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
-            buffer.append(")");
+            Constraint constraint = qomf.and(qomf.descendantNode(selectorName, path),
+                    qomf.not(qomf.propertyExistence(selectorName, EventHelper.NODE_PROPERTY_FINISHED)));
+
             if ( locked != null ) {
                 if ( locked ) {
-                    buffer.append(" and @jcr:lockOwner");
+                    constraint = qomf.and(constraint,
+                            qomf.propertyExistence(selectorName, "jcr:lockOwner"));
                 } else {
-                    buffer.append(" and not(@jcr:lockOwner)");
+                    constraint = qomf.and(constraint,
+                            qomf.not(qomf.propertyExistence(selectorName, "jcr:lockOwner")));
                 }
             }
             if ( filterProps != null && filterProps.length > 0 ) {
-                buffer.append(" and (");
-                int index = 0;
+                Constraint orConstraint = null;
                 for (Map<String,Object> template : filterProps) {
-                    if ( index > 0 ) {
-                        buffer.append(" or ");
-                    }
-                    buffer.append('(');
+                    Constraint comp = null;
                     final Iterator<Map.Entry<String, Object>> i = template.entrySet().iterator();
-                    boolean first = true;
                     while ( i.hasNext() ) {
                         final Map.Entry<String, Object> current = i.next();
                         // check prop name first
@@ -1528,32 +1533,39 @@ public class JobEventHandler
                             // check value
                             final Value value = EventHelper.getNodePropertyValue(s.getValueFactory(), current.getValue());
                             if ( value != null ) {
-                                if ( first ) {
-                                    first = false;
-                                    buffer.append('@');
+                                final Comparison newComp = qomf.comparison(qomf.propertyValue(selectorName, propName),
+                                        QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
+                                        qomf.literal(value));
+                                if ( comp == null ) {
+                                    comp = newComp;
                                 } else {
-                                    buffer.append(" and @");
+                                    comp = qomf.and(comp, newComp);
                                 }
-                                buffer.append(propName);
-                                buffer.append(" = '");
-                                buffer.append(current.getValue());
-                                buffer.append("'");
                             }
                         }
                     }
-                    buffer.append(')');
-                    index++;
+                    if ( comp != null ) {
+                        if ( orConstraint == null ) {
+                            orConstraint = comp;
+                        } else {
+                            orConstraint = qomf.or(constraint, comp);
+                        }
+                    }
                 }
-                buffer.append(')');
+                if ( orConstraint != null ) {
+                    constraint = qomf.and(constraint, orConstraint);
+                }
             }
-            buffer.append("]");
-            buffer.append(" order by @");
-            buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-            buffer.append(" ascending");
-            final String queryString = buffer.toString();
-            logger.debug("Executing job query {}.", queryString);
+            final Query q = qomf.createQuery(
+                    qomf.selector(getEventNodeType(), selectorName),
+                    constraint,
+                    new Ordering[] {qomf.ascending(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED))},
+                    null
+            );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Executing job query {}.", q.getStatement());
+            }
 
-            final Query q = qManager.createQuery(queryString, Query.XPATH);
             final NodeIterator iter = q.execute().getNodes();
             while ( iter.hasNext() ) {
                 final Node eventNode = iter.nextNode();

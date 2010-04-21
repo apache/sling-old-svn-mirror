@@ -233,7 +233,8 @@ public abstract class EventHelper {
                             }
                         }
                         oos.close();
-                        node.setProperty(EventHelper.NODE_PROPERTY_PROPERTIES, new ByteArrayInputStream(baos.toByteArray()));
+                        node.setProperty(EventHelper.NODE_PROPERTY_PROPERTIES,
+                                node.getSession().getValueFactory().createBinary(new ByteArrayInputStream(baos.toByteArray())));
                     } catch (IOException ioe) {
                         throw new RepositoryException("Unable to serialize event " + EventUtil.toString(event), ioe);
                     }
@@ -257,7 +258,7 @@ public abstract class EventHelper {
         // check the properties blob
         if ( node.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES) ) {
             try {
-                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(EventHelper.NODE_PROPERTY_PROPERTIES).getStream(),
+                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(EventHelper.NODE_PROPERTY_PROPERTIES).getBinary().getStream(),
                         objectClassLoader);
                 int length = ois.readInt();
                 for(int i=0;i<length;i++) {

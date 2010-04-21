@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -54,6 +55,13 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     @Override
     protected Mockery getMockery() {
         return this.context;
+    }
+
+    @Override
+    protected Dictionary<String, Object> getComponentConfig() {
+        final Dictionary<String, Object> config =  super.getComponentConfig();
+        config.put("cleanup.period", 1); // set clean up to 1 minute
+        return config;
     }
 
     /**
@@ -359,5 +367,43 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertEquals("Cancelled count", 1, cancelled.size());
         assertEquals("Started count", 10, started.size());
         assertEquals("Failed count", 5, failed.size());
+    }
+
+    @org.junit.Test public void testCleanup() throws Exception {
+        final Calendar obsolete = Calendar.getInstance();
+        obsolete.add(Calendar.MINUTE, -10);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "1").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "2").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "3").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "4").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
+
+        final Calendar future = Calendar.getInstance();
+        future.add(Calendar.MINUTE, +10);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "5").setProperty(EventHelper.NODE_PROPERTY_FINISHED, future);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "6").setProperty(EventHelper.NODE_PROPERTY_FINISHED, future);
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "7");
+        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "8");
+
+        handler.writerSession.save();
+        assertTrue(handler.getWriterRootNode().hasNode("1"));
+        assertEquals(obsolete, handler.getWriterRootNode().getNode("1").getProperty(EventHelper.NODE_PROPERTY_FINISHED).getDate());
+        assertTrue(handler.getWriterRootNode().hasNode("2"));
+        assertTrue(handler.getWriterRootNode().hasNode("3"));
+        assertTrue(handler.getWriterRootNode().hasNode("4"));
+        assertTrue(handler.getWriterRootNode().hasNode("5"));
+        assertTrue(handler.getWriterRootNode().hasNode("6"));
+        assertTrue(handler.getWriterRootNode().hasNode("7"));
+        assertTrue(handler.getWriterRootNode().hasNode("8"));
+
+        ((JobEventHandler)handler).run();
+
+        assertFalse(handler.getWriterRootNode().hasNode("1"));
+        assertFalse(handler.getWriterRootNode().hasNode("2"));
+        assertFalse(handler.getWriterRootNode().hasNode("3"));
+        assertFalse(handler.getWriterRootNode().hasNode("4"));
+        assertTrue(handler.getWriterRootNode().hasNode("5"));
+        assertTrue(handler.getWriterRootNode().hasNode("6"));
+        assertTrue(handler.getWriterRootNode().hasNode("7"));
+        assertTrue(handler.getWriterRootNode().hasNode("8"));
     }
 }
