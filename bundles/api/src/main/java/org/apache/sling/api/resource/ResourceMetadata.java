@@ -53,8 +53,8 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * <p>
      * This property is optional. If missing, it should be assumed equal to an
      * empty string.
-     * 
-     * @since 2.0.3-incubator-SNAPSHOT
+     *
+     * @since 2.0.4
      */
     public static final String RESOLUTION_PATH_INFO = "sling.resolutionPathInfo";
 
