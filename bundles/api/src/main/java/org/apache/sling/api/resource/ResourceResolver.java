@@ -36,6 +36,12 @@ import org.apache.sling.api.adapter.Adaptable;
  * adapters to other types. A JCR based resource resolver might support adapting
  * to the JCR Session used by the resolver to access the JCR Repository.
  * <p>
+ * A <code>ResourceResolver</code> is generally not thread safe! As a consequence,
+ * an application which uses the resolver, its returned resources and/or objects
+ * resulting from adapting either the resolver or a resource, must provide
+ * proper synchronization to ensure no more than one thread concurrently operates
+ * against a single resolver, resource or resulting objects.
+ * <p>
  * This interface defines two kinds of methods to access resources: The
  * <code>resolve</code> methods and the <code>getResource</code> methods. The
  * difference lies in the algorithm applied to find the requested resource and
