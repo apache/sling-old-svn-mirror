@@ -1325,14 +1325,18 @@ public class SlingAuthenticator implements Authenticator,
         @Override
         public Object addingService(ServiceReference reference) {
             final Object service = super.addingService(reference);
-            bindAuthHandler(service, reference);
+            if (service != null) {
+                bindAuthHandler(service, reference);
+            }
             return service;
         }
 
         @Override
         public void modifiedService(ServiceReference reference, Object service) {
             unbindAuthHandler(reference);
-            bindAuthHandler(service, reference);
+            if (service != null) {
+                bindAuthHandler(service, reference);
+            }
         }
 
         @Override
