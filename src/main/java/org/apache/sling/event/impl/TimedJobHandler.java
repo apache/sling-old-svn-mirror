@@ -44,6 +44,9 @@ import javax.jcr.lock.LockException;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -173,7 +176,7 @@ public class TimedJobHandler
                                     // lock node
                                     Lock lock = null;
                                     try {
-                                        lock = eventNode.lock(false, true);
+                                        lock = eventNode.getSession().getWorkspace().getLockManager().lock(info.nodePath, false, true, Long.MAX_VALUE, "TimedJobHandler");
                                     } catch (RepositoryException re) {
                                         // lock failed which means that the node is locked by someone else, so we don't have to requeue
                                     }
@@ -238,7 +241,7 @@ public class TimedJobHandler
 
                     // write event to repository, lock it and schedule the event
                     final Node eventNode = writeEvent(event, nodeName);
-                    lock = eventNode.lock(false, true);
+                    lock = eventNode.getSession().getWorkspace().getLockManager().lock(eventNode.getPath(), false, true, Long.MAX_VALUE, "TimedJobHandler");
                 }
             }
 
@@ -246,7 +249,7 @@ public class TimedJobHandler
                 // if something went wrong, we reschedule
                 if ( !this.processEvent(event, scheduleInfo) ) {
                     final String path = lock.getNode().getPath();
-                    lock.getNode().unlock();
+                    writerSession.getWorkspace().getLockManager().unlock(path);
                     return path;
                 }
             }
@@ -516,12 +519,16 @@ public class TimedJobHandler
     protected void loadEvents() {
         try {
             final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
-            final StringBuilder buffer = new StringBuilder("/jcr:root");
-            buffer.append(this.repositoryPath);
-            buffer.append("//element(*, ");
-            buffer.append(this.getEventNodeType());
-            buffer.append(")");
-            final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
+            final String selectorName = "nodetype";
+
+            final QueryObjectModelFactory qomf = qManager.getQOMFactory();
+
+            final Query q = qomf.createQuery(
+                    qomf.selector(getEventNodeType(), selectorName),
+                    qomf.descendantNode(selectorName, this.repositoryPath),
+                    null,
+                    null
+            );
             final NodeIterator result = q.execute().getNodes();
             while ( result.hasNext() ) {
                 final Node eventNode = result.nextNode();
@@ -584,6 +591,8 @@ public class TimedJobHandler
     }
 
     protected static final class ScheduleInfo implements Serializable {
+
+        private static final long serialVersionUID = 8667701700547811142L;
 
         public final String expression;
         public final Long   period;
@@ -681,25 +690,22 @@ public class TimedJobHandler
         try {
             s = this.createSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
-            final StringBuilder buffer = new StringBuilder("/jcr:root");
-            buffer.append(this.repositoryPath);
-            if ( topic != null ) {
-                buffer.append('/');
-                buffer.append(topic.replace('/', '.'));
+            final String selectorName = "nodetype";
+
+            final QueryObjectModelFactory qomf = qManager.getQOMFactory();
+
+            final String path;
+            if ( topic == null ) {
+                path = this.repositoryPath;
+            } else {
+                path = this.repositoryPath + '/' + topic.replace('/', '.');
             }
-            buffer.append("//element(*, ");
-            buffer.append(this.getEventNodeType());
-            buffer.append(")");
+            Constraint constraint = qomf.descendantNode(selectorName, path);
             if ( filterProps != null && filterProps.length > 0 ) {
-                buffer.append(" [");
-                int index = 0;
+                Constraint orConstraint = null;
                 for (Map<String,Object> template : filterProps) {
-                    if ( index > 0 ) {
-                        buffer.append(" or ");
-                    }
-                    buffer.append('(');
+                    Constraint comp = null;
                     final Iterator<Map.Entry<String, Object>> i = template.entrySet().iterator();
-                    boolean first = true;
                     while ( i.hasNext() ) {
                         final Map.Entry<String, Object> current = i.next();
                         // check prop name first
@@ -708,28 +714,39 @@ public class TimedJobHandler
                             // check value
                             final Value value = EventHelper.getNodePropertyValue(s.getValueFactory(), current.getValue());
                             if ( value != null ) {
-                                if ( first ) {
-                                    first = false;
-                                    buffer.append('@');
+                                final Comparison newComp = qomf.comparison(qomf.propertyValue(selectorName, propName),
+                                        QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
+                                        qomf.literal(value));
+                                if ( comp == null ) {
+                                    comp = newComp;
                                 } else {
-                                    buffer.append(" and @");
+                                    comp = qomf.and(comp, newComp);
                                 }
-                                buffer.append(propName);
-                                buffer.append(" = '");
-                                buffer.append(current.getValue());
-                                buffer.append("'");
                             }
                         }
                     }
-                    buffer.append(')');
-                    index++;
+                    if ( comp != null ) {
+                        if ( orConstraint == null ) {
+                            orConstraint = comp;
+                        } else {
+                            orConstraint = qomf.or(orConstraint, comp);
+                        }
+                    }
                 }
-                buffer.append(']');
+                if ( orConstraint != null ) {
+                    constraint = qomf.and(constraint, orConstraint);
+                }
             }
-            final String queryString = buffer.toString();
-            logger.debug("Executing job query {}.", queryString);
+            final Query q = qomf.createQuery(
+                    qomf.selector(getEventNodeType(), selectorName),
+                    constraint,
+                    null,
+                    null
+            );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Executing job query {}.", q.getStatement());
+            }
 
-            final Query q = qManager.createQuery(queryString, Query.XPATH);
             final NodeIterator iter = q.execute().getNodes();
             while ( iter.hasNext() ) {
                 final Node eventNode = iter.nextNode();
