@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.osgi</artifactId>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.6</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Commons OSGi support</name>
     <description>Commons OSGi</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/osgi</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.osgi-2.0.6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.osgi-2.0.6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.osgi-2.0.6</url>
     </scm>
     
     <properties>
