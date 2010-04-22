@@ -176,38 +176,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
             // set various response headers, unless the request is included
             if (!included) {
-                final ResourceMetadata meta = resource.getResourceMetadata();
-                final long modifTime = meta.getModificationTime();
-                if (modifTime > 0) {
-                    response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
-                }
-
-                final String defaultContentType = "application/octet-stream";
-                String contentType = meta.getContentType();
-                if (contentType == null || defaultContentType.equals(contentType)) {
-                    // if repository doesn't provide a content-type, or
-                    // provides the
-                    // default one,
-                    // try to do better using our servlet context
-                    final String ct = getServletContext().getMimeType(
-                        resource.getPath());
-                    if (ct != null) {
-                        contentType = ct;
-                    }
-                }
-                if (contentType != null) {
-                    response.setContentType(contentType);
-                }
-
-                String encoding = meta.getCharacterEncoding();
-                if (encoding != null) {
-                    response.setCharacterEncoding(encoding);
-                }
-
-                long length = meta.getContentLength();
-                if (length > 0 && length < Integer.MAX_VALUE) {
-                    response.setContentLength((int) length);
-                }
+                setHeaders(resource, response);
             }
 
             OutputStream out = response.getOutputStream();
@@ -260,6 +229,8 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                     dispatcher = request.getRequestDispatcher(fileRes, rdo);
                 }
 
+                setHeaders(fileRes, response);
+
                 dispatcher.include(request, response);
                 return;
             }
@@ -271,6 +242,49 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
         }
 
+    }
+
+    /**
+     * @param resource
+     * @param request
+     * @param response
+     */
+    private void setHeaders(Resource resource, 
+            SlingHttpServletResponse response) {
+        
+        final ResourceMetadata meta = resource.getResourceMetadata();
+        final long modifTime = meta.getModificationTime();
+        if (modifTime > 0) {
+            response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
+        }
+
+        final String defaultContentType = "application/octet-stream";
+        String contentType = meta.getContentType();
+        if (contentType == null || defaultContentType.equals(contentType)) {
+            // if repository doesn't provide a content-type, or
+            // provides the
+            // default one,
+            // try to do better using our servlet context
+            final String ct = getServletContext().getMimeType(
+                resource.getPath());
+            if (ct != null) {
+                contentType = ct;
+            }
+        }
+        if (contentType != null) {
+            response.setContentType(contentType);
+        }
+
+        String encoding = meta.getCharacterEncoding();
+        if (encoding != null) {
+            response.setCharacterEncoding(encoding);
+        }
+
+        long length = meta.getContentLength();
+        if (length > 0 && length < Integer.MAX_VALUE) {
+            response.setContentLength((int) length);
+        }
+        
     }
 
     private void renderIndex(Resource resource,
