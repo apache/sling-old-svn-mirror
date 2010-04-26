@@ -25,6 +25,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.rewriter.ProcessorManager;
@@ -32,14 +37,17 @@ import org.apache.sling.rewriter.ProcessorManager;
 /**
  * This filter activates the rewriter for the output.
  *
- * @scr.component metatype="no"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-2500" type="Integer" private="true"
- * @scr.service interface="javax.servlet.Filter"
  */
+@Component
+@Service(value=Filter.class)
+@Properties({
+    @Property(name="filter.scope",value="request",propertyPrivate=true),
+    @Property(name="filter.order",intValue=-2500,propertyPrivate=true)
+})
+
 public class RewriterFilter implements Filter {
 
-    /** @scr.reference */
+    @Reference
     private ProcessorManager pipelineManager;
 
     /**

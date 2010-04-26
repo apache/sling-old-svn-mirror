@@ -21,6 +21,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.html.HtmlParser;
 import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.GeneratorFactory;
@@ -33,13 +37,13 @@ import org.xml.sax.SAXException;
  * On the fly HTML parser which can be used as the
  * starting point for html pipelines.
  *
- * @scr.component metatype="no"
- * @scr.service
- * @scr.property name="pipeline.type" value="html-generator"
  */
+@Component
+@Service(value=GeneratorFactory.class)
+@Property(name="pipeline.type",value="html-generator")
 public class HtmlGeneratorFactory implements GeneratorFactory {
 
-    /** @scr.reference */
+    @Reference
     private HtmlParser htmlParser;
 
     /**
