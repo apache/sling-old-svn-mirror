@@ -144,6 +144,20 @@ public class JSONResponse extends HtmlResponse {
         setReferer(referer);
         response.setContentType(RESPONSE_CONTENT_TYPE);
         response.setCharacterEncoding(RESPONSE_CHARSET);
+        
+        // Status code
+        if (setStatus) {
+          Object status = getProperty(PN_STATUS_CODE);
+          if (status instanceof Number) {
+              int statusCode = ((Number) status).intValue();
+              response.setStatus(statusCode);
+
+              // special treatment of 201/CREATED: Requires Location
+              if (statusCode == HttpServletResponse.SC_CREATED) {
+                  response.setHeader("Location", getLocation());
+              }
+          }
+      }
 
         try {
             json.write(response.getWriter());

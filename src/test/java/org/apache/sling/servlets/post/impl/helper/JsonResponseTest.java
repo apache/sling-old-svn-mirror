@@ -171,11 +171,9 @@ public class JsonResponseTest extends TestCase {
         }
 
         public void setStatus(int i) {
-            throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setStatus");
         }
 
         public void setStatus(int i, String s) {
-            throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setStatus");
         }
 
         public String getCharacterEncoding() {
