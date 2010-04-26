@@ -17,8 +17,15 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.servlets.post.SlingPostConstants;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 /** Test switching the output content-type of the POST servlet using
  *  either an Accept header or :http-equiv-accept parameter */
@@ -75,4 +82,24 @@ public class PostServletOutputContentTypeTest extends HttpTestBase {
     public void testJsonContentTypeWithQ() throws Exception {
         runTest("text/plain; q=0.5, text/html; q=0.8, application/json; q=0.9", CONTENT_TYPE_JSON);         
     }
+    
+    public void testJsonContentTypeException() throws Exception {
+      final String testPath = MY_TEST_PATH + "/abs/" + System.currentTimeMillis();
+      final String url = HTTP_BASE_URL + "/" + MY_TEST_PATH;
+
+      // create dest as parent
+      testClient.createNode(HTTP_BASE_URL + testPath + "/dest", null);
+
+      // Perform a POST that should fail.
+      final PostMethod post = new PostMethod(url);
+      post.setFollowRedirects(false);
+      post.addParameter(new NameValuePair(SlingPostConstants.RP_DEST, testPath + "/dest/"));
+      post.addParameter(new NameValuePair(SlingPostConstants.RP_OPERATION,
+          SlingPostConstants.OPERATION_COPY));
+      post.addRequestHeader("Accept", CONTENT_TYPE_JSON);
+
+      final int status = httpClient.executeMethod(post);
+      assertEquals(500, status);
+    }
+
 }
