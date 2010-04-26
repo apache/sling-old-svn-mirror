@@ -57,14 +57,17 @@ public class AccessManagerFactoryTracker extends ServiceTracker {
     public void removedService(ServiceReference serviceReference, Object o) {
         log.warn("AccessManager service removed.");
         this.factory = null;
-        // Make a copy of consumers list to avoid concurrent modification
         closeSessions();
         super.removedService(serviceReference, o);
     }
 
     private void closeSessions() {
         log.warn("Closing all sessions");
-        Set<PluggableDefaultAccessManager> closing = new HashSet<PluggableDefaultAccessManager>(consumers);
+        // Make a copy of consumers list to avoid concurrent modification
+        Set<PluggableDefaultAccessManager> closing;
+        synchronized (consumers) {
+            closing = new HashSet<PluggableDefaultAccessManager>(consumers);
+        }
         for (PluggableDefaultAccessManager consumer : closing) {
             try {
                 consumer.endSession();
@@ -83,12 +86,16 @@ public class AccessManagerFactoryTracker extends ServiceTracker {
 
     public AccessManagerPluginFactory getFactory(PluggableDefaultAccessManager consumer) {
         log.debug("Registering PluggableDefaultAccessManager instance");
-        this.consumers.add(consumer);
+        synchronized (consumers) {
+            this.consumers.add(consumer);
+        }
         return factory;
     }
 
     public void unregister(PluggableDefaultAccessManager consumer) {
         log.debug("Unregistering PluggableDefaultAccessManager instance");
-        this.consumers.remove(consumer);
+        synchronized (consumers) {
+            this.consumers.remove(consumer);
+        }
     }
 }
