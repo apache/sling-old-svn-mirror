@@ -21,24 +21,21 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
@@ -46,17 +43,20 @@ import org.apache.sling.rewriter.ProcessorConfiguration;
 import org.apache.sling.rewriter.ProcessorManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This manager keeps track of configured processors.
  *
- * @scr.component metatype="no"
- * @scr.service interface="ProcessorManager"
  */
-public class ProcessorManagerImpl implements ProcessorManager {
+@Component
+@Service(value=ProcessorManager.class)
+public class ProcessorManagerImpl
+    implements ProcessorManager, EventHandler {
 
     private static final String CONFIG_REL_PATH = "config/rewriter";
     private static final String CONFIG_PATH = "/" + CONFIG_REL_PATH;
@@ -69,14 +69,8 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /** The bundle context. */
     private BundleContext bundleContext;
 
-    /** The admin session. */
-    private Session adminSession;
-
     /** @scr.reference */
-    private SlingRepository repository;
-
-    /** @scr.reference */
-    private JcrResourceResolverFactory resourceResolverFactory;
+    private ResourceResolverFactory resourceResolverFactory;
 
     /** The resource resolver. */
     private ResourceResolver resourceResolver;
@@ -87,8 +81,8 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /** Ordered processor configs. */
     private List<ProcessorConfiguration> orderedProcessors = new ArrayList<ProcessorConfiguration>();
 
-    /** Registered listeners */
-    private final List<EventListenerWrapper> listeners = new ArrayList<EventListenerWrapper>();
+    /** Event handler registration */
+    private ServiceRegistration eventHandlerRegistration;
 
     /** Search paths */
     private String[] searchPaths;
@@ -101,35 +95,24 @@ public class ProcessorManagerImpl implements ProcessorManager {
      * @param ctx
      */
     protected void activate(final ComponentContext ctx)
-    throws RepositoryException, InvalidSyntaxException {
+    throws LoginException, InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
         this.factoryCache = new FactoryCache(this.bundleContext);
-        this.adminSession = this.repository.loginAdministrative(null);
 
         // create array of search paths for actions and constraints
-        this.resourceResolver = this.resourceResolverFactory.getResourceResolver(adminSession);
+        this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
         this.searchPaths = resourceResolver.getSearchPath();
 
-        // set up observation listener
-        for(final String p : searchPaths) {
-            // remove trailing slash
-            final String path = p.substring(0, p.length() - 1);
-            // we have to set up a listener for the whole search path
-            // as we support {searchPath}/{appName}/config/rewriter
-            EventListenerWrapper wrapper = new EventListenerWrapper(this, path);
-            adminSession.getWorkspace().getObservationManager()
-                       .addEventListener(wrapper,
-                               Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_CHANGED|Event.PROPERTY_ADDED|Event.PROPERTY_REMOVED,
-                               path,
-                               true /* isDeep */,
-                               null /* uuid */,
-                               null /* nodeTypeName */,
-                               true /* noLocal */
-                               );
-            this.listeners.add(wrapper);
-        }
-
         this.initProcessors();
+
+        // register event handler
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put("event.topics","org/apache/sling/api/resource/*");
+        props.put("service.description","Processor Configuration/Modification Handler");
+        props.put("service.vendor","The Apache Software Foundation");
+
+        this.eventHandlerRegistration = ctx.getBundleContext()
+                  .registerService(EventHandler.class.getName(), this, props);
 
         this.factoryCache.start();
         try {
@@ -144,19 +127,15 @@ public class ProcessorManagerImpl implements ProcessorManager {
      * @param ctx
      */
     protected void deactivate(final ComponentContext ctx) {
+        if ( this.eventHandlerRegistration != null ) {
+            this.eventHandlerRegistration.unregister();
+            this.eventHandlerRegistration = null;
+        }
         this.factoryCache.stop();
         this.factoryCache = null;
-        if ( this.adminSession != null ) {
-            for(final EventListener listener : this.listeners) {
-                try {
-                    this.adminSession.getWorkspace().getObservationManager().removeEventListener(listener);
-                } catch (RepositoryException e) {
-                    this.log.error("Unable to unregister observation manager.", e);
-                }
-            }
-            listeners.clear();
-            this.adminSession.logout();
-            this.adminSession = null;
+        if ( this.resourceResolver != null ) {
+            this.resourceResolver.close();
+            this.resourceResolver = null;
         }
         try {
             WebConsoleConfigPrinter.unregister();
@@ -167,33 +146,72 @@ public class ProcessorManagerImpl implements ProcessorManager {
     }
 
     /**
-     * Initializes the current processors
-     * @throws RepositoryException
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
-    private synchronized void initProcessors()
-    throws RepositoryException {
+    public void handleEvent(final org.osgi.service.event.Event event) {
+        // check if the event handles something in the search paths
+        String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
+        int foundPos = -1;
+        for(final String sPath : this.searchPaths) {
+            if ( path.startsWith(sPath) ) {
+                foundPos = sPath.length();
+                break;
+            }
+        }
+        if ( foundPos != -1 ) {
+            // now check if this is a rewriter config
+            // relative path after the search path
+            final int firstSlash = path.indexOf('/', foundPos);
+            final int pattern = path.indexOf(CONFIG_PATH, foundPos);
+            // only if firstSlash and pattern are at the same position, this migt be a rewriter config
+            if ( firstSlash == pattern && firstSlash != -1 ) {
+                // the node should be a child of CONFIG_PATH
+                if ( path.length() > pattern + CONFIG_PATH.length() && path.charAt(pattern + CONFIG_PATH.length()) == '/') {
+                    // if a child resource is changed, make sure we have the correct path
+                    final int slashPos = path.indexOf('/', pattern + CONFIG_PATH.length() + 1);
+                    if ( slashPos != -1 ) {
+                        path = path.substring(0, slashPos);
+                    }
+                }
+            }
+            // we should do the update async as we don't want to block the event delivery
+            final String configPath = path;
+            final Thread t = new Thread() {
+                public void run() {
+                    if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
+                        removeProcessor(configPath);
+                    } else {
+                        updateProcessor(configPath);
+                    }
+                }
+            };
+            t.start();
+        }
+    }
+
+    /**
+     * Initializes the current processors
+     */
+    private synchronized void initProcessors() {
         for(final String path : this.searchPaths ) {
             // check if the search path exists
-            if ( this.adminSession.itemExists(path) ) {
-                final Item item = this.adminSession.getItem(path);
-                if ( item.isNode() ) {
-                    // now iterate over the child nodes
-                    final Node searchPathNode = (Node)item;
-                    final NodeIterator spIter = searchPathNode.getNodes();
-                    while ( spIter.hasNext() ) {
-                        // check if the node has a rewriter config
-                        final Node appNode = spIter.nextNode();
-                        if ( appNode.hasNode(CONFIG_REL_PATH) ) {
-                            final Node parentNode = appNode.getNode(CONFIG_REL_PATH);
-                            // now read configs
-                            final NodeIterator iter = parentNode.getNodes();
-                            while ( iter.hasNext() ) {
-                                final Node configNode = iter.nextNode();
-                                final String key = configNode.getName();
-                                final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configNode);
-                                this.log.debug("Found new processor configuration {}", config);
-                                this.addProcessor(key, configNode.getPath(), config);
-                            }
+            final Resource spResource = this.resourceResolver.getResource(path.substring(0, path.length() - 1));
+            if ( spResource != null ) {
+                // now iterate over the child nodes
+                final Iterator<Resource> spIter = ResourceUtil.listChildren(spResource);
+                while ( spIter.hasNext() ) {
+                    // check if the node has a rewriter config
+                    final Resource appResource = spIter.next();
+                    final Resource parentResource = this.resourceResolver.getResource(appResource.getPath() + CONFIG_PATH);
+                    if ( parentResource != null ) {
+                        // now read configs
+                        final Iterator<Resource> iter = ResourceUtil.listChildren(parentResource);
+                        while ( iter.hasNext() ) {
+                            final Resource configResource = iter.next();
+                            final String key = ResourceUtil.getName(configResource);
+                            final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
+                            this.log.debug("Found new processor configuration {}", config);
+                            this.addProcessor(key, configResource.getPath(), config);
                         }
                     }
                 }
@@ -204,10 +222,8 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /**
      * Read the configuration for the processor from the repository.
      */
-    private ProcessorConfigurationImpl getProcessorConfiguration(Node configNode)
-    throws RepositoryException {
-        configNode.getSession().refresh(true);
-        final ProcessorConfigurationImpl config = new ProcessorConfigurationImpl(this.resourceResolver.getResource(configNode.getPath()));
+    private ProcessorConfigurationImpl getProcessorConfiguration(final Resource configResource) {
+        final ProcessorConfigurationImpl config = new ProcessorConfigurationImpl(configResource);
         return config;
     }
 
@@ -230,72 +246,6 @@ public class ProcessorManagerImpl implements ProcessorManager {
         if ( config.isActive() ) {
             this.orderedProcessors.add(config);
             Collections.sort(this.orderedProcessors, new ProcessorConfiguratorComparator());
-        }
-    }
-
-    /**
-     * This method is invoked by the event listener wrapper.
-     * The second argument is the search path - which is the prefix we have to strip
-     * to check if this is a rewriter configuration change.
-     */
-    public synchronized void onEvent(final EventIterator iter, final String searchPath) {
-        final Set<String>removedPaths = new HashSet<String>();
-        final Set<String>changedPaths = new HashSet<String>();
-        while ( iter.hasNext() ) {
-            final Event event = iter.nextEvent();
-            try {
-                String nodePath = event.getPath();
-                if ( event.getType() == Event.PROPERTY_ADDED
-                     || event.getType() == Event.PROPERTY_REMOVED
-                     || event.getType() == Event.PROPERTY_CHANGED ) {
-                    final int lastSlash = nodePath.lastIndexOf('/');
-                    nodePath = nodePath.substring(0, lastSlash);
-                }
-                // relative path after the search path
-                String checkPath = nodePath.substring(searchPath.length() + 1);
-                final int firstSlash = checkPath.indexOf('/');
-                final int pattern = checkPath.indexOf(CONFIG_PATH);
-                // only if firstSlash and pattern are at the same position, this migt be a rewriter config
-                if ( firstSlash == pattern && firstSlash != -1 ) {
-                    // the node should be a direct child of CONFIG_PATH
-                    if ( checkPath.length() > pattern + CONFIG_PATH.length() ) {
-                        checkPath = checkPath.substring(pattern + CONFIG_PATH.length() + 1);
-                        if ( checkPath.indexOf('/') == -1 ) {
-                            switch (event.getType()) {
-                                case Event.NODE_ADDED:
-                                    changedPaths.add(nodePath);
-                                    break;
-
-                                case Event.PROPERTY_ADDED:
-                                case Event.PROPERTY_REMOVED:
-                                case Event.PROPERTY_CHANGED:
-                                    changedPaths.add(nodePath);
-                                    break;
-
-                                case Event.NODE_REMOVED:
-                                    // remove processor
-                                    removedPaths.add(nodePath);
-                                    break;
-                            }
-                        }
-                    }
-                }
-            } catch (RepositoryException e) {
-                log.error("Error during modification: {}", e.getMessage());
-            }
-        }
-        // handle removed first
-        changedPaths.removeAll(removedPaths);
-        for(final String path : removedPaths) {
-            this.removeProcessor(path);
-        }
-        // now update changed/added processors
-        for(final String path : changedPaths) {
-            try {
-                this.updateProcessor(path);
-            } catch (RepositoryException e) {
-                log.error("Error during modification: {}", e.getMessage());
-            }
         }
     }
 
@@ -341,8 +291,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /**
      * updates a processor
      */
-    private void updateProcessor(String path)
-    throws RepositoryException {
+    private synchronized void updateProcessor(String path) {
         final int pos = path.lastIndexOf('/');
         final String key = path.substring(pos + 1);
         int keyIndex = 0;
@@ -354,8 +303,11 @@ public class ProcessorManagerImpl implements ProcessorManager {
             keyIndex++;
         }
 
-        final Node configNode = (Node) this.adminSession.getItem(path);
-        final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configNode);
+        final Resource configResource = this.resourceResolver.getResource(path);
+        if ( configResource == null ) {
+            return;
+        }
+        final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
 
         final ConfigEntry[] configs = this.processors.get(key);
         if ( configs != null ) {
@@ -434,7 +386,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /**
      * removes a pipeline
      */
-    private void removeProcessor(String path) {
+    private synchronized void removeProcessor(String path) {
         final int pos = path.lastIndexOf('/');
         final String key = path.substring(pos + 1);
         // we have to search the config
@@ -523,28 +475,6 @@ public class ProcessorManagerImpl implements ProcessorManager {
             return -1;
         }
 
-    }
-
-    /**
-     * Event listener wrapper to be able to add this service several times with different paths.
-     */
-    public final static class EventListenerWrapper implements EventListener {
-
-        private final ProcessorManagerImpl delegatee;
-
-        private final String path;
-
-        public EventListenerWrapper(final ProcessorManagerImpl listener, final String path) {
-            this.delegatee = listener;
-            this.path = path;
-        }
-
-        /**
-         * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
-         */
-        public void onEvent(EventIterator i) {
-            this.delegatee.onEvent(i, path);
-        }
     }
 
     public static final class ConfigEntry {

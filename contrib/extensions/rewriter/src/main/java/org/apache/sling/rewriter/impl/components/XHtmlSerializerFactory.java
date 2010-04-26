@@ -19,6 +19,9 @@ package org.apache.sling.rewriter.impl.components;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Serializer;
@@ -26,10 +29,10 @@ import org.apache.sling.rewriter.SerializerFactory;
 
 /**
  * This sax serializer serializes xhtml-
- * @scr.component metatype="no"
- * @scr.service
- * @scr.property name="pipeline.type" value="xhtml-serializer"
  */
+@Component
+@Service(value=SerializerFactory.class)
+@Property(name="pipeline.type",value="xhtml-serializer")
 public class XHtmlSerializerFactory implements SerializerFactory {
 
     /**
