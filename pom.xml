@@ -196,7 +196,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-launchpad-plugin</artifactId>
-                    <version>2.0.7-SNAPSHOT</version>
+                    <version>2.0.6</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
