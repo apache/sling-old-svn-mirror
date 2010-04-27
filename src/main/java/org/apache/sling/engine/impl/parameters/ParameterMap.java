@@ -31,6 +31,8 @@ import org.apache.sling.api.request.RequestParameterMap;
 class ParameterMap extends LinkedHashMap<String, RequestParameter[]> implements
         RequestParameterMap {
 
+    private static final long serialVersionUID = -3984737679401682171L;
+
     private Map<String, String[]> stringParameterMap;
 
     ParameterMap() {

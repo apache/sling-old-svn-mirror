@@ -51,6 +51,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -58,7 +59,6 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.auth.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
@@ -68,7 +68,6 @@ import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -699,7 +698,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         }
 
         // require a name for the filter
-        String filterName = AbstractServiceReferenceConfig.getName(ref);
+        final String filterName = SlingFilterConfig.getName(ref);
         if (filterName == null) {
             log.error("initFilter: Missing name for filter {}", ref);
             return;
@@ -707,7 +706,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         // initialize the filter first
         try {
-            FilterConfig config = new SlingFilterConfig(slingServletContext,
+            final FilterConfig config = new SlingFilterConfig(slingServletContext,
                 ref, filterName);
             filter.init(config);
 
