@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,9 +38,10 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
+import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.JSONResponse;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
-import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
+import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
@@ -76,6 +78,10 @@ import org.slf4j.LoggerFactory;
  * 					interface="org.apache.sling.servlets.post.SlingPostOperation"
  * 					cardinality="0..n"
  * 					policy="dynamic"
+ * @scr.reference name="nodeNameGenerator"
+ *                  interface="org.apache.sling.servlets.post.NodeNameGenerator"
+ *                  cardinality="0..n"
+ *                  policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -108,16 +114,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private static final String PROP_NODE_NAME_MAX_LENGTH = "servlet.post.nodeNameMaxLength";
 
     /**
-     * utility class for generating node names
-     */
-    private NodeNameGenerator nodeNameGenerator;
-
-    /**
      * utility class for parsing date strings
      */
     private DateParser dateParser;
 
-    private SlingPostOperation modifyOperation;
+    private ModifyOperation modifyOperation;
 
     private final List<ServiceReference> delayedPostOperations = new ArrayList<ServiceReference>();
 
@@ -129,13 +130,22 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
 
+    private final List<ServiceReference> delayedNodeNameGenerators = new ArrayList<ServiceReference>();
+
+    private final List<ServiceReference> nodeNameGenerators = new ArrayList<ServiceReference>();
+
+    private NodeNameGenerator[] cachedNodeNameGenerators = new NodeNameGenerator[0];
+
     private ComponentContext componentContext;
+
+    private NodeNameGenerator defaultNodeNameGenerator;
 
     @Override
     public void init() {
         // default operation: create/modify
-        modifyOperation = new ModifyOperation(nodeNameGenerator, dateParser,
+        modifyOperation = new ModifyOperation(defaultNodeNameGenerator, dateParser,
             getServletContext());
+        modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
 
         // other predefined operations
         postOperations.put(SlingPostConstants.OPERATION_COPY,
@@ -329,7 +339,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         String[] nameHints = OsgiUtil.toStringArray(props.get(PROP_NODE_NAME_HINT_PROPERTIES));
         int nameMax = (int) OsgiUtil.toLong(
             props.get(PROP_NODE_NAME_MAX_LENGTH), -1);
-        nodeNameGenerator = new NodeNameGenerator(nameHints, nameMax);
+        defaultNodeNameGenerator = new DefaultNodeNameGenerator(nameHints, nameMax);
 
         dateParser = new DateParser();
         String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
@@ -342,10 +352,16 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                     dateFormat, t);
             }
         }
+
+        synchronized ( this.delayedNodeNameGenerators ) {
+            for(final ServiceReference ref : this.delayedNodeNameGenerators) {
+                this.registerNodeNameGenerator(ref);
+            }
+            this.delayedNodeNameGenerators.clear();
+        }
     }
 
     protected void deactivate(ComponentContext context) {
-        nodeNameGenerator = null;
         dateParser = null;
         this.componentContext = null;
     }
@@ -423,6 +439,56 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             for(int i=0;i<index;i++) {
                 this.cachedPostProcessors[i] = oldArray[i];
             }
+        }
+    }
+
+    protected void bindNodeNameGenerator(ServiceReference ref) {
+        synchronized ( this.delayedNodeNameGenerators ) {
+            if ( this.componentContext == null ) {
+                this.delayedNodeNameGenerators.add(ref);
+            } else {
+                this.registerNodeNameGenerator(ref);
+            }
+        }
+    }
+
+    protected void unbindNodeNameGenerator(ServiceReference ref) {
+        synchronized ( this.delayedNodeNameGenerators ) {
+            this.delayedNodeNameGenerators.remove(ref);
+            this.nodeNameGenerators.remove(ref);
+        }
+    }
+
+    protected void registerNodeNameGenerator(ServiceReference ref) {
+        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
+        int index = 0;
+        while ( index < this.nodeNameGenerators.size() &&
+                ranking < OsgiUtil.toInteger(this.nodeNameGenerators.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
+            index++;
+        }
+        if ( index == this.nodeNameGenerators.size() ) {
+            this.nodeNameGenerators.add(ref);
+        } else {
+            this.nodeNameGenerators.add(index, ref);
+        }
+        this.cachedNodeNameGenerators = new NodeNameGenerator[this.nodeNameGenerators.size()];
+        index = 0;
+        for(final ServiceReference current : this.nodeNameGenerators) {
+            final NodeNameGenerator generator = (NodeNameGenerator) this.componentContext.locateService("nodeNameGenerator", current);
+            if ( generator != null ) {
+                this.cachedNodeNameGenerators[index] = generator;
+                index++;
+            }
+        }
+        if ( index < this.cachedNodeNameGenerators.length ) {
+            NodeNameGenerator[] oldArray = this.cachedNodeNameGenerators;
+            this.cachedNodeNameGenerators = new NodeNameGenerator[index];
+            for(int i=0;i<index;i++) {
+                this.cachedNodeNameGenerators[i] = oldArray[i];
+            }
+        }
+        if(this.modifyOperation != null) {
+            this.modifyOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
         }
     }
 }

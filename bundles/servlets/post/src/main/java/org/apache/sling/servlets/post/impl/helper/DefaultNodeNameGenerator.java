@@ -16,8 +16,10 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
@@ -25,7 +27,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * like title, description, etc.
  * See SLING-128.
  */
-public class NodeNameGenerator {
+public class DefaultNodeNameGenerator implements NodeNameGenerator {
 
     private final String[] parameterNames;
     private final NodeNameFilter filter = new NodeNameFilter();
@@ -35,7 +37,7 @@ public class NodeNameGenerator {
     private int maxLength = DEFAULT_MAX_NAME_LENGTH;
     private int counter;
 
-    public NodeNameGenerator(String[] parameterNames, int maxNameLength) {
+    public DefaultNodeNameGenerator(String[] parameterNames, int maxNameLength) {
         if (parameterNames == null) {
             this.parameterNames = new String[0];
         } else {
@@ -50,13 +52,16 @@ public class NodeNameGenerator {
     /**
      * Get a "nice" node name, if possible, based on given request
      *
-     * @param parameters the request parameters
+     * @param request the request
+     * @param basePath the base path
      * @param requirePrefix <code>true</code> if the parameter names for
      *      properties requires a prefix
+     * @param defaultNodeNameGenerator a default generator
      * @return a nice node name
      */
-    public String getNodeName(RequestParameterMap parameters,
-            boolean requirePrefix) {
+    public String getNodeName(SlingHttpServletRequest request, String basePath,
+            boolean requirePrefix, NodeNameGenerator defaultNodeNameGenerator) {
+        RequestParameterMap parameters = request.getRequestParameterMap();
         String valueToUse = null;
         boolean doFilter = true;
 

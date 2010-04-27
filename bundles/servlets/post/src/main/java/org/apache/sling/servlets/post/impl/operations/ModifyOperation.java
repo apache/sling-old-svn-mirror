@@ -44,7 +44,7 @@ import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
-import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
+import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
@@ -58,9 +58,14 @@ import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
 public class ModifyOperation extends AbstractSlingPostOperation {
 
     /**
+     * The default node name generator
+     */
+    private final NodeNameGenerator defaultNodeNameGenerator;
+
+    /**
      * utility class for generating node names
      */
-    private final NodeNameGenerator nodeNameGenerator;
+    private NodeNameGenerator[] extraNodeNameGenerators;
 
     private final DateParser dateParser;
 
@@ -69,11 +74,15 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      */
     private final SlingFileUploadHandler uploadHandler;
 
-    public ModifyOperation(NodeNameGenerator nodeNameGenerator,
+    public ModifyOperation(NodeNameGenerator defaultNodeNameGenerator,
             DateParser dateParser, ServletContext servletContext) {
-        this.nodeNameGenerator = nodeNameGenerator;
+        this.defaultNodeNameGenerator = defaultNodeNameGenerator;
         this.dateParser = dateParser;
         this.uploadHandler = new SlingFileUploadHandler(servletContext);
+    }
+
+    public void setExtraNodeNameGenerators(NodeNameGenerator[] extraNodeNameGenerators) {
+        this.extraNodeNameGenerators = extraNodeNameGenerators;
     }
 
     @Override
@@ -170,12 +179,24 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
     private String generateName(SlingHttpServletRequest request, String basePath)
             throws RepositoryException {
+        boolean requirePrefix = requireItemPathPrefix(request);
+
+        String generatedName = null;
+        if (extraNodeNameGenerators != null) {
+            for (NodeNameGenerator generator : extraNodeNameGenerators) {
+                generatedName = generator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
+                if (generatedName != null) {
+                    break;
+                }
+            }
+        }
+        if (generatedName == null) {
+            generatedName = defaultNodeNameGenerator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
+        }
 
         // If the path ends with a *, create a node under its parent, with
         // a generated node name
-        basePath += "/"
-            + nodeNameGenerator.getNodeName(request.getRequestParameterMap(),
-                requireItemPathPrefix(request));
+        basePath += "/" + generatedName;
 
         // if resulting path exists, add a suffix until it's not the case
         // anymore
