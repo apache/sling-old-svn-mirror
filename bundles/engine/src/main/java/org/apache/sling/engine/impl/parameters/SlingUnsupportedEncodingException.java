@@ -24,8 +24,10 @@ import org.apache.sling.api.SlingIOException;
 
 public class SlingUnsupportedEncodingException extends SlingIOException {
 
+    private static final long serialVersionUID = -4482276105859280247L;
+
     SlingUnsupportedEncodingException(UnsupportedEncodingException uee) {
         super(uee);
     }
-    
+
 }
