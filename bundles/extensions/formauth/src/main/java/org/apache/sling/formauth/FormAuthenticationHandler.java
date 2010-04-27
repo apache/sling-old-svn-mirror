@@ -42,6 +42,7 @@ import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -205,6 +206,14 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
      * {@link FormReason} value.
      */
     static final String PAR_J_REASON = "j_reason";
+
+    /**
+     * The service ranking property.
+     *
+     * @scr.property type="Integer" value="0" private="false"
+     */
+    @SuppressWarnings("unused")
+    private static final String PAR_SERVICE_RANKING = Constants.SERVICE_RANKING;
 
     /**
      * The factor to convert minute numbers into milliseconds used internally
