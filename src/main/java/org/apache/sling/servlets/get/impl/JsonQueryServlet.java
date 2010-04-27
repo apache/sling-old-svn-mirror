@@ -95,6 +95,31 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
     }
 
     /**
+     * Retrieve the query type from the request.
+     *
+     * @param req request
+     * @return the query type.
+     *
+     */
+    protected String getQueryType(SlingHttpServletRequest req) {
+        return (req.getParameter(QUERY_TYPE) != null && req.getParameter(
+                QUERY_TYPE).equals(Query.SQL)) ? Query.SQL : Query.XPATH;
+    }
+    
+
+    /**
+     * Retrieve the query statement from the request.
+     *
+     * @param req request
+     * @param queryType the query type, as previously determined
+     * @return the query statement.
+     *
+     */
+    protected String getStatement(SlingHttpServletRequest req, String queryType) {
+        return req.getParameter(STATEMENT);
+    }
+
+    /**
      * Dumps the result as JSON object.
      *
      * @param req request
@@ -106,9 +131,9 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         try {
             ResourceResolver resolver = req.getResourceResolver();
 
-            String statement = req.getParameter(STATEMENT);
-            String queryType = (req.getParameter(QUERY_TYPE) != null && req.getParameter(
-                QUERY_TYPE).equals(Query.SQL)) ? Query.SQL : Query.XPATH;
+            String queryType = getQueryType(req);
+
+            String statement = getStatement(req, queryType);
 
             Iterator<Map<String, Object>> result = resolver.queryResources(
                 statement, queryType);
