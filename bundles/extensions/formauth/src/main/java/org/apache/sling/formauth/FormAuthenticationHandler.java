@@ -314,7 +314,11 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
 
         // append originally requested resource (for redirect after login)
         char parSep = '?';
-        final String resource = getLoginResource(request);
+        String resource = getLoginResource(request);
+        if (resource == null) {
+            resource = request.getContextPath() + request.getPathInfo();
+        }
+
         if (resource != null) {
             targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
             targetBuilder.append("=").append(
