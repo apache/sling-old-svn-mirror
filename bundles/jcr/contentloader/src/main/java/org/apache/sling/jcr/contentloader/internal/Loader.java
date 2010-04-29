@@ -39,10 +39,12 @@ import java.util.StringTokenizer;
 
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
 import org.apache.sling.jcr.contentloader.internal.readers.XmlReader;
 import org.apache.sling.jcr.contentloader.internal.readers.ZipReader;
@@ -70,7 +72,7 @@ public class Loader {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
-    private ContentLoaderService jcrContentHelper;
+    private ContentLoaderService contentLoaderService;
 
     /** All available import providers. */
     private Map<String, ImportProvider> defaultImportProviders;
@@ -80,9 +82,9 @@ public class Loader {
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(ContentLoaderService jcrContentHelper) {
-        this.jcrContentHelper = jcrContentHelper;
-        this.contentCreator = new DefaultContentCreator(jcrContentHelper);
+    public Loader(ContentLoaderService contentLoaderService) {
+        this.contentLoaderService = contentLoaderService;
+        this.contentCreator = new DefaultContentCreator(contentLoaderService);
         this.delayedBundles = new LinkedList<Bundle>();
 
         defaultImportProviders = new LinkedHashMap<String, ImportProvider>();
@@ -98,30 +100,30 @@ public class Loader {
             delayedBundles.clear();
             delayedBundles = null;
         }
-        jcrContentHelper = null;
+        contentLoaderService = null;
         defaultImportProviders = null;
     }
 
     /**
      * Register a bundle and install its content.
      *
-     * @param session
+     * @param metadataSession
      * @param bundle
      * @throws RepositoryException
      */
-    public void registerBundle(final Session session,
+    public void registerBundle(final Session metadataSession,
                                final Bundle bundle,
                                final boolean isUpdate) throws RepositoryException {
 
         // if this is an update, we have to uninstall the old content first
         if ( isUpdate ) {
-            this.unregisterBundle(session, bundle);
+            this.unregisterBundle(metadataSession, bundle);
         }
 
         log.debug("Registering bundle {} for content loading.",
             bundle.getSymbolicName());
 
-        if (registerBundleInternal(session, bundle, false, isUpdate)) {
+        if (registerBundleInternal(metadataSession, bundle, false, isUpdate)) {
 
             // handle delayed bundles, might help now
             int currentSize = -1;
@@ -132,7 +134,7 @@ public class Loader {
                 for (Iterator<Bundle> di = delayedBundles.iterator(); di.hasNext();) {
 
                     Bundle delayed = di.next();
-                    if (registerBundleInternal(session, delayed, true, false)) {
+                    if (registerBundleInternal(metadataSession, delayed, true, false)) {
                         di.remove();
                     }
 
@@ -147,7 +149,7 @@ public class Loader {
         }
     }
 
-    private boolean registerBundleInternal(final Session session,
+    private boolean registerBundleInternal(final Session metadataSession,
             final Bundle bundle, final boolean isRetry, final boolean isUpdate) {
 
         // check if bundle has initial content
@@ -159,11 +161,11 @@ public class Loader {
         }
 
         try {
-            jcrContentHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+            contentLoaderService.createRepositoryPath(metadataSession, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
             // check if the content has already been loaded
-            final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
-                session, bundle, true);
+            final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(
+                metadataSession, bundle, true);
 
             // if we don't get an info, someone else is currently loading
             if (bundleContentInfo == null) {
@@ -183,7 +185,7 @@ public class Loader {
 
                 } else {
 
-                    createdNodes = installContent(session, bundle, pathIter,
+                    createdNodes = installContent(metadataSession, bundle, pathIter,
                         contentAlreadyLoaded);
 
                     if (isRetry) {
@@ -199,7 +201,7 @@ public class Loader {
                 return true;
 
             } finally {
-                jcrContentHelper.unlockBundleContentInfo(session, bundle,
+                contentLoaderService.unlockBundleContentInfo(metadataSession, bundle,
                     success, createdNodes);
             }
 
@@ -228,9 +230,9 @@ public class Loader {
 
         } else {
             try {
-                jcrContentHelper.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
+                contentLoaderService.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
 
-                final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
+                final Map<String, Object> bundleContentInfo = contentLoaderService.getBundleContentInfo(
                         session, bundle, false);
 
                 // if we don't get an info, someone else is currently loading or unloading
@@ -241,9 +243,9 @@ public class Loader {
 
                 try {
                     uninstallContent(session, bundle, (String[])bundleContentInfo.get(ContentLoaderService.PROPERTY_UNINSTALL_PATHS));
-                    jcrContentHelper.contentIsUninstalled(session, bundle);
+                    contentLoaderService.contentIsUninstalled(session, bundle);
                 } finally {
-                    jcrContentHelper.unlockBundleContentInfo(session, bundle, false, null);
+                    contentLoaderService.unlockBundleContentInfo(session, bundle, false, null);
 
                 }
             } catch (RepositoryException re) {
@@ -259,12 +261,13 @@ public class Loader {
      * Install the content from the bundle.
      * @return If the content should be removed on uninstall, a list of top nodes
      */
-    private List<String> installContent(final Session session,
+    private List<String> installContent(final Session defaultSession,
                                         final Bundle bundle,
                                         final Iterator<PathEntry> pathIter,
                                         final boolean contentAlreadyLoaded)
     throws RepositoryException {
         final List<String> createdNodes = new ArrayList<String>();
+        final Map<String, Session> createdSessions = new HashMap<String, Session>();
 
         log.debug("Installing initial content from bundle {}",
             bundle.getSymbolicName());
@@ -273,8 +276,20 @@ public class Loader {
             while (pathIter.hasNext()) {
                 final PathEntry entry = pathIter.next();
                 if (!contentAlreadyLoaded || entry.isOverwrite()) {
+                    String workspace = entry.getWorkspace();
+                    final Session targetSession;
+                    if (workspace != null) {
+                        if (createdSessions.containsKey(workspace)){
+                            targetSession = createdSessions.get(workspace);
+                        } else {
+                            targetSession = createSession(workspace);
+                            createdSessions.put(workspace, targetSession);
+                        }
+                    } else {
+                        targetSession = defaultSession;
+                    }
 
-                    final Node targetNode = getTargetNode(session, entry.getTarget());
+                    final Node targetNode = getTargetNode(targetSession, entry.getTarget());
 
                     if (targetNode != null) {
                         installFromPath(bundle, entry.getPath(), entry, targetNode,
@@ -299,8 +314,13 @@ public class Loader {
             }
 
             // persist modifications now
-            session.refresh(true);
-            session.save();
+            defaultSession.refresh(true);
+            defaultSession.save();
+
+            for (Session session : createdSessions.values()) {
+                session.refresh(true);
+                session.save();
+            }
 
             // finally checkin versionable nodes
             for (final Node versionable : this.contentCreator.getVersionables()) {
@@ -309,8 +329,13 @@ public class Loader {
 
         } finally {
             try {
-                if (session.hasPendingChanges()) {
-                    session.refresh(false);
+                if (defaultSession.hasPendingChanges()) {
+                    defaultSession.refresh(false);
+                }
+                for (Session session : createdSessions.values()) {
+                    if (session.hasPendingChanges()) {
+                        session.refresh(false);
+                    }
                 }
             } catch (RepositoryException re) {
                 log.warn(
@@ -318,6 +343,9 @@ public class Loader {
                     bundle.getSymbolicName(), re);
             }
             this.contentCreator.clear();
+            for (Session session : createdSessions.values()) {
+                session.logout();
+            }
         }
         log.debug("Done installing initial content from bundle {}",
             bundle.getSymbolicName());
@@ -810,5 +838,16 @@ public class Loader {
         }
         return name;
 
+    }
+
+    private Session createSession(String workspace) throws RepositoryException {
+        try {
+            return contentLoaderService.getRepository().loginAdministrative(workspace);
+        } catch (NoSuchWorkspaceException e) {
+            Session temp = contentLoaderService.getRepository().loginAdministrative(null);
+            temp.getWorkspace().createWorkspace(workspace);
+            temp.logout();
+            return contentLoaderService.getRepository().loginAdministrative(workspace);
+        }
     }
 }
