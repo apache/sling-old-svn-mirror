@@ -132,14 +132,18 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     public static final String PROP_DEFAULT_SCRIPT_WORKSPACE = "servletresolver.defaultScriptWorkspace";
 
     /**
-     * @scr.property options true="True" false="False"
+     * @scr.property valueRef="DEFAULT_USE_REQUEST_WORKSPACE"
      */
     public static final String PROP_USE_REQUEST_WORKSPACE = "servletresolver.useRequestWorkspace";
 
+    private static final boolean DEFAULT_USE_REQUEST_WORKSPACE = false;
+
     /**
-     * @scr.property options true="True" false="False"
+     * @scr.property valueRef="DEFAULT_USE_DEFAULT_WORKSPACE"
      */
     public static final String PROP_USE_DEFAULT_WORKSPACE = "servletresolver.useDefaultWorkspace";
+
+    private static final boolean DEFAULT_USE_DEFAULT_WORKSPACE = false;
 
     /**
      * The default servlet root is the first search path (which is usally /apps)
@@ -814,13 +818,16 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
         }
 
-        this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), false);
-        this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), false);
+        this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), DEFAULT_USE_DEFAULT_WORKSPACE);
+        this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), DEFAULT_USE_REQUEST_WORKSPACE);
 
         this.scriptSessions = new ConcurrentHashMap<String, Session>();
         this.scriptResolvers = new ConcurrentHashMap<String, WorkspaceResourceResolver>();
 
         String defaultWorkspaceProp = (String) properties.get(PROP_DEFAULT_SCRIPT_WORKSPACE);
+        if ( defaultWorkspaceProp != null && defaultWorkspaceProp.trim().length() == 0 ) {
+            defaultWorkspaceProp = null;
+        }
         this.defaultScriptSession = createScriptSession(defaultWorkspaceProp);
 
         // we load the workspaceName out of the session to ensure the value is
