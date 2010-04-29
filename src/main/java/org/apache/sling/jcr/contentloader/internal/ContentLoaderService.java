@@ -145,7 +145,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
                 try {
-                    session = this.getSession(bundle);
+                    session = this.getSession();
                     final boolean isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
                     initialContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
@@ -164,7 +164,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
-                    session = this.getSession(bundle);
+                    session = this.getSession();
                     initialContentLoader.unregisterBundle(session, bundle);
                 } catch (Throwable t) {
                     log.error(
@@ -251,7 +251,10 @@ public class ContentLoaderService implements SynchronousBundleListener {
             passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
         }
 
+        Session session = null;
         try {
+            session = this.getSession();
+            this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
@@ -260,7 +263,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-                    Session session = getSession(bundle);
+
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
                     try {
@@ -271,7 +274,9 @@ public class ContentLoaderService implements SynchronousBundleListener {
                                 + bundle.getSymbolicName() + " ("
                                 + bundle.getBundleId() + ")", t);
                     } finally {
-                        this.ungetSession(session);
+                        if ( session.hasPendingChanges() ) {
+                            session.refresh(false);
+                        }
                     }
                 } else {
                     ignored++;
@@ -309,14 +314,11 @@ public class ContentLoaderService implements SynchronousBundleListener {
     }
 
     /**
-     * Returns an administrative session to the workspace
-     * specified in the bundle or, if none specified,
-     * the default workspace
+     * Returns an administrative session to the default workspace.
      */
-    private Session getSession(Bundle bundle)
+    private Session getSession()
     throws RepositoryException {
-        String workspace = (String) bundle.getHeaders().get(CONTENT_WORKSPACE_HEADER);
-        return getRepository().loginAdministrative(workspace);
+        return getRepository().loginAdministrative(null);
     }
 
     /**

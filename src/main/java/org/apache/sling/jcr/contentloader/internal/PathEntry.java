@@ -50,6 +50,11 @@ public class PathEntry {
     public static final String PATH_DIRECTIVE = "path";
 
     /**
+     * The workspace into which the content will be loaded.
+     */
+    public static final String WORKSPACE_DIRECTIVE = "workspace";
+
+    /**
      * The checkin directive specifying whether versionable nodes should be
      * checked in
      */
@@ -83,6 +88,9 @@ public class PathEntry {
      * target node is the root node
      */
     private final String target;
+
+    /** Workspace to import into. */
+    private final String workspace;
 
     public static Iterator<PathEntry> getContentPaths(final Bundle bundle) {
         final List<PathEntry> entries = new ArrayList<PathEntry>();
@@ -147,6 +155,14 @@ public class PathEntry {
                 this.ignoreImportProviders.add(st.nextToken());
             }
         }
+
+        // workspace directive
+        final String workspaceValue = entry.getDirectiveValue(WORKSPACE_DIRECTIVE);
+        if (pathValue != null) {
+            this.workspace = workspaceValue;
+        } else {
+            this.workspace = null;
+        }
     }
 
     public String getPath() {
@@ -174,5 +190,9 @@ public class PathEntry {
 
     public String getTarget() {
         return target;
+    }
+
+    public String getWorkspace() {
+        return workspace;
     }
 }
