@@ -36,7 +36,9 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
 
     private final String scriptName;
 
-    public static NamedScriptResourceCollector create(final String name, final Resource resource) {
+    public static NamedScriptResourceCollector create(final String name,
+            final Resource resource,
+            final String[] executionPaths) {
         final String resourceType;
         final String resourceSuperType;
         final String baseResourceType;
@@ -62,15 +64,17 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
                 resourceType,
                 resourceSuperType,
                 scriptName,
-                extension);
+                extension,
+                executionPaths);
     }
 
     public NamedScriptResourceCollector(final String baseResourceType,
                               final String resourceType,
                               final String resourceSuperType,
                               final String scriptName,
-                              final String extension) {
-        super(baseResourceType, resourceType, resourceSuperType, extension);
+                              final String extension,
+                              final String[] executionPaths) {
+        super(baseResourceType, resourceType, resourceSuperType, extension, executionPaths);
         this.scriptName = scriptName;
         // create the hash code once
         final String key = baseResourceType + ':' + this.scriptName + ':' +
@@ -85,9 +89,11 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
         // if extension is set, we first check for an exact script match
         if ( this.extension != null ) {
             final String path = location.getPath() + '/' + this.scriptName;
-            final Resource current = resolver.getResource(path);
-            if ( current != null ) {
-                this.addWeightedResource(resources, current, 0, WeightedResource.WEIGHT_EXTENSION);
+            if ( this.isPathAllowed(path) ) {
+                final Resource current = resolver.getResource(path);
+                if ( current != null ) {
+                    this.addWeightedResource(resources, current, 0, WeightedResource.WEIGHT_EXTENSION);
+                }
             }
         }
         // if the script name denotes a path we have to get the denoted resource
@@ -106,6 +112,9 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
         while (children.hasNext()) {
             final Resource child = children.next();
 
+            if ( !this.isPathAllowed(child.getPath()) ) {
+                continue;
+            }
             final String currentScriptName = ResourceUtil.getName(child);
             final int lastDot = currentScriptName.lastIndexOf('.');
             if (lastDot < 0) {
@@ -115,7 +124,6 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
 
             if ( currentScriptName.substring(0, lastDot).equals(name) ) {
                 this.addWeightedResource(resources, child, 0, WeightedResource.WEIGHT_PREFIX);
-                continue;
             }
         }
     }

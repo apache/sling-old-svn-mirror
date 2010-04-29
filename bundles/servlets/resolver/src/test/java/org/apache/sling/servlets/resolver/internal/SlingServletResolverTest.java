@@ -73,7 +73,11 @@ public class SlingServletResolverTest {
     private MockResourceResolver mockResourceResolver;
 
     @Before public void setUp() throws Exception {
-        mockResourceResolver = new MockResourceResolver();
+        mockResourceResolver = new MockResourceResolver() {
+            public void close() {
+                // nothing to do;
+            }
+        };
         mockResourceResolver.setSearchPath("/");
 
         final JcrResourceResolverFactory factory = new JcrResourceResolverFactory() {
@@ -100,7 +104,7 @@ public class SlingServletResolverTest {
         Class<?> resolverClass = servletResolver.getClass().getSuperclass();
 
         // set resource resolver factory
-        final Field resolverField = resolverClass.getDeclaredField("resourceResolverFactory");
+        final Field resolverField = resolverClass.getDeclaredField("jcrResourceResolverFactory");
         resolverField.setAccessible(true);
         resolverField.set(servletResolver, factory);
 

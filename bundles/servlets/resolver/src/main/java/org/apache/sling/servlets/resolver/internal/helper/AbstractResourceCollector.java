@@ -49,14 +49,18 @@ public abstract class AbstractResourceCollector {
 
     protected final String resourceSuperType;
 
+    protected final String[] executionPaths;
+
     public AbstractResourceCollector(final String baseResourceType,
             final String resourceType,
             final String resourceSuperType,
-            final String extension) {
+            final String extension,
+            final String[] executionPaths) {
         this.baseResourceType = baseResourceType;
         this.resourceType = resourceType;
         this.resourceSuperType = resourceSuperType;
         this.extension = extension;
+        this.executionPaths = executionPaths;
     }
 
     public final Collection<Resource> getServlets(ResourceResolver resolver) {
@@ -170,4 +174,21 @@ public abstract class AbstractResourceCollector {
         }
         return s1.equals(s2);
     }
+
+    protected boolean isPathAllowed(final String path) {
+        return isPathAllowed(path, this.executionPaths);
+    }
+
+    public static boolean isPathAllowed(final String path, final String[] executionPaths) {
+        if ( executionPaths == null ) {
+            return true;
+        }
+        for(final String prefix : executionPaths ) {
+            if ( path.startsWith(prefix) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
