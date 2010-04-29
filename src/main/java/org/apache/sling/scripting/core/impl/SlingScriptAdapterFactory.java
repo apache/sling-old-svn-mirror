@@ -43,6 +43,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.api.ScriptEngineManagerFactory;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -73,12 +74,13 @@ import org.slf4j.LoggerFactory;
  *               values.0="org.apache.sling.api.scripting.SlingScript"
  *               values.1="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
+ * @scr.service interface="org.apache.sling.scripting.api.ScriptEngineManagerFactory"
  * @scr.service interface="org.apache.sling.commons.mime.MimeTypeProvider"
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
  */
-public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider, BundleListener {
+public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider, BundleListener, ScriptEngineManagerFactory {
 
     private final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
@@ -145,7 +147,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
         return null;
     }
 
-    /* package */ScriptEngineManager getScriptEngineManager() {
+    public ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
 
             // create (empty) script engine manager
