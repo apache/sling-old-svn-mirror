@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -69,7 +70,7 @@ public class ProcessorManagerImpl
     /** The bundle context. */
     private BundleContext bundleContext;
 
-    /** @scr.reference */
+    @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
     /** The resource resolver. */

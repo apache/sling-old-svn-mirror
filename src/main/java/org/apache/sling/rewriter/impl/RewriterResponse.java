@@ -18,7 +18,6 @@ package org.apache.sling.rewriter.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 
@@ -80,26 +79,6 @@ class RewriterResponse
      * @see javax.servlet.ServletResponseWrapper#getWriter()
      */
     public PrintWriter getWriter() throws IOException {
-        if ( this.processor != null && this.writer == null ) {
-            return new PrintWriter(new Writer() {
-
-                @Override
-                public void close() throws IOException {
-                    // nothing to do
-                }
-
-                @Override
-                public void flush() throws IOException {
-                    // nothing to do
-                }
-
-                @Override
-                public void write(char[] cbuf, int off, int len)
-                throws IOException {
-                    // nothing to do
-                }
-             });
-        }
         if (writer == null) {
             this.processor = this.getProcessor();
             if ( this.processor != null ) {
