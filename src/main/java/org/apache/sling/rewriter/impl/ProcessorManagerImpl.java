@@ -173,20 +173,20 @@ public class ProcessorManagerImpl
                     if ( slashPos != -1 ) {
                         path = path.substring(0, slashPos);
                     }
+                    // we should do the update async as we don't want to block the event delivery
+                    final String configPath = path;
+                    final Thread t = new Thread() {
+                        public void run() {
+                            if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
+                                removeProcessor(configPath);
+                            } else {
+                                updateProcessor(configPath);
+                            }
+                        }
+                    };
+                    t.start();
                 }
             }
-            // we should do the update async as we don't want to block the event delivery
-            final String configPath = path;
-            final Thread t = new Thread() {
-                public void run() {
-                    if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
-                        removeProcessor(configPath);
-                    } else {
-                        updateProcessor(configPath);
-                    }
-                }
-            };
-            t.start();
         }
     }
 
@@ -411,7 +411,7 @@ public class ProcessorManagerImpl
                         this.orderedProcessors.add(configs[1].config);
                         Collections.sort(this.orderedProcessors, new ProcessorConfiguratorComparator());
                     }
-                    ConfigEntry[] newArray = new ConfigEntry[configs.length];
+                    ConfigEntry[] newArray = new ConfigEntry[configs.length - 1];
                     int index = 0;
                     for(final ConfigEntry current : configs) {
                         if ( current != found ) {
