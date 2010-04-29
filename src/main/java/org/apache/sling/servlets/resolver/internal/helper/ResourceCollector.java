@@ -78,8 +78,10 @@ public class ResourceCollector extends AbstractResourceCollector {
      * @return The <code>ResourceCollector</code> to find servlets and scripts
      *         suitable for handling the <code>request</code>.
      */
-    public static ResourceCollector create(SlingHttpServletRequest request, String workspaceName) {
-        return new ResourceCollector(request, workspaceName);
+    public static ResourceCollector create(final SlingHttpServletRequest request,
+            final String workspaceName,
+            final String[] executionPaths) {
+        return new ResourceCollector(request, workspaceName, executionPaths);
     }
 
     /**
@@ -95,11 +97,16 @@ public class ResourceCollector extends AbstractResourceCollector {
      *            is assumed.
      * @param resource the resource to invoke, the resource type and resource super type are taken from this resource.
      */
-    public ResourceCollector(String methodName, String baseResourceType, Resource resource, String workspaceName) {
+    public ResourceCollector(final String methodName,
+            final String baseResourceType,
+            final Resource resource,
+            final String workspaceName,
+            final String[] executionPaths) {
         super((baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME),
                 resource.getResourceType(),
                 resource.getResourceSuperType(),
-                null);
+                null,
+                executionPaths);
         this.methodName = methodName;
         this.requestSelectors = new String[0];
         this.numRequestSelectors = 0;
@@ -127,11 +134,14 @@ public class ResourceCollector extends AbstractResourceCollector {
      *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
      */
-    private ResourceCollector(SlingHttpServletRequest request, String workspaceName) {
+    private ResourceCollector(final SlingHttpServletRequest request,
+            final String workspaceName,
+            final String[] executionPaths) {
         super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
                 request.getResource().getResourceType(),
                 request.getResource().getResourceSuperType(),
-                request.getRequestPathInfo().getExtension());
+                request.getRequestPathInfo().getExtension(),
+                executionPaths);
         this.methodName = request.getMethod();
 
         RequestPathInfo requestpaInfo = request.getRequestPathInfo();
@@ -168,6 +178,9 @@ public class ResourceCollector extends AbstractResourceCollector {
             while (children.hasNext()) {
                 Resource child = children.next();
 
+                if ( !this.isPathAllowed(child.getPath()) ) {
+                    continue;
+                }
                 String scriptName = ResourceUtil.getName(child);
                 int lastDot = scriptName.lastIndexOf('.');
                 if (lastDot < 0) {
@@ -238,10 +251,12 @@ public class ResourceCollector extends AbstractResourceCollector {
         // name nor extensions and selectors
         String path = location.getPath()
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION;
-        location = location.getResourceResolver().getResource(path);
-        if (location != null) {
-            addWeightedResource(resources, location, 0,
-                WeightedResource.WEIGHT_LAST_RESSORT);
+        if ( this.isPathAllowed(path) ) {
+            location = location.getResourceResolver().getResource(path);
+            if (location != null) {
+                addWeightedResource(resources, location, 0,
+                    WeightedResource.WEIGHT_LAST_RESSORT);
+            }
         }
     }
 
