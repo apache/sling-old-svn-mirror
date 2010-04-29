@@ -264,11 +264,13 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
             sb.append(", pipeline=(generator=");
             sb.append(this.generatorConfiguration);
             sb.append(", transformers=(");
-            for(int i=0; i<this.transformerConfigurations.length; i++) {
-                if ( i > 0 ) {
-                    sb.append(", ");
+            if ( this.transformerConfigurations != null ) {
+                for(int i=0; i<this.transformerConfigurations.length; i++) {
+                    if ( i > 0 ) {
+                        sb.append(", ");
+                    }
+                    sb.append(this.transformerConfigurations[i]);
                 }
-                sb.append(this.transformerConfigurations[i]);
             }
             sb.append(", serializer=");
             sb.append(this.serializerConfiguration);
