@@ -19,6 +19,7 @@ package org.apache.sling.servlets.resolver.internal;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
@@ -27,17 +28,15 @@ import org.apache.sling.api.resource.ResourceResolver;
 /**
  * This is a facade around ResourceResolver in order to provide access to the
  * workspace name.
- *
- * TODO - should ResourceResolver have a getWorkspaceName() method?
  */
 public class WorkspaceResourceResolver implements ResourceResolver {
 
-    private ResourceResolver delegate;
-    private String workspaceName;
+    private final ResourceResolver delegate;
+    private final String workspaceName;
 
-    public WorkspaceResourceResolver(ResourceResolver delegate, String workspaceName) {
+    public WorkspaceResourceResolver(ResourceResolver delegate) {
         this.delegate = delegate;
-        this.workspaceName = workspaceName;
+        this.workspaceName = getWorkspaceName(delegate);
     }
 
     /** {@inheritDoc} */
@@ -106,5 +105,24 @@ public class WorkspaceResourceResolver implements ResourceResolver {
 
     public void close() {
         delegate.close();
+    }
+
+    public static boolean isSameWorkspace(final String wspName1, final String wspName2) {
+        if ( wspName1 == null && wspName2 == null ) {
+            return true;
+        }
+        return wspName1.equals(wspName2);
+    }
+
+    public static String getWorkspaceName(final ResourceResolver resolver) {
+        try {
+            final Session s = resolver.adaptTo(Session.class);
+            if ( s != null ) {
+                return s.getWorkspace().getName();
+            }
+        } catch (NoClassDefFoundError t) {
+            // if the session class is not available - we have no workspaces
+        }
+        return null;
     }
 }

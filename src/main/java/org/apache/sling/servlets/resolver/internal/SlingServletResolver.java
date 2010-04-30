@@ -38,10 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jcr.Credentials;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -54,9 +50,11 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
@@ -64,8 +62,6 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.servlets.ErrorHandler;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
 import org.apache.sling.servlets.resolver.internal.helper.AbstractResourceCollector;
@@ -166,15 +162,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     private ServletContext servletContext;
 
     /** @scr.reference */
-    private JcrResourceResolverFactory jcrResourceResolverFactory;
-
-    /** @scr.reference */
-    private SlingRepository repository;
-
-    /** The session used for script resolution. */
-    private ConcurrentHashMap<String, Session> scriptSessions;
-
-    private Session defaultScriptSession;
+    private ResourceResolverFactory resourceResolverFactory;
 
     /** The resource resolver used for script resolution. */
     private ConcurrentHashMap<String, WorkspaceResourceResolver> scriptResolvers;
@@ -203,12 +191,6 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     /** Registration as event handler. */
     private ServiceRegistration eventHandlerReg;
-
-    /**
-     * The workspace name which should be used as a default for script
-     * resolution.
-     */
-    private String defaultScriptWorkspaceName;
 
     /**
      * If true, the primary workspace name for script resolution will be the
@@ -247,15 +229,16 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
 
         Servlet servlet = null;
-        String wspName = getWorkspaceName(request);
 
         if (this.useRequestWorkspace) {
+            final String wspName = getWorkspaceName(request);
             // First, we use a resource resolver using the same workspace as the
             // resource
             WorkspaceResourceResolver scriptResolver = getScriptResolver(wspName);
             servlet = resolveServlet(request, type, scriptResolver);
 
-            if (servlet == null && defaultScriptWorkspaceName != wspName && this.useDefaultWorkspace) {
+            if (servlet == null && this.useDefaultWorkspace
+                    && !WorkspaceResourceResolver.isSameWorkspace(wspName, defaultScriptResolver.getWorkspaceName()) ) {
                 servlet = resolveServlet(request, type, defaultScriptResolver);
             }
 
@@ -425,8 +408,6 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      */
     public void handleError(int status, String message, SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
-        String wspName = getWorkspaceName(request);
-        WorkspaceResourceResolver scriptResolver = getScriptResolver(wspName);
 
         // do not handle, if already handling ....
         if (request.getAttribute(SlingConstants.ERROR_REQUEST_URI) != null) {
@@ -440,6 +421,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
+            final WorkspaceResourceResolver scriptResolver = getScriptResolver(getWorkspaceName(request));
 
             // find the error handler component
             Resource resource = getErrorResource(request);
@@ -480,10 +462,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     }
 
     public void handleError(Throwable throwable, SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws IOException {
-        String wspName = getWorkspaceName(request);
-        WorkspaceResourceResolver scriptResolver = getScriptResolver(wspName);
-
+    throws IOException {
         // do not handle, if already handling ....
         if (request.getAttribute(SlingConstants.ERROR_REQUEST_URI) != null) {
             log.error("handleError: Recursive invocation. Not further handling Throwable:", throwable);
@@ -496,6 +475,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
+            final WorkspaceResourceResolver scriptResolver = getScriptResolver(getWorkspaceName(request));
 
             // find the error handler component
             Servlet servlet = null;
@@ -527,7 +507,6 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             tracker.logTimer(timerName, "Using handler {0}", RequestUtil.getServletName(servlet));
 
             handleError(servlet, request, response);
-
         } finally {
 
             tracker.logTimer(timerName, "Error handler finished");
@@ -759,11 +738,17 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      * Package scoped to help with testing.
      */
     String getWorkspaceName(SlingHttpServletRequest request) {
-        return request.getResourceResolver().adaptTo(Session.class).getWorkspace().getName();
+        return WorkspaceResourceResolver.getWorkspaceName(request.getResourceResolver());
     }
 
+    /**
+     * Get a resource resolver for the given workspace.
+     * If the login to the given workspace does not work, we return the default resource resolver!
+     * @param wspName The workspace name or null for the default workspace
+     * @return A resource resolver
+     */
     private WorkspaceResourceResolver getScriptResolver(String wspName) {
-        if (wspName.equals(defaultScriptWorkspaceName)) {
+        if (wspName == null || wspName.equals(defaultScriptResolver.getWorkspaceName())) {
             return defaultScriptResolver;
         }
 
@@ -772,47 +757,33 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             return scriptResolver;
         }
 
-        // create the script session
-        Session scriptSession = createScriptSession(wspName);
-
-        Session sessionFromMap = scriptSessions.putIfAbsent(wspName, scriptSession);
-        if (sessionFromMap != null) {
-            // another session was bound while this session was being created
-            // abandon ship
-            scriptSession.logout();
-            scriptSession = sessionFromMap;
+        try {
+            scriptResolver = new WorkspaceResourceResolver(this.resourceResolverFactory.getResourceResolver(createAuthenticationInfo(wspName)));
+            WorkspaceResourceResolver resolverFromMap = scriptResolvers.putIfAbsent(wspName, scriptResolver);
+            if (resolverFromMap != null) {
+                // another resolver was bound while this resolver was being created
+                // abandon ship
+                scriptResolver.close();
+                scriptResolver = resolverFromMap;
+            }
+        } catch (LoginException le) {
+            log.warn("Unable to login into workspace " + wspName + " : " + le.getMessage(), le);
+            scriptResolver = defaultScriptResolver;
         }
-
-        scriptResolver = new WorkspaceResourceResolver(this.jcrResourceResolverFactory.getResourceResolver(scriptSession),
-                wspName);
-        WorkspaceResourceResolver resolverFromMap = scriptResolvers.putIfAbsent(wspName, scriptResolver);
-        if (resolverFromMap != null) {
-            // another resolver was bound while this resolver was being created
-            // abandon ship
-            scriptResolver = resolverFromMap;
-        }
-
         return scriptResolver;
     }
 
-    private Session createScriptSession(String wspName) {
-        Session scriptSession = null;
-        try {
-            scriptSession = this.repository.loginAdministrative(wspName);
-        } catch (RepositoryException e) {
-            throw new SlingException("Unable to create new admin session.", e);
-        }
+    private Map<String, Object> createAuthenticationInfo(String wspName) {
+        final Map<String, Object> authInfo = new HashMap<String, Object>();
         // if a script user is configured we use this user to read the scripts
         final String scriptUser = OsgiUtil.toString(context.getProperties().get(PROP_SCRIPT_USER), null);
         if (scriptUser != null && scriptUser.length() > 0) {
-            Credentials creds = new SimpleCredentials(scriptUser, new char[0]);
-            try {
-                scriptSession = scriptSession.impersonate(creds);
-            } catch (RepositoryException e) {
-                throw new SlingException("Unable to impersonate to script user: " + scriptUser, e);
-            }
+            authInfo.put(ResourceResolverFactory.SUDO_USER_ID, scriptUser);
         }
-        return scriptSession;
+        if ( wspName != null ) {
+            authInfo.put("user.jcr.workspace", wspName);
+        }
+        return authInfo;
     }
 
     // ---------- SCR Integration ----------------------------------------------
@@ -820,7 +791,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /**
      * Activate this component.
      */
-    protected void activate(ComponentContext context) {
+    protected void activate(ComponentContext context) throws LoginException {
         // from configuration if available
         final Dictionary<?, ?> properties = context.getProperties();
         Object servletRoot = properties.get(PROP_SERVLET_ROOT);
@@ -841,20 +812,15 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), DEFAULT_USE_DEFAULT_WORKSPACE);
             this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), DEFAULT_USE_REQUEST_WORKSPACE);
 
-            this.scriptSessions = new ConcurrentHashMap<String, Session>();
             this.scriptResolvers = new ConcurrentHashMap<String, WorkspaceResourceResolver>();
 
             String defaultWorkspaceProp = (String) properties.get(PROP_DEFAULT_SCRIPT_WORKSPACE);
             if ( defaultWorkspaceProp != null && defaultWorkspaceProp.trim().length() == 0 ) {
                 defaultWorkspaceProp = null;
             }
-            this.defaultScriptSession = createScriptSession(defaultWorkspaceProp);
 
-            // we load the workspaceName out of the session to ensure the value is
-            // non-null
-            this.defaultScriptWorkspaceName = this.defaultScriptSession.getWorkspace().getName();
-            this.defaultScriptResolver = new WorkspaceResourceResolver(jcrResourceResolverFactory
-                    .getResourceResolver(defaultScriptSession), defaultScriptWorkspaceName);
+            this.defaultScriptResolver = new WorkspaceResourceResolver(
+                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo(defaultWorkspaceProp)));
 
             servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot,
                     this.defaultScriptResolver.getSearchPath());
@@ -924,19 +890,17 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
 
         // close sessions
-        if (this.scriptSessions != null && (!this.scriptSessions.isEmpty())) {
-            for (Session session : this.scriptSessions.values()) {
-                session.logout();
+        if (this.scriptResolvers != null ) {
+            for (final ResourceResolver resolver : this.scriptResolvers.values()) {
+                resolver.close();
             }
+            this.scriptResolvers = null;
         }
-        this.scriptSessions = null;
-        this.scriptResolvers = null;
 
-        if (this.defaultScriptSession != null) {
-            this.defaultScriptSession.logout();
+        if (this.defaultScriptResolver != null) {
+            this.defaultScriptResolver.close();
+            this.defaultScriptResolver = null;
         }
-        this.defaultScriptSession = null;
-        this.defaultScriptResolver = null;
 
         this.context = null;
         this.cache = null;
