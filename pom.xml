@@ -211,7 +211,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.4.2</version>
+                    <version>1.4.4</version>
                     <!-- As QDox is trying to inspect/load the classes
                          we have to add a slf4j implementation to the
                          class path of the plugin - we usually use
