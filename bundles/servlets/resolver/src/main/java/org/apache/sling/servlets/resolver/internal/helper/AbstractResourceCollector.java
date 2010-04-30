@@ -179,12 +179,19 @@ public abstract class AbstractResourceCollector {
         return isPathAllowed(path, this.executionPaths);
     }
 
+    /**
+     * This method checks whether a path is allowed to be executed.
+     */
     public static boolean isPathAllowed(final String path, final String[] executionPaths) {
         if ( executionPaths == null ) {
             return true;
         }
-        for(final String prefix : executionPaths ) {
-            if ( path.startsWith(prefix) ) {
+        for(final String config : executionPaths ) {
+            if ( config.endsWith("/") ) {
+                if ( path.startsWith(config) ) {
+                    return true;
+                }
+            } else if ( path.equals(config) ) {
                 return true;
             }
         }

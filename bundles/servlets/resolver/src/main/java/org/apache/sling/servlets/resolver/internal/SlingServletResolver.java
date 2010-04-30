@@ -875,9 +875,6 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                     if ( path == null || path.length() == 0 || path.equals("/") ) {
                         hasRoot = true;
                     }
-                    if ( !path.endsWith("/") ) {
-                        this.executionPaths[i] = path + '/';
-                    }
                 }
                 if ( hasRoot ) {
                     this.executionPaths = null;
