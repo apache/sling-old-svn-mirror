@@ -54,6 +54,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            javax.jcr;resolution:=optional,*
+                        </Import-Package>
                         <Private-Package>
                             org.apache.sling.servlets.resolver.*
                         </Private-Package>

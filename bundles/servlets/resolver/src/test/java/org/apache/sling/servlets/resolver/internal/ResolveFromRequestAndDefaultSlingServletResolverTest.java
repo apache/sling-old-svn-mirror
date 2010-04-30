@@ -16,13 +16,7 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Workspace;
-
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.jmock.Expectations;
 import org.jmock.Mockery;
 
 /**
@@ -42,24 +36,6 @@ public class ResolveFromRequestAndDefaultSlingServletResolverTest extends SlingS
 
     protected String getRequestWorkspaceName() {
         return "default";
-    }
-
-    @Override
-    protected void addExpectations(final SlingRepository repository)
-            throws RepositoryException {
-        final Session defaultSession = this.context.mock(Session.class);
-        final Workspace defaultWorkspace = this.context.mock(Workspace.class);
-
-        this.context.checking(new Expectations() {
-            {
-                one(repository).loginAdministrative(with(aNull(String.class)));
-                will(returnValue(defaultSession));
-                one(defaultSession).getWorkspace();
-                will(returnValue(defaultWorkspace));
-                one(defaultWorkspace).getName();
-                will(returnValue("default"));
-            }
-        });
     }
 
 }
