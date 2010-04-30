@@ -584,7 +584,7 @@ public class JcrResourceResolverFactoryImpl implements
     private Session handleSudo(final Session session, final Map<String, Object> authenticationInfo)
     throws LoginException {
         final String sudoUser = getSudoUser(authenticationInfo);
-        if ( sudoUser != null ) {
+        if ( sudoUser != null && !session.getUserID().equals(sudoUser) ) {
             try {
                 final SimpleCredentials creds = new SimpleCredentials(sudoUser, new char[0]);
                 return session.impersonate(creds);
