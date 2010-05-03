@@ -35,6 +35,7 @@ public class CustomLogFormatTest extends TestCase {
         this.testCase0Helper("%!300,400t");
         this.testCase0Helper("%!300,400{Content-Type}i");
         this.testCase0Helper("xyz %Dms");
+        this.testCase0Helper("xyz %{foo}M");
     }
 
     private void testCase0Helper(String format) {
