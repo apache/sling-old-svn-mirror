@@ -218,6 +218,10 @@ class CustomLogFormat {
                 param = new MethodParameter();
                 break;
 
+            case 'M':
+                param = new ParamParameter(name);
+                break;
+
             case 'o':
                 param = (name == null) ? null : new HeaderParameter(name, false);
                 break;
@@ -417,6 +421,10 @@ class CustomLogFormat {
             return this.parName;
         }
 
+        protected String getParParam() {
+            return this.parParam;
+        }
+
         public String toString() {
             StringBuffer result = new StringBuffer("%");
 
@@ -528,6 +536,20 @@ class CustomLogFormat {
 
         protected String getValue(SlingHttpServletRequest request) {
             return Thread.currentThread().getName();
+        }
+
+        protected String getValue(SlingHttpServletResponseImpl response) {
+            return null;
+        }
+    }
+
+    static class ParamParameter extends BaseParameter {
+        public ParamParameter(String parParam) {
+            super('M', parParam, true);
+        }
+
+        protected String getValue(SlingHttpServletRequest request) {
+            return request.getParameter(this.getParParam());
         }
 
         protected String getValue(SlingHttpServletResponseImpl response) {
