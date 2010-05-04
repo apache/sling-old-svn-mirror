@@ -342,8 +342,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                                     scriptName);
                 }
             }
-        } else {
-
+        }
+        if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
             final NamedScriptResourceCollector locationUtil = NamedScriptResourceCollector.create(scriptName, resource, this.executionPaths);
             servlet = getServlet(locationUtil, null, resolver);
@@ -555,7 +555,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                                     type);
                 }
             }
-        } else {
+        }
+        if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
             final ResourceCollector locationUtil = ResourceCollector.create(request, resolver.getWorkspaceName(), this.executionPaths);
             servlet = getServlet(locationUtil, request, resolver);
