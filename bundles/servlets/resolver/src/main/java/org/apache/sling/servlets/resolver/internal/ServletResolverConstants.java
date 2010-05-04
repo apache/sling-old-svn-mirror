@@ -27,6 +27,9 @@ public class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types.
+     * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
+     * property must be set, or the servlet is ignored. If both are set, the
+     * servlet is registered using both ways.
      */
     public static final String SLING_SERVLET_PATHS = "sling.servlet.paths";
 
@@ -36,9 +39,9 @@ public class ServletResolverConstants {
      * is "sling.servlet.resourceTypes").
      * <p>
      * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_PATHS} property is set. Otherwise this property
-     * must be set or the servlet is ignored.
+     * denoting the resource types. Either this property or the {@link #SLING_SERVLET_PATHS}
+     * property must be set, or the servlet is ignored. If both are set, the
+     * servlet is registered using both ways.
      */
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
 
@@ -71,7 +74,7 @@ public class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_PATHS} property is set. Otherwise this property is
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property is
      * optional and ignored if not set.
      */
     public static final String SLING_SERVLET_SELECTORS = "sling.servlet.selectors";
@@ -83,7 +86,7 @@ public class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_PATHS} property is set. Otherwise this property or
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
      * the {@link #SLING_SERVLET_METHODS} is optional and ignored if not set.
      */
     public static final String SLING_SERVLET_EXTENSIONS = "sling.servlet.extensions";
@@ -95,7 +98,7 @@ public class ServletResolverConstants {
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types. This property is ignored if the
-     * {@link #SLING_SERVLET_PATHS} property is set. Otherwise this property or
+     * {@link #SLING_SERVLET_RESOURCE_TYPES} property is not set. Otherwise this property or
      * the {@link #SLING_SERVLET_EXTENSIONS} is optional and ignored if not set.
      */
     public static final String SLING_SERVLET_METHODS = "sling.servlet.methods";
