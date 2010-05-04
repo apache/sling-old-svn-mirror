@@ -83,7 +83,7 @@
                             http://sling.apache.org/site/sling-api.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.api.*;version=${pom.version}
+                            org.apache.sling.api.*;version=${project.version}
                         </Export-Package>
                         <!-- Require explicit version of the servlet API -->
                         <Import-Package>
