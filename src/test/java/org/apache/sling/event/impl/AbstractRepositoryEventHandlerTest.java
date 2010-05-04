@@ -109,13 +109,13 @@ public abstract class AbstractRepositoryEventHandlerTest {
         this.handler.threadPool = new ThreadPoolImpl();
 
         // lets set up the bundle context
-        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "beforeBundleContext");
 
         // lets set up the component configuration
         final Dictionary<String, Object> componentConfig = this.getComponentConfig();
 
         // lets set up the compnent context
-        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "beforeComponentContext");
         this.getMockery().checking(new Expectations() {{
             allowing(componentContext).getBundleContext();
             will(returnValue(bundleContext));
@@ -130,9 +130,9 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
     @org.junit.After public void shutdown() throws Exception {
         // lets set up the bundle context with the sling id
-        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "afterBundleContext");
 
-        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "afterComponentContext");
         this.getMockery().checking(new Expectations() {{
             allowing(componentContext).getBundleContext();
             will(returnValue(bundleContext));
