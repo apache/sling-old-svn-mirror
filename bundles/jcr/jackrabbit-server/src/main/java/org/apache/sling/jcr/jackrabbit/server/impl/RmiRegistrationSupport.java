@@ -76,9 +76,15 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
 
         Object portProp = this.getComponentContext().getProperties().get(
             PROP_REGISTRY_PORT);
-        this.registryPort = (portProp instanceof Number)
-                ? ((Number) portProp).intValue()
-                : 0;
+        if (portProp instanceof Number) {
+            this.registryPort = ((Number) portProp).intValue();
+        } else {
+            try {
+                this.registryPort = Integer.parseInt(String.valueOf(portProp));
+            } catch (NumberFormatException nfe) {
+                this.registryPort = 0;
+            }
+        }
 
         // ensure correct value
         if (this.registryPort < 0) {
