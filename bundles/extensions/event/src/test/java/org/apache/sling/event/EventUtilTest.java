@@ -77,8 +77,8 @@ public class EventUtilTest {
         assertFalse(EventUtil.isLocal(remoteEvent));
     }
 
-    protected Value getValueOfType(final int type) {
-        final Value v = this.context.mock(Value.class);
+    protected Value getValueOfType(final int type, String name) {
+        final Value v = this.context.mock(Value.class, name);
         this.context.checking(new Expectations() {{
             allowing(v).getType();will(returnValue(type));
         }});
@@ -89,15 +89,15 @@ public class EventUtilTest {
         final ValueFactory factory = this.context.mock(ValueFactory.class);
         this.context.checking(new Expectations() {{
             allowing(factory).createValue(true);
-            will(returnValue(getValueOfType(PropertyType.BOOLEAN)));
+            will(returnValue(getValueOfType(PropertyType.BOOLEAN, "booleanValue1")));
             allowing(factory).createValue(false);
-            will(returnValue(getValueOfType(PropertyType.BOOLEAN)));
+            will(returnValue(getValueOfType(PropertyType.BOOLEAN, "booleanValue2")));
             allowing(factory).createValue(with(any(Long.class)));
-            will(returnValue(getValueOfType(PropertyType.LONG)));
+            will(returnValue(getValueOfType(PropertyType.LONG, "longValue")));
             allowing(factory).createValue(with(any(String.class)));
-            will(returnValue(getValueOfType(PropertyType.STRING)));
+            will(returnValue(getValueOfType(PropertyType.STRING, "stringValue")));
             allowing(factory).createValue(with(any(Calendar.class)));
-            will(returnValue(getValueOfType(PropertyType.DATE)));
+            will(returnValue(getValueOfType(PropertyType.DATE, "dateValue")));
         }});
         // boolean
         assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, true).getType());

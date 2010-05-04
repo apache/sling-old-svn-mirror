@@ -23,15 +23,19 @@ import static org.junit.Assert.assertNotNull;
 import org.apache.felix.framework.Logger;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 
 /** Test the UninstallBundleCommand */
+@RunWith(JMock.class)
 public class UninstallBundleCommandTest {
-    static final Mockery mockery = new Mockery();
+    final Mockery mockery = new JUnit4Mockery();
     private BundleContext bundleContext;
     private final Logger logger = new Logger();
 
@@ -39,7 +43,7 @@ public class UninstallBundleCommandTest {
     public void setUp() throws Exception {
         final Bundle [] b = new Bundle[3];
         for(int i=0; i < b.length; i++) {
-            b[i] = mockery.mock(Bundle.class);
+            b[i] = mockery.mock(Bundle.class, "bundle" + i);
         }
 
         // b0 is in version range, will be uninstalled
@@ -50,7 +54,7 @@ public class UninstallBundleCommandTest {
             will(returnValue(new Version("1.0.0")));
             exactly(1).of(b[0]).uninstall();
         }});
-        
+
         // b1 is not in version range, not uninstalled
         mockery.checking(new Expectations() {{
             allowing(b[1]).getSymbolicName();
@@ -58,7 +62,7 @@ public class UninstallBundleCommandTest {
             allowing(b[1]).getVersion();
             will(returnValue(new Version("2.0.0")));
         }});
-        
+
         // b2 has different symbolic name, not uninstalled
         mockery.checking(new Expectations() {{
             allowing(b[2]).getSymbolicName();
@@ -66,14 +70,14 @@ public class UninstallBundleCommandTest {
             allowing(b[2]).getVersion();
             will(returnValue(new Version("1.0.0")));
         }});
-        
+
         bundleContext = mockery.mock(BundleContext.class);
         mockery.checking(new Expectations() {{
             allowing(bundleContext).getBundles();
             will(returnValue(b));
         }});
     }
-    
+
     @Test
     public void testExplicitVersion() throws Exception {
         final UninstallBundleCommand proto = new UninstallBundleCommand();
@@ -82,7 +86,7 @@ public class UninstallBundleCommandTest {
         assertNotNull("Expecting parsing to succeed", cmd);
         cmd.execute(logger, bundleContext);
     }
-    
+
     @Test
     public void testVersionRange() throws Exception {
         final UninstallBundleCommand proto = new UninstallBundleCommand();

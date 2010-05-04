@@ -33,26 +33,30 @@ import java.util.List;
 import org.apache.felix.framework.Logger;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Version;
 
+@RunWith(JMock.class)
 public class BootstrapCommandFileTest {
     private final Logger logger = new Logger();
     private final File nonExistentFile = new File("/nonexistent." + System.currentTimeMillis());
-    static final Mockery mockery = new Mockery();
+    final Mockery mockery = new JUnit4Mockery();
     private File dataFile;
     private File cmdFile;
     private BundleContext bundleContext;
-    
+
     @Before
     public void setUp() throws IOException,BundleException {
         dataFile = File.createTempFile(getClass().getSimpleName(), "txt");
-        
+
         final Bundle b1 = mockery.mock(Bundle.class);
         mockery.checking(new Expectations() {{
             allowing(b1).getSymbolicName();
@@ -62,8 +66,8 @@ public class BootstrapCommandFileTest {
             allowing(b1).uninstall();
         }});
         final Bundle [] bundles = { b1 };
-        
-            
+
+
         bundleContext = mockery.mock(BundleContext.class);
         mockery.checking(new Expectations() {{
             allowing(bundleContext).getDataFile(with(any(String.class)));
@@ -71,7 +75,7 @@ public class BootstrapCommandFileTest {
             allowing(bundleContext).getBundles();
             will(returnValue(bundles));
         }});
-        
+
         cmdFile = File.createTempFile(getClass().getSimpleName(), "cmd");
         final PrintWriter w = new PrintWriter(new FileWriter(cmdFile));
         w.println("# Test command file, this is a comment");
@@ -81,7 +85,7 @@ public class BootstrapCommandFileTest {
         w.flush();
         w.close();
     }
-    
+
     @After
     public void tearDown() throws IOException {
         dataFile.delete();
@@ -91,24 +95,24 @@ public class BootstrapCommandFileTest {
     @Test
     public void testNoFileNoExecution() {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, nonExistentFile);
-        assertFalse("Expecting anythingToExecute false for non-existing file", 
+        assertFalse("Expecting anythingToExecute false for non-existing file",
                 bcf.anythingToExecute(bundleContext));
     }
-    
+
     @Test
     public void testExecuteOnceOnly() throws IOException {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
-        assertTrue("Expecting anythingToExecute true for existing file", 
+        assertTrue("Expecting anythingToExecute true for existing file",
                 bcf.anythingToExecute(bundleContext));
         assertEquals("Expecting two commands to be executed", 2, bcf.execute(bundleContext));
-        assertFalse("Expecting anythingToExecute false after execution", 
+        assertFalse("Expecting anythingToExecute false after execution",
                 bcf.anythingToExecute(bundleContext));
     }
-    
+
     @Test
     public void testParsing() throws IOException {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
-        final String cmdString = 
+        final String cmdString =
             "# a comment\n"
             + "uninstall symbolicname1 1.0\n"
             + "\n"
@@ -119,16 +123,16 @@ public class BootstrapCommandFileTest {
         assertEquals("Expecting two commands after parsing", 2, c.size());
         int index = 0;
         for(Command cmd : c) {
-            assertTrue("Expecting an UninstallBundleCommand at index " + index, 
+            assertTrue("Expecting an UninstallBundleCommand at index " + index,
                     cmd instanceof UninstallBundleCommand);
             index++;
         }
     }
-    
+
     @Test
     public void testSyntaxError() throws IOException {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
-        final String cmdString = 
+        final String cmdString =
             "# a comment\n"
             + "uninstall only_one_field\n"
             + "\n"
@@ -139,22 +143,22 @@ public class BootstrapCommandFileTest {
             bcf.parse(new ByteArrayInputStream(cmdString.getBytes()));
             fail("Expecting IOException for syntax error");
         } catch(IOException ioe) {
-            assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line", 
+            assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line",
                     ioe.getMessage().contains("only_one_field"));
         }
     }
-    
+
     @Test
     public void testInvalidCommand() throws IOException {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
-        final String cmdString = 
+        final String cmdString =
             "foo\n"
             ;
         try {
             bcf.parse(new ByteArrayInputStream(cmdString.getBytes()));
             fail("Expecting IOException for invalid command");
         } catch(IOException ioe) {
-            assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line", 
+            assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line",
                     ioe.getMessage().contains("foo"));
         }
     }

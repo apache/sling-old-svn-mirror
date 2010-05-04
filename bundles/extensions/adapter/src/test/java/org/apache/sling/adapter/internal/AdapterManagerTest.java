@@ -61,8 +61,8 @@ public class AdapterManagerTest {
     /**
      * Helper method to create a mock bundle
      */
-    protected Bundle createBundle() {
-        final Bundle bundle = this.context.mock(Bundle.class);
+    protected Bundle createBundle(String name) {
+        final Bundle bundle = this.context.mock(Bundle.class, name);
         this.context.checking(new Expectations() {{
             allowing(bundle).getBundleId();
             will(returnValue(1L));
@@ -96,8 +96,8 @@ public class AdapterManagerTest {
      * Helper method to create a mock service reference
      */
     protected ServiceReference createServiceReference() {
-        final Bundle bundle = this.createBundle();
-        final ServiceReference ref = this.context.mock(ServiceReference.class);
+        final Bundle bundle = this.createBundle("bundle");
+        final ServiceReference ref = this.context.mock(ServiceReference.class, "serviceReference");
         this.context.checking(new Expectations() {{
             allowing(ref).getProperty(Constants.SERVICE_ID);
             will(returnValue(1L));
@@ -115,8 +115,8 @@ public class AdapterManagerTest {
      * Helper method to create a mock service reference
      */
     protected ServiceReference createServiceReference2() {
-        final Bundle bundle = this.createBundle();
-        final ServiceReference ref = this.context.mock(ServiceReference.class);
+        final Bundle bundle = this.createBundle("bundle2");
+        final ServiceReference ref = this.context.mock(ServiceReference.class, "serviceReference2");
         this.context.checking(new Expectations() {{
             allowing(ref).getProperty(Constants.SERVICE_ID);
             will(returnValue(2L));

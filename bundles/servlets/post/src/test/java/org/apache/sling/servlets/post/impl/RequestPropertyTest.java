@@ -216,20 +216,21 @@ public class RequestPropertyTest {
     @SuppressWarnings("unchecked")
     private Map<String, RequestProperty> collectContent(Param... kvs) throws Throwable {
         final List<Map.Entry<String, RequestParameter>> params = new ArrayList<Map.Entry<String, RequestParameter>>();
-        for (final Param kv : kvs) {
+        for (int i = 0; i < kvs.length; i++) {
+            final Param kv = kvs[i];
             final RequestParameter[] param = new RequestParameter[kv.value.length];
-            for (int i = 0; i < kv.value.length; i++) {
-                final String strValue = kv.value[i];
-                final RequestParameter aparam = context.mock(RequestParameter.class);
+            for (int j = 0; j < kv.value.length; j++) {
+                final String strValue = kv.value[j];
+                final RequestParameter aparam = context.mock(RequestParameter.class, "requestParameter" + i + "#" + j);
                 context.checking(new Expectations() {
                     {
                         allowing(aparam).getString();
                         will(returnValue(strValue));
                     }
                 });
-                param[i] = aparam;
+                param[j] = aparam;
             }
-            final Map.Entry<String, RequestParameter> entry = context.mock(Map.Entry.class);
+            final Map.Entry<String, RequestParameter> entry = context.mock(Map.Entry.class, "entry" + i);
             context.checking(new Expectations() {
                 {
                     allowing(entry).getKey();
