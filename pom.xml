@@ -69,8 +69,8 @@
                             !org.eclipse.*, *
                         </Import-Package>
                         
-                        <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
-                        <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
+                        <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
+                        <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
 
                         <!-- Embed Jasper completely -->
                         <Embed-Dependency>
