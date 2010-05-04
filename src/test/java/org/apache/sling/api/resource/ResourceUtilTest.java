@@ -256,9 +256,9 @@ public class ResourceUtilTest {
         // the resource resolver
         final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
         // the resource to test
-        final Resource r = this.context.mock(Resource.class);
-        final Resource r2 = this.context.mock(Resource.class);
-        final Resource typeResource = this.context.mock(Resource.class);
+        final Resource r = this.context.mock(Resource.class, "resource1");
+        final Resource r2 = this.context.mock(Resource.class, "resource2");
+        final Resource typeResource = this.context.mock(Resource.class, "typeResource");
         this.context.checking(new Expectations() {{
             allowing(r).getResourceType(); will(returnValue("a:b"));
             allowing(r).getResourceResolver(); will(returnValue(resolver));
@@ -288,8 +288,8 @@ public class ResourceUtilTest {
         // the resource resolver
         final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
         // the resource to test
-        final Resource r = this.context.mock(Resource.class);
-        final Resource typeResource = this.context.mock(Resource.class);
+        final Resource r = this.context.mock(Resource.class, "resource");
+        final Resource typeResource = this.context.mock(Resource.class, "typeResource");
         this.context.checking(new Expectations() {{
             allowing(r).getResourceType(); will(returnValue("a:b"));
             allowing(r).getResourceSuperType(); will(returnValue("d:e"));
@@ -326,9 +326,9 @@ public class ResourceUtilTest {
         // none is adaptable to String
         // b and c are adaptable to long
         // a and c are adaptable to boolean
-        final Resource a = this.context.mock(Resource.class);
-        final Resource b = this.context.mock(Resource.class);
-        final Resource c = this.context.mock(Resource.class);
+        final Resource a = this.context.mock(Resource.class, "a");
+        final Resource b = this.context.mock(Resource.class, "b");
+        final Resource c = this.context.mock(Resource.class, "c");
         final List<Resource> l = new ArrayList<Resource>();
         l.add(a); l.add(b); l.add(c);
         this.context.checking(new Expectations() {{
@@ -377,20 +377,20 @@ public class ResourceUtilTest {
         }
         return count;
     }
-    
+
     @Test public void testIsStarResource() {
-		final Resource nonStar = context.mock(Resource.class);
+		final Resource nonStar = context.mock(Resource.class, "nonStarResource");
 		final String starPath = "/foo/*";
-		final Resource star = context.mock(Resource.class);
+		final Resource star = context.mock(Resource.class, "starResource");
 		final String nonStarPath = "/foo/*";
         this.context.checking(new Expectations() {{
         	allowing(star).getPath(); will(returnValue(starPath));
         	allowing(nonStar).getPath(); will(returnValue(nonStarPath));
         }});
-        
-		assertTrue("expecting star==true for path" + starPath, 
+
+		assertTrue("expecting star==true for path" + starPath,
 				ResourceUtil.isStarResource(star));
-		assertTrue("expecting star==false for path" + starPath, 
+		assertTrue("expecting star==false for path" + starPath,
 				ResourceUtil.isStarResource(nonStar));
     }
     @Test public void testIsSyntheticResource() {
@@ -400,12 +400,12 @@ public class ResourceUtilTest {
         	allowing(star).getPath(); will(returnValue("/foo/*"));
         }});
         final Resource wrapped = new ResourceWrapper(synth);
-        
-		assertTrue("expecting synthetic==true for SyntheticResource", 
+
+		assertTrue("expecting synthetic==true for SyntheticResource",
 				ResourceUtil.isSyntheticResource(synth));
-		assertFalse("expecting synthetic==false for star resource", 
+		assertFalse("expecting synthetic==false for star resource",
 				ResourceUtil.isSyntheticResource(star));
-		assertTrue("expecting synthetic==true for wrapped Resource", 
+		assertTrue("expecting synthetic==true for wrapped Resource",
 				ResourceUtil.isSyntheticResource(wrapped));
     }
 }
