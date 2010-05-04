@@ -55,7 +55,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.api;version=2.2.0,
+                            org.apache.sling.scripting.api;version=2.1.0,
                             javax.script
                         </Export-Package>
                         <Private-Package>
