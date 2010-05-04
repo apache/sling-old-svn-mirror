@@ -69,7 +69,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.jcr.ocm;version=${pom.version},
+                            org.apache.sling.jcr.ocm;version=${project.version},
                             org.apache.jackrabbit.ocm.exception;
                             org.apache.jackrabbit.ocm.mapper;
                             org.apache.jackrabbit.ocm.manager;

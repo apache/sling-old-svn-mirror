@@ -58,7 +58,7 @@
                             http://sling.apache.org/site/mime-type-support.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.commons.mime;version=${pom.version}
+                            org.apache.sling.commons.mime;version=${project.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.mime.internal
