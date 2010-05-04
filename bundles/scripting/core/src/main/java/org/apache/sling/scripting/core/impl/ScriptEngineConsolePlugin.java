@@ -39,10 +39,10 @@ public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
     private static ScriptEngineConsolePlugin INSTANCE;
 
     static void initPlugin(BundleContext context,
-            SlingScriptAdapterFactory scriptAdapterFactory) {
+            ScriptEngineManagerFactory scriptEngineManagerFactory) {
         if (INSTANCE == null) {
             ScriptEngineConsolePlugin tmp = new ScriptEngineConsolePlugin(
-                scriptAdapterFactory);
+                    scriptEngineManagerFactory);
             tmp.activate(context);
             INSTANCE = tmp;
         }
@@ -60,12 +60,12 @@ public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
 
     private ServiceRegistration serviceRegistration;
 
-    private final SlingScriptAdapterFactory scriptAdapterFactory;
+    private final ScriptEngineManagerFactory scriptEngineManagerFactory;
 
     // private constructor to force using static setup and shutdown
     private ScriptEngineConsolePlugin(
-            SlingScriptAdapterFactory scriptAdapterFactory) {
-        this.scriptAdapterFactory = scriptAdapterFactory;
+            ScriptEngineManagerFactory scriptEngineManagerFactory) {
+        this.scriptEngineManagerFactory = scriptEngineManagerFactory;
     }
 
     public String getTitle() {
@@ -76,7 +76,7 @@ public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
         pw.println("Available Script Engines");
         pw.println("========================");
 
-        ScriptEngineManager manager = scriptAdapterFactory.getScriptEngineManager();
+        ScriptEngineManager manager = scriptEngineManagerFactory.getScriptEngineManager();
         List<?> factories = manager.getEngineFactories();
         for (Iterator<?> fi = factories.iterator(); fi.hasNext();) {
 
