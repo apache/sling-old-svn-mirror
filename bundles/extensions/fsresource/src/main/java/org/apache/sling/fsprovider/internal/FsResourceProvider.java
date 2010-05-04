@@ -49,6 +49,7 @@ import org.osgi.service.event.EventAdmin;
  *                label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  *                configurationFactory="true"
+ *                policy="require"
  * @scr.service interface="ResourceProvider"
  * @scr.property name="service.description" value="Sling Filesystem Resource
  *               Provider"
@@ -200,14 +201,6 @@ public class FsResourceProvider implements ResourceProvider {
     // ---------- SCR Integration
 
     protected void activate(BundleContext bundleContext, Map<?, ?> props) {
-
-        String serviceFactoryPid = (String) props.get("service.factoryPid");
-        if ( serviceFactoryPid == null ) {
-            // this is the activate for the Alias PID and not the configured service, therefore we should not
-            // do anything here, see OSGi 4.2 compendium v1.1 section 115.3.1 for more details.
-            return;
-        }
-
         String providerRoot = (String) props.get(ROOTS);
         if (providerRoot == null || providerRoot.length() == 0) {
             throw new IllegalArgumentException(ROOTS + " property must be set");
