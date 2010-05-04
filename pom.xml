@@ -62,8 +62,8 @@
 						<Private-Package>
 						</Private-Package>
 						<Export-Package>
-                     org.apache.sling.jcr.jackrabbit.accessmanager;version=${pom.version},
-                     org.apache.sling.jcr.jackrabbit.accessmanager.post;version=${pom.version}
+                     org.apache.sling.jcr.jackrabbit.accessmanager;version=${project.version},
+                     org.apache.sling.jcr.jackrabbit.accessmanager.post;version=${project.version}
 						</Export-Package>
 						<Sling-Initial-Content />
 						<Sling-Nodetypes />
