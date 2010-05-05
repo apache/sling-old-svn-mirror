@@ -893,12 +893,14 @@ public class JcrResourceResolver
                     new Object[] { res, propName, prop });
                 return prop;
             }
-        }
-
-        // otherwise, check it in the jcr:content child resource
-        res = getResource(res, "jcr:content");
-        if (res != null) {
-            return getProperty(res, propName);
+            // otherwise, check it in the jcr:content child resource
+            // This is a special case checking for JCR based resources
+            // we directly use the deep resolving of properties of the
+            // JCR value map implementation - this does not work
+            // in none JCR environments, however in non JCR envs there
+            // is usually no "jcr:content" child node anyway
+            prop = props.get("jcr:content/" + propName, String.class);
+            return prop;
         }
 
         return null;
