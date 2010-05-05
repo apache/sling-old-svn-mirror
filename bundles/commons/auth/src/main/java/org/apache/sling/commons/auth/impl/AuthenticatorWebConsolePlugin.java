@@ -20,7 +20,7 @@ package org.apache.sling.commons.auth.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -80,7 +80,7 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content' colspan='2'>Handler</td>");
         pw.println("</tr>");
 
-        ArrayList<AbstractAuthenticationHandlerHolder> holderList = slingAuthenticator.getAuthenticationHandler();
+        final List<AbstractAuthenticationHandlerHolder> holderList = slingAuthenticator.getAuthenticationHandler();
         for (AbstractAuthenticationHandlerHolder handler : holderList) {
 
             pw.println("<tr class='content'>");
@@ -101,7 +101,7 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content'>Defining Service (Description or ID)</td>");
         pw.println("</tr>");
 
-        ArrayList<AuthenticationRequirementHolder> holderList = slingAuthenticator.getAuthenticationRequirements();
+        final List<AuthenticationRequirementHolder> holderList = slingAuthenticator.getAuthenticationRequirements();
         for (AuthenticationRequirementHolder req : holderList) {
 
             pw.println("<tr class='content'>");
