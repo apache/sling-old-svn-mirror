@@ -21,99 +21,124 @@ package org.apache.sling.commons.auth.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class PathBasedHolderCache<Type extends PathBasedHolder> {
 
-    private final Map<String, Map<String, ArrayList<Type>>> cache = new HashMap<String, Map<String, ArrayList<Type>>>();
+    private final Map<String, Map<String, List<Type>>> cache = new HashMap<String, Map<String, List<Type>>>();
 
-    public synchronized void clear() {
-        cache.clear();
+    /** Read/write lock to synchronize the cache access. */
+    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+
+    public void clear() {
+        this.rwLock.writeLock().lock();
+        try {
+            cache.clear();
+        } finally {
+            this.rwLock.writeLock().unlock();
+        }
     }
 
-    public synchronized void addHolder(final Type holder) {
+    public void addHolder(final Type holder) {
+        this.rwLock.writeLock().lock();
+        try {
 
-        Map<String, ArrayList<Type>> byHostMap = cache.get(holder.protocol);
-        if (byHostMap == null) {
-            byHostMap = new HashMap<String, ArrayList<Type>>();
-            cache.put(holder.protocol, byHostMap);
+            Map<String, List<Type>> byHostMap = cache.get(holder.protocol);
+            if (byHostMap == null) {
+                byHostMap = new HashMap<String, List<Type>>();
+                cache.put(holder.protocol, byHostMap);
+            }
+
+            final List<Type> byPathList = new ArrayList<Type>();
+
+            // preset with current list
+            final List<Type> currentPathList = byHostMap.get(holder.host);
+            if (currentPathList != null) {
+                byPathList.addAll(currentPathList);
+            }
+
+            // add the new holder
+            byPathList.add(holder);
+
+            // sort the list according to the path length (longest path first)
+            Collections.sort(byPathList);
+
+            // replace old list with new list
+            byHostMap.put(holder.host, byPathList);
+        } finally {
+            this.rwLock.writeLock().unlock();
         }
-
-        final ArrayList<Type> byPathList = new ArrayList<Type>();
-
-        // preset with current list
-        final ArrayList<Type> currentPathList = byHostMap.get(holder.host);
-        if (currentPathList != null) {
-            byPathList.addAll(currentPathList);
-        }
-
-        // add the new holder
-        byPathList.add(holder);
-
-        // sort the list according to the path length (longest path first)
-        Collections.sort(byPathList);
-
-        // replace old list with new list
-        byHostMap.put(holder.host, byPathList);
     }
 
-    public synchronized void removeHolder(final Type holder) {
-        final Map<String, ArrayList<Type>> byHostMap = cache.get(holder.protocol);
-        if (byHostMap != null) {
-            final ArrayList<Type> byPathList = byHostMap.get(holder.host);
-            if (byPathList != null) {
+    public void removeHolder(final Type holder) {
+        this.rwLock.writeLock().lock();
+        try {
+            final Map<String, List<Type>> byHostMap = cache.get(holder.protocol);
+            if (byHostMap != null) {
+                final List<Type> byPathList = byHostMap.get(holder.host);
+                if (byPathList != null) {
 
-                // create a new list without the removed holder
-                final ArrayList<Type> list = new ArrayList<Type>();
-                list.addAll(byPathList);
-                list.remove(holder);
+                    // create a new list without the removed holder
+                    final List<Type> list = new ArrayList<Type>();
+                    list.addAll(byPathList);
+                    list.remove(holder);
 
-                // replace the old list with the new one (or remove if empty)
-                if (list.isEmpty()) {
-                    byHostMap.remove(holder.host);
-                } else {
-                    byHostMap.put(holder.host, list);
+                    // replace the old list with the new one (or remove if empty)
+                    if (list.isEmpty()) {
+                        byHostMap.remove(holder.host);
+                    } else {
+                        byHostMap.put(holder.host, list);
+                    }
                 }
             }
+        } finally {
+            this.rwLock.writeLock().unlock();
         }
     }
 
-    public synchronized ArrayList<Type> findApplicableHolder(
-            HttpServletRequest request) {
-
-        Map<String, ArrayList<Type>> byHostMap = cache.get(request.getScheme());
-        if (byHostMap == null) {
-            byHostMap = cache.get("");
-        }
-
-        String hostname = request.getServerName()
-            + (request.getServerPort() != 80 && request.getServerPort() != 443
+    public List<Type>[] findApplicableHolder(final HttpServletRequest request) {
+        this.rwLock.readLock().lock();
+        try {
+            final String hostname = request.getServerName()
+                  + (request.getServerPort() != 80 && request.getServerPort() != 443
                     ? ":" + request.getServerPort()
                     : "");
 
-        ArrayList<Type> infos = null;
-        if (byHostMap != null) {
-            infos = byHostMap.get(hostname);
-            if (infos == null) {
-                infos = byHostMap.get("");
-            }
-            if (infos != null) {
-                return infos;
-            }
-        }
+            @SuppressWarnings("unchecked")
+            final List<Type>[] result = new ArrayList[4];
 
-        return null;
+            final Map<String, List<Type>> byHostMap = cache.get(request.getScheme());
+            if ( byHostMap != null ) {
+                result[0] = byHostMap.get(hostname);
+                result[1] = byHostMap.get("");
+            }
+            final Map<String, List<Type>> defaultByHostMap = cache.get("");
+            if ( defaultByHostMap != null ) {
+                result[0] = defaultByHostMap.get(hostname);
+                result[1] = defaultByHostMap.get("");
+            }
+            return result;
+        } finally {
+            this.rwLock.readLock().unlock();
+        }
     }
 
-    public synchronized ArrayList<Type> getHolders() {
-        final ArrayList<Type> result = new ArrayList<Type>();
-        for (Map<String, ArrayList<Type>> byHostEntry : cache.values()) {
-            for (ArrayList<Type> holderList : byHostEntry.values()) {
-                result.addAll(holderList);
+    public List<Type> getHolders() {
+        this.rwLock.readLock().lock();
+        try {
+            final List<Type> result = new ArrayList<Type>();
+            for (Map<String, List<Type>> byHostEntry : cache.values()) {
+                for (List<Type> holderList : byHostEntry.values()) {
+                    result.addAll(holderList);
+                }
             }
+            return result;
+        } finally {
+            this.rwLock.readLock().unlock();
         }
-        return result;
     }
 }
