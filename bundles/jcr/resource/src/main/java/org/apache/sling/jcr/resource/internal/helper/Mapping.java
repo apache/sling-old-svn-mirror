@@ -18,7 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal.helper;
 
-import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The <code>Mapping</code> class conveys the mapping configuration used by
@@ -63,6 +64,13 @@ public class Mapping {
         }
     };
 
+    // Regular expression to split mapping configuration strings into three
+    // groups:
+    //   1 - external path prefix
+    //   2 - direction (Outbound (>), Bidirectional (:), Inbound (>))
+    //   3 - internap path prefix
+    private static final Pattern CONFIG_SPLITTER = Pattern.compile("(.+)([:<>])(.+)");
+
     /** the 'from' (inside, repository) mapping */
     private final String from;
 
@@ -78,36 +86,6 @@ public class Mapping {
     /** the mapping direction */
     private final int direction;
 
-    /**
-     * Creates a new instance of a mapping.
-     *
-     * @param from Handle prefix possible valid in the ContentBus.
-     * @param to URI path prefix to be replaced by from to get a possibly valid
-     *            handle.
-     * @param dir the direction of the mapping. either "inwards", "outwards" or
-     *            "both".
-     * @throws NullPointerException if either <code>from</code> or
-     *             <code>to</code> is <code>null</code>.
-     */
-    public Mapping(String from, String to, String dir) {
-        this(from, to, "in".equals(dir) ? Mapping.INBOUND : ("out".equals(dir)
-                ? Mapping.OUTBOUND
-                : Mapping.BOTH));
-    }
-
-    /**
-     * Creates a new instance of a mapping.
-     *
-     * @param from Handle prefix possible valid in the ContentBus.
-     * @param to URI path prefix to be replaced by from to get a possibly valid
-     *            handle.
-     * @throws NullPointerException if either <code>from</code> or
-     *             <code>to</code> is <code>null</code>.
-     */
-    public Mapping(String from, String to) {
-        this(from, to, Mapping.BOTH);
-    }
-
     public Mapping(String config) {
         this(split(config));
     }
@@ -122,10 +100,10 @@ public class Mapping {
                 ? Mapping.INBOUND
                 : ("<".equals(parts[1]) ? Mapping.OUTBOUND : Mapping.BOTH);
     }
-    
+
     @Override
     public String toString() {
-        return "Mapping (from=" + from + ", to=" + to + ", direction=" + direction 
+        return "Mapping (from=" + from + ", to=" + to + ", direction=" + direction
             + ", lengths=" + fromLength + "/" + toLength;
     }
 
@@ -169,12 +147,12 @@ public class Mapping {
     public String getFrom() {
         return from;
     }
-    
+
     // TODO: temporary
     public String getTo() {
         return to;
     }
-    
+
     /**
      * Checks, if this mapping is defined for inbound mapping.
      *
@@ -207,14 +185,23 @@ public class Mapping {
     }
 
     public static String[] split(String map) {
-        String[] res = new String[3]; // src, op, dst
-        StringTokenizer st = new StringTokenizer(map, "-<>", true);
 
-        for (int i = 0; i < res.length; i++) {
-            res[i] = st.hasMoreTokens() ? st.nextToken() : "";
+        // standard case of mapping <path>[<:>]<path>
+        Matcher mapMatch = CONFIG_SPLITTER.matcher(map);
+        if (mapMatch.matches()) {
+            return new String[] { mapMatch.group(1), mapMatch.group(2),
+                mapMatch.group(3) };
         }
 
-        return res;
+        // backwards compatibility using "-" instead of ":"
+        int dash = map.indexOf('-');
+        if (dash > 0) {
+            return new String[] { map.substring(0, dash),
+                map.substring(dash, dash + 1),
+                map.substring(dash + 1, map.length()) };
+        }
+
+        return new String[] { map, "-", map };
     }
 
 }

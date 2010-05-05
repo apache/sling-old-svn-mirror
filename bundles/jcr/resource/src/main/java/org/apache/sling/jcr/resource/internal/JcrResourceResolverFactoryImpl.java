@@ -143,15 +143,13 @@ public class JcrResourceResolverFactoryImpl implements
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
      *
-     * @scr.property values.1="/-/"
+     * @scr.property values.1="/:/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
 
     /**
-     * @scr.property values.1="/-/" values.2="/content/-/"
-     *               Cvalues.3="/apps/&times;/docroot/-/"
-     *               Cvalues.4="/libs/&times;/docroot/-/"
-     *               values.5="/system/docroot/-/"
+     * @scr.property values.1="/:/" values.2="/content/:/"
+     *               values.3="/system/docroot/:/"
      */
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
