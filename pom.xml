@@ -262,7 +262,6 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <_versionpolicy>$${version;===;${@}}</_versionpolicy>
                         </instructions>
                     </configuration>
                 </plugin>
@@ -364,7 +363,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
 	    <!--
 	    We should execute this profile manually to make sure that all files in our source code contain proper licenses.
 	    This is very important and should not be skipped in any scenario.  It is very importnt for us to follow ASF policy.
-	    Example:  mvn -P prepare-release install
+	    Example:  mvn -Prat prepare-release install
 	    -->
         <profile>
             <id>rat</id>
@@ -395,25 +394,25 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                 </plugins>
             </build>
         </profile>
-            <profile>
-                <id>animal-sniffer</id>
-                <build>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>animal-sniffer-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <phase>test</phase>
-                                    <goals>
-                                        <goal>check</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                    </plugins>
-                </build>
-            </profile>
+        <profile>
+            <id>animal-sniffer</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>animal-sniffer-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <mailingLists>
@@ -516,7 +515,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.7</version>
+                <version>4.8.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
