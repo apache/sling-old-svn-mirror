@@ -197,9 +197,6 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-launchpad-plugin</artifactId>
-                    <!-- If you change the version here, make sure
-                         to adjust the version reference in the
-                         configuration for the maven release plugin! -->
                     <version>2.0.6</version>
                 </plugin>
                 <plugin>
@@ -276,7 +273,7 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                             https://svn.apache.org/repos/asf/sling/tags
                         </tagBase>
                         <preparationGoals>
-                            org.apache.sling:maven-launchpad-plugin:2.0.6:check-bundle-list-for-snapshots clean verify
+                            launchpad:check-bundle-list-for-snapshots clean verify
                         </preparationGoals>
                     </configuration>
                 </plugin>
