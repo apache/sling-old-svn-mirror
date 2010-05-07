@@ -272,9 +272,6 @@ MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
                         <tagBase>
                             https://svn.apache.org/repos/asf/sling/tags
                         </tagBase>
-                        <preparationGoals>
-                            launchpad:check-bundle-list-for-snapshots clean verify
-                        </preparationGoals>
                     </configuration>
                 </plugin>
                 <plugin>

@@ -236,6 +236,15 @@
                     </webResources>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <preparationGoals>
+                        launchpad:check-bundle-list-for-snapshots clean verify
+                    </preparationGoals>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>
