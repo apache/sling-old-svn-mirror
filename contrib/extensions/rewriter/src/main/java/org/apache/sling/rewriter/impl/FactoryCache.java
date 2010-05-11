@@ -58,13 +58,13 @@ public class FactoryCache {
     /** The optional property for the paths the component should apply to */
     private static final String PROPERTY_PATHS = "pipeline.paths";
 
-    /** The optional property for the paths the component should apply to */
+    /** The optional property for the extensions the component should apply to */
     private static final String PROPERTY_EXTENSIONS = "pipeline.extensions";
 
-    /** The optional property for the paths the component should apply to */
+    /** The optional property for the content types the component should apply to */
     private static final String PROPERTY_CONTENT_TYPES = "pipeline.contentTypes";
 
-    /** The optional property for the paths the component should apply to */
+    /** The optional property for the resource types the component should apply to */
     private static final String PROPERTY_RESOURCE_TYPES = "pipeline.resourceTypes";
 
     /** The logger. */
