@@ -21,7 +21,6 @@ package org.apache.sling.jcr.base.util;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -364,9 +363,6 @@ public class AccessControlUtil {
     		acl.addAccessControlEntry(principal, grantedPrivilegeList.toArray(new Privilege[grantedPrivilegeList.size()]));
     	}
 
-    	//process any denied privileges
-    	UserManager userManager = getUserManager(session);
-    	Authorizable authorizable = userManager.getAuthorizable(principal);
    		//add a fresh ACE with the denied privileges
    		List<Privilege> deniedPrivilegeList = new ArrayList<Privilege>();
    		for (String name : newDeniedPrivilegeNames) {
@@ -391,8 +387,8 @@ public class AccessControlUtil {
     		for (Privilege privilege : oldDenies) {
     			oldDeniedNames.add(privilege.getName());
     		}
-    		log.debug("Updated ACE for principalId {} for resource {} from grants {}, denies {} to grants {}, denies {}", new Object [] {
-    				authorizable.getID(), resourcePath, oldGrantedNames, oldDeniedNames, newGrantedPrivilegeNames, newDeniedPrivilegeNames
+    		log.debug("Updated ACE for principalName {} for resource {} from grants {}, denies {} to grants {}, denies {}", new Object [] {
+    				principal.getName(), resourcePath, oldGrantedNames, oldDeniedNames, newGrantedPrivilegeNames, newDeniedPrivilegeNames
     			});
     	}
 	}
