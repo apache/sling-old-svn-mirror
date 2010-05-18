@@ -42,6 +42,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.sling.commons.testing.util.JavascriptEngine;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -80,6 +81,9 @@ public class HttpTestBase extends TestCase {
 
     /** URLs stored here are deleted in tearDown */
     protected final List<String> urlsToDelete = new LinkedList<String>();
+    
+    /** Need to execute javascript code */
+    private final JavascriptEngine javascriptEngine = new JavascriptEngine(); 
 
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
@@ -400,30 +404,13 @@ public class HttpTestBase extends TestCase {
 
     /** Evaluate given code using given jsonData as the "data" object */
     protected void assertJavascript(String expectedOutput, String jsonData, String code, String testInfo) throws IOException {
-        // build the code, something like
-        //  data = <jsonData> ;
-        //  <code>
-        final String jsCode = "data=" + jsonData + ";\n" + code;
-        final Context rhinoContext = Context.enter();
-        final ScriptableObject scope = rhinoContext.initStandardObjects();
-
-        // execute the script, out script variable maps to sw
-        final StringWriter sw = new StringWriter();
-        final PrintWriter pw = new PrintWriter(sw, true);
-        ScriptableObject.putProperty(scope, "out", Context.javaToJS(pw, scope));
-        final int lineNumber = 1;
-        final Object securityDomain = null;
-        rhinoContext.evaluateString(scope, jsCode, getClass().getSimpleName(),
-                lineNumber, securityDomain);
-
-        // check script output
-        pw.flush();
-        final String result = sw.toString().trim();
+    	final String result = javascriptEngine.execute(code, jsonData);
         if(!result.equals(expectedOutput)) {
             fail(
                     "Expected '" + expectedOutput
                     + "' but got '" + result
-                    + "' for script='" + jsCode + "'"
+                    + "' for script='" + code + "'"
+                    + "' and data='" + jsonData + "'"
                     + (testInfo==null ? "" : ", test info=" + testInfo)
             );
         }
