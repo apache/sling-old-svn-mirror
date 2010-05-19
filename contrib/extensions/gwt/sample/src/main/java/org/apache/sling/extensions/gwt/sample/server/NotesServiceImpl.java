@@ -18,8 +18,8 @@
  */
 package org.apache.sling.extensions.gwt.sample.server;
 
-import org.apache.sling.extensions.gwt.sample.client.Note;
-import org.apache.sling.extensions.gwt.sample.client.NotesService;
+import org.apache.sling.extensions.gwt.sample.service.Note;
+import org.apache.sling.extensions.gwt.sample.service.NotesService;
 import org.apache.sling.extensions.gwt.user.server.rpc.SlingRemoteServiceServlet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -172,7 +172,7 @@ public class NotesServiceImpl extends SlingRemoteServiceServlet implements Notes
     /**
      * {@inheritDoc}
      */
-    public ArrayList getNotes() {
+    public ArrayList<Note> getNotes() {
 
         final ArrayList<Note> notes = new ArrayList<Note>();
 

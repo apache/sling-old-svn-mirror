@@ -18,13 +18,20 @@
  */
 package org.apache.sling.extensions.gwt.sample.client;
 
+import java.util.ArrayList;
+
+import org.apache.sling.extensions.gwt.sample.service.Note;
+import org.apache.sling.extensions.gwt.sample.service.NotesService;
+import org.apache.sling.extensions.gwt.sample.service.NotesServiceAsync;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Panel;
@@ -32,9 +39,6 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
-
-import java.util.ArrayList;
 
 /**
  * This class is the starting point for the Sling GWT Sample, a GWT client application that enables the user
@@ -126,21 +130,21 @@ public class Notes implements EntryPoint {
 
         Button save = new Button("Save");
         save.setStyleName("button");
-        save.addClickListener(new ClickListener() {
+        save.addClickHandler(new ClickHandler() {
 
-            public void onClick(Widget widget) {
+            public void onClick(ClickEvent event) {
                 if (validateFormInput()) {
                     createNote(inputNoteTitle.getText(), inputNoteText.getText());
                     resetForm();
                 }
+
             }
         });
-
         Button clear = new Button("Clear");
         save.setStyleName("button");
-        clear.addClickListener(new ClickListener() {
+        clear.addClickHandler(new ClickHandler() {
 
-            public void onClick(Widget widget) {
+            public void onClick(ClickEvent event) {
                 resetForm();
             }
         });
@@ -178,26 +182,26 @@ public class Notes implements EntryPoint {
         note.setTitle(title);
         note.setText(text);
 
-        service.createNote(note, new AsyncCallback() {
+        service.createNote(note, new AsyncCallback<Note>() {
 
             public void onFailure(Throwable throwable) {
                 Window.alert("Failed to created note: " + throwable.getMessage());
             }
 
-            public void onSuccess(Object o) {
+            public void onSuccess(Note o) {
                 getNotes();
             }
         });
     }
 
     private void deleteNote(String path) {
-        service.deleteNote(path, new AsyncCallback() {
+        service.deleteNote(path, new AsyncCallback<String>() {
 
             public void onFailure(Throwable throwable) {
                 Window.alert("Failed to delete note: " + throwable.getMessage());
             }
 
-            public void onSuccess(Object o) {
+            public void onSuccess(String o) {
                 getNotes();
             }
         });
@@ -207,14 +211,13 @@ public class Notes implements EntryPoint {
 
         notesPanel.clear();
 
-        service.getNotes(new AsyncCallback() {
+        service.getNotes(new AsyncCallback<ArrayList<Note>>() {
             public void onFailure(Throwable throwable) {
                 notesPanel.add(new HTML("No notes stored so far."));
                 Window.alert("Could not retrieve notes: " + throwable.getMessage());
             }
 
-            public void onSuccess(Object o) {
-                ArrayList notesList = (ArrayList) o;
+            public void onSuccess(ArrayList<Note> notesList) {
                 for (int i = 0; i < notesList.size(); i++) {
                     final Note note = (Note) notesList.get(i);
 
@@ -229,13 +232,12 @@ public class Notes implements EntryPoint {
 
                     final Button delButton = new Button("Delete");
                     delButton.setStyleName("noteControls");
-                    delButton.addClickListener(new ClickListener() {
+                    delButton.addClickHandler(new ClickHandler() {
 
-                        public void onClick(Widget widget) {
+                        public void onClick(ClickEvent event) {
                             deleteNote(note.getPath());
                         }
                     });
-
                     noteEntry.add(noteTitle);
                     noteEntry.add(noteText);
                     noteEntry.add(delButton);

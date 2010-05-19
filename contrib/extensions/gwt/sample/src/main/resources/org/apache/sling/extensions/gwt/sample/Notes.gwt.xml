@@ -21,6 +21,10 @@
     <!-- Inherit the core Web Toolkit stuff.                  -->
     <inherits name='com.google.gwt.user.User'/>
 
+    <!-- These are necessary in order to separate the RPC classes from the pure client-side classes. -->
+    <source path="client" />
+    <source path="service" />
+
     <!-- Specify the app entry point class.                   -->
     <entry-point class='org.apache.sling.extensions.gwt.sample.client.Notes'/>
 

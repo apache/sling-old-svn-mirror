@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.gwt.sample.client;
+package org.apache.sling.extensions.gwt.sample.service;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
@@ -34,7 +34,6 @@ public interface NotesService extends RemoteService {
      *
      * @param note The <code>Note</code> to be created and stored in the repository.
      * @return The <code>String</code> representing the status message of the successful RPC operation.
-     * @gwt.typeArgs note <org.apache.sling.extensions.gwt.sample.client.Note>
      */
     public String createNote(Note note);
 
@@ -42,9 +41,8 @@ public interface NotesService extends RemoteService {
      * This method is called to retrieve an <code>ArrayList</code> of all notes stored in the repository.
      *
      * @return The <code>ArrayList</code> containing all <code>Note</code>s stored on the server.
-     * @gwt.typeArgs <org.apache.sling.extensions.gwt.sample.client.Note>
      */
-    public ArrayList getNotes();
+    public ArrayList<Note> getNotes();
 
     /**
      * This method is called to delete a <code>Note</code> from the repository. To identify the <code>javax.jcr.Node</code>

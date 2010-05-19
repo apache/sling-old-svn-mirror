@@ -16,20 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.gwt.sample.client;
+package org.apache.sling.extensions.gwt.sample.service;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
+import java.io.Serializable;
 
 /**
  * This class represents a serializable POJO of a note taken with the application. The POJO is produced by the
  * {@link org.apache.sling.extensions.gwt.sample.server.NotesServiceImpl}.
  * <p/>
- * The class must implement GWT's <code>IsSerializable</code> interface to be serializable as part of the RPC
- * implementation.
  * <p/>
  * The <code>Note</code> class features simple getters and setters for its data.
  */
-public class Note implements IsSerializable {
+public class Note implements Serializable {
 
     /**
      * The String representing the title of the note.

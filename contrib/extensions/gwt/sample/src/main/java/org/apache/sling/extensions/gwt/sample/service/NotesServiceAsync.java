@@ -16,22 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.gwt.sample.client;
+package org.apache.sling.extensions.gwt.sample.service;
+
+import java.util.ArrayList;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * This is the asynchronous service interface as required for GWT RPC operations.
  *
- * @see org.apache.sling.extensions.gwt.sample.client.NotesService
+ * @see org.apache.sling.extensions.gwt.sample.service.NotesService
  * @see org.apache.sling.extensions.gwt.sample.client.Notes
  * @see org.apache.sling.extensions.gwt.sample.server.NotesServiceImpl
  */
 public interface NotesServiceAsync {
 
-    void createNote(Note note, AsyncCallback async);
+    void createNote(Note note, AsyncCallback<Note> async);
 
-    void getNotes(AsyncCallback async);
+    void getNotes(AsyncCallback<ArrayList<Note>> async);
 
-    void deleteNote(String path, AsyncCallback async);
+    void deleteNote(String path, AsyncCallback<String> async);
 }
