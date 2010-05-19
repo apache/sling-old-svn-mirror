@@ -74,6 +74,17 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         assertJavascript("123", content, "out.println(data.a)");
     }
 
+    public void testWithSpecificDefaultAndNoValueField() throws IOException {
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("a@DefaultValue","123");
+        props.put("a@UseDefaultWhenMissing","yes");
+
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+        assertJavascript("123", content, "out.println(data.a)");
+    }
+
     public void testWithIgnore() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","");
