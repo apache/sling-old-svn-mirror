@@ -35,38 +35,11 @@ import java.text.ParseException;
  * Extending google's remote service servlet to enable resolving of resources through
  * a bundle (for policy file loading).
  * <p/>
- * This class is for version 1.4.60 of the GWT gwt-servlet.jar edition and it is highly recommended to compile
- * client apps with the corresponding 1.4.60 GWT compiler only!
+ * This class is for version 2.0.3 of the GWT gwt-servlet.jar edition and it is highly recommended to compile
+ * client apps with the corresponding 2.0.3 GWT gwt-user.jar only!
  * <p/>
  * GWT service servlets that are used in sling are required to extend the <code>SlingRemoteServiceServlet</code>
  * instead of google's own <code>RemoteServiceServlet</code>.
- * <p/>
- * It is important that any bundle using the Sling GWT Servlet Library imports the required packages from this bundle,
- * for otherwise RPC calls will fail due to well hidden <code>ClassNotFoundException</code>s. The client app will in
- * such a case only report "This application is outdated, please hit refresh...". As such, import the following
- * packages:
- * <p/>
- * <code>
- * org.apache.sling.extensions.gwt.user.server.rpc,
- * com.google.gwt.core.client,
- * com.google.gwt.http.client,
- * com.google.gwt.i18n.client,
- * com.google.gwt.i18n.client.constants,
- * com.google.gwt.i18n.client.impl,
- * com.google.gwt.junit.client,
- * com.google.gwt.junit.client.impl,
- * com.google.gwt.user.client,
- * com.google.gwt.user.client.impl,
- * com.google.gwt.user.client.rpc,
- * com.google.gwt.user.client.rpc.core.java.lang,
- * com.google.gwt.user.client.rpc.core.java.util,
- * com.google.gwt.user.client.rpc.impl,
- * com.google.gwt.user.client.ui,
- * com.google.gwt.user.client.ui.impl,
- * com.google.gwt.user.server.rpc,
- * com.google.gwt.user.server.rpc.impl,
- * com.google.gwt.xml.client,
- * com.google.gwt.xml.client.impl
  * </code>
  */
 public class SlingRemoteServiceServlet extends RemoteServiceServlet {
@@ -195,17 +168,11 @@ public class SlingRemoteServiceServlet extends RemoteServiceServlet {
             try {
                 if (is != null) {
                     try {
-                        serializationPolicy = SerializationPolicyLoader.loadFromStream(is);
+                        serializationPolicy = SerializationPolicyLoader.loadFromStream(is, null);
                     } catch (ParseException e) {
                         getServletContext().log(
                                 "ERROR: Failed to parse the policy file '"
                                         + serializationPolicyFilePath + "'", e);
-                    } catch (ClassNotFoundException e) {
-                        getServletContext().log(
-                                "ERROR: Could not find class '" + e.getMessage()
-                                        + "' listed in the serialization policy file '"
-                                        + serializationPolicyFilePath + "'"
-                                        + "; your server's classpath may be misconfigured", e);
                     } catch (IOException e) {
                         getServletContext().log(
                                 "ERROR: Could not read the policy file '"
