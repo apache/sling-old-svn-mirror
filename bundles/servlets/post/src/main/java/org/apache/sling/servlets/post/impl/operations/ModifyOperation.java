@@ -611,6 +611,18 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 continue;
             }
 
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_USE_DEFAULT_WHEN_MISSING)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.SUFFIX_USE_DEFAULT_WHEN_MISSING);
+
+                if (e.getValue().length == 1) {
+                    prop.setUseDefaultWhenMissing(true);
+                }
+
+                continue;
+            }
+
             // plain property, create from values
             RequestProperty prop = getOrCreateRequestProperty(reqProperties,
                 propPath, null);

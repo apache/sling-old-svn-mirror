@@ -17,7 +17,6 @@
 package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.api.request.RequestParameter;
@@ -62,6 +61,8 @@ public class RequestProperty {
 
     private boolean ignoreBlanks;
 
+    private boolean useDefaultWhenMissing;
+
     public RequestProperty(String path) {
         assert path.startsWith("/");
         this.path = ResourceUtil.normalize(path);
@@ -100,10 +101,14 @@ public class RequestProperty {
     }
 
     public boolean hasValues() {
-        if (ignoreBlanks) {
-            return values != null && getStringValues().length > 0;
+        if (useDefaultWhenMissing && defaultValues != null && defaultValues.length > 0) {
+            return true;
         } else {
-            return values != null;
+            if (ignoreBlanks) {
+                return (values != null && getStringValues().length > 0);
+            } else {
+                return values != null;
+            }
         }
     }
 
@@ -128,7 +133,7 @@ public class RequestProperty {
     }
 
     public boolean isFileUpload() {
-        return !values[0].isFormField();
+        return values != null && !values[0].isFormField();
     }
 
     /**
@@ -162,7 +167,9 @@ public class RequestProperty {
      */
     public String[] getStringValues() {
         if (stringValues == null) {
-            if (values.length > 1) {
+            if (values == null && useDefaultWhenMissing) {
+                stringValues = new String[] { defaultValues[0].getString() };
+            } else if (values.length > 1) {
                 // TODO: how the default values work for MV props is not very
                 // clear
                 List<String> stringValueList = new ArrayList<String>(values.length);
@@ -273,5 +280,9 @@ public class RequestProperty {
 
     public void setIgnoreBlanks(boolean b) {
         ignoreBlanks = b;
+    }
+
+    public void setUseDefaultWhenMissing(boolean b) {
+        useDefaultWhenMissing = b;
     }
 }
