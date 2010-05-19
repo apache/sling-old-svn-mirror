@@ -340,4 +340,10 @@ public interface SlingPostConstants {
      * ignored.
      */
     public static final String SUFFIX_IGNORE_BLANKS = "@IgnoreBlanks";
+
+    /**
+     * Suffix indicating that the default value should be used when the property
+     * is not defined. By default the default value is only used when
+     */
+    public static final String SUFFIX_USE_DEFAULT_WHEN_MISSING = "@UseDefaultWhenMissing";
 }
