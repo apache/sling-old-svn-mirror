@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -112,7 +113,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
     }
 
     private String createTestPath() {
-        return "/test" + System.currentTimeMillis();
+        return "/test" + System.currentTimeMillis() + new Random().nextInt();
     }
 
     private List<Event> generateEvents(String workspaceName) throws Exception {
