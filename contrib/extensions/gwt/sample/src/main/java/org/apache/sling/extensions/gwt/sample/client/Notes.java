@@ -49,11 +49,6 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class Notes implements EntryPoint {
 
     private static final NotesServiceAsync service = (NotesServiceAsync) GWT.create(NotesService.class);
-    private static final ServiceDefTarget target = (ServiceDefTarget) service;
-
-    {
-        target.setServiceEntryPoint(GWT.getModuleBaseURL() + "notesservice");
-    }
 
     final TextBox inputNoteTitle = new TextBox();
     final TextArea inputNoteText = new TextArea();

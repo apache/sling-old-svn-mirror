@@ -19,6 +19,7 @@
 package org.apache.sling.extensions.gwt.sample.service;
 
 import com.google.gwt.user.client.rpc.RemoteService;
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 import java.util.ArrayList;
 
@@ -27,6 +28,7 @@ import java.util.ArrayList;
  * <p/>
  * It defines the API for creating, deleting and retrieving notes.
  */
+@RemoteServiceRelativePath("notesservice")
 public interface NotesService extends RemoteService {
 
     /**
