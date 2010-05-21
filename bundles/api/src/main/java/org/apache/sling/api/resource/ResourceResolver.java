@@ -71,6 +71,13 @@ import org.apache.sling.api.adapter.Adaptable;
  */
 public interface ResourceResolver extends Adaptable {
 
+    /** A request attribute containing the workspace to use for
+     * {@link #resolve(HttpServletRequest)} and {@link #resolve(HttpServletRequest, String)}
+     * if not the default workspace should be used to resolve the resource.
+     * @since 2.1
+     */
+    String REQUEST_ATTR_WORKSPACE_INFO = ResourceResolver.class.getName() + "/use.workspace";
+
     /**
      * Resolves the resource from the given <code>absPath</code> optionally
      * taking <code>HttpServletRequest</code> into account, such as the value of
@@ -82,6 +89,9 @@ public interface ResourceResolver extends Adaptable {
      * method is, that this method may take request properties like the scheme,
      * the host header or request parameters into account to resolve the
      * resource.
+     *
+     * If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the
+     * given workspace is used to resolve the resource.
      *
      * @param request The http servlet request object providing more hints at
      *            how to resolve the <code>absPath</code>. This parameter may be
@@ -136,6 +146,9 @@ public interface ResourceResolver extends Adaptable {
      * the {@link #resolve(HttpServletRequest, String)} where the
      * <code>absPath</code> argument is the result of calling the
      * <code>getPathInfo()</code> on the <code>request</code> object.
+     *
+     * If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the
+     * given workspace is used to resolve the resource.
      *
      * @param request The http servlet request object used to resolve the
      *            resource for. This must not be <code>null</code>.

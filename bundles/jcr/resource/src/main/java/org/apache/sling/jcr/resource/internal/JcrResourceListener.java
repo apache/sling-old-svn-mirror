@@ -38,7 +38,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -90,7 +89,7 @@ public class JcrResourceListener implements EventListener {
         this.workspaceName = workspaceName;
         final Map<String,Object> authInfo = new HashMap<String,Object>();
         if ( workspaceName != null ) {
-            authInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+            authInfo.put(JcrResourceResolverFactoryImpl.AUTH_INFO_WORKSPACE, workspaceName);
         }
         this.resolver = factory.getAdministrativeResourceResolver(authInfo);
         this.session = resolver.adaptTo(Session.class);
