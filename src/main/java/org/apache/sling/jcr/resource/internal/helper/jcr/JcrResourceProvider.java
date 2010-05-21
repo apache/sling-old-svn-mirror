@@ -31,6 +31,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,9 @@ public class JcrResourceProvider implements ResourceProvider {
 
             parentItemResource = (JcrItemResource) parent;
 
+        } else if (parent instanceof ResourceWrapper) {
+
+            parentItemResource = (JcrItemResource) ((ResourceWrapper) parent).getResource();
         } else {
 
             // try to get the JcrItemResource for the parent path to list
@@ -124,6 +128,19 @@ public class JcrResourceProvider implements ResourceProvider {
      */
     private JcrItemResource createResource(ResourceResolver resourceResolver,
             String path) throws RepositoryException {
+        final int wsSepPos = path.indexOf(":/");
+        if (wsSepPos != -1) {
+            final String workspaceName = path.substring(0, wsSepPos);
+            final String expectedWorkspaceName = getSession().getWorkspace().getName();
+            if (workspaceName.equals(expectedWorkspaceName)) {
+                path = path.substring(wsSepPos + 1);
+        } else {
+            throw new RepositoryException("Unexpected workspace name. Expected " +
+                    expectedWorkspaceName + ". Actual " + workspaceName);
+        }
+    }
+
+
         if (itemExists(path)) {
             Item item = getSession().getItem(path);
             if (item.isNode()) {

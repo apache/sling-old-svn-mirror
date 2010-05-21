@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
@@ -146,6 +148,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         ws2Session = getRepository().loginAdministrative("ws2");
 
         rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
+        Node child = rootWs2Node.addNode("child1");
+        child.addNode("child2");
         ws2Session.save();
     }
 
@@ -318,6 +322,29 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+
+        // should be able to list children
+        Iterator<Resource> children = resResolver.listChildren(res);
+        assertTrue(children.hasNext());
+        Resource child = children.next();
+        assertNotNull(child);
+        assertEquals("ws2:" + rootPath + "/child1", child.getPath());
+
+        // should be able to list children of a child
+        Iterator<Resource> children2 = resResolver.listChildren(child);
+        assertTrue(children2.hasNext());
+        Resource child2 = children2.next();
+        assertNotNull(child2);
+        assertEquals("ws2:" + rootPath + "/child1/child2", child2.getPath());
+
+        // should also be able to list children of a synthetic resource
+        SyntheticResource synth = new SyntheticResource(null, "ws2:" +
+                rootPath+"/child1", "res/synth");
+        children2 = resResolver.listChildren(synth);
+        assertTrue(children2.hasNext());
+        child2 = children2.next();
+        assertNotNull(child2);
+        assertEquals("ws2:" + rootPath + "/child1/child2", child2.getPath());
 
         // missing resource below root should resolve "missing resource"
         String path = rootPath + "/missing";
