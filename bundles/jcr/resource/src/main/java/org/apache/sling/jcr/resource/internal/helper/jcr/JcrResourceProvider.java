@@ -89,7 +89,7 @@ public class JcrResourceProvider implements ResourceProvider {
 
         } else if (parent instanceof ResourceWrapper) {
 
-            parentItemResource = (JcrItemResource) ((ResourceWrapper) parent).getResource();
+            return listChildren(((ResourceWrapper) parent).getResource());
         } else {
 
             // try to get the JcrItemResource for the parent path to list
