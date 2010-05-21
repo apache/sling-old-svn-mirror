@@ -78,7 +78,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     /**
      * The name of the property providing the name of the user on whose behalf
      * the request is being handled. This property is set by the
-     * {@link #AuthenticationInfo(String, String, char[], String)} constructor
+     * {@link #AuthenticationInfo(String, String, char[])} constructor
      * and may be <code>null</code> if this instance is created by either the
      * {@link #AuthenticationInfo(String, String)} or
      * {@link #AuthenticationInfo(String, String, char[])} constructors.
@@ -90,7 +90,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     /**
      * The name of the property providing the password of the user on whose
      * behalf the request is being handled. This property is set by the
-     * {@link #AuthenticationInfo(String, String, char[], String)} constructor
+     * {@link #AuthenticationInfo(String, String, char[])} constructor
      * and may be <code>null</code> if this instance is created by either the
      * {@link #AuthenticationInfo(String, String)} or
      * {@link #AuthenticationInfo(String, String, char[])} constructors.
@@ -103,24 +103,12 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * The name of the property providing the JCR credentials. These credentials
      * are preset to the credentials given to the
      * {@link #AuthenticationInfo(String, String)} or
-     * {@link #AuthenticationInfo(String, String, char[])} constructors. the
-     * {@link #AuthenticationInfo(String, String, char[], String)} constructor
+     * {@link #AuthenticationInfo(String, String, char[])} constructors.
      * is used the credentials property is set to a JCR
      * <code>SimpleCredentials</code> instance containing the user id and
      * password passed to the constructor.
      */
     public static final String CREDENTIALS = "user.jcr.credentials";
-
-    /**
-     * The name of the property providing the name of the JCR workspace to which
-     * the request should be connected. This property may be set by any of the
-     * constructors. If this property is not set, the user will be connected to
-     * a default workspace as defined by the JCR repository to which the request
-     * is connected.
-     * <p>
-     * The type of this property, if present, is <code>String</code>.
-     */
-    public static final String WORKSPACE = "user.jcr.workspace";
 
     /**
      * Creates an instance of this class with just the authentication type. To
@@ -130,7 +118,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * @param authType The authentication type, must not be <code>null</code>.
      */
     public AuthenticationInfo(final String authType) {
-        this(authType, null, null, null);
+        this(authType, null, null);
     }
 
     /**
@@ -144,14 +132,12 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      *             <code>null</code>.
      */
     public AuthenticationInfo(final String authType, final String userId) {
-        this(authType, userId, null, null);
+        this(authType, userId, null);
     }
 
     /**
      * Creates an instance of this class authenticating with the given type and
-     * userid/password connecting to the default workspace as if the
-     * {@link #AuthenticationInfo(String, String, char[], String)} method would
-     * be called with a <code>null</code> workspace name.
+     * userid/password connecting.
      *
      * @param authType The authentication type, must not be <code>null</code>.
      * @param userId The name of the user to authenticate as. This may be
@@ -163,33 +149,9 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      */
     public AuthenticationInfo(final String authType, final String userId,
             final char[] password) {
-        this(authType, userId, password, null);
-    }
-
-    /**
-     * Creates an instance of this class authenticating with the given type and
-     * userid/password.
-     *
-     * @param authType The authentication type, must not be <code>null</code>.
-     * @param userId The name of the user to authenticate as. This may be
-     *            <code>null</code> for the constructor and later be set.
-     * @param password The password to authenticate with or <code>null</code> if
-     *            no password can be supplied.
-     * @param workspaceName The name of the workspace to connect to, may be
-     *            <code>null</code> to connect to the default workspace.
-     * @throws NullPointerException if <code>authType</code> is
-     *             <code>null</code>
-     */
-    public AuthenticationInfo(final String authType, final String userId,
-            final char[] password, final String workspaceName) {
-        if (authType == null) {
-            throw new NullPointerException("authType");
-        }
-
         super.put(AUTH_TYPE, authType);
         putIfNotNull(USER, userId);
         putIfNotNull(PASSWORD, password);
-        putIfNotNull(WORKSPACE, workspaceName);
     }
 
     /**
@@ -267,10 +229,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * <td>{@link #CREDENTIALS}</td>
      * <td><code>javax.jcr.Credentials</code></td>
      * </tr>
-     * <tr>
-     * <td>{@link #WORKSPACE}</td>
-     * <td><code>String</code></td>
-     * </tr>
      * </table>
      * <p>
      * If the value for the special key does not match the required type an
@@ -306,11 +264,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
         if (CREDENTIALS.equals(key) && !isCredentialsObject(value)) {
             throw new IllegalArgumentException(CREDENTIALS
                 + " property must be a javax.jcr.Credentials instance");
-        }
-
-        if (WORKSPACE.equals(key) && !(value instanceof String)) {
-            throw new IllegalArgumentException(WORKSPACE
-                + " property must be a String");
         }
 
         return super.put(key, value);

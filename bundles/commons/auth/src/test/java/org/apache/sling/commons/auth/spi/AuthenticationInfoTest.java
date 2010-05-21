@@ -75,7 +75,6 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         assertNull(info.getUser());
         assertNull(info.getPassword());
-        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -84,7 +83,6 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertNull(info.getPassword());
-        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -95,18 +93,16 @@ public class AuthenticationInfoTest {
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertSame(pwd, info.getPassword());
-        assertNull(info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
     public void testAuthenticationInfoStringStringCharArrayString() {
         final char[] pwd = new char[6];
         final AuthenticationInfo info = new AuthenticationInfo("test", "name",
-            pwd, "wsp");
+            pwd);
         Assert.assertEquals("test", info.getAuthType());
         Assert.assertEquals("name", info.getUser());
         assertSame(pwd, info.getPassword());
-        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
     }
 
     @Test
@@ -185,41 +181,11 @@ public class AuthenticationInfoTest {
     }
 
     @Test
-    public void testSetWorkspaceName() {
-        final AuthenticationInfo info = new AuthenticationInfo("test", "user",
-            new char[0], "wsp");
-        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
-
-        info.remove(AuthenticationInfo.WORKSPACE);
-        Assert.assertEquals(null, info.get(AuthenticationInfo.WORKSPACE));
-
-        info.put(AuthenticationInfo.WORKSPACE, "dummy");
-        Assert.assertEquals("dummy", info.get(AuthenticationInfo.WORKSPACE));
-
-        info.put(AuthenticationInfo.WORKSPACE, "");
-        Assert.assertEquals("", info.get(AuthenticationInfo.WORKSPACE));
-    }
-
-    @Test
-    public void testGetWorkspaceName() {
-        final AuthenticationInfo info = new AuthenticationInfo("test");
-        info.put(AuthenticationInfo.WORKSPACE, "wsp");
-
-        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
-        Assert.assertEquals("wsp", info.get(AuthenticationInfo.WORKSPACE));
-        Assert.assertEquals(info.get(AuthenticationInfo.WORKSPACE),
-                info.get(AuthenticationInfo.WORKSPACE));
-    }
-
-    @Test
     public void testSetCredentials() {
         final Credentials creds = new SimpleCredentials("user", new char[0]);
         final AuthenticationInfo info = new AuthenticationInfo("test");
 
         info.put(AuthenticationInfo.CREDENTIALS, creds);
-        Assert.assertSame(creds, info.get(AuthenticationInfo.CREDENTIALS));
-
-        info.remove(AuthenticationInfo.WORKSPACE);
         Assert.assertSame(creds, info.get(AuthenticationInfo.CREDENTIALS));
     }
 
@@ -265,27 +231,24 @@ public class AuthenticationInfoTest {
     @Test
     public void testPutStringObject() {
         final AuthenticationInfo info = new AuthenticationInfo("test", "user",
-            new char[2], "wsp");
+            new char[2]);
         info.put(AuthenticationInfo.CREDENTIALS,
                 new SimpleCredentials("user", new char[2]));
 
         test_put_fail(info, AuthenticationInfo.AUTH_TYPE, null);
         test_put_fail(info, AuthenticationInfo.USER, null);
         test_put_fail(info, AuthenticationInfo.PASSWORD, null);
-        test_put_fail(info, AuthenticationInfo.WORKSPACE, null);
         test_put_fail(info, AuthenticationInfo.CREDENTIALS, null);
 
         test_put_fail(info, AuthenticationInfo.AUTH_TYPE, 42);
         test_put_fail(info, AuthenticationInfo.USER, 42);
         test_put_fail(info, AuthenticationInfo.PASSWORD, "string");
-        test_put_fail(info, AuthenticationInfo.WORKSPACE, 42);
         test_put_fail(info, AuthenticationInfo.CREDENTIALS, "string");
 
         test_put_success(info, AuthenticationInfo.AUTH_TYPE, "new_type");
         test_put_success(info, AuthenticationInfo.USER, "new_user");
         test_put_success(info, AuthenticationInfo.PASSWORD,
             "new_pwd".toCharArray());
-        test_put_success(info, AuthenticationInfo.WORKSPACE, "new_wsp");
         test_put_success(info, AuthenticationInfo.CREDENTIALS,
             new SimpleCredentials("new_user", new char[0]));
     }

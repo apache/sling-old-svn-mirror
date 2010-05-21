@@ -71,7 +71,6 @@ public final class EngineAuthenticationHandlerHolder extends
         AuthenticationInfo info = new AuthenticationInfo(
             engineAuthInfo.getAuthType());
         info.put(AuthenticationInfo.CREDENTIALS, engineAuthInfo.getCredentials());
-        info.put(AuthenticationInfo.WORKSPACE, engineAuthInfo.getWorkspaceName());
 
         return info;
     }
