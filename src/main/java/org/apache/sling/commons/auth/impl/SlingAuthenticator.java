@@ -659,7 +659,7 @@ public class SlingAuthenticator implements Authenticator,
         // try to connect
         try {
             Session session = repository.login(getCredentials(authInfo),
-                (String)authInfo.get(AuthenticationInfo.WORKSPACE));
+                null);
 
             // handle impersonation
             session = handleImpersonation(request, response, session);
@@ -719,7 +719,7 @@ public class SlingAuthenticator implements Authenticator,
 
             try {
 
-                Session session = repository.login((String)anonInfo.get(AuthenticationInfo.WORKSPACE));
+                Session session = repository.login();
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
