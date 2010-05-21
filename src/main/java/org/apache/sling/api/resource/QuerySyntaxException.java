@@ -28,6 +28,8 @@ import org.apache.sling.api.SlingException;
  */
 public class QuerySyntaxException extends SlingException {
 
+    private static final long serialVersionUID = -6529624886228517646L;
+
     private final String query;
 
     private final String language;

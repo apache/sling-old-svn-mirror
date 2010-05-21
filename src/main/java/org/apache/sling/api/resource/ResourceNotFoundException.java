@@ -31,6 +31,8 @@ import org.apache.sling.api.SlingException;
  */
 public class ResourceNotFoundException extends SlingException {
 
+    private static final long serialVersionUID = -6684709279554347984L;
+
     private final String resource;
 
     public ResourceNotFoundException(String message) {

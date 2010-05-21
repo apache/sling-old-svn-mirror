@@ -40,6 +40,8 @@ import org.apache.sling.api.SlingHttpServletResponse;
  */
 public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
 
+    private static final long serialVersionUID = -7960975481323952419L;
+
     /**
      * Called by the
      * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to

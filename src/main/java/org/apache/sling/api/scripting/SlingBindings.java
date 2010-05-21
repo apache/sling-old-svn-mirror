@@ -35,6 +35,8 @@ import org.slf4j.Logger;
  */
 public class SlingBindings extends HashMap<String, Object> {
 
+    private static final long serialVersionUID = 209505693646323450L;
+
     /**
      * The name of the global scripting variable providing the
      * {@link org.apache.sling.api.SlingHttpServletRequest} object (value is

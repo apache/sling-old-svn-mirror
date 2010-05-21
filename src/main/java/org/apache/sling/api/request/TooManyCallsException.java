@@ -27,17 +27,19 @@ import org.apache.sling.api.SlingException;
  */
 public class TooManyCallsException extends SlingException {
 
+    private static final long serialVersionUID = -8725296173002395104L;
+
     /**
      * Creates an instance of this exception naming the Servlet (or Script)
      * whose call caused this exception to be thrown.
      * <p>
      * The servlet name is the actual message of the exception.
-     * 
+     *
      * @param servletName The name of the Servlet (or Script) causing this
      *            exception.
      */
     public TooManyCallsException(String servletName) {
         super(servletName);
     }
-    
+
 }

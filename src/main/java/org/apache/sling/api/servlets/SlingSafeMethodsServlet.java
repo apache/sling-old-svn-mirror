@@ -69,6 +69,8 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  */
 public class SlingSafeMethodsServlet extends GenericServlet {
 
+    private static final long serialVersionUID = 3620512288346703072L;
+
     /**
      * Handles the <em>HEAD</em> method.
      * <p>

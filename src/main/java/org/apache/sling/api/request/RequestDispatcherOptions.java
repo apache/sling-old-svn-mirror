@@ -39,6 +39,8 @@ import java.util.StringTokenizer;
  */
 public class RequestDispatcherOptions extends HashMap<String, String> {
 
+    private static final long serialVersionUID = -9081782403304877746L;
+
     /**
      * When dispatching, use the value provided by this option as the resource
      * type, instead of the one defined by the

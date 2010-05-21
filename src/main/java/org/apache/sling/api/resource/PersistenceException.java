@@ -26,6 +26,8 @@ import java.io.IOException;
  */
 public class PersistenceException extends IOException {
 
+    private static final long serialVersionUID = -147631829162481787L;
+
     public PersistenceException() {
         super();
     }

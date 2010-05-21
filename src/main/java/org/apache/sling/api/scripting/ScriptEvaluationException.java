@@ -27,6 +27,8 @@ import org.apache.sling.api.SlingException;
  */
 public class ScriptEvaluationException extends SlingException {
 
+    private static final long serialVersionUID = -274759591325189020L;
+
     private final String scriptName;
 
     public ScriptEvaluationException(String scriptName, String message) {
