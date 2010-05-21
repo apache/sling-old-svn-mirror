@@ -21,8 +21,8 @@ package org.apache.sling.jcr.resource.internal;
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -64,8 +64,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private MapEntries mapEntries;
 
     private Session ws2Session;
-
-    private ResourceResolver ws2Resolver;
 
     private Node rootWs2Node;
 
@@ -149,10 +147,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
         ws2Session.save();
-
-        ws2Resolver = resFac.getAdministrativeResourceResolver(Collections.singletonMap(JcrResourceConstants.AUTH_INFO_WORKSPACE, (Object) "ws2"));
-
-
     }
 
     @Override
@@ -175,8 +169,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         session.save();
         ws2Session.save();
-
-        ws2Resolver.close();
+        ws2Session.logout();
 
         super.tearDown();
     }
@@ -255,23 +248,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertNull(res);
     }
 
-    public void testGetResourceFromWs2ViaWs2Resolver() throws Exception {
-        // existing resource
-        Resource res = ws2Resolver.getResource("ws2:" + rootPath);
-        assertNotNull(res);
-        assertEquals("ws2:" + rootPath, res.getPath());
-        assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
-            res.getResourceType());
-
-        assertNotNull(res.adaptTo(Node.class));
-        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
-
-        // missing resource
-        String path = "ws2:" + rootPath + "/missing";
-        res = resResolver.getResource(path);
-        assertNull(res);
-    }
-
     public void testGetResourceFromWs2ViaDefaultResolver() throws Exception {
         // existing resource
         Resource res = resResolver.getResource("ws2:" + rootPath);
@@ -327,6 +303,54 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getPath());
+        assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+    }
+
+    public void testResolveResourceWithWS2() throws Exception {
+        // existing resource
+        HttpServletRequest request = new ResourceResolverTestRequest(rootPath);
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        Resource res = resResolver.resolve(request, rootPath);
+        assertNotNull(res);
+        assertEquals("ws2:" + rootPath, res.getPath());
+        assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
+            res.getResourceType());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+
+        // missing resource below root should resolve "missing resource"
+        String path = rootPath + "/missing";
+        request = new ResourceResolverTestRequest(path);
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals("ws2:" + path, res.getPath());
+        assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+
+        assertNull(res.adaptTo(Node.class));
+
+        // root with selectors/ext should resolve root
+        path = rootPath + ".print.a4.html";
+        request = new ResourceResolverTestRequest(path);
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals("ws2:" + rootPath, res.getPath());
+        assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
+            res.getResourceType());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+
+        // missing resource should return NON_EXISTING Resource
+        path = rootPath + System.currentTimeMillis();
+        request = new ResourceResolverTestRequest(path);
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertTrue(ResourceUtil.isNonExistingResource(res));
+        assertEquals("ws2:" + path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
 
@@ -1570,6 +1594,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         private final int port;
 
+        private final Map<String, Object> attrs = new HashMap<String, Object>();
+
         private String contextPath;
 
         ResourceResolverTestRequest(String pathInfo) {
@@ -1603,7 +1629,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
 
         public Object getAttribute(String name) {
-            return null;
+            return attrs.get(name);
         }
 
         public Enumeration<?> getAttributeNames() {
@@ -1714,6 +1740,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
 
         public void setAttribute(String name, Object o) {
+            attrs.put(name, o);
         }
 
         public void setCharacterEncoding(String env) {

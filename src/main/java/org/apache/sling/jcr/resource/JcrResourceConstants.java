@@ -52,11 +52,4 @@ public class JcrResourceConstants {
      * the primary node type is used as the resource super type.
      */
     public static final String SLING_RESOURCE_SUPER_TYPE_PROPERTY = "sling:resourceSuperType";
-
-    /**
-     * The name of the authentication info property containing the workspace name.
-     *
-     * @since 2.0.8
-     */
-    public static final String AUTH_INFO_WORKSPACE = "user.jcr.workspace";
 }

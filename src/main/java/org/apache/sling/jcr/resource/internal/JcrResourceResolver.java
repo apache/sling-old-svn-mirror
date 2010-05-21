@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -44,7 +45,6 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
@@ -161,6 +161,20 @@ public class JcrResourceResolver
     public Resource resolve(HttpServletRequest request, String absPath) {
         checkClosed();
 
+        // check for workspace info
+        final String workspaceName = (request == null ? null :
+            (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
+        if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
+            LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
+            try {
+                final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                return wsResolver.resolve(request, absPath);
+            } catch (LoginException e) {
+                // requested a resource in a workspace I don't have access to.
+                // TODO
+            }
+
+        }
         // make sure abspath is not null and is absolute
         if (absPath == null) {
             absPath = "/";
@@ -193,10 +207,11 @@ public class JcrResourceResolver
             for (MapEntry mapEntry : this.factory.getMapEntries().getResolveMaps()) {
                 mappedPath = mapEntry.replace(requestPath);
                 if (mappedPath != null) {
-                    LOGGER.debug(
-                        "resolve: MapEntry {} matches, mapped path is {}",
-                        mapEntry, mappedPath);
-
+                    if ( LOGGER.isDebugEnabled() ) {
+                        LOGGER.debug(
+                            "resolve: MapEntry {} matches, mapped path is {}",
+                            mapEntry, Arrays.toString(mappedPath));
+                    }
                     if (mapEntry.isInternal()) {
                         // internal redirect
                         LOGGER.debug("resolve: Redirecting internally");
@@ -207,7 +222,7 @@ public class JcrResourceResolver
                     LOGGER.debug("resolve: Returning external redirect");
                     return this.factory.getResourceDecoratorTracker().decorate(
                             new RedirectResource(this, absPath, mappedPath[0],
-                                   mapEntry.getStatus()), null,
+                                   mapEntry.getStatus()), workspaceName,
                              request);
                 }
             }
@@ -255,7 +270,6 @@ public class JcrResourceResolver
 
             // first check whether the requested resource is a StarResource
             if (StarResource.appliesTo(realPath)) {
-
                 LOGGER.debug("resolve: Mapped path {} is a Star Resource",
                     realPath);
                 res = new StarResource(this, ensureAbsPath(realPath));
@@ -285,7 +299,7 @@ public class JcrResourceResolver
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
-            final String resourcePath = ensureAbsPath(realPathList[0]);
+            String resourcePath = ensureAbsPath(realPathList[0]);
             LOGGER.debug(
                 "resolve: Path {} does not resolve, returning NonExistingResource at {}",
                    absPath, resourcePath);
@@ -302,7 +316,7 @@ public class JcrResourceResolver
             LOGGER.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
 
-        return this.factory.getResourceDecoratorTracker().decorate(res, null, request);
+        return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
     }
 
     /**
@@ -690,7 +704,7 @@ public class JcrResourceResolver
         if (wsResolver == null) {
             final Map<String,Object> newAuthInfo =
                 originalAuthInfo == null ? new HashMap<String, Object>() : new HashMap<String,Object>(originalAuthInfo);
-            newAuthInfo.put(JcrResourceConstants.AUTH_INFO_WORKSPACE, workspaceName);
+            newAuthInfo.put(JcrResourceResolverFactoryImpl.AUTH_INFO_WORKSPACE, workspaceName);
             if (isAdmin) {
                 wsResolver = factory.getAdministrativeResourceResolver(newAuthInfo);
             } else {

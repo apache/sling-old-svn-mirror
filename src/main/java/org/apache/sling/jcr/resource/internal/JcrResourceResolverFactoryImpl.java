@@ -42,7 +42,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
@@ -85,6 +84,14 @@ import org.slf4j.LoggerFactory;
  */
 public class JcrResourceResolverFactoryImpl implements
         JcrResourceResolverFactory, ResourceResolverFactory {
+
+
+    /**
+     * The name of the authentication info property containing the workspace name.
+     * This is only used internally and should never be used from anyone outside
+     * this bundle as we might change this mechanism.
+     */
+    static final String AUTH_INFO_WORKSPACE = "internal.user.jcr.workspace";
 
     public final static class ResourcePattern {
         public final Pattern pattern;
@@ -548,7 +555,7 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private String getWorkspace(final Map<String, Object> authenticationInfo) {
         if ( authenticationInfo != null ) {
-            return (String) authenticationInfo.get(JcrResourceConstants.AUTH_INFO_WORKSPACE);
+            return (String) authenticationInfo.get(AUTH_INFO_WORKSPACE);
         }
         return null;
     }
