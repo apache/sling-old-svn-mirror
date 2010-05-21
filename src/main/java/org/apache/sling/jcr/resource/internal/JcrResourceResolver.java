@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -161,20 +162,6 @@ public class JcrResourceResolver
     public Resource resolve(HttpServletRequest request, String absPath) {
         checkClosed();
 
-        // check for workspace info
-        final String workspaceName = (request == null ? null :
-            (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
-        if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
-            LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
-            try {
-                final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
-                return wsResolver.resolve(request, absPath);
-            } catch (LoginException e) {
-                // requested a resource in a workspace I don't have access to.
-                // TODO
-            }
-
-        }
         // make sure abspath is not null and is absolute
         if (absPath == null) {
             absPath = "/";
@@ -185,6 +172,33 @@ public class JcrResourceResolver
         // check for special namespace prefix treatment
         absPath = unmangleNamespaces(absPath);
 
+        // check for workspace info
+        final String workspaceName = (request == null ? null :
+            (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
+        if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
+            LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
+            try {
+                final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                return wsResolver.resolve(request, absPath);
+            } catch (LoginException e) {
+                // requested a resource in a workspace I don't have access to.
+                // we treat this as a not found resource
+                LOGGER.debug(
+                    "resolve: Path {} does not resolve, returning NonExistingResource",
+                       absPath);
+
+                final Resource res = new NonExistingResource(this, absPath);
+                // SLING-864: if the path contains a dot we assume this to be
+                // the start for any selectors, extension, suffix, which may be
+                // used for further request processing.
+                int index = absPath.indexOf('.');
+                if (index != -1) {
+                    res.getResourceMetadata().setResolutionPathInfo(absPath.substring(index));
+                }
+                return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
+            }
+
+        }
         // Assume http://localhost:80 if request is null
         String[] realPathList = { absPath };
         String requestPath;
@@ -521,7 +535,8 @@ public class JcrResourceResolver
                     return wsResolver.getResource(path.substring(wsSepPos + 1));
                 } catch (LoginException e) {
                     // requested a resource in a workspace I don't have access to.
-                    // TODO
+                    // we treat this as a not found resource
+                    return null;
                 }
             }
         }
@@ -574,6 +589,7 @@ public class JcrResourceResolver
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#listChildren(org.apache.sling.api.resource.Resource)
      */
+    @SuppressWarnings("unchecked")
     public Iterator<Resource> listChildren(final Resource parent) {
         checkClosed();
         final String path = parent.getPath();
@@ -586,7 +602,8 @@ public class JcrResourceResolver
                     return wsResolver.listChildren(parent);
                 } catch (LoginException e) {
                     // requested a resource in a workspace I don't have access to.
-                    // TODO
+                    // we treat this as a not found resource
+                    return Collections.EMPTY_LIST.iterator();
                 }
             }
         }
