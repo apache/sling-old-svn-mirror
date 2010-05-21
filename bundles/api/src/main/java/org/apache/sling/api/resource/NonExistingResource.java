@@ -20,14 +20,29 @@ package org.apache.sling.api.resource;
 
 /**
  * Simple helper class representing nonexisting resources.
+ *
+ * This is an utility class to <em>create</em> non existing resources.
+ * It is not meant to be used to check if a resource is a non existing
+ * resource. Use the {@link ResourceUtil#isNonExistingResource(Resource)}
+ * method instead (or check the resource type yourself). The reason
+ * for this is that this resource might be wrapped by other resource
+ * implementations like resource decorators etc.
  */
 public final class NonExistingResource extends SyntheticResource {
 
-    public NonExistingResource(ResourceResolver resourceResolver,
-            String resourceURI) {
+    /**
+     * Create a new non existing resource.
+     * @param resourceResolver The resource resolver.
+     * @param resourceURI The path of the resource.
+     */
+    public NonExistingResource(final ResourceResolver resourceResolver,
+            final String resourceURI) {
         super(resourceResolver, resourceURI, RESOURCE_TYPE_NON_EXISTING);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.SyntheticResource#getResourceType()
+     */
     public final String getResourceType() {
         // overwrite to prevent overwriting of this method in extensions of
         // this class because the specific resource type is the marker of a
