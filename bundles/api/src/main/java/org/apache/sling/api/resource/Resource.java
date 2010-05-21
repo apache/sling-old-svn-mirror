@@ -36,7 +36,7 @@ public interface Resource extends Adaptable {
      * @see #getResourceType()
      * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest, String)
      */
-    static final String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
+    String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
 
     /**
      * This resource's path - for now that could be a JCR path. It's also

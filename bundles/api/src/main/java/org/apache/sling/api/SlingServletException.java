@@ -28,6 +28,8 @@ import javax.servlet.ServletException;
  */
 public class SlingServletException extends SlingException {
 
+    private static final long serialVersionUID = 8666411662509951915L;
+
     public SlingServletException(ServletException cause) {
         super(cause);
     }

@@ -23,6 +23,8 @@ import org.apache.sling.api.SlingException;
 /** Thrown when an invalid service filter is used */
 public class InvalidServiceFilterSyntaxException extends SlingException {
 
+    private static final long serialVersionUID = 6557699360505403255L;
+
     private final String filter;
 
     public InvalidServiceFilterSyntaxException(String filter, String reason) {

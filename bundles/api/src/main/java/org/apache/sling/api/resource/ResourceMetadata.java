@@ -36,6 +36,8 @@ import java.util.HashMap;
  */
 public class ResourceMetadata extends HashMap<String, Object> {
 
+    private static final long serialVersionUID = 4692666752269523738L;
+
     /**
      * The name of the required property providing the part of the request URI
      * which was used to the resolve the resource to which the meta data

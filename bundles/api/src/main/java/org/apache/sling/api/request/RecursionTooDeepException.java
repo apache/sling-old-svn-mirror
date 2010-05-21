@@ -27,13 +27,15 @@ import org.apache.sling.api.SlingException;
  */
 public class RecursionTooDeepException extends SlingException {
 
+    private static final long serialVersionUID = 776668636261012142L;
+
     /**
      * Creates a new instance of this class reporting the exception occurred
      * while trying to include the output for rendering the resource at the
      * given path.
      * <p>
      * The resource path is the actual message of the exception.
-     * 
+     *
      * @param resourcePath The path of the resource whose output inclusion
      *            causes this exception.
      */

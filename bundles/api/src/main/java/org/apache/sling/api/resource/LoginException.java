@@ -27,6 +27,8 @@ package org.apache.sling.api.resource;
  */
 public class LoginException extends Exception {
 
+    private static final long serialVersionUID = -5896615185390272299L;
+
     /**
      * Constructs a new instance of this class with <code>null</code> as its
      * detail message.

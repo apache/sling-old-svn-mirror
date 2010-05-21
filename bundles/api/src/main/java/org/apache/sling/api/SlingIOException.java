@@ -28,6 +28,8 @@ import java.io.IOException;
  */
 public class SlingIOException extends SlingException {
 
+    private static final long serialVersionUID = 5278814329174799608L;
+
     public SlingIOException(IOException cause) {
         super(cause);
     }

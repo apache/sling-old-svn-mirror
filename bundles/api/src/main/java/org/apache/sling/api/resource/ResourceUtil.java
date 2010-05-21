@@ -257,7 +257,7 @@ public class ResourceUtil {
      * @throws NullPointerException if <code>res</code> is <code>null</code>.
      */
     public static boolean isNonExistingResource(Resource res) {
-        return NonExistingResource.RESOURCE_TYPE_NON_EXISTING.equals(res.getResourceType());
+        return Resource.RESOURCE_TYPE_NON_EXISTING.equals(res.getResourceType());
     }
 
     /**
