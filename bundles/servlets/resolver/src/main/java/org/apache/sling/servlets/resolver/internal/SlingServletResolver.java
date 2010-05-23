@@ -164,10 +164,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /** @scr.reference */
     private ResourceResolverFactory resourceResolverFactory;
 
-    /** The resource resolver used for script resolution. */
-    private ConcurrentHashMap<String, WorkspaceResourceResolver> scriptResolvers;
-
-    private WorkspaceResourceResolver defaultScriptResolver;
+    private ResourceResolver scriptResolver;
 
     private Map<ServiceReference, ServiceRegistration> servletsByReference = new HashMap<ServiceReference, ServiceRegistration>();
 
@@ -206,6 +203,12 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     private boolean useDefaultWorkspace;
 
     /**
+     * The default workspace to use (might be null to use the default
+     * workspace).
+     */
+    private String defaultWorkspaceName;
+
+    /**
      * The allowed execution paths.
      */
     private String[] executionPaths;
@@ -234,16 +237,15 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final String wspName = getWorkspaceName(request);
             // First, we use a resource resolver using the same workspace as the
             // resource
-            WorkspaceResourceResolver scriptResolver = getScriptResolver(wspName);
-            servlet = resolveServlet(request, type, scriptResolver);
+            servlet = resolveServlet(request, type, scriptResolver, wspName);
 
-            if (servlet == null && this.useDefaultWorkspace
-                    && !WorkspaceResourceResolver.isSameWorkspace(wspName, defaultScriptResolver.getWorkspaceName()) ) {
-                servlet = resolveServlet(request, type, defaultScriptResolver);
+            // now we try the default workspace
+            if (servlet == null && this.useDefaultWorkspace && wspName != null ) {
+                servlet = resolveServlet(request, type, scriptResolver, this.defaultWorkspaceName);
             }
 
         } else {
-            servlet = resolveServlet(request, type, defaultScriptResolver);
+            servlet = resolveServlet(request, type, scriptResolver, this.defaultWorkspaceName);
         }
 
         // last resort, use the core bundle default servlet
@@ -284,7 +286,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             log.debug("resolveServlet called for resource {} with script name {}", resource, scriptName);
         }
 
-        final Servlet servlet = resolveServlet(defaultScriptResolver, resource, scriptName);
+        final Servlet servlet = resolveServlet(scriptResolver, resource, scriptName);
 
         // log the servlet found
         if (log.isDebugEnabled()) {
@@ -309,7 +311,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             log.debug("resolveServlet called for for script name {}", scriptName);
         }
 
-        final Servlet servlet = resolveServlet(defaultScriptResolver, null, scriptName);
+        final Servlet servlet = resolveServlet(scriptResolver, null, scriptName);
 
         // log the servlet found
         if (log.isDebugEnabled()) {
@@ -421,21 +423,21 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
-            final WorkspaceResourceResolver scriptResolver = getScriptResolver(getWorkspaceName(request));
+            final String wspName = getWorkspaceName(request);
 
             // find the error handler component
             Resource resource = getErrorResource(request);
 
             // find a servlet for the status as the method name
             ResourceCollector locationUtil = new ResourceCollector(String.valueOf(status),
-                    ServletResolverConstants.ERROR_HANDLER_PATH, resource, scriptResolver.getWorkspaceName(),
+                    ServletResolverConstants.ERROR_HANDLER_PATH, resource, wspName,
                     this.executionPaths);
             Servlet servlet = getServlet(locationUtil, request, scriptResolver);
 
             // fall back to default servlet if none
             if (servlet == null) {
                 servlet = getDefaultErrorServlet(request, scriptResolver,
-                    resource);
+                    resource, wspName);
             }
 
             // set the message properties
@@ -475,7 +477,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
-            final WorkspaceResourceResolver scriptResolver = getScriptResolver(getWorkspaceName(request));
+            final String wspName = getWorkspaceName(request);
 
             // find the error handler component
             Servlet servlet = null;
@@ -485,7 +487,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             while (servlet == null && tClass != Object.class) {
                 // find a servlet for the simple class name as the method name
                 ResourceCollector locationUtil = new ResourceCollector(tClass.getSimpleName(),
-                        ServletResolverConstants.ERROR_HANDLER_PATH, resource, scriptResolver.getWorkspaceName(),
+                        ServletResolverConstants.ERROR_HANDLER_PATH, resource, wspName,
                         this.executionPaths);
                 servlet = getServlet(locationUtil, request, scriptResolver);
 
@@ -495,7 +497,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
             if (servlet == null) {
                 servlet = getDefaultErrorServlet(request, scriptResolver,
-                    resource);
+                    resource, wspName);
             }
 
             // set the message properties
@@ -536,17 +538,23 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     /**
      * Resolve an appropriate servlet for a given request and resource type
-     * using the provided ResourceResolver.
+     * using the provided ResourceResolver and workspace
      */
-    private Servlet resolveServlet(final SlingHttpServletRequest request, final String type,
-            final WorkspaceResourceResolver resolver) {
+    private Servlet resolveServlet(final SlingHttpServletRequest request,
+            final String type,
+            final ResourceResolver resolver,
+            final String workspaceName) {
         Servlet servlet = null;
 
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
         if (type.charAt(0) == '/') {
             if ( this.isPathAllowed(type) ) {
-                final Resource res = resolver.getResource(type);
+                String path = type;
+                if ( workspaceName != null ) {
+                    path = workspaceName + ':' + type;
+                }
+                final Resource res = resolver.getResource(path);
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
@@ -558,7 +566,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
         if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
-            final ResourceCollector locationUtil = ResourceCollector.create(request, resolver.getWorkspaceName(), this.executionPaths);
+            final ResourceCollector locationUtil = ResourceCollector.create(request, workspaceName, this.executionPaths);
             servlet = getServlet(locationUtil, request, resolver);
 
             if (log.isDebugEnabled()) {
@@ -594,7 +602,9 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final ResourceResolver scriptResolver) {
         final Servlet scriptServlet = (this.cache != null ? this.cache.get(locationUtil) : null);
         if (scriptServlet != null) {
-            log.debug("Using cached servlet {}", scriptServlet.getClass().getName());
+            if ( log.isDebugEnabled() ) {
+                log.debug("Using cached servlet {}", RequestUtil.getServletName(scriptServlet));
+            }
             return scriptServlet;
         }
 
@@ -679,15 +689,16 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      */
     private Servlet getDefaultErrorServlet(
             final SlingHttpServletRequest request,
-            final WorkspaceResourceResolver scriptResolver,
-            final Resource resource) {
+            final ResourceResolver scriptResolver,
+            final Resource resource,
+            final String workspaceName) {
 
         // find a default error handler according to the resource type
         // tree of the given resource
         final ResourceCollector locationUtil = new ResourceCollector(
             ServletResolverConstants.DEFAULT_ERROR_HANDLER_NAME,
             ServletResolverConstants.ERROR_HANDLER_PATH, resource,
-            scriptResolver.getWorkspaceName(),
+            workspaceName,
             this.executionPaths);
         final Servlet servlet = getServlet(locationUtil, request,
             scriptResolver);
@@ -739,50 +750,23 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      * Package scoped to help with testing.
      */
     String getWorkspaceName(SlingHttpServletRequest request) {
-        return WorkspaceResourceResolver.getWorkspaceName(request.getResourceResolver());
-    }
-
-    /**
-     * Get a resource resolver for the given workspace.
-     * If the login to the given workspace does not work, we return the default resource resolver!
-     * @param wspName The workspace name or null for the default workspace
-     * @return A resource resolver
-     */
-    private WorkspaceResourceResolver getScriptResolver(String wspName) {
-        if (wspName == null || wspName.equals(defaultScriptResolver.getWorkspaceName())) {
-            return defaultScriptResolver;
-        }
-
-        WorkspaceResourceResolver scriptResolver = scriptResolvers.get(wspName);
-        if (scriptResolver != null) {
-            return scriptResolver;
-        }
-
-        try {
-            scriptResolver = new WorkspaceResourceResolver(this.resourceResolverFactory.getResourceResolver(createAuthenticationInfo(wspName)));
-            WorkspaceResourceResolver resolverFromMap = scriptResolvers.putIfAbsent(wspName, scriptResolver);
-            if (resolverFromMap != null) {
-                // another resolver was bound while this resolver was being created
-                // abandon ship
-                scriptResolver.close();
-                scriptResolver = resolverFromMap;
+        if ( this.useRequestWorkspace ) {
+            final String path = request.getResource().getPath();
+            final int pos = path.indexOf(":/");
+            if ( pos == -1 ) {
+                return null; // default workspace
             }
-        } catch (LoginException le) {
-            log.warn("Unable to login into workspace " + wspName + " : " + le.getMessage(), le);
-            scriptResolver = defaultScriptResolver;
+            return path.substring(0, pos);
         }
-        return scriptResolver;
+        return null;
     }
 
-    private Map<String, Object> createAuthenticationInfo(String wspName) {
+    private Map<String, Object> createAuthenticationInfo() {
         final Map<String, Object> authInfo = new HashMap<String, Object>();
         // if a script user is configured we use this user to read the scripts
         final String scriptUser = OsgiUtil.toString(context.getProperties().get(PROP_SCRIPT_USER), null);
         if (scriptUser != null && scriptUser.length() > 0) {
             authInfo.put(ResourceResolverFactory.SUDO_USER_ID, scriptUser);
-        }
-        if ( wspName != null ) {
-            authInfo.put("user.jcr.workspace", wspName);
         }
         return authInfo;
     }
@@ -813,18 +797,17 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), DEFAULT_USE_DEFAULT_WORKSPACE);
             this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), DEFAULT_USE_REQUEST_WORKSPACE);
 
-            this.scriptResolvers = new ConcurrentHashMap<String, WorkspaceResourceResolver>();
-
             String defaultWorkspaceProp = (String) properties.get(PROP_DEFAULT_SCRIPT_WORKSPACE);
             if ( defaultWorkspaceProp != null && defaultWorkspaceProp.trim().length() == 0 ) {
                 defaultWorkspaceProp = null;
             }
+            this.defaultWorkspaceName = defaultWorkspaceProp;
 
-            this.defaultScriptResolver = new WorkspaceResourceResolver(
-                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo(defaultWorkspaceProp)));
+            this.scriptResolver =
+                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo());
 
             servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot,
-                    this.defaultScriptResolver.getSearchPath());
+                    this.scriptResolver.getSearchPath());
         }
         createAllServlets(refs);
 
@@ -890,17 +873,9 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             }
         }
 
-        // close sessions
-        if (this.scriptResolvers != null ) {
-            for (final ResourceResolver resolver : this.scriptResolvers.values()) {
-                resolver.close();
-            }
-            this.scriptResolvers = null;
-        }
-
-        if (this.defaultScriptResolver != null) {
-            this.defaultScriptResolver.close();
-            this.defaultScriptResolver = null;
+        if (this.scriptResolver != null) {
+            this.scriptResolver.close();
+            this.scriptResolver = null;
         }
 
         this.context = null;
@@ -1039,7 +1014,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 if (path.contains(":")) {
                     path = path.substring(path.indexOf(":") + 1);
                 }
-                final String[] searchPaths = this.defaultScriptResolver.getSearchPath();
+                final String[] searchPaths = this.scriptResolver.getSearchPath();
                 int index = 0;
                 while (!flushCache && index < searchPaths.length) {
                     if (path.startsWith(searchPaths[index])) {

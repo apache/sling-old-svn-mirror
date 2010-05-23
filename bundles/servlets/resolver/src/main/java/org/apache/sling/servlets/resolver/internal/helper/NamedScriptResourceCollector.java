@@ -74,7 +74,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
                               final String scriptName,
                               final String extension,
                               final String[] executionPaths) {
-        super(baseResourceType, resourceType, resourceSuperType, extension, executionPaths);
+        super(baseResourceType, resourceType, resourceSuperType, null, extension, executionPaths);
         this.scriptName = scriptName;
         // create the hash code once
         final String key = baseResourceType + ':' + this.scriptName + ':' +
