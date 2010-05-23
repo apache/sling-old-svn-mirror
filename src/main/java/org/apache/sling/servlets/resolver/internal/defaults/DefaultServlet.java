@@ -36,6 +36,8 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  */
 public class DefaultServlet extends SlingSafeMethodsServlet {
 
+    private static final long serialVersionUID = 3806788918045433043L;
+
     @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {

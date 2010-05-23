@@ -62,8 +62,6 @@ public class ResourceCollector extends AbstractResourceCollector {
     // request is GET or HEAD and extension is html
     private final boolean isHtml;
 
-    private final String workspaceName;
-
     /**
      * Creates a <code>ResourceCollector</code> for the given
      * <code>request</code>. If the request is a GET or HEAD request, a
@@ -105,6 +103,7 @@ public class ResourceCollector extends AbstractResourceCollector {
         super((baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME),
                 resource.getResourceType(),
                 resource.getResourceSuperType(),
+                workspaceName,
                 null,
                 executionPaths);
         this.methodName = methodName;
@@ -113,7 +112,6 @@ public class ResourceCollector extends AbstractResourceCollector {
         this.isGet = false;
         this.isHtml = false;
 
-        this.workspaceName = workspaceName;
         // create the hash code once
         final String key = methodName + ':' + baseResourceType + ':' + extension + "::" +
             (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType) +
@@ -140,6 +138,7 @@ public class ResourceCollector extends AbstractResourceCollector {
         super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
                 request.getResource().getResourceType(),
                 request.getResource().getResourceSuperType(),
+                workspaceName,
                 request.getRequestPathInfo().getExtension(),
                 executionPaths);
         this.methodName = request.getMethod();
@@ -152,7 +151,6 @@ public class ResourceCollector extends AbstractResourceCollector {
         isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
         isHtml = isGet && "html".equals(extension);
 
-        this.workspaceName = workspaceName;
         // create the hash code once
         final String key = methodName + ':' + baseResourceType + ':' + extension + ':' + requestpaInfo.getSelectorString() + ':' +
             (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType) +
@@ -161,9 +159,9 @@ public class ResourceCollector extends AbstractResourceCollector {
     }
 
     protected void getWeightedResources(final Set<Resource> resources,
-                                        Resource location) {
+                                        final Resource location) {
 
-        ResourceResolver resolver = location.getResourceResolver();
+        final ResourceResolver resolver = location.getResourceResolver();
         Resource current = location;
         String parentName = ResourceUtil.getName(current);
 
@@ -252,9 +250,9 @@ public class ResourceCollector extends AbstractResourceCollector {
         String path = location.getPath()
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION;
         if ( this.isPathAllowed(path) ) {
-            location = location.getResourceResolver().getResource(path);
-            if (location != null) {
-                addWeightedResource(resources, location, 0,
+            current = location.getResourceResolver().getResource(path);
+            if (current != null) {
+                addWeightedResource(resources, current, 0,
                     WeightedResource.WEIGHT_LAST_RESSORT);
             }
         }
@@ -273,8 +271,7 @@ public class ResourceCollector extends AbstractResourceCollector {
             if ( isGet == o.isGet
                  && isHtml == o.isHtml
                  && numRequestSelectors == o.numRequestSelectors
-                 && stringEquals(methodName, o.methodName)
-                 && stringEquals(workspaceName, o.workspaceName)) {
+                 && stringEquals(methodName, o.methodName)) {
                 // now compare selectors
                 for(int i=0;i<numRequestSelectors;i++) {
                     if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
