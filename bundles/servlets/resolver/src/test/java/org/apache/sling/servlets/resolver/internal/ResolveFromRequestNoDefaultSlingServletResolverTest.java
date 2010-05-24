@@ -32,5 +32,6 @@ public class ResolveFromRequestNoDefaultSlingServletResolverTest extends SlingSe
     @Override
     protected void configureComponentContext(MockComponentContext mockComponentContext) {
         mockComponentContext.setProperty(SlingServletResolver.PROP_USE_REQUEST_WORKSPACE, "true");
+        mockComponentContext.setProperty(SlingServletResolver.PROP_USE_DEFAULT_WORKSPACE, "true");
     }
 }
