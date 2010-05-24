@@ -95,17 +95,19 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONArray jsonArray = new JSONArray(json);
+		JSONObject jsonObject = new JSONObject(json);
 		
 		if (addGroupAce) {
-			assertEquals(2, jsonArray.length());
+			assertEquals(2, jsonObject.length());
 		} else {
-			assertEquals(1, jsonArray.length());
+			assertEquals(1, jsonObject.length());
 		}
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0);
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 		
+		assertEquals(0, aceObject.getInt("order"));
+
 		String principalString = aceObject.optString("principal");
 		assertEquals(testUserId, principalString);
 		
@@ -118,11 +120,13 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		assertEquals("jcr:write", deniedArray.getString(0));
 
 		if (addGroupAce) {
-			aceObject = jsonArray.optJSONObject(1);
+			aceObject = jsonObject.optJSONObject(testGroupId);
 			assertNotNull(aceObject);
 			
 			principalString = aceObject.optString("principal");
 			assertEquals(testGroupId, principalString);
+
+		        assertEquals(1, aceObject.getInt("order"));
 
 			grantedArray = aceObject.optJSONArray("granted");
 			assertNotNull(grantedArray);
@@ -149,9 +153,9 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertNotNull(jsonArray);
-		assertEquals(0, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertNotNull(jsonObject);
+		assertEquals(0, jsonObject.length());
 	}
 
 	//test removing multiple aces
@@ -172,8 +176,8 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertNotNull(jsonArray);
-		assertEquals(0, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertNotNull(jsonObject);
+		assertEquals(0, jsonObject.length());
 	}
 }

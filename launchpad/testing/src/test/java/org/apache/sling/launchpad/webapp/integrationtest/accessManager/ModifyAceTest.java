@@ -96,15 +96,18 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0);
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 		
 		String principalString = aceObject.optString("principal");
 		assertEquals(testUserId, principalString);
-		
+
+	        int order = aceObject.optInt("order");
+	        assertEquals(0, order);
+
 		JSONArray grantedArray = aceObject.optJSONArray("granted");
 		assertNotNull(grantedArray);
 		assertEquals(1, grantedArray.length());
@@ -138,11 +141,14 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0);
+		JSONObject aceObject = jsonObject.optJSONObject(testGroupId);
 		assertNotNull(aceObject);
+
+	        int order = aceObject.optInt("order");
+	        assertEquals(0, order);
 
 		String principalString = aceObject.optString("principal");
 		assertEquals(testGroupId, principalString);
@@ -184,15 +190,18 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0);
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 
 		String principalString = aceObject.optString("principal");
 		assertEquals(testUserId, principalString);
 		
+	        int order = aceObject.optInt("order");
+	        assertEquals(0, order);
+
 		JSONArray grantedArray = aceObject.optJSONArray("granted");
 		assertNotNull(grantedArray);
 		assertEquals(3, grantedArray.length());
@@ -233,10 +242,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		//fetch the JSON for the acl to verify the settings.
 		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
-		JSONArray jsonArray2 = new JSONArray(json2);
-		assertEquals(1, jsonArray2.length());
+		JSONObject jsonObject2 = new JSONObject(json2);
+		assertEquals(1, jsonObject2.length());
 		
-		JSONObject aceObject2 = jsonArray2.optJSONObject(0);
+		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
 		assertNotNull(aceObject2);
 
 		String principalString2 = aceObject2.optString("principal");
@@ -290,10 +299,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0); 
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 		
 		assertEquals(testUserId, aceObject.optString("principal"));
@@ -333,10 +342,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 		
-		JSONArray jsonArray2 = new JSONArray(json2);
-		assertEquals(1, jsonArray2.length());
+		JSONObject jsonObject2 = new JSONObject(json2);
+		assertEquals(1, jsonObject2.length());
 		
-		JSONObject aceObject2 = jsonArray2.optJSONObject(0); 
+		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
 		assertNotNull(aceObject2);
 		
 		assertEquals(testUserId, aceObject2.optString("principal"));
@@ -390,10 +399,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
 		
-		JSONObject aceObject = jsonArray.optJSONObject(0); 
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 		
 		assertEquals(testUserId, aceObject.optString("principal"));
@@ -434,10 +443,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 		
-		JSONArray jsonArray2 = new JSONArray(json2);
-		assertEquals(1, jsonArray2.length());
+		JSONObject jsonObject2 = new JSONObject(json2);
+		assertEquals(1, jsonObject2.length());
 		
-		JSONObject aceObject2 = jsonArray2.optJSONObject(0); 
+		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
 		assertNotNull(aceObject2);
 		
 		assertEquals(testUserId, aceObject.optString("principal"));
@@ -486,10 +495,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
-		
-		JSONObject aceObject = jsonArray.optJSONObject(0); 
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
+
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
 		assertNotNull(aceObject);
 		
 		assertEquals(testUserId, aceObject.optString("principal"));
@@ -522,10 +531,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 
-		JSONArray jsonArray2 = new JSONArray(json2);
-		assertEquals(1, jsonArray2.length());
+		JSONObject jsonObject2 = new JSONObject(json2);
+		assertEquals(1, jsonObject2.length());
 		
-		JSONObject aceObject2 = jsonArray2.optJSONObject(0); 
+		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
 		assertNotNull(aceObject2);
 		
 		assertEquals(testUserId, aceObject2.optString("principal"));
@@ -569,11 +578,17 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
-		
-		assertEquals(testGroupId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testUserId, jsonArray.getJSONObject(1).getString("principal"));
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(2, jsonObject.length());
+
+		JSONObject group = jsonObject.getJSONObject(testGroupId);
+		assertNotNull(group);
+		assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(0, group.getInt("order"));
+		JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(1, user.getInt("order"));
 	}	
 
 	/**
@@ -594,11 +609,18 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(2, jsonObject.length());
 		
-		assertEquals(testUserId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testGroupId, jsonArray.getJSONObject(1).getString("principal"));
+                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(0, user.getInt("order"));
+                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                assertNotNull(group);
+                assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(1, group.getInt("order"));
+
 	}	
 
 	/**
@@ -619,11 +641,20 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
 		
-		assertEquals(testGroupId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testUserId, jsonArray.getJSONObject(1).getString("principal"));
+                JSONObject jsonObject = new JSONObject(json);
+                assertEquals(2, jsonObject.length());
+
+
+                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                assertNotNull(group);
+                assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(0, group.getInt("order"));
+                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(1, user.getInt("order"));
+
 	}	
 
 	/**
@@ -644,11 +675,18 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
-		
-		assertEquals(testUserId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testGroupId, jsonArray.getJSONObject(1).getString("principal"));
+                JSONObject jsonObject = new JSONObject(json);
+                assertEquals(2, jsonObject.length());
+
+                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(0, user.getInt("order"));
+                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                assertNotNull(group);
+                assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(1, group.getInt("order"));
+
 	}	
 
 	/**
@@ -668,12 +706,22 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
 		
-		assertEquals(testGroupId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testUserId, jsonArray.getJSONObject(1).getString("principal"));
-		
+                JSONObject jsonObject = new JSONObject(json);
+                assertEquals(2, jsonObject.length());
+
+                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                assertNotNull(group);
+                assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(0, group.getInt("order"));
+
+                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(1, user.getInt("order"));
+
+
+
 		//add another principal between the testGroupId and testUserId
 		testUserId2 = createTestUser();
 		addOrUpdateAce(testFolderUrl, testUserId2, true, "1");
@@ -681,12 +729,24 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json2 = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 
-		JSONArray jsonArray2 = new JSONArray(json2);
-		assertEquals(3, jsonArray2.length());
-		
-		assertEquals(testGroupId, jsonArray2.getJSONObject(0).getString("principal"));
-		assertEquals(testUserId2, jsonArray2.getJSONObject(1).getString("principal"));		
-		assertEquals(testUserId, jsonArray2.getJSONObject(2).getString("principal"));		
+                JSONObject jsonObject2 = new JSONObject(json2);
+                assertEquals(3, jsonObject2.length());
+
+                JSONObject group2 = jsonObject2.getJSONObject(testGroupId);
+                assertNotNull(group2);
+                assertEquals(testGroupId, group2.getString("principal"));
+                assertEquals(0, group2.getInt("order"));
+
+                JSONObject user3 =  jsonObject2.getJSONObject(testUserId2);
+                assertNotNull(user3);
+                assertEquals(testUserId2, user3.getString("principal"));
+                assertEquals(1, user3.getInt("order"));
+
+                JSONObject user2 =  jsonObject2.getJSONObject(testUserId);
+                assertNotNull(user2);
+                assertEquals(testUserId, user2.getString("principal"));
+                assertEquals(2, user2.getInt("order"));
+
 	}	
 
 	/**
@@ -711,11 +771,18 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(2, jsonArray.length());
-		
-		assertEquals(testGroupId, jsonArray.getJSONObject(0).getString("principal"));
-		assertEquals(testUserId, jsonArray.getJSONObject(1).getString("principal"));
+                JSONObject jsonObject = new JSONObject(json);
+                assertEquals(2, jsonObject.length());
+
+                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                assertNotNull(group);
+                assertEquals(testGroupId, group.getString("principal"));
+                assertEquals(0, group.getInt("order"));
+                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(1, user.getInt("order"));
+
 	}	
 
 	
@@ -735,10 +802,15 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONArray jsonArray = new JSONArray(json);
-		assertEquals(1, jsonArray.length());
 		
-		assertEquals(testUserId, jsonArray.getJSONObject(0).getString("principal"));
+                JSONObject jsonObject = new JSONObject(json);
+                assertEquals(1, jsonObject.length());
+
+                JSONObject user = jsonObject.getJSONObject(testUserId);
+                assertNotNull(user);
+                assertEquals(testUserId, user.getString("principal"));
+                assertEquals(0, user.getInt("order"));
+
 	}
 	
 	/**
