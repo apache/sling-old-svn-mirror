@@ -35,7 +35,7 @@ public class ResolveFromRequestAndDefaultSlingServletResolverTest extends SlingS
     }
 
     protected String getRequestWorkspaceName() {
-        return "default";
+        return null;
     }
 
 }

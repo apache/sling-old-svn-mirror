@@ -423,7 +423,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
-            final String wspName = getWorkspaceName(request);
+            final String wspName = (this.useRequestWorkspace ? getWorkspaceName(request) : null);
 
             // find the error handler component
             Resource resource = getErrorResource(request);
@@ -477,7 +477,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         try {
-            final String wspName = getWorkspaceName(request);
+            final String wspName = (this.useRequestWorkspace ? getWorkspaceName(request) : null);
 
             // find the error handler component
             Servlet servlet = null;
