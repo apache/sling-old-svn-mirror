@@ -132,7 +132,8 @@ public class GetAclServlet extends SlingAllMethodsServlet {
 	/* (non-Javadoc)
 	 * @see org.apache.sling.api.servlets.SlingSafeMethodsServlet#doGet(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
 	 */
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	protected void doGet(SlingHttpServletRequest request,
 			SlingHttpServletResponse response) throws ServletException,
 			IOException {
@@ -157,18 +158,20 @@ public class GetAclServlet extends SlingAllMethodsServlet {
         	}
 
         	AccessControlEntry[] declaredAccessControlEntries = getDeclaredAccessControlEntries(session, resourcePath);
-        	Map<String, Map<String, Set<String>>> aclMap = new LinkedHashMap<String, Map<String,Set<String>>>();
+        	Map<String, Map<String, Object>> aclMap = new LinkedHashMap<String, Map<String,Object>>();
+                int sequence = 0;
         	for (AccessControlEntry ace : declaredAccessControlEntries) {
     			Principal principal = ace.getPrincipal();
-    			Map<String, Set<String>> map = aclMap.get(principal.getName());
+    			Map<String, Object> map = aclMap.get(principal.getName());
     			if (map == null) {
-    				map = new LinkedHashMap<String, Set<String>>();
+    				map = new LinkedHashMap<String, Object>();
     				aclMap.put(principal.getName(), map);
+    				map.put("order", sequence++);
     			}
 
     			boolean allow = AccessControlUtil.isAllow(ace);
     			if (allow) {
-    				Set<String> grantedSet = map.get("granted");
+    				Set<String> grantedSet = (Set<String>) map.get("granted");
     				if (grantedSet == null) {
     					grantedSet = new LinkedHashSet<String>();
     					map.put("granted", grantedSet);
@@ -178,7 +181,7 @@ public class GetAclServlet extends SlingAllMethodsServlet {
     					grantedSet.add(privilege.getName());
     				}
     			} else {
-    				Set<String> deniedSet = map.get("denied");
+    				Set<String> deniedSet = (Set<String>) map.get("denied");
     				if (deniedSet == null) {
     					deniedSet = new LinkedHashSet<String>();
     					map.put("denied", deniedSet);
@@ -195,30 +198,32 @@ public class GetAclServlet extends SlingAllMethodsServlet {
         	response.setCharacterEncoding("UTF-8");
 
         	List<JSONObject> aclList = new ArrayList<JSONObject>();
-        	Set<Entry<String, Map<String, Set<String>>>> entrySet = aclMap.entrySet();
-        	for (Entry<String, Map<String, Set<String>>> entry : entrySet) {
+        	Set<Entry<String, Map<String, Object>>> entrySet = aclMap.entrySet();
+        	for (Entry<String, Map<String, Object>> entry : entrySet) {
         		String principalName = entry.getKey();
-        		Map<String, Set<String>> value = entry.getValue();
+        		Map<String, Object> value = entry.getValue();
 
             	JSONObject aceObject = new JSONObject();
             	aceObject.put("principal", principalName);
 
-        		Set<String> grantedSet = value.get("granted");
+        		Set<String> grantedSet = (Set<String>) value.get("granted");
         		if (grantedSet != null) {
             		aceObject.put("granted", grantedSet);
         		}
         		
-        		Set<String> deniedSet = value.get("denied");
+        		Set<String> deniedSet = (Set<String>) value.get("denied");
         		if (deniedSet != null) {
         			aceObject.put("denied", deniedSet);
         		}
-
+        		aceObject.put("order", value.get("order"));
         		aclList.add(aceObject);
 			}
-        	JSONArray jsonAclArray = new JSONArray(aclList);
-
+                JSONObject jsonAclMap = new JSONObject(aclMap);
+                for ( JSONObject jsonObj : aclList) {
+                   jsonAclMap.put(jsonObj.getString("principal"), jsonObj);
+                }
+                jsonAclMap.write(response.getWriter());
             // do the dump
-        	jsonAclArray.write(response.getWriter());
         } catch (AccessDeniedException ade) {
         	response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (ResourceNotFoundException rnfe) {
