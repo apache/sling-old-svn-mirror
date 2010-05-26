@@ -85,10 +85,31 @@ public interface JobStatusProvider {
      * Cancel this job.
      * Cancelling a job might fail if the job is currently in processing.
      * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
+     * @deprecated Use {@link #removeJob(String)} instead.
+     */
+    @Deprecated
+    void cancelJob(String jobId);
+
+    /**
+     * Cancel this job.
+     * Cancelling a job might fail if the job is currently in processing.
+     * This method can be used if the topic and the provided job id is known.
+     * @param topic The job topic as put into the property {@link EventUtil#PROPERTY_JOB_TOPIC}.
+     * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
+     * @deprecated Use {@link #removeJob(String, String)} instead.
+     */
+    @Deprecated
+    void cancelJob(String topic, String jobId);
+
+    /**
+     * Cancel this job.
+     * Cancelling a job might fail if the job is currently in processing.
+     * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
      * @return <code>true</code> if the job could be cancelled or does not exist anymore.
      *         <code>false</code> otherwise.
+     * @since 2.4.0
      */
-    boolean cancelJob(String jobId);
+    boolean removeJob(String jobId);
 
     /**
      * Cancel this job.
@@ -98,8 +119,9 @@ public interface JobStatusProvider {
      * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
      * @return <code>true</code> if the job could be cancelled or does not exist anymore.
      *         <code>false</code> otherwise.
+     * @since 2.4.0
      */
-    boolean cancelJob(String topic, String jobId);
+    boolean removeJob(String topic, String jobId);
 
     /**
      * Wake up the named job queue.

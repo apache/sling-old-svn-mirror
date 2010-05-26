@@ -176,14 +176,14 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertEquals(1, jeh.getAllJobs("sling/test").size());
         cb.block();
         // job is currently sleeping, therefore cancel fails
-        assertFalse(jeh.cancelJob("sling/test", "myid"));
+        assertFalse(jeh.removeJob("sling/test", "myid"));
         try {
             Thread.sleep(800);
         } catch (InterruptedException e) {
             // ignore
         }
         // the job is now in the queue again
-        assertTrue(jeh.cancelJob("sling/test", "myid"));
+        assertTrue(jeh.removeJob("sling/test", "myid"));
         assertEquals(0, jeh.getAllJobs("sling/test").size());
     }
 
