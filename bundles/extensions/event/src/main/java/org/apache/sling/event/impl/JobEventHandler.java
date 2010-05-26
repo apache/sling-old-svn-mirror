@@ -1628,11 +1628,25 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String, java.lang.String)
      */
-    public boolean cancelJob(String topic, String jobId) {
+    public void cancelJob(String topic, String jobId) {
+        this.removeJob(topic, jobId);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String)
+     */
+    public void cancelJob(String jobId) {
+        this.removeJob(jobId);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#removeJob(java.lang.String, java.lang.String)
+     */
+    public boolean removeJob(String topic, String jobId) {
         if ( jobId != null && topic != null ) {
             try {
                 final String uniqueJobId = this.getWriterRootNode().getPath() + '/' + JobUtil.getUniquePath(topic, jobId);
-                return this.cancelJob(uniqueJobId);
+                return this.removeJob(uniqueJobId);
             } catch (RepositoryException e) {
                 // this only happens if getPath() throws which really should not happen
                 this.ignoreException(e);
@@ -1642,9 +1656,9 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String)
+     * @see org.apache.sling.event.JobStatusProvider#removeJob(java.lang.String)
      */
-    public boolean cancelJob(String jobId) {
+    public boolean removeJob(String jobId) {
         if ( jobId != null ) {
             synchronized ( this.backgroundLock ) {
                 try {
