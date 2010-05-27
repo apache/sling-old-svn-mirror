@@ -641,6 +641,18 @@ public class SlingAuthenticator implements Authenticator,
         }
         return credentials;
     }
+
+    /**
+     * Extract the user name from the authentication info.
+     */
+    private String getUserName(final AuthenticationInfo info) {
+        final Credentials credentials = (Credentials) info.get(AuthenticationInfo.CREDENTIALS);
+        if ( !(credentials instanceof SimpleCredentials) ) {
+            return info.getUser();
+        }
+        return ((SimpleCredentials)credentials).getUserID();
+    }
+
     /**
      * Try to acquire an Session as indicated by authInfo
      *
@@ -700,7 +712,7 @@ public class SlingAuthenticator implements Authenticator,
             }
 
             // now find a way to get credentials
-            handleLoginFailure(request, response, authInfo.getUser(), re);
+            handleLoginFailure(request, response, getUserName(authInfo), re);
 
         }
 
