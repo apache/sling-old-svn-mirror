@@ -710,10 +710,10 @@ public class JcrResourceResolver
         return rootProvider.getSession();
     }
 
-    /** We don't need to synchronize this method as a resource resolver
-     * is expected to be used by a single session (like the underlying session).
+    /**
+     * Get a resolver for the workspace.
      */
-    private ResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
+    private synchronized ResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
         if ( createdResolvers == null ) {
             createdResolvers = new HashMap<String,ResourceResolver>();
         }
