@@ -52,6 +52,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -549,10 +550,34 @@ public class JobEventHandler
         }
     }
 
+    private boolean checkJobTopic(final Event job) {
+        final String jobTopic = (String)job.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+        boolean topicIsCorrect = false;
+        if ( jobTopic != null ) {
+            try {
+                @SuppressWarnings("unused")
+                final Event testEvent = new Event(jobTopic, (Dictionary<String, Object>)null);
+                topicIsCorrect = true;
+            } catch (IllegalArgumentException iae) {
+                // we just have to catch it
+            }
+            if ( !topicIsCorrect ) {
+                logger.warn("Discarding job {} : job has an illegal job topic {}", EventUtil.toString(job), jobTopic);
+            }
+        } else {
+            logger.warn("Discarding job {} : job topic is missing", EventUtil.toString(job));
+        }
+        return topicIsCorrect;
+    }
+
     /**
      * Put the job into the correct queue.
      */
     private void queueJob(final EventInfo info) {
+        // Check job topic
+        if ( !checkJobTopic(info.event) ) {
+            return;
+        }
         if ( logger.isDebugEnabled() ) {
             logger.debug("Received new job {}", EventUtil.toString(info.event));
         }
@@ -903,11 +928,8 @@ public class JobEventHandler
                 if ( logger.isDebugEnabled() ) {
                     logger.debug("Handling local job {}", EventUtil.toString(event));
                 }
-                // job event
-                final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-
-                //  job topic must be set, otherwise we ignore this event!
-                if ( jobTopic != null ) {
+                // check job topic
+                if ( this.checkJobTopic(event) ) {
                     // queue the event in order to respond quickly
                     try {
                         this.writeQueue.put(event);
@@ -915,8 +937,6 @@ public class JobEventHandler
                         // this should never happen
                         this.ignoreException(e);
                     }
-                } else {
-                    this.logger.warn("Event does not contain job topic: {}", EventUtil.toString(event));
                 }
 
             } else {
@@ -1010,7 +1030,8 @@ public class JobEventHandler
             } else {
                 this.logger.error("Job event can't be sent as no event admin is available.");
             }
-        } catch (RepositoryException re) {
+
+        } catch (Exception re) {
             // if an exception occurs, we just log
             this.logger.error("Exception during job processing.", re);
         } finally {
@@ -1039,7 +1060,7 @@ public class JobEventHandler
      * @return The real job event.
      */
     private Event getJobEvent(Event e, String nodePath) {
-        final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+        final String eventTopic = ResourceUtil.normalize((String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
         final Dictionary<String, Object> properties = new EventPropertiesMap(e);
         // put properties for finished job callback
         properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME,
