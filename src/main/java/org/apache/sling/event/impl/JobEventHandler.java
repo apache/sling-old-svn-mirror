@@ -644,7 +644,7 @@ public class JobEventHandler
                                   new String[] {this.getEventNodeType()},
                                   true);
         if ( this.running ) {
-            logger.info("Apache Sling Job Event Handler started.");
+            logger.info("Apache Sling Job Event Handler started on instance {}", this.applicationId);
             logger.debug("Job Handler Configuration: (sleepTime={} secs, maxJobRetries={}," +
                     " waitForAck={} ms, maximumParallelJobs={}, cleanupPeriod={} min, maxJobQueues={})",
                     new Object[] {sleepTime, maxJobRetries,waitForAckMs,maximumParallelJobs,cleanupPeriod,maxJobQueues});
