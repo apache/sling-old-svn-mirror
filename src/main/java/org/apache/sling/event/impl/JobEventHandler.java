@@ -1242,6 +1242,9 @@ public class JobEventHandler
         }
         // if the event is still in the processing list, we confirm the ack
         if ( ack != null ) {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Received ack for job {}", EventUtil.toString(job));
+            }
             this.sendNotification(EventUtil.TOPIC_JOB_STARTED, job);
         }
         return ack != null;
