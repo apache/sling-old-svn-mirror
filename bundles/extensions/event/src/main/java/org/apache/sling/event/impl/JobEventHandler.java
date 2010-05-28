@@ -1044,6 +1044,9 @@ public class JobEventHandler
         // put properties for finished job callback
         properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME,
                 new JobStatusNotifier.NotifierContext(this, nodePath));
+        // remove app id and distributable flag
+        properties.remove(EventUtil.PROPERTY_DISTRIBUTE);
+        properties.remove(EventUtil.PROPERTY_APPLICATION);
         return new Event(eventTopic, properties);
     }
 
