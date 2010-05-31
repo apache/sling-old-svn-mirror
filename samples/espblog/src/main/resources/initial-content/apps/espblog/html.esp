@@ -86,6 +86,10 @@ function renderMedia(postNode, mediaFolderName) {
 				<% if(currentNode.title) { %>							
 			    <h3>Comment on this post</h3>
 				<form class="hform" method="POST" action="<%=currentNode%>/comments/*">
+                    <p>
+                        Note that you need to <a href="?sling:authRequestLogin=1">login</a> 
+                        before commenting on this post.
+                    </p> 
 					<p><label>Your name</label><input type="text" size="80" name="commenter"/></p>
 					<p><label>Your comment</label>
 					<textarea name="commenttext" cols="40"></textarea></p>

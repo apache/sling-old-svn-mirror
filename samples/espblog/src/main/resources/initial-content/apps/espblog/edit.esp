@@ -21,7 +21,33 @@
 
 <html>
 <%
-pageTitle = currentNode.title ? currentNode.title : "New post";
+// Check if we have a currentNode
+var currentNodeProvided = ((typeof currentNode != "undefined") && currentNode.title != null); 
+function getCurrentNodeValue(prop) {
+    var result = "";
+    if(currentNodeProvided && currentNode[prop]) {
+        result = currentNode[prop];
+    }
+    return result;
+}
+
+// Compute path to used for the POST request, different
+// depending on existence of a current node or not
+var postPath = null;
+var pageTitle = null;
+if(currentNodeProvided) {
+    postPath = currentNode.getPath();
+    pageTitle = currentNode.title;
+} else {
+    postPath = request.getContextPath() + "";
+    if(postPath.length > 0) {
+        postPath += "/";
+    }
+    postPath += request.getPathInfo();
+    pageTitle = "New post";
+}
+
+// Load header utility
 load("header.esp");
 %>
 	<body>
@@ -41,15 +67,20 @@ load("header.esp");
        </div>
        
        <div class="main">
-			<h1><%= pageTitle %></h1>
+            <h1><%= pageTitle %></h1>
+			
+            <p>
+                Note that you need to <a href="?sling:authRequestLogin=1">login</a> 
+                before creating or editing a post.
+            </p> 
 					
-			<form class="hform" method="POST" action="<%= currentNode.getPath().lastIndexOf("*") != currentNode.getPath().length-1 ? currentNode : "/content/espblog/posts/*" %>" enctype="multipart/form-data">	        				
+			<form class="hform" method="POST" action="<%= postPath %>" enctype="multipart/form-data">	        				
 					
 					<p><label>Title</label>
-					<input name="title" type="text" size="80" value="<%= currentNode.getPath().lastIndexOf("*") != currentNode.getPath().length-1 ? currentNode.title : "" %>"></p>
+					<input name="title" type="text" size="80" value="<%= getCurrentNodeValue("title") %>"></p>
 					
 					<p><label>Body</label>
-					<textarea name="posttext" cols="40" rows="5"><%= currentNode.getPath().lastIndexOf("*") != currentNode.getPath().length-1 ? currentNode.posttext : "" %></textarea></p>
+					<textarea name="posttext" cols="40" rows="5"><%=  getCurrentNodeValue("posttext") %></textarea></p>
 					
 					<p><label>File</label><input type="file" name="attachments/*"/></p>
 
