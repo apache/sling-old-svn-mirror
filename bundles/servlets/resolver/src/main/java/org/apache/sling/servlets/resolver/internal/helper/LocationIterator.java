@@ -18,11 +18,14 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>LocationIterator</code> provides access to an ordered collection
@@ -80,6 +83,9 @@ public class LocationIterator implements Iterator<String> {
     // if there is no more location to return
     private String nextLocation;
 
+    /** Set of used resource types to detect a circular resource type hierarchy. */
+    private final Set<String> usedResourceTypes = new HashSet<String>();
+
     /**
      * Creates an instance of this iterator starting with a location built from
      * the resource type of the <code>resource</code> and ending with the
@@ -104,6 +110,8 @@ public class LocationIterator implements Iterator<String> {
         this.firstResourceSuperType = resourceSuperType;
         // we start with the first resource type
         this.resourceType = firstResourceType;
+
+        this.usedResourceTypes.add(this.resourceType);
 
         nextLocation = seek();
     }
@@ -196,6 +204,15 @@ public class LocationIterator implements Iterator<String> {
                 resourceType);
         }
 
+        // detect circular dependency
+        if ( superType != null ) {
+            if ( this.usedResourceTypes.contains(superType) ) {
+                LoggerFactory.getLogger(this.getClass()).error("Circular dependency in resource type hierarchy detected! Check super types of {}", superType);
+                superType = null;
+            } else {
+                this.usedResourceTypes.add(superType);
+            }
+        }
         // use default resource type if there is no super type any more
         if (superType == null) {
             superType = baseResourceType;

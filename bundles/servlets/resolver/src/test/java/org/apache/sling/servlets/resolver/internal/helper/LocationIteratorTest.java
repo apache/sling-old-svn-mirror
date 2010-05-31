@@ -22,6 +22,7 @@ import static org.apache.sling.servlets.resolver.internal.ServletResolverConstan
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.commons.testing.sling.MockResource;
 
 public class LocationIteratorTest extends HelperTestBase {
 
@@ -463,6 +464,49 @@ public class LocationIteratorTest extends HelperTestBase {
         assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
         assertTrue(li.hasNext());
         assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertFalse(li.hasNext());
+    }
+
+    public void testCircularResourceTypeHierarchy() {
+        final String root1 = "/libs";
+        resourceResolver.setSearchPath(root1);
+
+        // resource type and super type for start resource
+        final String resourceType = "foo/bar";
+        final String resourceSuperType = "foo/check1";
+        final String resourceSuperType2 = "foo/check2";
+
+        final Resource resource2 = new MockResource(resourceResolver,
+                root1 + '/' + resourceSuperType,
+                resourceType, resourceSuperType2);
+        resourceResolver.addResource(resource2);
+        final Resource resource3 = new MockResource(resourceResolver,
+                root1 + '/' + resourceSuperType2,
+                resourceType, resourceType);
+        resourceResolver.addResource(resource3);
+
+        LocationIterator li = new LocationIterator(resourceType,
+                resourceSuperType,
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
+
+        // 1. /libs/foo/bar
+        assertTrue(li.hasNext());
+        assertEquals(root1 + '/' + resourceType, li.next());
+
+        // 1. /libs/foo/check1
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/" + resourceSuperType, li.next());
+
+        // 3. /libs/foo/check2
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/" + resourceSuperType2, li.next());
+
+        // 4. /libs/sling/servlet/default
+        assertTrue(li.hasNext());
+        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+
+        // 5. finished
         assertFalse(li.hasNext());
     }
 }
