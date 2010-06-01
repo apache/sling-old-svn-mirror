@@ -104,6 +104,9 @@ public class JcrResourceResolver
     /** Closed marker. */
     private volatile boolean closed = false;
 
+    /** a resolver with the workspace which was specifically requested via a request attribute. */
+    private ResourceResolver requestBoundResolver;
+
     public JcrResourceResolver(final JcrResourceProviderEntry rootProvider,
                                final JcrResourceResolverFactoryImpl factory,
                                final boolean isAdmin,
@@ -179,6 +182,7 @@ public class JcrResourceResolver
             LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
             try {
                 final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                requestBoundResolver = wsResolver;
                 return wsResolver.resolve(request, absPath);
             } catch (LoginException e) {
                 // requested a resource in a workspace I don't have access to.
@@ -644,7 +648,7 @@ public class JcrResourceResolver
     throws SlingException {
         checkClosed();
         try {
-            QueryResult result = JcrResourceUtil.query(getSession(), query,
+            QueryResult result = JcrResourceUtil.query(adaptTo(Session.class), query,
                 language);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
@@ -693,7 +697,11 @@ public class JcrResourceResolver
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         checkClosed();
         if (type == Session.class) {
-            return (AdapterType) getSession();
+            if (requestBoundResolver != null) {
+                return (AdapterType) requestBoundResolver.adaptTo(Session.class);
+            } else {
+                return (AdapterType) getSession();
+            }
         }
 
         // fall back to default behaviour
