@@ -38,6 +38,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
@@ -198,24 +199,33 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         // a generated node name
         basePath += "/" + generatedName;
 
+        basePath = ensureUniquePath(request, basePath);
+
+        return basePath;
+    }
+
+    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
         // if resulting path exists, add a suffix until it's not the case
         // anymore
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
+        String jcrPath = removeAndValidateWorkspace(basePath, session);
+
         // if resulting path exists, add a suffix until it's not the case
         // anymore
-        if (session.itemExists(basePath)) {
+        if (session.itemExists(jcrPath)) {
             for (int idx = 0; idx < 1000; idx++) {
-                String newPath = basePath + "_" + idx;
+                String newPath = jcrPath + "_" + idx;
                 if (!session.itemExists(newPath)) {
-                    basePath = newPath;
+                    basePath = basePath + "_" + idx;
+                    jcrPath = newPath;
                     break;
                 }
             }
         }
 
         // if it still exists there are more than 1000 nodes ?
-        if (session.itemExists(basePath)) {
+        if (session.itemExists(jcrPath)) {
             throw new RepositoryException(
                 "Collision in generated node names for path=" + basePath);
         }
@@ -233,6 +243,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             throws RepositoryException {
 
         String path = response.getPath();
+
         if (!session.itemExists(path)) {
 
             deepGetOrCreateNode(session, path, reqProperties, changes);

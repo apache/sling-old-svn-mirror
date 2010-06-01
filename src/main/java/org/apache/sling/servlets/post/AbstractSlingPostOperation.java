@@ -64,25 +64,24 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     public void run(SlingHttpServletRequest request,
                     HtmlResponse response,
                     SlingPostProcessor[] processors) {
-
-        // calculate the paths
-        String path = getItemPath(request);
-        response.setPath(path);
-
-        // location
-        response.setLocation(externalizePath(request, path));
-
-        // parent location
-        path = ResourceUtil.getParent(path);
-        if (path != null) {
-            response.setParentLocation(externalizePath(request, path));
-        }
-
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
-        final List<Modification> changes = new ArrayList<Modification>();
-
         try {
+            // calculate the paths
+            String path = getItemPath(request);
+            path = removeAndValidateWorkspace(path, session);
+            response.setPath(path);
+
+            // location
+            response.setLocation(externalizePath(request, path));
+
+            // parent location
+            path = ResourceUtil.getParent(path);
+            if (path != null) {
+                response.setParentLocation(externalizePath(request, path));
+            }
+
+            final List<Modification> changes = new ArrayList<Modification>();
 
             doRun(request, response, changes);
 
@@ -123,6 +122,26 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         }
 
     }
+
+    /**
+     * Remove the workspace name, if any, from the start of the path and validate that the
+     * session's workspace name matches the path workspace name.
+     */
+    protected String removeAndValidateWorkspace(String path, Session session) throws RepositoryException {
+        final int wsSepPos = path.indexOf(":/");
+        if (wsSepPos != -1) {
+            final String workspaceName = path.substring(0, wsSepPos);
+            if (!workspaceName.equals(session.getWorkspace().getName())) {
+                throw new RepositoryException("Incorrect workspace. Expecting " + workspaceName + ". Received "
+                        + session.getWorkspace().getName());
+            } else {
+                return path.substring(wsSepPos + 1);
+            }
+        } else {
+            return path;
+        }
+    }
+
 
     /**
      * Returns the path of the resource of the request as the item path.
