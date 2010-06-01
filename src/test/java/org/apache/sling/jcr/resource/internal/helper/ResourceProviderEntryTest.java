@@ -258,6 +258,10 @@ public class ResourceProviderEntryTest extends TestCase {
         public void close() {
             // nothing to do
         }
+
+        public String getUserID() {
+            return null;
+        }
     }
 
     private static class TestResource implements Resource {
