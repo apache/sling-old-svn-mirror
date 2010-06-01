@@ -688,6 +688,13 @@ public class JcrResourceResolver
         }
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getUserID(java.lang.String)
+     */
+    public String getUserID() {
+        return getSession().getUserID();
+    }
+
     // ---------- Adaptable interface
 
     /**

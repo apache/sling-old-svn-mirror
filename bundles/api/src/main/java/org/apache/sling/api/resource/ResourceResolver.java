@@ -357,4 +357,14 @@ public interface ResourceResolver extends Adaptable {
      * @since 2.1
      */
     void close();
+
+
+    /**
+     * Get the user ID, if any, associated with this resource resolver.
+     * The meaning of this identifier is an implementation detail defined
+     * by the underlying repository. This method may return null.
+     *
+     * @return the user ID
+     */
+    String getUserID();
 }

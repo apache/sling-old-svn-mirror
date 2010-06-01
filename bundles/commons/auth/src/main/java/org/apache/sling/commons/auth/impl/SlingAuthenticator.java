@@ -820,14 +820,13 @@ public class SlingAuthenticator implements Authenticator,
      */
     private void setAttributes(final ResourceResolver resolver, final String authType,
             final HttpServletRequest request) {
-        Session session = resolver.adaptTo(Session.class);
 
         final SlingAuthenticatorResourceResolver sar = new SlingAuthenticatorResourceResolver(
             resolver);
 
         // HttpService API required attributes
         // TODO - figure out if this can be change to use authInfo instead of the session
-        request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
+        request.setAttribute(HttpContext.REMOTE_USER, resolver.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
 
         // resource resolver for down-stream use
@@ -835,11 +834,12 @@ public class SlingAuthenticator implements Authenticator,
         request.setAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME, sar);
 
         // JCR session for backwards compatibility
+        Session session = resolver.adaptTo(Session.class);
         request.setAttribute(REQUEST_ATTRIBUTE_SESSION, session);
 
         log.debug(
             "setAttributes: ResourceResolver stored as request attribute: user={}, workspace={}",
-            session.getUserID(), session.getWorkspace().getName());
+            resolver.getUserID(), session.getWorkspace().getName());
     }
 
     /**
