@@ -417,20 +417,7 @@ public class DefaultContentCreator implements ContentCreator {
      */
     public void createProperty(String name, Object value)
     throws RepositoryException {
-        final Node node = this.parentNodeStack.peek();
-        // check if the property already exists, don't overwrite it in this case
-        if (node.hasProperty(name)
-            && !node.getProperty(name).isNew()) {
-            return;
-        }
-        if ( value == null ) {
-            if ( node.hasProperty(name) ) {
-                node.getProperty(name).remove();
-            }
-        } else {
-            final Value jcrValue = this.createValue(node.getSession().getValueFactory(), value);
-            node.setProperty(name, jcrValue);
-        }
+       createProperty(name, value, false);
     }
 
     /**
@@ -438,23 +425,7 @@ public class DefaultContentCreator implements ContentCreator {
      */
     public void createProperty(String name, Object[] values)
     throws RepositoryException {
-        final Node node = this.parentNodeStack.peek();
-        // check if the property already exists, don't overwrite it in this case
-        if (node.hasProperty(name)
-            && !node.getProperty(name).isNew()) {
-            return;
-        }
-        if ( values == null || values.length == 0 ) {
-            if ( node.hasProperty(name) ) {
-                node.getProperty(name).remove();
-            }
-        } else {
-            final Value[] jcrValues = new Value[values.length];
-            for(int i = 0; i < values.length; i++) {
-                jcrValues[i] = this.createValue(node.getSession().getValueFactory(), values[i]);
-            }
-            node.setProperty(name, jcrValues);
-        }
+        createProperty(name, values, false);
     }
 
     /**
@@ -613,6 +584,45 @@ public class DefaultContentCreator implements ContentCreator {
       return null;
     }
 
+    private void createProperty(String name, Object value, boolean overwriteExisting)
+    throws RepositoryException {
+        final Node node = this.parentNodeStack.peek();
+        // check if the property already exists, don't overwrite it in this case
+        if (node.hasProperty(name)
+            && !node.getProperty(name).isNew() && !overwriteExisting) {
+            return;
+        }
+        if ( value == null ) {
+            if ( node.hasProperty(name) ) {
+                node.getProperty(name).remove();
+            }
+        } else {
+            final Value jcrValue = this.createValue(node.getSession().getValueFactory(), value);
+            node.setProperty(name, jcrValue);
+        }
+    }
+
+    private void createProperty(String name, Object[] values, boolean overwriteExisting)
+    throws RepositoryException {
+        final Node node = this.parentNodeStack.peek();
+        // check if the property already exists, don't overwrite it in this case
+        if (node.hasProperty(name)
+            && !node.getProperty(name).isNew() && !overwriteExisting) {
+            return;
+        }
+        if ( values == null || values.length == 0 ) {
+            if ( node.hasProperty(name) ) {
+                node.getProperty(name).remove();
+            }
+        } else {
+            final Value[] jcrValues = new Value[values.length];
+            for(int i = 0; i < values.length; i++) {
+                jcrValues[i] = this.createValue(node.getSession().getValueFactory(), values[i]);
+            }
+            node.setProperty(name, jcrValues);
+        }
+    }
+
     /**
      * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createFileAndResourceNode(java.lang.String, java.io.InputStream, java.lang.String, long)
      */
@@ -626,12 +636,15 @@ public class DefaultContentCreator implements ContentCreator {
         final Node parentNode = this.parentNodeStack.peek();
 
         // if node already exists but should be overwritten, delete it
-        if (this.configuration.isOverwrite() && parentNode.hasNode(name)) {
-            parentNode.getNode(name).remove();
-        } else if (parentNode.hasNode(name)) {
+        if (parentNode.hasNode(name)) {
             this.parentNodeStack.push(parentNode.getNode(name));
             this.parentNodeStack.push(parentNode.getNode(name).getNode("jcr:content"));
-            return;
+            if (!this.configuration.isOverwrite()) {
+                return;
+            }
+        } else {
+            this.createNode(name, "nt:file", null);
+            this.createNode("jcr:content", "nt:resource", null);
         }
 
         // ensure content type
@@ -649,12 +662,9 @@ public class DefaultContentCreator implements ContentCreator {
         if (lastModified <= 0) {
             lastModified = System.currentTimeMillis();
         }
-
-        this.createNode(name, "nt:file", null);
-        this.createNode("jcr:content", "nt:resource", null);
-        this.createProperty("jcr:mimeType", mimeType);
-        this.createProperty("jcr:lastModified", lastModified);
-        this.createProperty("jcr:data", data);
+        this.createProperty("jcr:mimeType", mimeType, true);
+        this.createProperty("jcr:lastModified", lastModified, true);
+        this.createProperty("jcr:data", data, true);
     }
 
     /**
