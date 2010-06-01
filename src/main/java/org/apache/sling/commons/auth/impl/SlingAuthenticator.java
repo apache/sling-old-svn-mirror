@@ -22,15 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -38,7 +33,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.auth.AuthenticationSupport;
 import org.apache.sling.commons.auth.Authenticator;
 import org.apache.sling.commons.auth.NoAuthenticationHandlerException;
@@ -49,9 +46,6 @@ import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.AuthenticationInfoPostProcessor;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.api.TooManySessionsException;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -171,10 +165,7 @@ public class SlingAuthenticator implements Authenticator,
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
 
     /** @scr.reference */
-    private SlingRepository repository;
-
-    /** @scr.reference */
-    private JcrResourceResolverFactory resourceResolverFactory;
+    private ResourceResolverFactory resourceResolverFactory;
 
     private PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authHandlerCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
 
@@ -395,13 +386,13 @@ public class SlingAuthenticator implements Authenticator,
             request.setAttribute(REQUEST_ATTRIBUTE_AUTH_INFO, authInfo);
 
             log.debug("handleSecurity: No credentials in the request, anonymous");
-            return getAnonymousSession(request, response, anonInfo);
+            return getAnonymousResolver(request, response, anonInfo);
 
         } else {
 
             log.debug("handleSecurity: Trying to get a session for {}",
                 authInfo.getUser());
-            return getSession(request, response, authInfo);
+            return getResolver(request, response, authInfo);
 
         }
     }
@@ -522,13 +513,13 @@ public class SlingAuthenticator implements Authenticator,
 
     public void requestDestroyed(ServletRequestEvent sre) {
         ServletRequest request = sre.getServletRequest();
-        Object sessionAttr = request.getAttribute(SlingAuthenticatorSession.ATTR_NAME);
-        if (sessionAttr instanceof SlingAuthenticatorSession) {
-            ((SlingAuthenticatorSession) sessionAttr).logout();
+        Object resolverAttr = request.getAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME);
+        if (resolverAttr instanceof SlingAuthenticatorResourceResolver) {
+            ((SlingAuthenticatorResourceResolver) resolverAttr).logout();
 
             request.removeAttribute(REQUEST_ATTRIBUTE_RESOLVER);
             request.removeAttribute(REQUEST_ATTRIBUTE_SESSION);
-            request.removeAttribute(SlingAuthenticatorSession.ATTR_NAME);
+            request.removeAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME);
         }
     }
 
@@ -607,61 +598,14 @@ public class SlingAuthenticator implements Authenticator,
 
 
     /**
-     * Create a credentials object from the provided authentication info.
-     * If no map is provided, <code>null</code> is returned.
-     * If a map is provided and contains a credentials object, this object is
-     * returned.
-     * If a map is provided but does not contain a credentials object nor a
-     * user, <code>null</code> is returned.
-     * if a map is provided with a user name but without a credentials object
-     * a new credentials object is created and all values from the authentication
-     * info are added as attributes.
-     * @param authenticationInfo Optional authentication info
-     * @return A credentials object or <code>null</code>
-     */
-    private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
-        if ( authenticationInfo == null ) {
-            return null;
-        }
-        Credentials credentials = (Credentials) authenticationInfo.get(AuthenticationInfo.CREDENTIALS);
-        if ( credentials == null ) {
-            // otherwise try to create SimpleCredentials if the userId is set
-            final String userId = (String) authenticationInfo.get(AuthenticationInfo.USER);
-            if (userId != null) {
-                final char[] password = (char[]) authenticationInfo.get(AuthenticationInfo.PASSWORD);
-                credentials = new SimpleCredentials(userId, (password == null ? new char[0] : password));
-
-                // add attributes
-                final Iterator<Map.Entry<String, Object>> i = authenticationInfo.entrySet().iterator();
-                while  (i.hasNext() ) {
-                    final Map.Entry<String, Object> current = i.next();
-                    ((SimpleCredentials)credentials).setAttribute(current.getKey(), current.getValue());
-                }
-            }
-        }
-        return credentials;
-    }
-
-    /**
-     * Extract the user name from the authentication info.
-     */
-    private String getUserName(final AuthenticationInfo info) {
-        final Credentials credentials = (Credentials) info.get(AuthenticationInfo.CREDENTIALS);
-        if ( !(credentials instanceof SimpleCredentials) ) {
-            return info.getUser();
-        }
-        return ((SimpleCredentials)credentials).getUserID();
-    }
-
-    /**
-     * Try to acquire an Session as indicated by authInfo
+     * Try to acquire a ResourceResolver as indicated by authInfo
      *
      * @return <code>true</code> if request processing should continue assuming
      *         successfull authentication. If <code>false</code> is returned it
      *         is assumed a response has been sent to the client and the request
      *         is terminated.
      */
-    private boolean getSession(final HttpServletRequest request,
+    private boolean getResolver(final HttpServletRequest request,
             final HttpServletResponse response,
             final AuthenticationInfo authInfo) {
 
@@ -670,11 +614,10 @@ public class SlingAuthenticator implements Authenticator,
 
         // try to connect
         try {
-            Session session = repository.login(getCredentials(authInfo),
-                null);
+            handleImpersonation(request, response, authInfo);
+            ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
 
-            // handle impersonation
-            session = handleImpersonation(request, response, session);
+            setSudoCookie(request, response, authInfo);
 
             // handle success feedback
             if (feedbackHandler != null) {
@@ -699,10 +642,10 @@ public class SlingAuthenticator implements Authenticator,
 
             // no redirect desired, so continue processing by first setting
             // the request attributes and then returning true
-            setAttributes(session, authInfo.getAuthType(), request);
+            setAttributes(resolver, authInfo.getAuthType(),  request);
             return true;
 
-        } catch (RepositoryException re) {
+        } catch (LoginException re) {
 
             // handle failure feedback before proceeding to handling the
             // failed login internally
@@ -712,7 +655,7 @@ public class SlingAuthenticator implements Authenticator,
             }
 
             // now find a way to get credentials
-            handleLoginFailure(request, response, getUserName(authInfo), re);
+            handleLoginFailure(request, response, authInfo.getUser(), re);
 
         }
 
@@ -721,8 +664,8 @@ public class SlingAuthenticator implements Authenticator,
 
     }
 
-    /** Try to acquire an anonymous Session */
-    private boolean getAnonymousSession(final HttpServletRequest request,
+    /** Try to acquire an anonymous ResourceResolver */
+    private boolean getAnonymousResolver(final HttpServletRequest request,
             final HttpServletResponse response, AuthenticationInfo anonInfo) {
 
         // Get an anonymous session if allowed, or if we are handling
@@ -731,7 +674,7 @@ public class SlingAuthenticator implements Authenticator,
 
             try {
 
-                Session session = repository.login();
+                ResourceResolver resolver = resourceResolverFactory.getResourceResolver(null);
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
@@ -741,11 +684,11 @@ public class SlingAuthenticator implements Authenticator,
                 }
 
                 // set the attributes for further processing
-                setAttributes(session, null, request);
+                setAttributes(resolver, null, request);
 
                 return true;
 
-            } catch (RepositoryException re) {
+            } catch (LoginException re) {
 
                 // cannot login > fail login, do not try to authenticate
                 handleLoginFailure(request, response, "anonymous user", re);
@@ -795,7 +738,7 @@ public class SlingAuthenticator implements Authenticator,
             final HttpServletResponse response, final String user,
             final Exception reason) {
 
-        if (reason instanceof TooManySessionsException) {
+        if (reason.getClass().getName().contains("TooManySessionsException")) {
 
             // to many users, send a 503 Service Unavailable
             log.info("handleLoginFailure: Too many sessions for {}: {}", user,
@@ -875,20 +818,21 @@ public class SlingAuthenticator implements Authenticator,
      * {@link SlingHttpContext#SESSION} request attribute is set with the JCR
      * Session.
      */
-    private void setAttributes(final Session session, final String authType,
+    private void setAttributes(final ResourceResolver resolver, final String authType,
             final HttpServletRequest request) {
+        Session session = resolver.adaptTo(Session.class);
 
-        final ResourceResolver resolver = resourceResolverFactory.getResourceResolver(session);
-        final SlingAuthenticatorSession sas = new SlingAuthenticatorSession(
-            session);
+        final SlingAuthenticatorResourceResolver sar = new SlingAuthenticatorResourceResolver(
+            resolver);
 
         // HttpService API required attributes
+        // TODO - figure out if this can be change to use authInfo instead of the session
         request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
 
         // resource resolver for down-stream use
         request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
-        request.setAttribute(SlingAuthenticatorSession.ATTR_NAME, sas);
+        request.setAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME, sar);
 
         // JCR session for backwards compatibility
         request.setAttribute(REQUEST_ATTRIBUTE_SESSION, session);
@@ -974,19 +918,9 @@ public class SlingAuthenticator implements Authenticator,
      * @see Session#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
-    private Session handleImpersonation(HttpServletRequest req,
-            HttpServletResponse res, Session session) {
-
-        // the current state of impersonation
-        String currentSudo = null;
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (int i = 0; currentSudo == null && i < cookies.length; i++) {
-                if (sudoCookieName.equals(cookies[i].getName())) {
-                    currentSudo = unquoteCookieValue(cookies[i].getValue());
-                }
-            }
-        }
+    private void handleImpersonation(HttpServletRequest req,
+            HttpServletResponse res, AuthenticationInfo authInfo) {
+        String currentSudo = getSudoCookieValue(req);
 
         /**
          * sudo parameter : empty or missing to continue to use the setting
@@ -1002,32 +936,29 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // sudo the session if needed
-        final String authUser = session.getUserID();
         if (sudo != null && sudo.length() > 0) {
-            try {
-                // impersonate setting the respective attribute
-                final SimpleCredentials creds = new SimpleCredentials(sudo,
-                    new char[0]);
-                creds.setAttribute(ATTR_IMPERSONATOR, authUser);
-                final Session impersonated = session.impersonate(creds);
+            authInfo.put(ResourceResolverFactory.SUDO_USER_ID, sudo);
+        }
+    }
 
-                // logout the original session and replace with impersonated
-                // session.
-                session.logout();
-                session = impersonated;
-
-            } catch (RepositoryException re) {
-
-                // log an error message if impersonation fails
-                log.error("handleImpersonation: Failed to impersonate "
-                    + authUser + " as " + sudo + ", processing request as "
-                    + authUser, re);
-
-                // clear sudo to revert impersonation
-                sudo = null;
+    private String getSudoCookieValue(HttpServletRequest req) {
+        // the current state of impersonation
+        String currentSudo = null;
+        Cookie[] cookies = req.getCookies();
+        if (cookies != null) {
+            for (int i = 0; currentSudo == null && i < cookies.length; i++) {
+                if (sudoCookieName.equals(cookies[i].getName())) {
+                    currentSudo = unquoteCookieValue(cookies[i].getValue());
+                }
             }
         }
-        // invariant: same session or successful impersonation
+        return currentSudo;
+    }
+
+    private void setSudoCookie(HttpServletRequest req,
+            HttpServletResponse res, AuthenticationInfo authInfo) {
+        String sudo = (String) authInfo.get(ResourceResolverFactory.SUDO_USER_ID);
+        String currentSudo = getSudoCookieValue(req);
 
         // set the (new) impersonation
         if (sudo != currentSudo) {
@@ -1036,7 +967,7 @@ public class SlingAuthenticator implements Authenticator,
                 // active due to cookie setting
 
                 // clear impersonation
-                this.sendSudoCookie(res, "", 0, req.getContextPath(), authUser);
+                this.sendSudoCookie(res, "", 0, req.getContextPath(), authInfo.getUser());
 
             } else if (currentSudo == null || !currentSudo.equals(sudo)) {
                 // Parameter set to a name. As the cookie is not set yet
@@ -1044,12 +975,9 @@ public class SlingAuthenticator implements Authenticator,
 
                 // (re-)set impersonation
                 this.sendSudoCookie(res, sudo, -1, req.getContextPath(),
-                    authUser);
+                        sudo);
             }
         }
-
-        // return the session
-        return session;
     }
 
     /**
@@ -1188,27 +1116,25 @@ public class SlingAuthenticator implements Authenticator,
         return builder.toString();
     }
 
-    private static class SlingAuthenticatorSession {
+    private static class SlingAuthenticatorResourceResolver {
 
-        static final String ATTR_NAME = "$$org.apache.sling.commons.auth.impl.SlingAuthenticatorSession$$";
+        static final String ATTR_NAME = "$$org.apache.sling.commons.auth.impl.SlingAuthenticatorResourceResolver$$";
 
-        private Session session;
+        private ResourceResolver resolver;
 
-        SlingAuthenticatorSession(final Session session) {
-            this.session = session;
+        SlingAuthenticatorResourceResolver(final ResourceResolver resolver) {
+            this.resolver = resolver;
         }
 
         void logout() {
-            if (session != null) {
+            if (resolver != null) {
                 try {
                     // logout if session is still alive (and not logged out)
-                    if (session.isLive()) {
-                        session.logout();
-                    }
+                    resolver.close();
                 } catch (Throwable t) {
                     // TODO: might log
                 } finally {
-                    session = null;
+                    resolver = null;
                 }
             }
         }
