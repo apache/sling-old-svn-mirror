@@ -240,12 +240,15 @@
                                     <goal>test</goal>
                                 </goals>
                                 <configuration>
+                                    <!--  needed to make it possible to scan the jar -->
+                                    <useManifestOnlyJar>false</useManifestOnlyJar>
+                                
                                     <excludes>
                                         <exclude>none</exclude>
                                     </excludes>
                                     <includes>
                                         <include>
-                                            ${integration.test.code.path}/**/*Test.java
+                                            **/launchpad/testing/TestAll.java
                                         </include>
                                     </includes>
                                     <systemProperties>
@@ -333,6 +336,9 @@
                                 <exclude>
                                     ${integration.test.code.path}/**/*.java
                                 </exclude>
+                                <exclude>
+                                     **/launchpad/testing/TestAll.java
+                                </exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -360,6 +366,12 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+             <groupId>org.apache.sling</groupId>
+             <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
+             <version>0.0.1-SNAPSHOT</version>
+             <scope>test</scope>
+        </dependency>
 
         <!--  The basic Sling WebApp -->
         <dependency>
