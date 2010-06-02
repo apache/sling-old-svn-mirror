@@ -16,19 +16,32 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Test uploading files using the Sling post servlet (SLING-168)
  */
 public class UploadFileTest extends HttpTestBase {
 
-    private static final String TEST_FILE = "src/test/resources/integration-test/file-to-upload.txt";
+
+    private static final String UPLOAD_CONTENT = "This file is used by UploadFileTest.java.\n" +
+    		"\n" +
+    		"It must contain http://www.apache.org/licenses/LICENSE-2.0 for tests.\n" +
+    		"\n" +
+    		"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce semper ipsum et lorem. In hac habitasse \n" +
+    		"platea dictumst. Donec dictum tincidunt purus. Aenean quis nunc. Aliquam rhoncus. Proin sed risus. \n" +
+    		"Maecenas porta arcu in nisi. Pellentesque quis sapien quis lectus vehicula aliquet. Cras ornare elit \n" +
+    		"eget massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed \n" +
+    		"ut justo. Integer porttitor quam. Aliquam aliquet. Nulla interdum arcu vitae nibh. Morbi dapibus odio \n" +
+    		"a sem. Integer dictum. Praesent vel eros nec ipsum venenatis malesuada. Vestibulum rutrum mi ac ligula. \n" +
+    		"Ut nisl ligula, vehicula dignissim, accumsan quis, faucibus sed, sapien. Quisque purus tellus, euismod \n" +
+    		"id, auctor quis, rutrum non, augue.\n";
 
     public void testDistinctResource() throws IOException {
         String folderPath = "/UploadFileTest_1_" + System.currentTimeMillis();
@@ -43,7 +56,7 @@ public class UploadFileTest extends HttpTestBase {
         }
 
         // upload local file
-        File localFile = new File(TEST_FILE);
+        File localFile = getTestFile();
         testClient.uploadToFileNode(urlOfNewNode, localFile, "./file", null);
 
         // get and check URL of created file
@@ -69,6 +82,7 @@ public class UploadFileTest extends HttpTestBase {
 
     }
 
+
     public void testDistinctResourceWithType() throws IOException {
         String folderPath = "/UploadFileTest_1_" + System.currentTimeMillis();
         final String url = HTTP_BASE_URL + folderPath;
@@ -82,7 +96,7 @@ public class UploadFileTest extends HttpTestBase {
         }
 
         // upload local file
-        File localFile = new File(TEST_FILE);
+        File localFile = getTestFile();
         testClient.uploadToFileNode(urlOfNewNode, localFile, "./file", "nt:unstructured");
 
         // get and check URL of created file
@@ -115,7 +129,7 @@ public class UploadFileTest extends HttpTestBase {
 
 
         // upload local file
-        File localFile = new File(TEST_FILE);
+        File localFile = getTestFile();
         testClient.uploadToFileNode(url, localFile, "./file", null);
 
         // get and check URL of created file
@@ -160,12 +174,12 @@ public class UploadFileTest extends HttpTestBase {
         } catch(IOException ioe) {
             fail("createNode failed: " + ioe);
         }
-
         // upload local file
+        File tempFile = getTestFile();
         File [] localFiles = new File[] {
-        	new File(TEST_FILE),
-        	new File(TEST_FILE),
-        	new File(TEST_FILE)
+        	tempFile,
+        	tempFile,
+        	tempFile
         };
         String [] fieldNames = new String [] {
         		"./file1.txt",
@@ -212,4 +226,19 @@ public class UploadFileTest extends HttpTestBase {
         assertTrue("checking primary type", content_json.contains("\"jcr:primaryType\":\"nt:resource\""));
         assertTrue("checking mime type", content_json.contains("\"jcr:mimeType\":\"text/plain\""));
 	}
+	
+  /**
+   * @return
+   * @throws IOException 
+   */
+  private File getTestFile() throws IOException {
+    File tempFile = new File("target/file-to-upload.txt");
+    if ( !tempFile.exists() || tempFile.length() == 0 ) {
+      FileWriter out = new FileWriter(tempFile);
+      out.write(UPLOAD_CONTENT); // we do rather than from a resource since surefire has fun with classloaders.
+      out.close();
+    }
+    return tempFile;
+  }
+
 }
