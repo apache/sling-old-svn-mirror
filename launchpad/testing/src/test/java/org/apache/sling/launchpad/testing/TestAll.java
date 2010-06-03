@@ -83,7 +83,7 @@ public class TestAll extends TestCase {
                 e.printStackTrace();
             }
         }
-        TestSuite suite = new TestSuite(classSet.toArray(new Class[classSet.size()]),"Sling Inregration Tests matching "+testPattern);
+        TestSuite suite = new TestSuite(classSet.toArray(new Class[classSet.size()]),"Sling Integration Tests matching "+testPattern);
       
         return suite;
     }
