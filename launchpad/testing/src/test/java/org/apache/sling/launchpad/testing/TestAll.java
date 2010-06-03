@@ -57,7 +57,6 @@ public class TestAll extends TestCase {
                 "**/launchpad/webapp/integrationtest/**/*Test");
         String testRegex = convertToRegex(testPattern);
         Pattern pattern = Pattern.compile(testRegex);
-        LOGGER.info("Using Pattern " + testRegex);
         for (URL u : urls) {
             try {
                 matchingClasses.addAll(scanFile(new File(u.toURI()), pattern));
@@ -83,6 +82,7 @@ public class TestAll extends TestCase {
                 e.printStackTrace();
             }
         }
+        LOGGER.info(classSet.size() + " test classes found using Pattern " + testRegex);
         TestSuite suite = new TestSuite(classSet.toArray(new Class[classSet.size()]),"Sling Integration Tests matching "+testPattern);
       
         return suite;
