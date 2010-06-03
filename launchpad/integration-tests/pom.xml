@@ -33,13 +33,79 @@
   <description>
         Sling Integration Tests, contains integration tests that
         are used by the testing project and other upstream testing projects.
-    </description>
+  </description>
+  
+  <properties>
+    <!-- HTTP port of Sling instance to test -->
+    <http.port>8888</http.port>
+    
+    <!-- path suffix for HTTP access to Sling test instance -->
+    <http.base.path/>
+    
+    <!-- path suffix for WebDAV access to Sling test instance -->
+    <webdav.workspace.path/>
+    
+    <!-- hostname of Sling instance to test -->
+    <test.host>localhost</test.host>
+    
+    <!-- Timeout when checking for Sling readyness before starting tests -->
+    <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
+  </properties>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/integration-tests</url>
   </scm>
+
+  <profiles>
+    <profile>
+      <!--
+        SLING-1543, setup for running single integration tests with
+        -Dtest
+      -->
+      <id>runTests</id>
+      <activation>
+        <property>
+          <name>test</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <testClassesDirectory>${project.build.outputDirectory}</testClassesDirectory>
+              <systemProperties>
+                <!--
+                    Settings for running the integration against a specific Sling instance
+                -->
+                <property>
+                    <name>launchpad.http.server.url</name>
+                    <value>
+                        http://${test.host}:${http.port}/${http.base.path}
+                    </value>
+                </property>
+                <property>
+                    <name>launchpad.webdav.server.url</name>
+                    <value>
+                        http://${test.host}:${http.port}/${webdav.workspace.path}
+                    </value>
+                </property>
+                <property>
+                    <name>HttpTestBase.readyTimeoutSeconds</name>
+                    <value>
+                        ${HttpTestBase.readyTimeoutSeconds}
+                     </value>
+                 </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
 
@@ -80,6 +146,11 @@
       <artifactId>junit</artifactId>
       <version>4.8.1</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
