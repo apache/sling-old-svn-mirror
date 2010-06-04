@@ -78,9 +78,12 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     @SuppressWarnings("unchecked")
     private void refreshScriptEngineManager() {
+
         if (scriptEngineManagerRegistration != null) {
             scriptEngineManagerRegistration.unregister();
+            scriptEngineManagerRegistration = null;
         }
+
         // create (empty) script engine manager
         ClassLoader loader = getClass().getClassLoader();
         SlingScriptEngineManager tmp = new SlingScriptEngineManager(loader);
@@ -97,8 +100,12 @@ public class ScriptEngineManagerFactory implements BundleListener {
         }
 
         scriptEngineManager = tmp;
-        scriptEngineManagerRegistration = bundleContext.registerService(ScriptEngineManager.class.getName(),
-                scriptEngineManager, new Hashtable());
+
+        if (bundleContext != null) {
+            scriptEngineManagerRegistration = bundleContext.registerService(
+                ScriptEngineManager.class.getName(), scriptEngineManager,
+                new Hashtable());
+        }
 
         // Log messages to verify which ScriptEngine is actually used
         // for our registered extensions
@@ -210,12 +217,13 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
         context.getBundleContext().removeBundleListener(this);
 
+        if (scriptEngineManagerRegistration != null) {
+            scriptEngineManagerRegistration.unregister();
+            scriptEngineManagerRegistration = null;
+        }
         engineSpiBundles.clear();
         engineSpiServices.clear();
         scriptEngineManager = null;
-        if (scriptEngineManagerRegistration != null) {
-            scriptEngineManagerRegistration.unregister();
-        }
         if (this.eventAdminTracker != null) {
             this.eventAdminTracker.close();
             this.eventAdminTracker = null;
