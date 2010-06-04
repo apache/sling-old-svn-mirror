@@ -107,14 +107,18 @@ public class JcrResourceResolver
     /** a resolver with the workspace which was specifically requested via a request attribute. */
     private ResourceResolver requestBoundResolver;
 
+    private final boolean useMultiWorkspaces;
+
     public JcrResourceResolver(final JcrResourceProviderEntry rootProvider,
                                final JcrResourceResolverFactoryImpl factory,
                                final boolean isAdmin,
-                               final Map<String, Object> originalAuthInfo) {
+                               final Map<String, Object> originalAuthInfo,
+                               boolean useMultiWorkspaces) {
         this.rootProvider = rootProvider;
         this.factory = factory;
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
+        this.useMultiWorkspaces = useMultiWorkspaces;
     }
 
     /**
@@ -175,33 +179,36 @@ public class JcrResourceResolver
         // check for special namespace prefix treatment
         absPath = unmangleNamespaces(absPath);
 
-        // check for workspace info
-        final String workspaceName = (request == null ? null :
-            (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
-        if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
-            LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
-            try {
-                final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
-                requestBoundResolver = wsResolver;
-                return wsResolver.resolve(request, absPath);
-            } catch (LoginException e) {
-                // requested a resource in a workspace I don't have access to.
-                // we treat this as a not found resource
-                LOGGER.debug(
-                    "resolve: Path {} does not resolve, returning NonExistingResource",
-                       absPath);
+        String workspaceName = null;
+        if (useMultiWorkspaces) {
+            // check for workspace info
+            workspaceName = (request == null ? null :
+                (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
+            if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
+                LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
+                try {
+                    final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                    requestBoundResolver = wsResolver;
+                    return wsResolver.resolve(request, absPath);
+                } catch (LoginException e) {
+                    // requested a resource in a workspace I don't have access to.
+                    // we treat this as a not found resource
+                    LOGGER.debug(
+                        "resolve: Path {} does not resolve, returning NonExistingResource",
+                           absPath);
 
-                final Resource res = new NonExistingResource(this, absPath);
-                // SLING-864: if the path contains a dot we assume this to be
-                // the start for any selectors, extension, suffix, which may be
-                // used for further request processing.
-                int index = absPath.indexOf('.');
-                if (index != -1) {
-                    res.getResourceMetadata().setResolutionPathInfo(absPath.substring(index));
+                    final Resource res = new NonExistingResource(this, absPath);
+                    // SLING-864: if the path contains a dot we assume this to be
+                    // the start for any selectors, extension, suffix, which may be
+                    // used for further request processing.
+                    int index = absPath.indexOf('.');
+                    if (index != -1) {
+                        res.getResourceMetadata().setResolutionPathInfo(absPath.substring(index));
+                    }
+                    return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
                 }
-                return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
-            }
 
+            }
         }
         // Assume http://localhost:80 if request is null
         String[] realPathList = { absPath };
@@ -528,19 +535,21 @@ public class JcrResourceResolver
     public Resource getResource(String path) {
         checkClosed();
 
-        final int wsSepPos = path.indexOf(":/");
-        if (wsSepPos != -1) {
-            final String workspaceName = path.substring(0, wsSepPos);
-            if (workspaceName.equals(getSession().getWorkspace().getName())) {
-                path = path.substring(wsSepPos + 1);
-            } else {
-                try {
-                    ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
-                    return wsResolver.getResource(path.substring(wsSepPos + 1));
-                } catch (LoginException e) {
-                    // requested a resource in a workspace I don't have access to.
-                    // we treat this as a not found resource
-                    return null;
+        if (useMultiWorkspaces) {
+            final int wsSepPos = path.indexOf(":/");
+            if (wsSepPos != -1) {
+                final String workspaceName = path.substring(0, wsSepPos);
+                if (workspaceName.equals(getSession().getWorkspace().getName())) {
+                    path = path.substring(wsSepPos + 1);
+                } else {
+                    try {
+                        ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                        return wsResolver.getResource(path.substring(wsSepPos + 1));
+                    } catch (LoginException e) {
+                        // requested a resource in a workspace I don't have access to.
+                        // we treat this as a not found resource
+                        return null;
+                    }
                 }
             }
         }
@@ -601,16 +610,22 @@ public class JcrResourceResolver
         if (wsSepPos != -1) {
             final String workspaceName = path.substring(0, wsSepPos);
             if (!workspaceName.equals(getSession().getWorkspace().getName())) {
-                try {
-                    ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
-                    return wsResolver.listChildren(parent);
-                } catch (LoginException e) {
-                    // requested a resource in a workspace I don't have access to.
-                    // we treat this as a not found resource
+                if (useMultiWorkspaces) {
+                    try {
+                        ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                        return wsResolver.listChildren(parent);
+                    } catch (LoginException e) {
+                        // requested a resource in a workspace I don't have access to.
+                        // we treat this as a not found resource
+                        return Collections.EMPTY_LIST.iterator();
+                    }
+                } else {
+                    // this is illegal
                     return Collections.EMPTY_LIST.iterator();
                 }
             }
         }
+
 
         String workspacePrefix = null;
         if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {

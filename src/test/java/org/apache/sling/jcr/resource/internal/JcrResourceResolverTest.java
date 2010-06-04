@@ -36,6 +36,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import junitx.util.PrivateAccessor;
+
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
@@ -62,6 +64,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private JcrResourceResolverFactoryImpl resFac;
 
     private ResourceResolver resResolver;
+
+    private ResourceResolver mwResResolver;
 
     private MapEntries mapEntries;
 
@@ -136,6 +140,9 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
 
         resResolver = resFac.getResourceResolver(session);
+
+        PrivateAccessor.setField(resFac, "useMultiWorkspaces", Boolean.TRUE);
+        mwResResolver = resFac.getResourceResolver(session);
 
         try {
             getSession().getWorkspace().createWorkspace("ws2");
@@ -254,7 +261,12 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     public void testGetResourceFromWs2ViaDefaultResolver() throws Exception {
         // existing resource
-        Resource res = resResolver.getResource("ws2:" + rootPath);
+        String ws2Path = "ws2:" + rootPath;
+        Resource res = resResolver.getResource(ws2Path);
+        assertNull(res);
+
+        res = mwResResolver.getResource(ws2Path);
+
         assertNotNull(res);
         assertEquals("ws2:" + rootPath, res.getPath());
         assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
@@ -311,27 +323,52 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     }
 
     public void testResolveResourceWithWS2() throws Exception {
+        // before resolution, all resolvers adapt to sessions in the
+        // default workspace
+        assertEquals("default", resResolver.adaptTo(Session.class).getWorkspace().getName());
+        assertEquals("default", mwResResolver.adaptTo(Session.class).getWorkspace().getName());
+
         // existing resource
         HttpServletRequest request = new ResourceResolverTestRequest(rootPath);
         request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
         Resource res = resResolver.resolve(request, rootPath);
         assertNotNull(res);
-        assertEquals("ws2:" + rootPath, res.getPath());
+
+        // because multi-workspace is disabled, this should return the resource from the
+        // default workspace
+        assertEquals(rootPath, res.getPath());
+        assertEquals("default", res.adaptTo(Node.class).getSession().getWorkspace().getName());
+
+        // and the request-bound session still isn't set
+        assertEquals("default", resResolver.adaptTo(Session.class).getWorkspace().getName());
+
+        // now for the multi-workspace enabled resolver
+        Resource ws2Res = mwResResolver.resolve(request, rootPath);
+
+        // now the request-bound session is set
+        assertEquals("ws2", mwResResolver.adaptTo(Session.class).getWorkspace().getName());
+
+        assertEquals("ws2:" + rootPath, ws2Res.getPath());
         assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
-            res.getResourceType());
+            ws2Res.getResourceType());
 
-        assertNotNull(res.adaptTo(Node.class));
-        assertTrue(rootWs2Node.isSame(res.adaptTo(Node.class)));
+        assertNotNull(ws2Res.adaptTo(Node.class));
+        assertTrue(rootWs2Node.isSame(ws2Res.adaptTo(Node.class)));
 
-        // should be able to list children
-        Iterator<Resource> children = resResolver.listChildren(res);
+        // shouldn't be able to resolve non-default workspace
+        // children from a non-multiworkspace resolver
+        Iterator<Resource> children = resResolver.listChildren(ws2Res);
+        assertFalse(children.hasNext());
+
+        // should also be able to list children from the mw
+        children = mwResResolver.listChildren(ws2Res);
         assertTrue(children.hasNext());
         Resource child = children.next();
         assertNotNull(child);
         assertEquals("ws2:" + rootPath + "/child1", child.getPath());
 
         // should be able to list children of a child
-        Iterator<Resource> children2 = resResolver.listChildren(child);
+        Iterator<Resource>children2 = mwResResolver.listChildren(child);
         assertTrue(children2.hasNext());
         Resource child2 = children2.next();
         assertNotNull(child2);
@@ -340,7 +377,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // should also be able to list children of a synthetic resource
         SyntheticResource synth = new SyntheticResource(null, "ws2:" +
                 rootPath+"/child1", "res/synth");
-        children2 = resResolver.listChildren(synth);
+        children2 = mwResResolver.listChildren(synth);
         assertTrue(children2.hasNext());
         child2 = children2.next();
         assertNotNull(child2);
@@ -350,7 +387,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         String path = rootPath + "/missing";
         request = new ResourceResolverTestRequest(path);
         request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
-        res = resResolver.resolve(request, path);
+        res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertEquals("ws2:" + path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
@@ -361,7 +398,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         path = rootPath + ".print.a4.html";
         request = new ResourceResolverTestRequest(path);
         request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
-        res = resResolver.resolve(request, path);
+        res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertEquals("ws2:" + rootPath, res.getPath());
         assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
@@ -374,7 +411,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         path = rootPath + System.currentTimeMillis();
         request = new ResourceResolverTestRequest(path);
         request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
-        res = resResolver.resolve(request, path);
+        res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertTrue(ResourceUtil.isNonExistingResource(res));
         assertEquals("ws2:" + path, res.getPath());

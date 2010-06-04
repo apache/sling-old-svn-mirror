@@ -48,11 +48,14 @@ public class JcrResourceProvider implements ResourceProvider {
 
     private final Session session;
     private final ClassLoader dynamicClassLoader;
+    private final boolean useMultiWorkspaces;
 
     public JcrResourceProvider(final Session session,
-                               final ClassLoader dynamicClassLoader) {
+                               final ClassLoader dynamicClassLoader,
+                               boolean useMultiWorkspaces) {
         this.session = session;
         this.dynamicClassLoader = dynamicClassLoader;
+        this.useMultiWorkspaces = useMultiWorkspaces;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -128,18 +131,19 @@ public class JcrResourceProvider implements ResourceProvider {
      */
     private JcrItemResource createResource(ResourceResolver resourceResolver,
             String path) throws RepositoryException {
-        final int wsSepPos = path.indexOf(":/");
-        if (wsSepPos != -1) {
-            final String workspaceName = path.substring(0, wsSepPos);
-            final String expectedWorkspaceName = getSession().getWorkspace().getName();
-            if (workspaceName.equals(expectedWorkspaceName)) {
-                path = path.substring(wsSepPos + 1);
-        } else {
-            throw new RepositoryException("Unexpected workspace name. Expected " +
-                    expectedWorkspaceName + ". Actual " + workspaceName);
+        if (useMultiWorkspaces) {
+            final int wsSepPos = path.indexOf(":/");
+                if (wsSepPos != -1) {
+                    final String workspaceName = path.substring(0, wsSepPos);
+                    final String expectedWorkspaceName = getSession().getWorkspace().getName();
+                    if (workspaceName.equals(expectedWorkspaceName)) {
+                        path = path.substring(wsSepPos + 1);
+                } else {
+                    throw new RepositoryException("Unexpected workspace name. Expected " +
+                            expectedWorkspaceName + ". Actual " + workspaceName);
+                }
+            }
         }
-    }
-
 
         if (itemExists(path)) {
             Item item = getSession().getItem(path);

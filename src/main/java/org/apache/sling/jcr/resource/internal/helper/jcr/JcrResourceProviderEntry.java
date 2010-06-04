@@ -40,9 +40,10 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     public JcrResourceProviderEntry(Session session,
             ResourceProviderEntry delegatee,
-            final ClassLoader dynamicClassLoader) {
+            final ClassLoader dynamicClassLoader,
+            boolean useMultiWorkspaces) {
         super("/", new ResourceProvider[] { new JcrResourceProvider(session,
-                dynamicClassLoader) });
+                dynamicClassLoader, useMultiWorkspaces) });
 
         this.delegatee = delegatee;
         this.session = session;
