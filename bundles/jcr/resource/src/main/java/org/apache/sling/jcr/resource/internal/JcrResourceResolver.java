@@ -645,7 +645,7 @@ public class JcrResourceResolver
     throws SlingException {
         checkClosed();
         try {
-            final QueryResult res = JcrResourceUtil.query(getSession(), query, language);
+            final QueryResult res = JcrResourceUtil.query(adaptTo(Session.class), query, language);
             return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), null,
                     new JcrNodeResourceIterator(this, res.getNodes(), factory.getDynamicClassLoader()));
         } catch (javax.jcr.query.InvalidQueryException iqe) {
