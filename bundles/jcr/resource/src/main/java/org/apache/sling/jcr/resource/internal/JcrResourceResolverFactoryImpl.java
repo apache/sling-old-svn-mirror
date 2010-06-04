@@ -208,6 +208,8 @@ public class JcrResourceResolverFactoryImpl implements
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
 
+    private boolean useMultiWorkspaces;
+
     /** The resource listeners for the observation events. */
     private Set<JcrResourceListener> resourceListeners;
 
@@ -390,8 +392,8 @@ public class JcrResourceResolverFactoryImpl implements
             this.resourceListeners.add(new JcrResourceListener(null, this, "/", "/", this.eventAdminTracker));
 
             // check if multi workspace support is enabled
-            final boolean useMultiWorkspaces = OsgiUtil.toBoolean(properties.get(PROP_MULTIWORKSPACE), DEFAULT_MULTIWORKSPACE);
-            if (useMultiWorkspaces) {
+            this.useMultiWorkspaces = OsgiUtil.toBoolean(properties.get(PROP_MULTIWORKSPACE), DEFAULT_MULTIWORKSPACE);
+            if (this.useMultiWorkspaces) {
                 final String[] listenerWorkspaces = getAllWorkspaces();
                 for (final String wspName : listenerWorkspaces) {
                     if (!wspName.equals(this.repository.getDefaultWorkspace())) {
@@ -489,10 +491,9 @@ public class JcrResourceResolverFactoryImpl implements
                                                  final boolean isAdmin,
                                                  final Map<String, Object> authenticationInfo) {
         final JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry,
-            this.getDynamicClassLoader());
+            session, rootProviderEntry, this.getDynamicClassLoader(), useMultiWorkspaces);
 
-        return new JcrResourceResolver(sessionRoot, this, isAdmin, authenticationInfo);
+        return new JcrResourceResolver(sessionRoot, this, isAdmin, authenticationInfo, useMultiWorkspaces);
     }
 
     /**

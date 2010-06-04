@@ -126,6 +126,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
 
         JcrResourceResolverFactoryImpl factory = new JcrResourceResolverFactoryImpl();
         PrivateAccessor.setField(factory, "repository", getRepository());
+        PrivateAccessor.setField(factory, "useMultiWorkspaces", Boolean.TRUE);
 
         final EventAdmin mockEA = new EventAdmin() {
 
