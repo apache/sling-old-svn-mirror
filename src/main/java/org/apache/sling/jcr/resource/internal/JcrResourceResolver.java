@@ -603,7 +603,7 @@ public class JcrResourceResolver
      * @see org.apache.sling.api.resource.ResourceResolver#listChildren(org.apache.sling.api.resource.Resource)
      */
     @SuppressWarnings("unchecked")
-    public Iterator<Resource> listChildren(final Resource parent) {
+    public Iterator<Resource> listChildren(Resource parent) {
         checkClosed();
         final String path = parent.getPath();
         final int wsSepPos = path.indexOf(":/");
@@ -623,9 +623,13 @@ public class JcrResourceResolver
                     // this is illegal
                     return Collections.EMPTY_LIST.iterator();
                 }
+            } else if (parent instanceof WorkspaceDecoratedResource) {
+                parent = ((WorkspaceDecoratedResource) parent).getResource();
+            } else {
+                LOGGER.warn("looking for children of workspace path {}, but with an undecorated resource.",
+                        parent.getPath());
             }
         }
-
 
         String workspacePrefix = null;
         if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
