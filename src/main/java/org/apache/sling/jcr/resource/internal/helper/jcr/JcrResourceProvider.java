@@ -133,11 +133,11 @@ public class JcrResourceProvider implements ResourceProvider {
             String path) throws RepositoryException {
         if (useMultiWorkspaces) {
             final int wsSepPos = path.indexOf(":/");
-                if (wsSepPos != -1) {
-                    final String workspaceName = path.substring(0, wsSepPos);
-                    final String expectedWorkspaceName = getSession().getWorkspace().getName();
-                    if (workspaceName.equals(expectedWorkspaceName)) {
-                        path = path.substring(wsSepPos + 1);
+            if (wsSepPos != -1) {
+                final String workspaceName = path.substring(0, wsSepPos);
+                final String expectedWorkspaceName = getSession().getWorkspace().getName();
+                if (workspaceName.equals(expectedWorkspaceName)) {
+                    path = path.substring(wsSepPos + 1);
                 } else {
                     throw new RepositoryException("Unexpected workspace name. Expected " +
                             expectedWorkspaceName + ". Actual " + workspaceName);
