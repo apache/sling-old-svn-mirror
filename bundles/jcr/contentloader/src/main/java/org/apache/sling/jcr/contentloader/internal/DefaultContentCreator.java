@@ -739,7 +739,7 @@ public class DefaultContentCreator implements ContentCreator {
         	Set<Entry<String, Object>> entrySet = extraProperties.entrySet();
         	for (Entry<String, Object> entry : entrySet) {
         		Value value = createValue(valueFactory, entry.getValue());
-        		authorizable.setProperty(name, value);
+        		authorizable.setProperty(entry.getKey(), value);
 			}
         }
 	}
@@ -780,7 +780,7 @@ public class DefaultContentCreator implements ContentCreator {
         	Set<Entry<String, Object>> entrySet = extraProperties.entrySet();
         	for (Entry<String, Object> entry : entrySet) {
         		Value value = createValue(valueFactory, entry.getValue());
-        		authorizable.setProperty(name, value);
+        		authorizable.setProperty(entry.getKey(), value);
 			}
         }
 	}
