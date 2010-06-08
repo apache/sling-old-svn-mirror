@@ -186,6 +186,12 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /** The script resolution cache. */
     private Map<AbstractResourceCollector, Servlet> cache;
 
+    /** The cache size. */
+    private int cacheSize;
+
+    /** Flag to log warning if cache size exceed only once. */
+    private volatile boolean logCacheSizeWarning;
+
     /** Registration as event handler. */
     private ServiceRegistration eventHandlerReg;
 
@@ -633,7 +639,13 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 boolean servletAcceptsRequest = !isOptingServlet || (request != null && ((OptingServlet) candidate).accepts(request));
                 if (servletAcceptsRequest) {
                     if (!hasOptingServlet && !isOptingServlet && this.cache != null) {
-                        this.cache.put(locationUtil, candidate);
+                        if ( this.cache.size() < this.cacheSize ) {
+                            this.cache.put(locationUtil, candidate);
+                        } else if ( this.logCacheSizeWarning ) {
+                            this.logCacheSizeWarning = false;
+                            log.warn("Script cache has reached its limit of {}. You might want to increase the cache size for the servlet resolver.",
+                                    this.cacheSize);
+                        }
                     }
                     log.debug("Using servlet provided by candidate resource {}", candidateResource.getPath());
                     return candidate;
@@ -833,9 +845,12 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
 
         // create cache - if a cache size is configured
-        final int cacheSize = OsgiUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
-        if (cacheSize > 5) {
+        this.cacheSize = OsgiUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
+        if (this.cacheSize > 5) {
             this.cache = new ConcurrentHashMap<AbstractResourceCollector, Servlet>(cacheSize);
+            this.logCacheSizeWarning = true;
+        } else {
+            this.cacheSize = 0;
         }
 
         // and finally register as event listener
@@ -1025,6 +1040,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             }
             if (flushCache) {
                 this.cache.clear();
+                this.logCacheSizeWarning = true;
             }
         }
     }
