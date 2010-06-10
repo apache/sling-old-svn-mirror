@@ -65,11 +65,12 @@
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
-        <!-- The Maven Plugins -->
+        <!-- The Maven Plugins and Archeyptes-->
         <module>maven/maven-jcrocm-plugin</module>
         <module>maven/maven-jspc-plugin</module>
         <module>maven/maven-sling-plugin</module>
         <module>maven/maven-launchpad-plugin</module>
+        <module>maven/archetypes/launchpad-standalone</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
