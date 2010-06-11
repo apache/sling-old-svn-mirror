@@ -238,7 +238,7 @@ public class JcrResourceResolverFactoryImpl implements
      *
      * @see org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(javax.jcr.Session)
      */
-    public ResourceResolver getResourceResolver(Session session) {
+    public JcrResourceResolver getResourceResolver(Session session) {
         return getResourceResolver(session, true, null);
     }
 
@@ -471,7 +471,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
-    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
+    public JcrResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
     throws LoginException {
         final String workspace = getWorkspace(authenticationInfo);
         final Session session;
@@ -487,7 +487,7 @@ public class JcrResourceResolverFactoryImpl implements
      * Create a new ResourceResolver wrapping a Session object. Carries map of
      * authentication info in order to create a new resolver as needed.
      */
-    private ResourceResolver getResourceResolver(final Session session,
+    private JcrResourceResolver getResourceResolver(final Session session,
                                                  final boolean isAdmin,
                                                  final Map<String, Object> authenticationInfo) {
         final JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
@@ -499,7 +499,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
-    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo)
+    public JcrResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo)
     throws LoginException {
         final Credentials credentials = getCredentials(authenticationInfo);
         final String workspace = getWorkspace(authenticationInfo);

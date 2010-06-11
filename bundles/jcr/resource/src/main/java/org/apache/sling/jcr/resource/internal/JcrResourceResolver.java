@@ -99,7 +99,7 @@ public class JcrResourceResolver
     private final Map<String, Object> originalAuthInfo;
 
     /** Resolvers for different workspaces. */
-    private Map<String,ResourceResolver> createdResolvers;
+    private Map<String,JcrResourceResolver> createdResolvers;
 
     /** Closed marker. */
     private volatile boolean closed = false;
@@ -399,7 +399,33 @@ public class JcrResourceResolver
 
         }
 
-        Resource res = resolveInternal(mappedPath);
+        Resource res = null;
+        String workspaceName = null;
+
+        if (useMultiWorkspaces) {
+            final int wsSepPos = mappedPath.indexOf(":/");
+            if (wsSepPos != -1) {
+                workspaceName = mappedPath.substring(0, wsSepPos);
+                if (workspaceName.equals(getSession().getWorkspace().getName())) {
+                    mappedPath = mappedPath.substring(wsSepPos + 1);
+                } else {
+                    try {
+                        JcrResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                        mappedPath = mappedPath.substring(wsSepPos + 1);
+                        res = wsResolver.resolveInternal(mappedPath);
+                    } catch (LoginException e) {
+                        // requested a resource in a workspace I don't have access to.
+                        // we treat this as a not found resource
+                        return null;
+                    }
+                }
+            }
+        }
+
+        if (res == null) {
+            res = resolveInternal(mappedPath);
+        }
+
         if (res != null) {
 
             // keep, what we might have cut off in internal resolution
@@ -415,7 +441,7 @@ public class JcrResourceResolver
                 if (alias == null) {
                     alias = ResourceUtil.getName(res);
                 }
-                if (alias != null && alias.length() > 0) {
+                if (alias != null && alias.length() > 0 && !alias.endsWith(":")) {
                     names.add(alias);
                 }
                 res = ResourceUtil.getParent(res);
@@ -747,11 +773,11 @@ public class JcrResourceResolver
     /**
      * Get a resolver for the workspace.
      */
-    private synchronized ResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
+    private synchronized JcrResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
         if ( createdResolvers == null ) {
-            createdResolvers = new HashMap<String,ResourceResolver>();
+            createdResolvers = new HashMap<String,JcrResourceResolver>();
         }
-        ResourceResolver wsResolver = createdResolvers.get(workspaceName);
+        JcrResourceResolver wsResolver = createdResolvers.get(workspaceName);
         if (wsResolver == null) {
             final Map<String,Object> newAuthInfo =
                 originalAuthInfo == null ? new HashMap<String, Object>() : new HashMap<String,Object>(originalAuthInfo);

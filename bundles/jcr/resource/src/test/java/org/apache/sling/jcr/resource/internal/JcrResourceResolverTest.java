@@ -1056,6 +1056,9 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         path = "/child";
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
+
+        mapped = mwResResolver.map("ws2:" + rootWs2Node.getPath());
+        assertEquals(rootWs2Node.getPath(), mapped);
     }
 
     public void testMapURLEscaping() throws Exception {
