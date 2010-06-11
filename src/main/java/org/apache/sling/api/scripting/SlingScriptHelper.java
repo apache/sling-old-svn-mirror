@@ -21,6 +21,7 @@ package org.apache.sling.api.scripting;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.resource.Resource;
 
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
@@ -114,6 +115,73 @@ public interface SlingScriptHelper {
     void include(String path, RequestDispatcherOptions options);
 
     /**
+     * Same as {@link #include(Resource,RequestDispatcherOptions)}, but using
+     * empty options.
+     *
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     */
+    void include(Resource resource);
+
+    /**
+     * Helper method to include the result of processing the request for the
+     * given <code>resource</code> and <code>requestDispatcherOptions</code>.
+     * This method is intended to be implemented as follows:
+     *
+     * <pre>
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(resource,
+     *     &quot;option:xyz&quot;);
+     * if (dispatcher != null) {
+     *     dispatcher.include(getRequest(), getResponse());
+     * }
+     * </pre>
+     *
+     * <p>
+     * This method creates a <code>RequestDispatcherOptions</code> object by
+     * calling the
+     * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
+     * constructor.
+     *
+     * @param resource The resource to include.
+     * @param requestDispatcherOptions influence the rendering of the included
+     *            Resource
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     * @see RequestDispatcherOptions#RequestDispatcherOptions(String)
+     * @see #include(String, RequestDispatcherOptions)
+     */
+    void include(Resource resource, String requestDispatcherOptions);
+
+    /**
+     * Helper method to include the result of processing the request for the
+     * given <code>resource</code> and <code>options</code>. This method is
+     * intended to be implemented as follows:
+     *
+     * <pre>
+     * RequestDispatcherOptions opts = new RequestDispatcherOptions();
+     * opts.put(&quot;option&quot;, &quot;xyz&quot;);
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(resource, opts);
+     * if (dispatcher != null) {
+     *     dispatcher.include(getRequest(), getResponse());
+     * }
+     * </pre>
+     *
+     * @param path The resource to include.
+     * @param options influence the rendering of the included Resource
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     * @see RequestDispatcherOptions
+     * @see #include(String, String)
+     */
+    void include(Resource resource, RequestDispatcherOptions options);
+
+    /**
      * Same as {@link #forward(String,RequestDispatcherOptions)}, but using
      * empty options.
      *
@@ -179,6 +247,73 @@ public interface SlingScriptHelper {
      * @see RequestDispatcherOptions
      */
     void forward(String path, RequestDispatcherOptions options);
+
+    /**
+     * Same as {@link #forward(Resource,RequestDispatcherOptions)}, but using
+     * empty options.
+     *
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     */
+    void forward(Resource resource);
+
+    /**
+     * Helper method to forward the request to a Servlet or script for the given
+     * <code>resource</code> and <code>requestDispatcherOptions</code>. This method
+     * is intended to be implemented as follows:
+     *
+     * <pre>
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(resource,
+     *     &quot;option:xyz&quot;);
+     * if (dispatcher != null) {
+     *     dispatcher.forward(getRequest(), getResponse());
+     * }
+     * </pre>
+     *
+     * <p>
+     * This method creates a <code>RequestDispatcherOptions</code> object by
+     * calling the
+     * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
+     * constructor.
+     *
+     * @param path The resource to forward to.
+     * @param requestDispatcherOptions influence the rendering of the forwarded
+     *            Resource
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     * @see RequestDispatcherOptions#RequestDispatcherOptions(String)
+     * @see #forward(String, RequestDispatcherOptions)
+     */
+    void forward(Resource resource, String requestDispatcherOptions);
+
+    /**
+     * Helper method to forward the request to a Servlet or script for the given
+     * <code>resource</code> and <code>options</code>. This method is intended
+     * to be implemented as follows:
+     *
+     * <pre>
+     * RequestDispatcherOptions opts = new RequestDispatcherOptions();
+     * opts.put(&quot;option&quot;, &quot;xyz&quot;);
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(resource, opts);
+     * if (dispatcher != null) {
+     *     dispatcher.forward(getRequest(), getResponse());
+     * }
+     * </pre>
+     *
+     * @param path The resource to forward the request to.
+     * @param options influence the rendering of the forwarded Resource
+     * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     * @throws IllegalStateException If the respoonse has already been committed
+     * @see RequestDispatcherOptions
+     */
+    void forward(Resource resource, RequestDispatcherOptions options);
 
     /**
      * Lookup a single service
