@@ -33,6 +33,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.InvalidServiceFilterSyntaxException;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -263,6 +264,71 @@ public class ScriptHelper implements SlingScriptHelper {
         }
         if ( this.services != null ) {
             this.services.clear();
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(org.apache.sling.api.resource.Resource)
+     */
+    public void forward(Resource resource) {
+        forward(resource, (RequestDispatcherOptions) null);
+    }
+
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(org.apache.sling.api.resource.Resource, java.lang.String)
+     */
+    public void forward(Resource resource, String options) {
+        forward(resource, new RequestDispatcherOptions(options));
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(org.apache.sling.api.resource.Resource, org.apache.sling.api.request.RequestDispatcherOptions)
+     */
+    public void forward(Resource resource, RequestDispatcherOptions options) {
+        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
+            resource, options);
+
+        if (dispatcher != null) {
+            try {
+                dispatcher.forward(getRequest(), getResponse());
+            } catch (IOException ioe) {
+                throw new SlingIOException(ioe);
+            } catch (ServletException se) {
+                throw new SlingServletException(se);
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#forward(org.apache.sling.api.resource.Resource)
+     */
+    public void include(Resource resource) {
+        include(resource, (RequestDispatcherOptions) null);
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#include(org.apache.sling.api.resource.Resource, java.lang.String)
+     */
+    public void include(Resource resource, String options) {
+        include(resource, new RequestDispatcherOptions(options));
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#include(org.apache.sling.api.resource.Resource, org.apache.sling.api.request.RequestDispatcherOptions)
+     */
+    public void include(Resource resource, RequestDispatcherOptions options) {
+        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
+            resource, options);
+
+        if (dispatcher != null) {
+            try {
+                dispatcher.include(getRequest(), getResponse());
+            } catch (IOException ioe) {
+                throw new SlingIOException(ioe);
+            } catch (ServletException se) {
+                throw new SlingServletException(se);
+            }
         }
     }
 }
