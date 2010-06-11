@@ -675,8 +675,16 @@ public class JcrResourceResolver
     throws SlingException {
         checkClosed();
         try {
-            final QueryResult res = JcrResourceUtil.query(adaptTo(Session.class), query, language);
-            return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), null,
+            Session session = null;
+            String workspaceName = null;
+            if (requestBoundResolver != null) {
+                session = requestBoundResolver.adaptTo(Session.class);
+                workspaceName = session.getWorkspace().getName();
+            } else {
+                session = getSession();
+            }
+            final QueryResult res = JcrResourceUtil.query(session, query, language);
+            return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), workspaceName,
                     new JcrNodeResourceIterator(this, res.getNodes(), factory.getDynamicClassLoader()));
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
