@@ -210,8 +210,14 @@
                                             org.apache.jackrabbit.commons.*,
                                             org.apache.jackrabbit.spi.commons.*,
 
-                                            <!-- Our default configuration uses derby, so import the driver -->
-                                            org.apache.derby.jdbc;resolution:=optional,
+                                            <!-- optional JDBC driver import -->
+                                            com.microsoft.sqlserver.jdbc;
+                                            oracle.jdbc;
+                                            org.apache.derby.jdbc;
+                                            org.gjt.mm.mysql;
+                                            org.h2;
+                                            org.postgresql;
+                                                resolution:=optional,
 
                                             <!-- Required by concurrent lib SynchronizationTimer class -->
                                             javax.swing.*;resolution:=optional
