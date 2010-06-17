@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.osgi.installer.InstallableBundleResource;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +77,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return new InstallableBundleResource(urlScheme + ":" + path, is, digest, priority);
+        return new InstallableResource(urlScheme + ":" + path, is, digest, priority);
 	}
 
 	boolean acceptNodeName(String name) {
