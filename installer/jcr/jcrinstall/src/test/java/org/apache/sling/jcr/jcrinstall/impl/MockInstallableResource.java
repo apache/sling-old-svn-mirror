@@ -20,9 +20,9 @@ package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.io.ByteArrayInputStream;
 
-import org.apache.sling.osgi.installer.InstallableBundleResource;
+import org.apache.sling.osgi.installer.InstallableResource;
 
-public class MockInstallableResource extends InstallableBundleResource {
+public class MockInstallableResource extends InstallableResource {
 
     private static int counter;
 

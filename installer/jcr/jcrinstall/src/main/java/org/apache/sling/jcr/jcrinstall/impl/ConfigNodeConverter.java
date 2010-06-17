@@ -29,7 +29,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.sling.osgi.installer.InstallableConfigResource;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,7 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			result = new InstallableConfigResource(urlScheme + ":" + n.getPath(), load(n), priority);
+			result = new InstallableResource(urlScheme + ":" + n.getPath(), load(n), priority);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());

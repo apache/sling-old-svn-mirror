@@ -26,7 +26,7 @@ import java.util.Hashtable;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableConfigResource;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
@@ -49,7 +49,7 @@ public class TaskOrderingTest {
 	}
 
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableConfigResource(url, new Hashtable<String, Object>()));
+		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableResource(url, new Hashtable<String, Object>()));
 	}
 
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {

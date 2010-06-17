@@ -299,13 +299,12 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             if(group.isEmpty()) {
                 continue;
             }
-            final RegisteredResource.ResourceType rt = group.first().getResourceType();
-            if(rt.equals(RegisteredResource.ResourceType.BUNDLE)) {
-                bundleTaskCreator.createTasks(ctx, group, tasks);
-            } else if(rt.equals(RegisteredResource.ResourceType.CONFIG)) {
-                configTaskCreator.createTasks(ctx, group, tasks);
-            } else {
-                throw new IllegalArgumentException("No TaskCreator for resource type "+ group.first().getResourceType());
+            final InstallableResource.Type rt = group.first().getResourceType();
+            switch (rt) {
+                case BUNDLE:bundleTaskCreator.createTasks(ctx, group, tasks);
+                            break;
+                case CONFIG:configTaskCreator.createTasks(ctx, group, tasks);
+                            break;
             }
         }
     }
