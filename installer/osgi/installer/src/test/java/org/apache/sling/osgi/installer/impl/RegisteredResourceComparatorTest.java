@@ -28,11 +28,11 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableConfigResource;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
-    
+
     private void assertOrder(Set<RegisteredResource> toTest, RegisteredResource[] inOrder) {
         assertEquals("Expected sizes to match", toTest.size(), inOrder.length);
         int i = 0;
@@ -42,17 +42,16 @@ public class RegisteredResourceComparatorTest {
             i++;
         }
     }
-    
+
     private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority) throws IOException {
         if(data == null) {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
-        final InstallableResource r = new InstallableResource("test:" + url, data);
-        r.setPriority(priority);
+        final InstallableConfigResource r = new InstallableConfigResource("test:" + url, data, priority);
         return new RegisteredResourceImpl(new MockOsgiInstallerContext(), r);
     }
-    
+
     private void assertOrder(RegisteredResource[] inOrder) {
         final SortedSet<RegisteredResource> toTest = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
         for(int i = inOrder.length - 1 ; i >= 0; i--) {
@@ -65,7 +64,7 @@ public class RegisteredResourceComparatorTest {
         }
         assertOrder(toTest, inOrder);
     }
-    
+
     @Test
     public void testBundleName() {
         final RegisteredResource [] inOrder = {
@@ -76,7 +75,7 @@ public class RegisteredResourceComparatorTest {
         };
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testBundleVersion() {
         final RegisteredResource [] inOrder = {
@@ -88,7 +87,7 @@ public class RegisteredResourceComparatorTest {
         };
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testBundlePriority() {
         final RegisteredResource [] inOrder = {
@@ -99,7 +98,7 @@ public class RegisteredResourceComparatorTest {
         };
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testComposite() {
         final RegisteredResource [] inOrder = {
@@ -112,7 +111,7 @@ public class RegisteredResourceComparatorTest {
         };
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testBundleDigests() {
         final RegisteredResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
@@ -120,7 +119,7 @@ public class RegisteredResourceComparatorTest {
         final RegisteredResourceComparator c = new RegisteredResourceComparator();
         assertEquals("Digests must not be included in bundles comparison", 0, c.compare(a, b));
     }
-    
+
     @Test
     public void testSnapshotSerialNumber() {
         // Verify that snapshots with a higher serial number come first
@@ -130,16 +129,16 @@ public class RegisteredResourceComparatorTest {
         inOrder[0] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestA");
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testConfigPriority() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [3];
-        inOrder[0] = getConfig("pid", null, 2); 
-        inOrder[1] = getConfig("pid", null, 1); 
-        inOrder[2] = getConfig("pid", null, 0); 
+        inOrder[0] = getConfig("pid", null, 2);
+        inOrder[1] = getConfig("pid", null, 1);
+        inOrder[2] = getConfig("pid", null, 0);
         assertOrder(inOrder);
     }
-    
+
     @Test
     /** Digests must not be included in comparisons: a and b might represent the same
      * 	config even if their digests are different */
@@ -152,29 +151,29 @@ public class RegisteredResourceComparatorTest {
         final RegisteredResourceComparator c = new RegisteredResourceComparator();
         assertEquals("Digests must not be included in configs comparison", 0, c.compare(a, b));
     }
-    
+
     @Test
     public void testConfigPid() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [3];
-        inOrder[0] = getConfig("pidA", null, 0); 
-        inOrder[1] = getConfig("pidB", null, 0); 
-        inOrder[2] = getConfig("pidC", null, 0); 
+        inOrder[0] = getConfig("pidA", null, 0);
+        inOrder[1] = getConfig("pidB", null, 0);
+        inOrder[2] = getConfig("pidC", null, 0);
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testConfigComposite() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [4];
-        inOrder[0] = getConfig("pidA", null, 10); 
-        inOrder[1] = getConfig("pidA", null, 0); 
-        inOrder[2] = getConfig("pidB", null, 1); 
-        inOrder[3] = getConfig("pidB", null, 0); 
+        inOrder[0] = getConfig("pidA", null, 10);
+        inOrder[1] = getConfig("pidA", null, 0);
+        inOrder[2] = getConfig("pidB", null, 1);
+        inOrder[3] = getConfig("pidB", null, 0);
         assertOrder(inOrder);
     }
-    
+
     @Test
     public void testConfigAndBundle() throws IOException {
-    	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
+    	final RegisteredResource cfg = getConfig("pid", null, InstallableConfigResource.DEFAULT_PRIORITY);
     	final RegisteredResource b = new MockBundleResource("a", "1.0");
     	final RegisteredResourceComparator c = new RegisteredResourceComparator();
     	assertEquals("bundle is > config when compared", 1, c.compare(b, cfg));

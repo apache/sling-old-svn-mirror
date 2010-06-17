@@ -24,7 +24,7 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.DigestUtil;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -111,8 +111,8 @@ public class ConfigInstallTask extends AbstractConfigTask {
     boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) throws NoSuchAlgorithmException, IOException {
     	boolean result = false;
     	if(a != null && b != null) {
-    		final String da = InstallableResource.computeDigest(a, ignoredProperties);
-    		final String db = InstallableResource.computeDigest(b, ignoredProperties);
+    		final String da = DigestUtil.computeDigest(a, ignoredProperties);
+    		final String db = DigestUtil.computeDigest(b, ignoredProperties);
     		result = da.equals(db);
     	}
     	return result;

@@ -25,7 +25,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableBundleResource;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
@@ -39,11 +39,11 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 	private final int priority;
 	private final long serialNumber;
 	private static long serialNumberCounter = System.currentTimeMillis();
-	
+
     MockBundleResource(String symbolicName, String version) {
-        this(symbolicName, version, InstallableResource.DEFAULT_PRIORITY);
+        this(symbolicName, version, InstallableBundleResource.DEFAULT_PRIORITY);
     }
-    
+
 	MockBundleResource(String symbolicName, String version, int priority) {
 		attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
 		attributes.put(Constants.BUNDLE_VERSION, version);
@@ -51,7 +51,7 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 		this.priority = priority;
 		serialNumber = getNextSerialNumber();
 	}
-	
+
     MockBundleResource(String symbolicName, String version, int priority, String digest) {
         attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
         attributes.put(Constants.BUNDLE_VERSION, version);
@@ -59,23 +59,23 @@ public class MockBundleResource implements RegisteredResource, Serializable {
         this.priority = priority;
         serialNumber = getNextSerialNumber();
     }
-    
+
     private static long getNextSerialNumber() {
         synchronized (MockBundleResource.class) {
-            return serialNumberCounter++; 
+            return serialNumberCounter++;
         }
     }
-    
+
 	@Override
 	public String toString() {
-	    return getClass().getSimpleName() 
+	    return getClass().getSimpleName()
 	    + ", n=" + attributes.get(Constants.BUNDLE_SYMBOLICNAME)
         + ", v= " + attributes.get(Constants.BUNDLE_VERSION)
         + ", d=" + digest
         + ", p=" + priority
         ;
 	}
-	
+
 	public void cleanup(OsgiInstallerContext ctx) {
 	}
 
@@ -110,7 +110,7 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 	public String getURL() {
 		return null;
 	}
-	
+
     public String getUrlScheme() {
         return null;
     }
@@ -122,11 +122,11 @@ public class MockBundleResource implements RegisteredResource, Serializable {
     public void setInstallable(boolean installable) {
         this.installable = installable;
     }
-    
+
     public int getPriority() {
         return priority;
     }
-    
+
     public long getSerialNumber() {
         return serialNumber;
     }

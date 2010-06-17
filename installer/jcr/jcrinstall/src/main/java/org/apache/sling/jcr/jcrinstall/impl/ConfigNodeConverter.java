@@ -29,52 +29,56 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
+import org.apache.sling.osgi.installer.InstallableConfigResource;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Converts configuration nodes to InstallableData */
 class ConfigNodeConverter implements JcrInstaller.NodeConverter {
-	
+
 	public static final String CONFIG_NODE_TYPE = "sling:OsgiConfig";
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	
+
 	/** Convert n to an InstallableData, or return null
 	 * 	if we don't know how to convert it.
 	 */
-	public InstallableResource convertNode(String urlScheme, Node n) throws Exception {
+	/**
+	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(java.lang.String, javax.jcr.Node, int)
+	 */
+	public InstallableResource convertNode(String urlScheme, Node n, final int priority) throws Exception {
 		InstallableResource result = null;
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			result = new InstallableResource(urlScheme + ":" + n.getPath(), load(n));
+			result = new InstallableConfigResource(urlScheme + ":" + n.getPath(), load(n), priority);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());
 		}
 		return result;
 	}
-	
+
     /** Load config from node n */
     protected Dictionary<String, Object> load(Node n) throws RepositoryException {
         Dictionary<String, Object> result = new Hashtable<String, Object>();
-        
+
         log.debug("Loading config from Node {}", n.getPath());
-        
+
         // load default values from node itself
         log.debug("Loading {} properties", n.getPath());
         loadProperties(result, n);
-        
+
         return result;
     }
-    
+
     /** Load properties of n into d */
     protected void loadProperties(Dictionary<String, Object> d, Node n) throws RepositoryException {
         final PropertyIterator pi = n.getProperties();
         while(pi.hasNext()) {
             final Property p = pi.nextProperty();
             final String name = p.getName();
-            
+
             // ignore jcr: and similar properties
             if(name.contains(":")) {
                 continue;
@@ -91,7 +95,7 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
                     data[i++] = o;
                 }
                 d.put(name, data);
-                
+
             } else {
                 final Object o = convertValue(p.getValue());
                 if(o != null) {

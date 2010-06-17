@@ -52,28 +52,28 @@ class WatchedFolder implements EventListener{
     private final Collection <JcrInstaller.NodeConverter> converters;
     private final Set<String> existingResourceUrls = new HashSet<String>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     static class ScanResult {
-        List<InstallableResource> toAdd = new ArrayList<InstallableResource>(); 
-        List<InstallableResource> toRemove = new ArrayList<InstallableResource>();
+        List<InstallableResource> toAdd = new ArrayList<InstallableResource>();
+        List<String> toRemove = new ArrayList<String>();
     };
-    
+
     /** Store the digests of the last returned resources, keyed by path, to detect changes */
     private final Map<String, String> digests = new HashMap<String, String>();
-    
-    WatchedFolder(Session session, String path, int priority, 
+
+    WatchedFolder(Session session, String path, int priority,
     		String urlScheme, Collection<JcrInstaller.NodeConverter> converters) throws RepositoryException {
         if(priority < 1) {
             throw new IllegalArgumentException("Cannot watch folder with priority 0:" + path);
         }
-        
+
         this.path = path;
         this.converters = converters;
         this.priority = priority;
         this.urlScheme = urlScheme;
-        
+
         this.session = session;
-        
+
         // observe any changes in our folder (and under it, as changes to properties
         // might be lower in the hierarchy)
         final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
@@ -85,7 +85,7 @@ class WatchedFolder implements EventListener{
 
         log.info("Watching folder {} (priority {})", path, priority);
     }
-    
+
     void cleanup() {
     	try {
 	    	session.getWorkspace().getObservationManager().removeEventListener(this);
@@ -93,41 +93,41 @@ class WatchedFolder implements EventListener{
     		log.warn("RepositoryException in cleanup()", re);
     	}
     }
-    
+
     @Override
     public String toString() {
     	return getClass().getSimpleName() + ":" + path;
     }
-    
+
     String getPath() {
         return path;
     }
-    
+
     /** Set a static "timer" whenever an event occurs */
     public void onEvent(EventIterator it) {
         log.debug("JCR event received for path {}", path);
     	scheduleScan();
     }
-    
+
     void scheduleScan() {
         log.debug("Scheduling scan of {}", path);
-        rescanTimer.scheduleScan(); 
+        rescanTimer.scheduleScan();
         needsScan = true;
     }
-    
+
     boolean needsScan() {
     	return needsScan;
     }
-    
+
     static RescanTimer getRescanTimer() {
     	return rescanTimer;
     }
-    
+
     /** Scan the contents of our folder and return the corresponding InstallableResource */
     ScanResult scan() throws Exception {
         log.debug("Scanning {}", path);
         needsScan = false;
-        
+
         Node folder = null;
         if(session.itemExists(path)) {
         	Item i = session.getItem(path);
@@ -135,7 +135,7 @@ class WatchedFolder implements EventListener{
         		folder = (Node)i;
         	}
         }
-        
+
         // Return an InstallableResource for all child nodes for which we have a NodeConverter
         final ScanResult result = new ScanResult();
         final Set<String> resourcesSeen = new HashSet<String>();
@@ -144,14 +144,13 @@ class WatchedFolder implements EventListener{
             while(it.hasNext()) {
             	final Node n = it.nextNode();
             	for(JcrInstaller.NodeConverter nc : converters) {
-            		final InstallableResource r = nc.convertNode(urlScheme, n);
+            		final InstallableResource r = nc.convertNode(urlScheme, n, priority);
             		if(r != null) {
             			resourcesSeen.add(r.getUrl());
             		    final String oldDigest = digests.get(r.getUrl());
             		    if(r.getDigest().equals(oldDigest)) {
             		    	log.debug("Digest didn't change, ignoring " + r);
             		    } else {
-                            r.setPriority(priority);
                             result.toAdd.add(r);
             		    }
             			break;
@@ -159,26 +158,25 @@ class WatchedFolder implements EventListener{
             	}
             }
         }
-        
-        // Resources that existed but are not in resourcesSeen need to be 
+
+        // Resources that existed but are not in resourcesSeen need to be
         // unregistered from OsgiInstaller
         for(String url : existingResourceUrls) {
         	if(!resourcesSeen.contains(url)) {
-                InstallableResource r = new InstallableResource(url);
-                result.toRemove.add(r);
+                result.toRemove.add(url);
         	}
         }
-        for(InstallableResource r : result.toRemove) {
-        	existingResourceUrls.remove(r.getUrl());
-        	digests.remove(r.getUrl());
+        for(String u : result.toRemove) {
+        	existingResourceUrls.remove(u);
+        	digests.remove(u);
         }
-        
+
         // Update saved digests of the resources that we're returning
         for(InstallableResource r : result.toAdd) {
             existingResourceUrls.add(r.getUrl());
             digests.put(r.getUrl(), r.getDigest());
         }
-        
+
         return result;
     }
 }
