@@ -109,22 +109,22 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	/**
 	 * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(org.apache.sling.osgi.installer.InstallableResource)
 	 */
-	public void addResource(InstallableResource r) {
+	public void addResource(final InstallableResource r) {
         installerThread.addNewResource(r);
 	}
 
 	/**
 	 * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.util.Collection, java.lang.String)
 	 */
-	public void registerResources(Collection<InstallableResource> data, String urlScheme) {
+	public void registerResources(final Collection<InstallableResource> data, String urlScheme) {
         installerThread.addNewResources(data, urlScheme, bundleContext);
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(org.apache.sling.osgi.installer.InstallableResource)
+	 * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String)
 	 */
-	public void removeResource(InstallableResource r) {
-        installerThread.removeResource(r);
+	public void removeResource(final String url) {
+        installerThread.removeResource(url);
 	}
 
 	public void incrementCounter(int index) {

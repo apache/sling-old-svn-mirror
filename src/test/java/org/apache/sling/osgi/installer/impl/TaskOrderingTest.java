@@ -26,7 +26,7 @@ import java.util.Hashtable;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableConfigResource;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
@@ -41,17 +41,17 @@ import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask
 public class TaskOrderingTest {
 
 	private Set<OsgiInstallerTask> taskSet;
-	
+
 	@org.junit.Before public void setUp() {
 	    // The data type must be consistent with the "tasks" member
 	    // of the {@link OsgiControllerImpl} class.
-		taskSet = new TreeSet<OsgiInstallerTask>(); 
+		taskSet = new TreeSet<OsgiInstallerTask>();
 	}
-	
+
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableResource(url, new Hashtable<String, Object>()));
+		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableConfigResource(url, new Hashtable<String, Object>()));
 	}
-	
+
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {
 		int index = 0;
 		for(OsgiInstallerTask t : actual) {
@@ -61,20 +61,20 @@ public class TaskOrderingTest {
 			index++;
 		}
 	}
-	
-	@org.junit.Test 
+
+	@org.junit.Test
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-		    new ConfigRemoveTask(getRegisteredResource("test:a")),    
-            new ConfigInstallTask(getRegisteredResource("test:a")),    
+		    new ConfigRemoveTask(getRegisteredResource("test:a")),
+            new ConfigInstallTask(getRegisteredResource("test:a")),
 		    new BundleRemoveTask(getRegisteredResource("test:url")),
 		    new BundleUpdateTask(getRegisteredResource("test:url")),
 		    new BundleInstallTask(getRegisteredResource("test:url")),
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
-	
+
 		taskSet.clear();
         taskSet.add(tasksInOrder[6]);
 		taskSet.add(tasksInOrder[5]);
@@ -83,9 +83,9 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[2]);
         taskSet.add(tasksInOrder[1]);
         taskSet.add(tasksInOrder[0]);
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
-		
+
 		taskSet.clear();
         taskSet.add(tasksInOrder[0]);
         taskSet.add(tasksInOrder[1]);
@@ -94,9 +94,9 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[4]);
 		taskSet.add(tasksInOrder[5]);
 		taskSet.add(tasksInOrder[6]);
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
-		
+
 		taskSet.clear();
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
@@ -105,9 +105,9 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[4]);
         taskSet.add(tasksInOrder[1]);
 		taskSet.add(tasksInOrder[6]);
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
-		
+
 		taskSet.clear();
 		taskSet.add(tasksInOrder[4]);
 		taskSet.add(tasksInOrder[5]);
@@ -116,11 +116,11 @@ public class TaskOrderingTest {
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[3]);
         taskSet.add(tasksInOrder[1]);
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
-	
-	@org.junit.Test 
+
+	@org.junit.Test
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
@@ -129,23 +129,23 @@ public class TaskOrderingTest {
 			new SynchronousRefreshPackagesTask(),
 			new BundleStartTask(0),
 		};
-	
+
 		taskSet.clear();
 		for(int i = tasksInOrder.length -1 ; i >= 0; i--) {
 			taskSet.add(tasksInOrder[i]);
 		}
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
-		
+
         taskSet.clear();
         for(int i = 0 ; i < tasksInOrder.length; i++) {
             taskSet.add(tasksInOrder[i]);
         }
-        
+
         assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
-	
-	@org.junit.Test 
+
+	@org.junit.Test
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
@@ -154,7 +154,7 @@ public class TaskOrderingTest {
 			new BundleStartTask(0),
 			new BundleStartTask(1),
 		};
-		
+
 		taskSet.clear();
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[3]);
@@ -175,11 +175,11 @@ public class TaskOrderingTest {
 		taskSet.add(new SynchronousRefreshPackagesTask());
 		taskSet.add(tasksInOrder[1]);
 		taskSet.add(new SynchronousRefreshPackagesTask());
-		
+
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
-	
-	@org.junit.Test 
+
+	@org.junit.Test
 	public void testBundleStartOrder() {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
@@ -189,18 +189,18 @@ public class TaskOrderingTest {
 			new BundleStartTask(11),
 			new BundleStartTask(51)
 		};
-		
+
 		taskSet.clear();
 		for(int i = tasksInOrder.length -1 ; i >= 0; i--) {
 			taskSet.add(tasksInOrder[i]);
 		}
 		assertOrder(testIndex++, taskSet, tasksInOrder);
-		
+
         taskSet.clear();
         for(int i = 0 ; i < tasksInOrder.length; i++) {
             taskSet.add(tasksInOrder[i]);
         }
-        
+
         assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
 }

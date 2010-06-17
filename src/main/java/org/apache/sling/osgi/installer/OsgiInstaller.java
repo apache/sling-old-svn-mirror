@@ -56,7 +56,7 @@ public interface OsgiInstaller {
 
 	/** Inform the installer that a resource is no longer available
 	 * 	@param r an empty InstallableResource, isEmpty() must return true */
-	void removeResource(InstallableResource r);
+	void removeResource(String url);
 
 	/** Return counters used for statistics, console display, testing, etc. */
 	long [] getCounters();

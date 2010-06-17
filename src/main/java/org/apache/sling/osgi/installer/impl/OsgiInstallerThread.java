@@ -133,16 +133,12 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     }
 
     /** Register a resource for removal, or ignore if we don't have that URL */
-    void removeResource(InstallableResource r) {
-		if(!r.isEmpty()) {
-			throw new IllegalArgumentException("removeResource() got non-empty InstallableResource: " + r);
-		}
-
+    void removeResource(String url) {
 		// Will mark all resources which have r's URL as uninstallable
-		ctx.logDebug("Adding URL " + r.getUrl() + " to urlsToRemove");
+		ctx.logDebug("Adding URL " + url + " to urlsToRemove");
 
         synchronized (newResources) {
-            urlsToRemove.add(r.getUrl());
+            urlsToRemove.add(url);
             newResources.notify();
         }
     }

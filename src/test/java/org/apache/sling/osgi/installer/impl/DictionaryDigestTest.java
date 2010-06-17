@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.DigestUtil;
 
 public class DictionaryDigestTest {
 	private void setTestData(Hashtable<String, Object> d) {
@@ -32,10 +32,10 @@ public class DictionaryDigestTest {
 		d.put("long", new Long(12));
 		d.put("array", new String[] { "a", "b"});
 	}
-	
-	private String testDigestChanged(Dictionary<String, Object> d, 
+
+	private String testDigestChanged(Dictionary<String, Object> d,
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = InstallableResource.computeDigest(d);
+		final String newDigest = DigestUtil.computeDigest(d);
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -43,43 +43,43 @@ public class DictionaryDigestTest {
 		}
 		return newDigest;
 	}
-	
+
 	@org.junit.Test public void testDictionaryDigestSameData() throws Exception {
 		final Hashtable<String, Object> d1 = new Hashtable<String, Object>();
 		final Hashtable<String, Object> d2 = new Hashtable<String, Object>();
-		
+
 		setTestData(d1);
 		setTestData(d2);
-		
+
 		assertEquals(
-				"Two dictionary with same values have the same key", 
-				InstallableResource.computeDigest(d1),
-				InstallableResource.computeDigest(d2)
+				"Two dictionary with same values have the same key",
+				DigestUtil.computeDigest(d1),
+				DigestUtil.computeDigest(d2)
 		);
 	}
-	
+
 	@org.junit.Test public void testDictionaryDigestChanges() throws Exception {
 		String digest = "";
 		int step = 1;
-		
+
 		final Dictionary<String, Object> d = new Hashtable<String, Object>();
 		digest = testDigestChanged(d, digest, step, true);
 		digest = testDigestChanged(d, digest, step, false);
-		
+
 		d.put("key", "value");
 		digest = testDigestChanged(d, digest, step, true);
 		d.put("key", "value");
 		digest = testDigestChanged(d, digest, step, false);
 		d.put("key", "valueB");
 		digest = testDigestChanged(d, digest, step, true);
-		                		
+
 		d.put("int", new Integer(12));
 		digest = testDigestChanged(d, digest, step, true);
 		d.put("int", new Integer(12));
 		digest = testDigestChanged(d, digest, step, false);
 		d.put("int", new Integer(13));
 		digest = testDigestChanged(d, digest, step, true);
-		
+
 		d.put("array", new String [] { "a", "b", "c"});
 		digest = testDigestChanged(d, digest, step, true);
 		d.put("array", new String [] { "a", "b", "c"});
@@ -89,21 +89,21 @@ public class DictionaryDigestTest {
 		d.put("another", new String [] { "a", "b", "D"});
 		digest = testDigestChanged(d, digest, step, true);
 	}
-	
+
 	@org.junit.Test public void testDictionaryOrderDoesNotMatter() throws Exception {
 		final Dictionary<String, Object> a = new Hashtable<String, Object>();
 		a.put("one", "A");
 		a.put("two", "B");
 		a.put("three", "C");
-		
+
 		final Dictionary<String, Object> b = new Hashtable<String, Object>();
 		b.put("two", "B");
 		b.put("one", "A");
 		b.put("three", "C");
-		
-		assertEquals("Same data in different order must have same digest", 
-				InstallableResource.computeDigest(a),
-				InstallableResource.computeDigest(b)
+
+		assertEquals("Same data in different order must have same digest",
+		        DigestUtil.computeDigest(a),
+		        DigestUtil.computeDigest(b)
 		);
 	}
 }
