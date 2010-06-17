@@ -29,7 +29,6 @@ import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.log.LogService;
 
 /** TaskCreator that processes a list of bundle RegisteredResources */
 class BundleTaskCreator {
@@ -88,11 +87,8 @@ class BundleTaskCreator {
 		    // and if we installed it
 		    if(getBundleInfo(ctx, resources.first()) != null) {
 		        if(ctx.getInstalledBundleVersion(symbolicName) == null) {
-                    if(ctx.getLogService() != null) {
-                        ctx.getLogService().log(LogService.LOG_INFO,
-                                "Bundle " + symbolicName
+		            ctx.logInfo("Bundle " + symbolicName
                                 + " was not installed by this module, not removed");
-                    }
 		        } else {
 		            tasks.add(new BundleRemoveTask(resources.first()));
 		        }
@@ -117,17 +113,11 @@ class BundleTaskCreator {
                     final String installedVersion = ctx.getInstalledBundleVersion(info.symbolicName);
                     if(info.version.toString().equals(installedVersion)) {
                         toUpdate = toActivate;
-                        if(ctx.getLogService() != null) {
-                            ctx.getLogService().log(LogService.LOG_INFO,
-                                    "Bundle " + info.symbolicName + " " + installedVersion
+                        ctx.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was installed by this module, downgrading to " + newVersion);
-                        }
                     } else {
-                        if(ctx.getLogService() != null) {
-                            ctx.getLogService().log(LogService.LOG_INFO,
-                                    "Bundle " + info.symbolicName + " " + installedVersion
+                        ctx.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was not installed by this module, not downgraded");
-                        }
                     }
 			    } else if(compare == 0 && ctx.isSnapshot(newVersion)){
 			        // installed, same version but SNAPSHOT
@@ -140,16 +130,10 @@ class BundleTaskCreator {
 			if(toUpdate != null) {
 			    final String previousDigest = digests.get(symbolicName);
 			    if(toUpdate.getDigest().equals(previousDigest)) {
-			        if(ctx.getLogService() != null) {
-			            ctx.getLogService().log(LogService.LOG_DEBUG,
-			                    "Ignoring update of " + toUpdate + ", digest didn't change");
-			        }
+			        ctx.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
                     digestToSave = previousDigest;
 			    } else {
-                    if(ctx.getLogService() != null) {
-                        ctx.getLogService().log(LogService.LOG_DEBUG,
-                                "Scheduling update of " + toUpdate + ", digest has changed");
-                    }
+			        ctx.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
 			        tasks.add(new BundleUpdateTask(toUpdate));
 			        digestToSave = toUpdate.getDigest();
 			    }

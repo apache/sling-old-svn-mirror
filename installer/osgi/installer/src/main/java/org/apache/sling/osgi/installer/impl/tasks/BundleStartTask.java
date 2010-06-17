@@ -22,11 +22,10 @@ import java.text.DecimalFormat;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.impl.Activator;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.service.log.LogService;
 
 /** Start a bundle given its bundle ID
  *  Restarts if the bundle does not start on the first try,
@@ -39,15 +38,15 @@ public class BundleStartTask extends OsgiInstallerTask {
 	private final String sortKey;
 	private long eventsCountForRetrying;
 	private int retryCount = 0;
-	
+
 	public BundleStartTask(long bundleId) {
 		this.bundleId = bundleId;
-		sortKey = TaskOrder.BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId); 
+		sortKey = TaskOrder.BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
 	}
-	
+
 	@Override
 	public String getSortKey() {
-		return sortKey; 
+		return sortKey;
 	}
 
 	@Override
@@ -57,50 +56,37 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	public void execute(OsgiInstallerContext ctx) throws Exception {
 		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
-		final LogService log = ctx.getLogService();
 		boolean needToRetry = false;
-		
+
         if(bundleId == 0) {
-            if(log != null) {
-                log.log(LogService.LOG_DEBUG, "Bundle 0 is the framework bundle, ignoring request to start it");
-            }
+            ctx.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
             return;
         }
-        
+
 		if(b == null) {
-			if(log != null) {
-				log.log(LogService.LOG_INFO, "Cannot start bundle, id not found:" + bundleId);
-			}
+		    ctx.logInfo("Cannot start bundle, id not found:" + bundleId);
 			return;
 		}
-		
+
 		try {
 	        if(b.getState() == Bundle.ACTIVE) {
-	            if(log != null) {
-	                log.log(LogService.LOG_DEBUG, "Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
-	            }
+	            ctx.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
 	        } else {
 	            // Try to start bundle, and if that doesn't work we'll need to retry
 	            logExecution(ctx);
 	            try {
 	                b.start();
-	                if(log != null) {
-	                    log.log(LogService.LOG_INFO, 
-	                            "Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
-	                }
+	                ctx.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
 	            } catch(BundleException e) {
-	                if(log != null) {
-	                    log.log(LogService.LOG_INFO, 
-	                            "Could not start bundle (retry count=" + retryCount + ", " + e 
+	                ctx.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
 	                            + "), will retry: " + bundleId + "/" + b.getSymbolicName());
-	                }
 	                needToRetry = true;
 	            }
-	            
+
 	        }
 		} finally {
 	        if(needToRetry) {
-	            
+
 	            // Do the first retry immediately (in case "something" happenened right now
 	            // that warrants a retry), but for the next ones wait for at least one bundle
 	            // event or framework event
@@ -109,23 +95,20 @@ public class BundleStartTask extends OsgiInstallerTask {
 	            } else {
                     eventsCountForRetrying = Activator.getTotalEventsCount() + 1;
 	            }
-	            
+
 	            ctx.addTaskToNextCycle(this);
 	        }
 		}
 		retryCount++;
 		ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
 	}
-	
+
 	/** Do not execute this task if waiting for events */
     public boolean isExecutable(OsgiInstallerContext tctx) {
-        final long eventsCount = Activator.getTotalEventsCount(); 
-        final boolean result = eventsCount >= eventsCountForRetrying; 
+        final long eventsCount = Activator.getTotalEventsCount();
+        final boolean result = eventsCount >= eventsCountForRetrying;
         if(!result) {
-            if(tctx.getLogService() != null) {
-                tctx.getLogService().log(LogService.LOG_DEBUG, 
-                        this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
-            }
+            tctx.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
         }
         return result;
     }

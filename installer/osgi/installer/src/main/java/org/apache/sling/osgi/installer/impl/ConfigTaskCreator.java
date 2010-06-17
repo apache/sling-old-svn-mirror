@@ -24,7 +24,6 @@ import java.util.SortedSet;
 
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
-import org.osgi.service.log.LogService;
 
 /** TaskCreator that processes a list of config RegisteredResources */
 class ConfigTaskCreator {
@@ -56,16 +55,11 @@ class ConfigTaskCreator {
 		    final String key = getDigestKey(toActivate);
 		    final String previousDigest = digests.get(key);
 		    if(toActivate.getDigest().equals(previousDigest)) {
-		        if(ctx.getLogService() != null) {
-		            ctx.getLogService().log(LogService.LOG_DEBUG, "Configuration (" + key+ ") already installed, ignored: " + toActivate);
-		        }
+		        ctx.logDebug("Configuration (" + key+ ") already installed, ignored: " + toActivate);
 		    } else {
 		        tasks.add(new ConfigInstallTask(toActivate));
 		        digests.put(key, toActivate.getDigest());
-                if(ctx.getLogService() != null) {
-                    ctx.getLogService().log(LogService.LOG_DEBUG,
-                            "Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
-                }
+                ctx.logDebug("Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
 		    }
 		}
 	}

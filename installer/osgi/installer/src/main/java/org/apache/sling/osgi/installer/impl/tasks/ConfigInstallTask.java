@@ -29,45 +29,41 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 
-/** Install/remove task for configurations */ 
+/** Install/remove task for configurations */
 public class ConfigInstallTask extends AbstractConfigTask {
 
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
-    
+
     /** Configuration properties to ignore when comparing configs */
     public static Set<String> ignoredProperties = new HashSet<String>();
     static {
     	ignoredProperties.add("service.pid");
     	ignoredProperties.add(CONFIG_PATH_KEY);
     }
-    
+
     public ConfigInstallTask(RegisteredResource r) {
         super(r);
     }
-    
+
     @Override
     public String getSortKey() {
         return TaskOrder.CONFIG_INSTALL_ORDER + pid.getCompositePid();
     }
-    
+
     @SuppressWarnings("unchecked")
 	@Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        
+
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_DEBUG, 
-                        "ConfigurationAdmin not available, task will be retried later: " + this);
-            }
+            ctx.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return;
         }
-        
+
         // Convert data to a configuration Dictionary
         Dictionary<String, Object> dict = resource.getDictionary();
 
@@ -92,28 +88,22 @@ public class ConfigInstallTask extends AbstractConfigTask {
             config = getConfiguration(ca, pid, true, ctx);
         } else {
 			if(isSameData(config.getProperties(), resource.getDictionary())) {
-	            if(ctx.getLogService() != null) {
-	                ctx.getLogService().log(LogService.LOG_DEBUG,
-	                        "Configuration " + config.getPid() 
-	                        + " already installed with same data, update request ignored: " 
+			    ctx.logDebug("Configuration " + config.getPid()
+	                        + " already installed with same data, update request ignored: "
 	                        + resource);
-	            }
 				config = null;
 			}
         }
-        
+
         if(config != null) {
             logExecution(ctx);
             if (config.getBundleLocation() != null) {
                 config.setBundleLocation(null);
             }
             config.update(dict);
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_INFO,
-                        "Configuration " + config.getPid() 
-                        + " " + (created ? "created" : "updated") 
+            ctx.logInfo("Configuration " + config.getPid()
+                        + " " + (created ? "created" : "updated")
                         + " from " + resource);
-            }
         }
     }
 

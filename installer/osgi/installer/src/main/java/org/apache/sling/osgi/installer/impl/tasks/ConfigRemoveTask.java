@@ -22,7 +22,6 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 
 /** Remove a Configuration */
  public class ConfigRemoveTask extends AbstractConfigTask {
@@ -30,40 +29,31 @@ import org.osgi.service.log.LogService;
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
-    
+
     public ConfigRemoveTask(RegisteredResource r) {
         super(r);
     }
-    
+
     @Override
     public String getSortKey() {
         return TaskOrder.CONFIG_REMOVE_ORDER + pid.getCompositePid();
     }
-    
+
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        
+
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_DEBUG, 
-                        "ConfigurationAdmin not available, task will be retried later: " + this);
-            }
+            ctx.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return;
         }
-        
+
         logExecution(ctx);
         final Configuration cfg = getConfiguration(ca, pid, false, ctx);
         if(cfg == null) {
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_DEBUG,
-                        "Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
-            }
+            ctx.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
         } else {
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_INFO,
-                        "Deleting config " + pid + " (" + resource + ")");
-            }
+            ctx.logInfo("Deleting config " + pid + " (" + resource + ")");
             cfg.delete();
         }
     }
