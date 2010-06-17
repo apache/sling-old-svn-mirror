@@ -67,12 +67,14 @@ class MockOsgiInstaller implements OsgiInstaller {
         }
     }
 
-    public void removeResource(InstallableResource d) {
-    	if(!d.isEmpty()) {
-    		throw new IllegalArgumentException("InstallableResource must be empty for removeResource call");
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String)
+     */
+    public void removeResource(String url) {
+    	urls.remove(url);
+    	synchronized ( this) {
+            recordedCalls.add("remove:" + url + ":100");
     	}
-    	urls.remove(d.getUrl());
-        recordCall("remove", d);
     }
 
     private synchronized void recordCall(String prefix, InstallableResource r) {

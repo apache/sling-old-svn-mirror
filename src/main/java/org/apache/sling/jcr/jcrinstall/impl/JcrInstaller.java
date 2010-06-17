@@ -131,7 +131,7 @@ public class JcrInstaller implements EventListener {
 
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
-    	InstallableResource convertNode(String urlScheme, Node n) throws Exception;
+    	InstallableResource convertNode(String urlScheme, Node n, int priority) throws Exception;
     }
 
     /** Our NodeConverters*/
@@ -370,8 +370,8 @@ public class JcrInstaller implements EventListener {
      *  @return a list of InstallableResource that must be unregistered,
      *  	for folders that have been removed
      */
-    private List<InstallableResource> updateFoldersList() throws Exception {
-    	final List<InstallableResource> result = new LinkedList<InstallableResource>();
+    private List<String> updateFoldersList() throws Exception {
+    	final List<String> result = new LinkedList<String>();
 
     	// If one of our root folders was just created, scan it for folders to watch
     	if(newRoots.size() > 0) {
@@ -458,7 +458,7 @@ public class JcrInstaller implements EventListener {
                     WatchedFolder.getRescanTimer().reset();
                     counters[SCAN_FOLDERS_COUNTER]++;
                     final WatchedFolder.ScanResult sr = wf.scan();
-                    for(InstallableResource r : sr.toRemove) {
+                    for(String r : sr.toRemove) {
                         log.info("Removing resource from OSGi installer: {}",r);
                         installer.removeResource(r);
                     }
@@ -474,8 +474,8 @@ public class JcrInstaller implements EventListener {
             if(scanWf || updateFoldersListTimer.expired()) {
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
-                final List<InstallableResource> toRemove = updateFoldersList();
-                for(InstallableResource r : toRemove) {
+                final List<String> toRemove = updateFoldersList();
+                for(String r : toRemove) {
                     log.info("Removing resource from OSGi installer (folder deleted): {}",r);
                     installer.removeResource(r);
                 }

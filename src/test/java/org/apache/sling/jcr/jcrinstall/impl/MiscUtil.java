@@ -100,6 +100,10 @@ class MiscUtil {
         public void close() {
             // nothing to do
         }
+
+        public String getUserID() {
+            return null;
+        }
     }
 
     /** Set a non-public Field */
@@ -110,7 +114,7 @@ class MiscUtil {
     }
 
     /** Return a JcrInstaller setup for testing */
-    static JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller) throws Exception {
+    static synchronized JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller) throws Exception {
         final JcrInstaller installer = new JcrInstaller();
         setField(installer, "repository", repository);
         setField(installer, "installer", osgiInstaller);
@@ -120,21 +124,25 @@ class MiscUtil {
         return installer;
     }
 
+    private static ComponentContext COMPONENT_CONTEXT;
     static ComponentContext getMockComponentContext() {
-        // Setup fake ComponentContext to allow JcrInstaller to start
-        final ComponentContext cc = mockery.mock(ComponentContext.class);
-        final BundleContext bc = mockery.mock(BundleContext.class);
+        if ( COMPONENT_CONTEXT == null ) {
+            // Setup fake ComponentContext to allow JcrInstaller to start
+            final ComponentContext cc = mockery.mock(ComponentContext.class);
+            final BundleContext bc = mockery.mock(BundleContext.class);
 
-        final Dictionary<String, Object> emptyDict = new Hashtable<String, Object>();
-        mockery.checking(new Expectations() {{
-            allowing(cc).getProperties();
-            will(returnValue(emptyDict));
-            allowing(cc).getBundleContext();
-            will(returnValue(bc));
-            allowing(bc).getProperty(with(any(String.class)));
-            will(returnValue(null));
-        }});
-        return cc;
+            final Dictionary<String, Object> emptyDict = new Hashtable<String, Object>();
+            mockery.checking(new Expectations() {{
+                allowing(cc).getProperties();
+                will(returnValue(emptyDict));
+                allowing(cc).getBundleContext();
+                will(returnValue(bc));
+                allowing(bc).getProperty(with(any(String.class)));
+                will(returnValue(null));
+            }});
+            COMPONENT_CONTEXT = cc;
+        }
+        return COMPONENT_CONTEXT;
     }
 
     static private void waitForCycles(JcrInstaller installer, long initialCycleCount, int expectedCycles, long timeoutMsec) throws Exception {

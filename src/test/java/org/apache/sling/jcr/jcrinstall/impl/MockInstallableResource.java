@@ -20,20 +20,20 @@ package org.apache.sling.jcr.jcrinstall.impl;
 
 import java.io.ByteArrayInputStream;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableBundleResource;
 
-public class MockInstallableResource extends InstallableResource {
+public class MockInstallableResource extends InstallableBundleResource {
 
     private static int counter;
-    
+
     public MockInstallableResource(String uri) {
         this(uri, "", null);
     }
-    
+
     public MockInstallableResource(String uri, String data, String digest) {
         super(uri, new ByteArrayInputStream(data.getBytes()), getNextDigest(digest));
     }
-    
+
     static String getNextDigest(String digest) {
         if(digest != null) {
             return digest;
@@ -41,5 +41,5 @@ public class MockInstallableResource extends InstallableResource {
         synchronized (MockInstallableResource.class) {
             return String.valueOf(System.currentTimeMillis() + (counter++));
         }
-    }    
+    }
 }
