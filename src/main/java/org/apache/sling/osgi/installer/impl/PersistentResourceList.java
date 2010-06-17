@@ -27,29 +27,24 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.SortedSet;
 
-import org.osgi.service.log.LogService;
-
 /** Persistent list of RegisteredResource, used by installer to
  *  keep track of all registered resources
  */
 class PersistentResourceList {
     private final HashMap<String, SortedSet<RegisteredResource>> data;
     private final File dataFile;
-    
+
     @SuppressWarnings("unchecked")
     PersistentResourceList(OsgiInstallerContext ctx, File dataFile) {
         this.dataFile = dataFile;
-        
+
         ObjectInputStream ois = null;
         HashMap<String, SortedSet<RegisteredResource>> restoredData = null;
         try {
             ois = new ObjectInputStream(new FileInputStream(dataFile));
             restoredData = (HashMap<String, SortedSet<RegisteredResource>>)ois.readObject();
         } catch(Exception e) {
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_INFO, 
-                        "Unable to restore data, starting with empty list (" + e.toString());
-            }
+            ctx.logInfo("Unable to restore data, starting with empty list (" + e.toString());
         } finally {
             if(ois != null) {
                 try {
@@ -59,10 +54,10 @@ class PersistentResourceList {
                 }
             }
         }
-        
+
         data = restoredData != null ? restoredData : new HashMap<String, SortedSet<RegisteredResource>>();
     }
-    
+
     HashMap<String, SortedSet<RegisteredResource>>  getData() {
         return data;
     }

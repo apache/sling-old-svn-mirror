@@ -23,7 +23,6 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.service.log.LogService;
 
 /** Execute an OSGi "refresh packages" operation, synchronously */
 public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
@@ -43,14 +42,13 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-        	if(ctx!= null && ctx.getLogService() != null) {
-	    		ctx.getLogService().log(LogService.LOG_DEBUG,
-	    				"FrameworkEvent.PACKAGES_REFRESHED");
+        	if (ctx!= null) {
+        	    ctx.logDebug("FrameworkEvent.PACKAGES_REFRESHED");
         	}
         	packageRefreshEventsCount++;
         }
     }
-    
+
 	@Override
 	public String getSortKey() {
 		return TaskOrder.REFRESH_PACKAGES_ORDER;
@@ -75,10 +73,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     		if(b.getState() == Bundle.ACTIVE) {
     			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId());
     			ctx.addTaskToCurrentCycle(t);
-            	if(ctx.getLogService() != null) {
-            		ctx.getLogService().log(LogService.LOG_DEBUG, 
-            				"Added " + t + " to restart bundle if needed after refreshing packages"); 
-            	}
+    			ctx.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
     		}
     	}
 
@@ -89,22 +84,16 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
             ctx.getPackageAdmin().refreshPackages(null);
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
-                	if(ctx.getLogService() != null) {
-        	    		ctx.getLogService().log(LogService.LOG_WARNING,
-        	    				"No FrameworkEvent.PACKAGES_REFRESHED event received within "
+                    ctx.logWarn("No FrameworkEvent.PACKAGES_REFRESHED event received within "
         	    				+ MAX_REFRESH_PACKAGES_WAIT_SECONDS
         	    				+ " seconds after refresh");
-                	}
                     break;
                 }
                 if(packageRefreshEventsCount >= targetEventCount) {
                     final long delta = System.currentTimeMillis() - start;
-                    if(ctx.getLogService() != null) {
-        	    		ctx.getLogService().log(LogService.LOG_DEBUG,
-        	    				"FrameworkEvent.PACKAGES_REFRESHED received "
+                    ctx.logDebug("FrameworkEvent.PACKAGES_REFRESHED received "
         	    				+ delta
         	    				+ " msec after refreshPackages call");
-                    }
                     break;
                 }
                 try {

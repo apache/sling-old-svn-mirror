@@ -25,19 +25,18 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
     private final PersistentBundleInfo persistentBundleInfo;
-    
+
     public MockOsgiInstallerContext() throws IOException {
         final File f = File.createTempFile(MockOsgiInstallerContext.class.getSimpleName(), ".data");
         f.deleteOnExit();
         persistentBundleInfo = new PersistentBundleInfo(this, f);
     }
-    
+
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
 	}
 
@@ -52,24 +51,20 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 		return null;
 	}
 
-	public LogService getLogService() {
-		return null;
-	}
-
 	public PackageAdmin getPackageAdmin() {
 		return null;
 	}
 
     public void incrementCounter(int index) {
     }
-    
+
     public void setCounter(int index, long value) {
     }
 
     public Bundle getMatchingBundle(String bundleSymbolicName) {
         return null;
     }
-    
+
 	public boolean isSnapshot(Version v) {
 		return v.toString().indexOf(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
@@ -85,8 +80,50 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
     public void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException {
         saveInstalledBundleInfo(b.getSymbolicName(), digest, version);
     }
-    
+
     public void saveInstalledBundleInfo(String symbolicName, String digest, String version) throws IOException {
         persistentBundleInfo.putInfo(symbolicName, digest, version);
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String, java.lang.Throwable)
+     */
+    public void logDebug(String message, Throwable t) {
+        // nothing to do - no logging
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String)
+     */
+    public void logDebug(String message) {
+        // nothing to do - no logging
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String, java.lang.Throwable)
+     */
+    public void logInfo(String message, Throwable t) {
+        // nothing to do - no logging
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String)
+     */
+    public void logInfo(String message) {
+        // nothing to do - no logging
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String, java.lang.Throwable)
+     */
+    public void logWarn(String message, Throwable t) {
+        // nothing to do - no logging
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String)
+     */
+    public void logWarn(String message) {
+        // nothing to do - no logging
     }
 }

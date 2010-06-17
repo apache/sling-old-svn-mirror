@@ -18,18 +18,15 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import org.osgi.service.log.LogService;
 
-/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */ 
+/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
     public abstract void execute(OsgiInstallerContext ctx) throws Exception;
 
 	protected void logExecution(OsgiInstallerContext ctx) {
-		if(ctx.getLogService() != null) {
-			ctx.getLogService().log(LogService.LOG_INFO, "OsgiInstallerTask: executing  " + this);
-		}
+	    ctx.logInfo("OsgiInstallerTask: executing  " + this);
 	}
-	
+
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
 
@@ -37,12 +34,12 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	public final int compareTo(OsgiInstallerTask o) {
 		return getSortKey().compareTo(o.getSortKey());
 	}
-	
+
 	/** Is it worth executing this task now? */
 	public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
 	    return true;
 	}
-	
+
 	/** Can the task be retried after {@link execute} failed? */
 	public boolean canRetry(OsgiInstallerContext ctx) {
 		return true;

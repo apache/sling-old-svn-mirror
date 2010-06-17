@@ -44,7 +44,6 @@ import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
 import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.log.LogService;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
@@ -100,10 +99,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 }
                 dictionary = null;
                 final File f = getDataFile(ctx);
-                if(osgiCtx.getLogService() != null) {
-                    osgiCtx.getLogService().log(LogService.LOG_DEBUG, 
-                            "Copying data to local storage " + f.getAbsolutePath());
-                }
+                osgiCtx.logDebug("Copying data to local storage " + f.getAbsolutePath());
                 copyToLocalStorage(input.getInputStream(), f);
                 hasDataFile = true;
                 digest = input.getDigest();
@@ -154,10 +150,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	public void cleanup(OsgiInstallerContext ctx) {
 	    final File dataFile = getDataFile(ctx.getBundleContext());
 		if(dataFile.exists()) {
-		    if(ctx.getLogService() != null) {
-		        ctx.getLogService().log(LogService.LOG_DEBUG, "Deleting local storage file " 
+		    ctx.logDebug("Deleting local storage file "
 		                + dataFile.getAbsolutePath());
-		    } 
 			dataFile.delete();
 		}
 	}

@@ -24,38 +24,50 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Installer context, gives access to selected methods of the {@link OsgiInstallerImpl} */
 public interface OsgiInstallerContext {
-	BundleContext getBundleContext();
+
+    BundleContext getBundleContext();
 	PackageAdmin getPackageAdmin();
 	ConfigurationAdmin getConfigurationAdmin();
-	LogService getLogService();
 	void incrementCounter(int index);
     void setCounter(int index, long value);
     Bundle getMatchingBundle(String bundleSymbolicName);
     boolean isSnapshot(Version v);
-	
+
 	/** Schedule a task for execution in the current OsgiController cycle */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);
-	
-	/** Schedule a task for execution in the next OsgiController cycle, 
-	 * 	usually to indicate that a task must be retried 
+
+	/** Schedule a task for execution in the next OsgiController cycle,
+	 * 	usually to indicate that a task must be retried
 	 */
 	void addTaskToNextCycle(OsgiInstallerTask t);
-	
+
 	/** Store a bundle's digest and installed version, keyed by symbolic ID */
 	void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException;
-	
-	/** Retrieve a bundle's digest that was stored by saveInstalledBundleInfo  
-	 *  @return null if no digest was stored   
+
+	/** Retrieve a bundle's digest that was stored by saveInstalledBundleInfo
+	 *  @return null if no digest was stored
 	 * */
 	String getInstalledBundleDigest(Bundle b) throws IOException;
-	
-    /** Retrieve a bundle's version that was stored by saveInstalledBundleInfo  
-     *  @return null if no version was stored   
+
+    /** Retrieve a bundle's version that was stored by saveInstalledBundleInfo
+     *  @return null if no version was stored
      * */
     String getInstalledBundleVersion(String symbolicName) throws IOException;
+
+
+    void logDebug(final String message);
+
+    void logDebug(final String message, final Throwable t);
+
+    void logInfo(final String message);
+
+    void logInfo(final String message, final Throwable t);
+
+    void logWarn(final String message);
+
+    void logWarn(final String message, final Throwable t);
 }

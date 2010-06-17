@@ -27,7 +27,6 @@ import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.log.LogService;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -37,20 +36,20 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
     private boolean canRetry = true;
-    
+
     public BundleUpdateTask(RegisteredResource r) {
         this.resource = r;
     }
-    
+
     public RegisteredResource getResource() {
         return resource;
     }
-    
-    @Override 
+
+    @Override
     public String toString() {
         return getClass().getSimpleName() + ": " + resource;
     }
-    
+
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
@@ -58,36 +57,28 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         if(b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
-        
+
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
     	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
     	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
     	snapshot = ctx.isSnapshot(newVersion);
     	if(currentVersion.equals(newVersion) && !snapshot) {
-    		if(ctx.getLogService() != null) {
-        		ctx.getLogService().log(
-        				LogService.LOG_DEBUG, 
-        				"Same version is already installed, and not a snapshot, ignoring update:" + resource);
-    		}
+    	    ctx.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
     		return;
     	}
-        
+
         // If snapshot and ready to update, cancel if digest didn't change - as the list
         // of RegisteredResources is not saved, this might not have been detected earlier,
         // if the snapshot was installed and the installer was later restarted
         if(snapshot) {
             final String oldDigest = ctx.getInstalledBundleDigest(b);
             if(resource.getDigest().equals(oldDigest)) {
-                if(ctx.getLogService() != null) {
-                    ctx.getLogService().log(
-                            LogService.LOG_DEBUG, 
-                            "Snapshot digest did not change, ignoring update:" + resource);
-                }
+                ctx.logDebug("Snapshot digest did not change, ignoring update:" + resource);
                 return;
             }
         }
-        
+
         logExecution(ctx);
         if(b.getState() == Bundle.ACTIVE) {
             // bundle was active before the update - restart it once updated, but
@@ -105,12 +96,10 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         b.update(is);
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
-        if(ctx.getLogService() != null) {
-            ctx.getLogService().log(LogService.LOG_DEBUG, "Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
-        }
+        ctx.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
     }
-    
+
     @Override
     public boolean canRetry(OsgiInstallerContext ctx) {
     	return canRetry;

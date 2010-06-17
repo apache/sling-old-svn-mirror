@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 
-import org.osgi.service.log.LogService;
-
 /** Store the digests and version numbers of installed bundles
  *  in a file, to keep track of what we installed.
  */
@@ -39,7 +37,7 @@ class PersistentBundleInfo {
     private final File dataFile;
     private final OsgiInstallerContext ctx;
     private static final String VERSION_PREFIX = "V:";
-    
+
     /** Load the list from supplied file, which is also
      *  used by purgeAndSave to save our data
      */
@@ -50,21 +48,16 @@ class PersistentBundleInfo {
         try {
             is = new FileInputStream(dataFile);
             digests.load(is);
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_INFO, "Digests restored from data file " + dataFile.getName());
-            }
+            ctx.logInfo("Digests restored from data file " + dataFile.getName());
         } catch(IOException ioe) {
-            if(ctx.getLogService() != null) {
-                ctx.getLogService().log(LogService.LOG_INFO, 
-                        "No digests retrieved, cannot read properties file " + dataFile.getName());
-            }
+            ctx.logInfo("No digests retrieved, cannot read properties file " + dataFile.getName());
         } finally {
             if(is != null) {
                 is.close();
             }
         }
     }
-    
+
     /** Remove data which do not belongs to installed bundles,
      *  and save our data
      */
@@ -72,7 +65,7 @@ class PersistentBundleInfo {
         final List<String> toRemove = new ArrayList<String>();
         for(Object o : digests.keySet()) {
             final String key = (String)o;
-            if(!installedBundlesSymbolicNames.contains(key) 
+            if(!installedBundlesSymbolicNames.contains(key)
                     && !installedBundlesSymbolicNames.contains(key.substring(VERSION_PREFIX.length()))) {
                 toRemove.add(key);
             }
@@ -80,7 +73,7 @@ class PersistentBundleInfo {
         for(String key : toRemove) {
             digests.remove(key);
         }
-        
+
         OutputStream os = null;
         try {
             os = new FileOutputStream(dataFile);
@@ -91,23 +84,20 @@ class PersistentBundleInfo {
                 os.close();
             }
         }
-        if(ctx.getLogService() != null) {
-            ctx.getLogService().log(LogService.LOG_INFO, 
-                    "Stored digests of " + digests.size() + " bundles in data file " + dataFile.getName());
-        }
+        ctx.logInfo("Stored digests of " + digests.size() + " bundles in data file " + dataFile.getName());
     }
-    
+
     /** Store a bundle digest - not persisted until purgeAndSave is called */
     void putInfo(String bundleSymbolicName, String digest, String installedVersion) {
         digests.setProperty(bundleSymbolicName, digest);
         digests.setProperty(VERSION_PREFIX + bundleSymbolicName, installedVersion);
     }
-    
+
     /** Retrieve digest, null if not found */
     String getDigest(String bundleSymbolicName) {
         return digests.getProperty(bundleSymbolicName);
     }
-    
+
     /** Retrieve installed version, null if not found */
     String getInstalledVersion(String bundleSymbolicName) {
         return digests.getProperty(VERSION_PREFIX + bundleSymbolicName);
