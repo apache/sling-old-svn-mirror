@@ -64,12 +64,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
 
-    static enum ResourceType {
-        BUNDLE,
-        CONFIG
-    }
-
-    private final RegisteredResource.ResourceType resourceType;
+    private final InstallableResource.Type resourceType;
 
     public static final String ENTITY_JAR_PREFIX = "jar:";
 	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
@@ -85,7 +80,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    try {
     		url = input.getUrl();
     		urlScheme = getUrlScheme(url);
-    		resourceType = computeResourceType(input.getExtension());
+    		resourceType = input.getType();
     		priority = input.getPriority();
     		serialNumber = getNextSerialNumber();
 
@@ -93,7 +88,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 throw new IllegalArgumentException("Missing digest: " + input);
             }
 
-    		if(resourceType == RegisteredResource.ResourceType.BUNDLE) {
+    		if(resourceType == InstallableResource.Type.BUNDLE) {
                 if(input.getInputStream() == null) {
                     throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
                 }
@@ -227,15 +222,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return url;
 	}
 
-    public RegisteredResource.ResourceType getResourceType() {
+    public InstallableResource.Type getResourceType() {
         return resourceType;
-    }
-
-    static RegisteredResource.ResourceType computeResourceType(String extension) {
-        if(extension.equals("jar")) {
-            return RegisteredResource.ResourceType.BUNDLE;
-        }
-        return RegisteredResource.ResourceType.CONFIG;
     }
 
     /** Return the identifier of the OSGi "entity" that this resource

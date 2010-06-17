@@ -25,7 +25,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallableBundleResource;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
@@ -41,7 +41,7 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 	private static long serialNumberCounter = System.currentTimeMillis();
 
     MockBundleResource(String symbolicName, String version) {
-        this(symbolicName, version, InstallableBundleResource.DEFAULT_PRIORITY);
+        this(symbolicName, version, InstallableResource.DEFAULT_PRIORITY);
     }
 
 	MockBundleResource(String symbolicName, String version, int priority) {
@@ -99,8 +99,8 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 		return null;
 	}
 
-	public ResourceType getResourceType() {
-		return RegisteredResource.ResourceType.BUNDLE;
+	public InstallableResource.Type getResourceType() {
+		return InstallableResource.Type.BUNDLE;
 	}
 
 	public String getUrl() {

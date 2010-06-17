@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableConfigResource;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
@@ -48,7 +48,7 @@ public class RegisteredResourceComparatorTest {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
-        final InstallableConfigResource r = new InstallableConfigResource("test:" + url, data, priority);
+        final InstallableResource r = new InstallableResource("test:" + url, data, priority);
         return new RegisteredResourceImpl(new MockOsgiInstallerContext(), r);
     }
 
@@ -173,7 +173,7 @@ public class RegisteredResourceComparatorTest {
 
     @Test
     public void testConfigAndBundle() throws IOException {
-    	final RegisteredResource cfg = getConfig("pid", null, InstallableConfigResource.DEFAULT_PRIORITY);
+    	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
     	final RegisteredResource b = new MockBundleResource("a", "1.0");
     	final RegisteredResourceComparator c = new RegisteredResourceComparator();
     	assertEquals("bundle is > config when compared", 1, c.compare(b, cfg));

@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -34,8 +35,8 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
     private static final long serialVersionUID = 1L;
 
     public int compare(RegisteredResource a, RegisteredResource b) {
-    	final boolean aBundle = a.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
-    	final boolean bBundle = b.getResourceType() == RegisteredResource.ResourceType.BUNDLE;
+    	final boolean aBundle = a.getResourceType() == InstallableResource.Type.BUNDLE;
+    	final boolean bBundle = b.getResourceType() == InstallableResource.Type.BUNDLE;
 
         if(aBundle && bBundle) {
             return compareBundles(a, b);
