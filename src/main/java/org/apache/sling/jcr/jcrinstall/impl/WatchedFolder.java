@@ -36,6 +36,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
  *  to it and providing InstallableData for its contents.
  */
 class WatchedFolder implements EventListener{
+
     private final String path;
     private final int priority;
     private final Session session;
@@ -53,6 +55,10 @@ class WatchedFolder implements EventListener{
     private final Set<String> existingResourceUrls = new HashSet<String>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
+    /** Installable resource factory. */
+    private final InstallableResourceFactory factory;
+
+
     static class ScanResult {
         List<InstallableResource> toAdd = new ArrayList<InstallableResource>();
         List<String> toRemove = new ArrayList<String>();
@@ -61,8 +67,13 @@ class WatchedFolder implements EventListener{
     /** Store the digests of the last returned resources, keyed by path, to detect changes */
     private final Map<String, String> digests = new HashMap<String, String>();
 
-    WatchedFolder(Session session, String path, int priority,
-    		String urlScheme, Collection<JcrInstaller.NodeConverter> converters) throws RepositoryException {
+    WatchedFolder(final Session session,
+            final String path,
+            final int priority,
+    		final String urlScheme,
+    		final Collection<JcrInstaller.NodeConverter> converters,
+    		final InstallableResourceFactory factory)
+    throws RepositoryException {
         if(priority < 1) {
             throw new IllegalArgumentException("Cannot watch folder with priority 0:" + path);
         }
@@ -82,6 +93,8 @@ class WatchedFolder implements EventListener{
         final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
+
+        this.factory = factory;
 
         log.info("Watching folder {} (priority {})", path, priority);
     }
@@ -144,7 +157,7 @@ class WatchedFolder implements EventListener{
             while(it.hasNext()) {
             	final Node n = it.nextNode();
             	for(JcrInstaller.NodeConverter nc : converters) {
-            		final InstallableResource r = nc.convertNode(urlScheme, n, priority);
+            		final InstallableResource r = nc.convertNode(urlScheme, n, priority, factory);
             		if(r != null) {
             			resourcesSeen.add(r.getUrl());
             		    final String oldDigest = digests.get(r.getUrl());

@@ -24,6 +24,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +42,18 @@ import org.slf4j.LoggerFactory;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
-	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(java.lang.String, javax.jcr.Node, int)
+	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(java.lang.String, javax.jcr.Node, int, org.apache.sling.osgi.installer.InstallableResourceFactory)
 	 */
-	public InstallableResource convertNode(String urlScheme, Node n, final int priority) throws RepositoryException {
+	public InstallableResource convertNode(final String urlScheme,
+	        final Node n,
+	        final int priority,
+	        final InstallableResourceFactory factory)
+	throws RepositoryException {
 		InstallableResource result = null;
 		if(n.hasProperty(JCR_CONTENT_DATA) && n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
 			if(acceptNodeName(n.getName())) {
 				try {
-					result = convert(urlScheme, n, n.getPath(), priority);
+					result = convert(urlScheme, n, n.getPath(), priority, factory);
 				} catch(IOException ioe) {
 					log.info("Conversion failed, node {} ignored ({})", n.getPath(), ioe);
 				}
@@ -62,7 +67,12 @@ import org.slf4j.LoggerFactory;
 		return null;
 	}
 
-	private InstallableResource convert(String urlScheme, Node n, String path, final int priority) throws IOException, RepositoryException {
+	private InstallableResource convert(final String urlScheme,
+	        final Node n,
+	        final String path,
+	        final int priority,
+	        final InstallableResourceFactory factory)
+    throws IOException, RepositoryException {
 		String digest = null;
         if (n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
         	digest = String.valueOf(n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis());
@@ -77,7 +87,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return new InstallableResource(urlScheme + ":" + path, is, digest, priority);
+        return factory.create(urlScheme + ":" + path, is, digest, null, priority);
 	}
 
 	boolean acceptNodeName(String name) {
