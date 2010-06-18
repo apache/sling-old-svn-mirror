@@ -26,13 +26,27 @@ import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-/** Installer context, gives access to selected methods of the {@link OsgiInstallerImpl} */
+/**
+ * Installer context, gives access to selected methods of the {@link OsgiInstallerImpl}
+ */
 public interface OsgiInstallerContext {
 
+    /**
+     * Return the bundle context.
+     */
     BundleContext getBundleContext();
-	PackageAdmin getPackageAdmin();
-	ConfigurationAdmin getConfigurationAdmin();
-	void incrementCounter(int index);
+
+    /**
+     * Return the package admin.
+     */
+    PackageAdmin getPackageAdmin();
+
+    /**
+     * Return the config admin.
+     */
+    ConfigurationAdmin getConfigurationAdmin();
+
+    void incrementCounter(int index);
     void setCounter(int index, long value);
     Bundle getMatchingBundle(String bundleSymbolicName);
     boolean isSnapshot(Version v);
@@ -58,16 +72,33 @@ public interface OsgiInstallerContext {
      * */
     String getInstalledBundleVersion(String symbolicName) throws IOException;
 
-
+    /**
+     * Log a debug message.
+     */
     void logDebug(final String message);
 
+    /**
+     * Log a debug message with exception.
+     */
     void logDebug(final String message, final Throwable t);
 
+    /**
+     * Log a info message.
+     */
     void logInfo(final String message);
 
+    /**
+     * Log a info message with exception.
+     */
     void logInfo(final String message, final Throwable t);
 
+    /**
+     * Log a warning message.
+     */
     void logWarn(final String message);
 
+    /**
+     * Log a warning message with exception.
+     */
     void logWarn(final String message, final Throwable t);
 }
