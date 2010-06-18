@@ -30,21 +30,11 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.log.LogService;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
-import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator, FrameworkListener, BundleListener {
 
     private static final String VENDOR = "The Apache Software Foundation";
 
-    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
-    private static String START_LEVEL_NAME = StartLevel.class.getName();
-    private static String LOG_SERVICE_NAME = LogService.class.getName();
-
-    private ServiceTracker packageAdminTracker;
-    private ServiceTracker logServiceTracker;
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
     private ServiceRegistration factoryServiceReg;
@@ -55,11 +45,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        this.packageAdminTracker = new ServiceTracker(context, PACKAGE_ADMIN_NAME, null);
-        this.logServiceTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
-        this.packageAdminTracker.open();
-        this.logServiceTracker.open();
-
         // listen to framework and bundle events
         context.addFrameworkListener(this);
         context.addBundleListener(this);
@@ -70,11 +55,7 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
             props.put(Constants.SERVICE_VENDOR, VENDOR);
 
-            // Assume PackageAdmin is available before this bundle is started.
-            // That's the case when using Felix OSGi, not sure about other frameworks.
-            this.osgiControllerService = new OsgiInstallerImpl(context,
-                    (PackageAdmin)checkNotNull(this.packageAdminTracker.getService(), "PackageAdmin"),
-                    logServiceTracker);
+            this.osgiControllerService = new OsgiInstallerImpl(context);
             final String [] serviceInterfaces = {
                     OsgiInstaller.class.getName()
             };
@@ -99,14 +80,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         }
     }
 
-    /** Complain if value is null */
-    static Object checkNotNull(Object value, String what) {
-    	if(value == null) {
-    		throw new IllegalArgumentException(what + " is null, cannot activate");
-    	}
-    	return value;
-    }
-
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
@@ -125,14 +98,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
             this.osgiControllerService = null;
-        }
-        if ( this.packageAdminTracker != null ) {
-            this.packageAdminTracker.close();
-            this.packageAdminTracker = null;
-        }
-        if ( this.logServiceTracker != null ) {
-            this.logServiceTracker.close();
-            this.logServiceTracker = null;
         }
     }
 
