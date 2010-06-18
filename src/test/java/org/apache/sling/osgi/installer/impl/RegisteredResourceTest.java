@@ -35,9 +35,12 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.osgi.framework.Constants;
 
 public class RegisteredResourceTest {
+
+    private InstallableResourceFactory factory = new InstallableResourceFactoryImpl();
 
     public static final String TEST_URL = "test:url";
 
@@ -65,7 +68,7 @@ public class RegisteredResourceTest {
 		}
 
 		final TestInputStream t = new TestInputStream(new ByteArrayInputStream(data.getBytes()));
-		final InstallableResource ir = new InstallableResource(TEST_URL, t, "somedigest");
+		final InstallableResource ir = factory.create(TEST_URL, t, "somedigest", null, null);
 		assertEquals("TestInputStream must not be closed before test", 0, t.closeCount);
 		new LocalFileRegisteredResource(ir);
 		assertEquals("TestInputStream must be closed by RegisteredResource", 1, t.closeCount);
@@ -74,7 +77,7 @@ public class RegisteredResourceTest {
     @org.junit.Test public void testResourceType() throws Exception {
         {
             final InputStream s = new FileInputStream(getTestBundle("testbundle-1.0.jar"));
-            final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, "some digest"));
+            final RegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1.jar", s, "some digest", null, null));
             assertEquals(".jar URL creates a BUNDLE resource",
                     InstallableResource.Type.BUNDLE, r.getResourceType());
             final InputStream rs = r.getInputStream(null);
@@ -86,7 +89,7 @@ public class RegisteredResourceTest {
 
         {
             final InputStream s = new ByteArrayInputStream("foo=bar\nother=2".getBytes());
-            final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.properties", s, "digest1"));
+            final RegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1.properties", s, "digest1", null, null));
             assertEquals(".properties URL creates a CONFIG resource",
                     InstallableResource.Type.CONFIG, r.getResourceType());
             final InputStream rs = r.getInputStream(null);
@@ -101,7 +104,7 @@ public class RegisteredResourceTest {
             final Hashtable<String, Object> data = new Hashtable<String, Object>();
             data.put("foo", "bar");
             data.put("other", 2);
-            final RegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1", data));
+            final RegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1", data, null, null, null));
             assertEquals("No-extension URL with Dictionary creates a CONFIG resource",
                     InstallableResource.Type.CONFIG, r.getResourceType());
             final InputStream rs = r.getInputStream(null);
@@ -116,7 +119,7 @@ public class RegisteredResourceTest {
 	@org.junit.Test public void testLocalFileCopy() throws Exception {
 	    final File f = getTestBundle("testbundle-1.0.jar");
         final InputStream s = new FileInputStream(f);
-		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, "somedigest"));
+		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1.jar", s, "somedigest", null, null));
 		assertTrue("Local file exists", r.getDataFile(null).exists());
 
 		assertEquals("Local file length matches our data", f.length(), r.getDataFile(null).length());
@@ -127,13 +130,13 @@ public class RegisteredResourceTest {
         final InputStream in = new ByteArrayInputStream(data.getBytes());
 
         try {
-            new LocalFileRegisteredResource(new InstallableResource("test:1.jar", in, null));
+            new LocalFileRegisteredResource(factory.create("test:1.jar", in, null, null, null));
             fail("With jar extension, expected an IllegalArgumentException as digest is null");
         } catch(IllegalArgumentException asExpected) {
         }
 
         try {
-            new LocalFileRegisteredResource(new InstallableResource("test:1.foo", in, null));
+            new LocalFileRegisteredResource(factory.create("test:1.foo", in, null, null, null));
             fail("With non-jar extension, expected an IllegalArgumentException as digest is null");
         } catch(IllegalArgumentException asExpected) {
         }
@@ -141,14 +144,14 @@ public class RegisteredResourceTest {
 
     @org.junit.Test public void testBundleManifest() throws Exception {
         final File f = getTestBundle("testbundle-1.0.jar");
-        final InstallableResource i = new InstallableResource("test:" + f.getAbsolutePath(), new FileInputStream(f), f.getName());
+        final InstallableResource i = factory.create("test:" + f.getAbsolutePath(), new FileInputStream(f), f.getName(), null, null);
         final RegisteredResource r = new LocalFileRegisteredResource(i);
         assertNotNull("RegisteredResource must have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
     }
 
     @org.junit.Test public void testConfigEntity() throws Exception {
-        final InstallableResource i = new InstallableResource("test:/foo/someconfig", new Hashtable<String, Object>());
+        final InstallableResource i = factory.create("test:/foo/someconfig", new Hashtable<String, Object>(), null, null, null);
         final RegisteredResource r = new LocalFileRegisteredResource(i);
         assertNull("RegisteredResource must not have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
@@ -156,8 +159,8 @@ public class RegisteredResourceTest {
 
     @org.junit.Test public void testConfigDigestIncludesUrl() throws Exception {
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
-        final InstallableResource rA = new InstallableResource("test:urlA", data);
-        final InstallableResource rB = new InstallableResource("test:urlB", data);
+        final InstallableResource rA = factory.create("test:urlA", data, null, null, null);
+        final InstallableResource rB = factory.create("test:urlB", data, null, null, null);
         assertFalse(
                 "Expecting configs with same data but different URLs to have different digests",
                 rA.getDigest().equals(rB.getDigest()));
@@ -175,7 +178,7 @@ public class RegisteredResourceTest {
         };
         for(String url : badOnes) {
             try {
-                new RegisteredResourceImpl(new MockOsgiInstallerContext(), new InstallableResource(url, s, null));
+                new RegisteredResourceImpl(new MockOsgiInstallerContext(),factory.create(url, s, null, null, null));
                 fail("Expected bad URL '" + url + "' to throw IllegalArgumentException");
             } catch(IllegalArgumentException asExpected) {
             }
@@ -190,7 +193,7 @@ public class RegisteredResourceTest {
 
         for(String url : goodOnes) {
             final RegisteredResource r = new RegisteredResourceImpl(new MockOsgiInstallerContext(),
-                    new InstallableResource(url, s, "digest1"));
+                    factory.create(url, s, "digest1", null, null));
             assertEquals("Expected scheme 'foo' for URL " + url, "foo", r.getUrlScheme());
         }
     }
