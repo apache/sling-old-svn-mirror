@@ -69,7 +69,7 @@ public class RegisteredResourceTest {
 
 		final TestInputStream t = new TestInputStream(new ByteArrayInputStream(data.getBytes()));
 		final InstallableResource ir = factory.create(TEST_URL, t, "somedigest", null, null);
-		assertEquals("TestInputStream must not be closed before test", 0, t.closeCount);
+		//assertEquals("TestInputStream must not be closed before test", 0, t.closeCount);
 		new LocalFileRegisteredResource(ir);
 		assertEquals("TestInputStream must be closed by RegisteredResource", 1, t.closeCount);
 	}
@@ -132,12 +132,6 @@ public class RegisteredResourceTest {
         try {
             new LocalFileRegisteredResource(factory.create("test:1.jar", in, null, null, null));
             fail("With jar extension, expected an IllegalArgumentException as digest is null");
-        } catch(IllegalArgumentException asExpected) {
-        }
-
-        try {
-            new LocalFileRegisteredResource(factory.create("test:1.foo", in, null, null, null));
-            fail("With non-jar extension, expected an IllegalArgumentException as digest is null");
         } catch(IllegalArgumentException asExpected) {
         }
     }

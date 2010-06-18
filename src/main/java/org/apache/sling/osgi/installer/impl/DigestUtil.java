@@ -45,12 +45,14 @@ public abstract class DigestUtil {
     }
 
     /** Compute digest on all keys of supplied data */
-    public static String computeDigest(Dictionary<String, Object> data) throws IOException, NoSuchAlgorithmException {
+    public static String computeDigest(Dictionary<String, Object> data)
+    throws IOException, NoSuchAlgorithmException {
     	return computeDigest(data, null);
     }
 
     /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
-    public static String computeDigest(Dictionary<String, Object> data, Set<String> keysToIgnore) throws IOException, NoSuchAlgorithmException {
+    public static String computeDigest(Dictionary<String, Object> data, Set<String> keysToIgnore)
+    throws IOException, NoSuchAlgorithmException {
         final MessageDigest d = MessageDigest.getInstance(DIGEST_TYPE);
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final ObjectOutputStream oos = new ObjectOutputStream(bos);

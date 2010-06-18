@@ -18,11 +18,18 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
+import org.apache.sling.osgi.installer.InstallableResource.Type;
+import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
+import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 
 /**
  * Default implementation of the installable resource factory.
@@ -43,10 +50,24 @@ public class InstallableResourceFactoryImpl implements InstallableResourceFactor
         if ( is == null ) {
             throw new IllegalArgumentException("input stream must not be null.");
         }
-        if ( priority == null ) {
-            return new InstallableResourceImpl(url, is, digest);
+        final InstallableResource.Type resourceType = (type != null ? type : computeResourceType(getExtension(url)));
+        if ( resourceType == InstallableResource.Type.CONFIG ) {
+            try {
+                return this.create(url, readDictionary(is), digest, resourceType, priority);
+            } catch (IOException ignore) {
+                // TODO - log this
+                return null;
+            }
         }
-        return new InstallableResourceImpl(url, is, digest, priority);
+
+        // TODO - compute digest for bundle if digest is null - for now we throw
+        if ( digest == null ) {
+            throw new IllegalArgumentException("digest must not be null for a bundle.");
+        }
+
+        return new InstallableResourceImpl(url, is, digest,
+                resourceType,
+                (priority != null ? priority : DEFAULT_PRIORITY));
     }
 
     /**
@@ -63,9 +84,50 @@ public class InstallableResourceFactoryImpl implements InstallableResourceFactor
         if ( d == null ) {
             throw new IllegalArgumentException("dictionary must not be null.");
         }
-        if ( priority == null ) {
-            return new InstallableResourceImpl(url, d);
+        try {
+            return new InstallableResourceImpl(url, d,
+                    (digest != null ? digest : url + ":" + DigestUtil.computeDigest(d)),
+                    (type != null ? type : Type.CONFIG),
+                    (priority != null ? priority : DEFAULT_PRIORITY));
+        } catch (Exception ignore) {
+            // TODO - log this
+            return null;
         }
-        return new InstallableResourceImpl(url, d, priority);
+    }
+
+    /** Convert InputStream to Dictionary using our extended properties format,
+     *  which supports multi-value properties
+     */
+    private static Dictionary<String, Object> readDictionary(InputStream is) throws IOException {
+        try {
+            final Dictionary<String, Object> result = new Hashtable<String, Object>();
+            final PropertyConverter converter = new PropertyConverter();
+            final Properties p = new Properties();
+            p.load(is);
+            for(Map.Entry<Object, Object> e : p.entrySet()) {
+                final PropertyValue v = converter.convert((String)e.getKey(), (String)e.getValue());
+                result.put(v.getKey(), v.getValue());
+            }
+            return result;
+        } finally {
+            try {
+                is.close();
+            } catch (IOException ignore ) {
+                // we ignore this
+            }
+        }
+    }
+
+    /** Compute the extension */
+    private static String getExtension(String url) {
+        final int pos = url.lastIndexOf('.');
+        return (pos < 0 ? "" : url.substring(pos+1));
+    }
+
+    private static Type computeResourceType(String extension) {
+        if(extension.equals("jar")) {
+            return Type.BUNDLE;
+        }
+        return Type.CONFIG;
     }
 }
