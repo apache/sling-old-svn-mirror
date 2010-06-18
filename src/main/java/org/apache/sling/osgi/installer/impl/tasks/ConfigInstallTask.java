@@ -24,7 +24,7 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.DigestUtil;
+import org.apache.sling.osgi.installer.impl.DigestUtil;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;

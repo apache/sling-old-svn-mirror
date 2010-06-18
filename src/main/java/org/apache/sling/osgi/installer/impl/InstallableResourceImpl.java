@@ -21,7 +21,6 @@ package org.apache.sling.osgi.installer.impl;
 import java.io.InputStream;
 import java.util.Dictionary;
 
-import org.apache.sling.osgi.installer.DigestUtil;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 
