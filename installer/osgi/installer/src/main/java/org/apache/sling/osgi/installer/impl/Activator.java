@@ -43,7 +43,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     private static String START_LEVEL_NAME = StartLevel.class.getName();
     private static String LOG_SERVICE_NAME = LogService.class.getName();
 
-    private ServiceTracker startLevelTracker;
     private ServiceTracker packageAdminTracker;
     private ServiceTracker logServiceTracker;
     private OsgiInstallerImpl osgiControllerService;
@@ -56,10 +55,8 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        this.startLevelTracker = new ServiceTracker(context, START_LEVEL_NAME, null);
         this.packageAdminTracker = new ServiceTracker(context, PACKAGE_ADMIN_NAME, null);
         this.logServiceTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
-        this.startLevelTracker.open();
         this.packageAdminTracker.open();
         this.logServiceTracker.open();
 
@@ -128,10 +125,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
             this.osgiControllerService = null;
-        }
-        if ( this.startLevelTracker != null ) {
-            this.startLevelTracker.close();
-            this.startLevelTracker = null;
         }
         if ( this.packageAdminTracker != null ) {
             this.packageAdminTracker.close();
