@@ -43,15 +43,29 @@ public interface InstallableResource {
 	 */
     String getUrl();
 
-	/** Return the type of this resource. */
+	/**
+	 * Return the type of this resource.
+	 * @return The resource type.
+	 */
     Type getType();
 
-	/** Return an input stream with the data of this resource. Null if resource
-	 *  contains a dictionary instead. Caller is responsible for closing the stream.
+	/**
+	 * Return an input stream with the data of this resource.
+	 * Null if resource contains a dictionary instead. Caller is responsible for
+	 * closing the stream.
+	 * If this resource is of type CONFIG it must not return an input stream and
+	 * if this resource is of type BUNDLE it must return an input stream!
+	 * @return The input stream or null.
 	 */
     InputStream getInputStream();
 
-	/** Return this resource's dictionary. Null if resource contains an InputStream instead */
+	/**
+	 * Return this resource's dictionary.
+	 * Null if resource contains an InputStream instead. If this resource is of
+	 * type CONFIG it must return a dictionary and if this resource is of type BUNDLE
+	 * it must not return a dictionary!
+	 * @return The resource's dictionary or null.
+	 */
 	Dictionary<String, Object> getDictionary();
 
 	/** Return this resource's digest. Not necessarily an actual md5 or other digest of the

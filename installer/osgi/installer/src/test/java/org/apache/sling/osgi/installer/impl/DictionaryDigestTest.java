@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.DigestUtil;
 
 public class DictionaryDigestTest {
 	private void setTestData(Hashtable<String, Object> d) {
