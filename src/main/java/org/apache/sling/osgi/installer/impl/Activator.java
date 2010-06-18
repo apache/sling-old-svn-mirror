@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Hashtable;
 
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -36,6 +37,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator, FrameworkListener, BundleListener {
 
+    private static final String VENDOR = "The Apache Software Foundation";
+
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
     private static String START_LEVEL_NAME = StartLevel.class.getName();
     private static String LOG_SERVICE_NAME = LogService.class.getName();
@@ -45,7 +48,8 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     private ServiceTracker logServiceTracker;
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
-    
+    private ServiceRegistration factoryServiceReg;
+
     private static long eventsCount;
 
     /**
@@ -62,13 +66,13 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         // listen to framework and bundle events
         context.addFrameworkListener(this);
         context.addBundleListener(this);
-        
-        // register OsgiController service        
+
+        // register OsgiController service
         {
             final Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
-            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-            
+            props.put(Constants.SERVICE_VENDOR, VENDOR);
+
             // Assume PackageAdmin is available before this bundle is started.
             // That's the case when using Felix OSGi, not sure about other frameworks.
             this.osgiControllerService = new OsgiInstallerImpl(context,
@@ -79,15 +83,25 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             };
             osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
         }
-        
-        // register EventsCounter service        
+
+        // register installable resource factory service
+        {
+            final Hashtable<String, String> props = new Hashtable<String, String>();
+            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installable Resource Factory");
+            props.put(Constants.SERVICE_VENDOR,VENDOR);
+
+            factoryServiceReg = context.registerService(InstallableResourceFactory.class.getName(),
+                    new InstallableResourceFactoryImpl(), props);
+        }
+
+        // register EventsCounter service
         {
             final Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling EventsCounter Service");
-            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            props.put(Constants.SERVICE_VENDOR, VENDOR);
         }
     }
-    
+
     /** Complain if value is null */
     static Object checkNotNull(Object value, String what) {
     	if(value == null) {
@@ -102,7 +116,11 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     public void stop(BundleContext context) throws Exception {
     	context.removeBundleListener(this);
     	context.removeFrameworkListener(this);
-    	
+
+    	if ( this.factoryServiceReg != null ) {
+    	    this.factoryServiceReg.unregister();
+    	    this.factoryServiceReg = null;
+    	}
         if ( this.osgiControllerServiceReg != null ) {
             this.osgiControllerServiceReg.unregister();
             this.osgiControllerServiceReg = null;
@@ -124,7 +142,7 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             this.logServiceTracker = null;
         }
     }
-    
+
     /** Used for tasks that wait for a framework or bundle event before retrying their operations */
     public static long getTotalEventsCount() {
         return eventsCount;
