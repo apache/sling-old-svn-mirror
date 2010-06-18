@@ -29,7 +29,7 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
 
     SlingRepository repo;
     Session session;
-    protected EventHelper eventHelper; 
+    protected EventHelper eventHelper;
     protected ContentHelper contentHelper;
     protected JcrInstaller installer;
     protected MockOsgiInstaller osgiInstaller;
@@ -46,7 +46,7 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
             contentHelper.setupContent();
         }
         osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller);
+        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller, new MockInstallableResourceFactory());
     }
 
     @Override
@@ -59,26 +59,26 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
         installer.deactivate(MiscUtil.getMockComponentContext());
         MiscUtil.waitForInstallerThread(installer, TIMEOUT);
     }
-    
+
     protected abstract boolean needsTestContent();
-    
+
     protected void assertRegisteredPaths(String [] paths) {
         for(String path : paths) {
             assertRegistered(path, !path.contains("NOT"));
         }
     }
-    
+
     protected void assertRegistered(String path, boolean registered) {
         assertRegistered(null, path, registered);
     }
-    
+
     protected void assertRegistered(String info, String path, boolean registered) {
         if(info == null) {
             info = "";
         } else {
             info += ": ";
         }
-        
+
         if(registered) {
             assertTrue(info + "Expected " + path + " to be registered",
                     osgiInstaller.isRegistered(JcrInstaller.URL_SCHEME, path));
@@ -87,7 +87,7 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
                     osgiInstaller.isRegistered(JcrInstaller.URL_SCHEME, path));
         }
     }
-    
+
     protected void assertRecordedCall(String action, String path) {
         final String callStr = action + ":" + JcrInstaller.URL_SCHEME + ":" + path;
         boolean found = false;

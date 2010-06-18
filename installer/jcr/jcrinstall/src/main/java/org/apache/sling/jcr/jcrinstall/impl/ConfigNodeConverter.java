@@ -30,6 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,15 +43,16 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 	/** Convert n to an InstallableData, or return null
 	 * 	if we don't know how to convert it.
 	 */
-	/**
-	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(java.lang.String, javax.jcr.Node, int)
-	 */
-	public InstallableResource convertNode(String urlScheme, Node n, final int priority) throws Exception {
+	public InstallableResource convertNode(final String urlScheme,
+	        final Node n,
+	        final int priority,
+	        final InstallableResourceFactory factory)
+	throws Exception {
 		InstallableResource result = null;
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			result = new InstallableResource(urlScheme + ":" + n.getPath(), load(n), priority);
+			result = factory.create(urlScheme + ":" + n.getPath(), load(n), null, null, priority);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());

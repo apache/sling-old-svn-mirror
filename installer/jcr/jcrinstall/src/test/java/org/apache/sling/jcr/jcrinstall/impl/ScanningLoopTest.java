@@ -27,26 +27,26 @@ import org.junit.Test;
 /** Verify that JcrInstaller scans folders only when needed */
 public class ScanningLoopTest extends RepositoryTestBase {
     public static final long TIMEOUT = 5000L;
-    
+
     private JcrInstaller installer;
     private SlingRepository repository;
     private MockOsgiInstaller osgiInstaller;
     private ContentHelper contentHelper;
     private Session session;
-    private EventHelper eventHelper; 
-    
+    private EventHelper eventHelper;
+
     @Override
     public void setUp() throws Exception {
         super.setUp();
         repository = getRepository();
         osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repository, osgiInstaller);
+        installer = MiscUtil.getJcrInstaller(repository, osgiInstaller, new MockInstallableResourceFactory());
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         eventHelper = new EventHelper(session);
         contentHelper = new ContentHelper(session);
         contentHelper.setupFolders();
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -59,11 +59,11 @@ public class ScanningLoopTest extends RepositoryTestBase {
             session = null;
         }
     }
-    
+
     private void assertCounter(int index, long value) {
         assertEquals("Counter " + index, value, installer.getCounters()[index]);
     }
-    
+
     private void assertIdle() throws Exception {
         final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
         final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
@@ -71,7 +71,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         assertCounter(JcrInstaller.SCAN_FOLDERS_COUNTER, sf);
         assertCounter(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER, uc);
     }
-    
+
     private void assertEvents(String info, long oldCount, int counterIndex) {
         final long newCount = installer.getCounters()[counterIndex];
         assertTrue(info + " (old=" + oldCount + ", new=" + newCount + ")", newCount > oldCount);
@@ -82,7 +82,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 4);
         assertIdle();
     }
-    
+
     @Test
     public void testAddBundle() throws Exception {
         contentHelper.createOrUpdateFile(contentHelper.FAKE_RESOURCES[0]);
@@ -90,49 +90,49 @@ public class ScanningLoopTest extends RepositoryTestBase {
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertIdle();
     }
-    
+
     public void testAddContentOutside() throws Exception {
         final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
         final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
-        
+
         contentHelper.createOrUpdateFile("/" + System.currentTimeMillis());
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
-        
+
         // Adding a file outside /libs or /apps must not "wake up" the scan loop
         assertCounter(JcrInstaller.SCAN_FOLDERS_COUNTER, sf);
         assertCounter(JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER, uc);
     }
-    
+
     public void testDeleteFile() throws Exception {
         contentHelper.setupContent();
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertIdle();
-        
+
         final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
         contentHelper.delete(contentHelper.FAKE_RESOURCES[0]);
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
-        assertEvents("Expected at least one folder scan event", 
+        assertEvents("Expected at least one folder scan event",
                 sf,  JcrInstaller.SCAN_FOLDERS_COUNTER);
-        
+
         assertIdle();
     }
-    
+
     public void testDeleteLibsFolder() throws Exception {
         contentHelper.setupContent();
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
         assertIdle();
-        
+
         final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
         contentHelper.delete("/libs");
         eventHelper.waitForEvents(TIMEOUT);
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
-        assertEvents("Expected at least one folders list update event", 
+        assertEvents("Expected at least one folders list update event",
                 uc,  JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
-        
+
         assertIdle();
     }
 }
