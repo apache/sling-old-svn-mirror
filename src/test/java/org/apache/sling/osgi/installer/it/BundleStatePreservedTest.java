@@ -35,17 +35,17 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
     public static Option[] configuration() {
     	return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     @Test
     public void testBundleStatePreserved() throws Exception {
     	// Install two bundles, one started, one stopped
@@ -64,10 +64,10 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
             assertNotNull("Test bundle B must be found", b);
             b.stop();
         }
-    	
+
         assertBundle("Bundle A must be started", "osgi-installer-testA", null, Bundle.ACTIVE);
         assertBundle("Bundle B must be stopped", "osgi-installer-testB", null, Bundle.RESOLVED);
-    	
+
     	// Execute some OsgiController operations
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
@@ -75,25 +75,25 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
-    	
+
         // Verify number of registered resources and groups
         assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 5);
         assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 3);
-    	
+
         resetCounters();
-        installer.removeResource(getNonInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+        installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         resetCounters();
-        installer.removeResource(getNonInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+        installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
-        
+
         resetCounters();
-        installer.removeResource(getNonInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+        installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
         waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
-        
+
         assertNull("testbundle must be gone at end of test", findBundle("osgi-installer-testbundle"));
-        
+
     	// Now check that bundles A and B have kept their states
         assertBundle("Bundle A must still be started", "osgi-installer-testA", null, Bundle.ACTIVE);
         assertBundle("Bundle B must still be stopped", "osgi-installer-testB", null, Bundle.RESOLVED);

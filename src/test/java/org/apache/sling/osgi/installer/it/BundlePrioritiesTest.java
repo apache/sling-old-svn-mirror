@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.junit.After;
 import org.junit.Before;
@@ -36,27 +36,27 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     @Test
     /** Use snapshots, it's the only bundles which are updated even if their version doesn't change */
     public void testPrioritiesUsingSnapshots() throws IOException {
         // Install test bundle
         final String symbolicName = "osgi-installer-snapshot-test";
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
-        
-        final int lowPriority = InstallableResource.DEFAULT_PRIORITY - 1;
-        final int highPriority = InstallableResource.DEFAULT_PRIORITY + 1;
-        
+
+        final int lowPriority = InstallableResourceFactory.DEFAULT_PRIORITY - 1;
+        final int highPriority = InstallableResourceFactory.DEFAULT_PRIORITY + 1;
+
         {
             resetCounters();
             installer.addResource(getInstallableResource(
@@ -77,7 +77,7 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest3", highPriority));
             waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         }
-        
+
         assertNoOsgiTasks("At end of test");
     }
 }

@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
@@ -61,19 +62,19 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	private long [] counters;
 	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.osgi.installer.it-" + POM_VERSION;
-    
+
     @Inject
     protected BundleContext bundleContext;
-    
+
     public static final String URL_SCHEME = "OsgiInstallerTest";
-    
+
     static abstract class Condition {
     	abstract boolean isTrue() throws Exception;
     	String additionalInfo() { return null; }
     	void onFailure() { }
     	long getMsecBetweenEvaluations() { return 100L; }
     }
-    
+
     @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
     	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
@@ -82,19 +83,19 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
     }
-    
+
     public void setupInstaller() {
         installer = getService(OsgiInstaller.class);
         resetCounters();
     }
-    
+
     public void tearDown() {
         if(configAdminTracker != null) {
             configAdminTracker.close();
             configAdminTracker = null;
         }
     }
-    
+
     protected void restartInstaller() throws BundleException {
         final String symbolicName = "org.apache.sling.osgi.installer";
         final Bundle b = findBundle(symbolicName);
@@ -106,7 +107,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         b.start();
         setupInstaller();
     }
-    
+
     protected void generateBundleEvent() throws Exception {
         // install a bundle manually to generate a bundle event
         final File f = getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar");
@@ -128,22 +129,22 @@ class OsgiInstallerTestBase implements FrameworkListener {
             }
         }
     }
-    
+
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
             packageRefreshEventsCount++;
         }
     }
-    
+
     protected void refreshPackages() {
         bundleContext.addFrameworkListener(this);
         final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 5;
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
-        
+
         final PackageAdmin pa = getService(PackageAdmin.class);
         pa.refreshPackages(null);
-        
+
         try {
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
@@ -158,7 +159,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
             bundleContext.removeFrameworkListener(this);
         }
     }
-    
+
     protected Configuration findConfiguration(String pid) throws Exception {
     	final ConfigurationAdmin ca = getService(ConfigurationAdmin.class);
     	if(ca != null) {
@@ -173,7 +174,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	}
     	return null;
     }
-    
+
     protected void waitForCondition(String info, long timeoutMsec, Condition c) throws Exception {
         final long end = System.currentTimeMillis() + timeoutMsec;
         do {
@@ -182,15 +183,15 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	}
         	Thread.sleep(c.getMsecBetweenEvaluations());
         } while(System.currentTimeMillis() < end);
-        
+
         if(c.additionalInfo() != null) {
         	info += " " + c.additionalInfo();
         }
-        
+
         c.onFailure();
         fail("WaitForCondition failed: " + info);
     }
-    
+
     protected void waitForConfigValue(String info, String pid, long timeoutMsec, String key, String value) throws Exception {
         final long end = System.currentTimeMillis() + timeoutMsec;
         do {
@@ -202,14 +203,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
         } while(System.currentTimeMillis() < end);
         fail("Did not get " + key + "=" + value + " for config " + pid);
     }
-    
+
     protected Configuration waitForConfiguration(String info, String pid, long timeoutMsec, boolean shouldBePresent) throws Exception {
         if(info == null) {
             info = "";
         } else {
             info += ": ";
         }
-        
+
         Configuration result = null;
         final long end = System.currentTimeMillis() + timeoutMsec;
         do {
@@ -222,7 +223,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
             }
             sleep(25);
         } while(System.currentTimeMillis() < end);
-        
+
         if(shouldBePresent && result == null) {
             fail(info + "Configuration not found (" + pid + ")");
         } else if(!shouldBePresent && result != null) {
@@ -230,7 +231,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
         return result;
     }
-    
+
     protected Bundle findBundle(String symbolicName) {
     	for(Bundle b : bundleContext.getBundles()) {
     		if(symbolicName.equals(b.getSymbolicName())) {
@@ -239,7 +240,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	}
     	return null;
     }
-    
+
     protected Bundle assertBundle(String info, String symbolicName, String version, int state) {
         final Bundle b = findBundle(symbolicName);
         if(info == null) {
@@ -258,43 +259,41 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
         return b;
     }
-    
+
     protected File getTestBundle(String bundleName) {
     	return new File(System.getProperty("osgi.installer.base.dir"), bundleName);
     }
-    
+
     protected InstallableResource getInstallableResource(File testBundle) throws IOException {
         return getInstallableResource(testBundle, null);
     }
-    
-    protected InstallableResource getNonInstallableResource(File testBundle) throws IOException {
-    	return new InstallableResource(URL_SCHEME + ":" + testBundle.getAbsolutePath());
+
+    protected String getNonInstallableResourceUrl(File testBundle) throws IOException {
+    	return URL_SCHEME + ":" + testBundle.getAbsolutePath();
     }
-    
+
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
-        return getInstallableResource(testBundle, digest, InstallableResource.DEFAULT_PRIORITY);
+        return getInstallableResource(testBundle, digest, InstallableResourceFactory.DEFAULT_PRIORITY);
     }
-    
+
     protected InstallableResource getInstallableResource(File testBundle, String digest, int priority) throws IOException {
         final String url = URL_SCHEME + ":" + testBundle.getAbsolutePath();
         if(digest == null) {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
-        final InstallableResource result = new InstallableResource(url, new FileInputStream(testBundle), digest);
-        result.setPriority(priority);
+        final InstallableResource result = new MockInstallableResource(url, new FileInputStream(testBundle), digest, null, priority);
         return result;
     }
-    
+
     protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data) {
-        return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
+        return getInstallableResource(configPid, data, InstallableResourceFactory.DEFAULT_PRIORITY);
     }
-    
+
     protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
-        final InstallableResource result = new InstallableResource(URL_SCHEME + ":/" + configPid, data);
-        result.setPriority(priority);
+        final InstallableResource result = new MockInstallableResource(URL_SCHEME + ":/" + configPid, data, null, null, priority);
         return result;
     }
-    
+
     protected ConfigurationAdmin waitForConfigAdmin(boolean shouldBePresent) {
     	ConfigurationAdmin result = null;
         if(configAdminTracker == null) {
@@ -303,7 +302,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 configAdminTracker.open();
             }
         }
-        
+
     	final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
     	do {
@@ -312,31 +311,31 @@ class OsgiInstallerTestBase implements FrameworkListener {
     		assertEquals("Expected ConfigurationAdmin to be " + (shouldBePresent ? "present" : "absent"),
     				shouldBePresent, isPresent);
     	} while(System.currentTimeMillis() < waitUntil);
-    	
+
     	return result;
     }
-    
+
     protected void resetCounters() {
         final long [] src = installer.getCounters();
         counters = new long[src.length];
         System.arraycopy(installer.getCounters(), 0, counters, 0, src.length);
     }
-    
+
     protected void sleep(long msec) {
         try {
             Thread.sleep(msec);
         } catch(InterruptedException ignored) {
         }
     }
-    
+
     protected void waitForInstallerAction(int counterType, long howMany) {
         waitForInstallerAction(null, counterType, howMany);
     }
-    
+
     protected void waitForInstallerAction(String info, int counterType, long howMany) {
     	waitForInstallerAction(info, counterType, howMany, 0);
     }
-    
+
     /** @param howMany negative values means absolute, instead of relative to current value */
     protected void waitForInstallerAction(String info, int counterType, long howMany, long timeoutMsec) {
         if(info == null) {
@@ -344,17 +343,17 @@ class OsgiInstallerTestBase implements FrameworkListener {
         } else {
             info += ": ";
         }
-        
+
         final boolean waitForCycles = counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER;
-        
+
         long targetValue = howMany <  0 ? -howMany : counters[counterType] + howMany;
         if(waitForCycles) {
             // if waiting for installer cycles, get initial value from
-            // that counter - we know we want to wait from now on, not from an 
+            // that counter - we know we want to wait from now on, not from an
             // earlier resetCounters() call
             targetValue = installer.getCounters()[counterType] + howMany;
         }
-        
+
         final long timeout = timeoutMsec > 0 ? timeoutMsec : WAIT_FOR_ACTION_TIMEOUT_MSEC;
         final long endTime = System.currentTimeMillis() + timeout;
         long lastValue = 0;
@@ -368,31 +367,31 @@ class OsgiInstallerTestBase implements FrameworkListener {
             }
             sleep(10);
         }
-        fail(info + "waitForInstallerAction(" + counterType + "," + howMany 
+        fail(info + "waitForInstallerAction(" + counterType + "," + howMany
                 + ") fails after " + WAIT_FOR_ACTION_TIMEOUT_MSEC + " msec"
                 + ", expected value " + targetValue + ", actual " + lastValue);
     }
-    
+
     /** Verify that no OSGi actions are executed in next two installer cycles */
     protected void assertNoOsgiTasks(String info) {
     	final long actionsCounter = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
     	waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
-    	assertEquals(info + ": OSGi tasks counter should not have changed", 
+    	assertEquals(info + ": OSGi tasks counter should not have changed",
     			actionsCounter, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
     }
-    
+
     public void assertCounter(int index, long value) {
         assertEquals("Expected value matches for counter " + index, value, installer.getCounters()[index]);
     }
-    
+
     protected void log(int level, String msg) {
     	final LogService log = getService(LogService.class);
     	log.log(LogService.LOG_INFO, msg);
     }
-    
+
     public static Option[] defaultConfiguration() {
     	String vmOpt = "-Dosgi.installer.testing";
-    	
+
     	// This runs in the VM that runs the build, but the tests run in another one.
     	// Make all osgi.installer.* system properties available to OSGi framework VM
     	for(Object o : System.getProperties().keySet()) {
@@ -406,17 +405,17 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	final String paxDebugLevel = System.getProperty("pax.exam.log.level");
     	final String paxDebugPort = System.getProperty("pax.exam.debug.port");
     	if(paxDebugPort != null && paxDebugPort.length() > 0) {
-        	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort; 
+        	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort;
     	}
-    	
+
         return options(
                 felix(),
                 vmOption(vmOpt),
                 waitForFrameworkStartup(),
-                
+
                 logProfile(),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
-                
+
                 provision(
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
