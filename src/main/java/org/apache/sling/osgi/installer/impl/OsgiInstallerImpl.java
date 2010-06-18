@@ -26,7 +26,6 @@ import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -36,22 +35,45 @@ import org.osgi.util.tracker.ServiceTracker;
 /** OsgiInstaller service implementation */
 public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
+    /** Interface of the package admin */
+    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
+    /** Interface of the log service */
+    private static String LOG_SERVICE_NAME = LogService.class.getName();
+    /** Interface of the config admin */
+    private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
+
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
+    /** The bundle context. */
 	private final BundleContext bundleContext;
-    private final PackageAdmin packageAdmin;
-    private final ServiceTracker logServiceTracker;
+
+	/** The actual worker thread. */
     private final OsgiInstallerThread installerThread;
+
     private long [] counters = new long[COUNTERS_SIZE];
     private PersistentBundleInfo bundleDigestsStorage;
 
-    public OsgiInstallerImpl(final BundleContext bc,
-                              final PackageAdmin pa,
-                              final ServiceTracker logServiceTracker)
+    /** Tracker for the package admin. */
+    private final ServiceTracker packageAdminTracker;
+    /** Tracker for the log service. */
+    private final ServiceTracker logServiceTracker;
+    /** Tracker for the configuration admin. */
+    private final ServiceTracker configAdminServiceTracker;
+
+    /**
+     * Construct a new service
+     */
+    public OsgiInstallerImpl(final BundleContext bc)
     throws IOException {
         this.bundleContext = bc;
-        this.packageAdmin = pa;
-        this.logServiceTracker = logServiceTracker;
+        // create and start tracker
+        this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
+        this.logServiceTracker = new ServiceTracker(bc, LOG_SERVICE_NAME, null);
+        this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
+        this.packageAdminTracker.open();
+        this.logServiceTracker.open();
+        this.configAdminServiceTracker.open();
+
         bundleDigestsStorage = new PersistentBundleInfo(this, bc.getDataFile("bundle-digests.properties"));
 
         installerThread = new OsgiInstallerThread(this);
@@ -59,30 +81,42 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         installerThread.start();
     }
 
-    public void deactivate() throws InterruptedException, IOException {
+    /**
+     * Deactivate this service.
+     */
+    public void deactivate() {
         installerThread.deactivate();
 
         final TreeSet<String> installedBundlesSymbolicNames = new TreeSet<String>();
         for(Bundle b : bundleContext.getBundles()) {
             installedBundlesSymbolicNames.add(b.getSymbolicName());
         }
-        bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
+        try {
+            bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
+        } catch (IOException e) {
+            logWarn(OsgiInstaller.class.getName() + " service failed to save state.", e);
+        }
 
         this.logInfo("Waiting for installer thread to stop");
-        installerThread.join();
+        try {
+            installerThread.join();
+        } catch (InterruptedException e) {
+            // we simply ignore this
+        }
+
+        this.packageAdminTracker.close();
+        this.logServiceTracker.close();
+        this.configAdminServiceTracker.close();
 
         this.logWarn(OsgiInstaller.class.getName()
                     + " service deactivated - this warning can be ignored if system is shutting down");
     }
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getConfigurationAdmin()
+	 */
 	public ConfigurationAdmin getConfigurationAdmin() {
-		if(bundleContext != null) {
-		   	final ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
-		    if(ref != null) {
-		    	return (ConfigurationAdmin)bundleContext.getService(ref);
-		    }
-		}
-		return null;
+	    return (ConfigurationAdmin)this.configAdminServiceTracker.getService();
 	}
 
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
@@ -94,12 +128,18 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		installerThread.addTaskToNextCycle(t);
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getBundleContext()
+	 */
 	public BundleContext getBundleContext() {
 		return bundleContext;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getPackageAdmin()
+	 */
 	public PackageAdmin getPackageAdmin() {
-		return packageAdmin;
+		return (PackageAdmin)this.packageAdminTracker.getService();
 	}
 
 	public long [] getCounters() {
