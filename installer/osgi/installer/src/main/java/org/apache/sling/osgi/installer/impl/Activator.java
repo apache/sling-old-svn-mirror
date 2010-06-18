@@ -83,7 +83,7 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(BundleContext context) throws Exception {
+    public void stop(BundleContext context) {
     	context.removeBundleListener(this);
     	context.removeFrameworkListener(this);
 
