@@ -47,6 +47,7 @@ public interface InstallableResourceFactory {
      * @param optional resource type - if the client knows the resource type it should
      *     be specified - if not, the factory detects the type
      * @param optional priority - if not specified {@link #DEFAULT_PRIORITY} will be used.
+     * @return A new installable resource or null if something goes wrong
      */
     InstallableResource create(String url,
                                InputStream is,
@@ -73,6 +74,7 @@ public interface InstallableResourceFactory {
      * @param optional resource type - if the client knows the resource type it should
      *     be specified - if not, the factory detects the type
      * @param optional priority - if not specified {@link #DEFAULT_PRIORITY} will be used.
+     * @return A new installable resource or null if something goes wrong
      */
     InstallableResource create(String url,
                                Dictionary<String, Object> d,

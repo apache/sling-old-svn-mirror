@@ -77,21 +77,22 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	public RegisteredResourceImpl(OsgiInstallerContext osgiCtx, InstallableResource input) throws IOException {
 
 	    final BundleContext ctx = osgiCtx.getBundleContext();
-	    try {
-    		url = input.getUrl();
-    		urlScheme = getUrlScheme(url);
-    		resourceType = input.getType();
-    		priority = input.getPriority();
-    		serialNumber = getNextSerialNumber();
+		url = input.getUrl();
+		urlScheme = getUrlScheme(url);
+		resourceType = input.getType();
+		priority = input.getPriority();
+		serialNumber = getNextSerialNumber();
 
-            if(input.getDigest() == null || input.getDigest().length() == 0) {
-                throw new IllegalArgumentException("Missing digest: " + input);
+        if(input.getDigest() == null || input.getDigest().length() == 0) {
+            throw new IllegalArgumentException("Missing digest: " + input);
+        }
+
+		if(resourceType == InstallableResource.Type.BUNDLE) {
+		    final InputStream is = input.getInputStream();
+            if (is == null) {
+                throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
             }
-
-    		if(resourceType == InstallableResource.Type.BUNDLE) {
-                if(input.getInputStream() == null) {
-                    throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
-                }
+            try {
                 dictionary = null;
                 final File f = getDataFile(ctx);
                 osgiCtx.logDebug("Copying data to local storage " + f.getAbsolutePath());
@@ -106,24 +107,18 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 } else {
                     entity = ENTITY_BUNDLE_PREFIX + name;
                 }
-    		} else {
-                hasDataFile = false;
-                final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
-                entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
-                attributes.put(CONFIG_PID_ATTRIBUTE, pid);
-                if(input.getInputStream() == null) {
-                    // config provided as a Dictionary
-                    dictionary = copy(input.getDictionary());
-                } else {
-                    dictionary = readDictionary(input.getInputStream());
-                }
-                digest = input.getDigest();
-    		}
-    	} finally {
-    		if(input.getInputStream() != null) {
-    			input.getInputStream().close();
-    		}
-    	}
+            } finally {
+                is.close();
+            }
+		} else {
+            hasDataFile = false;
+            final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
+            entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
+            attributes.put(CONFIG_PID_ATTRIBUTE, pid);
+            // config provided as a Dictionary
+            dictionary = copy(input.getDictionary());
+            digest = input.getDigest();
+		}
 	}
 
     private static long getNextSerialNumber() {

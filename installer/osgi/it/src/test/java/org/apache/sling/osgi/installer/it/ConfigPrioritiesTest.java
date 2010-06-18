@@ -16,11 +16,13 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import static org.junit.Assert.fail;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import static org.junit.Assert.fail;
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -32,22 +34,22 @@ import org.osgi.service.cm.Configuration;
 public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
 
     private final static long TIMEOUT = 5000L;
-    
+
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     void assertConfigValue(String pid, String key, String value, long timeoutMsec) throws Exception {
         boolean found = false;
         final String info = pid + ": waiting for " + key + "=" + value;
@@ -59,33 +61,33 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
                 break;
             }
         } while(System.currentTimeMillis() < end);
-        
+
         if(!found) {
             fail("Did not get expected value: " + info);
         }
     }
-    
+
     public void testOverrideConfig() throws Exception {
         final String pid = getClass().getSimpleName() + "." + System.currentTimeMillis();
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
-        
+
         data.put("foo", "a");
-        final InstallableResource a = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY - 1);
+        final InstallableResource a = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY - 1);
         data.put("foo", "b");
-        final InstallableResource b = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY);
+        final InstallableResource b = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY);
         data.put("foo", "c");
-        final InstallableResource c = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY + 1);
-        
+        final InstallableResource c = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY + 1);
+
         installer.addResource(b);
         assertConfigValue(pid, "foo", "b", TIMEOUT);
         installer.addResource(c);
         assertConfigValue(pid, "foo", "c", TIMEOUT);
         installer.addResource(a);
-        installer.removeResource(new InstallableResource(c.getUrl()));
+        installer.removeResource(c.getUrl());
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.removeResource(new InstallableResource(b.getUrl()));
+        installer.removeResource(b.getUrl());
         assertConfigValue(pid, "foo", "a", TIMEOUT);
-        installer.removeResource(new InstallableResource(a.getUrl()));
+        installer.removeResource(a.getUrl());
         waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
     }
 }
