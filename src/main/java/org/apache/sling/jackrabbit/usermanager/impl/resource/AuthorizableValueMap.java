@@ -33,6 +33,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
@@ -42,6 +43,15 @@ import org.slf4j.LoggerFactory;
  * ValueMap implementation for Authorizable Resources
  */
 public class AuthorizableValueMap implements ValueMap {
+
+    private static final String DECLARED_MEMBERS_KEY = "declaredMembers";
+
+    private static final String MEMBERS_KEY = "members";
+
+    private static final String DECLARED_MEMBER_OF_KEY = "declaredMemberOf";
+
+    private static final String MEMBER_OF_KEY = "memberOf";
+
     private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
 
     private boolean fullyRead;
@@ -126,7 +136,6 @@ public class AuthorizableValueMap implements ValueMap {
     }
 
     protected Object read(String key) {
-
         // if the item has been completely read, we need not check
         // again, as we certainly will not find the key
         if (fullyRead) {
@@ -134,6 +143,19 @@ public class AuthorizableValueMap implements ValueMap {
         }
 
         try {
+            if (key.equals(MEMBERS_KEY) && authorizable.isGroup()) {
+                return getMembers((Group) authorizable, true);
+            }
+            if (key.equals(DECLARED_MEMBERS_KEY) && authorizable.isGroup()) {
+                return getMembers((Group) authorizable, false);
+            }
+            if (key.equals(MEMBER_OF_KEY)) {
+                return getMemberships(authorizable, true);
+            }
+            if (key.equals(DECLARED_MEMBER_OF_KEY)) {
+                return getMemberships(authorizable, false);
+            }
+
             if (authorizable.hasProperty(key)) {
                 final Value[] property = authorizable.getProperty(key);
                 final Object value = valuesToJavaObject(property);
@@ -167,6 +189,13 @@ public class AuthorizableValueMap implements ValueMap {
     protected void readFully() {
         if (!fullyRead) {
             try {
+                if (authorizable.isGroup()) {
+                    cache.put(MEMBERS_KEY, getMembers((Group) authorizable, true));
+                    cache.put(DECLARED_MEMBERS_KEY, getMembers((Group) authorizable, false));
+                }
+                cache.put(MEMBER_OF_KEY, getMemberships(authorizable, true));
+                cache.put(DECLARED_MEMBER_OF_KEY, getMemberships(authorizable, false));
+
                 Iterator pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
                     String key = (String) pi.next();
@@ -317,6 +346,30 @@ public class AuthorizableValueMap implements ValueMap {
             type = Property.class;
         }
         return type;
+    }
+
+    private String[] getMembers(Group group, boolean includeAll) throws RepositoryException {
+        List<String> results = new ArrayList<String>();
+        for (Iterator<Authorizable> it = includeAll ? group.getMembers() : group.getDeclaredMembers();
+                it.hasNext();) {
+            Authorizable auth = it.next();
+            if (auth.isGroup()) {
+                results.add(AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX + auth.getID());
+            } else {
+                results.add(AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + auth.getID());
+            }
+        }
+        return results.toArray(new String[results.size()]);
+    }
+
+    private String[] getMemberships(Authorizable authorizable, boolean includeAll) throws RepositoryException {
+        List<String> results = new ArrayList<String>();
+        for (Iterator<Group> it = includeAll ? authorizable.memberOf() : authorizable.declaredMemberOf();
+                it.hasNext();) {
+            Group group = it.next();
+            results.add(AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX + group.getID());
+        }
+        return results.toArray(new String[results.size()]);
     }
 
 }
