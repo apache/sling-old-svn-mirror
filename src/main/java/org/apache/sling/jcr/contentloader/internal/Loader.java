@@ -392,11 +392,10 @@ public class Loader {
             return;
         }
 
-        // potential root node import/extension
-        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path);
-        if (rootNodeDescriptor != null) {
-            processedEntries.put(rootNodeDescriptor,
-                parent.getSession().getRootNode());
+        // potential parent node import/extension
+        URL parentNodeDescriptor = importParentNode(parent.getSession(), bundle, path, parent);
+        if (parentNodeDescriptor != null) {
+            processedEntries.put(parentNodeDescriptor, parent);
         }
 
         while (entries.hasMoreElements()) {
@@ -549,7 +548,7 @@ public class Loader {
             this.contentCreator.prepareParsing(parent, toPlainName(name));
             nodeReader.parse(resourceUrl, this.contentCreator);
 
-            return this.contentCreator.getRootNode();
+            return this.contentCreator.getCreatedRootNode();
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
@@ -807,9 +806,9 @@ public class Loader {
 
     /**
      * Imports mixin nodes and properties (and optionally child nodes) of the
-     * root node.
+     * parent node.
      */
-    private URL importRootNode(Session session, Bundle bundle, String path)
+    private URL importParentNode(Session session, Bundle bundle, String path, Node parent)
     throws RepositoryException {
         final Descriptor descriptor = getRootNodeDescriptor(bundle, path);
         // no root descriptor found
@@ -818,7 +817,7 @@ public class Loader {
         }
 
         try {
-            this.contentCreator.prepareParsing(session.getRootNode(), null);
+            this.contentCreator.prepareParsing(parent, null);
             descriptor.nodeReader.parse(descriptor.rootNodeDescriptor, this.contentCreator);
 
             return descriptor.rootNodeDescriptor;
