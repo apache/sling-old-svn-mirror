@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<web-app version="2.4"
+         xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+    <display-name>Sling Launchpad Web Application Archetype</display-name>
+
+    <servlet>
+        <display-name>Sling Servlet</display-name>
+        <servlet-name>sling</servlet-name>
+        <servlet-class>
+            org.apache.sling.launchpad.webapp.SlingServlet
+        </servlet-class>
+        
+        <!--
+        	Any init-params defined for the servlet will overwrite
+            the default settings in the repository.xml file.
+            
+            The most important init-param to be set here is the 
+            sling.home parameter defining where Sling will place
+            its files such as the bundle cache, logs, configuration,
+            etc.
+            
+            If the sling.home parameter is not set a default value is
+            set as ${user.dir}/sling/${context.path} where ${user.dir}
+            is the current working directory and ${context.path} is the
+            servlet context path with slashes replaced by underscores and
+            the root context represented as just a single underscore.
+            
+            Example: For Sling deployed in the root context, the default
+            sling.home would be sling/_. For Sling deployed in the context
+            /sling/i1, the default sling.home would be sling/_sling_i1.
+        -->  
+        <!--  
+        <init-param>
+        	<param-name>sling.home</param-name>
+        	<param-value> Enter Path Here </param-value>
+        </init-param>
+        -->
+        <load-on-startup>100</load-on-startup>
+    </servlet>
+
+    <!-- Default Mapping for the Context -->
+    <servlet-mapping>
+        <servlet-name>sling</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Overwrite Mappings which may be present in default web.xml files -->
+    <servlet-mapping>
+        <servlet-name>sling</servlet-name>
+        <url-pattern>*.jsp</url-pattern>
+    </servlet-mapping>
+    
+</web-app>
