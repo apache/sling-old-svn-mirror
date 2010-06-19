@@ -71,6 +71,7 @@
         <module>maven/maven-sling-plugin</module>
         <module>maven/maven-launchpad-plugin</module>
         <module>maven/archetypes/launchpad-standalone</module>
+        <module>maven/archetypes/launchpad-webapp</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
