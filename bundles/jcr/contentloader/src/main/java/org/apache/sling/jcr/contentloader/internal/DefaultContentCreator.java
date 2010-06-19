@@ -73,11 +73,11 @@ public class DefaultContentCreator implements ContentCreator {
     private final Map<String, List<String>> delayedReferences = new HashMap<String, List<String>>();
     private final Map<String, String[]> delayedMultipleReferences = new HashMap<String, String[]>();
 
-    private String defaultRootName;
+    private String defaultName;
 
-    private Node rootNode;
+    private Node createdRootNode;
 
-    private boolean isRootNodeImport;
+    private boolean isParentNodeImport;
 
     private boolean ignoreOverwriteFlag = false;
 
@@ -135,17 +135,17 @@ public class DefaultContentCreator implements ContentCreator {
 
     /**
      *
-     * If the defaultRootName is null, we are in ROOT_NODE import mode.
+     * If the defaultName is null, we are in PARENT_NODE import mode.
      * @param parentNode
-     * @param defaultRootName
+     * @param defaultName
      */
     public void prepareParsing(final Node parentNode,
-                               final String defaultRootName) {
+                               final String defaultName) {
         this.parentNodeStack.clear();
         this.parentNodeStack.push(parentNode);
-        this.defaultRootName = defaultRootName;
-        this.rootNode = null;
-        isRootNodeImport = defaultRootName == null;
+        this.defaultName = defaultName;
+        isParentNodeImport = defaultName == null;
+        this.createdRootNode = null;
     }
 
     /**
@@ -173,8 +173,8 @@ public class DefaultContentCreator implements ContentCreator {
     /**
      * Get the created root node.
      */
-    public Node getRootNode() {
-        return this.rootNode;
+    public Node getCreatedRootNode() {
+        return this.createdRootNode;
     }
 
     /**
@@ -231,11 +231,11 @@ public class DefaultContentCreator implements ContentCreator {
             if ( this.parentNodeStack.size() > 1 ) {
                 throw new RepositoryException("Node needs to have a name.");
             }
-            name = this.defaultRootName;
+            name = this.defaultName;
         }
 
-        // if we are in root node import mode, we don't create the root top level node!
-        if ( !isRootNodeImport || this.parentNodeStack.size() > 1 ) {
+        // if we are in parent node import mode, we don't create the root top level node!
+        if ( !isParentNodeImport || this.parentNodeStack.size() > 1 ) {
             // if node already exists but should be overwritten, delete it
             if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
                 parentNode.getNode(name).remove();
@@ -281,8 +281,8 @@ public class DefaultContentCreator implements ContentCreator {
             }
 
             this.parentNodeStack.push(node);
-            if ( this.rootNode == null ) {
-                this.rootNode = node;
+            if ( this.createdRootNode == null ) {
+                this.createdRootNode = node;
             }
         }
     }
