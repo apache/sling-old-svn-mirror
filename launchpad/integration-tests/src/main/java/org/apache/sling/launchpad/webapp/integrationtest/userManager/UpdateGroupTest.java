@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
@@ -35,11 +36,20 @@ import org.apache.sling.commons.json.JSONObject;
 public class UpdateGroupTest extends AbstractUserManagerTest {
 
 	String testGroupId = null;
-	
+
+	String testUserId = null;
+
 	@Override
 	protected void tearDown() throws Exception {
+        if (testUserId != null) {
+            //remove the test user if it exists.
+            String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
+            List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+            assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+        }
+
 		if (testGroupId != null) {
-			//remove the test user if it exists.
+			//remove the test group if it exists.
 			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
@@ -50,16 +60,16 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
 
 	public void testUpdateGroup() throws IOException, JSONException {
 		testGroupId = createTestGroup();
-		
+
         String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("displayName", "My Updated Test Group"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org/updated"));
-		
+
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
+
 		//fetch the user profile json to verify the settings
 		String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
@@ -69,22 +79,67 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
 		assertEquals("My Updated Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org/updated", jsonObj.getString("url"));
 	}
-	
+
 	public void testUpdateGroupMembers() throws IOException, JSONException {
 		testGroupId = createTestGroup();
-		
+		testUserId = createTestUser();
+
+        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+
+		// verify that the members array exists, but is empty
+		JSONArray members = getTestGroupMembers(creds);
+        assertEquals(0, members.length());
+
+        JSONArray memberships = getTestUserMemberships(creds);
+        assertEquals(0, memberships.length());
+
         String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 
-        //TODO: verify this works....
+        // add a group member
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":member", "../user/testUser"));
-		postParams.add(new NameValuePair(":member@Delete", "testGroup"));
-		
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
-        //TODO: verify the group membership is correct....
+		postParams.add(new NameValuePair(":member", testUserId));
+        assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+
+        members = getTestGroupMembers(creds);
+        assertEquals(1, members.length());
+        assertEquals("/system/userManager/user/" + testUserId, members.getString(0));
+
+        memberships = getTestUserMemberships(creds);
+        assertEquals(1, memberships.length());
+        assertEquals("/system/userManager/group/" + testGroupId, memberships.getString(0));
+
+        // delete a group member
+		postParams.clear();
+		postParams.add(new NameValuePair(":member@Delete", testUserId));
+        assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+
+        members = getTestGroupMembers(creds);
+        assertEquals(0, members.length());
+
+        memberships = getTestUserMemberships(creds);
+        assertEquals(0, memberships.length());
+
 	}
-	
+
+	JSONArray getTestUserMemberships(Credentials creds) throws IOException, JSONException {
+	    String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
+        assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
+        String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+        assertNotNull(json);
+        JSONObject jsonObj = new JSONObject(json);
+        JSONArray memberships = jsonObj.getJSONArray("memberOf");
+        return memberships;
+    }
+
+    JSONArray getTestGroupMembers(Credentials creds) throws IOException, JSONException {
+        String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".json";
+		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
+        String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+        assertNotNull(json);
+        JSONObject jsonObj = new JSONObject(json);
+        JSONArray members = jsonObj.getJSONArray("members");
+        return members;
+    }
+
 }
 
