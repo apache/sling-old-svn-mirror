@@ -19,24 +19,32 @@
 package org.apache.sling.openidauth.impl;
 
 import java.io.IOException;
-import java.security.Principal;
-import java.util.Map;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
+import java.util.Dictionary;
+import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.security.auth.callback.CallbackHandler;
+import javax.jcr.SimpleCredentials;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.commons.auth.Authenticator;
+import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
-import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.openidauth.OpenIDConstants;
-import org.apache.sling.openidauth.OpenIDConstants.OpenIDFailure;
+import org.apache.sling.openidauth.OpenIDFailure;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,24 +61,23 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  *
  * @scr.component immediate="false" label="%auth.openid.name"
  *                description="%auth.openid.description"
- * @scr.property name="service.description" value="Apache Sling OpenID Authentication Handler"
+ *                name="org.apache.sling.openidauth.OpenIDAuthenticationHandler"
+ * @scr.property name="service.description"
+ *               value="Apache Sling OpenID Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" values.0="/"
  * @scr.service
  */
-public class OpenIDAuthenticationHandler implements
-        AuthenticationHandler, LoginModulePlugin {
+public class OpenIDAuthenticationHandler implements AuthenticationHandler,
+        AuthenticationFeedbackHandler {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * @scr.property valueRef="DEFAULT_LOGIN_FORM"
+     * @scr.property valueRef="AuthenticationFormServlet.SERVLET_PATH"
      */
     public static final String PROP_LOGIN_FORM = "openid.login.form";
-
-    public static final String DEFAULT_LOGIN_FORM = "/system/sling/openid/loginform.html";
-
 
     /**
      * @scr.property valueRef="DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD"
@@ -79,78 +86,26 @@ public class OpenIDAuthenticationHandler implements
 
     public static final String DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD = RelyingParty.DEFAULT_IDENTIFIER_PARAMETER;
 
-
-    /**
-     * @scr.property valueRef="DEFAULT_ORIGINAL_URL_ON_SUCCESS" type="Boolean"
-     */
-    public static final String PROP_ORIGINAL_URL_ON_SUCCESS = "openid.original.url.onsuccess";
-
-    public static final boolean DEFAULT_ORIGINAL_URL_ON_SUCCESS = true;
-
-
-    /**
-     * @scr.property valueRef="DEFAULT_AUTH_SUCCESS_URL"
-     */
-    public static final String PROP_AUTH_SUCCESS_URL = "openid.login.success";
-
-    public static final String DEFAULT_AUTH_SUCCESS_URL = "/system/sling/openid/authsuccess.html";
-
-
-    /**
-     * @scr.property valueRef="DEFAULT_AUTH_FAIL_URL"
-     */
-    public static final String PROP_AUTH_FAIL_URL = "openid.login.fail";
-
-    public static final String DEFAULT_AUTH_FAIL_URL = "/system/sling/openid/authfail.html";
-
-
-    /**
-     * @scr.property valueRef="DEFAULT_LOGOUT_URL"
-     */
-    public static final String PROP_LOGOUT_URL = "openid.logout";
-
-    public static final String DEFAULT_LOGOUT_URL = "/system/sling/openid/logout.html";
-
-
     /**
      * @scr.property valueRef="DEFAULT_EXTERNAL_URL_PREFIX"
      */
     public static final String PROP_EXTERNAL_URL_PREFIX = "openid.external.url.prefix";
 
-    public static final String DEFAULT_EXTERNAL_URL_PREFIX = "http://my.external.sling.com";
-
-
-    /**
-     * @scr.property valueRef="DEFAULT_OPENID_USERS_PASSWORD"
-     */
-    public static final String PROP_OPENID_USERS_PASSWORD = "openid.users.password";
-
-    public static final String DEFAULT_OPENID_USERS_PASSWORD = "changeme";
-
-
-    /**
-     * @scr.property valueRef="DEFAULT_ANONYMOUS_AUTH_RESOURCES" type="Boolean"
-     */
-    public static final String PROP_ANONYMOUS_AUTH_RESOURCES = "openid.anon.auth.resources";
-
-    public static final boolean DEFAULT_ANONYMOUS_AUTH_RESOURCES = true;
-
+    public static final String DEFAULT_EXTERNAL_URL_PREFIX = "";
 
     /**
      * @scr.property valueRef="DEFAULT_USE_COOKIE" type="Boolean"
      */
     public static final String PROP_USE_COOKIE = "openid.use.cookie";
 
-    public static final boolean DEFAULT_USE_COOKIE = false;
-
+    public static final boolean DEFAULT_USE_COOKIE = true;
 
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_DOMAIN"
      */
     public static final String PROP_COOKIE_DOMAIN = "openid.cookie.domain";
 
-    public static final String DEFAULT_COOKIE_DOMAIN = ".sling.com";
-
+    public static final String DEFAULT_COOKIE_DOMAIN = "";
 
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_NAME"
@@ -159,15 +114,6 @@ public class OpenIDAuthenticationHandler implements
 
     public static final String DEFAULT_COOKIE_NAME = "sling.openid";
 
-
-    /**
-     * @scr.property valueRef="DEFAULT_COOKIE_PATH"
-     */
-    public static final String PROP_COOKIE_PATH = "openid.cookie.path";
-
-    public static final String DEFAULT_COOKIE_PATH = "/";
-
-
     /**
      * @scr.property valueRef="DEFAULT_COOKIE_SECRET_KEY"
      */
@@ -175,27 +121,103 @@ public class OpenIDAuthenticationHandler implements
 
     public static final String DEFAULT_COOKIE_SECRET_KEY = "secret";
 
+    /**
+     * @scr.property valueRef="DEFAULT_OPENID_USER_ATTR"
+     */
+    private static final String PROP_OPENID_USER_ATTR = "openid.user.attr";
+
+    private static final String DEFAULT_OPENID_USER_ATTR = "openid.user";
+
+    /**
+     * @scr.property valueRef="DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY"
+     */
+    private static final String PROP_OPEN_ID_IDENTIFIER_PROPERTY = "openid.property.identity";
+
+    private static final String DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY = "openid.identity";
+
+    /**
+     * The name of the attribute set on the OpenID user object to cache the
+     * mapping from the OpenID identifier to the JCR user id to prevent repeated
+     * time-consuming search for a matching user.
+     */
+    private static final String ATTR_USER_ID = "jcr.userid";
 
     static final String SLASH = "/";
+
+    /** @scr.reference */
+    private SlingRepository repository;
+
+    private Session session;
+
+    private UserManager userManager;
 
     private ComponentContext context;
 
     private String loginForm;
-    private String authSuccessUrl;
-    private String authFailUrl;
-    private String logoutUrl;
-    private boolean accessAuthPageAnon;
 
-    private boolean redirectToOriginalUrl;
+    /**
+     * The prefix used to create an external URL for the resource to which the
+     * client should be returned to after successfully authenticating with the
+     * OpenID provider. This parameter is used as the basis for the
+     * <code>return_to</code> parameter of the OpenID authentication request.
+     * <p>
+     * If this is not set, it defaults to the created from the request as
+     * follows:
+     *
+     * <pre>
+     * request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()</code>
+     * </pre>
+     * <p>
+     * where the port part is omitted if it is the default port for the scheme.
+     */
     private String externalUrlPrefix;
+
+    /**
+     * The OpenID realm to authenticate with. This String is presented to the
+     * client authenticating against the OpenID provider to inform about the
+     * site wishing to authenticate a user. This parameter is used as the value
+     * of the <code>realm</code> (and <code>trust_root</code> parameter of the
+     * OpenID authentication request.
+     * <p>
+     * If this is not set, the {@link #externalUrlPrefix} is used as the realm.
+     * <p>
+     * This field may be used to convey a wildcard realm, such as
+     * <code>http://*.apache.org</code>.
+     */
+    private String realm;
+
     private boolean useCookie;
+
     private String cookieDomain;
+
+    private char[] cookieSecret;
+
     private String cookieName;
-    private String cookiePath;
+
+    /**
+     * Name of the request parameter used provide the OpenID identifier.
+     * Configured by {@link #PROP_LOGIN_IDENTIFIER_FORM_FIELD}, defaults to
+     * {@link #DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD}.
+     */
     private String identifierParam;
 
-	private RelyingParty relyingParty;
+    /**
+     * Name of the JCR User property listing the OpenID identities with which
+     * the user is related. Configured by
+     * {@link #PROP_OPEN_ID_IDENTIFIER_PROPERTY}, defaults to
+     * {@link #DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY}. This property may be
+     * multi-valued if the user is associated with more than one OpenID
+     * identifiers.
+     *
+     * @see #getUserName(OpenIdUser)
+     */
+    private String identityProperty;
 
+    private String openIdAttribute;
+
+    private RelyingParty relyingParty;
+
+    private ServiceRegistration loginModule;
 
     public OpenIDAuthenticationHandler() {
         log.info("OpenIDAuthenticationHandler created");
@@ -208,21 +230,25 @@ public class OpenIDAuthenticationHandler implements
      * is only based on the original request object, no URI translation has
      * taken place yet.
      * <p>
-     * The method returns any of the following values : <table>
+     * The method returns any of the following values :
+     * <table>
      * <tr>
      * <th>value
-     * <th>description</tr>
+     * <th>description
+     * </tr>
      * <tr>
      * <td><code>null</code>
-     * <td>no user details were contained in the request </tr>
+     * <td>no user details were contained in the request
+     * </tr>
      * <tr>
      * <td>{@link AuthenticationInfo#DOING_AUTH}
-     * <td>the handler is in an ongoing authentication exchange with the
-     * client. The request handling is terminated.
+     * <td>the handler is in an ongoing authentication exchange with the client.
+     * The request handling is terminated.
      * <tr>
      * <tr>
      * <td>valid credentials
-     * <td>The user sent credentials.</tr>
+     * <td>The user sent credentials.
+     * </tr>
      * </table>
      * <p>
      * The method must not request credential information from the client, if
@@ -238,147 +264,107 @@ public class OpenIDAuthenticationHandler implements
      * @param response The response object which may be used to send the
      *            information on the request failure to the user.
      * @return A valid Credentials instance identifying the request user,
-     *         DOING_AUTH if the handler is in an authentication transaction with
-     *         the client or null if the request does not contain authentication
-     *         information. In case of DOING_AUTH, the method must have sent a
-     *         response indicating that fact to the client.
+     *         DOING_AUTH if the handler is in an authentication transaction
+     *         with the client or null if the request does not contain
+     *         authentication information. In case of DOING_AUTH, the method
+     *         must have sent a response indicating that fact to the client.
      */
     public AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
-        OpenIdUser user = null;
+        try {
+            final RelyingParty relyingParty = getRelyingParty(request);
 
-        try
-        {
-            user = relyingParty.discover(request);
+            // this may throw a ClassCastException after an update of the
+            // bundle if the HTTP Session object still holds on to an
+            // OpenIdUser instance created by the old bundle.
+            final OpenIdUser user = discover(relyingParty, request);
 
-            // Authentication timeout
-            if(user == null && RelyingParty.isAuthResponse(request))
-            {
-                log.debug("OpenID authentication timeout");
-                response.sendRedirect(request.getRequestURI());
-                return AuthenticationInfo.DOING_AUTH;
-            }
+            // no OpenID user in the request, check whether this is an
+            // OpenID response at all
+            if (user == null) {
 
-            if(request.getPathInfo() != null) {
-                String requestPath = request.getPathInfo();
-                if(requestPath != null) {
-                    if(OpenIDConstants.LOGOUT_REQUEST_PATH.equals(requestPath)) {
-                        relyingParty.invalidate(request, response);
-                        user = null;
-                        return handleLogout(request, response);
-                    }
-                    // handle (possibly)anon auth resources
-                    else if (loginForm.equals(requestPath) ||
-                            authFailUrl.equals(requestPath) ||
-                            logoutUrl.equals(requestPath)) {
+                if (RelyingParty.isAuthResponse(request)) {
 
-                        if (loginForm.equals(requestPath)) {
-                            // can force a login with Allow Anonymous enabled, by requesting
-                            // login form directly.  Checking this parameter allows us
-                            // to redirect user somewhere useful if login is successful
-                            if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
-                                request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-                                        request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER));
-                            }
+                    log.debug("OpenID authentication timeout");
+                    response.sendRedirect(request.getRequestURI());
+                    return AuthenticationInfo.DOING_AUTH;
 
-                            moveAttributeFromSessionToRequest(
-                                    OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
-                                    OpenIDConstants.OpenIDFailure.class,
-                                    request);
+                } else if (RelyingParty.isAuthCancel(request)) {
 
-                            moveAttributeFromSessionToRequest(
-                                    OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-                                    String.class,
-                                    request);
-
-                        } else if (authFailUrl.equals(requestPath)) {
-                            // move the failure reason attribute from session to request
-                            moveAttributeFromSessionToRequest(
-                                    OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
-                                    OpenIDConstants.OpenIDFailure.class,
-                                    request);
-
-                            moveAttributeFromSessionToRequest(
-                                    OpenIDConstants.ORIGINAL_URL_ATTRIBUTE,
-                                    String.class,
-                                    request);
-                        }
-
-                        if (accessAuthPageAnon) {
-                            // Causes anonymous login but does not respect
-                            // SlingAuthenticator allowAnonymous
-                            return new AuthenticationInfo(
-                                OpenIDConstants.OPEN_ID_AUTH_TYPE);
-                        }
-                    }
+                    log.info("OpenID authentication cancelled by user");
+                    return handleAuthFailure(OpenIDFailure.AUTHENTICATION,
+                        request);
                 }
-            }
 
-            if(user != null) {
-                if(user.isAuthenticated()) {
-                    // user already authenticated
-                    request.setAttribute(OpenIdUser.ATTR_NAME, user);
-                    return getAuthInfoFromUser(user);
-                } else if(user.isAssociated()) {
-                    if(RelyingParty.isAuthResponse(request)) {
-                        if(relyingParty.verifyAuth(user, request, response)) {
-                            // authenticated
-                            response.sendRedirect(request.getRequestURI());
-                            return AuthenticationInfo.DOING_AUTH;
-                        }
-                        // failed verification
-                        AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.VERIFICATION, request, response);
-                        if(authInfo != null) {
-                            return authInfo;
-                        }
-                    } else {
-                        // Assume a cancel or some other non-successful response from provider
-                        // failed verification
-                        relyingParty.invalidate(request, response);
-                        user = null;
+                // check whether the request has an OpenID identifier
+                // request parameter not leading to a valid OpenID
+                // transaction; fail authentication in this case
+                final String identifier = request.getParameter(identifierParam);
+                if (identifier != null) {
+                    log.info("OpenID authentication failed (probably failed to discover OpenID Provider)");
+                    return handleAuthFailure(OpenIDFailure.DISCOVERY, request);
+                }
 
-                        AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.AUTHENTICATION, request, response);
-                        if(authInfo != null) {
-                            return authInfo;
-                        }
-                    }
-                } else {
-                    // associate and authenticate user
-                    StringBuffer url = null;
-                    String trustRoot = null;
-                    String returnTo = null;
+            } else if (user.isAuthenticated()) {
 
-                    if(externalUrlPrefix != null && !"".equals(externalUrlPrefix.trim())) {
-                        url = new StringBuffer(externalUrlPrefix).append(request.getRequestURI());
-                        trustRoot = externalUrlPrefix;
-                    } else {
-                        url = request.getRequestURL();
-                        trustRoot = url.substring(0, url.indexOf(SLASH, 9));
-                    }
+                // user already authenticated
+                return getAuthInfoFromUser(user);
 
-                    String realm = url.substring(0, url.lastIndexOf(SLASH));
+            } else if (user.isAssociated()) {
 
-                    if(redirectToOriginalUrl) {
-                        returnTo = url.toString();
-                    } else {
-                        request.setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, request.getRequestURI());
-                        returnTo =  authSuccessUrl;
-                    }
+                if (RelyingParty.isAuthResponse(request)) {
 
-                    if(relyingParty.associateAndAuthenticate(user, request, response, trustRoot, realm,
-                            returnTo)) {
-                        // user is associated and then redirected to his openid provider for authentication
+                    if (relyingParty.verifyAuth(user, request, response)) {
+                        // authenticated
+                        response.sendRedirect(request.getRequestURI());
                         return AuthenticationInfo.DOING_AUTH;
                     }
-                    // failed association or auth request generation
-                    AuthenticationInfo authInfo = handleAuthFailure(OpenIDFailure.ASSOCIATION, request, response);
-                    if(authInfo != null) {
-                        return authInfo;
-                    }
+
+                    // failed verification
+                    return handleAuthFailure(OpenIDFailure.VERIFICATION,
+                        request);
+
                 }
+
+                // Assume a cancel or some other non-successful response
+                // from provider failed verification
+                relyingParty.invalidate(request, response);
+
+                return handleAuthFailure(OpenIDFailure.AUTHENTICATION, request);
+
+            } else {
+
+                // associate and authenticate user
+
+                // prepare the url for the return_to parameter
+                final String url = getBaseUrl(request);
+
+                // set the ream/trustroot from configuraiton or the root url
+                final String trustRoot = (realm == null) ? url : realm;
+
+                // append the resource URL to the returnTo address
+                final String returnTo = url + getLoginResource(request, "/");
+
+                if (relyingParty.associateAndAuthenticate(user, request,
+                    response, trustRoot, trustRoot, returnTo)) {
+                    // user is associated and then redirected to his openid
+                    // provider for authentication
+                    return AuthenticationInfo.DOING_AUTH;
+                }
+
+                // failed association or auth request generation
+                return handleAuthFailure(OpenIDFailure.ASSOCIATION, request);
             }
-        } catch(Exception e) {
+
+        } catch (ClassCastException cce) {
+            // expected after bundle update when using HTTP Sessions
+            log.warn("extractCredentials: Found OpenID user data in HTTP Session which cannot be used; failing credentials extraction");
+            log.debug("extractCredentials: dump", cce);
+            dropCredentials(request, response);
+            return handleAuthFailure(OpenIDFailure.OTHER, request);
+
+        } catch (Exception e) {
             log.error("Error processing OpenID request", e);
         }
 
@@ -400,36 +386,59 @@ public class OpenIDAuthenticationHandler implements
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        // if the response is already committed, we have a problem !!
-        if (!response.isCommitted()) {
+        // 0. ignore this handler if an authentication handler is requested
+        if (ignoreRequestCredentials(request)) {
+            // consider this handler is not used
+            return false;
+        }
 
-        	// If we're here & we have a valid authenticated user
-        	// probably we failed the repository login (no repo user
-        	// configured for the authenticated principal)
-        	OpenIdUser user = (OpenIdUser)request.getAttribute(OpenIDConstants.OPEN_ID_USER_ATTRIBUTE);
-        	if(user != null && user.isAuthenticated()) {
-        		request.getSession().setAttribute(
-        				OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE,
-        				OpenIDConstants.OpenIDFailure.REPOSITORY);
-        	}
+        // requestAuthentication is only called after a failedauthentication
+        // so it makes sense to remove any existing login
+        final RelyingParty relyingParty = getRelyingParty(request);
+        relyingParty.invalidate(request, response);
 
-        	// requestAuthentication is only called after a failed authentication
-        	// so it makes sense to remove any existing login
-        	relyingParty.invalidate(request, response);
+        // prepare the login form redirection target
+        final StringBuilder targetBuilder = new StringBuilder();
+        targetBuilder.append(request.getContextPath());
+        targetBuilder.append(loginForm);
 
-        	// original URL is set only if it doesn't already exist
-        	if(request.getSession().getAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE) == null) {
-        		String originalUrl = request.getRequestURI() +
-        			(request.getQueryString() != null ? "?" + request.getQueryString() : "");
+        // append originally requested resource (for redirect after login)
+        char parSep = '?';
+        final String resource = getLoginResource(request, null);
+        if (resource != null) {
+            targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
+            targetBuilder.append("=").append(
+                URLEncoder.encode(resource, "UTF-8"));
+            parSep = '&';
+        }
 
-        		// handle corner case where login form requested directly
-        		if(!originalUrl.equals(loginForm)) {
-        			request.getSession().setAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE, originalUrl);
-        		}
-        	}
-        	response.sendRedirect(loginForm);
-        } else {
-            log.error("requestAuthentication: Response is committed, cannot request authentication");
+        // append indication of previous login failure
+        if (request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON) != null) {
+            final Object jReason = request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON);
+            @SuppressWarnings("unchecked")
+            final String reason = (jReason instanceof Enum)
+                    ? ((Enum) jReason).name()
+                    : jReason.toString();
+            targetBuilder.append(parSep).append(
+                OpenIDConstants.OPENID_FAILURE_REASON);
+            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
+            parSep = '&';
+        }
+
+        final Object paramIdentifier = request.getAttribute(OpenIDConstants.OPENID_IDENTITY);
+        if (paramIdentifier instanceof String) {
+            targetBuilder.append(parSep).append(
+                OpenIDConstants.OPENID_IDENTITY);
+            targetBuilder.append("=").append(
+                URLEncoder.encode((String) paramIdentifier, "UTF-8"));
+        }
+
+        // finally redirect to the login form
+        final String target = targetBuilder.toString();
+        try {
+            response.sendRedirect(target);
+        } catch (IOException e) {
+            log.error("Failed to redirect to the page: " + target, e);
         }
 
         return true;
@@ -442,180 +451,396 @@ public class OpenIDAuthenticationHandler implements
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         try {
-            final OpenIdUser user = relyingParty.discover(request);
-            if (user != null) {
-                relyingParty.invalidate(request, response);
-            }
+            getRelyingParty(request).invalidate(request, response);
         } catch (Exception e) {
             log.warn("dropAuthentication: Problem checking whether the user is logged in at all, assuming not logged in and therefore not logging out");
         }
     }
 
-    protected AuthenticationInfo handleAuthFailure(OpenIDFailure failure, HttpServletRequest request, HttpServletResponse response)
-    	throws IOException {
+    public void authenticationFailed(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationInfo authInfo) {
 
-    	request.getSession().setAttribute(OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, failure);
+        /*
+         * Called if extractCredentials provided an authenticated OpenID user
+         * which could not be mapped to a valid repository user !!
+         *
+         * invalidate the curren OpenID user and set a failure reason
+         */
 
-		if(authFailUrl != null && !"".equals(authFailUrl)) {
-			response.sendRedirect(authFailUrl);
-			return AuthenticationInfo.DOING_AUTH;
+        OpenIdUser user = null;
+        try {
+            user = getRelyingParty(request).discover(request);
+        } catch (Exception e) {
+            // don't care ...
         }
-		return null;
+
+        dropCredentials(request, response);
+
+        request.setAttribute(OpenIDConstants.OPENID_FAILURE_REASON,
+            OpenIDFailure.REPOSITORY);
+
+        if (user != null && user.getIdentity() != null) {
+            request.setAttribute(OpenIDConstants.OPENID_IDENTITY,
+                user.getIdentity());
+        }
     }
 
-    protected AuthenticationInfo handleLogout(HttpServletRequest request, HttpServletResponse response)
-    	throws IOException {
-		String redirectUrl = null;
+    public boolean authenticationSucceeded(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationInfo authInfo) {
 
-		if(request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER) != null) {
-			redirectUrl = request.getParameter(OpenIDConstants.REDIRECT_URL_PARAMETER);
-		} else {
-			redirectUrl = logoutUrl;
-		}
-
-		// fallback
-		if(redirectUrl == null) {
-			redirectUrl = "/";
-		}
-
-		response.sendRedirect(redirectUrl);
-		return AuthenticationInfo.DOING_AUTH;
+        // FIXME: check redirect after login !
+        return DefaultAuthenticationFeedbackHandler.handleRedirect(request,
+            response);
     }
 
-    // ---------- SCR Integration ----------------------------------------------
+    // ---------- internal
+
+    /**
+     * Tries to discover the OpenID user from the request. This involves any of
+     * the following steps:
+     * <ul>
+     * <li>The user is already available as a request attribute</li>
+     * <li>The user is available from the HTTP Session or the OpenID cookie</li>
+     * <li>The user is identifier with an OpenID identifier supplied with the
+     * {@link #identifierParam} request parameter</li>
+     * <li>No user is available from the request at all</li>
+     * </ul>
+     * <p>
+     * If no user is available or any error occurrs while trying to discover the
+     * user from the request, <code>null</code> is returned.
+     *
+     * @param relyingParty The <code>RelyingParty</code> object used to discover
+     *            the OpenID user from the request
+     * @param request The <code>HttpServletRequest</code> from which the user is
+     *            to be discovered
+     * @return the <code>OpenIdUser</code> discovered from the request or
+     *         <code>null</code> if no user can be discovered or the discovery
+     *         failed.
+     * @throws ClassCastException may be thrown if an OpenID user object is
+     *             still stored in the HTTP Session after the authentication
+     *             handler bundle has been updated.
+     */
+    private OpenIdUser discover(final RelyingParty relyingParty,
+            final HttpServletRequest request) {
+        try {
+            // this may throw a ClassCastException after an update of the
+            // bundle if the HTTP Session object still holds on to an
+            // OpenIdUser instance created by the old bundle.
+            return relyingParty.discover(request);
+
+        } catch (UnknownHostException uhe) {
+            // openid_identifier names an invalid host
+            log.info(
+                "discover: The OpenID identifier cannot be resolved because it designates an unknown host {}",
+                uhe.getMessage());
+
+        } catch (IOException ioe) {
+            // another IO problem talking to the OpenID provider
+            log.info("discover: Failure to communicate with OpenID provider",
+                ioe);
+
+        } catch (ClassCastException cce) {
+            // rethrow class cast exception from failure to use OpenID user
+            // from Http Session created prior to authentication handler update
+            throw cce;
+
+        } catch (Exception e) {
+            // any other problem discovering the identifier
+            log.warn(
+                "discover: Unexpected failure discovering the OpenID user", e);
+        }
+
+        // exception discovering the identifier
+        return null;
+    }
+
+    private AuthenticationInfo handleAuthFailure(OpenIDFailure failure,
+            HttpServletRequest request) {
+
+        request.setAttribute(OpenIDConstants.OPENID_FAILURE_REASON,
+            failure);
+        return AuthenticationInfo.FAIL_AUTH;
+    }
+
+    // ---------- SCR Integration
 
     protected void activate(ComponentContext componentContext) {
-    	context = componentContext;
+        context = componentContext;
+        Dictionary<?, ?> props = context.getProperties();
 
-    	loginForm = OsgiUtil.toString(
-         		context.getProperties().get(PROP_LOGIN_FORM),
-         		DEFAULT_LOGIN_FORM);
+        loginForm = OsgiUtil.toString(props.get(
+            PROP_LOGIN_FORM), AuthenticationFormServlet.SERVLET_PATH);
 
-    	authSuccessUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_AUTH_SUCCESS_URL),
-         		DEFAULT_AUTH_SUCCESS_URL);
+        externalUrlPrefix = OsgiUtil.toString(props.get(
+            PROP_EXTERNAL_URL_PREFIX), DEFAULT_EXTERNAL_URL_PREFIX);
 
-    	authFailUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_AUTH_FAIL_URL),
-         		DEFAULT_AUTH_FAIL_URL);
+        // JCR user properties used to match OpenID users
+        identityProperty = OsgiUtil.toString(
+            props.get(PROP_OPEN_ID_IDENTIFIER_PROPERTY),
+            DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY);
 
-    	logoutUrl = OsgiUtil.toString(
-         		context.getProperties().get(PROP_LOGOUT_URL),
-         		DEFAULT_LOGOUT_URL);
+        // DYU OpenID properties
+        useCookie = OsgiUtil.toBoolean(props.get(
+            PROP_USE_COOKIE), DEFAULT_USE_COOKIE);
 
-    	redirectToOriginalUrl = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_ORIGINAL_URL_ON_SUCCESS),
-         		DEFAULT_ORIGINAL_URL_ON_SUCCESS);
+        cookieDomain = OsgiUtil.toString(props.get(
+            PROP_COOKIE_DOMAIN), DEFAULT_COOKIE_DOMAIN);
 
-    	accessAuthPageAnon = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_ANONYMOUS_AUTH_RESOURCES),
-         		DEFAULT_ANONYMOUS_AUTH_RESOURCES);
+        cookieName = OsgiUtil.toString(props.get(
+            PROP_COOKIE_NAME), DEFAULT_COOKIE_NAME);
 
-    	externalUrlPrefix = OsgiUtil.toString(
-    			context.getProperties().get(PROP_EXTERNAL_URL_PREFIX),
-    			DEFAULT_EXTERNAL_URL_PREFIX);
+        identifierParam = OsgiUtil.toString(props.get(
+            PROP_LOGIN_IDENTIFIER_FORM_FIELD),
+            DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD);
 
-    	// DYU OpenID properties
-    	useCookie = OsgiUtil.toBoolean(
-         		context.getProperties().get(PROP_USE_COOKIE),
-         		DEFAULT_USE_COOKIE);
+        cookieSecret = OsgiUtil.toString(
+            props.get(PROP_COOKIE_SECRET_KEY),
+            DEFAULT_COOKIE_SECRET_KEY).toCharArray();
 
-    	cookieDomain = OsgiUtil.toString(
-    			context.getProperties().get(PROP_COOKIE_DOMAIN),
-    			DEFAULT_COOKIE_DOMAIN);
+        openIdAttribute = OsgiUtil.toString(props.get(
+            PROP_OPENID_USER_ATTR), DEFAULT_OPENID_USER_ATTR);
 
-    	cookieName = OsgiUtil.toString(
-    			context.getProperties().get(PROP_COOKIE_NAME),
-    			DEFAULT_COOKIE_NAME);
+        this.loginModule = null;
+        try {
+            this.loginModule = OpenIDLoginModulePlugin.register(this,
+                componentContext.getBundleContext());
+        } catch (Throwable t) {
+            log.info("Cannot register OpenIDLoginModulePlugin. This is expected if Sling LoginModulePlugin services are not supported");
+            log.debug("dump", t);
+        }
+    }
 
-    	cookiePath = OsgiUtil.toString(
-    			context.getProperties().get(PROP_COOKIE_PATH),
-    			DEFAULT_COOKIE_PATH);
-
-    	identifierParam = OsgiUtil.toString(
-        		context.getProperties().get(PROP_LOGIN_IDENTIFIER_FORM_FIELD),
-        		DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD);
-
-    	String cookieSecret = OsgiUtil.toString(
-    			context.getProperties().get(PROP_COOKIE_SECRET_KEY),
-    			DEFAULT_COOKIE_SECRET_KEY);
-
-        Properties openIdProps = new Properties();
-
-        openIdProps.setProperty("openid.identifier.parameter", identifierParam);
-
-        if(useCookie) {
-        	openIdProps.setProperty("openid.user.manager", CookieBasedUserManager.class.getName());
-        	openIdProps.setProperty("openid.user.manager.cookie.name", cookieName);
-        	openIdProps.setProperty("openid.user.manager.cookie.path", cookiePath);
-        	openIdProps.setProperty("openid.user.manager.cookie.domain", cookieDomain);
-        	openIdProps.setProperty("openid.user.manager.cookie.security.secret_key", cookieSecret);
+    protected void deactivate(
+            @SuppressWarnings("unused") ComponentContext componentContext) {
+        if (loginModule != null) {
+            loginModule.unregister();
+            loginModule = null;
         }
 
-		relyingParty = RelyingParty.newInstance(openIdProps);
+        if (session != null) {
+            try {
+                if (session.isLive()) {
+                    session.logout();
+                }
+            } catch (Throwable t) {
+                log.error("deactivate: Unexpected problem logging out session",
+                    t);
+            }
+            userManager = null;
+            session = null;
+        }
     }
 
     // ---------- internal -----------------------------------------------------
 
-    @SuppressWarnings("unchecked")
-    private <T> T removeAttributeFromSession(String attrName, Class<T> type, HttpServletRequest request) {
-    	T attr = (T)request.getSession().getAttribute(attrName);
-		request.getSession().removeAttribute(attrName);
-		return attr;
+    /**
+     * Returns <code>true</code> if this authentication handler should ignore
+     * the call to
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
+     * <p>
+     * This method returns <code>true</code> if the
+     * {@link #REQUEST_LOGIN_PARAMETER} is set to any value other than "Form"
+     * (HttpServletRequest.FORM_AUTH).
+     */
+    private boolean ignoreRequestCredentials(final HttpServletRequest request) {
+        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        return requestLogin != null
+            && !OpenIDConstants.OPENID_AUTH.equals(requestLogin);
     }
 
-    private <T> T moveAttributeFromSessionToRequest(String attrName, Class<T> type, HttpServletRequest request) {
-		T attr = removeAttributeFromSession(attrName, type, request);
-		request.setAttribute(attrName, attr);
-		return attr;
-    }
-
-    private AuthenticationInfo getAuthInfoFromUser(OpenIdUser user) {
-    	final AuthenticationInfo info = new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE);
-        info.put(AuthenticationInfo.CREDENTIALS, new OpenIdCredentials(user));
+    private AuthenticationInfo getAuthInfoFromUser(final OpenIdUser user) {
+        final SimpleCredentials credentials = getCredentials(user);
+        final AuthenticationInfo info = new AuthenticationInfo(
+            OpenIDConstants.OPENID_AUTH, credentials.getUserID());
+        info.put(AuthenticationInfo.CREDENTIALS, credentials);
         return info;
     }
 
-	public boolean canHandle(Credentials credentials) {
-		if(credentials instanceof OpenIdCredentials) {
-		    OpenIdCredentials creds = (OpenIdCredentials)credentials;
-			OpenIdUser user = creds.getUser();
-			if(user != null) {
-				return user.isAssociated();
-			}
-		}
-		return false;
-	}
+    private SimpleCredentials getCredentials(final OpenIdUser user) {
+        final String userName = getUserName(user);
+        final SimpleCredentials creds = new SimpleCredentials(userName,
+            new char[0]);
 
-	@SuppressWarnings("unchecked")
-    public void doInit(CallbackHandler callbackHandler, Session session,
-			Map options) {
-		return;
-	}
+        // if there is no login module plugin service, set the credentials
+        // attribute to the user's OpenID identity, otherwise set it to
+        // the actual OpenIDUser object
+        if (loginModule == null) {
+            creds.setAttribute(openIdAttribute, user.getIdentity());
+        } else {
+            creds.setAttribute(openIdAttribute, user);
+        }
 
-	public AuthenticationPlugin getAuthentication(Principal principal,
-			Credentials creds) {
-		return new OpenIDAuthenticationPlugin(principal);
-	}
-
-	public Principal getPrincipal(Credentials credentials) {
-		if(credentials instanceof OpenIdCredentials) {
-            OpenIdCredentials creds = (OpenIdCredentials) credentials;
-            OpenIdUser user = creds.getUser();
-            if (user != null) {
-                return new OpenIDPrincipal(user);
-            }
-		}
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-    public void addPrincipals(Set principals) {
-        // Nothing to do
+        return creds;
     }
 
-	public int impersonate(Principal principal, Credentials credentials) {
-		return LoginModulePlugin.IMPERSONATION_DEFAULT;
-	}
+    OpenIdUser getOpenIdUser(final Credentials credentials) {
+        if (credentials instanceof SimpleCredentials) {
+            SimpleCredentials creds = (SimpleCredentials) credentials;
+            return (OpenIdUser) creds.getAttribute(openIdAttribute);
+        }
+        return null;
+    }
 
+    /**
+     * Find a JCR Repository user name for the given OpenIdUser. Derives a name
+     * from the user identifier if none can be found.
+     */
+    private String getUserName(final OpenIdUser user) {
+
+        final Object nickname = user.getAttribute(ATTR_USER_ID);
+        if (nickname instanceof String) {
+            return (String) nickname;
+        }
+
+        final String identity = user.getIdentity();
+        String userId = null;
+        UserManager userManager = getUserManager();
+        if (userManager != null) {
+            userId = getUserIdByProperty(userManager, identityProperty,
+                identity);
+        }
+
+        // still null, use some dummy value to fail login and be able
+        // to associate user afterwards
+        if (userId == null) {
+            userId = "::not_valid_for_login::";
+        } else {
+            // store the id in the attribute
+            user.setAttribute(ATTR_USER_ID, userId);
+        }
+
+        return userId;
+    }
+
+    private UserManager getUserManager() {
+        if (userManager == null) {
+            try {
+                if (session == null) {
+                    session = repository.loginAdministrative(null);
+                }
+                if (session instanceof JackrabbitSession) {
+                    userManager = ((JackrabbitSession) session).getUserManager();
+                }
+            } catch (RepositoryException re) {
+                log.error("getUserManager: Cannot get UserManager", re);
+            }
+        }
+        return userManager;
+    }
+
+    private String getUserIdByProperty(final UserManager userManager,
+            final String propName, final String propValue) {
+        String userId = null;
+        try {
+            Iterator<?> users = userManager.findAuthorizables(propName,
+                propValue, UserManager.SEARCH_TYPE_USER);
+
+            // use the first user found
+            if (users.hasNext()) {
+                userId = ((User) users.next()).getID();
+
+                // warn if more than one user found
+                if (users.hasNext()) {
+                    log.warn(
+                        "getUserName: Multiple users found with property {}={}; using {}",
+                        new Object[] { propName, propValue, userId });
+                }
+            }
+        } catch (RepositoryException re) {
+            log.warn("getUserName: Problem finding user with property {}={}",
+                new Object[] { propName, propValue }, re);
+        }
+
+        return userId;
+    }
+
+    /**
+     * Returns any resource target to redirect to after successful
+     * authentication. This method either returns a non-empty string or the
+     * <code>defaultLoginResource</code> parameter. First the
+     * <code>resource</code> request attribute is checked. If it is a non-empty
+     * string, it is returned. Second the <code>resource</code> request
+     * parameter is checked and returned if it is a non-empty string.
+     *
+     * @param request The request providing the attribute or parameter
+     * @param defaultLoginResource The default login resource value
+     * @return The non-empty redirection target or
+     *         <code>defaultLoginResource</code>.
+     */
+    static String getLoginResource(final HttpServletRequest request,
+            String defaultLoginResource) {
+
+        // return the resource attribute if set to a non-empty string
+        Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
+        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
+            return (String) resObj;
+        }
+
+        // return the resource parameter if not set or set to a non-empty value
+        final String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
+        if (resource != null && resource.length() > 0) {
+            return resource;
+        }
+
+        // normalize empty resource string to null
+        return defaultLoginResource;
+    }
+
+    private RelyingParty getRelyingParty(final HttpServletRequest request) {
+        if (relyingParty == null) {
+            Properties openIdProps = new Properties();
+            openIdProps.setProperty("openid.identifier.parameter",
+                identifierParam);
+
+            if (useCookie) {
+
+                final String ctxPath = request.getContextPath();
+                final String cookiePath = (ctxPath == null || ctxPath.length() == 0)
+                        ? "/"
+                        : ctxPath;
+
+                openIdProps.setProperty("openid.user.manager",
+                    CookieBasedUserManager.class.getName());
+                openIdProps.setProperty("openid.user.manager.cookie.name",
+                    cookieName);
+                openIdProps.setProperty("openid.user.manager.cookie.path",
+                    cookiePath);
+
+                if (cookieDomain != null) {
+                    openIdProps.setProperty(
+                        "openid.user.manager.cookie.domain", cookieDomain);
+                }
+
+                openIdProps.setProperty(
+                    "openid.user.manager.cookie.security.secret_key",
+                    new String(cookieSecret));
+            }
+
+            relyingParty = RelyingParty.newInstance(openIdProps);
+        }
+        return relyingParty;
+    }
+
+    String getBaseUrl(HttpServletRequest request) {
+        /*
+         * package private for unit testing
+         */
+        if (externalUrlPrefix == null || externalUrlPrefix.length() == 0) {
+            final String scheme = request.getScheme();
+            final String host = request.getServerName();
+            final int port = request.getServerPort();
+            final String ctx = request.getContextPath();
+
+            StringBuilder url = new StringBuilder();
+            url.append(scheme).append("://");
+            url.append(host);
+            if ((port > 0) && (!"http".equals(scheme) || port != 80)
+                && (!"https".equals(scheme) || port != 443)) {
+                url.append(':').append(port);
+            }
+            url.append(ctx);
+            return url.toString();
+        }
+        return externalUrlPrefix;
+    }
 }

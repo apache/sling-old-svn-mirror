@@ -18,20 +18,54 @@
  */
 package org.apache.sling.openidauth;
 
-public class OpenIDConstants {
-	public static final String LOGOUT_REQUEST_PATH = "/system/sling/openid/logout";
-	
-    public static final String OPEN_ID_AUTH_TYPE = "OpenID";
+/**
+ * The <code>OpenIDConstants</code> class defines useful constants for
+ * implementors of login forms for OpenID authentication.
+ */
+public final class OpenIDConstants {
 
-    public static final String OPEN_ID_USER_ATTRIBUTE = "openid_user";
+    /**
+     * Identification of this authentication handler. This value is set by the
+     * handler as the authentication type of the <code>AuthenticationInfo</code>
+     * object returned from the <code>extractCredentials</code> method.
+     * <p>
+     * To explicitly request OpenID authentication handling, this should be used
+     * as the value of the <code>sling:authRequestLogin</code> request
+     * parameter.
+     */
+    public static final String OPENID_AUTH = "OpenID";
 
-    public static final String ORIGINAL_URL_ATTRIBUTE = OPEN_ID_AUTH_TYPE + ".original.url";
-    
-    public static final String REDIRECT_URL_PARAMETER = OPEN_ID_AUTH_TYPE + ".redirect";
-    
-    public static final String OPENID_FAILURE_REASON_ATTRIBUTE = OPEN_ID_AUTH_TYPE + ".failure";
-    
-    public enum OpenIDFailure {
-    	DISCOVERY, ASSOCIATION, COMMUNICATION, AUTHENTICATION, VERIFICATION, REPOSITORY, OTHER
-    }
+    /**
+     * The name of the request parameter set by the
+     * <code>requestCredentials</code> method when redirecting to the login
+     * request form. The value of the parameter is the name of one of the
+     * {@link OpenIDFailure} constants.
+     * <p>
+     * This parameter is intended to be used by the login form to provide
+     * information to the client as to why OpenID authentication has failed. For
+     * example a login form implemented as a JSP may use the parameter to write
+     * the message like this:
+     *
+     * <pre>
+     * &lt;%
+     *     String reason = request.getParameter(OPENID_FAILURE_REASON_ATTRIBUTE);
+     *     OpenIDFailure fReason = OpenIDFailure.valueOf(reason);
+     * %>
+     * &lt;div id="err">
+     *   &lt;p>&lt;%= fReason %>&lt;/p>
+     * &lt;/div>
+     * </pre>
+     */
+    public static final String OPENID_FAILURE_REASON = "j_reason";
+
+    /**
+     * The name of the request parameter set by the
+     * <code>requestCredentials</code> method providing to authenticated OpenID
+     * identity. This parameter is only set if the
+     * {@link #OPENID_FAILURE_REASON} is {@link OpenIDFailure#REPOSITORY} and
+     * can be used to offer the user assistence with associating an existing JCR
+     * user with the OpenID identity.
+     */
+    public static final String OPENID_IDENTITY = "j_openid_identity";
+
 }
