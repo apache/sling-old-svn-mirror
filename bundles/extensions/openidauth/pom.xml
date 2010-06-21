@@ -55,33 +55,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-DocURL>
+                            http://sling.apache.org/site/openid-authenticationhandler.html
+                        </Bundle-DocURL>
                         <Private-Package>
-                            org.apache.sling.openidauth.impl.*,
-                            org.apache.commons.codec,
-                            org.apache.commons.codec.binary,
-                            org.apache.commons.codec.net
+                            org.apache.sling.openidauth.impl.*
                         </Private-Package>
-                        <!-- initial content to be loaded on bundle installation -->
-                        <Sling-Initial-Content>SLING-INF/content</Sling-Initial-Content>
-
-                        <!-- Bundle supplied resource prefixes -->
-                        <Include-Resource>{maven-resources}</Include-Resource>
 
                         <Export-Package>
-	                        org.apache.sling.openidauth,
-                        	!org.apache.sling.openidauth.impl
+	                        org.apache.sling.openidauth;version=1.0
                         </Export-Package>
-                        <_exportcontents>
-                        	com.dyuproject.openid
-                        </_exportcontents>
                         <Import-Package>
                         	*;resolution:=optional
                         </Import-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
-						<Embed-Transitive>true</Embed-Transitive>
                         <!-- Embed OpenID completely -->
                         <Embed-Dependency>
-                            dyuproject-openid,dyuproject-util,jetty-util
+                            dyuproject-openid,dyuproject-json,dyuproject-util,jetty-util
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -135,12 +124,6 @@
             <scope>provided</scope>
         </dependency>
 		<dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.3</version>
-            <scope>compile</scope>
-        </dependency>
-		<dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
@@ -157,23 +140,24 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 		<dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-		<dependency>
 			<groupId>com.dyuproject</groupId>
 			<artifactId>dyuproject-openid</artifactId>
-			<version>1.1.1</version>
+			<version>1.1.7</version>
 	    </dependency>
 	    <dependency>
 			<groupId>com.dyuproject</groupId>
 			<artifactId>dyuproject-util</artifactId>
-			<version>1.1.1</version>
+			<version>1.1.7</version>
+	    </dependency>
+	    <dependency>
+			<groupId>com.dyuproject</groupId>
+			<artifactId>dyuproject-json</artifactId>
+			<version>1.1.7</version>
 	    </dependency>
 	    <dependency>
 	    	<groupId>org.mortbay.jetty</groupId>
 	    	<artifactId>jetty-util</artifactId>
-	    	<version>7.0.0.pre5</version>
+	    	<version>6.1.19</version>
 	    </dependency>
 	    <dependency>
 	    	<groupId>org.apache.sling</groupId>
@@ -181,5 +165,19 @@
 	    	<version>2.0.6</version>
             <scope>provided</scope>
 	    </dependency>
+        
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        
     </dependencies>
 </project>
