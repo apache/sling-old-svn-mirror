@@ -122,6 +122,13 @@ public class JcrResourceResolver
     }
 
     /**
+     * @see org.apache.sling.api.resource.ResourceResolver#isLive()
+     */
+    public boolean isLive() {
+        return !this.closed && getSession().isLive();
+    }
+
+    /**
      * @see org.apache.sling.api.resource.ResourceResolver#close()
      */
     public void close() {
@@ -745,6 +752,7 @@ public class JcrResourceResolver
      * @see org.apache.sling.api.resource.ResourceResolver#getUserID(java.lang.String)
      */
     public String getUserID() {
+        checkClosed();
         return getSession().getUserID();
     }
 

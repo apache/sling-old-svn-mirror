@@ -106,6 +106,8 @@ public interface ResourceResolver extends Adaptable {
      *         {@link NonExistingResource} if no such resource can be resolved.
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
      *             thrown if an error occurrs trying to resolve the resource.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.0.4
      */
     Resource resolve(HttpServletRequest request, String absPath);
@@ -133,6 +135,8 @@ public interface ResourceResolver extends Adaptable {
      *         {@link NonExistingResource} if no such resource can be resolved.
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
      *             thrown if an error occurrs trying to resolve the resource.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Resource resolve(String absPath);
 
@@ -159,6 +163,8 @@ public interface ResourceResolver extends Adaptable {
      *             .
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
      *             thrown if an error occurrs trying to resolve the resource.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @deprecated as of 2.0.4, use {@link #resolve(HttpServletRequest, String)}
      *             instead.
      */
@@ -183,6 +189,8 @@ public interface ResourceResolver extends Adaptable {
      *
      * @param resourcePath The path for which to return a mapped path.
      * @return The mapped path.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     String map(String resourcePath);
 
@@ -209,6 +217,8 @@ public interface ResourceResolver extends Adaptable {
      *            more mapping functionality.
      * @param resourcePath The path for which to return a mapped path.
      * @return The mapped URL.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.0.4
      */
     String map(HttpServletRequest request, String resourcePath);
@@ -235,6 +245,8 @@ public interface ResourceResolver extends Adaptable {
      *         <code>null</code> if the path does not resolve to a resource.
      * @throws org.apache.sling.api.SlingException If an error occurrs trying to
      *             load the resource object from the path.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Resource getResource(String path);
 
@@ -263,6 +275,8 @@ public interface ResourceResolver extends Adaptable {
      *             load the resource object from the path or if
      *             <code>base</code> is <code>null</code> and <code>path</code>
      *             is relative.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Resource getResource(Resource base, String path);
 
@@ -279,6 +293,8 @@ public interface ResourceResolver extends Adaptable {
      * character. Thus to create an absolute path from a search path entry and a
      * relative path, the search path entry and relative path may just be
      * concatenated.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     String[] getSearchPath();
 
@@ -297,6 +313,8 @@ public interface ResourceResolver extends Adaptable {
      * @throws NullPointerException If <code>parent</code> is <code>null</code>.
      * @throws org.apache.sling.api.SlingException If any error occurs acquiring
      *             the child resource iterator.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Iterator<Resource> listChildren(Resource parent);
 
@@ -320,6 +338,8 @@ public interface ResourceResolver extends Adaptable {
      *             language is not supported.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Iterator<Resource> findResources(String query, String language);
 
@@ -346,25 +366,45 @@ public interface ResourceResolver extends Adaptable {
      *             language is not supported.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      */
     Iterator<Map<String, Object>> queryResources(String query, String language);
 
     /**
-     * Close this resource resolver.
-     * This method should be called by clients when the resource resolver is not
-     * used anymore. Once this method has been called, the resource resolver is
-     * considered unusable and will throw exceptions if still used.
+     * Returns <code>true</code> if this resource resolver has not been closed
+     * yet.
+     * <p>
+     * Unlike the other methods defined in this interface, this method will
+     * never throw an exception even after the resource resolver has been
+     * {@link #close() closed}.
+     *
+     * @return <code>true</code> if the resource resolver has not been closed
+     *         yet. Once the resource resolver has been closed, this method
+     *         returns <code>false</code>.
+     * @since 2.1
+     */
+    boolean isLive();
+
+    /**
+     * Close this resource resolver. This method should be called by clients
+     * when the resource resolver is not used anymore. Once this method has been
+     * called, the resource resolver is considered unusable and will throw
+     * exceptions if still used.
+     *
      * @since 2.1
      */
     void close();
 
-
     /**
-     * Get the user ID, if any, associated with this resource resolver.
-     * The meaning of this identifier is an implementation detail defined
-     * by the underlying repository. This method may return null.
+     * Get the user ID, if any, associated with this resource resolver. The
+     * meaning of this identifier is an implementation detail defined by the
+     * underlying repository. This method may return null.
      *
      * @return the user ID
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.1
      */
     String getUserID();
 }
