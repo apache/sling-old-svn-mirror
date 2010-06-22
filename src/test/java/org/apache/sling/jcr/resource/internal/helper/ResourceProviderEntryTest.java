@@ -255,6 +255,10 @@ public class ResourceProviderEntryTest extends TestCase {
             return Arrays.toString(roots);
         }
 
+        public boolean isLive() {
+            return true;
+        }
+
         public void close() {
             // nothing to do
         }

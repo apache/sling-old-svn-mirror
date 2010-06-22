@@ -101,6 +101,10 @@ public class MockResourceResolver implements ResourceResolver {
         return null;
     }
 
+    public boolean isLive() {
+        return session.isLive();
+    }
+
     public void close() {
         // nothing to do
     }
