@@ -59,8 +59,11 @@
                         <Bundle-DocURL>
                             http://sling.apache.org/site/form-based-authenticationhandler.html
                         </Bundle-DocURL>
+                        <Export-Package>
+                            org.apache.sling.formauth;version=1.0
+                        </Export-Package>
                         <Private-Package>
-                            org.apache.sling.formauth.*
+                            org.apache.sling.formauth.impl.*
                         </Private-Package>
                         <Import-Package>
                             javax.security.auth.callback;

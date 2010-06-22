@@ -18,7 +18,7 @@
  */
 package org.apache.sling.formauth;
 
-enum FormReason {
+public enum FormReason {
 
     /**
      * The login form is request because the credentials previously entered very
