@@ -191,6 +191,7 @@ public class SlingPropertyValueHandler {
      */
     private void setPropertyAsIs(Node parent, RequestProperty prop)
             throws RepositoryException {
+        final ValueFactory valFac = parent.getSession().getValueFactory();
 
         // no explicit typehint
         int type = PropertyType.UNDEFINED;
@@ -248,17 +249,16 @@ public class SlingPropertyValueHandler {
                         return;
                     }
                 } else if (isReferencePropertyType(type)) {
-                    Node n = referenceParser.parse(values[0]);
-                    if (n != null) {
+                    Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
+                    if (v != null) {
                         if ( prop.hasMultiValueTypeHint() ) {
-                            final Value[] array = new Value[1];
-                            array[0] = parent.getSession().getValueFactory().createValue(n);
+                            final Value[] array = new Value[] { v };
                             changes.add(Modification.onModified(
                                 parent.setProperty(prop.getName(), array).getPath()
                             ));
                         } else {
                             changes.add(Modification.onModified(
-                                    parent.setProperty(prop.getName(), n).getPath()
+                                    parent.setProperty(prop.getName(), v).getPath()
                                 ));
                         }
                         return;
@@ -287,7 +287,6 @@ public class SlingPropertyValueHandler {
 
             if (type == PropertyType.DATE) {
                 // try conversion
-                ValueFactory valFac = parent.getSession().getValueFactory();
                 Value[] c = dateParser.parse(values, valFac);
                 if (c != null) {
                     changes.add(Modification.onModified(
@@ -297,8 +296,7 @@ public class SlingPropertyValueHandler {
                 }
             } else if (isReferencePropertyType(type)) {
                 // try conversion
-                ValueFactory valFac = parent.getSession().getValueFactory();
-                Value[] n = referenceParser.parse(values, valFac);
+                Value[] n = referenceParser.parse(values, valFac, isWeakReference(type));
                 if (n != null) {
                     changes.add(Modification.onModified(
                         parent.setProperty(prop.getName(), n).getPath()
@@ -319,6 +317,10 @@ public class SlingPropertyValueHandler {
 
     private boolean isReferencePropertyType(int propertyType) {
         return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+    }
+
+    private boolean isWeakReference(int propertyType) {
+        return propertyType == PROPERTY_TYPE_WEAKREFERENCE;
     }
 
     /**
