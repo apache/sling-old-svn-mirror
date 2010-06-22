@@ -144,10 +144,13 @@ public class AuthenticationFormServlet extends HttpServlet {
         final String reason = request.getParameter(FormAuthenticationHandler.PAR_J_REASON);
         if (reason != null) {
             try {
-                return FormReason.valueOf(reason).getMessage();
+                return FormReason.valueOf(reason).toString();
             } catch (IllegalArgumentException iae) {
                 // thrown if the reason is not an expected value, assume none
             }
+            
+            // no valid FormReason value, use raw value
+            return reason;
         }
 
         return "";

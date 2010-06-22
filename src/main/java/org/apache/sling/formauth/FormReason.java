@@ -24,27 +24,34 @@ enum FormReason {
      * The login form is request because the credentials previously entered very
      * not valid to login to the repository.
      */
-    INVALID_CREDENTIALS {
-        @Override
-        public String getMessage() {
-            return "Username and Password do not match";
-        }
-    },
+    INVALID_CREDENTIALS("Username and Password do not match"),
 
     /**
      * The login form is requested because an existing session has timed out and
      * the credentials have to be entered again.
      */
-    TIMEOUT {
-        @Override
-        public String getMessage() {
-            return "Session timed out, please login again";
-        }
-    };
+    TIMEOUT("Session timed out, please login again");
 
     /**
-     * Returns an english indicative message of the reason to request the login
-     * form.
+     * The user-friendly message returned by {@link #toString()}
      */
-    abstract String getMessage();
+    private final String message;
+
+    /**
+     * Creates an instance of the reason conveying the given descriptive reason.
+     *
+     * @param message The descriptive reason.
+     */
+    private FormReason(String message) {
+        this.message = message;
+    }
+
+    /**
+     * Returns the message set when constructing this instance. To get the
+     * official name call the <code>name()</code> method.
+     */
+    @Override
+    public String toString() {
+        return message;
+    }
 }
