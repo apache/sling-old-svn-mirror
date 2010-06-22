@@ -50,7 +50,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
-          <param name="shutdownOnClose" value="true"/>
+          <param name="shutdownOnClose" value="false"/>
         </PersistenceManager>
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
@@ -66,7 +66,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
-          <param name="shutdownOnClose" value="true"/>
+          <param name="shutdownOnClose" value="false"/>
         </PersistenceManager>
     </Versioning>
 
