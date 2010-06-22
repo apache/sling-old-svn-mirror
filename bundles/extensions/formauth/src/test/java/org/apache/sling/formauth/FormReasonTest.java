@@ -24,12 +24,12 @@ public class FormReasonTest extends TestCase {
 
     public void test_TIMEOUT() {
         assertEquals(FormReason.TIMEOUT,
-            FormReason.valueOf(FormReason.TIMEOUT.toString()));
+            FormReason.valueOf(FormReason.TIMEOUT.name()));
     }
 
     public void test_INVALID_CREDENTIALS() {
         assertEquals(FormReason.INVALID_CREDENTIALS,
-            FormReason.valueOf(FormReason.INVALID_CREDENTIALS.toString()));
+            FormReason.valueOf(FormReason.INVALID_CREDENTIALS.name()));
     }
 
     public void test_INVALID() {

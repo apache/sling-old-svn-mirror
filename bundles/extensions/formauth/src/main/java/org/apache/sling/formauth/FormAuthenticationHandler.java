@@ -58,20 +58,12 @@ import org.slf4j.LoggerFactory;
  *               value="Apache Sling Form Based Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
+ * @scr.property nameRef="AuthenticationHandler.TYPE_PROPERTY" value="FORM"
+ *               private="true"
  * @scr.service
  */
 public class FormAuthenticationHandler implements AuthenticationHandler,
         AuthenticationFeedbackHandler {
-
-    /**
-     * The request parameter causing a 401/UNAUTHORIZED status to be sent back
-     * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
-     * method if no credentials are present in the request (value is
-     * "sling:authRequestLogin").
-     *
-     * @see #requestCredentials(HttpServletRequest, HttpServletResponse)
-     */
-    static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
 
     /**
      * The name of the parameter providing the login form URL.
@@ -276,6 +268,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
                 } else {
                     // signal the requestCredentials method a previous login failure
                     request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
+                    info = AuthenticationInfo.FAIL_AUTH;
                 }
             }
         }
@@ -337,7 +330,11 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
 
         // append indication of previous login failure
         if (request.getAttribute(PAR_J_REASON) != null) {
-            final String reason = String.valueOf(request.getAttribute(PAR_J_REASON));
+            final Object jReason = request.getAttribute(PAR_J_REASON);
+            @SuppressWarnings("unchecked")
+            final String reason = (jReason instanceof Enum)
+                    ? ((Enum) jReason).name()
+                    : jReason.toString();
             targetBuilder.append(parSep).append(PAR_J_REASON);
             targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
         }
