@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth;
+package org.apache.sling.formauth.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +41,7 @@ import org.apache.sling.commons.auth.spi.AuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.formauth.FormReason;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -49,11 +50,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>CookieAuthenticationHandler</code> class implements the
+ * The <code>FormAuthenticationHandler</code> class implements the
  * authorization steps based on a cookie.
  *
  * @scr.component immediate="false" label="%auth.form.name"
  *                description="%auth.form.description"
+ *                name="org.apache.sling.formauth.FormAuthenticationHandler"
  * @scr.property name="service.description"
  *               value="Apache Sling Form Based Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"

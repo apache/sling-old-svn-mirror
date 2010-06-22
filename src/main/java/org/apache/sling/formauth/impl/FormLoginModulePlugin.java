@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth;
+package org.apache.sling.formauth.impl;
 
 import java.security.Principal;
 import java.util.Hashtable;
