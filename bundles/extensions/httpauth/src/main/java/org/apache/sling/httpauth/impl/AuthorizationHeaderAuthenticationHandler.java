@@ -254,7 +254,9 @@ public class AuthorizationHeaderAuthenticationHandler implements
      */
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-        sendUnauthorized(response);
+        if (request.getHeader(HEADER_AUTHORIZATION) != null) {
+            sendUnauthorized(response);
+        }
     }
 
     /**
