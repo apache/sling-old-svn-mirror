@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+
+      Licensed to the Apache Software Foundation (ASF) under one
+      or more contributor license agreements.  See the NOTICE file
+      distributed with this work for additional information
+      regarding copyright ownership.  The ASF licenses this file
+      to you under the Apache License, Version 2.0 (the
+      "License"); you may not use this file except in compliance
+      with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing,
+      software distributed under the License is distributed on an
+      "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+      KIND, either express or implied.  See the License for the
+      specific language governing permissions and limitations
+      under the License.
+
+-->
+<html xml:lang="en" lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+>
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>Login</title>
+
+   <style type="text/css">
+   body {
+       font-family: Verdana, Arial, Helvetica, sans-serif;
+       font-size: 10px;
+       color: black;
+       background-color: white;
+   }
+
+   #main {
+       border: 1px solid gray;
+       margin-top: 25%;
+       margin-left: 25%;
+       width: 400px;
+       padding: 10px;
+   }
+
+   #loginform {
+       padding: 0px;
+       margin: 0px;
+   }
+
+   #err {
+       color: red;
+   }
+   </style>
+
+</head>
+
+<body>
+
+<div id="main"><!-- Login Form -->
+<img src="http://sling.apache.org/site/media.data/logo.png" width="110" height="63" alt="Sling Logo">
+<h3>Login:</h3>
+<form id="loginform" method="POST" action="${requestContextPath}/j_security_check"
+        enctype="multipart/form-data" accept-charset="UTF-8">
+
+   <input type="hidden" name="_charset_" value="UTF-8" />
+   <input type="hidden" name="resource" value="${resource}" />
+
+   <div id="err">
+      <p>${j_reason}</p>
+   </div>
+
+   <div>
+      <label for="j_username" accesskey="u">Username:</label>
+   </div>
+   <div>
+      <input id="j_username" name="j_username" type="text" />
+   </div>
+
+
+   <div>
+      <label for="j_password" accesskey="p">Password:</label>
+   </div>
+   <div>
+      <input id="j_password" name="j_password" type="password" />
+   </div>
+
+   <div class="buttongroup">
+      <button id="login" accesskey="l" class="form-button" type="submit">Login</button>
+   </div>
+</form>
+</div>
+
+</body>
+</html>
