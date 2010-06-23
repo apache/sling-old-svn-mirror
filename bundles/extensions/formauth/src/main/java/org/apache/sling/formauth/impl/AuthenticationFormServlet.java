@@ -58,6 +58,10 @@ public class AuthenticationFormServlet extends HttpServlet {
     @SuppressWarnings("unused")
     private static final String AUTH_REQUIREMENT = "-" + SERVLET_PATH;
 
+    private static final String DEFAULT_FORM_PATH = "login.html";
+
+    private static final String CUSTOM_FORM_PATH = "custom_login.html";
+
     /**
      * The raw form used by the {@link #getForm(HttpServletRequest)} method to
      * fill in with per-request data. This field is set by the
@@ -82,7 +86,30 @@ public class AuthenticationFormServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
+        handle(request, response);
+    }
 
+    /**
+     * Prepares and returns the login form. The response is sent as an UTF-8
+     * encoded <code>text/html</code> page with all known cache control headers
+     * set to prevent all caching.
+     * <p>
+     * This servlet is to be called to handle the request directly, that is it
+     * expected to not be included and for the response to not be committed yet
+     * because it first resets the response.
+     *
+     * @throws IOException if an error occurrs preparing or sending back the
+     *             login form
+     * @throws IllegalStateException if the response has already been committed
+     *             and thus response reset is not possible.
+     */
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+        handle(request, response);
+    }
+
+    private void handle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // reset the response first
         response.reset();
 
@@ -143,6 +170,12 @@ public class AuthenticationFormServlet extends HttpServlet {
      *         string if there is no specific reason
      */
     private String getReason(final HttpServletRequest request) {
+        // return the resource attribute if set to a non-empty string
+        Object resObj = request.getAttribute(FormAuthenticationHandler.PAR_J_REASON);
+        if (resObj instanceof FormReason) {
+            return ((FormReason) resObj).toString();
+        }
+
         final String reason = request.getParameter(FormAuthenticationHandler.PAR_J_REASON);
         if (reason != null) {
             try {
@@ -150,7 +183,7 @@ public class AuthenticationFormServlet extends HttpServlet {
             } catch (IllegalArgumentException iae) {
                 // thrown if the reason is not an expected value, assume none
             }
-            
+
             // no valid FormReason value, use raw value
             return reason;
         }
@@ -169,7 +202,13 @@ public class AuthenticationFormServlet extends HttpServlet {
         if (rawForm == null) {
             InputStream ins = null;
             try {
-                ins = getClass().getResourceAsStream("login.html");
+                // try a custom login page first.
+                ins = getClass().getResourceAsStream(CUSTOM_FORM_PATH);
+                if (ins == null) {
+                    // try the standard login page
+                    ins = getClass().getResourceAsStream(DEFAULT_FORM_PATH);
+                }
+
                 if (ins != null) {
                     StringBuilder builder = new StringBuilder();
                     Reader r = new InputStreamReader(ins, "UTF-8");

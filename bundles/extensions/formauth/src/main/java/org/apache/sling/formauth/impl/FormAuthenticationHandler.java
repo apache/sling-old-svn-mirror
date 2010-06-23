@@ -28,6 +28,8 @@ import java.util.Dictionary;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +37,10 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.auth.Authenticator;
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;
@@ -151,6 +157,21 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
     private static final String DEFAULT_TOKEN_FILE = "cookie-tokens.bin";
 
     /**
+     * Whether to redirect to the login form or simple do an include.
+     *
+     * @scr.property type="Boolean" valueRef="DEFAULT_INCLUDE_FORM"
+     */
+    public static final String PAR_INCLUDE_FORM = "form.use.include";
+
+    /**
+     * The default include value.
+     *
+     * @see #PAR_INCLUDE_FORM
+     */
+    private static final boolean DEFAULT_INCLUDE_FORM = false;
+
+
+    /**
      * The request method required for user name and password submission by the
      * form (value is "POST").
      */
@@ -247,6 +268,20 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
     private ServiceRegistration loginModule;
 
     /**
+     * If true, the handler will attempt to include the login form instead of
+     * doing a redirect.
+     */
+    private boolean includeLoginForm;
+
+    /**
+     * The resource resolver factory used to resolve the login form as a resource
+     *
+     * @scr.reference policy="dynamic" cardinality="0..1"
+     */
+    private ResourceResolverFactory resourceResolverFactory;
+
+
+    /**
      * Extracts cookie/session based credentials from the request. Returns
      * <code>null</code> if the handler assumes HTTP Basic authentication would
      * be more appropriate, if no form fields are present in the request and if
@@ -311,6 +346,35 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             return true;
         }
 
+        String resource = getLoginResource(request);
+        if (resource == null) {
+            resource = request.getContextPath() + request.getPathInfo();
+            request.setAttribute(Authenticator.LOGIN_RESOURCE, resource);
+        }
+
+        if (includeLoginForm && (resourceResolverFactory != null)) {
+            ResourceResolver resourceResolver = null;
+            try {
+                resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+                Resource loginFormResource = resourceResolver.resolve(loginForm);
+                Servlet loginFormServlet = loginFormResource.adaptTo(Servlet.class);
+                if (loginFormServlet != null) {
+                    try {
+                        loginFormServlet.service(request, response);
+                        return true;
+                    } catch (ServletException e) {
+                        log.error("Failed to include the form: " + loginForm, e);
+                    }
+                }
+            } catch (LoginException e) {
+                log.error("Unable to get a resource resolver to include for the login resource. Will redirect instead.");
+            } finally {
+                if (resourceResolver != null) {
+                    resourceResolver.close();
+                }
+            }
+        }
+
         // prepare the login form redirection target
         final StringBuilder targetBuilder = new StringBuilder();
         targetBuilder.append(request.getContextPath());
@@ -318,10 +382,6 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
 
         // append originally requested resource (for redirect after login)
         char parSep = '?';
-        String resource = getLoginResource(request);
-        if (resource == null) {
-            resource = request.getContextPath() + request.getPathInfo();
-        }
 
         if (resource != null) {
             targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
@@ -706,6 +766,9 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             log.info("Cannot register FormLoginModulePlugin. This is expected if Sling LoginModulePlugin services are not supported");
             log.debug("dump", t);
         }
+
+        this.includeLoginForm = OsgiUtil.toBoolean(properties.get(PAR_INCLUDE_FORM), DEFAULT_INCLUDE_FORM);
+
     }
 
     protected void deactivate(
