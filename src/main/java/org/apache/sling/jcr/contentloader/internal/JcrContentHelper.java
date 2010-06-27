@@ -18,32 +18,26 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-
-import javax.jcr.RepositoryException;
 
 /**
- * The <code>ContentReader</code>
- * A content reader is provided by an {@link ImportProvider}.
+ * Interface to provide helpers for the ContentCreator
+ *
  */
-public interface ContentReader {
+public interface JcrContentHelper {
 
-    /**
-     * Read the content from the URL and create the
-     * content using the provided content creator.
-     * @param url The input stream.
-     * @throws IOException
-     */
-    void parse(URL url, ContentCreator creator) throws IOException, RepositoryException;
+	/**
+	 * Returns the MIME type from the MimeTypeService for the given name
+	 * @param name the name of the file to get the mimeType for  
+	 */
+	String getMimeType(String name);
 
-    /**
-     * Read the content from the input stream and create the
-     * content using the provided content creator.
-     * @param ins the input stream.
-     * @throws IOException
-     */
-    void parse(InputStream ins, ContentCreator contentCreator) throws IOException, RepositoryException;
-    
+	/**
+	 * Digest the given password using the configured digest algorithm
+	 * 
+	 * @param pwd the password to digest
+	 * @return digested password
+	 * @throws IllegalArgumentException
+	 */
+    String digestPassword(String pwd) throws IllegalArgumentException;
+
 }

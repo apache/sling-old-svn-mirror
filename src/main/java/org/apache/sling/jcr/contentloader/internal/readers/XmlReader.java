@@ -172,14 +172,32 @@ public class XmlReader implements ContentReader {
         }
     }
 
-    private void parseInternal(final InputStream bufferedInput,
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+	 */
+	public void parse(InputStream ins, ContentCreator creator)
+			throws IOException, RepositoryException {
+        BufferedInputStream bufferedInput = null;
+        try {
+            // We need to buffer input, so that we can reset the stream if we encounter an XSL stylesheet reference
+            bufferedInput = new BufferedInputStream(ins);
+            URL xmlLocation = null;
+            parseInternal(bufferedInput, creator, xmlLocation);
+        } catch (XmlPullParserException xppe) {
+            throw (IOException) new IOException(xppe.getMessage()).initCause(xppe);
+        } finally {
+            closeStream(bufferedInput);
+        }
+	}
+
+	private void parseInternal(final InputStream bufferedInput,
                                final ContentCreator creator,
                                final URL xmlLocation)
     throws XmlPullParserException, IOException, RepositoryException {
         final StringBuilder contentBuffer = new StringBuilder();
         // Mark the beginning of the stream. We assume that if there's an XSL processing instruction,
         // it will occur in the first gulp - which makes sense, as processing instructions must be
-        // specified before the root elemeent of an XML file.
+        // specified before the root element of an XML file.
         bufferedInput.mark(bufferedInput.available());
         // set the parser input, use null encoding to force detection with
         // <?xml?>
@@ -594,7 +612,8 @@ public class XmlReader implements ContentReader {
      */
     protected static class AttributeMap extends HashMap<String, String> {
 
-        private static final AttributeMap instance = new AttributeMap();
+		private static final long serialVersionUID = -6304058237706001104L;
+		private static final AttributeMap instance = new AttributeMap();
 
         public static AttributeMap getInstance() {
             return instance;

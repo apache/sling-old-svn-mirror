@@ -24,6 +24,10 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.contentloader.ContentImportListener;
+import org.apache.sling.jcr.contentloader.ImportOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -59,7 +63,10 @@ import javax.jcr.ValueFactory;
  */
 public class DefaultContentCreator implements ContentCreator {
 
-	private PathEntry configuration;
+    /** default log */
+    final Logger log = LoggerFactory.getLogger(getClass());
+
+	private ImportOptions configuration;
 
     private final Pattern jsonDatePattern = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}[-+]{1}[0-9]{2}[:]{0,1}[0-9]{2}$");
     private final SimpleDateFormat jsonDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -85,7 +92,7 @@ public class DefaultContentCreator implements ContentCreator {
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
     /** Helper class to get the mime type of a file. */
-    private final ContentLoaderService jcrContentHelper;
+    private final JcrContentHelper jcrContentHelper;
 
     /** List of active import providers mapped by extension. */
     private Map<String, ImportProvider> importProviders;
@@ -93,6 +100,9 @@ public class DefaultContentCreator implements ContentCreator {
     /** Optional list of created nodes (for uninstall) */
     private List<String> createdNodes;
 
+    /** Optional listener to get notified about changes */
+    private ContentImportListener importListener;
+    
     /**
      * A one time use seed to randomize the user location.
      */
@@ -107,7 +117,7 @@ public class DefaultContentCreator implements ContentCreator {
      * Constructor.
      * @param jcrContentHelper Helper class to get the mime type of a file
      */
-    public DefaultContentCreator(ContentLoaderService jcrContentHelper) {
+    public DefaultContentCreator(JcrContentHelper jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
     }
 
@@ -117,9 +127,10 @@ public class DefaultContentCreator implements ContentCreator {
      * @param defaultImportProviders List of all import providers.
      * @param createdNodes Optional list to store new nodes (for uninstall)
      */
-    public void init(final PathEntry pathEntry,
+    public void init(final ImportOptions pathEntry,
                      final Map<String, ImportProvider> defaultImportProviders,
-                     final List<String> createdNodes) {
+                     final List<String> createdNodes,
+                     final ContentImportListener importListener) {
         this.configuration = pathEntry;
         // create list of allowed import providers
         this.importProviders = new HashMap<String, ImportProvider>();
@@ -131,6 +142,7 @@ public class DefaultContentCreator implements ContentCreator {
             }
         }
         this.createdNodes = createdNodes;
+        this.importListener = importListener;
     }
 
     /**
@@ -254,13 +266,18 @@ public class DefaultContentCreator implements ContentCreator {
                 if ( this.createdNodes != null ) {
                     this.createdNodes.add(node.getPath());
                 }
-
+                if ( this.importListener != null ) {
+                	this.importListener.onCreate(node.getPath());
+                }
             } else {
 
                 // explicit primary node type
                 node = parentNode.addNode(name, primaryNodeType);
                 if ( this.createdNodes != null ) {
                     this.createdNodes.add(node.getPath());
+                }
+                if ( this.importListener != null ) {
+                	this.importListener.onCreate(node.getPath());
                 }
             }
 
@@ -305,6 +322,10 @@ public class DefaultContentCreator implements ContentCreator {
             String uuid = getUUID(node.getSession(), propPath, getAbsPath(node, value));
             if (uuid != null) {
                 node.setProperty(name, uuid, propertyType);
+                
+                if ( this.importListener != null ) {
+                	this.importListener.onCreate(node.getProperty(name).getPath());
+                }
             }
 
         } else if ("jcr:isCheckedOut".equals(name)) {
@@ -325,11 +346,17 @@ public class DefaultContentCreator implements ContentCreator {
               // Fall back to default behaviour if this fails
               node.setProperty(name, value, propertyType);
             }
+            if ( this.importListener != null ) {
+            	this.importListener.onCreate(node.getProperty(name).getPath());
+            }
         } else {
             if (propertyType == PropertyType.UNDEFINED) {
                 node.setProperty(name, value);
             } else {
                 node.setProperty(name, value, propertyType);
+            }
+            if ( this.importListener != null ) {
+            	this.importListener.onCreate(node.getProperty(name).getPath());
             }
         }
     }
@@ -358,6 +385,9 @@ public class DefaultContentCreator implements ContentCreator {
             }
 
             node.setProperty(name, uuids, propertyType);
+            if ( this.importListener != null ) {
+            	this.importListener.onCreate(node.getProperty(name).getPath());
+            }
 
             if (!hasAll) {
                 delayedMultipleReferences.put(propPath, uuidOrPaths);
@@ -376,15 +406,20 @@ public class DefaultContentCreator implements ContentCreator {
             }
             catch (ParseException e) {
               // If this failes, fallback to the default
-              jcrContentHelper.log.warn("Could not create dates for property, fallingback to defaults", e);
+              log.warn("Could not create dates for property, fallingback to defaults", e);
               node.setProperty(name, values, propertyType);
             }
-
+            if ( this.importListener != null ) {
+            	this.importListener.onCreate(node.getProperty(name).getPath());
+            }
         } else {
             if (propertyType == PropertyType.UNDEFINED) {
                 node.setProperty(name, values);
             } else {
                 node.setProperty(name, values, propertyType);
+            }
+            if ( this.importListener != null ) {
+            	this.importListener.onCreate(node.getProperty(name).getPath());
             }
         }
     }
@@ -515,12 +550,18 @@ public class DefaultContentCreator implements ContentCreator {
                         }
                     }
                     parentNode.setProperty(name, uuids, PropertyType.REFERENCE);
+                    if ( this.importListener != null ) {
+                    	this.importListener.onCreate(parentNode.getProperty(name).getPath());
+                    }
 
                     if (hasAll) {
                         delayedMultipleReferences.remove(property);
                     }
                 } else {
                     parentNode.setProperty(name, uuid, PropertyType.REFERENCE);
+                    if ( this.importListener != null ) {
+                    	this.importListener.onCreate(parentNode.getProperty(name).getPath());
+                    }
                 }
             }
         }
@@ -594,11 +635,18 @@ public class DefaultContentCreator implements ContentCreator {
         }
         if ( value == null ) {
             if ( node.hasProperty(name) ) {
+            	String propPath = node.getProperty(name).getPath();
                 node.getProperty(name).remove();
+                if ( this.importListener != null ) {
+                	this.importListener.onDelete(propPath);
+                }
             }
         } else {
             final Value jcrValue = this.createValue(node.getSession().getValueFactory(), value);
             node.setProperty(name, jcrValue);
+            if ( this.importListener != null ) {
+            	this.importListener.onModify(node.getProperty(name).getPath());
+            }
         }
     }
 
@@ -612,7 +660,11 @@ public class DefaultContentCreator implements ContentCreator {
         }
         if ( values == null || values.length == 0 ) {
             if ( node.hasProperty(name) ) {
+            	String propPath = node.getProperty(name).getPath();
                 node.getProperty(name).remove();
+                if ( this.importListener != null ) {
+                	this.importListener.onDelete(propPath);
+                }
             }
         } else {
             final Value[] jcrValues = new Value[values.length];
@@ -620,6 +672,9 @@ public class DefaultContentCreator implements ContentCreator {
                 jcrValues[i] = this.createValue(node.getSession().getValueFactory(), values[i]);
             }
             node.setProperty(name, jcrValues);
+            if ( this.importListener != null ) {
+            	this.importListener.onModify(node.getProperty(name).getPath());
+            }
         }
     }
 
@@ -651,7 +706,7 @@ public class DefaultContentCreator implements ContentCreator {
         if (mimeType == null) {
             mimeType = jcrContentHelper.getMimeType(name);
             if (mimeType == null) {
-                jcrContentHelper.log.info(
+                log.info(
                     "createFile: Cannot find content type for {}, using {}",
                     name, DEFAULT_CONTENT_TYPE);
                 mimeType = DEFAULT_CONTENT_TYPE;
@@ -686,6 +741,9 @@ public class DefaultContentCreator implements ContentCreator {
                 final Node n = node.addNode(token, newNodeType);
                 if ( this.createdNodes != null ) {
                     this.createdNodes.add(n.getPath());
+                }
+                if ( this.importListener != null ) {
+                	this.importListener.onCreate(node.getPath());
                 }
             }
             node = node.getNode(token);
