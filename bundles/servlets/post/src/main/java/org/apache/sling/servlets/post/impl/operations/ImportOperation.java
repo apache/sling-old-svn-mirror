@@ -95,7 +95,7 @@ public class ImportOperation extends AbstractSlingPostOperation {
 
         String contentType = request.getParameter(SlingPostConstants.RP_CONTENT_TYPE);
         if (contentType == null) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
             "Required :contentType parameter is missing");
             return;
         }
@@ -126,7 +126,7 @@ public class ImportOperation extends AbstractSlingPostOperation {
             }
 
             if (contentStream == null) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                         "Missing content for import");
                 return;
             } else {
