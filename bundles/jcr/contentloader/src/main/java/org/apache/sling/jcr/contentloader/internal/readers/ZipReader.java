@@ -73,10 +73,16 @@ public class ZipReader implements ContentReader {
      * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
      */
     public void parse(java.net.URL url, ContentCreator creator)
-    throws IOException, RepositoryException {
-        InputStream ins = null;
+    		throws IOException, RepositoryException {
+    	parse(url.openStream(), creator);
+    }
+
+	/**
+	 * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+	 */
+	public void parse(InputStream ins, ContentCreator creator)
+			throws IOException, RepositoryException {
         try {
-            ins = url.openStream();
             creator.createNode(null, NT_FOLDER, null);
             final ZipInputStream zis = new ZipInputStream(ins);
             ZipEntry entry;
@@ -109,6 +115,6 @@ public class ZipReader implements ContentReader {
                 }
             }
         }
-    }
-
+	}
+    
 }

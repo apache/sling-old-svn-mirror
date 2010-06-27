@@ -156,7 +156,8 @@ public class JsonReader implements ContentReader {
             }
 
             JSONObject json = new JSONObject(jsonString);
-            this.createNode(null, json, contentCreator);
+            String optionalName = json.optString("name", null);
+            this.createNode(optionalName, json, contentCreator);
         } catch (JSONException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
         }

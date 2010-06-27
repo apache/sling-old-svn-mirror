@@ -110,6 +110,18 @@ public interface SlingPostConstants {
     public static final String OPERATION_NOP = "nop";
 
     /**
+     * Name of the predefined import operation (value is "import").
+     * 
+     * <p>
+     * The import operation requires either the {@link #RP_CONTENT} and {@link #RP_CONTENT_TYPE} 
+     * request parameters or the {@link #RP_CONTENT_FILE} request parameter.
+     * Finally the {@link #RP_REPLACE} parameter may be set to indicate whether 
+     * an existing item at the destination should be overwritten or not.
+     */
+    public static final String OPERATION_IMPORT = "import";
+    
+    
+    /**
      * Name of the request parameter used to indicate the resource to apply the
      * operation to (value is ":applyTo").
      * <p>
@@ -349,4 +361,29 @@ public interface SlingPostConstants {
      * useful for HTML checkboxes.
      */
     public static final String SUFFIX_USE_DEFAULT_WHEN_MISSING = "@UseDefaultWhenMissing";
+    
+    /**
+     * Name of the request parameter containing the content to be imported
+     * by the 'import' operation.
+     */
+    public static final String RP_CONTENT = RP_PREFIX + "content";
+
+    /**
+     * Name of the request parameter containing the content type of the content
+     * to be imported by the 'import' operation.
+     */
+    public static final String RP_CONTENT_TYPE = RP_PREFIX + "contentType";
+    
+    /**
+     * Name of the request parameter containing the file to be imported
+     * by the 'import' operation.
+     */
+    public static final String RP_CONTENT_FILE = RP_PREFIX + "contentFile";
+
+    /**
+     * Name of the request parameter indicating whether versionable nodes should 
+     * be checked in during an {@link SlingPostConstants#OPERATION_IMPORT} operation.
+     */
+    public static final String RP_CHECKIN = RP_PREFIX + "checkin";
+    
 }

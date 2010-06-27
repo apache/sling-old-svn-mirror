@@ -1,0 +1,26 @@
+<node xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0">
+    <name>nodeName</name>
+    <primaryNodeType>nt:unstructured</primaryNodeType>
+    <mixinNodeTypes>
+        <mixinNodeType>mix:referenceable</mixinNodeType>
+    </mixinNodeTypes>
+    <properties>
+        <property>
+            <name>propOne</name>
+            <value>propOneValue</value>
+            <type>String</type>
+        </property>
+    </properties>
+    <!-- child nodes -->
+    <node>
+       	<name>childOne</name>
+	    <properties>
+	        <property>
+	            <name>childPropOne</name>
+	            <value>true</value>
+	            <type>Boolean</type>
+	        </property>
+	    </properties>
+	</node>
+</node>
+

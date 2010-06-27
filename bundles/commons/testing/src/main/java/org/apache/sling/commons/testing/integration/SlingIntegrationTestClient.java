@@ -116,6 +116,21 @@ public class SlingIntegrationTestClient {
      */
     public String createNode(String url, NameValuePairList clientNodeProperties, Map<String,String> requestHeaders, boolean multiPart)
     throws IOException {
+    	return createNode(url, clientNodeProperties, requestHeaders, multiPart, null, null, null);
+    }
+    
+    /** Create a node under given path, using a POST to Sling
+     *  @param url under which node is created
+     *  @param multiPart if true, does a multipart POST
+     *  @param localFile file to upload
+     *  @param fieldName name of the file field
+     *  @param typeHint typeHint of the file field 
+     *  @return the URL that Sling provides to display the node
+     */
+    public String createNode(String url, NameValuePairList clientNodeProperties, Map<String,String> requestHeaders, boolean multiPart, 
+    		File localFile, String fieldName, String typeHint) 
+    throws IOException {
+    	
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
 
@@ -143,6 +158,12 @@ public class SlingIntegrationTestClient {
                 for(NameValuePair e : nodeProperties) {
                     if (e.getValue() != null) {
                         partList.add(new StringPart(e.getName(), e.getValue(), "UTF-8"));
+                    }
+                }
+                if  (localFile != null) {
+                    partList.add(new FilePart(fieldName, localFile));
+                    if (typeHint != null) {
+                    	partList.add(new StringPart(fieldName + "@TypeHint", typeHint));
                     }
                 }
                 final Part [] parts = partList.toArray(new Part[partList.size()]);

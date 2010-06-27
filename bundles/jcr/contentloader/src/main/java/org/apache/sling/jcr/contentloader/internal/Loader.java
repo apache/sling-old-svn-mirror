@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +43,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
-import org.apache.sling.jcr.contentloader.internal.readers.XmlReader;
-import org.apache.sling.jcr.contentloader.internal.readers.ZipReader;
+import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,17 +51,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>Loader</code> loads initial content from the bundle.
  */
-public class Loader {
-
-    public static final String EXT_XML = ".xml";
-
-    public static final String EXT_JCR_XML = ".jcr.xml";
-
-    public static final String EXT_JSON = ".json";
-
-    public static final String EXT_JAR = ".jar";
-
-    public static final String EXT_ZIP = ".zip";
+public class Loader extends BaseImportLoader {
 
     public static final String ROOT_DESCRIPTOR = "/ROOT";
 
@@ -73,25 +60,16 @@ public class Loader {
 
     private ContentLoaderService contentLoaderService;
 
-    /** All available import providers. */
-    private Map<String, ImportProvider> defaultImportProviders;
-
     private final DefaultContentCreator contentCreator;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
     public Loader(ContentLoaderService contentLoaderService) {
-        this.contentLoaderService = contentLoaderService;
+    	super();
+    	this.contentLoaderService = contentLoaderService;
         this.contentCreator = new DefaultContentCreator(contentLoaderService);
         this.delayedBundles = new LinkedList<Bundle>();
-
-        defaultImportProviders = new LinkedHashMap<String, ImportProvider>();
-        defaultImportProviders.put(EXT_JCR_XML, null);
-        defaultImportProviders.put(EXT_JSON, JsonReader.PROVIDER);
-        defaultImportProviders.put(EXT_XML, XmlReader.PROVIDER);
-        defaultImportProviders.put(EXT_JAR, ZipReader.JAR_PROVIDER);
-        defaultImportProviders.put(EXT_ZIP, ZipReader.ZIP_PROVIDER);
     }
 
     public void dispose() {
@@ -100,7 +78,7 @@ public class Loader {
             delayedBundles = null;
         }
         contentLoaderService = null;
-        defaultImportProviders = null;
+        super.dispose();
     }
 
     /**
@@ -369,7 +347,7 @@ public class Loader {
                                  final List<String> createdNodes)
     throws RepositoryException {
         //  init content creator
-        this.contentCreator.init(configuration, this.defaultImportProviders, createdNodes);
+        this.contentCreator.init(configuration, this.defaultImportProviders, createdNodes, null);
 
         final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
 
@@ -598,7 +576,7 @@ public class Loader {
             path = srcPath.substring(0, pos + 1) + name;
         }
 
-        this.contentCreator.init(configuration, defaultImportProviders, createdNodes);
+        this.contentCreator.init(configuration, defaultImportProviders, createdNodes, null);
         this.contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
         final long lastModified = conn.getLastModified();

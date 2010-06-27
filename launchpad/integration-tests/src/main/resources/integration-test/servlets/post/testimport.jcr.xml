@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node sv:name="testnode_1287021810" xmlns:test1="http://sling.apache.org/test/one"
+	xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+	xmlns:test2="test2=http://sling.apache.org/test/two" xmlns:fn_old="http://www.w3.org/2004/10/xpath-functions"
+	xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+	xmlns:ocm="http://jackrabbit.apache.org/ocm" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal"
+	xmlns:jcr="http://www.jcp.org/jcr/1.0">
+	<sv:property sv:name="jcr:primaryType" sv:type="Name">
+		<sv:value>nt:unstructured</sv:value>
+	</sv:property>
+	<sv:property sv:name="jcr:mixinTypes" sv:type="Name">
+		<sv:value>mix:referenceable</sv:value>
+	</sv:property>
+	<sv:property sv:name="jcr:uuid" sv:type="String">
+		<sv:value>b8318fed-6b96-46d9-baa0-72a313160d24</sv:value>
+	</sv:property>
+	<sv:property sv:name="propOne" sv:type="String">
+		<sv:value>propOneValue</sv:value>
+	</sv:property>
+	<sv:node sv:name="childOne">
+		<sv:property sv:name="jcr:primaryType" sv:type="Name">
+			<sv:value>nt:unstructured</sv:value>
+		</sv:property>
+		<sv:property sv:name="childPropOne" sv:type="Boolean">
+			<sv:value>true</sv:value>
+		</sv:property>
+	</sv:node>
+</sv:node>

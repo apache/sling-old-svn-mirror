@@ -24,12 +24,13 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.sling.commons.osgi.ManifestHeader;
+import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Bundle;
 
 /**
  * A path entry from the manifest for initial content.
  */
-public class PathEntry {
+public class PathEntry extends ImportOptions {
 
     /** The manifest header to specify initial content to be loaded. */
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
@@ -169,6 +170,9 @@ public class PathEntry {
         return this.path;
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.internal.ImportOptions#isOverwrite()
+	 */
     public boolean isOverwrite() {
         return this.overwrite;
     }
@@ -177,10 +181,16 @@ public class PathEntry {
         return this.uninstall;
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.internal.ImportOptions#isCheckin()
+	 */
     public boolean isCheckin() {
         return this.checkin;
     }
 
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.internal.ImportOptions#isIgnoredImportProvider(java.lang.String)
+	 */
     public boolean isIgnoredImportProvider(String extension) {
         if ( extension.startsWith(".") ) {
             extension = extension.substring(1);

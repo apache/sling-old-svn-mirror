@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *               Content Loader Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class ContentLoaderService implements SynchronousBundleListener {
+public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
 
     /** The manifest header to specify the workspace for initial content loading. */
     public static final String CONTENT_WORKSPACE_HEADER = "Sling-Initial-Content-Workspace";
@@ -220,7 +220,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
      * @return the digested value
      * @throws IllegalArgumentException
      */
-    protected String digestPassword(String pwd) throws IllegalArgumentException {
+    public String digestPassword(String pwd) throws IllegalArgumentException {
         try {
             StringBuffer password = new StringBuffer();
             password.append("{").append(passwordDigestAlgoritm).append("}");
