@@ -117,17 +117,15 @@ public class PostServletImportTest extends HttpTestBase {
         urlsToDelete.add(testNode);
 
         //add node that will get replaced
-        String testNodeName = "testNode_" + String.valueOf(random.nextInt());
         props.put("propTest", "propTestValue");
-        String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath + "/" + testNodeName, props);
+        String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath + "/nodeName", props);
         
         //import with the replace option to replace the existing node.
         props.clear();
         props.put(SlingPostConstants.RP_OPERATION,
         		SlingPostConstants.OPERATION_IMPORT);
         
-        props.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
-        testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
+        testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
         props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
         props.put(SlingPostConstants.RP_REPLACE, "true");
