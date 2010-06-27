@@ -22,7 +22,6 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +33,8 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.jcr.contentloader.ContentImporter;
+import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
@@ -41,9 +42,9 @@ import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.JSONResponse;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
-import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
+import org.apache.sling.servlets.post.impl.operations.ImportOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
 import org.apache.sling.servlets.post.impl.operations.NopOperation;
@@ -81,6 +82,10 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="nodeNameGenerator"
  *                  interface="org.apache.sling.servlets.post.NodeNameGenerator"
  *                  cardinality="0..n"
+ *                  policy="dynamic"
+ * @scr.reference name="contentImporter"
+ *                  interface="org.apache.sling.jcr.contentloader.ContentImporter"
+ *                  cardinality="0..1"
  *                  policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
@@ -140,6 +145,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private NodeNameGenerator defaultNodeNameGenerator;
 
+    private ImportOperation importOperation;
+
+    /**
+     * The content importer reference. 
+     */
+	private ContentImporter contentImporter;
+    
     @Override
     public void init() {
         // default operation: create/modify
@@ -155,6 +167,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         postOperations.put(SlingPostConstants.OPERATION_DELETE,
             new DeleteOperation());
         postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
+        
+        importOperation = new ImportOperation(defaultNodeNameGenerator, 
+        		contentImporter);
+        importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
+        postOperations.put(SlingPostConstants.OPERATION_IMPORT,
+                importOperation);
     }
 
     @Override
@@ -490,5 +508,23 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         if(this.modifyOperation != null) {
             this.modifyOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
         }
+        if (this.importOperation != null) {
+        	this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+        }
     }
+    
+    protected void bindContentImporter(ContentImporter importer) {
+    	this.contentImporter = importer;
+    	if (importOperation != null) {
+    		importOperation.setContentImporter(importer);
+    	}
+    }
+
+    protected void unbindContentImporter(ContentImporter importer) {
+    	this.contentImporter = null;
+    	if (importOperation != null) {
+    		importOperation.setContentImporter(null);
+    	}
+    }
+    
 }
