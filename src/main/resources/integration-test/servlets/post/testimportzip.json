@@ -1,0 +1,18 @@
+{
+	"jcr:createdBy":"admin",
+	"jcr:primaryType":"nt:folder",
+	"childOne":{
+		"jcr:createdBy":"admin",
+		"jcr:primaryType":"nt:folder",
+		"testfile.txt":{
+			"jcr:createdBy":"admin",
+			"jcr:primaryType":"nt:file",
+			"jcr:content":{
+				"jcr:lastModifiedBy":"admin",
+				":jcr:data":21,
+				"jcr:primaryType":"nt:resource",
+				"jcr:mimeType":"text/plain",
+			}
+		}
+	}
+}
