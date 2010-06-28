@@ -219,13 +219,13 @@ public class CreateUserServlet extends AbstractUserPostServlet {
                     "A principal already exists with the requested name: "
                         + principalName);
             } else {
-                Map<String, RequestProperty> reqProperties = collectContent(
-                    request, response);
-
                 User user = userManager.createUser(principalName,
                     digestPassword(pwd));
                 String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
                     + user.getID();
+                
+                Map<String, RequestProperty> reqProperties = collectContent(
+                    request, response, userPath);
 
                 response.setPath(userPath);
                 response.setLocation(externalizePath(request, userPath));

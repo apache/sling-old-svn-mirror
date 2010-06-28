@@ -114,9 +114,6 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
                     "A principal already exists with the requested name: "
                         + principalName);
             } else {
-                Map<String, RequestProperty> reqProperties = collectContent(
-                    request, response);
-
                 Group group = userManager.createGroup(new Principal() {
                     public String getName() {
                         return principalName;
@@ -125,6 +122,9 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
 
                 String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
                     + group.getID();
+                
+                Map<String, RequestProperty> reqProperties = collectContent(
+                    request, response, groupPath);
                 response.setPath(groupPath);
                 response.setLocation(externalizePath(request, groupPath));
                 response.setParentLocation(externalizePath(request,

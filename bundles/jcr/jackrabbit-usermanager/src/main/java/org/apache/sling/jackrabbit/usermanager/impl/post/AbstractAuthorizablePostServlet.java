@@ -287,7 +287,8 @@ public abstract class AbstractAuthorizablePostServlet extends
      * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
-            SlingHttpServletRequest request, HtmlResponse response) {
+            SlingHttpServletRequest request, HtmlResponse response,
+            String authorizablePath) {
 
         boolean requireItemPrefix = requireItemPathPrefix(request);
 
@@ -321,6 +322,8 @@ public abstract class AbstractAuthorizablePostServlet extends
                 // be used.
                 continue; // skip it.
             }
+            
+            propPath = authorizablePath + "/" + propPath;
 
             // @TypeHint example
             // <input type="text" name="./age" />
@@ -421,23 +424,23 @@ public abstract class AbstractAuthorizablePostServlet extends
      * <code>props</code>.
      * 
      * @param props The map of already seen request properties.
-     * @param paramName The absolute path of the property including the
+     * @param paramPath The absolute path of the property including the
      *            <code>suffix</code> to be looked up.
      * @param suffix The (optional) suffix to remove from the
      *            <code>paramName</code> before looking it up.
      * @return The {@link RequestProperty} for the <code>paramName</code>.
      */
     private RequestProperty getOrCreateRequestProperty(
-            Map<String, RequestProperty> props, String paramName, String suffix) {
-        if (suffix != null && paramName.endsWith(suffix)) {
-            paramName = paramName.substring(0, paramName.length()
+            Map<String, RequestProperty> props, String paramPath, String suffix) {
+        if (suffix != null && paramPath.endsWith(suffix)) {
+            paramPath = paramPath.substring(0, paramPath.length()
                 - suffix.length());
         }
 
-        RequestProperty prop = props.get(paramName);
+        RequestProperty prop = props.get(paramPath);
         if (prop == null) {
-            prop = new RequestProperty(paramName);
-            props.put(paramName, prop);
+            prop = new RequestProperty(paramPath);
+            props.put(paramPath, prop);
         }
 
         return prop;
