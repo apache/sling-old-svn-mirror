@@ -72,7 +72,7 @@ public abstract class AbstractResourceCollector {
 
         final SortedSet<Resource> resources = new TreeSet<Resource>();
         final Iterator<String> locations = new LocationIterator(resourceType, resourceSuperType,
-                                                                baseResourceType, resolver);
+                                                                baseResourceType, workspaceName, resolver);
         while (locations.hasNext()) {
             final String location = locations.next();
 
