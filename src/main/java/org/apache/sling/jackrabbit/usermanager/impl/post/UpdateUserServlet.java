@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.servlets.post.Modification;
 
 /**
@@ -106,9 +107,12 @@ public class UpdateUserServlet extends AbstractUserPostServlet {
         if (session == null) {
             throw new RepositoryException("JCR Session not found");
         }
+        
+        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+            + authorizable.getID();
 
         Map<String, RequestProperty> reqProperties = collectContent(request,
-            htmlResponse);
+            htmlResponse, userPath);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(authorizable, reqProperties, changes);
