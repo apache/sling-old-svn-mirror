@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 
 /**
  * The <code>CopyOperation</code> class implements the
@@ -42,7 +43,8 @@ public class CopyOperation extends AbstractCopyMoveOperation {
 
     @Override
     protected Item execute(List<Modification> changes, Item source,
-            String destParent, String destName) throws RepositoryException {
+            String destParent, String destName,
+            VersioningConfiguration versioningConfiguration) throws RepositoryException {
 
         Item destItem = copy(source, (Node) source.getSession().getItem(destParent), destName);
 

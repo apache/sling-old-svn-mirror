@@ -19,10 +19,13 @@ package org.apache.sling.servlets.post;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -65,7 +68,9 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                     HtmlResponse response,
                     SlingPostProcessor[] processors) {
         Session session = request.getResourceResolver().adaptTo(Session.class);
-
+        
+        VersioningConfiguration versionableConfiguration = getVersioningConfiguration(request);
+        
         try {
             // calculate the paths
             String path = getItemPath(request);
@@ -90,6 +95,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                 processors[i].process(request, changes);
             }
 
+            Set<String> nodesToCheckin = new LinkedHashSet<String>();
+
             // set changes on html response
             for(Modification change : changes) {
                 switch ( change.getType() ) {
@@ -97,12 +104,34 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                     case DELETE : response.onDeleted(change.getSource()); break;
                     case MOVE :   response.onMoved(change.getSource(), change.getDestination()); break;
                     case COPY :   response.onCopied(change.getSource(), change.getDestination()); break;
-                    case CREATE : response.onCreated(change.getSource()); break;
+                    case CREATE :
+                        response.onCreated(change.getSource());
+                        if (versionableConfiguration.isCheckinOnNewVersionableNode()) {
+                            nodesToCheckin.add(change.getSource());
+                        }
+                        break;
                     case ORDER : response.onChange("ordered", change.getSource(), change.getDestination()); break;
+                    case CHECKOUT :
+                        response.onChange("checkout", change.getSource());
+                        nodesToCheckin.add(change.getSource());
+                        break;
+                    case CHECKIN :
+                        response.onChange("checkin", change.getSource());
+                        nodesToCheckin.remove(change.getSource());
+                        break;
                 }
             }
             if (session.hasPendingChanges()) {
                 session.save();
+            }
+
+            if (!isSkipCheckin(request)) {
+                // now do the checkins
+                for(String checkinPath : nodesToCheckin) {
+                    if (checkin(session, checkinPath)) {
+                        response.onChange("checkin", checkinPath);
+                    }
+                }
             }
 
         } catch (Exception e) {
@@ -121,6 +150,16 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
             }
         }
 
+    }
+
+    protected VersioningConfiguration getVersioningConfiguration(SlingHttpServletRequest request) {
+        VersioningConfiguration versionableConfiguration =
+            (VersioningConfiguration) request.getAttribute(VersioningConfiguration.class.getName());
+        return versionableConfiguration != null ? versionableConfiguration : new VersioningConfiguration();
+    }
+
+    protected boolean isSkipCheckin(SlingHttpServletRequest request) {
+        return !getVersioningConfiguration(request).isAutoCheckin();
     }
 
     /**
@@ -352,6 +391,47 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
             throw new IllegalArgumentException(
                 "provided node ordering command is invalid: " + command);
         }
+    }
+
+    protected Node findVersionableAncestor(Node node) throws RepositoryException {
+        if (isVersionable(node)) {
+            return node;
+        } else {
+            try {
+                node = node.getParent();
+                return findVersionableAncestor(node);
+            } catch (ItemNotFoundException e) {
+                // top-level
+                return null;
+            }
+        }
+    }
+
+    protected boolean isVersionable(Node node) throws RepositoryException {
+        return node.isNodeType("mix:versionable");
+    }
+    
+    protected void checkoutIfNecessary(Node node, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration) throws RepositoryException {
+        if (versioningConfiguration.isAutoCheckout()) {
+            Node versionableNode = findVersionableAncestor(node);
+            if (versionableNode != null) {
+                if (!versionableNode.isCheckedOut()) {
+                    versionableNode.checkout();
+                    changes.add(Modification.onCheckout(versionableNode.getPath()));
+                }
+            }
+        }
+    }
+
+    private boolean checkin(Session session, String path) throws RepositoryException {
+        Node node = (Node) session.getItem(path);
+        if (node.isCheckedOut() && isVersionable(node)) {
+            node.checkin();
+            return true;
+        }
+
+        return false;
     }
 
     private static class ApplyToIterator implements Iterator<Resource> {

@@ -38,10 +38,13 @@ import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.JSONResponse;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
+import org.apache.sling.servlets.post.impl.operations.CheckinOperation;
+import org.apache.sling.servlets.post.impl.operations.CheckoutOperation;
 import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
 import org.apache.sling.servlets.post.impl.operations.ImportOperation;
@@ -119,6 +122,32 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private static final String PROP_NODE_NAME_MAX_LENGTH = "servlet.post.nodeNameMaxLength";
 
     /**
+     * @scr.property valueRef="DEFAULT_CHECKIN_ON_CREATE" type="Boolean"
+     */
+    private static final String PROP_CHECKIN_ON_CREATE = "servlet.post.checkinNewVersionableNodes";
+
+    /**
+     * @scr.property valueRef="DEFAULT_AUTO_CHECKOUT" type="Boolean"
+     */
+    private static final String PROP_AUTO_CHECKOUT = "servlet.post.autoCheckout";
+    /**
+     * @scr.property valueRef="DEFAULT_AUTO_CHECKIN" type="Boolean"
+     */
+    private static final String PROP_AUTO_CHECKIN = "servlet.post.autoCheckin";
+    
+    private static final boolean DEFAULT_CHECKIN_ON_CREATE = false;
+    
+    private static final boolean DEFAULT_AUTO_CHECKOUT = true;
+    
+    private static final boolean DEFAULT_AUTO_CHECKIN = true;
+    
+    private static final String PARAM_CHECKIN_ON_CREATE = ":checkinNewVersionableNodes";
+
+    private static final String PARAM_AUTO_CHECKOUT = ":autoCheckout";
+
+    private static final String PARAM_AUTO_CHECKIN = ":autoCheckin";
+
+    /**
      * utility class for parsing date strings
      */
     private DateParser dateParser;
@@ -151,6 +180,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * The content importer reference. 
      */
 	private ContentImporter contentImporter;
+
+    private VersioningConfiguration baseVersioningConfiguration;
     
     @Override
     public void init() {
@@ -167,12 +198,14 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         postOperations.put(SlingPostConstants.OPERATION_DELETE,
             new DeleteOperation());
         postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
-        
+        postOperations.put(SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation());
+        postOperations.put(SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation());
+
         importOperation = new ImportOperation(defaultNodeNameGenerator, 
-        		contentImporter);
+            contentImporter);
         importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
         postOperations.put(SlingPostConstants.OPERATION_IMPORT,
-                importOperation);
+            importOperation);
     }
 
     @Override
@@ -184,6 +217,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
+        VersioningConfiguration localVersioningConfig = createRequestVersioningConfiguration(request);
+        
+        request.setAttribute(VersioningConfiguration.class.getName(), localVersioningConfig);
 
         // prepare the response
         HtmlResponse htmlResponse = createHtmlResponse(request);
@@ -377,6 +413,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             }
             this.delayedNodeNameGenerators.clear();
         }
+        
+        this.baseVersioningConfiguration = createBaseVersioningConfiguration(props);
     }
 
     protected void deactivate(ComponentContext context) {
@@ -514,17 +552,45 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     }
     
     protected void bindContentImporter(ContentImporter importer) {
-    	this.contentImporter = importer;
-    	if (importOperation != null) {
-    		importOperation.setContentImporter(importer);
-    	}
+        this.contentImporter = importer;
+        if (importOperation != null) {
+            importOperation.setContentImporter(importer);
+        }
     }
 
     protected void unbindContentImporter(ContentImporter importer) {
-    	this.contentImporter = null;
-    	if (importOperation != null) {
-    		importOperation.setContentImporter(null);
-    	}
+        this.contentImporter = null;
+        if (importOperation != null) {
+            importOperation.setContentImporter(null);
+        }
     }
     
+    private VersioningConfiguration createBaseVersioningConfiguration(Dictionary<?, ?> props) {
+        VersioningConfiguration cfg = new VersioningConfiguration();
+        cfg.setCheckinOnNewVersionableNode(OsgiUtil.toBoolean(
+                props.get(PROP_CHECKIN_ON_CREATE), DEFAULT_CHECKIN_ON_CREATE));
+        cfg.setAutoCheckout(OsgiUtil.toBoolean(
+                props.get(PROP_AUTO_CHECKOUT), DEFAULT_AUTO_CHECKOUT));
+        cfg.setAutoCheckin(OsgiUtil.toBoolean(
+                props.get(PROP_AUTO_CHECKIN), DEFAULT_AUTO_CHECKIN));
+        return cfg;
+    }
+
+    private VersioningConfiguration createRequestVersioningConfiguration(SlingHttpServletRequest request) {
+        VersioningConfiguration cfg = baseVersioningConfiguration.clone();
+        
+        String paramValue = request.getParameter(PARAM_CHECKIN_ON_CREATE);
+        if (paramValue != null) {
+            cfg.setCheckinOnNewVersionableNode(Boolean.parseBoolean(paramValue));
+        }
+        paramValue = request.getParameter(PARAM_AUTO_CHECKOUT);
+        if (paramValue != null) {
+            cfg.setAutoCheckout(Boolean.parseBoolean(paramValue));
+        }
+        paramValue = request.getParameter(PARAM_AUTO_CHECKIN);
+        if (paramValue != null) {
+            cfg.setAutoCheckin(Boolean.parseBoolean(paramValue));
+        }
+        return cfg;
+    }
 }

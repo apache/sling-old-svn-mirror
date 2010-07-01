@@ -58,5 +58,15 @@ public enum ModificationType {
      * the sibbling node before which the source Node has been ordered. which
      * the
      */
-    ORDER
+    ORDER,
+
+    /**
+     * A Node has been checked out. The source path provides the path of the node.
+     */
+    CHECKOUT,
+
+    /**
+     * A Node has been checked in. The source path provides the path of the node.
+     */
+    CHECKIN
 }

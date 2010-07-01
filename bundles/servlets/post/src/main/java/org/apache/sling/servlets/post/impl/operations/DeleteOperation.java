@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 
 /**
  * The <code>DeleteOperation</code> class implements the
@@ -39,6 +40,7 @@ public class DeleteOperation extends AbstractSlingPostOperation {
     @Override
     protected void doRun(SlingHttpServletRequest request, HtmlResponse response, List<Modification> changes)
     throws RepositoryException {
+        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         Iterator<Resource> res = getApplyToResources(request);
         if (res == null) {
@@ -50,6 +52,7 @@ public class DeleteOperation extends AbstractSlingPostOperation {
                     "Missing source " + resource + " for delete");
                 return;
             }
+            checkoutIfNecessary(item.getParent(), changes, versioningConfiguration);
 
             item.remove();
             changes.add(Modification.onDeleted(resource.getPath()));
@@ -60,6 +63,7 @@ public class DeleteOperation extends AbstractSlingPostOperation {
                 Resource resource = res.next();
                 Item item = resource.adaptTo(Item.class);
                 if (item != null) {
+                    checkoutIfNecessary(item.getParent(), changes, versioningConfiguration);
                     item.remove();
                     changes.add(Modification.onDeleted(resource.getPath()));
                 }

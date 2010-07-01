@@ -110,6 +110,28 @@ public interface SlingPostConstants {
     public static final String OPERATION_NOP = "nop";
 
     /**
+     * Name of the predefined checkin operation (value is "checkin").
+     * <p>
+     * The checkin operation requires no further request parameters and just
+     * checks in the content addressed by the request.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are checked in instead of the request resource.
+     */
+    public static final String OPERATION_CHECKIN = "checkin";
+
+    /**
+     * Name of the predefined checkout operation (value is "checkout").
+     * <p>
+     * The checkout operation requires no further request parameters and just
+     * checks out the content addressed by the request.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are checked out instead of the request resource.
+     */
+    public static final String OPERATION_CHECKOUT = "checkout";
+
+    /**
      * Name of the predefined import operation (value is "import").
      * 
      * <p>
@@ -119,8 +141,7 @@ public interface SlingPostConstants {
      * an existing item at the destination should be overwritten or not.
      */
     public static final String OPERATION_IMPORT = "import";
-    
-    
+
     /**
      * Name of the request parameter used to indicate the resource to apply the
      * operation to (value is ":applyTo").

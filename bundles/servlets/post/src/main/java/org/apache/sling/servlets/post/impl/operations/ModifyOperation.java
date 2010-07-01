@@ -31,6 +31,7 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.version.VersionException;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingException;
@@ -38,12 +39,12 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
@@ -92,22 +93,24 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
         Map<String, RequestProperty> reqProperties = collectContent(request,
                 response);
+        
+        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         // do not change order unless you have a very good reason.
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         // ensure root of new content
-        processCreate(session, reqProperties, response, changes);
+        processCreate(session, reqProperties, response, changes, versioningConfiguration);
 
         // write content from existing content (@Move/CopyFrom parameters)
-        processMoves(session, reqProperties, changes);
-        processCopies(session, reqProperties, changes);
+        processMoves(session, reqProperties, changes, versioningConfiguration);
+        processCopies(session, reqProperties, changes, versioningConfiguration);
 
         // cleanup any old content (@Delete parameters)
-        processDeletes(session, reqProperties, changes);
+        processDeletes(session, reqProperties, changes, versioningConfiguration);
 
         // write content from form
-        writeContent(session, reqProperties, changes);
+        writeContent(session, reqProperties, changes, versioningConfiguration);
 
         // order content
         String path = response.getPath();
@@ -239,14 +242,15 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * @throws RepositoryException if a repository error occurs
      */
     private void processCreate(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, HtmlResponse response, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
         String path = response.getPath();
 
         if (!session.itemExists(path)) {
 
-            deepGetOrCreateNode(session, path, reqProperties, changes);
+            deepGetOrCreateNode(session, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
         } else {
@@ -262,6 +266,8 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
                     // clear existing mixins first
                     Node node = (Node) item;
+                    checkoutIfNecessary(node, changes, versioningConfiguration);
+
                     for (NodeType mixin : node.getMixinNodeTypes()) {
                         String mixinName = mixin.getName();
                         if (!newMixins.remove(mixinName)) {
@@ -272,6 +278,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                     // add new mixins
                     for (String mixin : newMixins) {
                         node.addMixin(mixin);
+                        // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                        // the mix:versionable mixin does an implicit checkout
+                        if (mixin.equals("mix:versionable") &&
+                                versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                            changes.add(Modification.onCheckout(path));
+                        }
                     }
                 }
             }
@@ -281,15 +293,17 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Moves all repository content listed as repository move source in the
      * request properties to the locations indicated by the resource properties.
+     * @param checkedOutNodes
      */
     private void processMoves(Session session,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryMoveSource()) {
                 processMovesCopiesInternal(property, true, session,
-                    reqProperties, changes);
+                    reqProperties, changes, versioningConfiguration);
             }
         }
     }
@@ -297,15 +311,17 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Copies all repository content listed as repository copy source in the
      * request properties to the locations indicated by the resource properties.
+     * @param checkedOutNodes
      */
     private void processCopies(Session session,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryCopySource()) {
                 processMovesCopiesInternal(property, false, session,
-                    reqProperties, changes);
+                    reqProperties, changes, versioningConfiguration);
             }
         }
     }
@@ -334,7 +350,8 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      */
     private void processMovesCopiesInternal(RequestProperty property,
             boolean isMove, Session session,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
         String propPath = property.getPath();
@@ -346,11 +363,15 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             // if the destination item already exists, remove it
             // first, otherwise ensure the parent location
             if (session.itemExists(propPath)) {
+                Node parent = session.getItem(propPath).getParent();
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
+                
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
-                deepGetOrCreateNode(session, property.getParentPath(),
-                    reqProperties, changes);
+                Node parent = deepGetOrCreateNode(session, property.getParentPath(),
+                    reqProperties, changes, versioningConfiguration);
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
             }
 
             // move through the session and record operation
@@ -359,10 +380,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
                 // node move/copy through session
                 if (isMove) {
+                    checkoutIfNecessary(sourceItem.getParent(), changes, versioningConfiguration);
                     session.move(source, propPath);
                 } else {
                     Node sourceNode = (Node) sourceItem;
                     Node destParent = (Node) session.getItem(property.getParentPath());
+                    checkoutIfNecessary(destParent, changes, versioningConfiguration);
                     CopyOperation.copy(sourceNode, destParent,
                         property.getName());
                 }
@@ -374,10 +397,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
                 // create destination property
                 Node destParent = (Node) session.getItem(property.getParentPath());
+                checkoutIfNecessary(destParent, changes, versioningConfiguration);
                 CopyOperation.copy(sourceProperty, destParent, null);
 
                 // remove source property (if not just copying)
                 if (isMove) {
+                    checkoutIfNecessary(sourceProperty.getParent(), changes, versioningConfiguration);
                     sourceProperty.remove();
                 }
             }
@@ -410,16 +435,19 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      */
     private void processDeletes(Session session,
             Map<String, RequestProperty> reqProperties,
-            List<Modification> changes) throws RepositoryException {
+            List<Modification> changes,
+            VersioningConfiguration versioningConfiguration) throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
 
             if (property.isDelete() && session.itemExists(property.getPath())) {
+                Node parent = (Node) session.getItem(property.getParentPath());
+
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                 if (property.getName().equals("jcr:mixinTypes")) {
 
                     // clear all mixins
-                    Node parent = (Node) session.getItem(property.getParentPath());
                     for (NodeType mixin : parent.getMixinNodeTypes()) {
                         parent.removeMixin(mixin.getName());
                     }
@@ -443,7 +471,8 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * @throws ServletException if an internal error occurs
      */
     private void writeContent(Session session,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
         SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
@@ -452,7 +481,10 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         for (RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
                 Node parent = deepGetOrCreateNode(session,
-                    prop.getParentPath(), reqProperties, changes);
+                    prop.getParentPath(), reqProperties, changes, versioningConfiguration);
+
+                checkoutIfNecessary(parent, changes, versioningConfiguration); 
+                
                 // skip jcr special properties
                 if (prop.getName().equals("jcr:primaryType")
                     || prop.getName().equals("jcr:mixinTypes")) {
@@ -715,13 +747,15 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * the path is empty, the given parent node is returned.
      *
      * @param path path to node that needs to be deep-created
+     * @param checkedOutNodes
      * @return node at path
      * @throws RepositoryException if an error occurs
      * @throws IllegalArgumentException if the path is relative and parent is
      *             <code>null</code>
      */
     private Node deepGetOrCreateNode(Session session, String path,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes,
+            VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
         if (log.isDebugEnabled()) {
             log.debug("Deep-creating Node '{}'", path);
@@ -768,10 +802,18 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 final String tmpPath = to < 0 ? path : path.substring(0, to);
                 // check for node type
                 final String nodeType = getPrimaryType(reqProperties, tmpPath);
-                if (nodeType != null) {
-                    node = node.addNode(name, nodeType);
-                } else {
-                    node = node.addNode(name);
+                checkoutIfNecessary(node, changes, versioningConfiguration);
+
+                try {
+                    if (nodeType != null) {
+                        node = node.addNode(name, nodeType);
+                    } else {
+                        node = node.addNode(name);
+
+                    }
+                } catch (VersionException e) {
+                    log.error("Unable to create node named " + name + " in "+node.getPath());
+                    throw e;
                 }
                 // check for mixin types
                 final String[] mixinTypes = getMixinTypes(reqProperties,

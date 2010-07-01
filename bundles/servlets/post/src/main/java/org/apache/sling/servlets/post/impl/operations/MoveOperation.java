@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 
 /**
  * The <code>MoveOperation</code> class implements the
@@ -38,7 +39,8 @@ public class MoveOperation extends AbstractCopyMoveOperation {
 
     @Override
     protected Item execute(List<Modification> changes, Item source,
-            String destParent, String destName) throws RepositoryException {
+            String destParent, String destName,
+            VersioningConfiguration versioningConfiguration) throws RepositoryException {
 
         if (destName == null) {
             destName = source.getName();
@@ -50,11 +52,13 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         }
         String destPath = destParent + "/" + destName;
         Session session = source.getSession();
+        
+        checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
 
         if (session.itemExists(destPath)) {
             session.getItem(destPath).remove();
         }
-
+        
         session.move(sourcePath, destPath);
         changes.add(Modification.onMoved(sourcePath, destPath));
         return session.getItem(destPath);
