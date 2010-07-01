@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.Item;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 
 /**
  * The <code>AbstractCopyMoveOperation</code> is the abstract base close for
@@ -44,6 +46,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             HtmlResponse response,
             List<Modification> changes)
     throws RepositoryException {
+        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         Resource resource = request.getResource();
         String source = resource.getPath();
@@ -78,17 +81,23 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
                     "Cannot " + getOperationName() + " " + resource + " to "
                         + dest + ": destination exists");
                 return;
+            } else {
+                checkoutIfNecessary(session.getItem(dest).getParent(), changes, versioningConfiguration);
             }
 
         } else {
 
             // check if path to destination exists and create it, but only
             // if it's a descendant of the current node
-            if (!dstParent.equals("") && !session.itemExists(dstParent)) {
-                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
-                    "Cannot " + getOperationName() + " " + resource + " to "
-                        + dest + ": parent of destination does not exist");
-                return;
+            if (!dstParent.equals("")) {
+                if (session.itemExists(dstParent)) {
+                    checkoutIfNecessary((Node) session.getItem(dstParent), changes, versioningConfiguration);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
+                        "Cannot " + getOperationName() + " " + resource + " to "
+                            + dest + ": parent of destination does not exist");
+                    return;
+                }
             }
 
             // the destination is newly created, hence a create request
@@ -108,7 +117,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             }
 
             String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
-            destItem = execute(changes, item, dstParent, dstName);
+            destItem = execute(changes, item, dstParent, dstName, versioningConfiguration);
 
         } else {
 
@@ -127,7 +136,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
                 Resource applyTo = resources.next();
                 Item item = applyTo.adaptTo(Item.class);
                 if (item != null) {
-                    execute(changes, item, dstParent, null);
+                    execute(changes, item, dstParent, null, versioningConfiguration);
                 }
             }
             destItem = session.getItem(dest);
@@ -157,6 +166,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
      *             the operation.
      */
     protected abstract Item execute(List<Modification> changes, Item source,
-            String destParent, String destName) throws RepositoryException;
+            String destParent, String destName,
+            VersioningConfiguration versioningConfiguration) throws RepositoryException;
 
 }

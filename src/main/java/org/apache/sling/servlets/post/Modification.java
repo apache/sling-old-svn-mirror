@@ -118,6 +118,14 @@ public class Modification {
         return new Modification(type, source, dest);
     }
 
+    public static Modification onCheckin(String path) {
+        return onChange(ModificationType.CHECKIN, path, null);
+    }
+
+    public static Modification onCheckout(String path) {
+        return onChange(ModificationType.CHECKOUT, path, null);
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Modification[type=").append(type).append(", source=").append(source);
