@@ -52,6 +52,7 @@ import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.ResponseUtil;
+import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -62,6 +63,7 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
+import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingFilterConfig;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
 import org.apache.sling.engine.impl.log.RequestLogger;
@@ -171,6 +173,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
+    
+    private RequestListenerManager requestListenerManager; 
 
     private boolean allowTrace = DEFAULT_ALLOW_TRACE;
 
@@ -183,8 +187,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
-
+        	
             HttpServletRequest request = (HttpServletRequest) req;
+
+        	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(), 
+        			request, SlingRequestEvent.EventType.EVENT_INIT ) );
 
             // set the thread name according to the request
             String threadName = setThreadName(request);
@@ -238,6 +245,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             } finally {
 
+            	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(), 
+            			request, SlingRequestEvent.EventType.EVENT_DESTROY ) );
                 // reset the thread name
                 if (threadName != null) {
                     Thread.currentThread().setName(threadName);
@@ -621,6 +630,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 initFilter(componentContext, serviceReference);
             }
         }
+        
+        // initialize requestListenerManager
+        requestListenerManager = new RequestListenerManager( bundleContext );
 
         // try to setup configuration printer
         try {
