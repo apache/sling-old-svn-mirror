@@ -81,9 +81,6 @@ public class PostServletImportTest extends HttpTestBase {
     	Iterator<String> keys = expectedJson.keys();
     	while (keys.hasNext()) {
     		String key = keys.next();
-                if ( ":name".equals(key) ) {
-                    continue;
-                }
     		
     		Object object = expectedJson.get(key);
     		Object object2 = actualJson.get(key);
@@ -146,8 +143,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNull(jsonObj.optString("propTest", null)); //test property should be gone.
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     /**
@@ -235,8 +232,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     /**
@@ -268,8 +265,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
     
     /**
@@ -300,7 +297,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     /**
@@ -332,7 +330,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
     
     public void testImportXMLFromFile() throws IOException, JSONException {
@@ -360,8 +359,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     public void testImportXMLFromFileWithoutOptionalName() throws IOException, JSONException {
@@ -390,8 +389,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
     
     public void testImportXMLFromRequestParam() throws IOException, JSONException {
@@ -419,8 +418,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     public void testImportXMLFromRequestParamWithoutOptionalName() throws IOException, JSONException {
@@ -449,8 +448,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
  
     
@@ -479,8 +478,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
 
     public void testImportJarFromFile() throws IOException, JSONException {
@@ -508,8 +507,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
  
     
@@ -538,8 +537,8 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
     }
     
 }
