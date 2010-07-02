@@ -440,51 +440,60 @@ public class Loader extends BaseImportLoader {
     throws RepositoryException {
         final URL file = bundle.getEntry(entry);
         final String name = getName(entry);
-
-        if (processedEntries.containsKey(file)) {
-            // this is a consumed node descriptor
-            return;
-        }
-
-        // check for node descriptor
-        URL nodeDescriptor = null;
-        for (String ext : this.contentCreator.getImportProviders().keySet()) {
-            nodeDescriptor = bundle.getEntry(entry + ext);
-            if (nodeDescriptor != null) {
-                break;
+        try {
+            if (processedEntries.containsKey(file)) {
+                // this is a consumed node descriptor
+                return;
             }
-        }
-
-        // install if it is a descriptor
-        boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
-
-        Node node = null;
-        if (foundProvider) {
-            if ((node = createNode(parent, name, file, configuration)) != null) {
-                processedEntries.put(file, node);
+    
+            // check for node descriptor
+            URL nodeDescriptor = null;
+            for (String ext : this.contentCreator.getImportProviders().keySet()) {
+                nodeDescriptor = bundle.getEntry(entry + ext);
+                if (nodeDescriptor != null) {
+                    break;
+                }
             }
-        }
-
-        // otherwise just place as file
-        if ( node == null ) {
-            try {
-                createFile(configuration, parent, file, createdNodes);
-                node = parent.getNode(name);
-            } catch (IOException ioe) {
-                log.warn("Cannot create file node for {}", file, ioe);
+    
+            // install if it is a descriptor
+            boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
+    
+            Node node = null;
+            if (foundProvider) {
+                if ((node = createNode(parent, name, file, configuration)) != null) {
+                    log.debug("Created Node as {} {} ",node.getPath(),name);
+                    processedEntries.put(file, node);
+                } else {
+                    log.warn("No Node created for file {} {} ",file,name);
+                }
+            } else {
+                log.debug("Cant find provider for Entry {} at {} ",entry,name);
             }
-        }
-        // if we have a descriptor, which has not been processed yet,
-        // process it
-        if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
-            try {
-                this.contentCreator.setIgnoreOverwriteFlag(true);
-                node = createNode(parent, name, nodeDescriptor,
-                                  configuration);
-                processedEntries.put(nodeDescriptor, node);
-            } finally {
-                this.contentCreator.setIgnoreOverwriteFlag(false);
+    
+            // otherwise just place as file
+            if ( node == null ) {
+                try {
+                    createFile(configuration, parent, file, createdNodes);
+                    node = parent.getNode(name);
+                } catch (IOException ioe) {
+                    log.warn("Cannot create file node for {}", file, ioe);
+                }
             }
+            // if we have a descriptor, which has not been processed yet,
+            // process it
+            if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
+                try {
+                    this.contentCreator.setIgnoreOverwriteFlag(true);
+                    node = createNode(parent, name, nodeDescriptor,
+                                      configuration);
+                    processedEntries.put(nodeDescriptor, node);
+                } finally {
+                    this.contentCreator.setIgnoreOverwriteFlag(false);
+                }
+            }
+        } catch ( RepositoryException e ) {
+            log.error("Failed to process process file {} from {}", file, name);
+            throw e;
         }
     }
 
