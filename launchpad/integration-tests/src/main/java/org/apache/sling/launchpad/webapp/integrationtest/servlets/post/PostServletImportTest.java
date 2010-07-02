@@ -81,6 +81,9 @@ public class PostServletImportTest extends HttpTestBase {
     	Iterator<String> keys = expectedJson.keys();
     	while (keys.hasNext()) {
     		String key = keys.next();
+                if ( ":name".equals(key) ) {
+                    continue;
+                }
     		
     		Object object = expectedJson.get(key);
     		Object object2 = actualJson.get(key);
