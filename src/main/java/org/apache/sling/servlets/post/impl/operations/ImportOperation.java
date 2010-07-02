@@ -109,8 +109,17 @@ public class ImportOperation extends AbstractSlingPostOperation {
         	//remove the trailing slash
         	basePath = basePath.substring(0, basePath.length() - 1);
         }
-		String name = generateName(request, basePath);
-        String contentRootName = name + "." + contentType;
+        
+        String contentRootName;
+        //check if a name was posted to use as the name of the imported root node
+        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null || 
+        		request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
+   			String name = generateName(request, basePath);
+   	        contentRootName = name + "." + contentType;
+        } else {
+        	//no name posted, so the import won't create a root node
+   	        contentRootName = "." + contentType;
+        }
         response.setCreateRequest(true);
         
         try {
