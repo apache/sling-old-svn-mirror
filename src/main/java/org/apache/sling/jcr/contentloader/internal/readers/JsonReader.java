@@ -105,6 +105,7 @@ public class JsonReader implements ContentReader {
         ignoredNames.add("jcr:successors");
         ignoredNames.add("jcr:checkedOut");
         ignoredNames.add("jcr:created");
+        ignoredNames.add(":name");
     }
 
     private static final Set<String> ignoredPrincipalPropertyNames = new HashSet<String>();
@@ -156,7 +157,7 @@ public class JsonReader implements ContentReader {
             }
 
             JSONObject json = new JSONObject(jsonString);
-            String optionalName = json.optString("name", null);
+            String optionalName = json.optString(":name", null);
             this.createNode(optionalName, json, contentCreator);
         } catch (JSONException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
