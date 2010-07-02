@@ -120,7 +120,10 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
     private String toPlainName(DefaultContentCreator contentCreator, String name) {
         final String providerExt = contentCreator.getImportProviderExtension(name);
         if (providerExt != null) {
-            return name.substring(0, name.length() - providerExt.length());
+        	if (name.length() == providerExt.length()) {
+        		return null; //no name is provided
+        	}
+        	return name.substring(0, name.length() - providerExt.length());
         }
         return name;
     }

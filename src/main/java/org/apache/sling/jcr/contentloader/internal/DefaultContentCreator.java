@@ -239,6 +239,7 @@ public class DefaultContentCreator implements ContentCreator {
                            String[] mixinNodeTypes)
     throws RepositoryException {
         final Node parentNode = this.parentNodeStack.peek();
+        boolean isParentImport = (name == null && isParentNodeImport);
         if ( name == null ) {
             if ( this.parentNodeStack.size() > 1 ) {
                 throw new RepositoryException("Node needs to have a name.");
@@ -247,7 +248,7 @@ public class DefaultContentCreator implements ContentCreator {
         }
 
         // if we are in parent node import mode, we don't create the root top level node!
-        if ( !isParentNodeImport || this.parentNodeStack.size() > 1 ) {
+        if ( !isParentImport || this.parentNodeStack.size() > 1 ) {
             // if node already exists but should be overwritten, delete it
             if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
                 parentNode.getNode(name).remove();
