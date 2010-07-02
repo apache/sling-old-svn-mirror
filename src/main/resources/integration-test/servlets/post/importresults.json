@@ -1,0 +1,11 @@
+{
+	"jcr:primaryType": "nt:unstructured",
+	"jcr:mixinTypes": [
+		"mix:referenceable"
+	],
+	"propOne" : "propOneValue",
+	
+	"childOne" : {
+		"childPropOne" : true
+	}
+}
