@@ -252,10 +252,10 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         } else {
             bundleList = new BundleList();
             if (includeDefaultBundles) {
-                Artifact artifact = getArtifact(defaultBundleList.getGroupId(), defaultBundleList.getArtifactId(),
+                Artifact defBndListArtifact = getArtifact(defaultBundleList.getGroupId(), defaultBundleList.getArtifactId(),
                         defaultBundleList.getVersion(), defaultBundleList.getType(), defaultBundleList.getClassifier());
-                getLog().info("Using bundle list file from " + artifact.getFile().getAbsolutePath());
-                bundleList = readBundleList(artifact.getFile());
+                getLog().info("Using bundle list file from " + defBndListArtifact.getFile().getAbsolutePath());
+                bundleList = readBundleList(defBndListArtifact.getFile());
             }
 
             if (bundleListFile.exists()) {
