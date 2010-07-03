@@ -78,7 +78,7 @@ public abstract class BaseBundleList {
     private void add(StartLevel mergeStartLevel, Bundle newBnd) {
         Bundle current = get(newBnd, false);
         if (current != null) {
-
+            current.setVersion(newBnd.getVersion());
         } else {
             StartLevel startLevel = null;
             if ( mergeStartLevel == null || newBnd.getStartLevel() > 0) {
