@@ -180,9 +180,6 @@ public class JobEventHandler
     public static volatile ThreadPool JOB_THREAD_POOL;
 
     /** Sync lock */
-    private final Object writeLock = new Object();
-
-    /** Sync lock */
     private final Object backgroundLock = new Object();
 
     /** Number of parallel jobs for the main queue. */

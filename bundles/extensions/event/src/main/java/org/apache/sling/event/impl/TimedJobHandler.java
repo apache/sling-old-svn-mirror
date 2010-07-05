@@ -91,9 +91,6 @@ public class TimedJobHandler
     /** Unloaded events. */
     protected Set<String>unloadedEvents = new HashSet<String>();
 
-    /** Sync lock */
-    private final Object writeLock = new Object();
-
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
      */
