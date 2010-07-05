@@ -166,9 +166,9 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     private ResourceResolver scriptResolver;
 
-    private Map<ServiceReference, ServiceRegistration> servletsByReference = new HashMap<ServiceReference, ServiceRegistration>();
+    private final Map<ServiceReference, ServletReg> servletsByReference = new HashMap<ServiceReference, ServletReg>();
 
-    private List<ServiceReference> pendingServlets = new ArrayList<ServiceReference>();
+    private final List<ServiceReference> pendingServlets = new ArrayList<ServiceReference>();
 
     /** The component context. */
     private ComponentContext context;
@@ -773,10 +773,10 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         return null;
     }
 
-    private Map<String, Object> createAuthenticationInfo() {
+    private Map<String, Object> createAuthenticationInfo(final Dictionary<String, Object> props) {
         final Map<String, Object> authInfo = new HashMap<String, Object>();
         // if a script user is configured we use this user to read the scripts
-        final String scriptUser = OsgiUtil.toString(context.getProperties().get(PROP_SCRIPT_USER), null);
+        final String scriptUser = OsgiUtil.toString(props.get(PROP_SCRIPT_USER), null);
         if (scriptUser != null && scriptUser.length() > 0) {
             authInfo.put(ResourceResolverFactory.SUDO_USER_ID, scriptUser);
         }
@@ -788,7 +788,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /**
      * Activate this component.
      */
-    protected void activate(ComponentContext context) throws LoginException {
+    @SuppressWarnings("unchecked")
+    protected void activate(final ComponentContext context) throws LoginException {
         // from configuration if available
         final Dictionary<?, ?> properties = context.getProperties();
         Object servletRoot = properties.get(PROP_SERVLET_ROOT);
@@ -796,30 +797,31 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             servletRoot = DEFAULT_SERVLET_ROOT;
         }
 
+        // workspace handling and resource resolver creation
+        this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), DEFAULT_USE_DEFAULT_WORKSPACE);
+        this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), DEFAULT_USE_REQUEST_WORKSPACE);
+
+        String defaultWorkspaceProp = (String) properties.get(PROP_DEFAULT_SCRIPT_WORKSPACE);
+        if ( defaultWorkspaceProp != null && defaultWorkspaceProp.trim().length() == 0 ) {
+            defaultWorkspaceProp = null;
+        }
+        this.defaultWorkspaceName = defaultWorkspaceProp;
+
+
         final Collection<ServiceReference> refs;
-        synchronized (this) {
+        synchronized (this.pendingServlets) {
 
-            refs = pendingServlets;
-            pendingServlets = new ArrayList<ServiceReference>();
-
-            // register servlets immediately from now on
-            this.context = context;
-
-            // workspace handling and resource resolver creation
-            this.useDefaultWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_DEFAULT_WORKSPACE), DEFAULT_USE_DEFAULT_WORKSPACE);
-            this.useRequestWorkspace = OsgiUtil.toBoolean(properties.get(PROP_USE_REQUEST_WORKSPACE), DEFAULT_USE_REQUEST_WORKSPACE);
-
-            String defaultWorkspaceProp = (String) properties.get(PROP_DEFAULT_SCRIPT_WORKSPACE);
-            if ( defaultWorkspaceProp != null && defaultWorkspaceProp.trim().length() == 0 ) {
-                defaultWorkspaceProp = null;
-            }
-            this.defaultWorkspaceName = defaultWorkspaceProp;
+            refs = new ArrayList<ServiceReference>(pendingServlets);
+            pendingServlets.clear();
 
             this.scriptResolver =
-                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo());
+                    resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo(context.getProperties()));
 
             servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot,
                     this.scriptResolver.getSearchPath());
+
+            // register servlets immediately from now on
+            this.context = context;
         }
         createAllServlets(refs);
 
@@ -861,7 +863,10 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     /**
      * Deactivate this component.
      */
-    protected void deactivate(ComponentContext context) {
+    protected void deactivate(final ComponentContext context) {
+        // stop registering of servlets immediately
+        this.context = null;
+
         // unregister event handler
         if (this.eventHandlerReg != null) {
             this.eventHandlerReg.unregister();
@@ -871,11 +876,16 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         // Copy the list of servlets first, to minimize the need for
         // synchronization
         final Collection<ServiceReference> refs;
-        synchronized (this) {
+        synchronized (this.servletsByReference) {
             refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
         }
         // destroy all servlets
         destroyAllServlets(refs);
+
+        // sanity check: clear array (it should be empty now anyway)
+        synchronized ( this.servletsByReference ) {
+            this.servletsByReference.clear();
+        }
 
         // destroy the fallback error handler servlet
         if (fallbackErrorServlet != null) {
@@ -893,33 +903,41 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             this.scriptResolver = null;
         }
 
-        this.context = null;
         this.cache = null;
         this.servletResourceProviderFactory = null;
     }
 
-    protected synchronized void bindServlet(ServiceReference reference) {
+    protected void bindServlet(ServiceReference reference) {
+        boolean directCreate = true;
         if (context == null) {
-            pendingServlets.add(reference);
-        } else {
-            createServlet(servletContext, reference);
+            synchronized ( pendingServlets ) {
+                if (context == null) {
+                    pendingServlets.add(reference);
+                    directCreate = false;
+                }
+            }
+        }
+        if ( directCreate ) {
+            createServlet(reference);
         }
     }
 
-    protected synchronized void unbindServlet(ServiceReference reference) {
-        pendingServlets.remove(reference);
+    protected void unbindServlet(ServiceReference reference) {
+        synchronized ( pendingServlets ) {
+            pendingServlets.remove(reference);
+        }
         destroyServlet(reference);
     }
 
     // ---------- Servlet Management -------------------------------------------
 
-    private void createAllServlets(Collection<ServiceReference> pendingServlets) {
-        for (ServiceReference serviceReference : pendingServlets) {
-            createServlet(servletContext, serviceReference);
+    private void createAllServlets(final Collection<ServiceReference> pendingServlets) {
+        for (final ServiceReference serviceReference : pendingServlets) {
+            createServlet(serviceReference);
         }
     }
 
-    private boolean createServlet(ServletContext servletContext, ServiceReference reference) {
+    private boolean createServlet(final ServiceReference reference) {
 
         // check for a name, this is required
         final String name = getName(reference);
@@ -967,11 +985,13 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         params.put(Constants.SERVICE_DESCRIPTION, "ServletResourceProvider for Servlets at "
                 + Arrays.asList(provider.getServletPaths()));
 
-        ServiceRegistration reg = context.getBundleContext().registerService(ResourceProvider.SERVICE_NAME, provider,
-                params);
+        final ServiceRegistration reg = context.getBundleContext()
+                .registerService(ResourceProvider.SERVICE_NAME, provider, params);
 
         log.info("Registered {}", provider.toString());
-        servletsByReference.put(reference, reg);
+        synchronized (this.servletsByReference) {
+            servletsByReference.put(reference, new ServletReg(servlet, reg));
+        }
 
         return true;
     }
@@ -983,23 +1003,20 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     }
 
     private void destroyServlet(ServiceReference reference) {
-        ServiceRegistration registration = servletsByReference.remove(reference);
+        ServletReg registration;
+        synchronized (this.servletsByReference) {
+            registration = servletsByReference.remove(reference);
+        }
         if (registration != null) {
 
-            registration.unregister();
+            registration.registration.unregister();
+            final String name = RequestUtil.getServletName(registration.servlet);
+            log.debug("unbindServlet: Servlet {} removed", name);
 
-            Servlet servlet = (Servlet) context.locateService(REF_SERVLET, reference);
-            if (servlet == null) {
-                log.error("destroyServlet: Servlet not found for reference {}", reference.toString());
-            } else {
-                String name = RequestUtil.getServletName(servlet);
-                log.debug("unbindServlet: Servlet {} removed", name);
-
-                try {
-                    servlet.destroy();
-                } catch (Throwable t) {
-                    log.error("unbindServlet: Unexpected problem destroying servlet " + name, t);
-                }
+            try {
+                registration.servlet.destroy();
+            } catch (Throwable t) {
+                log.error("unbindServlet: Unexpected problem destroying servlet " + name, t);
             }
         }
     }
@@ -1068,5 +1085,15 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     private boolean isPathAllowed(final String path) {
         return AbstractResourceCollector.isPathAllowed(path, this.executionPaths);
+    }
+
+    private static final class ServletReg {
+        public final Servlet servlet;
+        public final ServiceRegistration registration;
+
+        public ServletReg(final Servlet s, final ServiceRegistration sr) {
+            this.servlet = s;
+            this.registration = sr;
+        }
     }
 }
