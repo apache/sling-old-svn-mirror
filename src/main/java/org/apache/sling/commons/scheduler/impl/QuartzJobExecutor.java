@@ -44,10 +44,9 @@ public class QuartzJobExecutor implements Job {
         final boolean canRunConcurrently = (handler == null ? true : handler.runConcurrently);
 
         if (!canRunConcurrently) {
-            if ( handler.isRunning ) {
+            if ( !handler.isRunning.compareAndSet(false, true) ) {
                 return;
             }
-            handler.isRunning = true;
         }
 
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
@@ -76,7 +75,7 @@ public class QuartzJobExecutor implements Job {
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
         } finally {
             if (!canRunConcurrently) {
-                handler.isRunning = false;
+                handler.isRunning.set(false);
             }
         }
     }

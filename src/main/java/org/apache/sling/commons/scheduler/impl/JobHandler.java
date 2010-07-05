@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * The job handler controls the invocation of a job
  * like parallel invocation and the number of times
@@ -25,10 +27,10 @@ public class JobHandler {
 
     public final boolean runConcurrently;
 
-    public volatile boolean isRunning;
+    public final AtomicBoolean isRunning;
 
     public JobHandler(final boolean runConcurrently) {
         this.runConcurrently = runConcurrently;
-        this.isRunning = false;
+        this.isRunning = new AtomicBoolean(false);
     }
 }
