@@ -76,6 +76,9 @@ public abstract class AbstractRepositoryEventHandler
     /** The repository session to write into the repository. */
     protected Session writerSession;
 
+    /** Sync lock */
+    protected final Object writeLock = new Object();
+
     /** The path in the repository. */
     protected String repositoryPath;
 
@@ -214,14 +217,16 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void stopWriterSession() {
         if ( this.writerSession != null ) {
-            try {
-                this.writerSession.getWorkspace().getObservationManager().removeEventListener(this);
-            } catch (RepositoryException e) {
-                // we just ignore it
-                this.logger.warn("Unable to remove event listener.", e);
+            synchronized ( this.writeLock ) {
+                try {
+                    this.writerSession.getWorkspace().getObservationManager().removeEventListener(this);
+                } catch (RepositoryException e) {
+                    // we just ignore it
+                    this.logger.warn("Unable to remove event listener.", e);
+                }
+                this.writerSession.logout();
+                this.writerSession = null;
             }
-            this.writerSession.logout();
-            this.writerSession = null;
         }
     }
 
