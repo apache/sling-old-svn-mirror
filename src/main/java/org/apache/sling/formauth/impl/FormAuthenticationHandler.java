@@ -755,7 +755,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             properties.get(PAR_TOKEN_FILE), DEFAULT_TOKEN_FILE);
         final File tokenFile = getTokenFile(tokenFileName,
             componentContext.getBundleContext());
-        log.info("Storing tokens in ", tokenFile);
+        log.info("Storing tokens in {}", tokenFile.getAbsolutePath());
         this.tokenStore = new TokenStore(tokenFile, sessionTimeout);
 
         this.loginModule = null;
