@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  *                description="%content.import.service.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
- *               value="Apache Sling Contnet Importer Service"
+ *               value="Apache Sling JCR Content Import Service"
  * @scr.service interface="org.apache.sling.jcr.contentloader.ContentImporter"
  */
 public class DefaultContentImporter extends BaseImportLoader implements JcrContentHelper, ContentImporter {
