@@ -125,7 +125,9 @@ public abstract class AbstractRepositoryEventHandler
         this.threadPool.execute(new Runnable() {
             public void run() {
                 try {
-                    startWriterSession();
+                    synchronized ( writeLock ) {
+                        startWriterSession();
+                    }
                 } catch (RepositoryException e) {
                     // there is nothing we can do except log!
                     logger.error("Error during session starting.", e);
@@ -137,7 +139,9 @@ public abstract class AbstractRepositoryEventHandler
                     logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
                     running = false;
                 }
-                stopWriterSession();
+                synchronized ( writeLock ) {
+                    stopWriterSession();
+                }
             }
         });
         this.threadPool.execute(new Runnable() {
@@ -217,16 +221,14 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void stopWriterSession() {
         if ( this.writerSession != null ) {
-            synchronized ( this.writeLock ) {
-                try {
-                    this.writerSession.getWorkspace().getObservationManager().removeEventListener(this);
-                } catch (RepositoryException e) {
-                    // we just ignore it
-                    this.logger.warn("Unable to remove event listener.", e);
-                }
-                this.writerSession.logout();
-                this.writerSession = null;
+            try {
+                this.writerSession.getWorkspace().getObservationManager().removeEventListener(this);
+            } catch (RepositoryException e) {
+                // we just ignore it
+                this.logger.warn("Unable to remove event listener.", e);
             }
+            this.writerSession.logout();
+            this.writerSession = null;
         }
     }
 
