@@ -46,6 +46,8 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             HtmlResponse response,
             List<Modification> changes)
     throws RepositoryException {
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         Resource resource = request.getResource();
@@ -66,12 +68,12 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             dest = ResourceUtil.getParent(source) + "/" + dest;
         }
         dest = ResourceUtil.normalize(dest);
+        dest = removeAndValidateWorkspace(dest, session);
 
         // destination parent and name
         String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
 
         // delete destination if already exists
-        Session session = request.getResourceResolver().adaptTo(Session.class);
         if (!trailingSlash && session.itemExists(dest)) {
 
             final String replaceString = request.getParameter(SlingPostConstants.RP_REPLACE);
