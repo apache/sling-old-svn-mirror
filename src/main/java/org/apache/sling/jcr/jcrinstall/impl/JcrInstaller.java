@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
  *  label="%jcrinstall.name"
  *  description="%jcrinstall.description"
  *  immediate="true"
- *  @scr.service
  *  @scr.property
  *      name="service.description"
  *      value="Sling Jcrinstall Service"
