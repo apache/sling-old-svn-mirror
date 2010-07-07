@@ -60,9 +60,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
 
-    /** The manifest header to specify the workspace for initial content loading. */
-    public static final String CONTENT_WORKSPACE_HEADER = "Sling-Initial-Content-Workspace";
-
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
     private static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
     private static final String PROPERTY_CONTENT_LOADED_BY = "content-loaded-by";
