@@ -264,9 +264,7 @@ public class DefaultContentCreator implements ContentCreator {
 
                 // no explicit node type, use repository default
                 node = parentNode.addNode(name);
-                if ( this.createdNodes != null ) {
-                    this.createdNodes.add(node.getPath());
-                }
+                addNodeToCreatedList(node);
                 if ( this.importListener != null ) {
                 	this.importListener.onCreate(node.getPath());
                 }
@@ -274,9 +272,7 @@ public class DefaultContentCreator implements ContentCreator {
 
                 // explicit primary node type
                 node = parentNode.addNode(name, primaryNodeType);
-                if ( this.createdNodes != null ) {
-                    this.createdNodes.add(node.getPath());
-                }
+                addNodeToCreatedList(node);
                 if ( this.importListener != null ) {
                 	this.importListener.onCreate(node.getPath());
                 }
@@ -472,6 +468,12 @@ public class DefaultContentCreator implements ContentCreator {
         final Node node = this.parentNodeStack.pop();
         // resolve REFERENCE property values pointing to this node
         resolveReferences(node);
+    }
+
+    private void addNodeToCreatedList(Node node) throws RepositoryException {
+        if ( this.createdNodes != null ) {
+            this.createdNodes.add(node.getSession().getWorkspace().getName() + ":" + node.getPath());
+        }
     }
 
     private String getAbsPath(Node node, String path) throws RepositoryException {
@@ -740,9 +742,7 @@ public class DefaultContentCreator implements ContentCreator {
                     return false;
                 }
                 final Node n = node.addNode(token, newNodeType);
-                if ( this.createdNodes != null ) {
-                    this.createdNodes.add(n.getPath());
-                }
+                addNodeToCreatedList(n);
                 if ( this.importListener != null ) {
                 	this.importListener.onCreate(node.getPath());
                 }
