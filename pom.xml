@@ -17,7 +17,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>9</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
     <artifactId>sling-launchpad-standalone-archetype</artifactId>
     <version>0.0.1-SNAPSHOT</version>
