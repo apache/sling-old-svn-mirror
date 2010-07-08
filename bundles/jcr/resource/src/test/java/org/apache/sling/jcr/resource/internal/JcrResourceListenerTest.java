@@ -52,14 +52,17 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         Event event = events.get(0);
         assertEquals(SlingConstants.TOPIC_RESOURCE_ADDED, event.getTopic());
         assertEquals(createdPath, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
         event = events.get(1);
         assertEquals(SlingConstants.TOPIC_RESOURCE_CHANGED, event.getTopic());
         assertEquals(pathToModify, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
         event = events.get(2);
         assertEquals(SlingConstants.TOPIC_RESOURCE_REMOVED, event.getTopic());
         assertEquals(pathToDelete, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
     }
 
@@ -70,14 +73,17 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         Event event = events.get(0);
         assertEquals(SlingConstants.TOPIC_RESOURCE_ADDED, event.getTopic());
         assertEquals("ws2:" + createdPath, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
         event = events.get(1);
         assertEquals(SlingConstants.TOPIC_RESOURCE_CHANGED, event.getTopic());
         assertEquals("ws2:" + pathToModify, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
         event = events.get(2);
         assertEquals(SlingConstants.TOPIC_RESOURCE_REMOVED, event.getTopic());
         assertEquals("ws2:" + pathToDelete, event.getProperty(SlingConstants.PROPERTY_PATH));
+        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
 
     }
 
