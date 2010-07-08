@@ -20,10 +20,9 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -122,53 +121,105 @@ public class JcrResourceListener implements EventListener {
         if ( localEA == null ) {
             return;
         }
-        final Set<String>addedPaths = new HashSet<String>();
-        final Set<String>removedPaths = new HashSet<String>();
-        final Set<String>changedPaths = new HashSet<String>();
+        final Map<String, Event> addedEvents = new HashMap<String, Event>();
+        final Map<String, Event> changedEvents = new HashMap<String, Event>();
+        final Map<String, Event> removedEvents = new HashMap<String, Event>();
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
             try {
-                Set<String> set = null;
+                Map<String, Event> map = null;
                 String nodePath = event.getPath();
                 if ( event.getType() == Event.PROPERTY_ADDED
                      || event.getType() == Event.PROPERTY_REMOVED
                      || event.getType() == Event.PROPERTY_CHANGED ) {
                     final int lastSlash = nodePath.lastIndexOf('/');
                     nodePath = nodePath.substring(0, lastSlash);
-                    set = changedPaths;
+                    map = changedEvents;
                 } else if ( event.getType() == Event.NODE_ADDED ) {
-                    set = addedPaths;
-                } else if ( event.getType() == Event.NODE_REMOVED) {
-                    set = removedPaths;
+                    map = addedEvents;
+                }   else if ( event.getType() == Event.NODE_REMOVED) {
+                  map = removedEvents;
                 }
-                if ( set != null ) {
+                if ( map != null ) {
                     if ( this.mountPrefix != null ) {
-                        set.add(this.mountPrefix + nodePath);
+                        map.put(mountPrefix + nodePath, event);
                     } else {
-                        set.add(nodePath);
+                        map.put(nodePath, event);
                     }
                 }
             } catch (RepositoryException e) {
-                logger.error("Error during modification: {}", e.getMessage());
+                logger.error("Error during modificatiozas" +
+                		"n: {}", e.getMessage());
             }
         }
-        // remove is the strongest operation, therefore remove all removed
-        // paths from changed and added
-        addedPaths.removeAll(removedPaths);
-        changedPaths.removeAll(removedPaths);
-        // add is stronger than changed
-        changedPaths.removeAll(addedPaths);
 
-        // send events for added and changed
-        sendEvents(addedPaths, SlingConstants.TOPIC_RESOURCE_ADDED, localEA);
-        sendEvents(changedPaths, SlingConstants.TOPIC_RESOURCE_CHANGED, localEA);
-
-        // send events for removed
-        for(final String path : removedPaths) {
+        for (Entry<String, Event> e : removedEvents.entrySet()) {
+            // remove is the strongest operation, therefore remove all removed
+            // paths from changed and added
+            addedEvents.remove(e.getKey());
+            changedEvents.remove(e.getKey());
+          
+            // Launch an OSGi event
             final Dictionary<String, String> properties = new Hashtable<String, String>();
-            properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(path));
-
+            properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(e.getKey()));
+            properties.put(SlingConstants.PROPERTY_USERID, e.getValue().getUserID());
             localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
+        }
+
+        // add is stronger than changed
+        for (Entry<String, Event> e : addedEvents.entrySet()) {
+            changedEvents.remove(e.getKey());
+            
+            // Launch an OSGi event.
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED, localEA);
+        }
+
+        // Send the changed events.
+        for (Entry<String, Event> e : changedEvents.entrySet()) {
+            // Launch an OSGi event.
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_CHANGED, localEA);
+        }
+    }
+
+    /**
+     * Send an OSGi event based on a JCR Observation Event.
+     * @param path The path too the node where the event occurred.
+     * @param event The JCR observation event.
+     * @param topic The topic that should be used for the OSGi event.
+     * @param localEA The OSGi Event Admin that can be used to post events.
+     */
+    private void sendOsgiEvent(String path, Event event, final String topic, final EventAdmin localEA) {
+        path = createWorkspacePath(path);
+        Resource resource = this.resolver.getResource(path);
+        if ( resource != null ) {
+            // check for nt:file nodes
+            if ( path.endsWith("/jcr:content") ) {
+                final Node node = resource.adaptTo(Node.class);
+                if ( node != null ) {
+                    try {
+                        if (node.getParent().isNodeType("nt:file") ) {
+                            final Resource parentResource = ResourceUtil.getParent(resource);
+                            if ( parentResource != null ) {
+                                resource = parentResource;
+                            }
+                        }
+                    } catch (RepositoryException re) {
+                        // ignore this
+                    }
+                }
+            }
+            final Dictionary<String, String> properties = new Hashtable<String, String>();
+            properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
+            properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
+            final String resourceType = resource.getResourceType();
+            if ( resourceType != null ) {
+                properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+            }
+            final String resourceSuperType = resource.getResourceSuperType();
+            if ( resourceSuperType != null ) {
+                properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+            }
+            localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
         }
     }
 
@@ -177,41 +228,5 @@ public class JcrResourceListener implements EventListener {
             return path;
         }
         return workspaceName + ":" + path;
-    }
-
-    private void sendEvents(final Set<String> paths, final String topic, final EventAdmin localEA) {
-        for(String path : paths) {
-            path = createWorkspacePath(path);
-            Resource resource = this.resolver.getResource(path);
-            if ( resource != null ) {
-                // check for nt:file nodes
-                if ( path.endsWith("/jcr:content") ) {
-                    final Node node = resource.adaptTo(Node.class);
-                    if ( node != null ) {
-                        try {
-                            if (node.getParent().isNodeType("nt:file") ) {
-                                final Resource parentResource = ResourceUtil.getParent(resource);
-                                if ( parentResource != null ) {
-                                    resource = parentResource;
-                                }
-                            }
-                        } catch (RepositoryException re) {
-                            // ignore this
-                        }
-                    }
-                }
-                final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
-                final String resourceType = resource.getResourceType();
-                if ( resourceType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                }
-                final String resourceSuperType = resource.getResourceSuperType();
-                if ( resourceSuperType != null ) {
-                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
-                }
-                localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
-            }
-        }
     }
 }
