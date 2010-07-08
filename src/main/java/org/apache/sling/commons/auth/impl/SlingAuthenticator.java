@@ -825,7 +825,6 @@ public class SlingAuthenticator implements Authenticator,
             resolver);
 
         // HttpService API required attributes
-        // TODO - figure out if this can be change to use authInfo instead of the session
         request.setAttribute(HttpContext.REMOTE_USER, resolver.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
 
