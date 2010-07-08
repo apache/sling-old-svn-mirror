@@ -660,19 +660,44 @@ public class Loader extends BaseImportLoader {
         return (item.isNode()) ? (Node) item : null;
     }
 
-    private void uninstallContent(final Session session, final Bundle bundle,
+    private void uninstallContent(final Session defaultSession, final Bundle bundle,
             final String[] uninstallPaths) {
+        final Map<String, Session> createdSessions = new HashMap<String, Session>();
+        
         try {
             log.debug("Uninstalling initial content from bundle {}",
                 bundle.getSymbolicName());
             if ( uninstallPaths != null && uninstallPaths.length > 0 ) {
-                for(final String path : uninstallPaths) {
-                    if ( session.itemExists(path) ) {
-                        session.getItem(path).remove();
+                for(String path : uninstallPaths) {
+                    final Session targetSession;
+                    
+                    final int wsSepPos = path.indexOf(":/");
+                    if (wsSepPos != -1) {
+                        final String workspaceName = path.substring(0, wsSepPos);
+                        path = path.substring(wsSepPos + 1);
+                        if (workspaceName.equals(defaultSession.getWorkspace().getName())) {
+                            targetSession = defaultSession;
+                        } else if (createdSessions.containsKey(workspaceName)){
+                            targetSession = createdSessions.get(workspaceName);
+                        } else {
+                            targetSession = createSession(workspaceName);
+                            createdSessions.put(workspaceName, targetSession);
+                        }
+                    } else {
+                        targetSession = defaultSession;
+                    }
+
+                    if ( targetSession.itemExists(path) ) {
+                        targetSession.getItem(path).remove();
                     }
                 }
+                
                 // persist modifications now
-                session.save();
+                defaultSession.save();
+
+                for (Session session : createdSessions.values()) {
+                    session.save();
+                }
             }
 
             log.debug("Done uninstalling initial content from bundle {}",
@@ -682,13 +707,22 @@ public class Loader extends BaseImportLoader {
                 + bundle.getSymbolicName(), re);
         } finally {
             try {
-                if (session.hasPendingChanges()) {
-                    session.refresh(false);
+                if (defaultSession.hasPendingChanges()) {
+                    defaultSession.refresh(false);
+                }
+                for (Session session : createdSessions.values()) {
+                    if (session.hasPendingChanges()) {
+                        session.refresh(false);
+                    }
                 }
             } catch (RepositoryException re) {
                 log.warn(
                     "Failure to rollback uninstaling initial content for bundle {}",
                     bundle.getSymbolicName(), re);
+            }
+            
+            for (Session session : createdSessions.values()) {
+                session.logout();
             }
         }
     }
