@@ -307,8 +307,8 @@ public class SlingConstants {
     public static final String PROPERTY_PATH = "path";
 
     /**
-     * The name of the event property holding the userid.
-     * @since 2.0.9
+     * The name of the event property holding the userid. This property is optional.
+     * @since 2.1.0
      */
     public static final String PROPERTY_USERID = "userid";
 

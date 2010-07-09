@@ -20,24 +20,24 @@
 package org.apache.sling.api.request;
 
 /**
- * Implementations of this service interface receive notifications about 
- * changes to Sling request of the Sling application they are part of. 
- * To receive notification events, the implementation class must be 
- * registered as an OSGi service with the service name 
- * org.apache.sling.api.request.SlingRequestListener. 
+ * Implementations of this service interface receive notifications about
+ * changes to Sling request of the Sling application they are part of.
+ * To receive notification events, the implementation class must be
+ * registered as an OSGi service with the service name
+ * org.apache.sling.api.request.SlingRequestListener.
  */
 public interface SlingRequestListener {
-	
-	static final String SERVICE_NAME = "org.apache.sling.api.request.SlingRequestListener";	
+
+	String SERVICE_NAME = "org.apache.sling.api.request.SlingRequestListener";
 
 	/**
 	 * This method is called from the Sling application for every
 	 * <code>EventType</code> appearing during the dispatching of
-	 * a Sling request  
-	 * 
+	 * a Sling request
+	 *
 	 * @param sre the object representing the event
-	 * 
+	 *
 	 * @see org.apache.sling.api.request.SlingRequestEvent.EventType
 	 */
-	public void onEvent( SlingRequestEvent sre );
+	void onEvent( SlingRequestEvent sre );
 }
