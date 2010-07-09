@@ -25,51 +25,49 @@ import javax.servlet.ServletRequest;
 /**
  * represents an event published by the Sling engine while
  * dispatching a request.
- *  
+ *
  * @see org.apache.sling.api.request.SlingRequestListener
+ * @since 2.1.0
 */
 public class SlingRequestEvent {
-	private ServletContext sc;
-	private ServletRequest request;
-	private EventType type; 
-	
+
+	private final ServletContext sc;
+	private final ServletRequest request;
+	private final EventType type;
+
 	/**
-	 * type of the event  
+	 * type of the event
 	 */
 	public enum EventType { EVENT_INIT, EVENT_DESTROY };
-	
-	public SlingRequestEvent (ServletContext sc, ServletRequest request, EventType type )
-	{
+
+	public SlingRequestEvent (ServletContext sc, ServletRequest request, EventType type ) {
 		this.sc = sc;
 		this.request = request;
 		this.type = type;
 	}
-	
+
 	/**
 	 * Gets the actual servlet context object as <code>ServletContext</code>
-	 * @return
+	 * @return the actual servlet context.
 	 */
-	public ServletContext getServletContext()
-	{
+	public ServletContext getServletContext() {
 		return sc;
 	}
-	
+
 	/**
 	 * Gets the actual request object as <code>ServletRequest</code>
 	 * @return the actual request object as <code>ServletRequest</code>
 	 */
-	public ServletRequest getServletRequest()
-	{
+	public ServletRequest getServletRequest() {
 		return request;
 	}
-	
+
 	/**
 	 * get the type of the event, eg. EVENT_INIT or EVENT_DESTROY
-	 * @return the type of the event as <code>EventType</code>, 
+	 * @return the type of the event as <code>EventType</code>,
 	 * eg. EVENT_INIT or EVENT_DESTROY
 	 */
-	public EventType getType ()
-	{
+	public EventType getType () {
 		return type;
 	}
 }
