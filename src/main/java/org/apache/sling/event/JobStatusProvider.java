@@ -34,7 +34,7 @@ public interface JobStatusProvider {
     String PROPERTY_EVENT_ID = "slingevent:eventId";
 
     /**
-     * Return a list of currently schedulded jobs.
+     * Return a list of currently scheduled jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @return A non null collection.
      */
@@ -49,7 +49,7 @@ public interface JobStatusProvider {
     Collection<Event> getCurrentJobs(String topic);
 
     /**
-     * Return a list of currently schedulded jobs.
+     * Return a list of currently scheduled jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
      *                    must match the template (AND query). By providing several maps, different filters
