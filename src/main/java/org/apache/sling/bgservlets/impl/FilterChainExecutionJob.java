@@ -24,16 +24,19 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.bgservlets.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Runnable that executes a FilterChain, using 
  * 	a ServletResponseWrapper to capture the output.
  */
-class FilterChainExecutionJob implements Runnable {
+class FilterChainExecutionJob implements Runnable, JobStatus {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final FilterChain chain;
 	private final ServletResponseWrapper response;
+	private final String path;
+	private State state = State.NEW;
 	
 	// TODO is it ok to keep a reference to the request until run() is called??
 	private final HttpServletRequest request;
@@ -42,14 +45,14 @@ class FilterChainExecutionJob implements Runnable {
 		this.chain = chain;
 		this.request = request;
 		response  = new ServletResponseWrapper(hsr);
+		path = response.getOutputPath();
 	}
 	
 	public String toString() {
-		return "Background request job: " + response;
+		return getClass().getSimpleName() + ", state=" + state + ", path=" + path;
 	}
 	
 	public void run() {
-		log.info("{} execution starts", this);
 		try {
 			chain.doFilter(request, response);
 		} catch(Exception e) {
@@ -63,6 +66,18 @@ class FilterChainExecutionJob implements Runnable {
 				log.error("ServletResponseWrapper cleanup failed", ioe);
 			}
 		}
-		log.info("{} execution ends", this);
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public State getState() {
+		return state;
+	}
+
+	public void requestStateChange(State s) {
+		// TODO need some validity checks
+		state = s;
 	}
 }

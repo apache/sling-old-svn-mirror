@@ -55,6 +55,8 @@
           <instructions>
             <Export-Package>org.apache.sling.bgservlets</Export-Package>
             <Private-Package>org.apache.sling.bgservlets.impl.*</Private-Package>
+            <DynamicImport-Package>org.apache.felix.webconsole</DynamicImport-Package>
+            <Bundle-Activator>org.apache.sling.bgservlets.impl.Activator</Bundle-Activator>
           </instructions>
         </configuration>
       </plugin>
@@ -89,6 +91,11 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.webconsole</artifactId>
+      <version>3.0.0</version>
     </dependency>
   </dependencies>
 </project>
