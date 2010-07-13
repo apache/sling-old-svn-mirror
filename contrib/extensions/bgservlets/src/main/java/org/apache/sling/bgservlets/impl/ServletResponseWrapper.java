@@ -75,6 +75,10 @@ class ServletResponseWrapper extends HttpServletResponseWrapper {
 		return getClass().getName() + ":" + outputPath;
 	}
 	
+	String getOutputPath() {
+		return outputPath;
+	}
+	
 	void cleanup() throws IOException {
 		stream.flush();
 		stream.close();

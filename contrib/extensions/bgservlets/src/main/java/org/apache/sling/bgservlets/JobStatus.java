@@ -18,21 +18,28 @@
  */
 package org.apache.sling.bgservlets;
 
-import java.util.Iterator;
+/** Provides info about a job */
+public interface JobStatus {
+	enum State {
+		NEW,
+		QUEUED,
+		REJECTED,
+		RUNNING, 
+		SUSPEND_REQUESTED, 
+		SUSPENDED, 
+		STOP_REQUESTED, 
+		STOPPED, 
+		DONE
+	}
 
-/** Service that executes Runnables, will later allow
- * 	them to be suspended, resumed, stopped and restarted.
- */
-public interface ExecutionEngine {
+	/** Return the job's current state */
+	State getState();
 	
-	/** Add a job to the execution queue */
-	void queueForExecution(Runnable job);
-	
-	/** Get JobStatus by path */
-	JobStatus getJobStatus(String path);
-	
-	/** Enumerate JobStatus that match supplied predicate 
-	 * 	@param p if null, returns all known JobStatus.
+	/** Request a change in the job's state, which might not take
+	 * 	effect immediately, or even be ignored.
 	 */
-	Iterator<JobStatus> getMatchingJobStatus(Predicate<JobStatus> p);
+	void requestStateChange(State s);
+	
+	/** Path of the Resource that describes this job */
+	String getPath();
 }
