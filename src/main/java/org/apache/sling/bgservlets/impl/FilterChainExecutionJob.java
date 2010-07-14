@@ -26,6 +26,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.bgservlets.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,23 +38,21 @@ import org.slf4j.LoggerFactory;
 class FilterChainExecutionJob implements Runnable, JobStatus {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final FilterChain chain;
-	private final ServletResponseWrapper response;
+	private final BackgroundHttpServletResponse response;
 	private final SuspendableOutputStream stream;
 	private final String path;
-	
-	// TODO is it ok to keep a reference to the request until run() is called??
-	private final HttpServletRequest request;
+	private final SlingHttpServletRequest request;
 	
 	FilterChainExecutionJob(FilterChain chain, HttpServletRequest request, HttpServletResponse hsr) throws IOException {
 		this.chain = chain;
-		this.request = request;
+		this.request = new SlingHttpServletRequestWrapper(new BackgroundHttpServletRequest(request));
 		
 		// TODO write output to the Sling repository. For now: just a temp file
 		final File output = File.createTempFile(getClass().getSimpleName(), ".data");
 		output.deleteOnExit();
 		path = output.getAbsolutePath();
 		stream = new SuspendableOutputStream(new FileOutputStream(output));
-		response  = new ServletResponseWrapper(hsr, stream);
+		response  = new BackgroundHttpServletResponse(hsr, stream);
 	}
 	
 	public String toString() {
