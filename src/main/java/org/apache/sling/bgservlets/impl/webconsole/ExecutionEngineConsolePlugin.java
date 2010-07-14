@@ -106,6 +106,7 @@ public class ExecutionEngineConsolePlugin {
         public String getTitle() {
             return TITLE;
         }
+        
         @Override
         protected void renderContent(HttpServletRequest req, HttpServletResponse res)
           throws ServletException, IOException {
@@ -115,17 +116,65 @@ public class ExecutionEngineConsolePlugin {
         		pw.println("No ExecutionEngine service found");
         		return;
         	}
+        	
+        	// TODO should use POST
+    		final String jobPath = req.getParameter("jobPath");
+    		if(jobPath != null) {
+        		final JobStatus job = ee.getJobStatus(jobPath);
+        		if(job != null) {
+            		final String action = req.getParameter("action");
+            		if("suspend".equals(action)) {
+            			job.requestStateChange(JobStatus.State.SUSPENDED);
+            		} else if("stop".equals(action)) {
+            			job.requestStateChange(JobStatus.State.STOPPED);
+            		} else if("resume".equals(action)) {
+            			job.requestStateChange(JobStatus.State.RUNNING);
+            		}
+        		}
+    		}
+    		
+    		pw.println("TODO: provide a way to cleanup old jobs<br/>");
+    		pw.println("TODO: optionally list active jobs only<br/>");
   
-        	pw.println("ExecutionEngine jobs:<br/>");
-        	pw.println("<pre>");
+            pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+            pw.println("<thead>");
+            pw.println("<tr class='content'>");
+            pw.println("<th class='content container'>Controls</th>");
+            pw.println("<th class='content container'>State</th>");
+            pw.println("<th class='content container'>Path</th>");
+            pw.println("</tr>");
+            pw.println("</thead>");
+            pw.println("<tbody>");
+
         	final Iterator<JobStatus> it = ee.getMatchingJobStatus(null);
         	int count = 0;
         	while(it.hasNext()) {
-        		pw.println(it.next());
+        		renderJobStatus(pw, it.next());
         		count++;
         	}
-        	pw.println("</pre>");
+            pw.println("</tbody>");
+        	pw.println("</table>");
         	pw.println("Total <b>" + count + "</b> jobs.<br />");
         }
+        
+        private void renderJobStatus(PrintWriter pw, JobStatus job) {
+        	// TODO should use POST
+            pw.println("<tr class='content'>");
+        	pw.println("<td><form action='./" + LABEL + "' method='GET'>");
+        	final String [] actions = { "suspend", "resume", "stop" };
+        	for(String action : actions) {
+        		pw.println("<input type='submit' name='action' value='" + action + "'/>&nbsp;");
+        	}
+        	pw.println("<input type='hidden' name='jobPath' value='" + job.getPath() + "'/>&nbsp;");
+        	pw.println("</form></td>");
+        	pw.println("<td>");
+        	pw.println(job.getState());
+        	pw.println("</td>");
+        	pw.println("<td>");
+        	pw.println(job.getPath());
+        	pw.println("</td>");
+        	pw.println("</tr>");
+        }
+    
     }
 }

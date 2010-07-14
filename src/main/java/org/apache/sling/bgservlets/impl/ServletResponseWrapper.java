@@ -18,8 +18,6 @@
  */
 package org.apache.sling.bgservlets.impl;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -32,15 +30,14 @@ import javax.servlet.http.HttpServletResponseWrapper;
 /** Wraps an HttpServletResponse for background processing */
 class ServletResponseWrapper extends HttpServletResponseWrapper {
 
-	private final String outputPath;
 	private final ServletOutputStream stream;
 	private final PrintWriter writer;
 	
-	static class CustomOutputStream extends ServletOutputStream {
+	static class ServletOutputStreamWrapper extends ServletOutputStream {
 
 		private final OutputStream os;
 		
-		CustomOutputStream(OutputStream os) {
+		ServletOutputStreamWrapper(OutputStream os) {
 			this.os = os;
 		}
 		
@@ -61,22 +58,10 @@ class ServletResponseWrapper extends HttpServletResponseWrapper {
 		
 	}
 	
-	ServletResponseWrapper(HttpServletResponse response) throws IOException {
+	ServletResponseWrapper(HttpServletResponse response, OutputStream os) throws IOException {
 		super(response);
-		// TODO write output to the Sling repository. For now: just a temp file
-		final File output = File.createTempFile(getClass().getSimpleName(), ".data");
-		output.deleteOnExit();
-		outputPath = output.getAbsolutePath();
-		stream = new CustomOutputStream(new FileOutputStream(output));
+		stream = new ServletOutputStreamWrapper(os);
 		writer = new PrintWriter(new OutputStreamWriter(stream));
-	}
-	
-	public String toString() {
-		return getClass().getName() + ":" + outputPath;
-	}
-	
-	String getOutputPath() {
-		return outputPath;
 	}
 	
 	void cleanup() throws IOException {
