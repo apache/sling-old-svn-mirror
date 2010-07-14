@@ -30,11 +30,11 @@ import org.apache.sling.bgservlets.JobStatus;
  * 	stream) or stop them (by throwing an exception).
  */
 public class SuspendableOutputStream extends FilterOutputStream implements JobStatus {
-	private State state = State.RUNNING;
+	private State state = State.NEW;
 	private boolean closed = false;
 	
 	@SuppressWarnings("serial")
-	public static class StreamStoppedException extends IOException {
+	public static class StreamStoppedException extends RuntimeException {
 		StreamStoppedException() {
 			super("Stopped by " + SuspendableOutputStream.class.getSimpleName());
 		}
@@ -86,7 +86,9 @@ public class SuspendableOutputStream extends FilterOutputStream implements JobSt
 					state = State.SUSPENDED;
 					try {
 						// suspended: block until resumed
-						wait();
+						while(state == State.SUSPENDED) {
+							wait();
+						}
 					} catch (InterruptedException e) {
 						throw new IOException("InterruptedException in checkWritePermission()", e);
 					}
@@ -103,9 +105,12 @@ public class SuspendableOutputStream extends FilterOutputStream implements JobSt
 	public synchronized void requestStateChange(State s) {
 		boolean illegal = false;
 		
-		if(s == State.SUSPENDED) {
-			if(state == State.RUNNING) {
+		if(state == State.DONE) {
+			// ignore changes
+		} else if(s == State.SUSPENDED) {
+			if(state == State.NEW || state == State.QUEUED || state == State.RUNNING) {
 				state = State.SUSPEND_REQUESTED;
+				notify();
 			} else if(state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
 				// ignore change
 			} else {
@@ -113,8 +118,10 @@ public class SuspendableOutputStream extends FilterOutputStream implements JobSt
 			}
 			
 		} else if(s == State.STOPPED) {
-			if(state == State.RUNNING) {
+			if(state == State.NEW || state == State.QUEUED || state == State.RUNNING 
+					|| state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
 				state = State.STOP_REQUESTED;
+				notify();
 			} else if (state == State.STOP_REQUESTED || state == State.STOPPED) {
 				// ignore change
 			} else {
@@ -126,6 +133,10 @@ public class SuspendableOutputStream extends FilterOutputStream implements JobSt
 				state = State.RUNNING;
 				notify();
 			}
+			
+		} else {
+			state = s;
+			notify();
 		}
 		
 		if(illegal) {

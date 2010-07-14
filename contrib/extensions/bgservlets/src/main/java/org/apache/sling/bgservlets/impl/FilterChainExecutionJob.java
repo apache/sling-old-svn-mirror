@@ -18,6 +18,8 @@
  */
 package org.apache.sling.bgservlets.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import javax.servlet.FilterChain;
@@ -35,8 +37,8 @@ class FilterChainExecutionJob implements Runnable, JobStatus {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final FilterChain chain;
 	private final ServletResponseWrapper response;
+	private final SuspendableOutputStream stream;
 	private final String path;
-	private State state = State.NEW;
 	
 	// TODO is it ok to keep a reference to the request until run() is called??
 	private final HttpServletRequest request;
@@ -44,12 +46,17 @@ class FilterChainExecutionJob implements Runnable, JobStatus {
 	FilterChainExecutionJob(FilterChain chain, HttpServletRequest request, HttpServletResponse hsr) throws IOException {
 		this.chain = chain;
 		this.request = request;
-		response  = new ServletResponseWrapper(hsr);
-		path = response.getOutputPath();
+		
+		// TODO write output to the Sling repository. For now: just a temp file
+		final File output = File.createTempFile(getClass().getSimpleName(), ".data");
+		output.deleteOnExit();
+		path = output.getAbsolutePath();
+		stream = new SuspendableOutputStream(new FileOutputStream(output));
+		response  = new ServletResponseWrapper(hsr, stream);
 	}
 	
 	public String toString() {
-		return getClass().getSimpleName() + ", state=" + state + ", path=" + path;
+		return getClass().getSimpleName() + ", state=" + getState() + ", path=" + path;
 	}
 	
 	public void run() {
@@ -73,11 +80,10 @@ class FilterChainExecutionJob implements Runnable, JobStatus {
 	}
 
 	public State getState() {
-		return state;
+		return stream.getState();
 	}
 
 	public void requestStateChange(State s) {
-		// TODO need some validity checks
-		state = s;
+		stream.requestStateChange(s);
 	}
 }

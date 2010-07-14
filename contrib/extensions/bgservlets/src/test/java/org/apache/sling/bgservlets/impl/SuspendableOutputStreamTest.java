@@ -70,7 +70,8 @@ public class SuspendableOutputStreamTest {
 	public void testStop() throws IOException {
 		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		final SuspendableOutputStream f = new SuspendableOutputStream(bos);
-		assertEquals("Expecting RUNNING state first", JobStatus.State.RUNNING, f.getState());
+		assertEquals("Expecting NEW state first", JobStatus.State.NEW, f.getState());
+		f.requestStateChange(JobStatus.State.RUNNING);
 		f.write(TEST.getBytes());
 		f.flush();
 		
@@ -89,6 +90,7 @@ public class SuspendableOutputStreamTest {
 	public void testSuspend() throws Exception {
 		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		final SuspendableOutputStream f = new SuspendableOutputStream(bos);
+		f.requestStateChange(JobStatus.State.RUNNING);
 		final WriterThread t = new WriterThread(f);
 		t.setDaemon(true);
 		t.start();
@@ -115,5 +117,44 @@ public class SuspendableOutputStreamTest {
 		assertFalse("Expecting WriterThread to end after closing stream", t.isAlive());
 		assertNotNull("Expecting non-null Exception in WriterThread", t.runException);
 		assertTrue("Expecting IOException in WriterThread", t.runException instanceof IOException);
+	}
+	
+	@Test
+	public void testSuspendThenStop() throws Exception {
+		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		final SuspendableOutputStream f = new SuspendableOutputStream(bos);
+		assertEquals("Expecting NEW state first", JobStatus.State.NEW, f.getState());
+		final WriterThread t = new WriterThread(f);
+		t.setDaemon(true);
+		t.start();
+		
+		f.requestStateChange(JobStatus.State.SUSPENDED);
+		
+		final long delay = WriterThread.WRITE_DELAY * 3;
+		Thread.sleep(delay);
+		assertEquals("Expecting SUSPEND state after a few writes", JobStatus.State.SUSPENDED, f.getState());
+		
+		f.requestStateChange(JobStatus.State.STOPPED);
+		assertEquals("Expecting STOP_REQUESTED state before write", JobStatus.State.STOP_REQUESTED, f.getState());
+		try {
+			f.write("nothing".getBytes());
+			fail("Expected StreamStoppedException when writing to STOPPED stream");
+		} catch(SuspendableOutputStream.StreamStoppedException asExpected) {
+		}
+		
+		assertEquals("Expecting STOPPED state after write", JobStatus.State.STOPPED, f.getState());
+		f.close();
+	}
+	
+	@Test
+	public void testDone() {
+		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		final SuspendableOutputStream f = new SuspendableOutputStream(bos);
+		f.requestStateChange(JobStatus.State.DONE);
+		assertEquals("Expecting DONE state (1)", JobStatus.State.DONE, f.getState());
+		f.requestStateChange(JobStatus.State.SUSPENDED);
+		assertEquals("Expecting DONE state (2)", JobStatus.State.DONE, f.getState());
+		f.requestStateChange(JobStatus.State.STOPPED);
+		assertEquals("Expecting DONE state (3)", JobStatus.State.DONE, f.getState());
 	}
 }

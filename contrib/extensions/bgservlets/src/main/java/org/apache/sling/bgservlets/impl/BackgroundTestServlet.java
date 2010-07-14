@@ -29,6 +29,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Servlet used for interactive testing of the background
  * 	servlets engine.
@@ -40,6 +42,8 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 @Property(name="sling.servlet.paths", value="/system/bgservlets/test")
 public class BackgroundTestServlet extends SlingSafeMethodsServlet {
 
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	
 	@Override
 	protected void doGet(SlingHttpServletRequest request,
 			SlingHttpServletResponse response) throws ServletException,
@@ -51,20 +55,24 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
 		final int interval = getIntParam(request, "interval", 1);
 		final int flushEvery = getIntParam(request, "flushEvery", 2);
 		
-		for(int i=1; i <= cycles; i++) {
-			if(i % flushEvery == 0) {
-				w.println("Flushing output");
-				w.flush();
+		try {
+			for(int i=1; i <= cycles; i++) {
+				if(i % flushEvery == 0) {
+					w.println("Flushing output");
+					w.flush();
+				}
+				w.printf("Cycle %d of %d\n", i, cycles);
+				try {
+					Thread.sleep(interval * 1000);
+				} catch(InterruptedException iex) {
+					throw new ServletException("InterruptedException", iex);
+				}
 			}
-			w.printf("Cycle %d of %d\n", i, cycles);
-			try {
-				Thread.sleep(interval * 1000);
-			} catch(InterruptedException iex) {
-				throw new ServletException("InterruptedException", iex);
-			}
+			w.println("All done.");
+			w.flush();
+		} catch(Throwable t) {
+			log.info("Exception in doGet", t);
 		}
-		w.println("All done.");
-		w.flush();
 	}
 	
 	private int getIntParam(SlingHttpServletRequest request, String name, int defaultValue) {
