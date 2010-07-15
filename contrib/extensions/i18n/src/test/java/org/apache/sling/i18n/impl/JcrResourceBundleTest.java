@@ -162,6 +162,14 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             public void close() {
                 // nothing to do
             }
+
+            public String getUserID() {
+                return null;
+            }
+
+            public boolean isLive() {
+                return true;
+            }
         };
 
         createTestContent();

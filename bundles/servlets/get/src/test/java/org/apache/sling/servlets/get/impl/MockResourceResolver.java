@@ -84,4 +84,12 @@ public class MockResourceResolver implements ResourceResolver {
     public void close() {
         // nothing to do
     }
+
+    public String getUserID() {
+        return null;
+    }
+
+    public boolean isLive() {
+        return true;
+    }
 }

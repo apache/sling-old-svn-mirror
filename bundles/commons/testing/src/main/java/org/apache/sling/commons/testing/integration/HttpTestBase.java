@@ -18,8 +18,6 @@ package org.apache.sling.commons.testing.integration;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -43,8 +41,6 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.util.JavascriptEngine;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
@@ -62,10 +58,10 @@ public class HttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_CSS = "text/css";
 
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
-    
+
     public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
 	public static final String DEFAULT_EXT = ".txt";
-	
+
 	public static final String EXECUTE_RESOURCE_TYPE = "SlingTesting" + HttpTestBase.class.getSimpleName();
 	private static int executeCounter;
 
@@ -75,15 +71,15 @@ public class HttpTestBase extends TestCase {
     protected HttpClient httpClient;
 
     private static Boolean slingStartupOk;
-    
+
     /** Means "don't care about Content-Type" in getContent(...) methods */
     public static final String CONTENT_TYPE_DONTCARE = "*";
 
     /** URLs stored here are deleted in tearDown */
     protected final List<String> urlsToDelete = new LinkedList<String>();
-    
+
     /** Need to execute javascript code */
-    private final JavascriptEngine javascriptEngine = new JavascriptEngine(); 
+    private final JavascriptEngine javascriptEngine = new JavascriptEngine();
 
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
@@ -305,9 +301,9 @@ public class HttpTestBase extends TestCase {
     protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
         return getContent(url, expectedContentType, params, HttpServletResponse.SC_OK);
     }
-    
+
     /** retrieve the contents of given URL and assert its content type
-     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked 
+     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
     protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
@@ -359,15 +355,15 @@ public class HttpTestBase extends TestCase {
         }
         return url;
     }
-    
+
     /** Upload script, execute with no parameters and return content */
     protected String executeScript(String localFilename) throws Exception {
         return executeScript(localFilename, null);
     }
-    
+
     /** Upload script, execute with given parameters (optional) and return content */
     protected String executeScript(String localFilename, List<NameValuePair> params) throws Exception {
-        
+
         // Use unique resource type
         int counter = 0;
         synchronized (getClass()) {
@@ -376,13 +372,13 @@ public class HttpTestBase extends TestCase {
         final String resourceType = EXECUTE_RESOURCE_TYPE + counter;
         final String scriptPath = "/apps/" + resourceType;
         testClient.mkdirs(WEBDAV_BASE_URL , scriptPath);
-        
+
         final int pos = localFilename.lastIndexOf(".");
         if(pos < 1) {
             throw new IllegalArgumentException("localFilename must have extension (" + localFilename + ")");
         }
         final String ext = localFilename.substring(pos + 1);
-        final List<String> toDelete = new LinkedList<String>(); 
+        final List<String> toDelete = new LinkedList<String>();
         try {
             toDelete.add(uploadTestScript(scriptPath, localFilename, "txt." + ext));
             final Map<String, String> props = new HashMap<String, String>();
