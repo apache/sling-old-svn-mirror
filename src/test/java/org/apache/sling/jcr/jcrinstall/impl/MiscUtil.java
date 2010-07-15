@@ -105,6 +105,10 @@ class MiscUtil {
         public String getUserID() {
             return null;
         }
+
+        public boolean isLive() {
+            return true;
+        }
     }
 
     /** Set a non-public Field */
