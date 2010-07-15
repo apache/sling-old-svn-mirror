@@ -190,8 +190,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             HttpServletRequest request = (HttpServletRequest) req;
 
-        	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(),
-        			request, SlingRequestEvent.EventType.EVENT_INIT ) );
+        	requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_INIT );
 
             // set the thread name according to the request
             String threadName = setThreadName(request);
@@ -245,8 +244,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             } finally {
 
-            	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(),
-            			request, SlingRequestEvent.EventType.EVENT_DESTROY ) );
+                requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_DESTROY );
                 // reset the thread name
                 if (threadName != null) {
                     Thread.currentThread().setName(threadName);
@@ -632,7 +630,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         }
 
         // initialize requestListenerManager
-        requestListenerManager = new RequestListenerManager( bundleContext );
+        requestListenerManager = new RequestListenerManager( bundleContext, slingServletContext );
 
         // try to setup configuration printer
         try {

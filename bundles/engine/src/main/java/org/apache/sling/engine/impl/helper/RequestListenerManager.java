@@ -18,6 +18,9 @@
  */
 package org.apache.sling.engine.impl.helper;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.request.SlingRequestListener;
 import org.osgi.framework.BundleContext;
@@ -27,14 +30,19 @@ public class RequestListenerManager  {
 
     private final ServiceTracker serviceTracker;
 
-	public RequestListenerManager( final BundleContext context ) {
+    private final ServletContext servletContext;
+
+	public RequestListenerManager( final BundleContext context, final ServletContext servletContext ) {
 		serviceTracker = new ServiceTracker( context, SlingRequestListener.SERVICE_NAME, null );
 		serviceTracker.open();
+		this.servletContext = servletContext;
 	}
 
-	public void sendEvent ( final SlingRequestEvent event ) {
+	public void sendEvent ( final HttpServletRequest request,
+	        final SlingRequestEvent.EventType type) {
 		final Object[] services = serviceTracker.getServices();
-		if ( services != null ) {
+		if ( services != null && services.length > 0 ) {
+		    final SlingRequestEvent event = new SlingRequestEvent(this.servletContext, request, type);
 			for ( final Object service : services ) {
 				( (SlingRequestListener) service ).onEvent( event );
 			}
