@@ -43,7 +43,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.slf4j.Logger;
@@ -137,13 +136,13 @@ public class GetAclServlet extends SlingAllMethodsServlet {
 	protected void doGet(SlingHttpServletRequest request,
 			SlingHttpServletResponse response) throws ServletException,
 			IOException {
-		
+
         try {
     		Session session = request.getResourceResolver().adaptTo(Session.class);
     		if (session == null) {
     			throw new RepositoryException("JCR Session not found");
     		}
-    		
+
         	String resourcePath = null;
         	Resource resource = request.getResource();
         	if (resource == null) {
@@ -192,7 +191,7 @@ public class GetAclServlet extends SlingAllMethodsServlet {
     				}
     			}
     		}
-        	
+
 
         	response.setContentType("application/json");
         	response.setCharacterEncoding("UTF-8");
@@ -210,7 +209,7 @@ public class GetAclServlet extends SlingAllMethodsServlet {
         		if (grantedSet != null) {
             		aceObject.put("granted", grantedSet);
         		}
-        		
+
         		Set<String> deniedSet = (Set<String>) value.get("denied");
         		if (deniedSet != null) {
         			aceObject.put("denied", deniedSet);
@@ -247,5 +246,5 @@ public class GetAclServlet extends SlingAllMethodsServlet {
 		}
 		return new AccessControlEntry[0];
 	}
-	
+
 }

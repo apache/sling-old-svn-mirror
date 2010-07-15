@@ -16,7 +16,6 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.jcr.Node;
