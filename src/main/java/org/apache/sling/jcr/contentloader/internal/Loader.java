@@ -43,7 +43,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -445,7 +444,7 @@ public class Loader extends BaseImportLoader {
                 // this is a consumed node descriptor
                 return;
             }
-    
+
             // check for node descriptor
             URL nodeDescriptor = null;
             for (String ext : this.contentCreator.getImportProviders().keySet()) {
@@ -454,10 +453,10 @@ public class Loader extends BaseImportLoader {
                     break;
                 }
             }
-    
+
             // install if it is a descriptor
             boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
-    
+
             Node node = null;
             if (foundProvider) {
                 if ((node = createNode(parent, name, file, configuration)) != null) {
@@ -469,7 +468,7 @@ public class Loader extends BaseImportLoader {
             } else {
                 log.debug("Cant find provider for Entry {} at {} ",entry,name);
             }
-    
+
             // otherwise just place as file
             if ( node == null ) {
                 try {
@@ -663,14 +662,14 @@ public class Loader extends BaseImportLoader {
     private void uninstallContent(final Session defaultSession, final Bundle bundle,
             final String[] uninstallPaths) {
         final Map<String, Session> createdSessions = new HashMap<String, Session>();
-        
+
         try {
             log.debug("Uninstalling initial content from bundle {}",
                 bundle.getSymbolicName());
             if ( uninstallPaths != null && uninstallPaths.length > 0 ) {
                 for(String path : uninstallPaths) {
                     final Session targetSession;
-                    
+
                     final int wsSepPos = path.indexOf(":/");
                     if (wsSepPos != -1) {
                         final String workspaceName = path.substring(0, wsSepPos);
@@ -691,7 +690,7 @@ public class Loader extends BaseImportLoader {
                         targetSession.getItem(path).remove();
                     }
                 }
-                
+
                 // persist modifications now
                 defaultSession.save();
 
@@ -720,7 +719,7 @@ public class Loader extends BaseImportLoader {
                     "Failure to rollback uninstaling initial content for bundle {}",
                     bundle.getSymbolicName(), re);
             }
-            
+
             for (Session session : createdSessions.values()) {
                 session.logout();
             }
