@@ -16,50 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.engine.impl.helper;
 
 import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.request.SlingRequestListener;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RequestListenerManager  {
-	
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    private ServiceTracker serviceTracker;
 
-	public RequestListenerManager ( BundleContext context )
-	{
+    private final ServiceTracker serviceTracker;
+
+	public RequestListenerManager( final BundleContext context ) {
 		serviceTracker = new ServiceTracker( context, SlingRequestListener.SERVICE_NAME, null );
 		serviceTracker.open();
-		
 	}
-	
-	public void sendEvent ( SlingRequestEvent event )
-	{
-		Object[] services = serviceTracker.getServices();
-		if ( services != null )
-		{
-			for ( Object service : services )
-			{
-				if ( service instanceof SlingRequestListener )
-				{
-					( (SlingRequestListener) service ).onEvent( event );
-				}
-				else
-				{
-					log.error( "Implementation of service named " + SlingRequestListener.SERVICE_NAME + 
-							" does not implement service interface " + SlingRequestListener.class.getName() + "." );
-				}
+
+	public void sendEvent ( final SlingRequestEvent event ) {
+		final Object[] services = serviceTracker.getServices();
+		if ( services != null ) {
+			for ( final Object service : services ) {
+				( (SlingRequestListener) service ).onEvent( event );
 			}
 		}
 	}
-	
 
+	public void dispose() {
+	    this.serviceTracker.close();
+	}
 }

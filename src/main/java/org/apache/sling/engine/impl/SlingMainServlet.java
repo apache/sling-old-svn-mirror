@@ -173,8 +173,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
-    
-    private RequestListenerManager requestListenerManager; 
+
+    private RequestListenerManager requestListenerManager;
 
     private boolean allowTrace = DEFAULT_ALLOW_TRACE;
 
@@ -187,10 +187,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
-        	
+
             HttpServletRequest request = (HttpServletRequest) req;
 
-        	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(), 
+        	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(),
         			request, SlingRequestEvent.EventType.EVENT_INIT ) );
 
             // set the thread name according to the request
@@ -245,7 +245,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             } finally {
 
-            	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(), 
+            	requestListenerManager.sendEvent( new SlingRequestEvent( getServletContext(),
             			request, SlingRequestEvent.EventType.EVENT_DESTROY ) );
                 // reset the thread name
                 if (threadName != null) {
@@ -630,7 +630,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 initFilter(componentContext, serviceReference);
             }
         }
-        
+
         // initialize requestListenerManager
         requestListenerManager = new RequestListenerManager( bundleContext );
 
@@ -648,6 +648,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         if ( this.printerRegistration != null ) {
             WebConsoleConfigPrinter.unregister(this.printerRegistration);
             this.printerRegistration = null;
+        }
+
+        if ( this.requestListenerManager != null ) {
+            this.requestListenerManager.dispose();
+            this.requestListenerManager = null;
         }
 
         // first destroy the filters
