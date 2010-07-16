@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -35,21 +34,27 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.request.RequestParameterMap;
-import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.request.RequestProgressTracker;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-
-public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
+public class BackgroundHttpServletRequest implements HttpServletRequest {
 
 	private final String contextPath;
 	private final String method;
 	private final String pathInfo;
-	private final RequestProgressTracker requestProgressTracker;
+	private final String servletPath;
+	private final String queryString;
+	private final String requestURI;
+	private final StringBuffer requestURL;
+	private final String characterEncoding; 
+	private final int contentLength;
+	private final String contentType;
+	private final Locale locale;
+	private final String protocol;
+	private final String remoteAddr;
+	private final String remoteHost;
+	private final int remotePort;
+	private final int serverPort;
+	private final String scheme;
+	private final String remoteUser;
+	private final String serverName;
 	
 	private final Map<String, Object> attributes;
 	private final Map<String, ?> parameters;
@@ -80,9 +85,7 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	BackgroundHttpServletRequest(HttpServletRequest r) {
-		
-		final SlingHttpServletRequest sr = (r instanceof SlingHttpServletRequest ? (SlingHttpServletRequest)r : null);
+	BackgroundHttpServletRequest(HttpServletRequest r,String [] parametersToRemove) {
 		
 		// Store objects which are safe to use outside
 		// of the container's request/response cycle - the
@@ -91,18 +94,37 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 		contextPath = r.getContextPath();
 		method = r.getMethod();
 		pathInfo = r.getPathInfo();
-		
-		requestProgressTracker = (sr == null ? null : sr.getRequestProgressTracker());
-		
+		servletPath = r.getServletPath();
+		queryString = r.getQueryString();
+		requestURI = r.getRequestURI();
+		requestURL = r.getRequestURL();
+		characterEncoding = r.getCharacterEncoding();
+		contentLength = r.getContentLength();
+		contentType = r.getContentType();
+		locale = r.getLocale();
+		protocol = r.getProtocol();
+		remoteAddr = r.getRemoteAddr();
+		remoteHost = r.getRemoteHost();
+		remotePort = r.getRemotePort();
+		serverPort = r.getServerPort();
+		scheme = r.getScheme();
+		remoteUser = r.getRemoteUser();
+		serverName = r.getServerName();
+
 		attributes = new HashMap<String, Object>();
+		/* Don't copy attributes, we consider this to be a "fresh" request
 		final Enumeration<?> e = r.getAttributeNames();
 		while(e.hasMoreElements()) {
 			final String key = (String)e.nextElement();
 			attributes.put(key, r.getAttribute(key));
 		}
+		*/
 		
 		parameters = new HashMap<String, String>();
 		parameters.putAll(r.getParameterMap());
+		for(String key : parametersToRemove) {
+			parameters.remove(key);
+		}
 	}
 	
 	public String getAuthType() {
@@ -150,11 +172,11 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getQueryString() {
-		throw new UnsupportedBackgroundOperationException();
+		return queryString;
 	}
 
 	public String getRemoteUser() {
-		throw new UnsupportedBackgroundOperationException();
+		return remoteUser;
 	}
 
 	public String getRequestedSessionId() {
@@ -162,15 +184,15 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getRequestURI() {
-		throw new UnsupportedBackgroundOperationException();
+		return requestURI;
 	}
 
 	public StringBuffer getRequestURL() {
-		throw new UnsupportedBackgroundOperationException();
+		return requestURL;
 	}
 
 	public String getServletPath() {
-		throw new UnsupportedBackgroundOperationException();
+		return servletPath;
 	}
 
 	public HttpSession getSession() {
@@ -214,15 +236,15 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getCharacterEncoding() {
-		throw new UnsupportedBackgroundOperationException();
+		return characterEncoding;
 	}
 
 	public int getContentLength() {
-		throw new UnsupportedBackgroundOperationException();
+		return contentLength;
 	}
 
 	public String getContentType() {
-		throw new UnsupportedBackgroundOperationException();
+		return contentType;
 	}
 
 	public ServletInputStream getInputStream() throws IOException {
@@ -234,10 +256,10 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public Locale getLocale() {
-		throw new UnsupportedBackgroundOperationException();
+		return locale;
 	}
 
-	public Enumeration getLocales() {
+	public Enumeration<?> getLocales() {
 		throw new UnsupportedBackgroundOperationException();
 	}
 
@@ -270,7 +292,7 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getProtocol() {
-		throw new UnsupportedBackgroundOperationException();
+		return protocol;
 	}
 
 	public BufferedReader getReader() throws IOException {
@@ -282,15 +304,15 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getRemoteAddr() {
-		throw new UnsupportedBackgroundOperationException();
+		return remoteAddr;
 	}
 
 	public String getRemoteHost() {
-		throw new UnsupportedBackgroundOperationException();
+		return remoteHost;
 	}
 
 	public int getRemotePort() {
-		throw new UnsupportedBackgroundOperationException();
+		return remotePort;
 	}
 
 	public RequestDispatcher getRequestDispatcher(String arg0) {
@@ -298,24 +320,23 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 	}
 
 	public String getScheme() {
-		throw new UnsupportedBackgroundOperationException();
+		return scheme;
 	}
 
 	public String getServerName() {
-		throw new UnsupportedBackgroundOperationException();
+		return serverName;
 	}
 
 	public int getServerPort() {
-		throw new UnsupportedBackgroundOperationException();
+		return serverPort;
 	}
 
 	public boolean isSecure() {
-		throw new UnsupportedBackgroundOperationException();
+		return false;
 	}
 
-	public void removeAttribute(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-		
+	public void removeAttribute(String name) {
+		attributes.remove(name);
 	}
 
 	public void setAttribute(String key, Object value) {
@@ -326,71 +347,5 @@ public class BackgroundHttpServletRequest implements SlingHttpServletRequest {
 			throws UnsupportedEncodingException {
 		throw new UnsupportedBackgroundOperationException();
 		
-	}
-
-	public Cookie getCookie(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestDispatcher getRequestDispatcher(Resource arg0,
-			RequestDispatcherOptions arg1) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestDispatcher getRequestDispatcher(Resource arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestDispatcher getRequestDispatcher(String arg0,
-			RequestDispatcherOptions arg1) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestParameter getRequestParameter(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestParameterMap getRequestParameterMap() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestParameter[] getRequestParameters(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestPathInfo getRequestPathInfo() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public RequestProgressTracker getRequestProgressTracker() {
-		return requestProgressTracker;
-	}
-
-	public Resource getResource() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public ResourceBundle getResourceBundle(Locale arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public ResourceBundle getResourceBundle(String arg0, Locale arg1) {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public ResourceResolver getResourceResolver() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public String getResponseContentType() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public Enumeration<String> getResponseContentTypes() {
-		throw new UnsupportedBackgroundOperationException();
-	}
-
-	public <AdapterType> AdapterType adaptTo(Class<AdapterType> arg0) {
-		throw new UnsupportedBackgroundOperationException();
 	}
 }
