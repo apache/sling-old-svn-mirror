@@ -22,30 +22,45 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.servlets.SlingServlet;
 import org.apache.sling.bgservlets.JobStatus;
+import org.apache.sling.commons.auth.impl.SlingAuthenticator;
+import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Runnable that executes a FilterChain, using 
  * 	a ServletResponseWrapper to capture the output.
  */
-class FilterChainExecutionJob implements Runnable, JobStatus {
+class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private final FilterChain chain;
+	private final HttpServletRequest request;
 	private final BackgroundHttpServletResponse response;
 	private final SuspendableOutputStream stream;
+	private final SlingServlet slingServlet;
 	private final String path;
-	private final SlingHttpServletRequest request;
 	
-	FilterChainExecutionJob(FilterChain chain, HttpServletRequest request, HttpServletResponse hsr) throws IOException {
-		this.chain = chain;
-		this.request = new SlingHttpServletRequestWrapper(new BackgroundHttpServletRequest(request));
+	BackgroundRequestExecutionJob(SlingServlet slingServlet, ResourceResolverFactory rrf, HttpServletRequest request, 
+			HttpServletResponse hsr, String [] parametersToRemove) throws IOException, LoginException {
+		this.request = new BackgroundHttpServletRequest(request, parametersToRemove);
+		this.slingServlet = slingServlet;
+		
+		// TODO we might 
+		// In a normal request the ResourceResolver is added to the request attributes
+		// by the authentication service, need to do the same here as we can't reuse the
+		// original one which is closed once main request is done
+		final AuthenticationInfo aa = (AuthenticationInfo)request.getAttribute(AuthenticationInfo.class.getName());
+		if(aa == null) {
+			throw new IllegalArgumentException("Missing AuthenticationInfo attribute");
+		}
+		final ResourceResolver rr = rrf.getResourceResolver(aa);
+		this.request.setAttribute(SlingAuthenticator.REQUEST_ATTRIBUTE_RESOLVER, rr);
 		
 		// TODO write output to the Sling repository. For now: just a temp file
 		final File output = File.createTempFile(getClass().getSimpleName(), ".data");
@@ -61,10 +76,10 @@ class FilterChainExecutionJob implements Runnable, JobStatus {
 	
 	public void run() {
 		try {
-			chain.doFilter(request, response);
+			slingServlet.processRequest(request, response);
 		} catch(Exception e) {
 			// TODO report errors in the background job's output
-			log.error("chain.doFilter failed", e);
+			log.error("Exception in background request processing", e);
 		} finally {
 			try {
 				response.cleanup();
