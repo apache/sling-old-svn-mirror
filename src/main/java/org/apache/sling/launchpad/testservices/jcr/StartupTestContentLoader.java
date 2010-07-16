@@ -26,7 +26,7 @@ import org.osgi.service.component.ComponentContext;
 /**
  * Component which loads the JCR test content on startup.
  *
- * @scr.component immediate="false" metatype="no"
+ * @scr.component enabled="false" metatype="no"
  *
  * @scr.property name="service.description" value="Test Content Loader"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
