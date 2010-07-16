@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <version>2.0.7-SNAPSHOT</version>
 
     <name>Apache Sling Jackrabbit Embedded Repository</name>
@@ -81,173 +81,96 @@
                 </executions>
             </plugin>
 
-            <!--
-                copy the embedded libraries required for the embedded
-                Jackrabbit Repository
-            -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>embed-dependencies</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>
-                                jackrabbit-core,lucene-core,concurrent,xercesImpl,commons-dbcp,commons-pool
-                            </includeArtifactIds>
-                            <excludeTransitive>false</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}
-                            </outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!--
-                By default the JAR plugin will use the MANIFEST.MF file found
-                in the src/main/resources/META-INF folder, which is copied
-                as a resource.
-
-                To use a manifest file, which is generated with the Apache
-                Felix Maven Bundle plugin enable the bundle profile (see below)
-                as in
-
-                    $ mvn -P bundle clean install
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <archive>
-                        <manifestFile>
-                            ${project.build.outputDirectory}/META-INF/MANIFEST.MF
-                        </manifestFile>
-                    </archive>
+                    <instructions>
+                        <Bundle-Category>
+                            sling,jcr,jackrabbit
+                        </Bundle-Category>
+                        <Bundle-Activator>
+                            org.apache.sling.jcr.jackrabbit.server.impl.Activator
+                        </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.sling.jcr.jackrabbit.server;version=2.0.7,
+                            org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
+                            org.apache.jackrabbit.core.security.principal;version=2.0.0
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.sling.jcr.jackrabbit.server.impl.*,
+                            org.apache.commons.*
+                        </Private-Package>
+                        <Import-Package>
+                            <!-- Sling and OSGi -->
+                            org.apache.sling.*, org.osgi.*,
+                            <!-- JNDI, Security, Transactions -->
+                            javax.naming.*,
+                            javax.security.*,
+                            javax.sql.*,
+                            javax.transaction.xa,
+                            <!--  Helpers -->
+                            org.apache.commons.io.*,
+                            org.apache.commons.collections.*,
+                            <!-- JCR and Jackrabbit API -->
+                            javax.jcr.*, org.apache.jackrabbit.api.*,
+                            org.apache.jackrabbit.spi.*,
+
+                            <!-- Logging -->
+                            org.slf4j,
+                            <!-- XML stuff -->
+                            javax.xml.*, org.xml.sax.*, org.w3c.dom.*,
+                            <!-- JAR Service Registry for Query -->
+                            javax.imageio.spi,
+
+                            <!-- Exclude package, see JCR-2412 -->
+                            !org.apache.jackrabbit.test,
+
+                            <!-- playground imports -->
+                            org.apache.tika.*,
+
+                            <!-- Jackrabbit internals -->
+                            org.apache.jackrabbit.rmi.*,
+                            org.apache.jackrabbit.util,
+                            org.apache.jackrabbit.value,
+                            org.apache.jackrabbit.commons.*,
+                            org.apache.jackrabbit.spi.commons.*,
+
+                            <!-- optional JDBC driver import -->
+                            com.microsoft.sqlserver.jdbc;
+                            oracle.jdbc;
+                            org.apache.derby.jdbc;
+                            org.gjt.mm.mysql;
+                            org.h2;
+                            org.postgresql;
+                                resolution:=optional,
+
+                            <!-- Required by concurrent lib SynchronizationTimer class -->
+                            javax.swing.*;resolution:=optional
+                        </Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+
+                        <!-- Embedd some libraries -->
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <Embed-Dependency>
+                            jackrabbit-core,
+                            lucene-core,
+                            concurrent,
+                            commons-dbcp,
+                            commons-pool
+                        </Embed-Dependency>
+                        <_removeheaders>
+                            Embed-Dependency,
+                            Embed-Transitive,
+                            Private-Package,
+                            Include-Resource
+                        </_removeheaders>
+                    </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <!--
-            The bundle profile may be used to update the manifest entries of
-            the above default profile. If running the build with the build
-            profile, you may use the generated manifest to update the
-            src/main/resources/META-INF/MANIFEST.MF file for it to be used
-            in future builds excluding the bundle profile.
-        -->
-        <profile>
-            <id>bundle</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>maven-bundle-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>generate-manifest</id>
-                                <goals>
-                                    <goal>manifest</goal>
-                                </goals>
-                                <configuration>
-                                    <instructions>
-                                        <Note>Built by bundle profile</Note>
-                                        <Bundle-Category>
-                                            sling,jcr,jackrabbit
-                                        </Bundle-Category>
-                                        <Bundle-Activator>
-                                            org.apache.sling.jcr.jackrabbit.server.impl.Activator
-                                        </Bundle-Activator>
-                                        <Export-Package>
-                                            org.apache.sling.jcr.jackrabbit.server;version=2.0.7,
-                                            org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
-                                            org.apache.jackrabbit.core.security.principal;version=2.0.0
-                                        </Export-Package>
-                                        <Private-Package>
-                                            org.apache.sling.jcr.jackrabbit.server.impl.*,
-                                            org.apache.commons.*
-                                        </Private-Package>
-                                        <Import-Package>
-                                            <!-- Sling and OSGi -->
-                                            org.apache.sling.*, org.osgi.*,
-                                            <!-- JNDI, Security, Transactions -->
-                                            javax.naming.*,
-                                            javax.security.*,
-                                            javax.sql.*,
-                                            javax.transaction.xa,
-                                            <!--  Helpers -->
-                                            org.apache.commons.io.*,
-                                            org.apache.commons.collections.*,
-                                            <!-- JCR and Jackrabbit API -->
-                                            javax.jcr.*, org.apache.jackrabbit.api.*,
-                                            org.apache.jackrabbit.spi.*,
-
-                                            <!-- Logging -->
-                                            org.slf4j,
-                                            <!-- XML stuff -->
-                                            javax.xml.*, org.xml.sax.*, org.w3c.dom.*,
-                                            <!-- JAR Service Registry for Query -->
-                                            javax.imageio.spi,
-
-                                            <!-- Exclude package, see JCR-2412 -->
-                                            !org.apache.jackrabbit.test,
-
-                                            <!-- playground imports -->
-                                            org.apache.tika.*,
-
-                                            <!-- Jackrabbit internals -->
-                                            org.apache.jackrabbit.rmi.*,
-                                            org.apache.jackrabbit.util,
-                                            org.apache.jackrabbit.value,
-                                            org.apache.jackrabbit.commons.*,
-                                            org.apache.jackrabbit.spi.commons.*,
-
-                                            <!-- optional JDBC driver import -->
-                                            com.microsoft.sqlserver.jdbc;
-                                            oracle.jdbc;
-                                            org.apache.derby.jdbc;
-                                            org.gjt.mm.mysql;
-                                            org.h2;
-                                            org.postgresql;
-                                                resolution:=optional,
-
-                                            <!-- Required by concurrent lib SynchronizationTimer class -->
-                                            javax.swing.*;resolution:=optional
-                                        </Import-Package>
-                                        <DynamicImport-Package>*</DynamicImport-Package>
-
-                                        <!-- Embedd some libraries -->
-                                        <Embed-Transitive>true</Embed-Transitive>
-                                        <Embed-Dependency>
-                                            jackrabbit-core,
-                                            lucene-core,
-                                            concurrent,
-                                            commons-dbcp,
-                                            commons-pool
-                                        </Embed-Dependency>
-                                        <_removeheaders>
-                                            Embed-Dependency,
-                                            Embed-Transitive,
-                                            Private-Package,
-                                            Include-Resource
-                                        </_removeheaders>
-                                    </instructions>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <reporting>
         <plugins>
