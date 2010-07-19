@@ -31,7 +31,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public interface NotesServiceAsync {
 
-    void createNote(Note note, AsyncCallback<Note> async);
+    void createNote(Note note, AsyncCallback<String> async);
 
     void getNotes(AsyncCallback<ArrayList<Note>> async);
 

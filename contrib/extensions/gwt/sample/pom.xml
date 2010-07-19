@@ -84,7 +84,7 @@
                             com.google.gwt.user.client.rpc.core.*
                         </DynamicImport-Package>
                         <Sling-Initial-Content>
-                            SLING-INF/content
+                            SLING-INF/content;overwrite:=true
                         </Sling-Initial-Content>
                         <Sling-Bundle-Resources>
                             /gwt

@@ -177,13 +177,13 @@ public class Notes implements EntryPoint {
         note.setTitle(title);
         note.setText(text);
 
-        service.createNote(note, new AsyncCallback<Note>() {
+        service.createNote(note, new AsyncCallback<String>() {
 
             public void onFailure(Throwable throwable) {
                 Window.alert("Failed to created note: " + throwable.getMessage());
             }
 
-            public void onSuccess(Note o) {
+            public void onSuccess(String o) {
                 getNotes();
             }
         });
