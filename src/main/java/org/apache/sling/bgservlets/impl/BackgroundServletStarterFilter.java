@@ -41,73 +41,82 @@ import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Filter that runs the current request in the background
- * 	if specific request parameters are set.
- *  TODO: define the position of this filter in the chain,
- *  and how do we enforce it?
+/**
+ * Filter that runs the current request in the background if specific request
+ * parameters are set. TODO: define the position of this filter in the chain,
+ * and how do we enforce it?
  */
 @Component
 @Service
-@Properties({
-	@Property(name="filter.scope", value="request"),
-	@Property(name="filter.order", intValue=java.lang.Integer.MIN_VALUE)
-})
-public class BackgroundServletStarterFilter implements Filter{
+@Properties( {
+        @Property(name = "filter.scope", value = "request"),
+        @Property(name = "filter.order", intValue = java.lang.Integer.MIN_VALUE) })
+public class BackgroundServletStarterFilter implements Filter {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
-	@Reference
-	private ExecutionEngine executionEngine;
-	
-	@Reference
-	private SlingServlet slingServlet;
-	
-	@Reference
-	private ResourceResolverFactory resourceResolverFactory;
-	
-	/** 
-	 * Request runs in the background if this request parameter is present 
-	 * TODO should be configurable, and maybe use other decision methods */
-	public static final String BG_PARAM = "sling:bg";
-	private static final String [] PARAM_TO_REMOVE = { BG_PARAM };
-	
-	public void doFilter(final ServletRequest sreq, final ServletResponse sresp, 
-			final FilterChain chain) throws IOException, ServletException {
-		if(!(sreq instanceof HttpServletRequest)) {
-			throw new ServletException("request is not an HttpServletRequest: " + sresp.getClass().getName());
-		}
-		if(!(sresp instanceof HttpServletResponse)) {
-			throw new ServletException("response is not an HttpServletResponse: " + sresp.getClass().getName());
-		}
-		final HttpServletRequest request = (HttpServletRequest)sreq;
-		final SlingHttpServletRequest slingRequest = 
-			(request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest)request : null); 
-		final HttpServletResponse response = (HttpServletResponse)sresp; 
-		final String bgParam = sreq.getParameter(BG_PARAM); 
-		if(Boolean.valueOf(bgParam)) {
-			try {
-				final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
-						slingServlet, resourceResolverFactory, request, response, PARAM_TO_REMOVE);
-				log.debug("{} parameter true, running request in the background ({})", BG_PARAM, job);
-				if(slingRequest != null) {
-					slingRequest.getRequestProgressTracker().log(
-							BG_PARAM + " parameter true, running request in background (" + job + ")");
-				}
-				executionEngine.queueForExecution(job);
-				
-				// TODO not really an error, should send a nicer message
-				response.sendError(HttpServletResponse.SC_ACCEPTED, "Running request in the background using " + job);
-			} catch (org.apache.sling.api.resource.LoginException e) {
-				throw new ServletException("LoginException in doFilter", e);
-			}
-		} else {
-			chain.doFilter(sreq, sresp);
-		}
-	}
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-	public void destroy() {
-	}
+    @Reference
+    private ExecutionEngine executionEngine;
 
-	public void init(FilterConfig cfg) throws ServletException {
-	}
+    @Reference
+    private SlingServlet slingServlet;
+
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+
+    /**
+     * Request runs in the background if this request parameter is present TODO
+     * should be configurable, and maybe use other decision methods
+     */
+    public static final String BG_PARAM = "sling:bg";
+    private static final String[] PARAM_TO_REMOVE = { BG_PARAM };
+
+    public void doFilter(final ServletRequest sreq,
+            final ServletResponse sresp, final FilterChain chain)
+            throws IOException, ServletException {
+        if (!(sreq instanceof HttpServletRequest)) {
+            throw new ServletException("request is not an HttpServletRequest: "
+                    + sresp.getClass().getName());
+        }
+        if (!(sresp instanceof HttpServletResponse)) {
+            throw new ServletException(
+                    "response is not an HttpServletResponse: "
+                            + sresp.getClass().getName());
+        }
+        final HttpServletRequest request = (HttpServletRequest) sreq;
+        final SlingHttpServletRequest slingRequest = (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request
+                : null);
+        final HttpServletResponse response = (HttpServletResponse) sresp;
+        final String bgParam = sreq.getParameter(BG_PARAM);
+        if (Boolean.valueOf(bgParam)) {
+            try {
+                final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
+                        slingServlet, resourceResolverFactory, request,
+                        response, PARAM_TO_REMOVE);
+                log.debug("{} parameter true, running request in the background ({})",
+                        BG_PARAM, job);
+                if (slingRequest != null) {
+                    slingRequest.getRequestProgressTracker().log(
+                            BG_PARAM
+                            + " parameter true, running request in background ("
+                            + job + ")");
+                }
+                executionEngine.queueForExecution(job);
+
+                // TODO not really an error, should send a nicer message
+                response.sendError(HttpServletResponse.SC_ACCEPTED,
+                        "Running request in the background using " + job);
+            } catch (org.apache.sling.api.resource.LoginException e) {
+                throw new ServletException("LoginException in doFilter", e);
+            }
+        } else {
+            chain.doFilter(sreq, sresp);
+        }
+    }
+
+    public void destroy() {
+    }
+
+    public void init(FilterConfig cfg) throws ServletException {
+    }
 }

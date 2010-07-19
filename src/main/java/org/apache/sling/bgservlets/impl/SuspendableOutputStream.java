@@ -24,129 +24,140 @@ import java.io.OutputStream;
 
 import org.apache.sling.bgservlets.JobStatus;
 
-/** Wraps an OutputStream with controls for suspending it or
- * 	throwing an IOException next time it is written to.
- * 	Used to suspend background servlets (by blocking the 
- * 	stream) or stop them (by throwing an exception).
+/**
+ * Wraps an OutputStream with controls for suspending it or throwing an
+ * IOException next time it is written to. Used to suspend background servlets
+ * (by blocking the stream) or stop them (by throwing an exception).
  */
-public class SuspendableOutputStream extends FilterOutputStream implements JobStatus {
-	private State state = State.NEW;
-	private boolean closed = false;
-	
-	@SuppressWarnings("serial")
-	public static class StreamStoppedException extends RuntimeException {
-		StreamStoppedException() {
-			super("Stopped by " + SuspendableOutputStream.class.getSimpleName());
-		}
-	}
-	
-	public SuspendableOutputStream(OutputStream os) {
-		super(os);
-	}
+public class SuspendableOutputStream extends FilterOutputStream implements
+        JobStatus {
+    private State state = State.NEW;
+    private boolean closed = false;
 
-	@Override
-	public void write(byte[] b, int off, int len) throws IOException {
-		checkWritePermission();
-		super.write(b, off, len);
-	}
+    @SuppressWarnings("serial")
+    public static class StreamStoppedException extends RuntimeException {
+        StreamStoppedException() {
+            super("Stopped by " + SuspendableOutputStream.class.getSimpleName());
+        }
+    }
 
-	@Override
-	public void write(byte[] b) throws IOException {
-		checkWritePermission();
-		super.write(b);
-	}
+    public SuspendableOutputStream(OutputStream os) {
+        super(os);
+    }
 
-	@Override
-	public void write(int b) throws IOException {
-		checkWritePermission();
-		super.write(b);
-	}
-	
-	@Override
-	public void close() throws IOException {
-		super.close();
-		state = State.DONE;
-		closed = true;
-	}
-	
-	private void checkWritePermission() throws IOException {
-		if(closed) {
-			throw new IOException("Attempt to write to closed stream");
-		}
-		
-		if(state == State.STOP_REQUESTED || state == State.STOPPED) {
-			state = State.STOPPED;
-			// stopped: throw exception to stop stream user
-			flush();
-			throw new StreamStoppedException();
-			
-		} else if(state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
-			synchronized (this) {
-				if(state == State.SUSPEND_REQUESTED || state == State.SUSPENDED)
-					state = State.SUSPENDED;
-					try {
-						// suspended: block until resumed
-						while(state == State.SUSPENDED) {
-							wait();
-						}
-					} catch (InterruptedException e) {
-						throw new IOException("InterruptedException in checkWritePermission()", e);
-					}
-			}
-		}
-	}
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        checkWritePermission();
+        super.write(b, off, len);
+    }
 
+    @Override
+    public void write(byte[] b) throws IOException {
+        checkWritePermission();
+        super.write(b);
+    }
 
-	public State getState() {
-		return state;
-	}
+    @Override
+    public void write(int b) throws IOException {
+        checkWritePermission();
+        super.write(b);
+    }
 
-	/** Only SUSPENDED, STOP, and RUNNING make sense here */ 
-	public synchronized void requestStateChange(State s) {
-		boolean illegal = false;
-		
-		if(state == State.DONE) {
-			// ignore changes
-		} else if(s == State.SUSPENDED) {
-			if(state == State.NEW || state == State.QUEUED || state == State.RUNNING) {
-				state = State.SUSPEND_REQUESTED;
-				notify();
-			} else if(state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
-				// ignore change
-			} else {
-				illegal = true;
-			}
-			
-		} else if(s == State.STOPPED) {
-			if(state == State.NEW || state == State.QUEUED || state == State.RUNNING 
-					|| state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
-				state = State.STOP_REQUESTED;
-				notify();
-			} else if (state == State.STOP_REQUESTED || state == State.STOPPED) {
-				// ignore change
-			} else {
-				illegal = true;
-			}
-			
-		} else if(s == State.RUNNING) {
-			if(state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
-				state = State.RUNNING;
-				notify();
-			}
-			
-		} else {
-			state = s;
-			notify();
-		}
-		
-		if(illegal) {
-			throw new IllegalStateException("Illegal state change:" + state + " -> " + s);
-		}
-	}
+    @Override
+    public void close() throws IOException {
+        super.close();
+        state = State.DONE;
+        closed = true;
+    }
 
-	/** Not implemented
-	 * 	@throws UnsupportedOperationException */
-	public String getPath() {
-		throw new UnsupportedOperationException("getPath() is not applicable to this class");
-	}
+    private void checkWritePermission() throws IOException {
+        if (closed) {
+            throw new IOException("Attempt to write to closed stream");
+        }
+
+        if (state == State.STOP_REQUESTED || state == State.STOPPED) {
+            state = State.STOPPED;
+            // stopped: throw exception to stop stream user
+            flush();
+            throw new StreamStoppedException();
+
+        } else if (state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
+            synchronized (this) {
+                if (state == State.SUSPEND_REQUESTED
+                        || state == State.SUSPENDED)
+                    state = State.SUSPENDED;
+                try {
+                    // suspended: block until resumed
+                    while (state == State.SUSPENDED) {
+                        wait();
+                    }
+                } catch (InterruptedException e) {
+                    throw new IOException(
+                            "InterruptedException in checkWritePermission()", e);
+                }
+            }
+        }
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    /** Only SUSPENDED, STOP, and RUNNING make sense here */
+    public synchronized void requestStateChange(State s) {
+        boolean illegal = false;
+
+        if (state == State.DONE) {
+            // ignore changes
+        } else if (s == State.SUSPENDED) {
+            if (state == State.NEW || state == State.QUEUED
+                    || state == State.RUNNING) {
+                state = State.SUSPEND_REQUESTED;
+                notify();
+            } else if (state == State.SUSPEND_REQUESTED
+                    || state == State.SUSPENDED) {
+                // ignore change
+            } else {
+                illegal = true;
+            }
+
+        } else if (s == State.STOPPED) {
+            if (state == State.NEW || state == State.QUEUED
+                    || state == State.RUNNING
+                    || state == State.SUSPEND_REQUESTED
+                    || state == State.SUSPENDED) {
+                state = State.STOP_REQUESTED;
+                notify();
+            } else if (state == State.STOP_REQUESTED || state == State.STOPPED) {
+                // ignore change
+            } else {
+                illegal = true;
+            }
+
+        } else if (s == State.RUNNING) {
+            if (state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
+                state = State.RUNNING;
+                notify();
+            }
+
+        } else {
+            state = s;
+            notify();
+        }
+
+        if (illegal) {
+            throw new IllegalStateException("Illegal state change:" + state
+                    + " -> " + s);
+        }
+    }
+
+    /**
+     * Not implemented
+     * 
+     * @throws UnsupportedOperationException
+     */
+    public String getPath() {
+        throw new UnsupportedOperationException(
+                "getPath() is not applicable to this class");
+    }
 }

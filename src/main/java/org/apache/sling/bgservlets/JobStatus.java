@@ -20,26 +20,19 @@ package org.apache.sling.bgservlets;
 
 /** Provides info about a job */
 public interface JobStatus {
-	enum State {
-		NEW,
-		QUEUED,
-		REJECTED,
-		RUNNING, 
-		SUSPEND_REQUESTED, 
-		SUSPENDED, 
-		STOP_REQUESTED, 
-		STOPPED, 
-		DONE
-	}
+    enum State {
+        NEW, QUEUED, REJECTED, RUNNING, SUSPEND_REQUESTED, SUSPENDED, STOP_REQUESTED, STOPPED, DONE
+    }
 
-	/** Return the job's current state */
-	State getState();
-	
-	/** Request a change in the job's state, which might not take
-	 * 	effect immediately, or even be ignored.
-	 */
-	void requestStateChange(State s);
-	
-	/** Path of the Resource that describes this job */
-	String getPath();
+    /** Return the job's current state */
+    State getState();
+
+    /**
+     * Request a change in the job's state, which might not take effect
+     * immediately, or even be ignored.
+     */
+    void requestStateChange(State s);
+
+    /** Path of the Resource that describes this job */
+    String getPath();
 }

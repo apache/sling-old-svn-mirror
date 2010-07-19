@@ -33,165 +33,166 @@ import org.apache.sling.api.SlingHttpServletResponse;
 /** Minimal HttpServletResponse for background processing */
 class BackgroundHttpServletResponse implements SlingHttpServletResponse {
 
-	private final ServletOutputStream stream;
-	private final PrintWriter writer;
-	private final SlingHttpServletResponse wrappedResponse;
-	
-	static class ServletOutputStreamWrapper extends ServletOutputStream {
+    private final ServletOutputStream stream;
+    private final PrintWriter writer;
+    private final SlingHttpServletResponse wrappedResponse;
 
-		private final OutputStream os;
-		
-		ServletOutputStreamWrapper(OutputStream os) {
-			this.os = os;
-		}
-		
-		@Override
-		public void write(int b) throws IOException {
-			os.write(b);
-		}
+    static class ServletOutputStreamWrapper extends ServletOutputStream {
 
-		@Override
-		public void close() throws IOException {
-			os.close();
-		}
+        private final OutputStream os;
 
-		@Override
-		public void flush() throws IOException {
-			os.flush();
-		}
-		
-	}
-	
-	BackgroundHttpServletResponse(HttpServletResponse hsr, OutputStream os) throws IOException {
-		stream = new ServletOutputStreamWrapper(os);
-		writer = new PrintWriter(new OutputStreamWriter(stream));
-		wrappedResponse = (hsr instanceof SlingHttpServletResponse ? (SlingHttpServletResponse)hsr : null);
-	}
-	
-	void cleanup() throws IOException {
-		stream.flush();
-		stream.close();
-	}
+        ServletOutputStreamWrapper(OutputStream os) {
+            this.os = os;
+        }
 
+        @Override
+        public void write(int b) throws IOException {
+            os.write(b);
+        }
 
-	public ServletOutputStream getOutputStream() throws IOException {
-		return stream;
-	}
+        @Override
+        public void close() throws IOException {
+            os.close();
+        }
 
-	public PrintWriter getWriter() throws IOException {
-		return writer;
-	}
+        @Override
+        public void flush() throws IOException {
+            os.flush();
+        }
 
-	public void addCookie(Cookie arg0) {
-	}
+    }
 
-	public void addDateHeader(String arg0, long arg1) {
-	}
+    BackgroundHttpServletResponse(HttpServletResponse hsr, OutputStream os)
+            throws IOException {
+        stream = new ServletOutputStreamWrapper(os);
+        writer = new PrintWriter(new OutputStreamWriter(stream));
+        wrappedResponse = (hsr instanceof SlingHttpServletResponse ? (SlingHttpServletResponse) hsr
+                : null);
+    }
 
-	public void addHeader(String arg0, String arg1) {
-	}
+    void cleanup() throws IOException {
+        stream.flush();
+        stream.close();
+    }
 
-	public void addIntHeader(String arg0, int arg1) {
-	}
+    public ServletOutputStream getOutputStream() throws IOException {
+        return stream;
+    }
 
-	public boolean containsHeader(String arg0) {
-		return false;
-	}
+    public PrintWriter getWriter() throws IOException {
+        return writer;
+    }
 
-	public String encodeRedirectUrl(String arg0) {
-		return null;
-	}
+    public void addCookie(Cookie arg0) {
+    }
 
-	public String encodeRedirectURL(String arg0) {
-		return null;
-	}
+    public void addDateHeader(String arg0, long arg1) {
+    }
 
-	public String encodeUrl(String arg0) {
-		return null;
-	}
+    public void addHeader(String arg0, String arg1) {
+    }
 
-	public String encodeURL(String arg0) {
-		return null;
-	}
+    public void addIntHeader(String arg0, int arg1) {
+    }
 
-	public void sendError(int arg0, String arg1) throws IOException {
-		// TODO
-	}
+    public boolean containsHeader(String arg0) {
+        return false;
+    }
 
-	public void sendError(int arg0) throws IOException {
-		// TODO
-	}
+    public String encodeRedirectUrl(String arg0) {
+        return null;
+    }
 
-	public void sendRedirect(String arg0) throws IOException {
-		// TODO
-	}
+    public String encodeRedirectURL(String arg0) {
+        return null;
+    }
 
-	public void setDateHeader(String arg0, long arg1) {
-	}
+    public String encodeUrl(String arg0) {
+        return null;
+    }
 
-	public void setHeader(String arg0, String arg1) {
-	}
+    public String encodeURL(String arg0) {
+        return null;
+    }
 
-	public void setIntHeader(String arg0, int arg1) {
-	}
+    public void sendError(int arg0, String arg1) throws IOException {
+        // TODO
+    }
 
-	public void setStatus(int arg0, String arg1) {
-		// TODO
-	}
+    public void sendError(int arg0) throws IOException {
+        // TODO
+    }
 
-	public void setStatus(int arg0) {
-		// TODO
-	}
+    public void sendRedirect(String arg0) throws IOException {
+        // TODO
+    }
 
-	public void flushBuffer() throws IOException {
-		stream.flush();
-	}
+    public void setDateHeader(String arg0, long arg1) {
+    }
 
-	public int getBufferSize() {
-		return 0;
-	}
+    public void setHeader(String arg0, String arg1) {
+    }
 
-	public String getCharacterEncoding() {
-		return null;
-	}
+    public void setIntHeader(String arg0, int arg1) {
+    }
 
-	public String getContentType() {
-		return null;
-	}
+    public void setStatus(int arg0, String arg1) {
+        // TODO
+    }
 
-	public Locale getLocale() {
-		return null;
-	}
+    public void setStatus(int arg0) {
+        // TODO
+    }
 
-	public boolean isCommitted() {
-		return false;
-	}
+    public void flushBuffer() throws IOException {
+        stream.flush();
+    }
 
-	public void reset() {
-	}
+    public int getBufferSize() {
+        return 0;
+    }
 
-	public void resetBuffer() {
-	}
+    public String getCharacterEncoding() {
+        return null;
+    }
 
-	public void setBufferSize(int arg0) {
-	}
+    public String getContentType() {
+        return null;
+    }
 
-	public void setCharacterEncoding(String arg0) {
-	}
+    public Locale getLocale() {
+        return null;
+    }
 
-	public void setContentLength(int arg0) {
-	}
+    public boolean isCommitted() {
+        return false;
+    }
 
-	public void setContentType(String arg0) {
-	}
+    public void reset() {
+    }
 
-	public void setLocale(Locale arg0) {
-	}
+    public void resetBuffer() {
+    }
 
-	public <AdapterType> AdapterType adaptTo(Class<AdapterType> t) {
-		if(wrappedResponse != null) {
-			return wrappedResponse.adaptTo(t);
-		}
-		return null;
-	}
+    public void setBufferSize(int arg0) {
+    }
+
+    public void setCharacterEncoding(String arg0) {
+    }
+
+    public void setContentLength(int arg0) {
+    }
+
+    public void setContentType(String arg0) {
+    }
+
+    public void setLocale(Locale arg0) {
+    }
+
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> t) {
+        if (wrappedResponse != null) {
+            return wrappedResponse.adaptTo(t);
+        }
+        return null;
+    }
 }

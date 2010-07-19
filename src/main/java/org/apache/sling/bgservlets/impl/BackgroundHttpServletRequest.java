@@ -36,316 +36,321 @@ import javax.servlet.http.HttpSession;
 
 public class BackgroundHttpServletRequest implements HttpServletRequest {
 
-	private final String contextPath;
-	private final String method;
-	private final String pathInfo;
-	private final String servletPath;
-	private final String queryString;
-	private final String requestURI;
-	private final StringBuffer requestURL;
-	private final String characterEncoding; 
-	private final int contentLength;
-	private final String contentType;
-	private final Locale locale;
-	private final String protocol;
-	private final String remoteAddr;
-	private final String remoteHost;
-	private final int remotePort;
-	private final int serverPort;
-	private final String scheme;
-	private final String remoteUser;
-	private final String serverName;
-	
-	private final Map<String, Object> attributes;
-	private final Map<String, ?> parameters;
-	
-	static class IteratorEnumeration<T> implements Enumeration<T> {
-		private final Iterator<T> it;
-		IteratorEnumeration(Iterator<T> it) {
-			this.it = it;
-		}
-		public boolean hasMoreElements() {
-			return it.hasNext();
-		}
-		public T nextElement() {
-			return it.next();
-		}
-	}
-	
-	/** We throw this for any method for which we do not have data that's
-	 * 	safe to use outside of the container's request/response cycle.
-	 * 	Start by throwing this everywhere and implement methods as needed,
-	 * 	if their data is safe to use.
-	 */
-	@SuppressWarnings("serial")
-	class UnsupportedBackgroundOperationException extends UnsupportedOperationException {
-		UnsupportedBackgroundOperationException() {
-			super("This operation is not supported for background requests");
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	BackgroundHttpServletRequest(HttpServletRequest r,String [] parametersToRemove) {
-		
-		// Store objects which are safe to use outside
-		// of the container's request/response cycle - the
-		// goal is to release r once this request starts
-		// executing in the background
-		contextPath = r.getContextPath();
-		method = r.getMethod();
-		pathInfo = r.getPathInfo();
-		servletPath = r.getServletPath();
-		queryString = r.getQueryString();
-		requestURI = r.getRequestURI();
-		requestURL = r.getRequestURL();
-		characterEncoding = r.getCharacterEncoding();
-		contentLength = r.getContentLength();
-		contentType = r.getContentType();
-		locale = r.getLocale();
-		protocol = r.getProtocol();
-		remoteAddr = r.getRemoteAddr();
-		remoteHost = r.getRemoteHost();
-		remotePort = r.getRemotePort();
-		serverPort = r.getServerPort();
-		scheme = r.getScheme();
-		remoteUser = r.getRemoteUser();
-		serverName = r.getServerName();
+    private final String contextPath;
+    private final String method;
+    private final String pathInfo;
+    private final String servletPath;
+    private final String queryString;
+    private final String requestURI;
+    private final StringBuffer requestURL;
+    private final String characterEncoding;
+    private final int contentLength;
+    private final String contentType;
+    private final Locale locale;
+    private final String protocol;
+    private final String remoteAddr;
+    private final String remoteHost;
+    private final int remotePort;
+    private final int serverPort;
+    private final String scheme;
+    private final String remoteUser;
+    private final String serverName;
 
-		attributes = new HashMap<String, Object>();
-		/* Don't copy attributes, we consider this to be a "fresh" request
-		final Enumeration<?> e = r.getAttributeNames();
-		while(e.hasMoreElements()) {
-			final String key = (String)e.nextElement();
-			attributes.put(key, r.getAttribute(key));
-		}
-		*/
-		
-		parameters = new HashMap<String, String>();
-		parameters.putAll(r.getParameterMap());
-		for(String key : parametersToRemove) {
-			parameters.remove(key);
-		}
-	}
-	
-	public String getAuthType() {
-		return null;
-	}
+    private final Map<String, Object> attributes;
+    private final Map<String, ?> parameters;
 
-	public String getContextPath() {
-		return contextPath;
-	}
+    static class IteratorEnumeration<T> implements Enumeration<T> {
+        private final Iterator<T> it;
 
-	public Cookie[] getCookies() {
-		return null;
-	}
+        IteratorEnumeration(Iterator<T> it) {
+            this.it = it;
+        }
 
-	public long getDateHeader(String arg0) {
-		return 0;
-	}
+        public boolean hasMoreElements() {
+            return it.hasNext();
+        }
 
-	public String getHeader(String arg0) {
-		return null;
-	}
+        public T nextElement() {
+            return it.next();
+        }
+    }
 
-	public Enumeration<?> getHeaderNames() {
-		return null;
-	}
+    /**
+     * We throw this for any method for which we do not have data that's safe to
+     * use outside of the container's request/response cycle. Start by throwing
+     * this everywhere and implement methods as needed, if their data is safe to
+     * use.
+     */
+    @SuppressWarnings("serial")
+    class UnsupportedBackgroundOperationException extends
+            UnsupportedOperationException {
+        UnsupportedBackgroundOperationException() {
+            super("This operation is not supported for background requests");
+        }
+    }
 
-	public Enumeration<?> getHeaders(String name) {
-		return null;
-	}
+    @SuppressWarnings("unchecked")
+    BackgroundHttpServletRequest(HttpServletRequest r,
+            String[] parametersToRemove) {
 
-	public int getIntHeader(String name) {
-		return 0;
-	}
+        // Store objects which are safe to use outside
+        // of the container's request/response cycle - the
+        // goal is to release r once this request starts
+        // executing in the background
+        contextPath = r.getContextPath();
+        method = r.getMethod();
+        pathInfo = r.getPathInfo();
+        servletPath = r.getServletPath();
+        queryString = r.getQueryString();
+        requestURI = r.getRequestURI();
+        requestURL = r.getRequestURL();
+        characterEncoding = r.getCharacterEncoding();
+        contentLength = r.getContentLength();
+        contentType = r.getContentType();
+        locale = r.getLocale();
+        protocol = r.getProtocol();
+        remoteAddr = r.getRemoteAddr();
+        remoteHost = r.getRemoteHost();
+        remotePort = r.getRemotePort();
+        serverPort = r.getServerPort();
+        scheme = r.getScheme();
+        remoteUser = r.getRemoteUser();
+        serverName = r.getServerName();
 
-	public String getMethod() {
-		return method;
-	}
+        attributes = new HashMap<String, Object>();
+        /*
+         * Don't copy attributes, we consider this to be a "fresh" request final
+         * Enumeration<?> e = r.getAttributeNames(); while(e.hasMoreElements())
+         * { final String key = (String)e.nextElement(); attributes.put(key,
+         * r.getAttribute(key)); }
+         */
 
-	public String getPathInfo() {
-		return pathInfo;
-	}
+        parameters = new HashMap<String, String>();
+        parameters.putAll(r.getParameterMap());
+        for (String key : parametersToRemove) {
+            parameters.remove(key);
+        }
+    }
 
-	public String getPathTranslated() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getAuthType() {
+        return null;
+    }
 
-	public String getQueryString() {
-		return queryString;
-	}
+    public String getContextPath() {
+        return contextPath;
+    }
 
-	public String getRemoteUser() {
-		return remoteUser;
-	}
+    public Cookie[] getCookies() {
+        return null;
+    }
 
-	public String getRequestedSessionId() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public long getDateHeader(String arg0) {
+        return 0;
+    }
 
-	public String getRequestURI() {
-		return requestURI;
-	}
+    public String getHeader(String arg0) {
+        return null;
+    }
 
-	public StringBuffer getRequestURL() {
-		return requestURL;
-	}
+    public Enumeration<?> getHeaderNames() {
+        return null;
+    }
 
-	public String getServletPath() {
-		return servletPath;
-	}
+    public Enumeration<?> getHeaders(String name) {
+        return null;
+    }
 
-	public HttpSession getSession() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public int getIntHeader(String name) {
+        return 0;
+    }
 
-	public HttpSession getSession(boolean arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getMethod() {
+        return method;
+    }
 
-	public Principal getUserPrincipal() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getPathInfo() {
+        return pathInfo;
+    }
 
-	public boolean isRequestedSessionIdFromCookie() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getPathTranslated() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public boolean isRequestedSessionIdFromUrl() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getQueryString() {
+        return queryString;
+    }
 
-	public boolean isRequestedSessionIdFromURL() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getRemoteUser() {
+        return remoteUser;
+    }
 
-	public boolean isRequestedSessionIdValid() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getRequestedSessionId() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public boolean isUserInRole(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getRequestURI() {
+        return requestURI;
+    }
 
-	public Object getAttribute(String name) {
-		return attributes.get(name);
-	}
+    public StringBuffer getRequestURL() {
+        return requestURL;
+    }
 
-	public Enumeration<?> getAttributeNames() {
-		return new IteratorEnumeration<String>(attributes.keySet().iterator());
-	}
+    public String getServletPath() {
+        return servletPath;
+    }
 
-	public String getCharacterEncoding() {
-		return characterEncoding;
-	}
+    public HttpSession getSession() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public int getContentLength() {
-		return contentLength;
-	}
+    public HttpSession getSession(boolean arg0) {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public String getContentType() {
-		return contentType;
-	}
+    public Principal getUserPrincipal() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public ServletInputStream getInputStream() throws IOException {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public boolean isRequestedSessionIdFromCookie() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public String getLocalAddr() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public boolean isRequestedSessionIdFromUrl() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public Locale getLocale() {
-		return locale;
-	}
+    public boolean isRequestedSessionIdFromURL() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public Enumeration<?> getLocales() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public boolean isRequestedSessionIdValid() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public String getLocalName() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public boolean isUserInRole(String arg0) {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public int getLocalPort() {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public Object getAttribute(String name) {
+        return attributes.get(name);
+    }
 
-	public String getParameter(String name) {
-		final Object obj = parameters.get(name);
-		if(obj instanceof String[]) {
-			return ((String[])obj)[0];
-		}
-		return (String)obj;
-	}
+    public Enumeration<?> getAttributeNames() {
+        return new IteratorEnumeration<String>(attributes.keySet().iterator());
+    }
 
-	public Map<?,?> getParameterMap() {
-		return parameters;
-	}
+    public String getCharacterEncoding() {
+        return characterEncoding;
+    }
 
-	public Enumeration<?> getParameterNames() {
-		return new IteratorEnumeration<String>(parameters.keySet().iterator());
-	}
+    public int getContentLength() {
+        return contentLength;
+    }
 
-	public String[] getParameterValues(String key) {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getContentType() {
+        return contentType;
+    }
 
-	public String getProtocol() {
-		return protocol;
-	}
+    public ServletInputStream getInputStream() throws IOException {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public BufferedReader getReader() throws IOException {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getLocalAddr() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public String getRealPath(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public Locale getLocale() {
+        return locale;
+    }
 
-	public String getRemoteAddr() {
-		return remoteAddr;
-	}
+    public Enumeration<?> getLocales() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public String getRemoteHost() {
-		return remoteHost;
-	}
+    public String getLocalName() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public int getRemotePort() {
-		return remotePort;
-	}
+    public int getLocalPort() {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public RequestDispatcher getRequestDispatcher(String arg0) {
-		throw new UnsupportedBackgroundOperationException();
-	}
+    public String getParameter(String name) {
+        final Object obj = parameters.get(name);
+        if (obj instanceof String[]) {
+            return ((String[]) obj)[0];
+        }
+        return (String) obj;
+    }
 
-	public String getScheme() {
-		return scheme;
-	}
+    public Map<?, ?> getParameterMap() {
+        return parameters;
+    }
 
-	public String getServerName() {
-		return serverName;
-	}
+    public Enumeration<?> getParameterNames() {
+        return new IteratorEnumeration<String>(parameters.keySet().iterator());
+    }
 
-	public int getServerPort() {
-		return serverPort;
-	}
+    public String[] getParameterValues(String key) {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public boolean isSecure() {
-		return false;
-	}
+    public String getProtocol() {
+        return protocol;
+    }
 
-	public void removeAttribute(String name) {
-		attributes.remove(name);
-	}
+    public BufferedReader getReader() throws IOException {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public void setAttribute(String key, Object value) {
-		attributes.put(key, value);
-	}
+    public String getRealPath(String arg0) {
+        throw new UnsupportedBackgroundOperationException();
+    }
 
-	public void setCharacterEncoding(String arg0)
-			throws UnsupportedEncodingException {
-		throw new UnsupportedBackgroundOperationException();
-		
-	}
+    public String getRemoteAddr() {
+        return remoteAddr;
+    }
+
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    public int getRemotePort() {
+        return remotePort;
+    }
+
+    public RequestDispatcher getRequestDispatcher(String arg0) {
+        throw new UnsupportedBackgroundOperationException();
+    }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public String getServerName() {
+        return serverName;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public boolean isSecure() {
+        return false;
+    }
+
+    public void removeAttribute(String name) {
+        attributes.remove(name);
+    }
+
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+
+    public void setCharacterEncoding(String arg0)
+            throws UnsupportedEncodingException {
+        throw new UnsupportedBackgroundOperationException();
+
+    }
 }

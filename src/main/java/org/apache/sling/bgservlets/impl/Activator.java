@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 /** Bundle activator */
 public class Activator implements BundleActivator {
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
@@ -35,7 +35,7 @@ public class Activator implements BundleActivator {
         try {
             ExecutionEngineConsolePlugin.initPlugin(context);
         } catch (Throwable ignore) {
-        	// Happens for example if the webconsole is not installed
+            // Happens for example if the webconsole is not installed
             log.debug("Exception in start()", ignore);
         }
     }
