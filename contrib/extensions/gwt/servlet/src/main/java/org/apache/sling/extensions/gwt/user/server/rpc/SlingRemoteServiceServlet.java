@@ -35,8 +35,8 @@ import java.text.ParseException;
  * Extending google's remote service servlet to enable resolving of resources through
  * a bundle (for policy file loading).
  * <p/>
- * This class is for version 2.0.3 of the GWT gwt-servlet.jar edition and it is highly recommended to compile
- * client apps with the corresponding 2.0.3 GWT gwt-user.jar only!
+ * This class is for version 2.0.4 of the GWT gwt-servlet.jar edition and it is highly recommended to compile
+ * client apps with the corresponding 2.0.4 GWT gwt-user.jar only!
  * <p/>
  * GWT service servlets that are used in sling are required to extend the <code>SlingRemoteServiceServlet</code>
  * instead of google's own <code>RemoteServiceServlet</code>.
