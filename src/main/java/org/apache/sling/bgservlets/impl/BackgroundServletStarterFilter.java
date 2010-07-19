@@ -36,8 +36,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.servlets.SlingServlet;
 import org.apache.sling.bgservlets.ExecutionEngine;
+import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
