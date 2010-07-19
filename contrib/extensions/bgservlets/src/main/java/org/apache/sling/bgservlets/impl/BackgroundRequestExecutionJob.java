@@ -28,10 +28,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.servlets.SlingServlet;
 import org.apache.sling.bgservlets.JobStatus;
-import org.apache.sling.commons.auth.impl.SlingAuthenticator;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +42,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 	private final HttpServletRequest request;
 	private final BackgroundHttpServletResponse response;
 	private final SuspendableOutputStream stream;
+	private final ResourceResolver resourceResolver;
 	private final SlingServlet slingServlet;
 	private final String path;
 	
@@ -59,8 +59,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 		if(aa == null) {
 			throw new IllegalArgumentException("Missing AuthenticationInfo attribute");
 		}
-		final ResourceResolver rr = rrf.getResourceResolver(aa);
-		this.request.setAttribute(SlingAuthenticator.REQUEST_ATTRIBUTE_RESOLVER, rr);
+		resourceResolver = rrf.getResourceResolver(aa);
 		
 		// TODO write output to the Sling repository. For now: just a temp file
 		final File output = File.createTempFile(getClass().getSimpleName(), ".data");
@@ -76,7 +75,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 	
 	public void run() {
 		try {
-			slingServlet.processRequest(request, response);
+			slingServlet.processRequest(request, response, resourceResolver);
 		} catch(Exception e) {
 			// TODO report errors in the background job's output
 			log.error("Exception in background request processing", e);
