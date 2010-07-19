@@ -40,8 +40,8 @@
 
     <properties>
         <!-- The implementation of the Sling GWT Servlet Library is dependent
-            on this specific GWT version: 2.0.3. Do not upgrade just like that. -->
-    	<gwt.version>2.0.3</gwt.version>
+            on this specific GWT version: 2.0.4. Do not upgrade just like that. -->
+    	<gwt.version>2.0.4</gwt.version>
     </properties>
 
     <scm>
