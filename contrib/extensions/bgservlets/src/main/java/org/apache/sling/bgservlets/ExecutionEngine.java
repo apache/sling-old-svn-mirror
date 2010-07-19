@@ -20,19 +20,23 @@ package org.apache.sling.bgservlets;
 
 import java.util.Iterator;
 
-/** Service that executes Runnables, will later allow
- * 	them to be suspended, resumed, stopped and restarted.
+/**
+ * Service that executes Runnables, will later allow them to be suspended,
+ * resumed, stopped and restarted.
  */
 public interface ExecutionEngine {
-	
-	/** Add a job to the execution queue */
-	void queueForExecution(Runnable job);
-	
-	/** Get JobStatus by path */
-	JobStatus getJobStatus(String path);
-	
-	/** Enumerate JobStatus that match supplied predicate 
-	 * 	@param p if null, returns all known JobStatus.
-	 */
-	Iterator<JobStatus> getMatchingJobStatus(Predicate<JobStatus> p);
+
+    /** Add a job to the execution queue */
+    void queueForExecution(Runnable job);
+
+    /** Get JobStatus by path */
+    JobStatus getJobStatus(String path);
+
+    /**
+     * Enumerate JobStatus that match supplied predicate
+     * 
+     * @param p
+     *            if null, returns all known JobStatus.
+     */
+    Iterator<JobStatus> getMatchingJobStatus(Predicate<JobStatus> p);
 }

@@ -32,55 +32,56 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet used for interactive testing of the background
- * 	servlets engine.
- * 	TODO remove once we have better tests.
+/**
+ * Servlet used for interactive testing of the background servlets engine. TODO
+ * remove once we have better tests.
  */
 @Component
 @Service
 @SuppressWarnings("serial")
-@Property(name="sling.servlet.paths", value="/system/bgservlets/test")
+@Property(name = "sling.servlet.paths", value = "/system/bgservlets/test")
 public class BackgroundTestServlet extends SlingSafeMethodsServlet {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
-	@Override
-	protected void doGet(SlingHttpServletRequest request,
-			SlingHttpServletResponse response) throws ServletException,
-			IOException {
-		response.setContentType("text/plain");
-		final PrintWriter w = response.getWriter();
-		
-		final int cycles = getIntParam(request, "cycles", 10);
-		final int interval = getIntParam(request, "interval", 1);
-		final int flushEvery = getIntParam(request, "flushEvery", 2);
-		
-		try {
-			for(int i=1; i <= cycles; i++) {
-				if(i % flushEvery == 0) {
-					w.println("Flushing output");
-					w.flush();
-				}
-				w.printf("Cycle %d of %d\n", i, cycles);
-				try {
-					Thread.sleep(interval * 1000);
-				} catch(InterruptedException iex) {
-					throw new ServletException("InterruptedException", iex);
-				}
-			}
-			w.println("All done.");
-			w.flush();
-		} catch(Throwable t) {
-			log.info("Exception in doGet", t);
-		}
-	}
-	
-	private int getIntParam(SlingHttpServletRequest request, String name, int defaultValue) {
-		int result = defaultValue;
-		final String str = request.getParameter(name);
-		if(str != null) {
-			result = Integer.parseInt(str);
-		}
-		return result;
-	}
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
+        response.setContentType("text/plain");
+        final PrintWriter w = response.getWriter();
+
+        final int cycles = getIntParam(request, "cycles", 10);
+        final int interval = getIntParam(request, "interval", 1);
+        final int flushEvery = getIntParam(request, "flushEvery", 2);
+
+        try {
+            for (int i = 1; i <= cycles; i++) {
+                if (i % flushEvery == 0) {
+                    w.println("Flushing output");
+                    w.flush();
+                }
+                w.printf("Cycle %d of %d\n", i, cycles);
+                try {
+                    Thread.sleep(interval * 1000);
+                } catch (InterruptedException iex) {
+                    throw new ServletException("InterruptedException", iex);
+                }
+            }
+            w.println("All done.");
+            w.flush();
+        } catch (Throwable t) {
+            log.info("Exception in doGet", t);
+        }
+    }
+
+    private int getIntParam(SlingHttpServletRequest request, String name,
+            int defaultValue) {
+        int result = defaultValue;
+        final String str = request.getParameter(name);
+        if (str != null) {
+            result = Integer.parseInt(str);
+        }
+        return result;
+    }
 }

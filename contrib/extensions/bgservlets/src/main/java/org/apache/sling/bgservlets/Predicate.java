@@ -20,5 +20,5 @@ package org.apache.sling.bgservlets;
 
 /** Simple typed predicate */
 public interface Predicate<T> {
-	boolean isTrue(T subject);
+    boolean isTrue(T subject);
 }

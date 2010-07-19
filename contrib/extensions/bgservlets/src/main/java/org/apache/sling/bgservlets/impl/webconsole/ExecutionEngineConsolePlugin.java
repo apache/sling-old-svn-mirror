@@ -41,17 +41,18 @@ import org.slf4j.LoggerFactory;
 
 /** Felix OSGi console plugin for the ExecutionEngine */
 public class ExecutionEngineConsolePlugin {
-	private static final Logger log = LoggerFactory.getLogger(ExecutionEngineConsolePlugin.class);
-	private static Plugin plugin;
+    private static final Logger log = LoggerFactory
+            .getLogger(ExecutionEngineConsolePlugin.class);
+    private static Plugin plugin;
     public static final String LABEL = "bgservlets";
     public static final String TITLE = "Background Servlets & Jobs";
-	
+
     public static void initPlugin(BundleContext context) {
         if (plugin == null) {
             Plugin tmp = new Plugin();
             tmp.activate(context);
             plugin = tmp;
-    		log.info("{} activated", plugin);
+            log.info("{} activated", plugin);
         }
     }
 
@@ -59,7 +60,7 @@ public class ExecutionEngineConsolePlugin {
         if (plugin != null) {
             try {
                 plugin.deactivate();
-        		log.info("{} deactivated", plugin);
+                log.info("{} deactivated", plugin);
             } finally {
                 plugin = null;
             }
@@ -67,36 +68,42 @@ public class ExecutionEngineConsolePlugin {
     }
 
     @SuppressWarnings("serial")
-	public static final class Plugin extends AbstractWebConsolePlugin {
+    public static final class Plugin extends AbstractWebConsolePlugin {
         private ServiceRegistration serviceRegistration;
         private ServiceTracker executionEngineTracker;
-        
-    	public void activate(BundleContext ctx) {
+
+        public void activate(BundleContext ctx) {
             super.activate(ctx);
-            
-            executionEngineTracker = new ServiceTracker(ctx, ExecutionEngine.class.getName(), null);
+
+            executionEngineTracker = new ServiceTracker(ctx,
+                    ExecutionEngine.class.getName(), null);
             executionEngineTracker.open();
-            
+
             Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(Constants.SERVICE_DESCRIPTION,
-                "Web Console Plugin to display Background servlets and ExecutionEngine status");
-            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            props
+                    .put(Constants.SERVICE_DESCRIPTION,
+                            "Web Console Plugin to display Background servlets and ExecutionEngine status");
+            props.put(Constants.SERVICE_VENDOR,
+                    "The Apache Software Foundation");
             props.put(Constants.SERVICE_PID, getClass().getName());
             props.put(WebConsoleConstants.PLUGIN_LABEL, LABEL);
 
-            serviceRegistration = ctx.registerService(WebConsoleConstants.SERVICE_NAME, this, props);
-    	}
-    	public void deactivate() {
+            serviceRegistration = ctx.registerService(
+                    WebConsoleConstants.SERVICE_NAME, this, props);
+        }
+
+        public void deactivate() {
             if (serviceRegistration != null) {
                 serviceRegistration.unregister();
                 serviceRegistration = null;
             }
-    		if(executionEngineTracker != null) {
-    			executionEngineTracker.close();
-    			executionEngineTracker = null;
-    		}
+            if (executionEngineTracker != null) {
+                executionEngineTracker.close();
+                executionEngineTracker = null;
+            }
             super.deactivate();
-    	}
+        }
+
         @Override
         public String getLabel() {
             return LABEL;
@@ -106,37 +113,39 @@ public class ExecutionEngineConsolePlugin {
         public String getTitle() {
             return TITLE;
         }
-        
+
         @Override
-        protected void renderContent(HttpServletRequest req, HttpServletResponse res)
-          throws ServletException, IOException {
-        	final PrintWriter pw = res.getWriter();
-        	final ExecutionEngine ee = (ExecutionEngine)executionEngineTracker.getService();
-        	if(ee == null) {
-        		pw.println("No ExecutionEngine service found");
-        		return;
-        	}
-        	
-        	// TODO should use POST
-    		final String jobPath = req.getParameter("jobPath");
-    		if(jobPath != null) {
-        		final JobStatus job = ee.getJobStatus(jobPath);
-        		if(job != null) {
-            		final String action = req.getParameter("action");
-            		if("suspend".equals(action)) {
-            			job.requestStateChange(JobStatus.State.SUSPENDED);
-            		} else if("stop".equals(action)) {
-            			job.requestStateChange(JobStatus.State.STOPPED);
-            		} else if("resume".equals(action)) {
-            			job.requestStateChange(JobStatus.State.RUNNING);
-            		}
-        		}
-    		}
-    		
-    		pw.println("TODO: provide a way to cleanup old jobs<br/>");
-    		pw.println("TODO: optionally list active jobs only<br/>");
-  
-            pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+        protected void renderContent(HttpServletRequest req,
+                HttpServletResponse res) throws ServletException, IOException {
+            final PrintWriter pw = res.getWriter();
+            final ExecutionEngine ee = (ExecutionEngine) executionEngineTracker
+                    .getService();
+            if (ee == null) {
+                pw.println("No ExecutionEngine service found");
+                return;
+            }
+
+            // TODO should use POST
+            final String jobPath = req.getParameter("jobPath");
+            if (jobPath != null) {
+                final JobStatus job = ee.getJobStatus(jobPath);
+                if (job != null) {
+                    final String action = req.getParameter("action");
+                    if ("suspend".equals(action)) {
+                        job.requestStateChange(JobStatus.State.SUSPENDED);
+                    } else if ("stop".equals(action)) {
+                        job.requestStateChange(JobStatus.State.STOPPED);
+                    } else if ("resume".equals(action)) {
+                        job.requestStateChange(JobStatus.State.RUNNING);
+                    }
+                }
+            }
+
+            pw.println("TODO: provide a way to cleanup old jobs<br/>");
+            pw.println("TODO: optionally list active jobs only<br/>");
+
+            pw
+                    .println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
             pw.println("<thead>");
             pw.println("<tr class='content'>");
             pw.println("<th class='content container'>Controls</th>");
@@ -146,35 +155,37 @@ public class ExecutionEngineConsolePlugin {
             pw.println("</thead>");
             pw.println("<tbody>");
 
-        	final Iterator<JobStatus> it = ee.getMatchingJobStatus(null);
-        	int count = 0;
-        	while(it.hasNext()) {
-        		renderJobStatus(pw, it.next());
-        		count++;
-        	}
+            final Iterator<JobStatus> it = ee.getMatchingJobStatus(null);
+            int count = 0;
+            while (it.hasNext()) {
+                renderJobStatus(pw, it.next());
+                count++;
+            }
             pw.println("</tbody>");
-        	pw.println("</table>");
-        	pw.println("Total <b>" + count + "</b> jobs.<br />");
+            pw.println("</table>");
+            pw.println("Total <b>" + count + "</b> jobs.<br />");
         }
-        
+
         private void renderJobStatus(PrintWriter pw, JobStatus job) {
-        	// TODO should use POST
+            // TODO should use POST
             pw.println("<tr class='content'>");
-        	pw.println("<td><form action='./" + LABEL + "' method='GET'>");
-        	final String [] actions = { "suspend", "resume", "stop" };
-        	for(String action : actions) {
-        		pw.println("<input type='submit' name='action' value='" + action + "'/>&nbsp;");
-        	}
-        	pw.println("<input type='hidden' name='jobPath' value='" + job.getPath() + "'/>&nbsp;");
-        	pw.println("</form></td>");
-        	pw.println("<td>");
-        	pw.println(job.getState());
-        	pw.println("</td>");
-        	pw.println("<td>");
-        	pw.println(job.getPath());
-        	pw.println("</td>");
-        	pw.println("</tr>");
+            pw.println("<td><form action='./" + LABEL + "' method='GET'>");
+            final String[] actions = { "suspend", "resume", "stop" };
+            for (String action : actions) {
+                pw.println("<input type='submit' name='action' value='"
+                        + action + "'/>&nbsp;");
+            }
+            pw.println("<input type='hidden' name='jobPath' value='"
+                    + job.getPath() + "'/>&nbsp;");
+            pw.println("</form></td>");
+            pw.println("<td>");
+            pw.println(job.getState());
+            pw.println("</td>");
+            pw.println("<td>");
+            pw.println(job.getPath());
+            pw.println("</td>");
+            pw.println("</tr>");
         }
-    
+
     }
 }
