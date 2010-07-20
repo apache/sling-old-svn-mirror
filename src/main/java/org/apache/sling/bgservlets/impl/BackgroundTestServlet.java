@@ -20,6 +20,7 @@ package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 
@@ -55,6 +56,7 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
         final int interval = getIntParam(request, "interval", 1);
         final int flushEvery = getIntParam(request, "flushEvery", 2);
 
+        w.println("Start at " + new Date());
         try {
             for (int i = 1; i <= cycles; i++) {
                 if (i % flushEvery == 0) {

@@ -46,7 +46,7 @@ public class NodeInputStream extends InputStream {
     /** Current stream that we are reading */
     private InputStream currentStream;
     
-    NodeInputStream(Node n) throws IOException {
+    public NodeInputStream(Node n) throws IOException {
         node = n;
         selectNextStream();
     }
@@ -101,7 +101,7 @@ public class NodeInputStream extends InputStream {
             return 0;
         }
         int result = currentStream.read(b, off, len);
-        if(result == 0) {
+        if(result <= 0) {
             selectNextStream();
             return read(b, off, len);
         }
