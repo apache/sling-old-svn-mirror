@@ -18,10 +18,11 @@
  */
 package org.apache.sling.bgservlets.impl;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,6 +30,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.JobStatus;
+import org.apache.sling.bgservlets.impl.nodestream.NodeOutputStream;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
@@ -68,14 +70,31 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
                     "Missing AuthenticationInfo attribute");
         }
         resourceResolver = rrf.getResourceResolver(aa);
-
-        // TODO write output to the Sling repository. For now: just a temp file
-        final File output = File.createTempFile(getClass().getSimpleName(),
-                ".data");
-        output.deleteOnExit();
-        path = output.getAbsolutePath();
-        stream = new SuspendableOutputStream(new FileOutputStream(output));
-        response = new BackgroundHttpServletResponse(hsr, stream);
+        
+        // Save servlet output to the repository
+        final Session s = resourceResolver.adaptTo(Session.class);
+        if(s == null) {
+            throw new IOException("Unable to get Session from ResourceResolver " + resourceResolver);
+        }
+        
+        // TODO configurable path
+        try {
+            final String outputRootPath = "/" + getClass().getSimpleName();
+            Node outputRoot = null;
+            if(s.itemExists(outputRootPath)) {
+                outputRoot = (Node)s.getItem(outputRootPath);
+            } else {
+                outputRoot = s.getRootNode().addNode(outputRootPath.substring(1));
+            }
+            final Node output = outputRoot.addNode("out_" + System.currentTimeMillis());
+            s.save();
+            final NodeOutputStream nos = new NodeOutputStream(output);
+            path = output.getPath();
+            stream = new SuspendableOutputStream(nos);
+            response = new BackgroundHttpServletResponse(hsr, stream);
+        } catch(RepositoryException re) {
+            throw new IOException("RepositoryException in BackgroundRequestExecutionJob", re); 
+        }
     }
 
     public String toString() {

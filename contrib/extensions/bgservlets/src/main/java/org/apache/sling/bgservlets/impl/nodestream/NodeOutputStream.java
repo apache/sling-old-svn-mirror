@@ -82,10 +82,14 @@ public class NodeOutputStream extends OutputStream {
         counter++;
         final String name = NodeOutputStream.STREAM_PROPERTY_NAME_PREFIX + counter;
         try {
-            node.setProperty(name, new ByteArrayInputStream(buffer.toByteArray()));
-            log.debug("Saved {} bytes to Property {}", buffer.size(), node.getProperty(name).getPath());
-            node.save();
-            buffer.reset();
+            if(!node.getSession().isLive()) {
+                log.warn("Session closed, unable to flush stream");
+            } else {
+                node.setProperty(name, new ByteArrayInputStream(buffer.toByteArray()));
+                log.debug("Saved {} bytes to Property {}", buffer.size(), node.getProperty(name).getPath());
+                node.save();
+                buffer.reset();
+            }
         } catch(RepositoryException re) {
             throw new IOException("RepositoryException in flush()", re);
         }
