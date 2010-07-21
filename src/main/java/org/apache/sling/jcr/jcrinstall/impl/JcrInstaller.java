@@ -173,9 +173,9 @@ public class JcrInstaller implements EventListener {
     private StoppableThread backgroundThread;
 
     protected void activate(ComponentContext context) throws Exception {
+        log.info("Activating Apache Sling JCR Installer");
 
-    	log.info("activate()");
-
+        // open session
     	session = repository.loginAdministrative(repository.getDefaultWorkspace());
     	newRoots.clear();
 
@@ -184,59 +184,44 @@ public class JcrInstaller implements EventListener {
     	converters.add(new ConfigNodeConverter());
 
     	// Configurable max depth, system property (via bundle context) overrides default value
-    	Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
-    	if(obj != null) {
+    	final Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
+    	if (obj != null) {
     		// depending on where it's coming from, obj might be a string or integer
     		maxWatchedFolderDepth = Integer.valueOf(String.valueOf(obj)).intValue();
-            log.info("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
+            log.debug("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
     	} else {
             maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
-            log.info("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
+            log.debug("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
     	}
 
     	// Configurable folder regexp, system property overrides default value
     	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp != null) {
     		folderNameRegexp = folderNameRegexp.trim();
-            log.info("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
+            log.debug("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
     	} else {
     	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
-            log.info("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
+            log.debug("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
 
     	// Setup folder filtering and watching
-    	String [] rootsConfig = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH));
-    	if(rootsConfig == null) {
-    		rootsConfig = DEFAULT_SEARCH_PATH;
-    	}
+    	final String [] rootsConfig = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH);
         folderNameFilter = new FolderNameFilter(rootsConfig, folderNameRegexp, runMode);
         roots = folderNameFilter.getRootPaths();
         for (String path : roots) {
             listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
+            log.debug("Configured root folder: {}", path);
         }
 
-    	// Get search paths, and make sure each part starts and ends with a /
-        if (roots == null) {
-        }
-        for (int i = 0; i < roots.length; i++) {
-            if (!roots[i].startsWith("/")) {
-            	roots[i] = "/" + roots[i];
-            }
-            if (!roots[i].endsWith("/")) {
-            	roots[i] += "/";
-            }
-        }
-        for(int i = 0; i < roots.length; i++) {
-    		log.info("Configured root folder: {}", roots[i]);
-    	}
-
-        // Watch for DELETE events on the root - that might be one of our root folders
-        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
-        boolean isDeep = false;
-        boolean noLocal = true;
-        session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, "/",
-                isDeep, null, null, noLocal);
-        log.info("Watching for NODE_REMOVED events on / to detect removal of our root folders");
+        // Watch for events on the root - that might be one of our root folders
+        session.getWorkspace().getObservationManager().addEventListener(this,
+                Event.NODE_ADDED | Event.NODE_REMOVED,
+                "/",
+                false, // isDeep
+                null,
+                null,
+                true); // noLocal
+        log.debug("Watching for node events on / to detect removal/add of our root folders");
 
 
     	// Find paths to watch and create WatchedFolders to manage them
@@ -253,10 +238,10 @@ public class JcrInstaller implements EventListener {
     		resources.addAll(r.toAdd);
     	}
 
-    	log.info("Registering {} resources with OSGi installer: {}", resources.size(), resources);
+    	log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
     	installer.registerResources(resources, URL_SCHEME);
 
-    	if(backgroundThread != null) {
+    	if (backgroundThread != null) {
     	    throw new IllegalStateException("Expected backgroundThread to be null in activate()");
     	}
         backgroundThread = new StoppableThread();
@@ -264,7 +249,7 @@ public class JcrInstaller implements EventListener {
     }
 
     protected void deactivate(ComponentContext context) {
-    	log.info("deactivate()");
+    	log.info("Deactivating Apache Sling JCR Installer");
 
     	final long timeout = 30000L;
     	try {
@@ -311,11 +296,11 @@ public class JcrInstaller implements EventListener {
 
         try {
             s = repository.loginAdministrative(repository.getDefaultWorkspace());
-            if (!s.getRootNode().hasNode(relPath(rootPath))) {
+            if (!s.getRootNode().hasNode(rootPath)) {
                 log.info("Bundles root node {} not found, ignored", rootPath);
             } else {
                 log.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
-                final Node n = s.getRootNode().getNode(relPath(rootPath));
+                final Node n = s.getRootNode().getNode(rootPath);
                 findPathsUnderNode(n, result);
             }
         } finally {
@@ -428,13 +413,13 @@ public class JcrInstaller implements EventListener {
     }
 
     public void onEvent(EventIterator it) {
-        // Got a DELETE on root - schedule folders rescan if one
+        // Got a DELETE or ADD on root - schedule folders rescan if one
         // of our root folders is impacted
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
                 for(String root : roots) {
-                    if(root.startsWith(e.getPath())) {
+                    if (root.equals(e.getPath())) {
                         if(e.getType() == Event.NODE_ADDED) {
                             synchronized (newRoots) {
                                 newRoots.add(e.getPath());
