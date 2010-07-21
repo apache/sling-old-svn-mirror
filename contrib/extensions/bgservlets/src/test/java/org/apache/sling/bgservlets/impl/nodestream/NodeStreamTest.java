@@ -20,7 +20,6 @@ package org.apache.sling.bgservlets.impl.nodestream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
@@ -32,20 +31,26 @@ public class NodeStreamTest extends RepositoryTestBase {
     public static final String ASCII_DATA = "0123456789abcdefgjijklmnoprqstuvwxyz";
     public static final byte [] BINARY_DATA = getBinaryData();
     public static final String NAME_PREFIX = "testNode";
+    public static final int BIG_FACTOR = 15;
+    public static final byte [] BIG_DATA = bigData(BINARY_DATA, BIG_FACTOR);
     private int counter;
     
-    private void assertStream(InputStream expected, InputStream actual) throws IOException {
+    private void assertStream(InputStream expected, InputStream actual) {
         int offset = 0;
-        while(true) {
-            final int exp = expected.read();
-            if(exp == -1) {
-                assertEquals("Expecting end of actual stream at offset " + offset, -1, actual.read());
-                break;
-            } else {
-                final int act = actual.read();
-                assertEquals("Expecting same data at offset " + offset, exp, act);
+        try {
+            while(true) {
+                final int exp = expected.read();
+                if(exp == -1) {
+                    assertEquals("Expecting end of actual stream at offset " + offset, -1, actual.read());
+                    break;
+                } else {
+                    final int act = actual.read();
+                    assertEquals("Expecting same data at offset " + offset, exp, act);
+                }
+                offset++;
             }
-            offset++;
+        } catch(Exception e) {
+            fail("Exception at offset " + offset + ": " + e);
         }
     }
     
@@ -70,27 +75,23 @@ public class NodeStreamTest extends RepositoryTestBase {
     }
     
     public void testBigBinaryWriteAndRead() throws Exception {
-        final int FACTOR = 20;
-        final byte [] data = bigData(BINARY_DATA, FACTOR);
-        assertEquals("Expecting " + FACTOR + "x test data size", FACTOR * BINARY_DATA.length, data.length);
         final Node testNode = getTestRootNode().addNode(NAME_PREFIX + counter++);
         testNode.getSession().save();
         final NodeOutputStream nos = new NodeOutputStream(testNode);
-        nos.write(data);
+        nos.write(BIG_DATA);
         nos.close();
         
         assertFalse("Expecting no pending changes in testNode session", testNode.getSession().hasPendingChanges());
         
         final NodeInputStream nis = new NodeInputStream(testNode);
-        assertStream(new ByteArrayInputStream(data), nis);
+        assertStream(new ByteArrayInputStream(BIG_DATA), nis);
     }
     
     public void testMultipleBinaryWrites() throws Exception {
-        final int FACTOR = 20;
         final Node testNode = getTestRootNode().addNode(NAME_PREFIX + counter++);
         testNode.getSession().save();
         final NodeOutputStream nos = new NodeOutputStream(testNode);
-        for(int i=0; i < FACTOR; i++) {
+        for(int i=0; i < BIG_FACTOR; i++) {
             nos.write(BINARY_DATA);
         }
         nos.close();
@@ -100,34 +101,47 @@ public class NodeStreamTest extends RepositoryTestBase {
         final long expect = 10;
         assertTrue("Expecting > " + expect + " properties on test node", propCount > expect);
 
-        final byte [] data = bigData(BINARY_DATA, FACTOR);
         final NodeInputStream nis = new NodeInputStream(testNode);
-        assertStream(new ByteArrayInputStream(data), nis);
+        assertStream(new ByteArrayInputStream(BIG_DATA), nis);
     }
     
     public void testWriteWithOffset() throws Exception {
-        final int FACTOR = 20;
-        final byte [] data = bigData(BINARY_DATA, FACTOR);
-        assertEquals("Expecting " + FACTOR + "x test data size", FACTOR * BINARY_DATA.length, data.length);
-
         final Node testNode = getTestRootNode().addNode(NAME_PREFIX + counter++);
         testNode.getSession().save();
 
         final NodeOutputStream nos = new NodeOutputStream(testNode);
         int offset = 0;
         int step = 1271;
-        while(offset < data.length && step > 0) {
-            step = Math.min(step, data.length - offset);
-            nos.write(data, offset, step);
+        while(offset < BIG_DATA.length && step > 0) {
+            step = Math.min(step, BIG_DATA.length - offset);
+            nos.write(BIG_DATA, offset, step);
             offset += step;
         }
         nos.close();
         
         final NodeInputStream nis = new NodeInputStream(testNode);
-        assertStream(new ByteArrayInputStream(data), nis);
+        assertStream(new ByteArrayInputStream(BIG_DATA), nis);
     }
     
-    private byte[] bigData(byte [] data, int multiplier) {
+    public void testChunkedRead() throws Exception {
+        final Node testNode = getTestRootNode().addNode(NAME_PREFIX + counter++);
+        testNode.getSession().save();
+        
+        final NodeOutputStream nos = new NodeOutputStream(testNode);
+        nos.write(BIG_DATA);
+     
+        final ByteArrayOutputStream actual = new ByteArrayOutputStream(BIG_DATA.length);
+        final byte [] buffer = new byte[7432];
+        final NodeInputStream nis = new NodeInputStream(testNode);
+        int count = 0;
+        while((count = nis.read(buffer, 0, buffer.length)) > 0) {
+            actual.write(buffer, 0, count);
+        }
+        
+        assertStream(new ByteArrayInputStream(BIG_DATA), new ByteArrayInputStream(actual.toByteArray()));
+    }
+    
+    private static byte[] bigData(byte [] data, int multiplier) {
         final byte [] result = new byte[data.length * multiplier];
         int destPos = 0;
         for(int i=0; i < multiplier; i++) {
