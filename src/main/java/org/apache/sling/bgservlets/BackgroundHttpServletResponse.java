@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.bgservlets.impl;
+package org.apache.sling.bgservlets;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletResponse;
 
 /** Minimal HttpServletResponse for background processing */
-class BackgroundHttpServletResponse implements SlingHttpServletResponse {
+public class BackgroundHttpServletResponse implements SlingHttpServletResponse {
 
     private final ServletOutputStream stream;
     private final PrintWriter writer;
@@ -62,7 +62,7 @@ class BackgroundHttpServletResponse implements SlingHttpServletResponse {
 
     }
 
-    BackgroundHttpServletResponse(HttpServletResponse hsr, OutputStream os)
+    public BackgroundHttpServletResponse(HttpServletResponse hsr, OutputStream os)
             throws IOException {
         stream = new ServletOutputStreamWrapper(os);
         writer = new PrintWriter(new OutputStreamWriter(stream));
@@ -70,7 +70,7 @@ class BackgroundHttpServletResponse implements SlingHttpServletResponse {
                 : null);
     }
 
-    void cleanup() throws IOException {
+    public void cleanup() throws IOException {
         stream.flush();
         stream.close();
     }
