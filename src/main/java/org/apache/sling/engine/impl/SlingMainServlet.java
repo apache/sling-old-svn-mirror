@@ -58,8 +58,10 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.auth.AuthenticationSupport;
+import org.apache.sling.commons.auth.impl.SlingAuthenticator;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.engine.SlingServlet;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
@@ -86,6 +88,7 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
+ * @scr.service interface="org.apache.sling.engine.SlingServlet"               
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
@@ -93,7 +96,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class SlingMainServlet extends GenericServlet implements ErrorHandler,
-        HttpContext {
+        HttpContext, SlingServlet {
 
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_CALL_COUNTER" */
     public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls";
@@ -179,6 +182,22 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private boolean allowTrace = DEFAULT_ALLOW_TRACE;
 
     private Object printerRegistration;
+
+    // ---------- SlingServlet API -------------------------------------------------
+
+    public void processRequest(HttpServletRequest req, HttpServletResponse res,
+            ResourceResolver resourceResolver) throws IOException {
+        if (resourceResolver != null) {
+            log.debug("Using ResourceResolver provided by caller");
+            req.setAttribute(SlingAuthenticator.REQUEST_ATTRIBUTE_RESOLVER, resourceResolver);
+        } else if (req.getAttribute(SlingAuthenticator.REQUEST_ATTRIBUTE_RESOLVER) == null) {
+            throw new IllegalArgumentException(
+                    "No ResourceResolver provided by caller, and "
+                            + SlingAuthenticator.REQUEST_ATTRIBUTE_RESOLVER
+                            + " request attribute is null");
+        }
+        service(req, res);
+    }
 
     // ---------- Servlet API -------------------------------------------------
 
