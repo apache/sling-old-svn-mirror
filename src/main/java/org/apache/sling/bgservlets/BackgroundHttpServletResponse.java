@@ -28,14 +28,11 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingHttpServletResponse;
-
 /** Minimal HttpServletResponse for background processing */
-public class BackgroundHttpServletResponse implements SlingHttpServletResponse {
+public class BackgroundHttpServletResponse implements HttpServletResponse {
 
     private final ServletOutputStream stream;
     private final PrintWriter writer;
-    private final SlingHttpServletResponse wrappedResponse;
 
     static class ServletOutputStreamWrapper extends ServletOutputStream {
 
@@ -66,8 +63,6 @@ public class BackgroundHttpServletResponse implements SlingHttpServletResponse {
             throws IOException {
         stream = new ServletOutputStreamWrapper(os);
         writer = new PrintWriter(new OutputStreamWriter(stream));
-        wrappedResponse = (hsr instanceof SlingHttpServletResponse ? (SlingHttpServletResponse) hsr
-                : null);
     }
 
     public void cleanup() throws IOException {
@@ -187,12 +182,5 @@ public class BackgroundHttpServletResponse implements SlingHttpServletResponse {
     }
 
     public void setLocale(Locale arg0) {
-    }
-
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> t) {
-        if (wrappedResponse != null) {
-            return wrappedResponse.adaptTo(t);
-        }
-        return null;
     }
 }
