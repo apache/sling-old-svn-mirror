@@ -105,6 +105,7 @@ public class ImportOperation extends AbstractSlingPostOperation {
         final boolean checkin = "true".equals(request.getParameter(SlingPostConstants.RP_CHECKIN));
         
         String basePath = getItemPath(request);
+        basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
         if (basePath.endsWith("/")) {
         	//remove the trailing slash
         	basePath = basePath.substring(0, basePath.length() - 1);
