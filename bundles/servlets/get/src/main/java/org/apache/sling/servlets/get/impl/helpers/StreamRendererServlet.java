@@ -123,7 +123,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         } else {
 
             // the resource is the root, do not redirect, immediately index
-            if ("/".equals(resource.getPath())) {
+            if (isRootResourceRequest(resource)) {
 
                 renderDirectory(request, response, included);
 
@@ -144,6 +144,11 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
             }
         }
+    }
+
+    private boolean isRootResourceRequest(Resource resource) {
+        return ("/".equals(resource.getPath())) ||
+            ("/".equals(resource.getResourceResolver().map(resource.getPath())));
     }
 
     /**
