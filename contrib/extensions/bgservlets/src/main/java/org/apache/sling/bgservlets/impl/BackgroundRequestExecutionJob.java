@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.bgservlets.BackgroundHttpServletRequest;
+import org.apache.sling.bgservlets.BackgroundHttpServletResponse;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.impl.nodestream.NodeOutputStream;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;

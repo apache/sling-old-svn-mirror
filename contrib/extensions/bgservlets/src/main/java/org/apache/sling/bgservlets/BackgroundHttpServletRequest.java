@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.bgservlets.impl;
+package org.apache.sling.bgservlets;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,6 +34,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+/** Minimal HttpServletRequest for background processing */
 public class BackgroundHttpServletRequest implements HttpServletRequest {
 
     private final String contextPath;
@@ -90,7 +91,7 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
     }
 
     @SuppressWarnings("unchecked")
-    BackgroundHttpServletRequest(HttpServletRequest r,
+    public BackgroundHttpServletRequest(HttpServletRequest r,
             String[] parametersToRemove) {
 
         // Store objects which are safe to use outside
