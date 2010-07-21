@@ -88,7 +88,7 @@ public class ExecutionEngineImpl implements ExecutionEngine {
         }
     }
 
-    public void activate(ComponentContext context) {
+    protected void activate(ComponentContext context) {
         // TODO configurable!
         final int corePoolSize = 2;
         int maximumPoolSize = 2;
@@ -105,7 +105,7 @@ public class ExecutionEngineImpl implements ExecutionEngine {
                 keepAliveTime, unit, workQueue, handler);
     }
 
-    public void deactivate(ComponentContext context) {
+    protected void deactivate(ComponentContext context) {
         // TODO how to shutdown executor?
         executor = null;
 
