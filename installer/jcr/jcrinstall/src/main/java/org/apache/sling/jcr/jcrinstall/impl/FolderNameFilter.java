@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
  * 	their names. To be accepted, a folder must have a name that
  *  matches the expression, followed by optional suffixes based
  *  on the current RunMode.
- *  
- *  See {@link FolderNameFilterTest} for details.    
+ *
+ *  See {@link FolderNameFilterTest} for details.
  */
 class FolderNameFilter {
     private final Pattern pattern;
@@ -42,19 +42,19 @@ class FolderNameFilter {
     private final String [] rootPaths;
     private Map<String, Integer> rootPriorities = new HashMap<String, Integer>();
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /** getPriority computes priorities as follows: each root gets its own base priority,
-     * 	and paths that match one or several run levels get an additional RUNMODE_PRIORITY_OFFSET 
+     * 	and paths that match one or several run levels get an additional RUNMODE_PRIORITY_OFFSET
      *  per matched run level
      */
     public static final int RUNMODE_PRIORITY_BOOST = 1;
     public static final int DEFAULT_ROOT_PRIORITY = 99;
-    
+
     FolderNameFilter(String [] rootsConfig, String regexp, RunMode runMode) {
         this.regexp = regexp;
         this.pattern = Pattern.compile(regexp);
         this.runMode = runMode;
-        
+
         // Each entry in rootsConfig is like /libs:100, where 100
         // is the priority.
         // Break that up into paths and priorities
@@ -74,11 +74,15 @@ class FolderNameFilter {
         	log.debug("Root path {} has priority {}", rootPaths[i], priority);
         }
     }
-    
+
+    /**
+     * Return the list of root paths.
+     * Every entry in the list ends with a slash
+     */
     String [] getRootPaths() {
     	return rootPaths;
     }
-    
+
     static String cleanupRootPath(final String str) {
     	String result = str.trim();
     	if(!result.startsWith("/")) {
@@ -89,24 +93,24 @@ class FolderNameFilter {
     	}
     	return result;
     }
-    
+
     /** If a folder at given path can contain installable resources
      * 	(according to our regexp and current RunMode), return the
      * 	priority to use for InstallableResource found in that folder.
-     * 
-     * 	@return -1 if path is not an installable folder, else resource priority  
+     *
+     * 	@return -1 if path is not an installable folder, else resource priority
      */
     int getPriority(final String path) {
     	int result = 0;
     	List<String> modes = null;
     	boolean match = false;
-    	
-        // If path contains dots after the last /, remove suffixes 
-    	// starting with dots until path matches regexp, and accept 
+
+        // If path contains dots after the last /, remove suffixes
+    	// starting with dots until path matches regexp, and accept
     	// if all suffixes
         // are included in our list of runmodes
         final char DOT = '.';
-        
+
         String prefix = path;
         final int lastSlash = prefix.lastIndexOf('/');
         if(lastSlash > 0) {
@@ -123,7 +127,7 @@ class FolderNameFilter {
                     break;
                 }
             }
-            
+
             // If path prefix matches, check that all our runmodes match
             if(result > 0) {
                 for(String m : modes) {
@@ -136,12 +140,12 @@ class FolderNameFilter {
                     }
                 }
             }
-            
+
         } else if(pattern.matcher(path).matches()) {
         	match = true;
         	result = getRootPriority(path);
         }
-        
+
         if(modes != null) {
             if(log.isDebugEnabled()) {
                 log.debug("getPriority(" + path + ")=" + result + " (prefix=" + prefix + ", run modes=" + modes + ")");
@@ -151,14 +155,14 @@ class FolderNameFilter {
         } else {
         	log.debug("getPriority({})={}, path doesn't match regexp", path, result);
         }
-         
+
         return result;
     }
-    
+
     public String toString() {
         return getClass().getSimpleName() + " (" + regexp + "), RunMode=" + runMode;
     }
-    
+
     int getRootPriority(String path) {
     	for(Map.Entry<String, Integer> e : rootPriorities.entrySet()) {
     		if(path.startsWith(e.getKey())) {
