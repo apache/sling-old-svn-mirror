@@ -425,12 +425,14 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     }
 
     private boolean checkin(Session session, String path) throws RepositoryException {
-        Node node = (Node) session.getItem(path);
-        if (node.isCheckedOut() && isVersionable(node)) {
-            node.checkin();
-            return true;
+        Item item = session.getItem(path);
+        if (item instanceof Node) {
+            Node node = (Node) item;
+            if (node.isCheckedOut() && isVersionable(node)) {
+                node.checkin();
+                return true;
+            }
         }
-
         return false;
     }
 
