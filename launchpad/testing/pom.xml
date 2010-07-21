@@ -363,6 +363,25 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>exclude-initial-content</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-launchpad-plugin</artifactId>
+                        <configuration>
+                            <bundleExclusions>
+                                <bundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.content</artifactId>
+                                </bundle>
+                            </bundleExclusions>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>
