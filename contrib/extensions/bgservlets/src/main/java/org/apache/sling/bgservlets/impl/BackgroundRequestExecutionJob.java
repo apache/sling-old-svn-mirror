@@ -20,8 +20,6 @@ package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,8 +29,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.BackgroundHttpServletRequest;
 import org.apache.sling.bgservlets.BackgroundHttpServletResponse;
+import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobStatus;
-import org.apache.sling.bgservlets.impl.nodestream.NodeOutputStream;
+import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
@@ -52,14 +51,13 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
     private final String path;
 
     BackgroundRequestExecutionJob(SlingServlet slingServlet,
-            ResourceResolverFactory rrf, HttpServletRequest request,
+            ResourceResolverFactory rrf, JobStorage storage, HttpServletRequest request,
             HttpServletResponse hsr, String[] parametersToRemove)
             throws IOException, LoginException {
         this.request = new BackgroundHttpServletRequest(request,
                 parametersToRemove);
         this.slingServlet = slingServlet;
 
-        // TODO we might
         // In a normal request the ResourceResolver is added to the request
         // attributes
         // by the authentication service, need to do the same here as we can't
@@ -72,31 +70,16 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
                     "Missing AuthenticationInfo attribute");
         }
         resourceResolver = rrf.getResourceResolver(aa);
-        
-        // Save servlet output to the repository
+
+        // Get JobData, defines path and used to save servlet output to the repository
         final Session s = resourceResolver.adaptTo(Session.class);
         if(s == null) {
             throw new IOException("Unable to get Session from ResourceResolver " + resourceResolver);
         }
-        
-        // TODO configurable path
-        try {
-            final String outputRootPath = "/" + getClass().getSimpleName();
-            Node outputRoot = null;
-            if(s.itemExists(outputRootPath)) {
-                outputRoot = (Node)s.getItem(outputRootPath);
-            } else {
-                outputRoot = s.getRootNode().addNode(outputRootPath.substring(1));
-            }
-            final Node output = outputRoot.addNode("out_" + System.currentTimeMillis());
-            s.save();
-            final NodeOutputStream nos = new NodeOutputStream(output);
-            path = output.getPath();
-            stream = new SuspendableOutputStream(nos);
-            response = new BackgroundHttpServletResponse(hsr, stream);
-        } catch(RepositoryException re) {
-            throw new IOException("RepositoryException in BackgroundRequestExecutionJob", re); 
-        }
+        final JobData d = storage.createJobData(s);
+        path = d.getPath();
+        stream = new SuspendableOutputStream(d.getOutputStream());
+        response = new BackgroundHttpServletResponse(hsr, stream);
     }
 
     public String toString() {
