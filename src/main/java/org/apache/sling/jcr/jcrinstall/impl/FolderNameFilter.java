@@ -40,7 +40,7 @@ class FolderNameFilter {
     private final String regexp;
     private final RunMode runMode;
     private final String [] rootPaths;
-    private Map<String, Integer> rootPriorities = new HashMap<String, Integer>();
+    private final Map<String, Integer> rootPriorities = new HashMap<String, Integer>();
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** getPriority computes priorities as follows: each root gets its own base priority,
@@ -50,7 +50,7 @@ class FolderNameFilter {
     public static final int RUNMODE_PRIORITY_BOOST = 1;
     public static final int DEFAULT_ROOT_PRIORITY = 99;
 
-    FolderNameFilter(String [] rootsConfig, String regexp, RunMode runMode) {
+    FolderNameFilter(final String [] rootsConfig, final String regexp, final RunMode runMode) {
         this.regexp = regexp;
         this.pattern = Pattern.compile(regexp);
         this.runMode = runMode;
@@ -77,7 +77,7 @@ class FolderNameFilter {
 
     /**
      * Return the list of root paths.
-     * Every entry in the list ends with a slash
+     * Every entry in the list starts with a slash
      */
     String [] getRootPaths() {
     	return rootPaths;
@@ -85,10 +85,10 @@ class FolderNameFilter {
 
     static String cleanupRootPath(final String str) {
     	String result = str.trim();
-    	if(!result.startsWith("/")) {
+    	if (!result.startsWith("/")) {
     		result = "/" + result;
     	}
-    	if(result.endsWith("/")) {
+    	if (result.endsWith("/")) {
     		result = result.substring(0, result.length() - 1);
     	}
     	return result;

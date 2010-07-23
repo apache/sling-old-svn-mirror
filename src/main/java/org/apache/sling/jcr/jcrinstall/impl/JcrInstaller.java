@@ -205,8 +205,8 @@ public class JcrInstaller implements EventListener {
     	}
 
     	// Setup folder filtering and watching
-    	final String [] rootsConfig = OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH);
-        folderNameFilter = new FolderNameFilter(rootsConfig, folderNameRegexp, runMode);
+        folderNameFilter = new FolderNameFilter(OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
+                folderNameRegexp, runMode);
         roots = folderNameFilter.getRootPaths();
         for (String path : roots) {
             listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
@@ -291,16 +291,16 @@ public class JcrInstaller implements EventListener {
 
     /** Find the paths to watch under rootPath, according to our folderNameFilter,
      * 	and add them to result */
-    void findPathsToWatch(String rootPath, List<WatchedFolder> result) throws RepositoryException {
+    void findPathsToWatch(final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
         Session s = null;
 
         try {
             s = repository.loginAdministrative(repository.getDefaultWorkspace());
-            if (!s.getRootNode().hasNode(rootPath)) {
+            if (!s.itemExists(rootPath) || !s.getItem(rootPath).isNode() ) {
                 log.info("Bundles root node {} not found, ignored", rootPath);
             } else {
                 log.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
-                final Node n = s.getRootNode().getNode(rootPath);
+                final Node n = (Node)s.getItem(rootPath);
                 findPathsUnderNode(n, result);
             }
         } finally {
@@ -314,8 +314,7 @@ public class JcrInstaller implements EventListener {
      * Add n to result if it is a folder that we must watch, and recurse into its children
      * to do the same.
      */
-    void findPathsUnderNode(Node n, List<WatchedFolder> result) throws RepositoryException
-    {
+    void findPathsUnderNode(final Node n, final List<WatchedFolder> result) throws RepositoryException {
         final String path = n.getPath();
         final int priority = folderNameFilter.getPriority(path);
         if (priority > 0) {
@@ -330,16 +329,6 @@ public class JcrInstaller implements EventListener {
         while (it.hasNext()) {
             findPathsUnderNode(it.nextNode(), result);
         }
-    }
-
-    /**
-     * Return the relative path for supplied path
-     */
-    static String relPath(String path) {
-        if (path.startsWith("/")) {
-            return path.substring(1);
-        }
-        return path;
     }
 
     /** Add WatchedFolder to our list if it doesn't exist yet */
