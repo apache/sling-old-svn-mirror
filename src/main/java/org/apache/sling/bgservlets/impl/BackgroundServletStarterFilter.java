@@ -37,6 +37,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.ExecutionEngine;
+import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,9 @@ public class BackgroundServletStarterFilter implements Filter {
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+    
+    @Reference
+    private JobStorage jobStorage;
 
     /**
      * Request runs in the background if this request parameter is present TODO
@@ -91,8 +95,8 @@ public class BackgroundServletStarterFilter implements Filter {
         if (Boolean.valueOf(bgParam)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
-                        slingServlet, resourceResolverFactory, request,
-                        response, PARAM_TO_REMOVE);
+                        slingServlet, resourceResolverFactory, jobStorage,
+                        request, response, PARAM_TO_REMOVE);
                 log.debug("{} parameter true, running request in the background ({})",
                         BG_PARAM, job);
                 if (slingRequest != null) {

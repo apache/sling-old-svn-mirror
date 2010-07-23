@@ -19,6 +19,7 @@
 package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.Node;
@@ -28,11 +29,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.bgservlets.impl.nodestream.NodeInputStream;
+import org.apache.sling.bgservlets.JobData;
+import org.apache.sling.bgservlets.JobStorage;
 
 /** Servlet that replays the output of servlets executed in
  *  the background.
@@ -46,6 +49,9 @@ import org.apache.sling.bgservlets.impl.nodestream.NodeInputStream;
 })
 public class OutputReplayServlet extends SlingSafeMethodsServlet {
 
+    @Reference
+    private JobStorage jobStorage;
+    
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
     throws ServletException, IOException {
@@ -55,19 +61,20 @@ public class OutputReplayServlet extends SlingSafeMethodsServlet {
                     "Resource does not adapt to a Node: " + request.getResource().getPath());
         }
         
-        // TODO content-type, length etc
-        final NodeInputStream nis = new NodeInputStream(n);
+        // TODO content-type, length etc.
+        final JobData d = jobStorage.getJobData(n); 
+        final InputStream is = d.getInputStream();
         try {
             final OutputStream os = response.getOutputStream();
             final byte [] buffer = new byte[32768];
             int count = 0;
-            while((count = nis.read(buffer, 0, buffer.length)) > 0) {
+            while((count = is.read(buffer, 0, buffer.length)) > 0) {
                 os.write(buffer, 0, count);
             }
             os.flush();
         } finally {
-            if(nis != null) {
-                nis.close();
+            if(is != null) {
+                is.close();
             }
         }
     }

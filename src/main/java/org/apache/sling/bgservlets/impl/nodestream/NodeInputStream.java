@@ -54,6 +54,7 @@ public class NodeInputStream extends InputStream {
     /** Select next property to read from and open its stream */
     private void selectNextStream() throws IOException {
         counter++;
+        // TODO use hierarchy to allow for arbitrary number of flush calls
         final String name = NodeOutputStream.STREAM_PROPERTY_NAME_PREFIX + counter;
         try {
             if(node.hasProperty(name)) {
