@@ -40,7 +40,7 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	    return true;
 	}
 
-	/** Can the task be retried after {@link execute} failed? */
+	/** Can the task be retried after {@link #execute(OsgiInstallerContext)} failed? */
 	public boolean canRetry(OsgiInstallerContext ctx) {
 		return true;
 	}
