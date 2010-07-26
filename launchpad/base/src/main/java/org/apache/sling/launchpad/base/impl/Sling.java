@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +37,9 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
@@ -308,6 +312,11 @@ public class Sling implements BundleActivator {
             this.resourceProvider);
         bundleContext.registerService(URLStreamHandlerService.class.getName(),
             contextHandler, props);
+
+        // register the platform MBeanServer
+        MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+        bundleContext.registerService(MBeanServer.class.getName(),
+                platformMBeanServer, null);
 
         // execute optional bundle startup tasks of an extension
         this.doStartBundle();
