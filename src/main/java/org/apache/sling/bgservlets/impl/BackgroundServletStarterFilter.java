@@ -107,9 +107,16 @@ public class BackgroundServletStarterFilter implements Filter {
                 }
                 executionEngine.queueForExecution(job);
 
-                // TODO not really an error, should send a nicer message
-                response.sendError(HttpServletResponse.SC_ACCEPTED,
-                        "Running request in the background using " + job);
+                // Redirect to the job's status page, using same extension
+                // as this request
+                String ext = slingRequest.getRequestPathInfo().getExtension();
+                if(ext == null) {
+                    ext = "";
+                } else if(ext.length() > 0) {
+                    ext = "." + ext;
+                }
+                final String path = request.getContextPath() + job.getPath() + ext;
+                response.sendRedirect(path);
             } catch (org.apache.sling.api.resource.LoginException e) {
                 throw new ServletException("LoginException in doFilter", e);
             }

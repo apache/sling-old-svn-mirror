@@ -16,38 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.bgservlets.impl;
+package org.apache.sling.bgservlets.impl.servlets;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.bgservlets.BackgroundServletConstants;
 import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobStorage;
 
-/** Servlet that replays the output of servlets executed in
- *  the background.
+/** Default rendering of the job's stream node: replays the
+ *  stored stream.    
  */
 @Component
 @Service
 @SuppressWarnings("serial")
-@Properties ( {
-    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
-    @Property(name="sling.servlet.extensions", value="bgreplay")
-})
-public class OutputReplayServlet extends SlingSafeMethodsServlet {
+@Property(name = "sling.servlet.resourceTypes", value = BackgroundServletConstants.STREAM_RESOURCE_TYPE)
+public class JobStreamServlet extends SlingSafeMethodsServlet {
 
     @Reference
     private JobStorage jobStorage;
@@ -60,22 +58,27 @@ public class OutputReplayServlet extends SlingSafeMethodsServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, 
                     "Resource does not adapt to a Node: " + request.getResource().getPath());
         }
-        
-        // TODO content-type, length etc.
-        final JobData d = jobStorage.getJobData(n); 
-        final InputStream is = d.getInputStream();
+
+        // The stream is a child of the job node
         try {
-            final OutputStream os = response.getOutputStream();
-            final byte [] buffer = new byte[32768];
-            int count = 0;
-            while((count = is.read(buffer, 0, buffer.length)) > 0) {
-                os.write(buffer, 0, count);
+            final JobData d = jobStorage.getJobData(n.getParent()); 
+            final InputStream is = d.getInputStream();
+            try {
+                response.setContentType(request.getResponseContentType());
+                final OutputStream os = response.getOutputStream();
+                final byte [] buffer = new byte[32768];
+                int count = 0;
+                while((count = is.read(buffer, 0, buffer.length)) > 0) {
+                    os.write(buffer, 0, count);
+                }
+                os.flush();
+            } finally {
+                if(is != null) {
+                    is.close();
+                }
             }
-            os.flush();
-        } finally {
-            if(is != null) {
-                is.close();
-            }
+        } catch(RepositoryException re) {
+            throw new ServletException("RepositoryException in doGet()", re);
         }
     }
 }

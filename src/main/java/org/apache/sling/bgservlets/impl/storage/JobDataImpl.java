@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.bgservlets.BackgroundServletConstants;
 import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.impl.nodestream.NodeInputStream;
 import org.apache.sling.bgservlets.impl.nodestream.NodeOutputStream;
@@ -33,12 +35,14 @@ class JobDataImpl implements JobData {
 	private final Node node;
 	private final String path;
 	
-	public static final String STREAM_PATH = "outputStream";
+	public static final String STREAM_PATH = "stream";
 	
+    public static final String RT_PROP = SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE;
+    
 	/** Build a JobDataImpl on supplied node, which must exists */
 	JobDataImpl(Node n) throws RepositoryException {
 		node = n;
-		path = n.getPath();
+		path = node.getPath();
 	}
 	
 	public InputStream getInputStream() {
@@ -58,7 +62,9 @@ class JobDataImpl implements JobData {
                 throw new IllegalArgumentException("Stream node already exists: " 
                         + node.getPath() + "/" + STREAM_PATH);
             }
+            node.setProperty(RT_PROP, BackgroundServletConstants.JOB_RESOURCE_TYPE);
             final Node stream = node.addNode(STREAM_PATH);
+            stream.setProperty(RT_PROP, BackgroundServletConstants.STREAM_RESOURCE_TYPE);
             node.save();
             return new NodeOutputStream(stream);
         } catch(Exception e) {

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.bgservlets.impl;
+package org.apache.sling.bgservlets.impl.servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,10 +60,10 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
         try {
             for (int i = 1; i <= cycles; i++) {
                 if (i % flushEvery == 0) {
-                    w.println("Flushing output");
+                    w.println("Flushing output<br/>");
                     w.flush();
                 }
-                w.printf("Cycle %d of %d\n", i, cycles);
+                w.printf("Cycle %d of %d\n<br/>", i, cycles);
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException iex) {
