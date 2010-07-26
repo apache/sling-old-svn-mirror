@@ -23,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 
@@ -97,12 +99,26 @@ public class NodeStreamTest extends RepositoryTestBase {
         nos.close();
         
         assertFalse("Expecting no pending changes in testNode session", testNode.getSession().hasPendingChanges());
-        final long propCount = testNode.getProperties().getSize();
-        final long expect = 10;
-        assertTrue("Expecting > " + expect + " properties on test node", propCount > expect);
+        
+        // Stream must be stored in a hierarchy under testNode, to
+        // avoid limitations if flush() is called many times
+        final int childCount = getChildCount(testNode);
+        final int expect = 10;
+        assertTrue("Expecting > " + expect + " child nodes under testNode, got " + childCount, childCount > expect);
 
         final NodeInputStream nis = new NodeInputStream(testNode);
         assertStream(new ByteArrayInputStream(BIG_DATA), nis);
+    }
+    
+    private int getChildCount(Node n) throws RepositoryException {
+        int result = 0;
+        final NodeIterator it = n.getNodes();
+        while(it.hasNext()) {
+            result++;
+            final Node kid = it.nextNode();
+            result += getChildCount(kid);
+        }
+        return result;
     }
     
     public void testWriteWithOffset() throws Exception {

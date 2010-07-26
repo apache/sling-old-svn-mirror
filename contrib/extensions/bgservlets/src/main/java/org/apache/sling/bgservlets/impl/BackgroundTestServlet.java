@@ -53,7 +53,7 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
         final PrintWriter w = response.getWriter();
 
         final int cycles = getIntParam(request, "cycles", 10);
-        final int interval = getIntParam(request, "interval", 1);
+        final int interval = getIntParam(request, "interval", 1000);
         final int flushEvery = getIntParam(request, "flushEvery", 2);
 
         w.println("Start at " + new Date());
@@ -65,7 +65,7 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
                 }
                 w.printf("Cycle %d of %d\n", i, cycles);
                 try {
-                    Thread.sleep(interval * 1000);
+                    Thread.sleep(interval);
                 } catch (InterruptedException iex) {
                     throw new ServletException("InterruptedException", iex);
                 }
