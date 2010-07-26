@@ -1,18 +1,18 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package org.apache.sling.jcr.jackrabbit.accessmanager.post;
 
@@ -94,23 +94,23 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
  * @scr.property name="sling.servlet.methods" value="GET"
- * @scr.property name="sling.servlet.selectors" value="acl"
+ * @scr.property name="sling.servlet.selectors" value="eacl"
  * @scr.property name="sling.servlet.extensions " value="json"
  */
-public class GetAclServlet extends AbstractGetAclServlet {
-	private static final long serialVersionUID = 3391376559396223185L;
+@SuppressWarnings("serial")
+public class GetEffectiveAclServlet extends AbstractGetAclServlet {
 
-	@Override
-	protected AccessControlEntry[] getAccessControlEntries(Session session, String absPath) throws RepositoryException {
-		AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
-		AccessControlPolicy[] policies = accessControlManager.getPolicies(absPath);
-		for (AccessControlPolicy accessControlPolicy : policies) {
-			if (accessControlPolicy instanceof AccessControlList) {
-				AccessControlEntry[] accessControlEntries = ((AccessControlList)accessControlPolicy).getAccessControlEntries();
-				return accessControlEntries;
-			}
-		}
-		return new AccessControlEntry[0];
-	}
+    @Override
+    protected AccessControlEntry[] getAccessControlEntries(Session session, String absPath) throws RepositoryException {
+        AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
+        AccessControlPolicy[] policies = accessControlManager.getEffectivePolicies(absPath);
+        for (AccessControlPolicy accessControlPolicy : policies) {
+            if (accessControlPolicy instanceof AccessControlList) {
+                AccessControlEntry[] accessControlEntries = ((AccessControlList)accessControlPolicy).getAccessControlEntries();
+                return accessControlEntries;
+            }
+        }
+        return new AccessControlEntry[0];
+    }
 
 }
