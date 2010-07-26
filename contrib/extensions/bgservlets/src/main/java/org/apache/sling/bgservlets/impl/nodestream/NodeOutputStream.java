@@ -48,9 +48,6 @@ public class NodeOutputStream extends OutputStream {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** Prefix for Property names used to store our streams */
-    public static final String STREAM_PROPERTY_NAME_PREFIX = "_NODE_STREAM_";
-    
     /** Node type for our stream nodes */
     public static final String STREAM_NODE_TYPE = "nt:unstructured";
     
