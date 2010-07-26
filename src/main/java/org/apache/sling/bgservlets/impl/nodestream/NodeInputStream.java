@@ -39,31 +39,30 @@ public class NodeInputStream extends InputStream {
     /** The Node under which we read our data */
     private final Node node;
     
-    /** Counter used to build the name of Property from 
-     *  which we currently read */
-    private int counter;
+    /** Computes path for stream storage */
+    private final NodeStreamPath streamPath;
     
     /** Current stream that we are reading */
     private InputStream currentStream;
     
     public NodeInputStream(Node n) throws IOException {
         node = n;
+        streamPath = new NodeStreamPath();
         selectNextStream();
     }
     
     /** Select next property to read from and open its stream */
     private void selectNextStream() throws IOException {
-        counter++;
-        // TODO use hierarchy to allow for arbitrary number of flush calls
-        final String name = NodeOutputStream.STREAM_PROPERTY_NAME_PREFIX + counter;
+        streamPath.selectNextPath();
+        final String propertyPath = streamPath.getNodePath() + "/" + NodeStreamPath.PROPERTY_NAME;
         try {
-            if(node.hasProperty(name)) {
-                final Property p = node.getProperty(name); 
+            if(node.hasProperty(propertyPath)) {
+                final Property p = node.getProperty(propertyPath); 
                 currentStream = p.getStream();
                 log.debug("Switched to the InputStream of Property {}", p.getPath());
             } else {
                 currentStream = null;
-                log.debug("Property {} not found, end of stream", node.getPath() + "/" + name);
+                log.debug("Property {} not found, end of stream", node.getPath() + "/" + propertyPath);
             }
         } catch(RepositoryException re) {
             throw new IOException("RepositoryException in selectNextProperty()", re);

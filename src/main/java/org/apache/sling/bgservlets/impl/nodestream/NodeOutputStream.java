@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.bgservlets.impl.DeepNodeCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +51,14 @@ public class NodeOutputStream extends OutputStream {
     /** Prefix for Property names used to store our streams */
     public static final String STREAM_PROPERTY_NAME_PREFIX = "_NODE_STREAM_";
     
+    /** Node type for our stream nodes */
+    public static final String STREAM_NODE_TYPE = "nt:unstructured";
+    
     /** The Node under which we write our data */
     private final Node node;
     
-    /** Counter used to build the name of Property to
-     *  which we currently write */
-    private int counter;
+    /** Computes path for stream storage */
+    private final NodeStreamPath streamPath;
     
     /** Buffer to hold data before writing it to a Property */
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream(BUFFER_SIZE);
@@ -65,6 +68,7 @@ public class NodeOutputStream extends OutputStream {
     
     public NodeOutputStream(Node n) {
         node = n;
+        streamPath = new NodeStreamPath();
     }
     
     /** Calls flush to persist our stream, before closing */
@@ -79,15 +83,22 @@ public class NodeOutputStream extends OutputStream {
      */
     @Override
     public void flush() throws IOException {
-        counter++;
-        // TODO use hierarchy to allow for arbitrary number of flush calls
-        final String name = NodeOutputStream.STREAM_PROPERTY_NAME_PREFIX + counter;
+        
+        streamPath.selectNextPath();
+        
         try {
             if(!node.getSession().isLive()) {
                 log.warn("Session closed, unable to flush stream");
             } else {
-                node.setProperty(name, new ByteArrayInputStream(buffer.toByteArray()));
-                log.debug("Saved {} bytes to Property {}", buffer.size(), node.getProperty(name).getPath());
+                // Create node that will store the stream
+                final String streamNodePath = node.getPath() + "/" + streamPath.getNodePath();
+                final Node streamNode = new DeepNodeCreator().deepCreateNode(streamNodePath, 
+                        node.getSession(), STREAM_NODE_TYPE);
+                
+                streamNode.setProperty(NodeStreamPath.PROPERTY_NAME, 
+                        new ByteArrayInputStream(buffer.toByteArray()));
+                log.debug("Saved {} bytes to Property {}", buffer.size(), 
+                        streamNode.getProperty(NodeStreamPath.PROPERTY_NAME).getPath());
                 node.save();
                 buffer.reset();
             }
