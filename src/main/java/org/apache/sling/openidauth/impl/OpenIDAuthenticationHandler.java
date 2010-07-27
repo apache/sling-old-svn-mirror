@@ -35,9 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.sling.commons.auth.Authenticator;
-import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationHandler;
+import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.commons.auth.spi.AbstractAuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -68,8 +67,7 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" values.0="/"
  * @scr.service
  */
-public class OpenIDAuthenticationHandler implements AuthenticationHandler,
-        AuthenticationFeedbackHandler {
+public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -752,38 +750,6 @@ public class OpenIDAuthenticationHandler implements AuthenticationHandler,
         }
 
         return userId;
-    }
-
-    /**
-     * Returns any resource target to redirect to after successful
-     * authentication. This method either returns a non-empty string or the
-     * <code>defaultLoginResource</code> parameter. First the
-     * <code>resource</code> request attribute is checked. If it is a non-empty
-     * string, it is returned. Second the <code>resource</code> request
-     * parameter is checked and returned if it is a non-empty string.
-     *
-     * @param request The request providing the attribute or parameter
-     * @param defaultLoginResource The default login resource value
-     * @return The non-empty redirection target or
-     *         <code>defaultLoginResource</code>.
-     */
-    static String getLoginResource(final HttpServletRequest request,
-            String defaultLoginResource) {
-
-        // return the resource attribute if set to a non-empty string
-        Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
-            return (String) resObj;
-        }
-
-        // return the resource parameter if not set or set to a non-empty value
-        final String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-        if (resource != null && resource.length() > 0) {
-            return resource;
-        }
-
-        // normalize empty resource string to null
-        return defaultLoginResource;
     }
 
     private RelyingParty getRelyingParty(final HttpServletRequest request) {
