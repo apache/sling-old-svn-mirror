@@ -75,4 +75,25 @@ class JobDataImpl implements JobData {
 	public String getPath() {
 		return path;
 	}
+
+    public String getProperty(String name) {
+        String result = null;
+        try {
+            if(node.hasProperty(name)) {
+                result = node.getProperty(name).getValue().getString();
+            }
+        } catch(RepositoryException re) {
+            throw new JobStorageException("RepositoryException in getProperty", re);
+        }
+        return result;
+    }
+
+    public void setProperty(String name, String value) {
+        try {
+            node.setProperty(name, value);
+            node.save();
+        } catch(RepositoryException re) {
+            throw new JobStorageException("RepositoryException in setProperty", re);
+        }
+    }
 }

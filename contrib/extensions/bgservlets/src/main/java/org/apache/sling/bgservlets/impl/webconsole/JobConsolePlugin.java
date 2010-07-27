@@ -24,14 +24,17 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.sling.bgservlets.ExecutionEngine;
+import org.apache.sling.bgservlets.JobConsole;
 import org.apache.sling.bgservlets.JobStatus;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -40,12 +43,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Felix OSGi console plugin for the ExecutionEngine */
-public class ExecutionEngineConsolePlugin {
-    private static final Logger log = LoggerFactory
-            .getLogger(ExecutionEngineConsolePlugin.class);
+public class JobConsolePlugin {
+    private static final Logger log = LoggerFactory.getLogger(JobConsolePlugin.class);
     private static Plugin plugin;
     public static final String LABEL = "bgservlets";
     public static final String TITLE = "Background Servlets & Jobs";
+    public static final String STATUS_EXTENSION = "html";
 
     public static void initPlugin(BundleContext context) {
         if (plugin == null) {
@@ -70,26 +73,26 @@ public class ExecutionEngineConsolePlugin {
     @SuppressWarnings("serial")
     public static final class Plugin extends AbstractWebConsolePlugin {
         private ServiceRegistration serviceRegistration;
-        private ServiceTracker executionEngineTracker;
+        private ServiceTracker jobConsoleTracker;
+        private ServiceTracker repositoryTracker;
 
         public void activate(BundleContext ctx) {
             super.activate(ctx);
 
-            executionEngineTracker = new ServiceTracker(ctx,
-                    ExecutionEngine.class.getName(), null);
-            executionEngineTracker.open();
+            jobConsoleTracker = new ServiceTracker(ctx, JobConsole.class.getName(), null);
+            jobConsoleTracker.open();
+            repositoryTracker = new ServiceTracker(ctx, SlingRepository.class.getName(), null);
+            repositoryTracker.open();
 
             Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props
-                    .put(Constants.SERVICE_DESCRIPTION,
-                            "Web Console Plugin to display Background servlets and ExecutionEngine status");
+            props.put(Constants.SERVICE_DESCRIPTION,
+                    "Web Console Plugin to display Background servlets and ExecutionEngine status");
             props.put(Constants.SERVICE_VENDOR,
                     "The Apache Software Foundation");
             props.put(Constants.SERVICE_PID, getClass().getName());
             props.put(WebConsoleConstants.PLUGIN_LABEL, LABEL);
 
-            serviceRegistration = ctx.registerService(
-                    WebConsoleConstants.SERVICE_NAME, this, props);
+            serviceRegistration = ctx.registerService(WebConsoleConstants.SERVICE_NAME, this, props);
         }
 
         public void deactivate() {
@@ -97,9 +100,13 @@ public class ExecutionEngineConsolePlugin {
                 serviceRegistration.unregister();
                 serviceRegistration = null;
             }
-            if (executionEngineTracker != null) {
-                executionEngineTracker.close();
-                executionEngineTracker = null;
+            if (jobConsoleTracker != null) {
+                jobConsoleTracker.close();
+                jobConsoleTracker = null;
+            }
+            if (repositoryTracker != null) {
+                repositoryTracker.close();
+                repositoryTracker = null;
             }
             super.deactivate();
         }
@@ -118,17 +125,37 @@ public class ExecutionEngineConsolePlugin {
         protected void renderContent(HttpServletRequest req,
                 HttpServletResponse res) throws ServletException, IOException {
             final PrintWriter pw = res.getWriter();
-            final ExecutionEngine ee = (ExecutionEngine) executionEngineTracker
-                    .getService();
-            if (ee == null) {
-                pw.println("No ExecutionEngine service found");
+            
+            // Access required services
+            final JobConsole console = (JobConsole)jobConsoleTracker.getService();
+            if (console == null) {
+                pw.println("No JobConsole service found");
                 return;
             }
-
+            final SlingRepository repository = (SlingRepository)repositoryTracker.getService();
+            if(repository == null) {
+                pw.println("No SlingRepository service found");
+                return;
+            }
+            Session s = null;
+            try {
+                s = repository.loginAdministrative(repository.getDefaultWorkspace());
+                processCommands(req, pw, s, console);
+                renderJobs(req, pw, s, console);
+            } catch(RepositoryException re) {
+                throw new ServletException("RepositoryExceptio in renderContent()", re);
+            } finally {
+                if(s != null) {
+                    s.logout();
+                }
+            }
+        }
+        
+        private void processCommands(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
             // TODO should use POST
             final String jobPath = req.getParameter("jobPath");
             if (jobPath != null) {
-                final JobStatus job = ee.getJobStatus(jobPath);
+                final JobStatus job = console.getJobStatus(s, jobPath);
                 if (job != null) {
                     final String action = req.getParameter("action");
                     if ("suspend".equals(action)) {
@@ -140,12 +167,13 @@ public class ExecutionEngineConsolePlugin {
                     }
                 }
             }
+        }
+        
+        private void renderJobs(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
+            pw.println("TODO: action buttons look bad<br/>");
+            pw.println("TODO: options for max. number of jobs displayed + active only<br/>");
 
-            pw.println("TODO: provide a way to cleanup old jobs<br/>");
-            pw.println("TODO: optionally list active jobs only<br/>");
-
-            pw
-                    .println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+            pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
             pw.println("<thead>");
             pw.println("<tr class='content'>");
             pw.println("<th class='content container'>Controls</th>");
@@ -155,19 +183,28 @@ public class ExecutionEngineConsolePlugin {
             pw.println("</thead>");
             pw.println("<tbody>");
 
-            final Iterator<JobStatus> it = ee.getMatchingJobStatus(null);
+            final int maxJobsDisplayed = 100;
+            boolean truncated = false;
+            final boolean activeOnly = false;
+            final Iterator<JobStatus> it = console.getJobStatus(s, activeOnly);
             int count = 0;
             while (it.hasNext()) {
-                renderJobStatus(pw, it.next());
+                renderJobStatus(req, pw, console, it.next());
                 count++;
+                if(count > maxJobsDisplayed) {
+                    truncated = true;
+                    break;
+                }
             }
             pw.println("</tbody>");
             pw.println("</table>");
             pw.println("Total <b>" + count + "</b> jobs.<br />");
+            if(truncated) {
+                pw.println("(List truncated after " + maxJobsDisplayed + " jobs)<br />");
+            }
         }
 
-        private void renderJobStatus(PrintWriter pw, JobStatus job) {
-            // TODO should use POST
+        private void renderJobStatus(HttpServletRequest request, PrintWriter pw, JobConsole console, JobStatus job) {
             pw.println("<tr class='content'>");
             pw.println("<td><form action='./" + LABEL + "' method='GET'>");
             final String[] actions = { "suspend", "resume", "stop" };
@@ -181,8 +218,11 @@ public class ExecutionEngineConsolePlugin {
             pw.println("<td>");
             pw.println(job.getState());
             pw.println("</td>");
-            pw.println("<td>");
-            pw.println(job.getPath());
+            pw.print("<td>\n<a href='");
+            pw.print(console.getJobStatusPagePath(request, job, STATUS_EXTENSION));
+            pw.print("'>");
+            pw.print(job.getPath());
+            pw.println("</a>");
             pw.println("</td>");
             pw.println("</tr>");
         }

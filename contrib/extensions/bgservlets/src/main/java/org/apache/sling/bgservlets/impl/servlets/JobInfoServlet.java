@@ -23,16 +23,20 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Node;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.bgservlets.BackgroundServletConstants;
+import org.apache.sling.bgservlets.JobData;
+import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
@@ -56,13 +60,16 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
         renderers.put("json", new JsonRenderer());
     }
     
+    @Reference
+    private JobStorage jobStorage;
+    
     static interface Renderer {
         void render(PrintWriter pw, String streamPath, String streamResource) throws IOException;
     }
     
     private static class TextRenderer implements Renderer {
         public void render(PrintWriter pw, String streamPath, String streamResource) {
-            pw.println("Background execution scheduled, job output available at ");
+            pw.println("Background execution: job output available at ");
             pw.println(streamPath);
         }
     }
@@ -72,9 +79,9 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
             pw.println("<html><head><title>Background job</title>");
             pw.println("<link rel='stream' href='" + streamPath + "'/>");
             pw.println("</head><body>");
-            pw.println("<h1>Background job scheduled</h1>");
+            pw.println("<h1>Background job information</h1>");
             pw.println("Job output available at");
-            pw.println("<a href='" + streamPath + "'>" + streamResource + "</a>.");
+            pw.println("<a href='" + streamPath + "'>" + streamResource + "</a>");
             pw.println("</body>");
         }
     }
@@ -85,7 +92,7 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
             try {
                 w.object();
                 w.key("info");
-                w.value("Background job scheduled");
+                w.value("Background job information");
                 w.key("jobStreamPath");
                 w.value(streamPath);
                 w.endObject();
@@ -99,7 +106,14 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        final String streamResource = request.getResource().getPath() + "/stream." + request.getRequestPathInfo().getExtension(); 
+        final JobData j = jobStorage.getJobData(request.getResource().adaptTo(Node.class)); 
+        String jobExt = j.getProperty(JobData.PROP_EXTENSION);
+        if(jobExt == null || jobExt.length() == 0) {
+            jobExt = "";
+        } else {
+            jobExt = "." + jobExt;
+        }
+        final String streamResource = request.getResource().getPath() + "/stream" + jobExt; 
         final String streamPath = request.getContextPath() + streamResource;
         final String ext = request.getRequestPathInfo().getExtension();
         Renderer r = renderers.get(ext);
