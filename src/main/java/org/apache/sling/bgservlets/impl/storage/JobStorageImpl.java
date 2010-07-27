@@ -20,6 +20,7 @@ package org.apache.sling.bgservlets.impl.storage;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.jcr.Node;
@@ -73,6 +74,7 @@ public class JobStorageImpl implements JobStorage {
         }
 	    final Node result = new DeepNodeCreator().deepCreateNode(path, s, JOB_NODETYPE);
 	    result.addMixin(JobData.JOB_DATA_MIXIN);
+	    result.setProperty("jcr:created", Calendar.getInstance());
 	    result.save();
 	    log.debug("Job node {} created", result.getPath());
 	    return result;
