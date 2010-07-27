@@ -64,7 +64,12 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  * @scr.property name="service.description"
  *               value="Apache Sling OpenID Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" values.0="/"
+ * @scr.property nameRef=
+ *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.PATH_PROPERTY"
+ *               values.0="/"
+ * @scr.property nameRef=
+ *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.TYPE_PROPERTY"
+ *               valueRef="OpenIDConstants.OPENID_AUTH" private="true"
  * @scr.service
  */
 public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {

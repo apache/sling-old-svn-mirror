@@ -31,6 +31,7 @@ import org.apache.sling.openidauth.OpenIDFailure;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *               value="Default Login Form for OpenID Authentication"
+ * @scr.service interface="javax.servlet.Servlet"
  */
 @SuppressWarnings("serial")
 public class AuthenticationFormServlet extends AbstractAuthenticationFormServlet {
