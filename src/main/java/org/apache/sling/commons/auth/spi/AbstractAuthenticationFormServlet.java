@@ -31,9 +31,12 @@ import javax.servlet.http.HttpServletResponse;
  * The <code>AbstractAuthenticationFormServlet</code> provides a basic
  * implementation of a simple servlet to render a login form for authentication
  * purposes.
+ * <p>
+ * Note, that this abstract base class does not declare itself as implementing
+ * a service. Implementations of this class must explicitly state so by means
+ * of an <code>&#64;scr.service</code> tag or <code>Service</code> annotation.
  *
  * @scr.component metatype="no" abstract="yes"
- * @scr.service interface="javax.servlet.Servlet"
  */
 @SuppressWarnings("serial")
 public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
