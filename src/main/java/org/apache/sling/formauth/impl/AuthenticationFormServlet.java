@@ -30,6 +30,7 @@ import org.apache.sling.formauth.FormReason;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *               value="Default Login Form for Form Based Authentication"
+ * @scr.service interface="javax.servlet.Servlet"
  */
 @SuppressWarnings("serial")
 public class AuthenticationFormServlet extends AbstractAuthenticationFormServlet {
