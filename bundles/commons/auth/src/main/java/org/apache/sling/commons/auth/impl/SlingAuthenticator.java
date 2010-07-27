@@ -33,12 +33,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.auth.AuthenticationSupport;
-import org.apache.sling.commons.auth.Authenticator;
-import org.apache.sling.commons.auth.NoAuthenticationHandlerException;
 import org.apache.sling.commons.auth.impl.engine.EngineAuthenticationHandlerHolder;
 import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationHandler;

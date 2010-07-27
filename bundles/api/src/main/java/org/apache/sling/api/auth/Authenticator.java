@@ -16,23 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth;
+package org.apache.sling.api.auth;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * The <code>Authenticator</code> interface defines the service interface of the
- * authenticator used by the Sling engine. This service provides a method to
- * find an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler
- * AuthenticationHandler} and call its
- * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)
- * requestAuthentication} or
- * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials(HttpServletRequest, HttpServletResponse)
- * dropAuthentication} methods.
- * <p>
- * This service is used by applications which want to provide functionality to
- * their users to log into the application and log out from it.
+ * The <code>Authenticator</code> interface defines the service interface which
+ * may be used by applications to enfore requests to be authenticated (see
+ * {@link #login(HttpServletRequest, HttpServletResponse)}) or to end enforced
+ * authentication (see {@link #logout(HttpServletRequest, HttpServletResponse)}
+ * ). As such this service may be looked at as the functionality to enable
+ * applications to log users in and out.
  * <p>
  * A very simple login script (using ESP here) could be implemented like this:
  *
@@ -43,7 +38,7 @@ import javax.servlet.http.HttpServletResponse;
  *         auth.login(request, response);
  *         return; // we are done here
  *     } catch (e) {
- *         // probably no AuthenticationHandler available
+ *         // probably NoAuthenticationHandler exception
  *     }
  * }
  * // Authenticator service is missing or no AuthenticationHandler
@@ -60,7 +55,7 @@ import javax.servlet.http.HttpServletResponse;
  *     if (auth != null) {
  *         auth.logout(request, response);
  *     } else {
- *         // handle the case of no Authenticator to logout with
+ *         // handle the case of no Authenticator service to logout with
  *     }
  * }
  * </pre>
@@ -68,21 +63,24 @@ import javax.servlet.http.HttpServletResponse;
  * This interface is not intended to be implemented by applications but may be
  * used to initiate the authentication process form a request processing servlet
  * or script.
+ *
+ * @since 1.0 (Sling API Bundle 2.1.0)
  */
 public interface Authenticator {
 
     /**
      * The name under which this service is registered.
      */
-    static final String SERVICE_NAME = "org.apache.sling.commons.auth.Authenticator";
+    static final String SERVICE_NAME = Authenticator.class.getName();
 
     /**
-     * Name of the request attribute used by the
-     * {@link #login(HttpServletRequest, HttpServletResponse)} method to select
-     * an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler} to
-     * call. If this request attribute is not set or is the empty string, the
-     * request path info ( <code>HttpServletRequest.getPathInfo()</code>) method
-     * is used to get the path.
+     * Name of the request attribute which may be set by the application to
+     * indicate to the {@link #login(HttpServletRequest, HttpServletResponse)}
+     * method to which resource access should actually be authenticated. If this
+     * request attribute is not set or is the empty string, the
+     * {@link #login(HttpServletRequest, HttpServletResponse)} method uses the
+     * request path info (<code>HttpServletRequest.getPathInfo()</code>) method
+     * to find the resource to which to authenticate access.
      * <p>
      * This request attribute can be used by frontend servlets/scripts which
      * call into {@link #login(HttpServletRequest, HttpServletResponse)} on
@@ -91,11 +89,12 @@ public interface Authenticator {
     static final String LOGIN_RESOURCE = "resource";
 
     /**
-     * Finds an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
-     * for the given request and call its
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
-     * method to initiate an authentication process with the client to login to
-     * Sling.
+     * Tries to login a request user for the current request.
+     * <p>
+     * To identify the resource to which access should be authenticated the
+     * <code>{@link #LOGIN_RESOURCE resource}</code> request attribute is
+     * considered. If the request attribute is not set the request path info (
+     * <code>HttpServletRequest.getPathInfo()</code>) is used.
      * <p>
      * This method must be called on an uncommitted response since the
      * implementation may want to reset the response to start the authentication
@@ -103,22 +102,20 @@ public interface Authenticator {
      * <code>IllegalStateException</code> is thrown.
      * <p>
      * After this method has finished, request processing should be terminated
-     * and the response be considered committed and finished.
+     * and the response be considered committed and finished unless the
+     * {@link NoAuthenticationHandlerException} exception is thrown in which
+     * case no response has been sent to the client.
      *
      * @param request The object representing the client request.
      * @param response The object representing the response to the client.
-     * @throws NoAuthenticationHandlerException If no authentication handler
-     *             claims responsibility to authenticate the request.
+     * @throws NoAuthenticationHandlerException If the service cannot find a way
+     *             to authenticate a request user.
      * @throws IllegalStateException If the response has already been committed.
      */
     void login(HttpServletRequest request, HttpServletResponse response);
 
     /**
-     * Finds an {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
-     * for the given request and call its
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#dropCredentials(HttpServletRequest, HttpServletResponse)}
-     * method to drop authentication credentials for the client to logout from
-     * Sling.
+     * Logs out if the current request is authenticated.
      * <p>
      * This method must be called on an uncommitted response since the
      * implementation may want to reset the response to restart the

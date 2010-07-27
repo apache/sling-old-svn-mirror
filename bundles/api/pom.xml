@@ -59,7 +59,8 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-    <!-- Testing -->
+
+        <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -83,7 +84,8 @@
                             http://sling.apache.org/site/sling-api.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.api.*;version=${project.version}
+                            org.apache.sling.api.auth;version=1.0,
+                            org.apache.sling.api.*;version=2.1
                         </Export-Package>
                         <!-- Require explicit version of the servlet API -->
                         <Import-Package>

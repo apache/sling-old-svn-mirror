@@ -16,23 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth;
+package org.apache.sling.api.auth;
 
 import org.apache.sling.api.SlingException;
 
 /**
  * The <code>NoAuthenticationHandlerException</code> is thrown to indicate that
- * there is no {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
- * willing to handle the request.
+ * the
+ * {@link Authenticator#login(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+ * method could not find a way to authenticate the request user.
  * <p>
  * This exception is thrown without a message. The caller of the
- * {@link Authenticator} method called is expected to immediately handle this
- * exception and not to forward it up the call chain.
+ * {@link Authenticator#login(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+ * method called is expected to immediately handle this exception and not to
+ * forward it up the call chain.
  * <p>
  * This exception is not intended to be thrown by client code but is used by the
- * {@link Authenticator} implementation to indicate, that no
- * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler} is available
- * to login.
+ * {@link Authenticator} implementation.
+ *
+ * @since 1.0 (Sling API Bundle 2.1.0)
  */
 @SuppressWarnings("serial")
 public class NoAuthenticationHandlerException extends SlingException {
