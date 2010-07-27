@@ -48,7 +48,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-<!--                <version>LATEST</version> -->
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
