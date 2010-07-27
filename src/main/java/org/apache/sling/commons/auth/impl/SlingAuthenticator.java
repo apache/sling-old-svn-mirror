@@ -76,8 +76,8 @@ import org.slf4j.LoggerFactory;
  *                modified="modified" immediate="true"
  *
  * Register for three services
+ * @scr.service interface="org.apache.sling.api.auth.Authenticator"
  * @scr.service interface="org.apache.sling.commons.auth.AuthenticationSupport"
- * @scr.service interface="org.apache.sling.commons.auth.Authenticator"
  * @scr.service interface="javax.servlet.ServletRequestListener"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
