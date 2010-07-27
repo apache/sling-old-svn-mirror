@@ -55,8 +55,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>FormAuthenticationHandler</code> class implements the
- * authorization steps based on a cookie.
+ * The <code>FormAuthenticationHandler</code> class implements the authorization
+ * steps based on a cookie.
  *
  * @scr.component immediate="false" label="%auth.form.name"
  *                description="%auth.form.description"
@@ -64,8 +64,12 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.description"
  *               value="Apache Sling Form Based Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
- * @scr.property nameRef="AuthenticationHandler.TYPE_PROPERTY" value="FORM"
+ * @scr.property nameRef=
+ *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.PATH_PROPERTY"
+ *               values.0="/"
+ * @scr.property nameRef=
+ *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.TYPE_PROPERTY"
+ *               valueRef="javax.servlet.http.HttpServletRequest.FORM_AUTH"
  *               private="true"
  * @scr.service
  */
