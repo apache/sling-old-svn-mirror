@@ -37,13 +37,12 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.auth.Authenticator;
-import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationHandler;
+import org.apache.sling.commons.auth.spi.AbstractAuthenticationHandler;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -70,8 +69,7 @@ import org.slf4j.LoggerFactory;
  *               private="true"
  * @scr.service
  */
-public class FormAuthenticationHandler implements AuthenticationHandler,
-        AuthenticationFeedbackHandler {
+public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /**
      * The name of the parameter providing the login form URL.
@@ -346,7 +344,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
             return true;
         }
 
-        String resource = getLoginResource(request);
+        String resource = getLoginResource(request, null);
         if (resource == null) {
             resource = request.getContextPath() + request.getPathInfo();
             request.setAttribute(Authenticator.LOGIN_RESOURCE, resource);
@@ -490,7 +488,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
 
             // check whether redirect is requested by the resource parameter
 
-            final String resource = getLoginResource(request);
+            final String resource = getLoginResource(request, null);
             if (resource != null) {
                 try {
                     response.sendRedirect(resource);
@@ -595,35 +593,6 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
         }
     }
 
-    /**
-     * Returns any resource target to redirect to after successful
-     * authentication. This method either returns a non-empty string or
-     * <code>null</code>. First the <code>resource</code> request attribute is
-     * checked. If it is a non-empty string, it is returned. Second the
-     * <code>resource</code> request parameter is checked and returned if it is
-     * a non-empty string.
-     *
-     * @param request The request providing the attribute or parameter
-     * @return The non-empty redirection target or <code>null</code>.
-     */
-    static String getLoginResource(final HttpServletRequest request) {
-
-        // return the resource attribute if set to a non-empty string
-        Object resObj = request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
-            return (String) resObj;
-        }
-
-        // return the resource parameter if not set or set to a non-empty value
-        final String resource = request.getParameter(Authenticator.LOGIN_RESOURCE);
-        if (resource == null || resource.length() > 0) {
-            return resource;
-        }
-
-        // normalize empty resource string to null
-        return null;
-    }
-
     // --------- Request Parameter Auth ---------
 
     private AuthenticationInfo extractRequestParameterAuthentication(
@@ -647,7 +616,7 @@ public class FormAuthenticationHandler implements AuthenticationHandler,
                 // authentication, otherwise the request may be processed
                 // as a POST request to the j_security_check page (unless
                 // the j_validate parameter is set)
-                if (getLoginResource(request) == null) {
+                if (getLoginResource(request, null) == null) {
                     request.setAttribute(Authenticator.LOGIN_RESOURCE, "/");
                 }
             }
