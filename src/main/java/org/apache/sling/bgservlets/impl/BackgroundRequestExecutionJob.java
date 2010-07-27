@@ -24,6 +24,7 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -51,7 +52,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
     private final String path;
 
     BackgroundRequestExecutionJob(SlingServlet slingServlet,
-            ResourceResolverFactory rrf, JobStorage storage, HttpServletRequest request,
+            ResourceResolverFactory rrf, JobStorage storage, SlingHttpServletRequest request,
             HttpServletResponse hsr, String[] parametersToRemove)
             throws IOException, LoginException {
         this.request = new BackgroundHttpServletRequest(request,
@@ -77,6 +78,10 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
             throw new IOException("Unable to get Session from ResourceResolver " + resourceResolver);
         }
         final JobData d = storage.createJobData(s);
+        final String ext = request.getRequestPathInfo().getExtension();
+        if(ext != null) {
+            d.setProperty(JobData.PROP_EXTENSION, ext);
+        }
         path = d.getPath();
         stream = new SuspendableOutputStream(d.getOutputStream());
         response = new BackgroundHttpServletResponse(hsr, stream);

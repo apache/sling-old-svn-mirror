@@ -18,6 +18,7 @@
  */
 package org.apache.sling.bgservlets.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class ExecutionEngineImpl implements ExecutionEngine {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private Executor executor;
-    private final Map<String, JobStatus> jobs = new HashMap<String, JobStatus>();
+    private final Map<String, JobStatus> jobs = Collections.synchronizedMap(new HashMap<String, JobStatus>());
 
     private class RunnableWrapper implements Runnable {
         private final Runnable inputJob;
@@ -70,7 +71,9 @@ public class ExecutionEngineImpl implements ExecutionEngine {
                 inputJob.run();
             } finally {
                 if (jobStatus != null) {
+                    log.debug("Job is done, cleaning up {}", jobStatus.getPath());
                     jobStatus.requestStateChange(JobStatus.State.DONE);
+                    jobs.remove(jobStatus.getPath());
                 }
             }
             log.info("Done running job {}", inputJob);
@@ -126,7 +129,6 @@ public class ExecutionEngineImpl implements ExecutionEngine {
         final RunnableWrapper w = new RunnableWrapper(inputJob);
         if (w.getJobStatus() != null) {
             w.getJobStatus().requestStateChange(JobStatus.State.QUEUED);
-            // TODO when to cleanup?
             jobs.put(w.getJobStatus().getPath(), w.getJobStatus());
         }
         executor.execute(w);

@@ -88,15 +88,15 @@ public class BackgroundServletStarterFilter implements Filter {
                             + sresp.getClass().getName());
         }
         final HttpServletRequest request = (HttpServletRequest) sreq;
-        final SlingHttpServletRequest slingRequest = (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request
-                : null);
+        final SlingHttpServletRequest slingRequest = 
+            (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request : null);
         final HttpServletResponse response = (HttpServletResponse) sresp;
         final String bgParam = sreq.getParameter(BG_PARAM);
         if (Boolean.valueOf(bgParam)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
                         slingServlet, resourceResolverFactory, jobStorage,
-                        request, response, PARAM_TO_REMOVE);
+                        slingRequest, response, PARAM_TO_REMOVE);
                 log.debug("{} parameter true, running request in the background ({})",
                         BG_PARAM, job);
                 if (slingRequest != null) {

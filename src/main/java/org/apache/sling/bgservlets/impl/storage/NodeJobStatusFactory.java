@@ -18,18 +18,12 @@
  */
 package org.apache.sling.bgservlets.impl.storage;
 
-import org.apache.sling.api.SlingException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
-/** Exception related to job storage. Unchecked, meant
- * 	for non-recoverable problems.
- */
-@SuppressWarnings("serial")
-public class JobStorageException extends SlingException {
-	public JobStorageException(String reason) {
-		super(reason);
-	}
-	
-	public JobStorageException(String reason, Throwable cause) {
-		super(reason, cause);
-	}
+import org.apache.sling.bgservlets.JobStatus;
+
+/** Builds JobStatus objects out of Nodes */
+public interface NodeJobStatusFactory {
+    public JobStatus getJobStatus(Node n) throws RepositoryException;
 }

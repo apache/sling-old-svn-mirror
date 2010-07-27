@@ -26,6 +26,7 @@ import java.io.OutputStream;
  */
 public interface JobData {
     String JOB_DATA_MIXIN = "sling:bgJobData";
+    String PROP_EXTENSION = "sling;jobExtension";
     
 	/** Return unique path of this data item */
 	String getPath();
@@ -40,4 +41,10 @@ public interface JobData {
 	 *  @return null if no stream stored yet
 	 */
 	InputStream getInputStream();
+	
+	/** Set a named property */
+	void setProperty(String name, String value);
+	
+	/** Get a named property, null if non-existent */
+	String getProperty(String name);
 }

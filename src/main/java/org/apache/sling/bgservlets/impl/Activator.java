@@ -18,7 +18,7 @@
  */
 package org.apache.sling.bgservlets.impl;
 
-import org.apache.sling.bgservlets.impl.webconsole.ExecutionEngineConsolePlugin;
+import org.apache.sling.bgservlets.impl.webconsole.JobConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class Activator implements BundleActivator {
      */
     public void start(BundleContext context) throws Exception {
         try {
-            ExecutionEngineConsolePlugin.initPlugin(context);
+            JobConsolePlugin.initPlugin(context);
         } catch (Throwable ignore) {
             // Happens for example if the webconsole is not installed
             log.debug("Exception in start()", ignore);
@@ -45,7 +45,7 @@ public class Activator implements BundleActivator {
      */
     public void stop(BundleContext context) throws Exception {
         try {
-            ExecutionEngineConsolePlugin.destroyPlugin();
+            JobConsolePlugin.destroyPlugin();
         } catch (Throwable ignore) {
             log.debug("Exception in stop()", ignore);
         }
