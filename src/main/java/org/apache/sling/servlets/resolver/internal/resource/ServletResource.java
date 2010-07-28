@@ -23,14 +23,14 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-class ServletResource extends SlingAdaptable implements Resource {
+class ServletResource extends AbstractResource implements Resource {
 
     private final ResourceResolver resourceResolver;
 
