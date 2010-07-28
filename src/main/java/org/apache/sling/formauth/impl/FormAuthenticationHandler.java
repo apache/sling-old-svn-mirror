@@ -308,6 +308,9 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                     // signal the requestCredentials method a previous login failure
                     request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
                     info = AuthenticationInfo.FAIL_AUTH;
+                    // clear the cookie, its invalid and we should get rid of it so that the invalid cookie
+                    // isn't present on the authN operation.
+                    authStorage.clear(request, response);
                 }
             }
         }
