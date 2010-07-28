@@ -174,6 +174,21 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
 
     /**
+     * Whether to present a login form when a users cookie expires, the default
+     * is not to present the form.
+     *
+     * @scr.property type="Boolean" valueRef="DEFAULT_LOGIN_AFTER_EXPIRE"
+     */
+    private static final String PAR_LOGIN_AFTER_EXPIRE = null;
+
+    /**
+     * The default login after expire of a cookie.
+     *
+     * @see #PAR_LOGIN_AFTER_EXPIRE
+     */
+    private static final boolean DEFAULT_LOGIN_AFTER_EXPIRE = false;
+
+    /**
      * The request method required for user name and password submission by the
      * form (value is "POST").
      */
@@ -282,6 +297,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     private ResourceResolverFactory resourceResolverFactory;
 
+    /**
+     * If true the login form will be presented when the token expires.
+     */
+    private boolean loginAfterExpire;
+
 
     /**
      * Extracts cookie/session based credentials from the request. Returns
@@ -305,9 +325,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 if (tokenStore.isValid(authData)) {
                     info = createAuthInfo(authData);
                 } else {
-                    // signal the requestCredentials method a previous login failure
-                    request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
-                    info = AuthenticationInfo.FAIL_AUTH;
+                    if (this.loginAfterExpire) {
+                      // signal the requestCredentials method a previous login failure
+                      request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
+                      info = AuthenticationInfo.FAIL_AUTH;
+                    }
                     // clear the cookie, its invalid and we should get rid of it so that the invalid cookie
                     // isn't present on the authN operation.
                     authStorage.clear(request, response);
@@ -744,6 +766,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         this.includeLoginForm = OsgiUtil.toBoolean(properties.get(PAR_INCLUDE_FORM), DEFAULT_INCLUDE_FORM);
+
+        this.loginAfterExpire = OsgiUtil.toBoolean(properties.get(PAR_LOGIN_AFTER_EXPIRE), DEFAULT_LOGIN_AFTER_EXPIRE);
 
     }
 
