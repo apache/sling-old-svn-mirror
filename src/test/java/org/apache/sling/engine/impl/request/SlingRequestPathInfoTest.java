@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -283,7 +283,7 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("html", result.getSuffix());
     }
 
-    static class MockResource implements Resource {
+    static class MockResource extends AbstractResource {
 
         private final ResourceMetadata metadata;
 
