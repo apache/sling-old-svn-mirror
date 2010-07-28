@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Iterator;
+
 /**
  * The <code>ResourceWrapper</code> is a wrapper for any <code>Resource</code>
  * delegating all method calls to the wrapped resource by default. Extensions of
@@ -38,59 +40,119 @@ public class ResourceWrapper implements Resource {
     }
 
     /**
-     * Returns the <code>Resource</code> wrapped by this instance.
-     * This method can be overwritten by subclasses if required. All
-     * other methods use this method to get the resource object.
+     * Returns the <code>Resource</code> wrapped by this instance. This method
+     * can be overwritten by subclasses if required. All methods implemented by
+     * this class use this method to get the resource object.
      */
     public Resource getResource() {
         return resource;
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#getPath()
+     * Returns the value of calling <code>getPath</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public String getPath() {
         return getResource().getPath();
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+     * Returns the value of calling <code>getName</code> on the
+     * {@link #getResource() wrapped resource}.
+     *
+     * @since 2.1.0
+     */
+    public String getName() {
+        return getResource().getName();
+    }
+
+    /**
+     * Returns the value of calling <code>getParent</code> on the
+     * {@link #getResource() wrapped resource}.
+     *
+     * @since 2.1.0
+     */
+    public Resource getParent() {
+        return getResource().getParent();
+    }
+
+    /**
+     * Returns the value of calling <code>getChild</code> on the
+     * {@link #getResource() wrapped resource}.
+     *
+     * @since 2.1.0
+     */
+    public Resource getChild(String relPath) {
+        return getResource().getChild(relPath);
+    }
+
+    /**
+     * Returns the value of calling <code>listChildren</code> on the
+     * {@link #getResource() wrapped resource}.
+     *
+     * @since 2.1.0
+     */
+    public Iterator<Resource> listChildren() {
+        return getResource().listChildren();
+    }
+
+    /**
+     * Returns the value of calling <code>getResourceMetadata</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public ResourceMetadata getResourceMetadata() {
         return getResource().getResourceMetadata();
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+     * Returns the value of calling <code>getResourceResolver</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public ResourceResolver getResourceResolver() {
         return getResource().getResourceResolver();
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     * Returns the value of calling <code>getResourceType</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public String getResourceType() {
         return getResource().getResourceType();
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+     * Returns the value of calling <code>getResourceSuperType</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public String getResourceSuperType() {
         return getResource().getResourceSuperType();
     }
 
     /**
-     * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+     * Returns the value of calling <code>isResourceType</code> on the
+     * {@link #getResource() wrapped resource}.
+     *
+     * @since 2.1.0
+     */
+    public boolean isResourceType(final String resourceType) {
+        return getResource().isResourceType(resourceType);
+    }
+
+    /**
+     * Returns the value of calling <code>adaptTo</code> on the
+     * {@link #getResource() wrapped resource}.
      */
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return getResource().adaptTo(type);
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * Returns a string representation of this wrapper consisting of the class'
+     * simple name, the {@link #getResourceType() resource type} and
+     * {@link #getPath() path} as well as the string representation of the
+     * {@link #getResource() wrapped resource}.
      */
+    @Override
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";

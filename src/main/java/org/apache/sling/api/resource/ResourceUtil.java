@@ -25,10 +25,9 @@ import java.util.NoSuchElementException;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-
 /**
- * The <code>ResourceUtil</code> class provides helper methods dealing
- * with resources.
+ * The <code>ResourceUtil</code> class provides helper methods dealing with
+ * resources.
  */
 public class ResourceUtil {
 
@@ -114,9 +113,9 @@ public class ResourceUtil {
      * parent.
      *
      * @param path The path whose parent is to be returned.
-     * @return <code>null</code> if <code>path</code> is the root path (<code>/</code>)
-     *         or if <code>path</code> is a single name containing no slash (<code>/</code>)
-     *         characters.
+     * @return <code>null</code> if <code>path</code> is the root path (
+     *         <code>/</code>) or if <code>path</code> is a single name
+     *         containing no slash (<code>/</code>) characters.
      * @throws IllegalArgumentException If the path cannot be normalized by the
      *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
@@ -149,35 +148,34 @@ public class ResourceUtil {
 
     /**
      * Utility method returns the parent resource of the resource.
+     *
      * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
      * @return The parent resource or null if the rsrc is the root.
+     * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
     public static Resource getParent(Resource rsrc) {
-        final String parentPath = getParent(rsrc.getPath());
-        if ( parentPath == null ) {
-            return null;
-        }
-        return rsrc.getResourceResolver().getResource(parentPath);
+        return rsrc.getParent();
     }
 
     /**
-     * Utility method returns the parent resource of the resource.
+     * Utility method returns the name of the resource.
+     *
      * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
+     * @deprecated since 2.1.0, use {@link Resource#getName()} instead
      */
     public static String getName(Resource rsrc) {
-        final String name = getName(rsrc.getPath());
-        return name;
+        return rsrc.getName();
     }
 
     /**
-     * Utility method returns the name of the given <code>path</code>, which
-     * is normalized by {@link #normalize(String)} before resolving the name.
+     * Utility method returns the name of the given <code>path</code>, which is
+     * normalized by {@link #normalize(String)} before resolving the name.
      *
      * @param path The path whose name (the last path element) is to be
      *            returned.
-     * @return The empty string if <code>path</code> is the root path (<code>/</code>)
-     *         or if <code>path</code> is a single name containing no slash (<code>/</code>)
-     *         characters.
+     * @return The empty string if <code>path</code> is the root path (
+     *         <code>/</code>) or if <code>path</code> is a single name
+     *         containing no slash (<code>/</code>) characters.
      * @throws IllegalArgumentException If the path cannot be normalized by the
      *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
@@ -198,26 +196,33 @@ public class ResourceUtil {
     }
 
     /**
-     * Returns <code>true</code> if the resource <code>res</code> is a
-     * synthetic resource.
+     * Returns <code>true</code> if the resource <code>res</code> is a synthetic
+     * resource.
      * <p>
      * This method checks whether the resource is an instance of the
      * <code>org.apache.sling.resource.SyntheticResource</code> class.
      *
      * @param res The <code>Resource</code> to check whether it is a synthetic
      *            resource.
-     * @return <code>true</code> if <code>res</code> is a synthetic
-     *         resource. <code>false</code> is returned if <code>res</code>
-     *         is <code>null</code> or not an instance of the
+     * @return <code>true</code> if <code>res</code> is a synthetic resource.
+     *         <code>false</code> is returned if <code>res</code> is
+     *         <code>null</code> or not an instance of the
      *         <code>org.apache.sling.resource.SyntheticResource</code> class.
      */
     public static boolean isSyntheticResource(Resource res) {
-        if(res instanceof SyntheticResource) {
-        	return true;
-        } else if(res instanceof ResourceWrapper) {
-        	return ((ResourceWrapper)res).getResource() instanceof SyntheticResource;
+        if (res instanceof SyntheticResource) {
+            return true;
         }
-        return false;
+
+        if (!(res instanceof ResourceWrapper)) {
+            return false;
+        }
+
+        do {
+            res = ((ResourceWrapper) res).getResource();
+        } while (res instanceof ResourceWrapper);
+
+        return res instanceof SyntheticResource;
     }
 
     /**
@@ -234,8 +239,8 @@ public class ResourceUtil {
      *
      * @param res The <code>Resource</code> to check whether it is a star
      *            resource.
-     * @return <code>true</code> if <code>res</code> is to be considered a
-     *         star resource.
+     * @return <code>true</code> if <code>res</code> is to be considered a star
+     *         resource.
      * @throws NullPointerException if <code>res</code> is <code>null</code>.
      */
     public static boolean isStarResource(Resource res) {
@@ -261,42 +266,42 @@ public class ResourceUtil {
     }
 
     /**
-     * Returns an <code>Iterator</code> of {@link Resource} objects loaded
-     * from the children of the given <code>Resource</code>.
+     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
+     * the children of the given <code>Resource</code>.
      * <p>
-     * This is a convenience method for {@link ResourceResolver#listChildren(Resource)}.
+     * This is a convenience method for
+     * {@link ResourceResolver#listChildren(Resource)}.
      *
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects.
-     * @throws NullPointerException If <code>parent</code> is
-     *             <code>null</code>.
+     * @throws NullPointerException If <code>parent</code> is <code>null</code>.
      * @throws org.apache.sling.api.SlingException If any error occurs acquiring
      *             the child resource iterator.
      * @see ResourceResolver#listChildren(Resource)
+     * @deprecated since 2.1.0, use {@link Resource#listChildren()} instead
      */
     public static Iterator<Resource> listChildren(Resource parent) {
-        return parent.getResourceResolver().listChildren(parent);
+        return parent.listChildren();
     }
 
     /**
      * Returns an <code>ValueMap</code> object for the given
-     * <code>Resource</code>.
-     * This method calls {@link Resource#adaptTo(Class)} with the
-     * {@link ValueMap} class as an argument. If the <code>adaptTo</code>
-     * method returns a map, this map is returned. If the resource is not
-     * adaptable to a value map, next an adaption to {@link Map} is tried
-     * and if this is successful the map is wrapped as a value map.
-     * If the adaptions are not successful an empty value map is returned.
-     * If <code>null</code> is provided as the resource an empty map is
-     * returned as well.
+     * <code>Resource</code>. This method calls {@link Resource#adaptTo(Class)}
+     * with the {@link ValueMap} class as an argument. If the
+     * <code>adaptTo</code> method returns a map, this map is returned. If the
+     * resource is not adaptable to a value map, next an adaption to {@link Map}
+     * is tried and if this is successful the map is wrapped as a value map. If
+     * the adaptions are not successful an empty value map is returned. If
+     * <code>null</code> is provided as the resource an empty map is returned as
+     * well.
+     *
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
      */
     @SuppressWarnings("unchecked")
     public static ValueMap getValueMap(final Resource res) {
         // adapt to ValueMap if resource is not null
-        ValueMap valueMap = (res != null)?
-            res.adaptTo(ValueMap.class) : null;
+        ValueMap valueMap = (res != null) ? res.adaptTo(ValueMap.class) : null;
 
         // if no resource or no ValueMap adapter, check Map
         if (valueMap == null) {
@@ -314,6 +319,7 @@ public class ResourceUtil {
 
         return valueMap;
     }
+
     /**
      * Helper method, which returns the given resource type as returned from the
      * {@link org.apache.sling.api.resource.Resource#getResourceType()} as a
@@ -328,43 +334,45 @@ public class ResourceUtil {
     }
 
     /**
-     * Returns the super type of the given resource type.
-     * This method converts the resource type to a resource path
-     * by calling {@link #resourceTypeToPath(String)} and uses
-     * the <code>resourceResolver</code> to get the corresponding
-     * resource. If the resource exists, the {@link Resource#getResourceSuperType()}
-     * metod is called.
+     * Returns the super type of the given resource type. This method converts
+     * the resource type to a resource path by calling
+     * {@link #resourceTypeToPath(String)} and uses the
+     * <code>resourceResolver</code> to get the corresponding resource. If the
+     * resource exists, the {@link Resource#getResourceSuperType()} metod is
+     * called.
      *
-     * @param resourceResolver The <code>ResourceResolver</code> used to
-     *            access the resource whose path (relative or absolute) is given
-     *            by the <code>resourceType</code> parameter.
+     * @param resourceResolver The <code>ResourceResolver</code> used to access
+     *            the resource whose path (relative or absolute) is given by the
+     *            <code>resourceType</code> parameter.
      * @param resourceType The resource type whose super type is to be returned.
      *            This type is turned into a path by calling the
      *            {@link #resourceTypeToPath(String)} method before trying to
      *            get the resource through the <code>resourceResolver</code>.
      * @return the super type of the <code>resourceType</code> or
-     *         <code>null</code> if the resource type does not exists
-     *         or returns <code>null</code> for its super type.
+     *         <code>null</code> if the resource type does not exists or returns
+     *         <code>null</code> for its super type.
      * @since 2.0.6
      */
-    public static String getResourceSuperType(final ResourceResolver resourceResolver,
-                                              final String resourceType) {
+    public static String getResourceSuperType(
+            final ResourceResolver resourceResolver, final String resourceType) {
         // normalize resource type to a path string
         final String rtPath = resourceTypeToPath(resourceType);
         // get the resource type resource and check its super type
         String resourceSuperType = null;
         // if the path is absolute, use it directly
-        if ( rtPath != null && rtPath.startsWith("/") ) {
+        if (rtPath != null && rtPath.startsWith("/")) {
             final Resource rtResource = resourceResolver.getResource(rtPath);
-            if ( rtResource != null ) {
+            if (rtResource != null) {
                 resourceSuperType = rtResource.getResourceSuperType();
             }
 
         } else {
             // if the path is relative we use the search paths
-            for(final String searchPath : resourceResolver.getSearchPath()) {
-                final Resource rtResource = resourceResolver.getResource(searchPath + rtPath);
-                if ( rtResource != null && rtResource.getResourceSuperType() != null ) {
+            for (final String searchPath : resourceResolver.getSearchPath()) {
+                final Resource rtResource = resourceResolver.getResource(searchPath
+                    + rtPath);
+                if (rtResource != null
+                    && rtResource.getResourceSuperType() != null) {
                     resourceSuperType = rtResource.getResourceSuperType();
                     break;
                 }
@@ -374,81 +382,71 @@ public class ResourceUtil {
     }
 
     /**
-     * Returns the super type of the given resource.
-     * This method checks first if the resource itself knows its super type
-     * by calling {@link Resource#getResourceSuperType()}. If that returns
+     * Returns the super type of the given resource. This method checks first if
+     * the resource itself knows its super type by calling
+     * {@link Resource#getResourceSuperType()}. If that returns
      * <code>null</code> {@link #getResourceSuperType(ResourceResolver, String)}
      * is invoked with the resource type of the resource.
      *
      * @param resource The resource to return the resource super type for.
-     * @return the super type of the <code>resource</code> or
-     *         <code>null</code> if no super type could be computed.
+     * @return the super type of the <code>resource</code> or <code>null</code>
+     *         if no super type could be computed.
      * @since 2.0.6
      */
     public static String findResourceSuperType(final Resource resource) {
         String resourceSuperType = resource.getResourceSuperType();
-        if ( resourceSuperType == null ) {
-            resourceSuperType = getResourceSuperType(resource.getResourceResolver(), resource.getResourceType());
+        if (resourceSuperType == null) {
+            resourceSuperType = getResourceSuperType(
+                resource.getResourceResolver(), resource.getResourceType());
         }
         return resourceSuperType;
     }
 
     /**
-     * Check if the resource is of the given type.
-     * This method first checks the resource type of the resource, then
-     * its super resource type and continues to go up the resource super
-     * type hierarchy.
+     * Check if the resource is of the given type. This method first checks the
+     * resource type of the resource, then its super resource type and continues
+     * to go up the resource super type hierarchy.
+     *
+     * @param resource the resource to check
+     * @param resourceType the resource type to check the resource against
+     * @retrun <code>false</code> if <code>resource</code> is <code>null</code>.
+     *         Otherwise returns the result of calling
+     *         {@link Resource#isResourceType(String)} with the given
+     *         <code>resourceType</code>.
      * @since 2.0.6
      */
     public static boolean isA(final Resource resource, String resourceType) {
-        if ( resource == null || resourceType == null ) {
-            return false;
-        }
-        if ( resourceType.equals(resource.getResourceType()) ) {
-            return true;
-        }
-        String superType = findResourceSuperType(resource);
-        while ( superType != null ) {
-            if ( resourceType.equals(superType) ) {
-                return true;
-            }
-            superType = getResourceSuperType(resource.getResourceResolver(), superType);
-        }
-        return false;
+        return resource != null && resource.isResourceType(resourceType);
     }
 
     /**
-     * Return an iterator for objecs of the specified type.
-     * A new iterator is returned which tries to adapt the provided resources
-     * to the given type (using {@link Resource#adaptTo(Class)}.
-     * If a resource in the original iterator is not adaptable to the given
-     * class, this object is skipped. This implies that the number of objects
-     * returned by the new iterator might be less than the number of resource
-     * objects.
+     * Return an iterator for objecs of the specified type. A new iterator is
+     * returned which tries to adapt the provided resources to the given type
+     * (using {@link Resource#adaptTo(Class)}. If a resource in the original
+     * iterator is not adaptable to the given class, this object is skipped.
+     * This implies that the number of objects returned by the new iterator
+     * might be less than the number of resource objects.
+     *
      * @param iterator A resource iterator.
      * @param <T> The adapted type
      * @since 2.0.6
      */
-    public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator, final Class<T> type) {
+    public static <T> Iterator<T> adaptTo(final Iterator<Resource> iterator,
+            final Class<T> type) {
         return new Iterator<T>() {
 
-            private T nextObject;
+            private T nextObject = seek();
 
             public boolean hasNext() {
-                while ( nextObject == null && iterator.hasNext() ) {
-                    final Resource r = iterator.next();
-                    nextObject = r.adaptTo(type);
-                }
                 return nextObject != null;
             }
 
             public T next() {
-                hasNext();
-                if ( nextObject == null ) {
+                if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
                 final T object = nextObject;
-                nextObject = null;
+                nextObject = seek();
                 return object;
             }
 
@@ -456,6 +454,14 @@ public class ResourceUtil {
                 throw new UnsupportedOperationException();
             }
 
+            private T seek() {
+                T result = null;
+                while (result == null && iterator.hasNext()) {
+                    final Resource r = iterator.next();
+                    result = r.adaptTo(type);
+                }
+                return result;
+            }
         };
     }
 }

@@ -288,13 +288,14 @@ public class ResourceUtilTest {
         // the resource resolver
         final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
         // the resource to test
-        final Resource r = this.context.mock(Resource.class, "resource");
+        final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
+            @Override
+            public String getResourceSuperType() {
+                return "d:e";
+            }
+        };
         final Resource typeResource = this.context.mock(Resource.class, "typeResource");
         this.context.checking(new Expectations() {{
-            allowing(r).getResourceType(); will(returnValue("a:b"));
-            allowing(r).getResourceSuperType(); will(returnValue("d:e"));
-            allowing(r).getResourceResolver(); will(returnValue(resolver));
-
             allowing(typeResource).getResourceType();
             will(returnValue("x:y"));
             allowing(typeResource).getResourceSuperType();
