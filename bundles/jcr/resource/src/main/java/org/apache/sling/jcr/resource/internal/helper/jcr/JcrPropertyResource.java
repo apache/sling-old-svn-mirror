@@ -205,7 +205,7 @@ public class JcrPropertyResource extends JcrItemResource {
     }
 
     @Override
-    Iterator<Resource> listChildren() {
+    Iterator<Resource> listJcrChildren() {
         return null;
     }
 }

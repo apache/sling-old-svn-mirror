@@ -25,31 +25,7 @@ import org.apache.sling.api.adapter.AdapterManager;
  * <code>Resource</code> interface which may be used to provide a resource
  * object which has no actual resource data.
  */
-public class SyntheticResource implements Resource {
-
-    /** The adapter manager used for adapting the synthetic resource. */
-    private static volatile AdapterManager ADAPTER_MANAGER;
-
-    /**
-     * Set the adapter manager to be used by a synthetic resource.
-     * A bundle implementing the adapter manager can set the manager through this method.
-     * The set adapter manager will be used in the {@link #adaptTo(Class)} method
-     * of a synthetic resource.
-     * @param adapterMgr The adapter manager.
-     */
-    public static void setAdapterManager(final AdapterManager adapterMgr) {
-        ADAPTER_MANAGER = adapterMgr;
-    }
-
-    /**
-     * Unset an adapter manager previously set with {@link #setAdapterManager(AdapterManager)}
-     * @param adapterMgr The adapter manager
-     */
-    public static void unsetAdapterManager(final AdapterManager adapterMgr) {
-        if ( ADAPTER_MANAGER == adapterMgr ) {
-            ADAPTER_MANAGER = null;
-        }
-    }
+public class SyntheticResource extends AbstractResource {
 
     /** The resoure resolver to which this resource is related */
     private final ResourceResolver resourceResolver;
@@ -57,9 +33,8 @@ public class SyntheticResource implements Resource {
     /** The path of the synthetic resource */
     private final String path;
 
-    /** The type this synthetic resource assumes.
-     * TODO as soon as we remove the {@link #setResourceType(String)} methode we can make this final. */
-    private String resourceType;
+    /** The type this synthetic resource assumes */
+    private final String resourceType;
 
     /** The metadata of this resource just containig the resource path */
     private final ResourceMetadata resourceMetadata;
@@ -104,20 +79,6 @@ public class SyntheticResource implements Resource {
     }
 
     /**
-     * Helper method for sub classes to set the resource type
-     * @param resourceType The resource type
-     * @deprecated The resource type should be set through the constructor.
-     */
-    @Deprecated
-    protected void setResourceType(String resourceType) {
-        if (this.resourceType != null) {
-            throw new IllegalArgumentException("Resource type already set ("
-                    + this.resourceType + "), cannot change it");
-        }
-        this.resourceType = resourceType;
-    }
-
-    /**
      * Synthetic resources by default do not have a resource super type.
      */
     public String getResourceSuperType() {
@@ -138,19 +99,6 @@ public class SyntheticResource implements Resource {
      */
     public ResourceResolver getResourceResolver() {
         return resourceResolver;
-    }
-
-    /**
-     * If a adapter manager has been set through {@link #setAdapterManager(AdapterManager)}
-     * this adapter manager is used to adapt the resource to the given class.
-     * Otherwise this method returns <code>null</code>.
-     */
-    public <Type> Type adaptTo(Class<Type> type) {
-        final AdapterManager adapterMgr = ADAPTER_MANAGER;
-        if ( adapterMgr != null ) {
-            return adapterMgr.getAdapter(this, type);
-        }
-        return null;
     }
 
     @Override

@@ -93,6 +93,7 @@ public class JcrResourceProvider implements ResourceProvider {
         } else if (parent instanceof ResourceWrapper) {
 
             return listChildren(((ResourceWrapper) parent).getResource());
+
         } else {
 
             // try to get the JcrItemResource for the parent path to list
@@ -108,7 +109,7 @@ public class JcrResourceProvider implements ResourceProvider {
 
         // return children if there is a parent item resource, else null
         return (parentItemResource != null)
-                ? parentItemResource.listChildren()
+                ? parentItemResource.listJcrChildren()
                 : null;
     }
 

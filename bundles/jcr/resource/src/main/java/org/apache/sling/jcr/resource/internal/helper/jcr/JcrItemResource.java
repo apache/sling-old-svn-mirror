@@ -23,13 +23,13 @@ import java.util.Iterator;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
-abstract class JcrItemResource extends SlingAdaptable implements Resource {
+abstract class JcrItemResource extends AbstractResource implements Resource {
 
     private final ResourceResolver resourceResolver;
 
@@ -83,6 +83,6 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
      * Returns an iterator over the child resources or <code>null</code> if
      * there are none.
      */
-    abstract Iterator<Resource> listChildren();
+    abstract Iterator<Resource> listJcrChildren();
 
 }

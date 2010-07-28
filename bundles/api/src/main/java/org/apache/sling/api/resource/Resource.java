@@ -16,6 +16,8 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Iterator;
+
 import org.apache.sling.api.adapter.Adaptable;
 
 /**
@@ -24,6 +26,12 @@ import org.apache.sling.api.adapter.Adaptable;
  * The <code>Resource</code> is also an {@link Adaptable} to get adapters to
  * other types. A JCR based resource might support adapting to the JCR Node on
  * which the resource is based.
+ * <p>
+ * Implementor's Note: It is recommended to not implement this interface
+ * directly. Rather consider either extending from {@link AbstractResource} or
+ * {@link ResourceWrapper}. This will make sure your implementation will not be
+ * suffering from missing method problems should the Sling Resource API be
+ * extended in the future.
  */
 public interface Resource extends Adaptable {
 
@@ -34,15 +42,55 @@ public interface Resource extends Adaptable {
      * actually be resolved.
      *
      * @see #getResourceType()
-     * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest, String)
+     * @see ResourceUtil#isNonExistingResource(Resource)
+     * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest,
+     *      String)
      */
     String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
 
     /**
-     * This resource's path - for now that could be a JCR path. It's also
-     * possible to have an URI for other data sources.
+     * Returns the absolute path of this resource in the resource tree.
      */
     String getPath();
+
+    /**
+     * Returns the name of this resource. The name of a resource is the last
+     * segment of the {@link #getPath() path}.
+     *
+     * @since 2.1.0
+     */
+    String getName();
+
+    /**
+     * Returns the parent resource or <code>null</code> if this resource
+     * represents the root of the resource tree.
+     *
+     * @since 2.1.0
+     */
+    Resource getParent();
+
+    /**
+     * Returns an iterator of the direct children of this resource.
+     * <p>
+     * This method is a convenience and returns exactly the same resources as
+     * calling <code>getResourceResolver().listChildren(resource)</code>.
+     *
+     * @since 2.1.0
+     * @see ResourceResolver#listChildren(Resource)
+     */
+    Iterator<Resource> listChildren();
+
+    /**
+     * Returns the child at the given relative path of this resource or
+     * <code>null</code> if no such child exists.
+     * <p>
+     * This method is a convenience and returns exactly the same resources as
+     * calling <code>getResourceResolver().getResource(resource, relPath)</code>.
+     *
+     * @since 2.1.0
+     * @see ResourceResolver#getResource(Resource, String)
+     */
+    Resource getChild(String relPath);
 
     /**
      * The resource type is meant to point to rendering/processing scripts,
@@ -53,7 +101,7 @@ public interface Resource extends Adaptable {
      * created.
      * <p>
      * If the resource instance represents a resource which is not actually
-     * existing, this method returns the {@link #RESOURCE_TYPE_NON_EXISTING}.
+     * existing, this method returns {@link #RESOURCE_TYPE_NON_EXISTING}.
      */
     String getResourceType();
 
@@ -62,6 +110,19 @@ public interface Resource extends Adaptable {
      * if the {@link #getResourceType()} has no supertype.
      */
     String getResourceSuperType();
+
+    /**
+     * Returns <code>true</code> if the resource type or any of the resource's
+     * super type(s) equals the given resource type.
+     *
+     * @param resourceType The resource type to check this resource against.
+     * @return <code>true</code> if the resource type or any of the resource's
+     *         super type(s) equals the given resource type. <code>false</code>
+     *         is also returned if <code>resourceType</code> is
+     *         <code>null</code>.
+     * @since 2.1.0
+     */
+    boolean isResourceType(String resourceType);
 
     /**
      * Returns the metadata of this resource. The concrete data contained in the
@@ -79,5 +140,4 @@ public interface Resource extends Adaptable {
      * retrieved.
      */
     ResourceResolver getResourceResolver();
-
 }

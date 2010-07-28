@@ -228,7 +228,7 @@ public class JcrNodeResource extends JcrItemResource {
     // ---------- Descendable interface ----------------------------------------
 
     @Override
-    Iterator<Resource> listChildren() {
+    Iterator<Resource> listJcrChildren() {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
