@@ -179,7 +179,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      *
      * @scr.property type="Boolean" valueRef="DEFAULT_LOGIN_AFTER_EXPIRE"
      */
-    private static final String PAR_LOGIN_AFTER_EXPIRE = null;
+    private static final String PAR_LOGIN_AFTER_EXPIRE = "form.onexpire.login";
 
     /**
      * The default login after expire of a cookie.
