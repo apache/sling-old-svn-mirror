@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -268,7 +269,7 @@ public class ResourceProviderEntryTest extends TestCase {
         }
     }
 
-    private static class TestResource implements Resource {
+    private static class TestResource extends AbstractResource {
 
         private final String path;
 
