@@ -214,7 +214,7 @@ public class JsonReader implements ContentReader {
                 for (int i = 0; i < array.length(); i++) {
                     values[i] = array.get(i).toString();
                 }
-                final int propertyType = getType(name, values[0]);
+                final int propertyType = getType(name, array.get(0));
                 contentCreator.createProperty(getName(name), propertyType, values);
             } else {
                 contentCreator.createProperty(getName(name), PropertyType.STRING, new String[0]);
