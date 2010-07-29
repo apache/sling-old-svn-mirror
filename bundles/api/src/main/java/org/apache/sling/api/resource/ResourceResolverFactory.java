@@ -27,7 +27,6 @@ import java.util.Map;
  * As soon as the resource resolver is not used anymore, {@link ResourceResolver#close()}
  * should be called.
  *
- * WORK IN PROGRESS - see SLING-1262
  * @since 2.1
  */
 public interface ResourceResolverFactory {
