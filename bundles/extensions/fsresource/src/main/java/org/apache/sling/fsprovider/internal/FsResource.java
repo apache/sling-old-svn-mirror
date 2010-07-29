@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * The <code>FsResource</code> represents a file system file or folder as
  * a Sling Resource.
  */
-public class FsResource extends SlingAdaptable implements Resource {
+public class FsResource extends AbstractResource implements Resource {
 
     /**
      * The resource type for file system files mapped into the resource tree by

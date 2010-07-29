@@ -28,7 +28,7 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a Bundle entry */
-public class BundleResource extends SlingAdaptable implements Resource {
+public class BundleResource extends AbstractResource implements Resource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -208,7 +208,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
         return url;
     }
 
-    Iterator<Resource> listChildren() {
+    public Iterator<Resource> listChildren() {
         return new BundleResourceIterator(this);
     }
 
