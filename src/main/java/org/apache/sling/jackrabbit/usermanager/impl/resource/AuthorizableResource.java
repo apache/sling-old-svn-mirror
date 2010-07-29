@@ -23,7 +23,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.ValueMap;
 /**
  * Resource implementation for Authorizable
  */
-public class AuthorizableResource extends SlingAdaptable implements Resource {
+public class AuthorizableResource extends AbstractResource implements Resource {
     private Authorizable authorizable = null;
 
     private ResourceResolver resourceResolver = null;
