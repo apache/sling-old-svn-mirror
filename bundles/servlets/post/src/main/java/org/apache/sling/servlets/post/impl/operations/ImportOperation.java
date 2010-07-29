@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -28,23 +29,23 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
-import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.VersioningConfiguration;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 /**
  * The <code>ImportOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_IMPORT}
  * import operation for the Sling default POST servlet.
  */
-public class ImportOperation extends AbstractSlingPostOperation {
+public class ImportOperation extends AbstractCreateOperation {
 
     /**
      * The default node name generator
@@ -84,12 +85,31 @@ public class ImportOperation extends AbstractSlingPostOperation {
                     "Missing content importer for import");
             return;
     	}
+	Map<String, RequestProperty> reqProperties = collectContent(request,
+             response);
+     
+        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
+
+        // do not change order unless you have a very good reason.
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+
     	
-        Resource resource = request.getResource();
-        Node node = resource.adaptTo(Node.class);
+        processCreate(session, reqProperties, response, changes, versioningConfiguration);
+        String path = response.getPath();
+        Node node = null;
+        try {
+            node = (Node) session.getItem(path);
+        } catch ( RepositoryException e ) {
+            log.warn(e.getMessage(),e);
+            // was not able to resolve the node
+        } catch ( ClassCastException e) {
+            log.warn(e.getMessage(),e);
+            // it was not a node
+        }
         if (node == null) {
+            
             response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing target node " + resource + " for import");
+                    "Missing target node " + path + " for import");
             return;
         }
 
