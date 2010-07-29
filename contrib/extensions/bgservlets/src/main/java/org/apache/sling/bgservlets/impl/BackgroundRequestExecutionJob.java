@@ -59,11 +59,8 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
                 parametersToRemove);
         this.slingServlet = slingServlet;
 
-        // In a normal request the ResourceResolver is added to the request
-        // attributes
-        // by the authentication service, need to do the same here as we can't
-        // reuse the
-        // original one which is closed once main request is done
+        // Need a new ResourceResolver with the same credentials as the
+        // current request, for the background request.
         final AuthenticationInfo aa = (AuthenticationInfo) request
                 .getAttribute(AuthenticationInfo.class.getName());
         if (aa == null) {
