@@ -92,8 +92,8 @@ public class SuspendableOutputStream extends FilterOutputStream implements
                         wait();
                     }
                 } catch (InterruptedException e) {
-                    throw new IOException(
-                            "InterruptedException in checkWritePermission()", e);
+                    throw (IOException)new IOException(
+                            "InterruptedException in checkWritePermission()").initCause(e);
                 }
             }
         }
@@ -153,7 +153,7 @@ public class SuspendableOutputStream extends FilterOutputStream implements
 
     /**
      * Not implemented
-     * 
+     *
      * @throws UnsupportedOperationException
      */
     public String getPath() {
