@@ -60,6 +60,10 @@
                         <Private-Package>
                             org.apache.sling.fsprovider.internal
                         </Private-Package>
+                        <Import-Package>
+                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
