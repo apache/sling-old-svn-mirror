@@ -60,6 +60,24 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      */
     private static final int MAX_START_FAILURES = 20;
 
+    /**
+     * The name of the system property which may be set to define the default
+     * prefix for the sling.home value generated from the Sling servlet context
+     * path.
+     *
+     * @see #toSlingHome(String)
+     */
+    private static final String SLING_HOME_PREFIX = "sling.home.prefix";
+
+    /**
+     * The default value to be used as the prefix for the sling.home value
+     * generated from the Sling servlet context path if the
+     * {@link #SLING_HOME_PREFIX sling.home.prefix} system property is not set.
+     *
+     * @see #toSlingHome(String)
+     */
+    private static final String SLING_HOME_PREFIX_DEFAULT = "sling/";
+
     private String slingHome;
 
     private Loader loader;
@@ -418,9 +436,26 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         return slingHome;
     }
 
-    // convert the servlet context path to a directory path for sling.home
+    /**
+     * Converts the servlet context path to a path used for the sling.home
+     * property. The servlet context path is converted to a simple name by
+     * replacing all slash characters in the path with underscores (or a single
+     * underscore for the root context path being empty or null). Next the
+     * result is prefixed with either value of the
+     * <code>sling.home.prefix</code> system property or the (default prefix)
+     * <code>sling/</code>.
+     *
+     * @param contextPath
+     * @return
+     */
     private String toSlingHome(String contextPath) {
-        String prefix = "sling/";
+        String prefix = System.getProperty(SLING_HOME_PREFIX,
+            SLING_HOME_PREFIX_DEFAULT);
+
+        if (!prefix.endsWith("/")) {
+            prefix = prefix.concat("/");
+        }
+
         if (contextPath == null || contextPath.length() == 0) {
             return prefix + "_";
         }
