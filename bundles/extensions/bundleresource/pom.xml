@@ -63,6 +63,10 @@
                             org.apache.sling.bundleresource.*,
                             org.osgi.util.tracker
                         </Private-Package>
+                        <Import-Package>
+                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            *
+                        </Import-Package>
                         <DynamicImport-Package>
                             org.apache.felix.webconsole
                         </DynamicImport-Package>

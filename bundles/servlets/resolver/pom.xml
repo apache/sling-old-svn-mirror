@@ -55,7 +55,9 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.jcr;resolution:=optional,*
+                            javax.jcr;resolution:=optional,
+                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            *
                         </Import-Package>
                         <Private-Package>
                             org.apache.sling.servlets.resolver.*
