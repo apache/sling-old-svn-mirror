@@ -28,6 +28,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.sling.servlets.post.Modification;
 
@@ -107,23 +108,26 @@ public class SlingPropertyValueHandler {
 
         } else if (AUTO_PROPS.containsKey(name)) {
             // avoid collision with protected properties
-            switch (AUTO_PROPS.get(name)) {
-                case CREATED:
-                    if (parent.isNew()) {
+            try {
+                switch (AUTO_PROPS.get(name)) {
+                    case CREATED:
+                        if (parent.isNew()) {
+                            setCurrentDate(parent, name);
+                        }
+                        break;
+                    case CREATED_BY:
+                        if (parent.isNew()) {
+                            setCurrentUser(parent, name);
+                        }
+                        break;
+                    case MODIFIED:
                         setCurrentDate(parent, name);
-                    }
-                    break;
-                case CREATED_BY:
-                    if (parent.isNew()) {
+                        break;
+                    case MODIFIED_BY:
                         setCurrentUser(parent, name);
-                    }
-                    break;
-                case MODIFIED:
-                    setCurrentDate(parent, name);
-                    break;
-                case MODIFIED_BY:
-                    setCurrentUser(parent, name);
-                    break;
+                        break;
+                }
+            } catch (ConstraintViolationException e) {
             }
         } else {
             // no magic field, set value as provided
