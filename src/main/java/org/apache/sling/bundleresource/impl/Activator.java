@@ -127,16 +127,26 @@ public class Activator implements BundleActivator, BundleListener {
         String prefixes = (String) bundle.getHeaders().get(
             BUNDLE_RESOURCE_ROOTS);
         if (prefixes != null) {
+            log.debug(
+                "addBundleResourceProvider: Registering resources '{}' for bundle {}/{} as service ",
+                new Object[] { prefixes, bundle.getSymbolicName(),
+                    bundle.getBundleId() });
+
             BundleResourceProvider brp = new BundleResourceProvider(bundle,
                 prefixes);
-            brp.registerService(bundleContext);
+            long id = brp.registerService(bundleContext);
             bundleResourceProviderMap.put(bundle.getBundleId(), brp);
+
+            log.debug("addBundleResourceProvider: Service ID = {}", id);
         }
     }
 
     private void removeBundleResourceProvider(Bundle bundle) {
         BundleResourceProvider brp = bundleResourceProviderMap.remove(bundle.getBundleId());
         if (brp != null) {
+            log.debug(
+                "removeBundleResourceProvider: Unregistering resources for bundle {}/{}",
+                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() });
             brp.unregisterService();
         }
     }
