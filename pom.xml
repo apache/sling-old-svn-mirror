@@ -70,6 +70,7 @@
                         <Import-Package>
                             javax.script.*;
                             org.apache.sling.scripting.api.*;resolution:=optional,
+                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
                             org.apache.felix.webconsole;resolution:=optional,
                             *
                         </Import-Package>
