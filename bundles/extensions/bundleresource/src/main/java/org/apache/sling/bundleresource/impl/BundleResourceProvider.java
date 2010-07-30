@@ -57,10 +57,10 @@ public class BundleResourceProvider implements ResourceProvider {
         List<MappedPath> prefixList = new ArrayList<MappedPath>();
 
         final ManifestHeader header = ManifestHeader.parse(rootList);
-        for(final ManifestHeader.Entry entry : header.getEntries()) {
+        for (final ManifestHeader.Entry entry : header.getEntries()) {
             final String resourceRoot = entry.getValue();
             final String pathDirective = entry.getDirectiveValue("path");
-            if ( pathDirective != null ) {
+            if (pathDirective != null) {
                 prefixList.add(new MappedPath(resourceRoot, pathDirective));
             } else {
                 prefixList.add(MappedPath.create(resourceRoot));
@@ -69,7 +69,9 @@ public class BundleResourceProvider implements ResourceProvider {
         this.roots = prefixList.toArray(new MappedPath[prefixList.size()]);
     }
 
-    void registerService(BundleContext context) {
+    //---------- Service Registration
+    
+    long registerService(BundleContext context) {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Provider of bundle based resources");
@@ -77,6 +79,8 @@ public class BundleResourceProvider implements ResourceProvider {
         props.put(ROOTS, getRoots());
 
         serviceRegistration = context.registerService(SERVICE_NAME, this, props);
+        return (Long) serviceRegistration.getReference().getProperty(
+            Constants.SERVICE_ID);
     }
 
     void unregisterService() {
@@ -84,37 +88,8 @@ public class BundleResourceProvider implements ResourceProvider {
             serviceRegistration.unregister();
         }
     }
-
-    //---------- Web Console plugin support
-
-    BundleResourceCache getBundleResourceCache() {
-        return bundle;
-    }
-
-    MappedPath[] getMappedPaths() {
-        return roots;
-    }
-
-    //---------- internal
-
-    /** Returns the root paths */
-    private String[] getRoots() {
-        String[] rootPaths = new String[roots.length];
-        for (int i = 0; i < roots.length; i++) {
-            rootPaths[i] = roots[i].getResourceRoot();
-        }
-        return rootPaths;
-    }
-
-    private MappedPath getMappedPath(String resourcePath) {
-        for (MappedPath mappedPath : roots) {
-            if (mappedPath.isChild(resourcePath)) {
-                return mappedPath;
-            }
-        }
-
-        return null;
-    }
+    
+    // ---------- ResourceProvider interface
 
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) {
@@ -157,4 +132,36 @@ public class BundleResourceProvider implements ResourceProvider {
         // be prepared for such a situation
         return Collections.<Resource> emptyList().iterator();
     }
+
+    // ---------- Web Console plugin support
+
+    BundleResourceCache getBundleResourceCache() {
+        return bundle;
+    }
+
+    MappedPath[] getMappedPaths() {
+        return roots;
+    }
+
+    // ---------- internal
+
+    /** Returns the root paths */
+    private String[] getRoots() {
+        String[] rootPaths = new String[roots.length];
+        for (int i = 0; i < roots.length; i++) {
+            rootPaths[i] = roots[i].getResourceRoot();
+        }
+        return rootPaths;
+    }
+
+    private MappedPath getMappedPath(String resourcePath) {
+        for (MappedPath mappedPath : roots) {
+            if (mappedPath.isChild(resourcePath)) {
+                return mappedPath;
+            }
+        }
+
+        return null;
+    }
+
 }
