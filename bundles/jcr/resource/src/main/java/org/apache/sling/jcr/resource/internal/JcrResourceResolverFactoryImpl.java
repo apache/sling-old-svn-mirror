@@ -644,6 +644,8 @@ public class JcrResourceResolverFactoryImpl implements
 
             // add attributes
             copyAttributes(credentials, authenticationInfo);
+
+            return credentials;
         }
 
         // no user id (or not a String)
