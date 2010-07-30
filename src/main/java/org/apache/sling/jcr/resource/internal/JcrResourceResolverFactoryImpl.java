@@ -84,13 +84,21 @@ import org.slf4j.LoggerFactory;
 public class JcrResourceResolverFactoryImpl implements
         JcrResourceResolverFactory, ResourceResolverFactory {
 
-
     /**
      * The name of the authentication info property containing the workspace name.
      * This is only used internally and should never be used from anyone outside
      * this bundle as we might change this mechanism.
      */
     static final String AUTH_INFO_WORKSPACE = "internal.user.jcr.workspace";
+
+    /**
+     * The name of the session attribute which is set if the session created by
+     * the {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}
+     * method is an impersonated session. The value of this attribute is the
+     * name of the primary user authenticated with the credentials extracted
+     * from the request using the authenitcation handler.
+     */
+    private static final String SESSION_ATTR_IMPERSONATOR = "impersonator";
 
     public final static class ResourcePattern {
         public final Pattern pattern;
@@ -504,11 +512,7 @@ public class JcrResourceResolverFactoryImpl implements
         final String workspace = getWorkspace(authenticationInfo);
         final Session session;
         try {
-            if ( credentials == null ) {
-                session = this.getRepository().login(workspace);
-            } else {
-                session = this.getRepository().login(credentials, workspace);
-            }
+            session = this.getRepository().login(credentials, workspace);
         } catch (RepositoryException re) {
             throw getLoginException(re);
         }
@@ -586,14 +590,18 @@ public class JcrResourceResolverFactoryImpl implements
      * @return The original session or impersonated session.
      * @throws LoginException If something goes wrong.
      */
-    private Session handleSudo(final Session session, final Map<String, Object> authenticationInfo)
-    throws LoginException {
+    private Session handleSudo(final Session session,
+            final Map<String, Object> authenticationInfo) throws LoginException {
         final String sudoUser = getSudoUser(authenticationInfo);
-        if ( sudoUser != null && !session.getUserID().equals(sudoUser) ) {
+        if (sudoUser != null && !session.getUserID().equals(sudoUser)) {
             try {
-                final SimpleCredentials creds = new SimpleCredentials(sudoUser, new char[0]);
+                final SimpleCredentials creds = new SimpleCredentials(sudoUser,
+                    new char[0]);
+                copyAttributes(creds, authenticationInfo);
+                creds.setAttribute(SESSION_ATTR_IMPERSONATOR,
+                    session.getUserID());
                 return session.impersonate(creds);
-            } catch ( RepositoryException re) {
+            } catch (RepositoryException re) {
                 throw getLoginException(re);
             } finally {
                 session.logout();
@@ -616,25 +624,53 @@ public class JcrResourceResolverFactoryImpl implements
      * @return A credentials object or <code>null</code>
      */
     private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
-        if ( authenticationInfo == null ) {
+        if (authenticationInfo == null) {
             return null;
         }
-        Credentials credentials = (Credentials) authenticationInfo.get("user.jcr.credentials");
-        if ( credentials == null ) {
-            // otherwise try to create SimpleCredentials if the userId is set
-            final String userId = (String) authenticationInfo.get("user.name");
-            if (userId != null) {
-                final char[] password = (char[]) authenticationInfo.get("user.password");
-                credentials = new SimpleCredentials(userId, (password == null ? new char[0] : password));
 
-                // add attributes
-                final Iterator<Map.Entry<String, Object>> i = authenticationInfo.entrySet().iterator();
-                while  (i.hasNext() ) {
-                    final Map.Entry<String, Object> current = i.next();
-                    ((SimpleCredentials)credentials).setAttribute(current.getKey(), current.getValue());
-                }
+        final Object credentialsObject = authenticationInfo.get("user.jcr.credentials");
+        if (credentialsObject instanceof Credentials) {
+            return (Credentials) credentialsObject;
+        }
+
+        // otherwise try to create SimpleCredentials if the userId is set
+        final Object userId = authenticationInfo.get("user.name");
+        if (userId instanceof String) {
+            final Object password = authenticationInfo.get("user.password");
+            final SimpleCredentials credentials = new SimpleCredentials(
+                (String) userId, ((password instanceof char[])
+                        ? new char[0]
+                        : (char[]) password));
+
+            // add attributes
+            copyAttributes(credentials, authenticationInfo);
+        }
+
+        // no user id (or not a String)
+        return null;
+    }
+
+    /**
+     * Copies the contents of the source map as attributes into the target
+     * <code>SimpleCredentials</code> object with the exception of the
+     * <code>user.jcr.credentials</code> and <code>user.password</code>
+     * attributes to prevent leaking passwords into the JCR Session attributes
+     * which might be used for break-in attempts.
+     *
+     * @param target The <code>SimpleCredentials</code> object whose attributes
+     *            are to be augmented.
+     * @param source The map whose entries (except the ones listed above) are
+     *            copied as credentials attributes.
+     */
+    private void copyAttributes(final SimpleCredentials target,
+            final Map<String, Object> source) {
+        final Iterator<Map.Entry<String, Object>> i = source.entrySet().iterator();
+        while (i.hasNext()) {
+            final Map.Entry<String, Object> current = i.next();
+            if (!"user.password".equals(current.getKey())
+                && !"user.jcr.credentials".equals(current.getKey())) {
+                target.setAttribute(current.getKey(), current.getValue());
             }
         }
-        return credentials;
     }
 }
