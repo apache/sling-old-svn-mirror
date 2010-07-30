@@ -639,8 +639,8 @@ public class JcrResourceResolverFactoryImpl implements
             final Object password = authenticationInfo.get("user.password");
             final SimpleCredentials credentials = new SimpleCredentials(
                 (String) userId, ((password instanceof char[])
-                        ? new char[0]
-                        : (char[]) password));
+                        ? (char[]) password
+                        : new char[0]));
 
             // add attributes
             copyAttributes(credentials, authenticationInfo);
