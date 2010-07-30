@@ -29,35 +29,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Reads data stored by a {@link NodeOutputStream}
- *  and rebuilds a continuous stream out of the 
+ *  and rebuilds a continuous stream out of the
  *  multiple Properties that it creates.
  */
 public class NodeInputStream extends InputStream {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /** The Node under which we read our data */
     private final Node node;
-    
+
     /** Computes path for stream storage */
     private final NodeStreamPath streamPath;
-    
+
     /** Current stream that we are reading */
     private InputStream currentStream;
-    
+
     public NodeInputStream(Node n) throws IOException {
         node = n;
         streamPath = new NodeStreamPath();
         selectNextStream();
     }
-    
+
     /** Select next property to read from and open its stream */
     private void selectNextStream() throws IOException {
         streamPath.selectNextPath();
         final String propertyPath = streamPath.getNodePath() + "/" + NodeStreamPath.PROPERTY_NAME;
         try {
             if(node.hasProperty(propertyPath)) {
-                final Property p = node.getProperty(propertyPath); 
+                final Property p = node.getProperty(propertyPath);
                 currentStream = p.getStream();
                 log.debug("Switched to the InputStream of Property {}", p.getPath());
             } else {
@@ -65,10 +65,10 @@ public class NodeInputStream extends InputStream {
                 log.debug("Property {} not found, end of stream", node.getPath() + "/" + propertyPath);
             }
         } catch(RepositoryException re) {
-            throw new IOException("RepositoryException in selectNextProperty()", re);
+            throw (IOException)new IOException("RepositoryException in selectNextProperty()").initCause(re);
         }
     }
-    
+
     @Override
     public int available() throws IOException {
         return currentStream == null ? 0 : currentStream.available();

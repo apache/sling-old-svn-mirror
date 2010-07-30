@@ -51,7 +51,7 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
 
     public static final String DEFAULT_ENCODING = "UTF-8";
     public static final String DEFAULT_EXT = "txt";
-    
+
     private static final Map<String, Renderer> renderers;
     static {
         renderers = new HashMap<String, Renderer>();
@@ -59,21 +59,21 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
         renderers.put("html", new HtmlRenderer());
         renderers.put("json", new JsonRenderer());
     }
-    
+
     @Reference
     private JobStorage jobStorage;
-    
+
     static interface Renderer {
         void render(PrintWriter pw, String streamPath, String streamResource) throws IOException;
     }
-    
+
     private static class TextRenderer implements Renderer {
         public void render(PrintWriter pw, String streamPath, String streamResource) {
             pw.println("Background execution: job output available at ");
             pw.println(streamPath);
         }
     }
-    
+
     private static class HtmlRenderer implements Renderer {
         public void render(PrintWriter pw, String streamPath, String streamResource) {
             pw.println("<html><head><title>Background job</title>");
@@ -85,7 +85,7 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
             pw.println("</body>");
         }
     }
-    
+
     private static class JsonRenderer implements Renderer {
         public void render(PrintWriter pw, String streamPath, String streamResource) throws IOException {
             JSONWriter w = new JSONWriter(pw);
@@ -97,23 +97,23 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
                 w.value(streamPath);
                 w.endObject();
             } catch (JSONException e) {
-                throw new IOException("JSONException in " + getClass().getSimpleName(), e);
+                throw (IOException)new IOException("JSONException in " + getClass().getSimpleName()).initCause(e);
             }
         }
     }
-    
+
     @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        final JobData j = jobStorage.getJobData(request.getResource().adaptTo(Node.class)); 
+        final JobData j = jobStorage.getJobData(request.getResource().adaptTo(Node.class));
         String jobExt = j.getProperty(JobData.PROP_EXTENSION);
         if(jobExt == null || jobExt.length() == 0) {
             jobExt = "";
         } else {
             jobExt = "." + jobExt;
         }
-        final String streamResource = request.getResource().getPath() + "/stream" + jobExt; 
+        final String streamResource = request.getResource().getPath() + "/stream" + jobExt;
         final String streamPath = request.getContextPath() + streamResource;
         final String ext = request.getRequestPathInfo().getExtension();
         Renderer r = renderers.get(ext);
