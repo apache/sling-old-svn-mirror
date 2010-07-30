@@ -62,7 +62,7 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * <p>
  * Implementors note: The methods in this class are all declared to throw the
  * exceptions according to the intentions of the Servlet API rather than
- * throwing their Sling RuntimeException counter parts. This is done to easy the
+ * throwing their Sling RuntimeException counter parts. This is done to ease the
  * integration with traditional servlets.
  *
  * @see SlingAllMethodsServlet
