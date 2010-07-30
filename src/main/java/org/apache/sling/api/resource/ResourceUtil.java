@@ -154,7 +154,11 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
     public static Resource getParent(Resource rsrc) {
-        return rsrc.getParent();
+        final String parentPath = ResourceUtil.getParent(rsrc.getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return rsrc.getResourceResolver().getResource(parentPath);
     }
 
     /**
@@ -164,7 +168,12 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#getName()} instead
      */
     public static String getName(Resource rsrc) {
-        return rsrc.getName();
+        /*
+         * Same as AbstractResource.getName() implementation to prevent problems
+         * if there are implementations of the pre-2.1.0 Resource interface in
+         * the framework.
+         */
+        return getName(rsrc.getPath());
     }
 
     /**
@@ -281,7 +290,12 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#listChildren()} instead
      */
     public static Iterator<Resource> listChildren(Resource parent) {
-        return parent.listChildren();
+        /*
+         * Same as AbstractResource.listChildren() implementation to prevent
+         * problems if there are implementations of the pre-2.1.0 Resource
+         * interface in the framework.
+         */
+        return parent.getResourceResolver().listChildren(parent);
     }
 
     /**
@@ -416,7 +430,24 @@ public class ResourceUtil {
      * @since 2.0.6
      */
     public static boolean isA(final Resource resource, String resourceType) {
-        return resource != null && resource.isResourceType(resourceType);
+        if (resource == null || resourceType == null) {
+            return false;
+        }
+
+        if (resourceType.equals(resource.getResourceType())) {
+            return true;
+        }
+
+        String superType = findResourceSuperType(resource);
+        while (superType != null) {
+            if (resourceType.equals(superType)) {
+                return true;
+            }
+            superType = getResourceSuperType(resource.getResourceResolver(),
+                superType);
+        }
+
+        return false;
     }
 
     /**

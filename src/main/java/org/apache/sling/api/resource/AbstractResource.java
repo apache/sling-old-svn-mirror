@@ -83,12 +83,15 @@ public abstract class AbstractResource implements Resource {
      * calling the {@link ResourceUtil#getParent(String)} method and then to
      * retrieve that resource from the resource resolver.
      */
+    @SuppressWarnings("deprecation")
     public Resource getParent() {
-        final String parentPath = ResourceUtil.getParent(getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return getResourceResolver().getResource(parentPath);
+        /*
+         * Implemented calling the deprecated ResourceUtil.getParent method
+         * (which actually has the implementation) to prevent problems if there
+         * are implementations of the pre-2.1.0 Resource interface in the
+         * framework.
+         */
+        return ResourceUtil.getParent(this);
     }
 
     /**
@@ -131,25 +134,12 @@ public abstract class AbstractResource implements Resource {
      * methods.
      */
     public boolean isResourceType(String resourceType) {
-
-        if (resourceType == null) {
-            return false;
-        }
-
-        if (resourceType.equals(getResourceType())) {
-            return true;
-        }
-
-        String superType = ResourceUtil.findResourceSuperType(this);
-        while (superType != null) {
-            if (resourceType.equals(superType)) {
-                return true;
-            }
-            superType = ResourceUtil.getResourceSuperType(
-                getResourceResolver(), superType);
-        }
-
-        return false;
+        /*
+         * Implemented calling the ResourceUtil.isA method (which actually has
+         * the implementation) to prevent problems if there are implementations
+         * of the pre-2.1.0 Resource interface in the framework.
+         */
+        return ResourceUtil.isA(this, resourceType);
     }
 
     /**
