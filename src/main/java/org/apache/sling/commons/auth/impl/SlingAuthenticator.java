@@ -134,15 +134,6 @@ public class SlingAuthenticator implements Authenticator,
     private static final String DEFAULT_REALM = "Sling (Development)";
 
     /**
-     * The name of the session attribute which is set if the session created by
-     * the {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}
-     * method is an impersonated session. The value of this attribute is the
-     * name of the primary user authenticated with the credentials extracted
-     * from the request using the authenitcation handler.
-     */
-    private static final String ATTR_IMPERSONATOR = "impersonator";
-
-    /**
      * The name of the request attribute providing the authenticated JCR
      * Session. This is only provided for backwards compatibility and will be
      * removed in a future release.
