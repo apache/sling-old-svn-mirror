@@ -163,22 +163,28 @@ public class FileMonitor extends TimerTask {
                     if ( changed ) {
                         // and now update
                         final File[] files = monitorable.file.listFiles();
-                        final Monitorable[] children = new Monitorable[files.length];
-                        for(int i=0; i<files.length; i++) {
-                            // search in old list
-                            for(int m=0;m<ds.children.length;m++) {
-                                if ( ds.children[m].file.equals(files[i]) ) {
-                                    children[i] = ds.children[m];
-                                    break;
+                        if (files != null) {
+                            final Monitorable[] children = new Monitorable[files.length];
+                            for (int i = 0; i < files.length; i++) {
+                                // search in old list
+                                for (int m = 0; m < ds.children.length; m++) {
+                                    if (ds.children[m].file.equals(files[i])) {
+                                        children[i] = ds.children[m];
+                                        break;
+                                    }
+                                }
+                                if (children[i] == null) {
+                                    children[i] = new Monitorable(
+                                        monitorable.path + '/'
+                                            + files[i].getName(), files[i]);
+                                    children[i].status = NonExistingStatus.SINGLETON;
+                                    check(children[i], localEA);
                                 }
                             }
-                            if ( children[i] == null ) {
-                                children[i] = new Monitorable(monitorable.path + '/' + files[i].getName(), files[i]);
-                                children[i].status = NonExistingStatus.SINGLETON;
-                                check(children[i], localEA);
-                            }
+                            ds.children = children;
+                        } else {
+                            ds.children = new Monitorable[0];
                         }
-                        ds.children = children;
                     }
                 }
             }
@@ -241,10 +247,15 @@ public class FileMonitor extends TimerTask {
         public DirStatus(final File dir, final String path) {
             super(dir);
             final File[] files = dir.listFiles();
-            this.children = new Monitorable[files.length];
-            for(int i=0; i<files.length; i++) {
-                this.children[i] = new Monitorable(path + '/' + files[i].getName(), files[i]);
-                FileMonitor.createStatus(this.children[i]);
+            if (files != null) {
+                this.children = new Monitorable[files.length];
+                for (int i = 0; i < files.length; i++) {
+                    this.children[i] = new Monitorable(path + '/'
+                        + files[i].getName(), files[i]);
+                    FileMonitor.createStatus(this.children[i]);
+                }
+            } else {
+                this.children = new Monitorable[0];
             }
         }
     }
