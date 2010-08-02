@@ -192,7 +192,7 @@
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>3.0.1-SNAPSHOT</version>
+            <version>3.1.1-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
