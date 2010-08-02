@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -45,7 +46,10 @@ import org.apache.sling.commons.json.io.JSONWriter;
  */
 @Component
 @Service
-@Property(name = "sling.servlet.resourceTypes", value = BackgroundServletConstants.JOB_RESOURCE_TYPE)
+@Properties({
+    @Property(name = "sling.servlet.resourceTypes", value = BackgroundServletConstants.JOB_RESOURCE_TYPE),
+    @Property(name = "sling.servlet.methods", value="GET")
+})
 @SuppressWarnings("serial")
 public class JobInfoServlet extends SlingSafeMethodsServlet {
 
