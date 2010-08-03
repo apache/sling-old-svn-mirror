@@ -29,6 +29,7 @@ import javax.jcr.Session;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.bgservlets.BackgroundServletConstants;
 import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.impl.DeepNodeCreator;
@@ -74,7 +75,7 @@ public class JobStorageImpl implements JobStorage {
         }
 	    final Node result = new DeepNodeCreator().deepCreateNode(path, s, JOB_NODETYPE);
 	    result.addMixin(JobData.JOB_DATA_MIXIN);
-	    result.setProperty("jcr:created", Calendar.getInstance());
+	    result.setProperty(BackgroundServletConstants.CREATION_TIME_PROPERTY, Calendar.getInstance());
 	    result.save();
 	    log.debug("Job node {} created", result.getPath());
 	    return result;

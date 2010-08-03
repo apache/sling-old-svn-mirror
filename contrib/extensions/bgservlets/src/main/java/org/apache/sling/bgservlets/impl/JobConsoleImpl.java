@@ -120,4 +120,8 @@ public class JobConsoleImpl implements JobConsole {
         }
         return request.getContextPath() + jobStatus.getPath() + extension;
     }
+    
+    public String getJobStreamPath(HttpServletRequest request, JobStatus jobStatus) {
+        return request.getContextPath() + jobStatus.getStreamPath();
+    }
 }

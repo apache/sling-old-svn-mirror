@@ -21,6 +21,7 @@ package org.apache.sling.bgservlets.impl;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 
 import org.apache.sling.bgservlets.JobStatus;
 
@@ -153,11 +154,28 @@ public class SuspendableOutputStream extends FilterOutputStream implements
 
     /**
      * Not implemented
-     *
      * @throws UnsupportedOperationException
      */
     public String getPath() {
         throw new UnsupportedOperationException(
                 "getPath() is not applicable to this class");
+    }
+    
+    /**
+     * Not implemented
+     * @throws UnsupportedOperationException
+     */
+    public String getStreamPath() {
+        throw new UnsupportedOperationException(
+                "getStreamPath() is not applicable to this class");
+    }
+
+    /**
+     * Not implemented
+     * @throws UnsupportedOperationException
+     */
+    public Date getCreationTime() {
+        throw new UnsupportedOperationException(
+        "getCreationTime() is not applicable to this class");
     }
 }

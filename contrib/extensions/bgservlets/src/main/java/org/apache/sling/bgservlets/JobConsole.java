@@ -43,8 +43,9 @@ public interface JobConsole {
      */
     JobStatus getJobStatus(Session session, String path);
     
-    /** Return the full path, including extension, to use to display
-     *  the given job status' page.
-     */
+    /** Return the full path, including extension, to the job's status page. */
     String getJobStatusPagePath(HttpServletRequest request, JobStatus jobStatus, String extension);
+    
+    /** Return the full path, including extension, to the job's stream */
+    String getJobStreamPath(HttpServletRequest request, JobStatus jobStatus);
 }

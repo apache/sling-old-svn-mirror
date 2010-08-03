@@ -19,6 +19,7 @@
 package org.apache.sling.bgservlets.impl;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
@@ -50,7 +51,9 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
     private final ResourceResolver resourceResolver;
     private final SlingServlet slingServlet;
     private final String path;
-
+    private final String streamPath;
+    private final Date creationTime;
+    
     BackgroundRequestExecutionJob(SlingServlet slingServlet,
             ResourceResolverFactory rrf, JobStorage storage, SlingHttpServletRequest request,
             HttpServletResponse hsr, String[] parametersToRemove)
@@ -80,6 +83,8 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
             d.setProperty(JobData.PROP_EXTENSION, ext);
         }
         path = d.getPath();
+        creationTime = d.getCreationTime();
+        streamPath = d.getPath() + STREAM_PATH_SUFFIX + (ext == null ? "" : "." + ext);
         stream = new SuspendableOutputStream(d.getOutputStream());
         response = new BackgroundHttpServletResponse(hsr, stream);
     }
@@ -115,5 +120,13 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 
     public void requestStateChange(State s) {
         stream.requestStateChange(s);
+    }
+
+    public String getStreamPath() {
+        return streamPath;
+    }
+
+    public Date getCreationTime() {
+        return creationTime;
     }
 }

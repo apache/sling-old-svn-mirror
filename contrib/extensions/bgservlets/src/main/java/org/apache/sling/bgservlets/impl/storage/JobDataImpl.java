@@ -20,6 +20,8 @@ package org.apache.sling.bgservlets.impl.storage;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -27,6 +29,7 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.bgservlets.BackgroundServletConstants;
 import org.apache.sling.bgservlets.JobData;
+import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.impl.nodestream.NodeInputStream;
 import org.apache.sling.bgservlets.impl.nodestream.NodeOutputStream;
 
@@ -34,8 +37,9 @@ class JobDataImpl implements JobData {
 
 	private final Node node;
 	private final String path;
+	private final Calendar creationTime;
 	
-	public static final String STREAM_PATH = "stream";
+	public static final String STREAM_PATH = JobStatus.STREAM_PATH_SUFFIX.substring(1);
 	
     public static final String RT_PROP = SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE;
     
@@ -43,6 +47,13 @@ class JobDataImpl implements JobData {
 	JobDataImpl(Node n) throws RepositoryException {
 		node = n;
 		path = node.getPath();
+		if(node.hasProperty(BackgroundServletConstants.CREATION_TIME_PROPERTY)) {
+		    creationTime = node.getProperty(BackgroundServletConstants.CREATION_TIME_PROPERTY).getDate();
+		} else {
+		    // Set fake date if not found
+		    creationTime = Calendar.getInstance();
+		    creationTime.set(1900, 1, 1);
+		}
 	}
 	
 	public InputStream getInputStream() {
@@ -95,5 +106,9 @@ class JobDataImpl implements JobData {
         } catch(RepositoryException re) {
             throw new JobStorageException("RepositoryException in setProperty", re);
         }
+    }
+
+    public Date getCreationTime() {
+        return creationTime.getTime();
     }
 }
