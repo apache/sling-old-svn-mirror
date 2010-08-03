@@ -24,4 +24,7 @@ public class BackgroundServletConstants {
     
     /** Resource type for the stream node */
     public static final String STREAM_RESOURCE_TYPE = "sling/bg/stream";
+    
+    /** Property name used to store job nodes creation times */
+    public static final String CREATION_TIME_PROPERTY = "jcr:created";
 }

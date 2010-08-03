@@ -20,6 +20,7 @@ package org.apache.sling.bgservlets;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 
 /** Wraps a JCR Node to store and retrieve information
  * 	about a background Job
@@ -47,4 +48,7 @@ public interface JobData {
 	
 	/** Get a named property, null if non-existent */
 	String getProperty(String name);
+	
+	/** Return this item's creation time */
+	Date getCreationTime();
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.bgservlets.impl.storage;
 
+import java.util.Date;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -25,6 +27,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.bgservlets.ExecutionEngine;
+import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,15 +47,32 @@ public class NodeJobStatusFactoryImpl implements NodeJobStatusFactory {
     
     private class NodeJobStatus implements JobStatus {
         private final String path;
+        private final String streamPath;
+        private final Date creationTime;
         
         public NodeJobStatus(Node n) throws RepositoryException {
             path = n.getPath();
+            if(n.hasProperty(JobData.PROP_EXTENSION)) {
+                streamPath = path + JobStatus.STREAM_PATH_SUFFIX + "." 
+                    + n.getProperty(JobData.PROP_EXTENSION).getString();
+            } else {
+                streamPath = path + JobStatus.STREAM_PATH_SUFFIX;
+            }
+            creationTime = new JobDataImpl(n).getCreationTime();
         }
     
         public String getPath() {
             return path;
         }
     
+        public String getStreamPath() {
+            return streamPath;
+        }
+        
+        public Date getCreationTime() {
+            return creationTime;
+        }
+
         public State getState() {
             final JobStatus j = getActiveJob();
             if(j == null) {

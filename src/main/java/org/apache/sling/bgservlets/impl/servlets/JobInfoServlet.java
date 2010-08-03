@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,8 +37,9 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.bgservlets.BackgroundServletConstants;
+import org.apache.sling.bgservlets.JobConsole;
 import org.apache.sling.bgservlets.JobData;
-import org.apache.sling.bgservlets.JobStorage;
+import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
@@ -65,7 +67,7 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
     }
 
     @Reference
-    private JobStorage jobStorage;
+    private JobConsole jobConsole;
 
     static interface Renderer {
         void render(PrintWriter pw, String streamPath, String streamResource) throws IOException;
@@ -110,25 +112,24 @@ public class JobInfoServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        final JobData j = jobStorage.getJobData(request.getResource().adaptTo(Node.class));
-        String jobExt = j.getProperty(JobData.PROP_EXTENSION);
-        if(jobExt == null || jobExt.length() == 0) {
-            jobExt = "";
-        } else {
-            jobExt = "." + jobExt;
+        try {
+            final Node n = request.getResource().adaptTo(Node.class);
+            final JobStatus j = jobConsole.getJobStatus(n.getSession(), n.getPath());
+            final String streamPath =  j.getStreamPath();
+            final String fullStreamPath = request.getContextPath() + streamPath; 
+            final String ext = request.getRequestPathInfo().getExtension();
+            Renderer r = renderers.get(ext);
+            if(r == null) {
+                r = renderers.get(DEFAULT_EXT);
+            }
+            if(r == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No JobRenderer available for extension '" + ext + "'");
+            }
+            response.setContentType(request.getResponseContentType());
+            response.setCharacterEncoding(DEFAULT_ENCODING);
+            r.render(response.getWriter(), fullStreamPath, streamPath);
+        } catch(RepositoryException re) {
+            throw new ServletException("RepositoryException in doGet", re);
         }
-        final String streamResource = request.getResource().getPath() + "/stream" + jobExt;
-        final String streamPath = request.getContextPath() + streamResource;
-        final String ext = request.getRequestPathInfo().getExtension();
-        Renderer r = renderers.get(ext);
-        if(r == null) {
-            r = renderers.get(DEFAULT_EXT);
-        }
-        if(r == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No JobRenderer available for extension '" + ext + "'");
-        }
-        response.setContentType(request.getResponseContentType());
-        response.setCharacterEncoding(DEFAULT_ENCODING);
-        r.render(response.getWriter(), streamPath, streamResource);
     }
 }
