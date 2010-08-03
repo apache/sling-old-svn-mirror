@@ -68,9 +68,8 @@ public class Loader implements NamespaceMapper {
 
         // scan existing bundles
         for (Bundle bundle : existingBundles) {
-            if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-                // load content for bundles which are neither INSTALLED nor
-                // UNINSTALLED
+            // Ignore bundles which are in an inactive state
+            if ((bundle.getState() & (Bundle.UNINSTALLED | Bundle.STOP_TRANSIENT | Bundle.STOPPING )) == 0) {
                 registerBundle(bundle);
             }
         }
