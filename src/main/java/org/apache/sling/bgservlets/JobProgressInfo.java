@@ -20,33 +20,15 @@ package org.apache.sling.bgservlets;
 
 import java.util.Date;
 
-/** Provides info about a job */
-public interface JobStatus {
-    enum State {
-        NEW, QUEUED, REJECTED, RUNNING, SUSPEND_REQUESTED, SUSPENDED, STOP_REQUESTED, STOPPED, DONE
-    }
+/** Provides Job progress information */
+public interface JobProgressInfo {
     
-    /** Suffix used to build the job's stream path */
-    String STREAM_PATH_SUFFIX = "/stream";
-
-    /** Return the job's current state */
-    State getState();
-    
-    /** Return the job's creation time */
-    Date getCreationTime();
-
-    /**
-     * Request a change in the job's state, which might not take effect
-     * immediately, or even be ignored.
+    /** Return the job's ETA if available.
+     *  @return null if the job didn't provide an ETA, or if 
+     *      it is done.
      */
-    void requestStateChange(State s);
-
-    /** Path of the Resource that describes this job */
-    String getPath();
+    Date getEstimatedCompletionTime();
     
-    /** Full Path of the job's stream, including extension */
-    String getStreamPath();
-    
-    /** Return the job's progress info */
-    JobProgressInfo getProgressInfo();
+    /** Return a single line of progress information */
+    String getProgressMessage();
 }

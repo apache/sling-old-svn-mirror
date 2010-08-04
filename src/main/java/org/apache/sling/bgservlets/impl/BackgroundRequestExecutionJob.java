@@ -32,8 +32,10 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.BackgroundHttpServletRequest;
 import org.apache.sling.bgservlets.BackgroundHttpServletResponse;
 import org.apache.sling.bgservlets.JobData;
+import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.JobStorage;
+import org.apache.sling.bgservlets.RuntimeState;
 import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
@@ -43,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * Runnable that executes a FilterChain, using a ServletResponseWrapper to
  * capture the output.
  */
-class BackgroundRequestExecutionJob implements Runnable, JobStatus {
+class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState, JobProgressInfo {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final HttpServletRequest request;
     private final BackgroundHttpServletResponse response;
@@ -53,6 +55,8 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
     private final String path;
     private final String streamPath;
     private final Date creationTime;
+    private Date estimatedCompletionTime;
+    private String progressMessage;
     
     BackgroundRequestExecutionJob(SlingServlet slingServlet,
             ResourceResolverFactory rrf, JobStorage storage, SlingHttpServletRequest request,
@@ -61,6 +65,9 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
         this.request = new BackgroundHttpServletRequest(request,
                 parametersToRemove);
         this.slingServlet = slingServlet;
+        
+        // Provide this as the RuntimeState for the background servlet
+        this.request.setAttribute(RuntimeState.class.getName(), this);
 
         // Need a new ResourceResolver with the same credentials as the
         // current request, for the background request.
@@ -128,5 +135,25 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus {
 
     public Date getCreationTime() {
         return creationTime;
+    }
+    
+    public JobProgressInfo getProgressInfo() {
+        return this;
+    }
+
+    public String getProgressMessage() {
+        return progressMessage;
+    }
+    
+    public Date getEstimatedCompletionTime() {
+        return estimatedCompletionTime;
+    }
+
+    public void setEstimatedCompletionTime(Date d) {
+        estimatedCompletionTime = d;
+    }
+
+    public void setProgressMessage(String str) {
+        progressMessage = str;
     }
 }

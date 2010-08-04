@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 
+import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 
 /**
@@ -178,4 +179,15 @@ public class SuspendableOutputStream extends FilterOutputStream implements
         throw new UnsupportedOperationException(
         "getCreationTime() is not applicable to this class");
     }
+
+    /**
+     * Not implemented
+     * @throws UnsupportedOperationException
+     */
+    public JobProgressInfo getProgressInfo() {
+        throw new UnsupportedOperationException(
+        "getProgressInfo() is not applicable to this class");
+    }
+    
+    
 }

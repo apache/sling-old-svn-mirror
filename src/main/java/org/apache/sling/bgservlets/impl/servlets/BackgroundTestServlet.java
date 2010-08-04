@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.bgservlets.RuntimeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,14 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
         final int cycles = getIntParam(request, "cycles", 10);
         final int interval = getIntParam(request, "interval", 1000);
         final int flushEvery = getIntParam(request, "flushEvery", 2);
+        
+        // Use supplied RuntimeState if available
+        final RuntimeState runtimeState = (RuntimeState)request.getAttribute(RuntimeState.class.getName());
+        if(runtimeState == null) {
+            log.warn("No RuntimeState attribute provided, won't report progress");
+        } else {
+            runtimeState.setEstimatedCompletionTime(new Date(System.currentTimeMillis() + cycles * interval));
+        }
 
         w.println("Start at " + new Date());
         try {
@@ -63,7 +72,15 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
                     w.println("Flushing output<br/>");
                     w.flush();
                 }
-                w.printf("Cycle %d of %d\n<br/>", i, cycles);
+                
+                final String msg = String.format("Cycle %d of %d", i, cycles);
+                w.printf(msg);
+                w.print("\n<br/>");
+                
+                if(runtimeState != null) {
+                    runtimeState.setProgressMessage(msg);
+                }
+                
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException iex) {

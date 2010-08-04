@@ -20,6 +20,7 @@ package org.apache.sling.bgservlets.impl.webconsole;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -178,6 +179,8 @@ public class JobConsolePlugin {
             pw.println("<tr class='content'>");
             pw.println("<th class='content container'>Controls</th>");
             pw.println("<th class='content container'>State</th>");
+            pw.println("<th class='content container'>ETA</th>");
+            pw.println("<th class='content container'>Progress</th>");
             pw.println("<th class='content container'>Path</th>");
             pw.println("</tr>");
             pw.println("</thead>");
@@ -216,15 +219,42 @@ public class JobConsolePlugin {
                     + job.getPath() + "'/>&nbsp;");
             pw.println("</form></td>");
             pw.println("<td>");
-            pw.println(job.getState());
+            pw.println(escape(job.getState().toString()));
+            pw.println("</td>");
+            pw.println("<td>");
+            final Date eta = job.getProgressInfo().getEstimatedCompletionTime();
+            pw.println(eta == null ? "-" : eta.toString());
+            pw.println("</td>");
+            pw.println("<td>");
+            pw.println(escape(job.getProgressInfo().getProgressMessage()));
             pw.println("</td>");
             pw.print("<td>\n<a href='");
-            pw.print(console.getJobStatusPagePath(request, job, STATUS_EXTENSION));
+            pw.print(escape(console.getJobStatusPagePath(request, job, STATUS_EXTENSION)));
             pw.print("'>");
-            pw.print(job.getPath());
+            pw.print(escape(job.getPath()));
             pw.println("</a>");
             pw.println("</td>");
             pw.println("</tr>");
+        }
+        
+        static String escape(String str) {
+            if(str == null) {
+                return null;
+            }
+            final StringBuilder sb = new StringBuilder();
+            for(int i=0; i < str.length(); i++) {
+                final char c = str.charAt(i);
+                if(c == '<') {
+                    sb.append("&lt;");
+                } else if(c== '>') {
+                    sb.append("&gt;");
+                } else if(c == '&') {
+                    sb.append("&amp;");
+                } else {
+                    sb.append(c);
+                }
+            }
+            return sb.toString();
         }
 
     }

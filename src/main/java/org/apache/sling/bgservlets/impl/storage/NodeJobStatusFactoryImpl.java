@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobData;
+import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +96,25 @@ public class NodeJobStatusFactoryImpl implements NodeJobStatusFactory {
                 return executionEngine.getJobStatus(path);
             }
             return null;
+        }
+
+        public JobProgressInfo getProgressInfo() {
+            // If job is active, return its info, else
+            // return info from our job node
+            final JobStatus active = getActiveJob();
+            if(active != null) {
+                return active.getProgressInfo();
+            } else {
+                return new JobProgressInfo() {
+                    public String getProgressMessage() {
+                        return getState().toString();
+                    }
+                    
+                    public Date getEstimatedCompletionTime() {
+                        return null;
+                    }
+                };
+            }
         }
     };
     
