@@ -79,6 +79,8 @@ public class BackgroundTestServlet extends SlingSafeMethodsServlet {
                 
                 if(runtimeState != null) {
                     runtimeState.setProgressMessage(msg);
+                    final int remainingCycles = cycles - i;
+                    runtimeState.setEstimatedCompletionTime(new Date(System.currentTimeMillis() + remainingCycles * interval));
                 }
                 
                 try {
