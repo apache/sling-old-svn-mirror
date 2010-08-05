@@ -28,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -36,10 +37,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
-import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
@@ -52,16 +53,6 @@ import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
  */
 public class ModifyOperation extends AbstractCreateOperation {
 
-    /**
-     * The default node name generator
-     */
-    private final NodeNameGenerator defaultNodeNameGenerator;
-
-    /**
-     * utility class for generating node names
-     */
-    private NodeNameGenerator[] extraNodeNameGenerators;
-
     private final DateParser dateParser;
 
     /**
@@ -71,13 +62,9 @@ public class ModifyOperation extends AbstractCreateOperation {
 
     public ModifyOperation(NodeNameGenerator defaultNodeNameGenerator,
             DateParser dateParser, ServletContext servletContext) {
-        this.defaultNodeNameGenerator = defaultNodeNameGenerator;
+    	super(defaultNodeNameGenerator);
         this.dateParser = dateParser;
         this.uploadHandler = new SlingFileUploadHandler(servletContext);
-    }
-
-    public void setExtraNodeNameGenerators(NodeNameGenerator[] extraNodeNameGenerators) {
-        this.extraNodeNameGenerators = extraNodeNameGenerators;
     }
 
     @Override
@@ -173,62 +160,6 @@ public class ModifyOperation extends AbstractCreateOperation {
 
         return path;
     }
-
-    private String generateName(SlingHttpServletRequest request, String basePath)
-            throws RepositoryException {
-        boolean requirePrefix = requireItemPathPrefix(request);
-
-        String generatedName = null;
-        if (extraNodeNameGenerators != null) {
-            for (NodeNameGenerator generator : extraNodeNameGenerators) {
-                generatedName = generator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
-                if (generatedName != null) {
-                    break;
-                }
-            }
-        }
-        if (generatedName == null) {
-            generatedName = defaultNodeNameGenerator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
-        }
-
-        // If the path ends with a *, create a node under its parent, with
-        // a generated node name
-        basePath += "/" + generatedName;
-
-        basePath = ensureUniquePath(request, basePath);
-
-        return basePath;
-    }
-
-    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
-        // if resulting path exists, add a suffix until it's not the case
-        // anymore
-        Session session = request.getResourceResolver().adaptTo(Session.class);
-
-        String jcrPath = removeAndValidateWorkspace(basePath, session);
-
-        // if resulting path exists, add a suffix until it's not the case
-        // anymore
-        if (session.itemExists(jcrPath)) {
-            for (int idx = 0; idx < 1000; idx++) {
-                String newPath = jcrPath + "_" + idx;
-                if (!session.itemExists(newPath)) {
-                    basePath = basePath + "_" + idx;
-                    jcrPath = newPath;
-                    break;
-                }
-            }
-        }
-
-        // if it still exists there are more than 1000 nodes ?
-        if (session.itemExists(jcrPath)) {
-            throw new RepositoryException(
-                "Collision in generated node names for path=" + basePath);
-        }
-
-        return basePath;
-    }
-
 
     /**
      * Moves all repository content listed as repository move source in the

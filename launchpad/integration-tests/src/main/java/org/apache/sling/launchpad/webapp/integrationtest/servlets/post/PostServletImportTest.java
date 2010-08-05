@@ -20,13 +20,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -539,6 +544,96 @@ public class PostServletImportTest extends HttpTestBase {
 		//assert the imported content is there.
         String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
 		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+    }
+    
+    
+    
+
+    protected String importNodeWithExactName(String testNodeName) throws IOException, JSONException {
+        final String testPath = TEST_BASE_PATH;
+        Map<String, String> props = new HashMap<String, String>();
+        String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
+        urlsToDelete.add(testNode);
+
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION,
+        		SlingPostConstants.OPERATION_IMPORT);
+        
+        props.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
+        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
+        props.put(SlingPostConstants.RP_CONTENT, jsonContent);
+        props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        String location = testClient.createNode(HTTP_BASE_URL + testPath, props);
+
+        // assert content at new location
+        String content = getContent(location + ".3.json", CONTENT_TYPE_JSON);
+
+		JSONObject jsonObj = new JSONObject(content);
+		assertNotNull(jsonObj);
+
+		//assert the imported content is there.
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+
+    	assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have exact name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + testNode + ")",
+                location.contains(testNode + "/"));
+        assertTrue("Node (" + location + ") must have exact name '" + testNodeName + "'",
+        		location.endsWith("/" + testNodeName));
+
+		return location;
+    }
+    
+    /**
+     * SLING-1091: test create node with an exact node name (no filtering) 
+     */
+    public void testImportNodeWithExactName() throws IOException, JSONException {
+    	importNodeWithExactName("exactNodeName");
+    }
+
+    /**
+     * SLING-1091: test error reporting when attempting to create a node with an 
+     * invalid exact node name. 
+     */
+    public void testImportNodeWithInvalidExactName() throws IOException {
+        final String testPath = TEST_BASE_PATH;
+        Map<String, String> props = new HashMap<String, String>();
+        String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
+        urlsToDelete.add(testNode);
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_IMPORT));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, "exactNodeName*"));
+        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT, jsonContent));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT_TYPE, "json"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*"));
+
+        //expect a 500 status since the name is invalid
+        String location = HTTP_BASE_URL + testPath;
+		assertPostStatus(location, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+    }
+
+    /**
+     * SLING-1091: test error reporting when attempting to import a node with an 
+     * already used node name. 
+     */
+    public void testImportNodeWithAlreadyUsedExactName() throws IOException, JSONException {
+    	String testNodeName = "alreadyUsedExactNodeName";
+    	String location = importNodeWithExactName(testNodeName);
+
+    	
+        //try to create the same node again, since same name siblings are not allowed an error should be
+        // thrown
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, testNodeName));
+		//expect a 500 status since the name is not unique
+		String postUrl = location.substring(0, location.lastIndexOf('/'));
+		assertPostStatus(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
     }
     
 }
