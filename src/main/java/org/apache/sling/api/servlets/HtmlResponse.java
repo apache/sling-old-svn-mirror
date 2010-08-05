@@ -214,11 +214,21 @@ public class HtmlResponse {
     /**
      * Returns the status code of this instance. If the status code has never
      * been set by calling the {@link #setStatus(int, String)} method, the
-     * response is assumed to be successful and 200 is returned.
+     * status code is determined by checking if there was an error.  If there
+     * was an error, the response is assumed to be unsuccessful and 500 is returned.
+     * If there is no error, the response is assumed to be successful and 200 is returned.
      */
     public int getStatusCode() {
         Integer status = getProperty(PN_STATUS_CODE, Integer.class);
-        return (status == null) ? HttpServletResponse.SC_OK : status;
+        if (status == null) {
+        	if (getError() != null) {
+        		//if there was an error
+        		status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        	} else {
+        		status = HttpServletResponse.SC_OK;
+        	}
+        }
+        return status;
     }
 
     public String getStatusMessage() {
