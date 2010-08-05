@@ -48,34 +48,20 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 public class ImportOperation extends AbstractCreateOperation {
 
     /**
-     * The default node name generator
-     */
-    private final NodeNameGenerator defaultNodeNameGenerator;
-
-    /**
-     * utility class for generating node names
-     */
-    private NodeNameGenerator[] extraNodeNameGenerators;
-
-    /**
      * Reference to the content importer service
      */
 	private ContentImporter contentImporter;
 
     public ImportOperation(NodeNameGenerator defaultNodeNameGenerator,
             ContentImporter contentImporter) {
-        this.defaultNodeNameGenerator = defaultNodeNameGenerator;
+    	super(defaultNodeNameGenerator);
         this.contentImporter = contentImporter;
     }
-    
-	public void setContentImporter(ContentImporter importer) {
+
+    public void setContentImporter(ContentImporter importer) {
 		this.contentImporter = importer;
 	}
-
-    public void setExtraNodeNameGenerators(NodeNameGenerator[] extraNodeNameGenerators) {
-        this.extraNodeNameGenerators = extraNodeNameGenerators;
-    }
-	
+    
     @Override
     protected void doRun(SlingHttpServletRequest request, HtmlResponse response, final List<Modification> changes)
     		throws RepositoryException {
@@ -85,7 +71,7 @@ public class ImportOperation extends AbstractCreateOperation {
                     "Missing content importer for import");
             return;
     	}
-	Map<String, RequestProperty> reqProperties = collectContent(request,
+    	Map<String, RequestProperty> reqProperties = collectContent(request,
              response);
      
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
@@ -93,7 +79,6 @@ public class ImportOperation extends AbstractCreateOperation {
         // do not change order unless you have a very good reason.
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
-    	
         processCreate(session, reqProperties, response, changes, versioningConfiguration);
         String path = response.getPath();
         Node node = null;
@@ -135,7 +120,8 @@ public class ImportOperation extends AbstractCreateOperation {
         //check if a name was posted to use as the name of the imported root node
         if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null || 
         		request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
-   			String name = generateName(request, basePath);
+   			String nodePath = generateName(request, basePath);
+   			String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
    	        contentRootName = name + "." + contentType;
         } else {
         	//no name posted, so the import won't create a root node
@@ -226,54 +212,4 @@ public class ImportOperation extends AbstractCreateOperation {
         	throw new RepositoryException(e);
         }
     }
-
-    
-    private String generateName(SlingHttpServletRequest request, String basePath)
-    		throws RepositoryException {
-    	boolean requirePrefix = requireItemPathPrefix(request);
-
-    	String generatedName = null;
-    	if (extraNodeNameGenerators != null) {
-    		for (NodeNameGenerator generator : extraNodeNameGenerators) {
-    			generatedName = generator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
-    			if (generatedName != null) {
-    				break;
-    			}
-    		}
-    	}
-    	if (generatedName == null) {
-    		generatedName = defaultNodeNameGenerator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
-    	}
-
-    	// If the path ends with a *, create a node under its parent, with
-    	// a generated node name
-    	basePath += "/" + generatedName;
-
-    	// if resulting path exists, add a suffix until it's not the case
-    	// anymore
-    	Session session = request.getResourceResolver().adaptTo(Session.class);
-
-    	// if resulting path exists, add a suffix until it's not the case
-    	// anymore
-    	if (session.itemExists(basePath)) {
-    		for (int idx = 0; idx < 1000; idx++) {
-    			String newPath = basePath + "_" + idx;
-    			if (!session.itemExists(newPath)) {
-    				basePath = newPath;
-    				break;
-    			}
-    		}
-    	}
-
-    	// if it still exists there are more than 1000 nodes ?
-    	if (session.itemExists(basePath)) {
-    		throw new RepositoryException(
-    				"Collision in generated node names for path=" + basePath);
-    	}
-
-    	//the last segment is the name.
-    	String name = basePath.substring(basePath.lastIndexOf('/') + 1);
-		return name;
-    }
-
 }
