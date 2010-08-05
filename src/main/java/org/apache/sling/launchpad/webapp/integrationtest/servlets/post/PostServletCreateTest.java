@@ -17,11 +17,14 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -136,4 +139,60 @@ public class PostServletCreateTest extends HttpTestBase {
         assertJavascript("string", content, "out.println(typeof data.c)");
     }
 
- }
+    /**
+     * SLING-1091: test create node with an exact node name (no filtering) 
+     */
+    public void testCreateNodeWithExactName() throws IOException {
+    	Map<String,String> nodeProperties = new HashMap<String, String>();
+    	nodeProperties.put(SlingPostConstants.RP_NODE_NAME, "exactNodeName");
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, nodeProperties);
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have exact name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
+                location.contains(postUrl + "/"));
+        assertTrue("Node (" + location + ") must have exact name 'exactNodeName'",
+        		location.endsWith("/exactNodeName"));
+    }
+
+    /**
+     * SLING-1091: test error reporting when attempting to create a node with an 
+     * invalid exact node name. 
+     */
+    public void testCreateNodeWithInvalidExactName() throws IOException {
+		String location = postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, "exactNodeName*"));
+		//expect a 500 status since the name is invalid
+		assertPostStatus(location, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+    }
+
+    /**
+     * SLING-1091: test error reporting when attempting to create a node with an 
+     * already used node name. 
+     */
+    public void testCreateNodeWithAlreadyUsedExactName() throws IOException {
+        String testNodeName = "alreadyUsedExactNodeName";
+    	
+    	Map<String,String> nodeProperties = new HashMap<String, String>();
+    	nodeProperties.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, nodeProperties);
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have exact name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
+                location.contains(postUrl + "/"));
+        assertTrue("Node (" + location + ") must have exact name '" + testNodeName + "'",
+        		location.endsWith("/" + testNodeName));
+
+        //try to create the same node again, since same name siblings are not allowed an error should be
+        // thrown
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, testNodeName));
+		//expect a 500 status since the name is not unique
+		assertPostStatus(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+    }
+
+}
