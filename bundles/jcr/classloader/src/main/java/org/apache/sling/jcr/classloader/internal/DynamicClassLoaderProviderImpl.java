@@ -60,7 +60,7 @@ public class DynamicClassLoaderProviderImpl
         implements DynamicClassLoaderProvider, ClassLoaderWriter {
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
+    private final Logger log = LoggerFactory.getLogger(DynamicClassLoaderProviderImpl.class);
 
     /**
      * @scr.property valueRefs0="CLASS_PATH_DEFAULT"
