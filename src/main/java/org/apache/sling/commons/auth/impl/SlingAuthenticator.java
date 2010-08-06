@@ -904,7 +904,6 @@ public class SlingAuthenticator implements Authenticator,
      *            impersonation cookie.
      * @param session The real {@link Session} to optionally replace with an
      *            impersonated session.
-     * @return The impersonated session or the input session.
      * @see Session#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
