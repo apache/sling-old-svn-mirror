@@ -208,7 +208,7 @@ public class JcrResourceResolverWebConsolePlugin extends
                 // map or resolve as instructed
                 Object result;
                 if ("Map".equals(request.getParameter(ATTR_SUBMIT))) {
-                    if (helper.getRemoteHost() == null) {
+                    if (helper.getServerName() == null) {
                         result = resolver.map(helper.getPathInfo());
                     } else {
                         result = resolver.map(helper, helper.getPathInfo());
