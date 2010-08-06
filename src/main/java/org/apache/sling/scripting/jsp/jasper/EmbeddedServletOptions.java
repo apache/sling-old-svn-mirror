@@ -28,6 +28,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspConfig;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
+import org.apache.sling.scripting.jsp.jasper.compiler.OriginalTldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.ParserUtils;
@@ -610,7 +611,7 @@ public final class EmbeddedServletOptions implements Options {
 
         // Setup the global Tag Libraries location cache for this
         // web-application.
-        tldLocationsCache = new TldLocationsCache(context);
+        tldLocationsCache = new OriginalTldLocationsCache(context);
 
         // Setup the jsp config info for this web app.
         jspConfig = new JspConfig(context);

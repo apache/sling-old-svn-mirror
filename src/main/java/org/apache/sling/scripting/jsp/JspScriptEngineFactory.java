@@ -102,7 +102,8 @@ public class JspScriptEngineFactory
     /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
 
-    private SlingTldLocationsCache tldLocationsCache;
+    @Reference
+    private TaglibCache tldLocationsCache;
 
     private JspRuntimeContext jspRuntimeContext;
 
@@ -219,12 +220,9 @@ public class JspScriptEngineFactory
             // prepare some classes
             ioProvider = new SlingIOProvider(classLoaderWriter);
 
-            tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
-                componentContext.getBundleContext());
-
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
-                componentContext, jspClassLoader, tldLocationsCache);
+                componentContext, jspClassLoader, (SlingTldLocationsCache)tldLocationsCache);
 
             // Initialize the JSP Runtime Context
             this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
@@ -234,7 +232,7 @@ public class JspScriptEngineFactory
             this.jspRuntimeContext.setIOProvider(ioProvider);
 
             jspServletContext = new JspServletContext(ioProvider,
-                slingServletContext, tldLocationsCache);
+                slingServletContext, (SlingTldLocationsCache)tldLocationsCache);
 
             servletConfig = new JspServletConfig(jspServletContext,
                 componentContext.getProperties());
@@ -276,11 +274,6 @@ public class JspScriptEngineFactory
                 logger.debug("deactivate: ServletContext might already be unavailable", npe);
             }
             jspRuntimeContext = null;
-        }
-
-        if (tldLocationsCache != null) {
-            tldLocationsCache.shutdown(componentContext.getBundleContext());
-            tldLocationsCache = null;
         }
 
         ioProvider = null;
@@ -404,6 +397,8 @@ public class JspScriptEngineFactory
      *
      */
     private static class BetterScriptException extends ScriptException {
+
+        private static final long serialVersionUID = -6490165487977283019L;
 
         public BetterScriptException(String message, Exception cause) {
             super(message);

@@ -20,10 +20,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
@@ -31,38 +28,23 @@ import org.apache.sling.scripting.jsp.jasper.xmlparser.ParserUtils;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
 
 /**
  * The <code>SlingTldLocationsCache</code> TODO
  */
-public class SlingTldLocationsCache extends TldLocationsCache implements
-        BundleListener {
+public class SlingTldLocationsCache
+    extends TldLocationsCache implements TaglibCache {
 
     private static final String TLD_SCHEME = "tld:";
 
-    private Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
+    private final Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
 
-    public SlingTldLocationsCache(ServletContext servletContext,
-            BundleContext context) {
-        super(servletContext);
-
-        context.addBundleListener(this);
-
-        Bundle[] bundles = context.getBundles();
+    public SlingTldLocationsCache(final BundleContext context) {
+        final Bundle[] bundles = context.getBundles();
         for (int i = 0; i < bundles.length; i++) {
-            if (bundles[i].getState() == Bundle.ACTIVE) {
+            if (bundles[i].getState() == Bundle.RESOLVED || bundles[i].getState() == Bundle.ACTIVE ) {
                 addBundle(bundles[i]);
             }
-        }
-    }
-
-    void shutdown(BundleContext context) {
-        context.removeBundleListener(this);
-
-        synchronized (tldLocations) {
-            tldLocations.clear();
         }
     }
 
@@ -87,42 +69,25 @@ public class SlingTldLocationsCache extends TldLocationsCache implements
 
     // ---------- TldLocationsCache support ------------------------------------
 
-    public String[] getLocation(String uri) throws JasperException {
+    public String[] getLocation(final String uri) throws JasperException {
         synchronized (tldLocations) {
             if (tldLocations.containsKey(uri)) {
                 return new String[] { TLD_SCHEME + uri, null };
             }
         }
 
-        // TODO: Should we fall back to the original implementation at
-        // all ??
-        return super.getLocation(uri);
+        return null;
     }
 
-    // ---------- BundleListener -----------------------------------------------
-
-    public void bundleChanged(BundleEvent event) {
-        if (event.getType() == BundleEvent.STARTED) {
-            // find and register new TLD
-            addBundle(event.getBundle());
-
-        } else if (event.getType() == BundleEvent.STOPPED) {
-            // unregister TLD
-            removeBundle(event.getBundle());
-        }
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    private void addBundle(Bundle bundle) {
+    public void addBundle(Bundle bundle) {
         // currently only META-INF/*.tld is supported, this should
         // be extended for registration in a Bundle Manifest Header
 
-        Enumeration<?> entries = bundle.findEntries("META-INF", "*.tld", false);
+        final Enumeration<?> entries = bundle.findEntries("META-INF", "*.tld", false);
         if (entries != null) {
             while (entries.hasMoreElements()) {
-                URL taglib = (URL) entries.nextElement();
-                String uri = getUriFromTld(taglib);
+                final URL taglib = (URL) entries.nextElement();
+                final String uri = getUriFromTld(taglib);
 
                 synchronized (tldLocations) {
                     if (uri != null && !tldLocations.containsKey(uri)) {
@@ -134,23 +99,22 @@ public class SlingTldLocationsCache extends TldLocationsCache implements
         }
     }
 
-    private void removeBundle(Bundle bundle) {
+    public boolean isBundleUsed(Bundle bundle) {
         synchronized (tldLocations) {
-            for (Iterator<TldLocationEntry> li = tldLocations.values().iterator(); li.hasNext();) {
-                TldLocationEntry tle = li.next();
-                if (tle != null
-                    && tle.getBundle().getBundleId() == bundle.getBundleId()) {
-                    li.remove();
+            for(final TldLocationEntry tle : tldLocations.values()) {
+                if (tle.getBundleId() == bundle.getBundleId()) {
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     /*
      * Returns the value of the uri element of the given TLD, or null if the
      * given TLD does not contain any such element.
      */
-    private String getUriFromTld(URL resource) {
+    private String getUriFromTld(final URL resource) {
         InputStream stream = null;
         try {
             stream = resource.openStream();
@@ -180,22 +144,22 @@ public class SlingTldLocationsCache extends TldLocationsCache implements
         return null;
     }
 
-    private static class TldLocationEntry {
-        private Bundle bundle;
+    private static final class TldLocationEntry {
+        private final long bundleId;
 
-        private String tldPath;
+        private final URL tldURL;
 
-        private TldLocationEntry(Bundle bundle, String tldPath) {
-            this.bundle = bundle;
-            this.tldPath = tldPath;
+        private TldLocationEntry(final Bundle bundle, final String tldPath) {
+            this.bundleId = bundle.getBundleId();
+            this.tldURL = bundle.getEntry(tldPath);
         }
 
-        Bundle getBundle() {
-            return bundle;
+        long getBundleId() {
+            return this.bundleId;
         }
 
         URL getTldURL() {
-            return bundle.getEntry(tldPath);
+            return this.tldURL;
         }
     }
 }
