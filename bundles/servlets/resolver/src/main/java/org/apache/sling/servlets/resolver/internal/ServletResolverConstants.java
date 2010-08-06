@@ -26,7 +26,9 @@ public class ServletResolverConstants {
      * accessible as a resource (value is "sling.servlet.paths")
      * <p>
      * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types.
+     * denoting the absolute path(s) under the servlet is registered in the
+     * resource tree.
+     * <p>
      * Either this property or the {@link #SLING_SERVLET_RESOURCE_TYPES}
      * property must be set, or the servlet is ignored. If both are set, the
      * servlet is registered using both ways.
@@ -39,9 +41,11 @@ public class ServletResolverConstants {
      * is "sling.servlet.resourceTypes").
      * <p>
      * The type of this property is a String or String[] (array of strings)
-     * denoting the resource types. Either this property or the {@link #SLING_SERVLET_PATHS}
-     * property must be set, or the servlet is ignored. If both are set, the
-     * servlet is registered using both ways.
+     * denoting the resource types.
+     * <p>
+     * Either this property or the {@link #SLING_SERVLET_PATHS} property must be
+     * set, or the servlet is ignored. If both are set, the servlet is
+     * registered using both ways.
      */
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
 
