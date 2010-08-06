@@ -283,7 +283,6 @@ public final class DynamicRepositoryClassLoader
      *      if this class loader has already been destroyed.
      */
     protected Class<?> findClass(final String name) throws ClassNotFoundException {
-
         if (destroyed) {
             throw new ClassNotFoundException(name + " (Classloader destroyed)");
         }
@@ -769,7 +768,7 @@ public final class DynamicRepositoryClassLoader
 
         // update dirty flag accordingly
         dirty |= exp;
-        log.debug("expireResource: Loader dirty: {}", new Boolean(isDirty()));
+        log.debug("expireResource: Loader dirty: {}", isDirty());
 
         // return the expiry status
         return exp;
