@@ -41,6 +41,12 @@ public class PathEntry extends ImportOptions {
      */
     public static final String OVERWRITE_DIRECTIVE = "overwrite";
 
+    /**
+     * The overwriteProperties directive specifying if content properties 
+     * should be overwritten or just initially added.
+     */
+    public static final String OVERWRITE_PROPERTIES_DIRECTIVE = "overwriteProperties";
+
     /** The uninstall directive specifying if content should be uninstalled. */
     public static final String UNINSTALL_DIRECTIVE = "uninstall";
 
@@ -74,6 +80,9 @@ public class PathEntry extends ImportOptions {
 
     /** Should existing content be overwritten? */
     private final boolean overwrite;
+
+    /** Should existing content properties be overwritten? */
+    private final boolean overwriteProperties;
 
     /** Should existing content be uninstalled? */
     private final boolean uninstall;
@@ -123,6 +132,14 @@ public class PathEntry extends ImportOptions {
             this.overwrite = false;
         }
 
+        // overwriteProperties directive
+        final String overwritePropertiesValue = entry.getDirectiveValue(OVERWRITE_PROPERTIES_DIRECTIVE);
+        if (overwritePropertiesValue != null) {
+            this.overwriteProperties = Boolean.valueOf(overwritePropertiesValue);
+        } else {
+            this.overwriteProperties = false;
+        }
+        
         // uninstall directive
         final String uninstallValue = entry.getDirectiveValue(UNINSTALL_DIRECTIVE);
         if (uninstallValue != null) {
@@ -177,7 +194,15 @@ public class PathEntry extends ImportOptions {
         return this.overwrite;
     }
 
-    public boolean isUninstall() {
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
+	 */
+	@Override
+	public boolean isPropertyOverwrite() {
+		return this.overwriteProperties;
+	}
+
+	public boolean isUninstall() {
         return this.uninstall;
     }
 

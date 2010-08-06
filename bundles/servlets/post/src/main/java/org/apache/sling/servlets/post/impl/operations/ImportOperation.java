@@ -106,8 +106,9 @@ public class ImportOperation extends AbstractCreateOperation {
         }
 
         //import options passed as request parameters.
-        final boolean replace = "true".equals(request.getParameter(SlingPostConstants.RP_REPLACE));
-        final boolean checkin = "true".equals(request.getParameter(SlingPostConstants.RP_CHECKIN));
+        final boolean replace = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE));
+        final boolean replaceProperties = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE_PROPERTIES));
+        final boolean checkin = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_CHECKIN));
         
         String basePath = getItemPath(request);
         basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
@@ -164,6 +165,14 @@ public class ImportOperation extends AbstractCreateOperation {
 							@Override
 							public boolean isOverwrite() {
 								return replace;
+							}
+
+							/* (non-Javadoc)
+							 * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
+							 */
+							@Override
+							public boolean isPropertyOverwrite() {
+								return replaceProperties;
 							}
     					},
     					new ContentImportListener() {

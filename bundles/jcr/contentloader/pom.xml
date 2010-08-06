@@ -161,6 +161,12 @@
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>1.5.2</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- for security content loader (users/groups/acls) -->
         <dependency>

@@ -307,9 +307,10 @@ public class DefaultContentCreator implements ContentCreator {
     public void createProperty(String name, int propertyType, String value)
     throws RepositoryException {
         final Node node = this.parentNodeStack.peek();
-        // check if the property already exists, don't overwrite it in this case
+        // check if the property already exists and isPropertyOverwrite() is false, don't overwrite it in this case
         if (node.hasProperty(name)
-            && !node.getProperty(name).isNew()) {
+            && !this.configuration.isPropertyOverwrite()
+            && !node.getProperty(name).isNew()) { 
             return;
         }
 
@@ -364,8 +365,9 @@ public class DefaultContentCreator implements ContentCreator {
     public void createProperty(String name, int propertyType, String[] values)
     throws RepositoryException {
         final Node node = this.parentNodeStack.peek();
-        // check if the property already exists, don't overwrite it in this case
+        // check if the property already exists and isPropertyOverwrite() is false, don't overwrite it in this case
         if (node.hasProperty(name)
+            && !this.configuration.isPropertyOverwrite()
             && !node.getProperty(name).isNew()) {
             return;
         }
