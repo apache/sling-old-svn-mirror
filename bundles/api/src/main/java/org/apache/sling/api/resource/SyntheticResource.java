@@ -18,7 +18,6 @@
  */
 package org.apache.sling.api.resource;
 
-import org.apache.sling.api.adapter.AdapterManager;
 
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
