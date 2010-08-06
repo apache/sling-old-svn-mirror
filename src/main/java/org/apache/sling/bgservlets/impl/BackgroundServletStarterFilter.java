@@ -39,19 +39,22 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.engine.SlingServlet;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Filter that runs the current request in the background if specific request
- * parameters are set. TODO: define the position of this filter in the chain,
- * and how do we enforce it?
+ * parameters are set. Must be placed early in the filter chain.
  */
-@Component
+@Component(
+        metatype=true, 
+        label="%BackgroundServletStarterFilter.label", 
+        description="%BackgroundServletStarterFilter.description")
 @Service
 @Properties( {
-        @Property(name = "filter.scope", value = "request"),
-        @Property(name = "filter.order", intValue = java.lang.Integer.MIN_VALUE) })
+        @Property(name = "filter.scope", value = "request", propertyPrivate=true),
+        @Property(name = "filter.order", intValue = java.lang.Integer.MIN_VALUE, propertyPrivate=true )})
 public class BackgroundServletStarterFilter implements Filter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -67,14 +70,26 @@ public class BackgroundServletStarterFilter implements Filter {
     
     @Reference
     private JobStorage jobStorage;
+    
+    /** Name of the property that defines the request parameter name to 
+     *  use to start a servlet in the background.
+     */
+    @Property(value="sling:bg")
+    public static final String PROP_BG_PARAM = "background.parameter.name";
 
     /**
-     * Request runs in the background if this request parameter is present TODO
-     * should be configurable, and maybe use other decision methods
+     * Request runs in the background if this request parameter is present
      */
-    public static final String BG_PARAM = "sling:bg";
-    private static final String[] PARAM_TO_REMOVE = { BG_PARAM };
+    private String bgParamName;
 
+    protected void activate(ComponentContext ctx) {
+        bgParamName = (String)ctx.getProperties().get(PROP_BG_PARAM);
+        if(bgParamName == null || bgParamName.length() == 0) {
+            throw new IllegalStateException("Missing " + PROP_BG_PARAM + " in ComponentContext");
+        }
+        log.info("Request parameter {} will run servlets in the background", bgParamName);
+    }
+    
     public void doFilter(final ServletRequest sreq,
             final ServletResponse sresp, final FilterChain chain)
             throws IOException, ServletException {
@@ -91,17 +106,17 @@ public class BackgroundServletStarterFilter implements Filter {
         final SlingHttpServletRequest slingRequest = 
             (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request : null);
         final HttpServletResponse response = (HttpServletResponse) sresp;
-        final String bgParam = sreq.getParameter(BG_PARAM);
+        final String bgParam = sreq.getParameter(bgParamName);
         if (Boolean.valueOf(bgParam)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
                         slingServlet, resourceResolverFactory, jobStorage,
-                        slingRequest, response, PARAM_TO_REMOVE);
+                        slingRequest, response, new String[] { bgParamName });
                 log.debug("{} parameter true, running request in the background ({})",
-                        BG_PARAM, job);
+                        bgParamName, job);
                 if (slingRequest != null) {
                     slingRequest.getRequestProgressTracker().log(
-                            BG_PARAM
+                            bgParamName
                             + " parameter true, running request in background ("
                             + job + ")");
                 }
