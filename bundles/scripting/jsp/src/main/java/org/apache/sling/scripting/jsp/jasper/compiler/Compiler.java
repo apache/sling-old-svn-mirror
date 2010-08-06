@@ -357,25 +357,13 @@ public abstract class Compiler {
      *            If true, check against .class file, if false, check against
      *            .java file.
      */
-    public boolean isOutDated(boolean checkClass) {
+    public boolean isOutDated(final boolean checkClass) {
         if ( jsw.getLastModificationTest() != 0 ) {
             return false;
         }
-        String jsp = ctxt.getJspFile();
+        final String jsp = ctxt.getJspFile();
 
-        long jspRealLastModified = 0;
-        try {
-            URL jspUrl = ctxt.getResource(jsp);
-            if (jspUrl == null) {
-                ctxt.incrementRemoved();
-                return false;
-            }
-            URLConnection uc = jspUrl.openConnection();
-            jspRealLastModified = uc.getLastModified();
-            uc.getInputStream().close();
-        } catch (Exception e) {
-            return true;
-        }
+        long jspRealLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(jsp);
 
         long targetLastModified = 0;
         String targetFile;
@@ -408,16 +396,20 @@ public abstract class Compiler {
             return false;
         }
 
-        List depends = jsw.getDependants();
+        List<String> depends = jsw.getDependants();
         if (depends == null) {
             return false;
         }
 
-        Iterator it = depends.iterator();
+        final Iterator<String> it = depends.iterator();
         while (it.hasNext()) {
-            String include = (String) it.next();
+            final String include = it.next();
+            // ignore tag libs, we are reloaded if a taglib changes anyway
+            if ( include.startsWith("tld:") ) {
+                continue;
+            }
             try {
-                URL includeUrl = ctxt.getResource(include);
+                final URL includeUrl = ctxt.getResource(include);
                 if (includeUrl == null) {
                     return true;
                 }
