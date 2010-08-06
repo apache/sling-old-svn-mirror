@@ -165,9 +165,21 @@ public interface SlingPostConstants {
      * copy or move operation is to be replaced if existing (value is
      * ":replace"). Copy or move is only possible if the destination exists if
      * the replace parameter is set to the case-insignificant value true.
+     * 
+     * This request parameter is also used to indicate whether the destination node
+     * for an import operation is to be replaced if existing. The parameter value is 
+     * checked to see if it matches the case-insignificant value true.
      */
     public static final String RP_REPLACE = RP_PREFIX + "replace";
 
+    /**
+     * Name of the request parameter indicating whether the destination for a
+     * property change during an import operation is to be replaced if existing.
+     * The parameter value is checked to see if it matches the case-insignificant 
+     * value true.
+     */
+    public static final String RP_REPLACE_PROPERTIES = RP_PREFIX + "replaceProperties";
+    
     /**
      * Optional request parameter indicating the order of newly created nodes in
      * creation, copy and move operation requests (value is ":order").
