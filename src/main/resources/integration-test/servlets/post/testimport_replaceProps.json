@@ -1,0 +1,20 @@
+{
+	"propOne" : "propOneValueChanged",
+	"childOne" : {
+		"childPropOne" : false
+	},
+        "propIntArray" : [
+              6,
+              7,
+              8,
+              9
+        ],
+        "propBoolArray" : [
+              false,
+              true,
+              true,
+              true,
+              false,
+              true
+        ]
+}
