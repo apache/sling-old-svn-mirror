@@ -22,11 +22,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 /** Test switching the output content-type of the POST servlet using
  *  either an Accept header or :http-equiv-accept parameter */
 public class PostServletOutputContentTypeTest extends HttpTestBase {
