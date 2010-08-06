@@ -16,6 +16,8 @@
  */
 package org.apache.sling.engine.impl.request;
 
+import java.util.Iterator;
+
 import junit.framework.TestCase;
 
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -317,6 +319,24 @@ public class SlingRequestPathInfoTest extends TestCase {
             return null;
         }
 
-    }
+        public boolean isResourceType(String str) {
+            throw new Error("MockResource does not implement this method");
+        }
 
+        public Resource getChild(String str) {
+            throw new Error("MockResource does not implement this method");
+        }
+
+        public Iterator<Resource> listChildren() {
+            throw new Error("MockResource does not implement this method");
+        }
+
+        public Resource getParent() {
+            throw new Error("MockResource does not implement this method");
+        }
+
+        public String getName() {
+            throw new Error("MockResource does not implement this method");
+        }
+    }
 }
