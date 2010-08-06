@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.bgservlets.ExecutionEngine;
@@ -43,13 +44,28 @@ import org.slf4j.LoggerFactory;
  * Simple ExecutionEngine TODO should use Sling's thread pool, and check
  * synergies with scheduler services
  */
-@Component
+@Component(
+        metatype=true, 
+        label="%ExecutionEngineImpl.label", 
+        description="%ExecutionEngineImpl.description")
 @Service
 public class ExecutionEngineImpl implements ExecutionEngine {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private Executor executor;
     private final Map<String, JobStatus> jobs = Collections.synchronizedMap(new HashMap<String, JobStatus>());
+    
+    @Property(intValue=10)
+    public static final String PROP_CORE_POOL_SIZE = "core.pool.size";
+    private int corePoolSize;
+
+    @Property(intValue=20)
+    public static final String PROP_MAX_POOL_SIZE = "max.pool.size";
+    private int maximumPoolSize;
+    
+    @Property(intValue=30)
+    public static final String PROP_KEEP_ALIVE_TIME = "keep.alive.time.seconds";
+    private int keepAliveTimeSeconds;
 
     private class RunnableWrapper implements Runnable {
         private final Runnable inputJob;
@@ -90,12 +106,19 @@ public class ExecutionEngineImpl implements ExecutionEngine {
             super("Execution queue is full, cannot execute " + r);
         }
     }
+    
+    private int getIntegerProperty(ComponentContext ctx, String name) {
+        final Integer value = (Integer)ctx.getProperties().get(name);
+        if(value == null) {
+            throw new IllegalStateException("Missing ComponentContext property: " + name);
+        }
+        return value.intValue();
+    }
 
     protected void activate(ComponentContext context) {
-        // TODO configurable!
-        final int corePoolSize = 2;
-        int maximumPoolSize = 2;
-        long keepAliveTime = 30;
+        corePoolSize = getIntegerProperty(context, PROP_CORE_POOL_SIZE);
+        maximumPoolSize = getIntegerProperty(context, PROP_MAX_POOL_SIZE);
+        keepAliveTimeSeconds = getIntegerProperty(context, PROP_KEEP_ALIVE_TIME);
         TimeUnit unit = TimeUnit.SECONDS;
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(4);
         RejectedExecutionHandler handler = new RejectedExecutionHandler() {
@@ -104,8 +127,10 @@ public class ExecutionEngineImpl implements ExecutionEngine {
                 onJobRejected(r);
             }
         };
+        log.info("ThreadPoolExecutor configuration: corePoolSize = {}, maxPoolSize={}, keepAliveTimeSeconds={}",
+                new Object[] { corePoolSize, maximumPoolSize, keepAliveTimeSeconds });
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize,
-                keepAliveTime, unit, workQueue, handler);
+                keepAliveTimeSeconds, unit, workQueue, handler);
     }
 
     protected void deactivate(ComponentContext context) {
