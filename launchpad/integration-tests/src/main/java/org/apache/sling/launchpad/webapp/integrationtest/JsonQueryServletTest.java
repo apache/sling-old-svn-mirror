@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 
@@ -66,8 +67,12 @@ public class JsonQueryServletTest extends HttpTestBase {
             testClient.delete(WEBDAV_BASE_URL + testPath);
         }
     }
-    
     private void assertCount(int expectedCount, String statement, String queryType, int offset, int rows) 
+    throws IOException {
+    	assertCount(expectedCount, statement, queryType, offset, rows, false);
+    }    
+    private void assertCount(int expectedCount, String statement, String queryType, int offset, int rows,
+    		boolean tidy) 
     throws IOException {
         final List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("statement", statement));
@@ -80,7 +85,7 @@ public class JsonQueryServletTest extends HttpTestBase {
         if(rows > 0) {
             params.add(new NameValuePair("rows", String.valueOf(rows)));
         }
-        final String json = getContent(testFolderUrl + ".query.json", CONTENT_TYPE_JSON, params);
+        final String json = getContent(testFolderUrl + ".query" + (tidy ? ".tidy" : "") + ".json", CONTENT_TYPE_JSON, params);
         assertJavascript(
                 expectedCount + ".0", 
                 json, 
@@ -147,5 +152,57 @@ public class JsonQueryServletTest extends HttpTestBase {
         assertJavascript("Sun", json, "out.print(data[0].date.substring(0,3))");
         
         
+    }
+    
+    /**
+     * Test for SLING-1632: tidy rendering of query results
+     */
+    public void testTidyResultFormat() throws IOException, JSONException {
+    	boolean tidy = true;
+    	//query should function the same when the output is tidy'ed.
+        String statement = "/" + testPath + "/folderA/*";
+		String queryType = "xpath";
+		assertCount(5, statement, queryType, 0, 0, tidy);
+    	
+        final List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("statement", statement));
+        params.add(new NameValuePair("queryType", queryType));
+        final String json = getContent(testFolderUrl + ".query.json", CONTENT_TYPE_JSON, params);
+        final String tidyJson = getContent(testFolderUrl + ".query.tidy.json", CONTENT_TYPE_JSON, params);
+        
+        //tidy json text should have whitespace that makes it not be equivalent to the untidy version
+        assertNotSame(json, tidyJson);
+
+        //compare expected with actual
+        String expectedTidyJson = 
+        	"[{\n" +
+        	"    \"name\": \"node0\",\n" +
+        	"    \"jcr:score\": 1000,\n" +
+        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
+        	"    \"jcr:path\": \"" + testPath + "/folderA/node0\"\n" +
+        	"  },{\n" +
+        	"    \"name\": \"node1\",\n" +
+        	"    \"jcr:score\": 1000,\n" +
+        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
+        	"    \"jcr:path\": \"" + testPath + "/folderA/node1\"\n" +
+        	"  },{\n" +
+        	"    \"name\": \"node2\",\n" +
+        	"    \"jcr:score\": 1000,\n" +
+        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
+        	"    \"jcr:path\": \"" + testPath + "/folderA/node2\"\n" +
+        	"  },{\n" +
+        	"    \"name\": \"node3\",\n" +
+        	"    \"jcr:score\": 1000,\n" +
+        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
+        	"    \"jcr:path\": \"" + testPath + "/folderA/node3\"\n" +
+        	"  },{\n" +
+        	"    \"name\": \"node4\",\n" +
+        	"    \"jcr:score\": 1000,\n" +
+        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
+        	"    \"jcr:path\": \"" + testPath + "/folderA/node4\"\n" +
+        	"  }\n" +
+        	"]";
+		assertEquals(expectedTidyJson.length(), tidyJson.length());
+        assertEquals(expectedTidyJson, tidyJson);
     }
 }

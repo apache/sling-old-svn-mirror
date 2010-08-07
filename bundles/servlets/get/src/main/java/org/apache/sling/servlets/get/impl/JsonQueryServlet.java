@@ -82,10 +82,22 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
     /** rep:exerpt */
     private static final String REP_EXCERPT = "rep:excerpt()";
 
+    public static final String TIDY = "tidy";
+    
     private final JsonResourceWriter itemWriter;
 
     public JsonQueryServlet() {
         itemWriter = new JsonResourceWriter(null);
+    }
+    
+    /** True if our request wants the "tidy" pretty-printed format */
+    protected boolean isTidy(SlingHttpServletRequest req) {
+        for(String selector : req.getRequestPathInfo().getSelectors()) {
+            if(TIDY.equals(selector)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -151,6 +163,8 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
             resp.setCharacterEncoding("UTF-8");
 
             final JSONWriter w = new JSONWriter(resp.getWriter());
+            w.setTidy(isTidy(req));
+            
             w.array();
 
             long count = -1;
