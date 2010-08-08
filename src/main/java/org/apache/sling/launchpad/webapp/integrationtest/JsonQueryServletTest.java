@@ -173,36 +173,22 @@ public class JsonQueryServletTest extends HttpTestBase {
         //tidy json text should have whitespace that makes it not be equivalent to the untidy version
         assertNotSame(json, tidyJson);
 
-        //compare expected with actual
-        String expectedTidyJson = 
-        	"[{\n" +
-        	"    \"name\": \"node0\",\n" +
-        	"    \"jcr:score\": 1000,\n" +
-        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
-        	"    \"jcr:path\": \"" + testPath + "/folderA/node0\"\n" +
-        	"  },{\n" +
-        	"    \"name\": \"node1\",\n" +
-        	"    \"jcr:score\": 1000,\n" +
-        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
-        	"    \"jcr:path\": \"" + testPath + "/folderA/node1\"\n" +
-        	"  },{\n" +
-        	"    \"name\": \"node2\",\n" +
-        	"    \"jcr:score\": 1000,\n" +
-        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
-        	"    \"jcr:path\": \"" + testPath + "/folderA/node2\"\n" +
-        	"  },{\n" +
-        	"    \"name\": \"node3\",\n" +
-        	"    \"jcr:score\": 1000,\n" +
-        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
-        	"    \"jcr:path\": \"" + testPath + "/folderA/node3\"\n" +
-        	"  },{\n" +
-        	"    \"name\": \"node4\",\n" +
-        	"    \"jcr:score\": 1000,\n" +
-        	"    \"jcr:primaryType\": \"nt:unstructured\",\n" +
-        	"    \"jcr:path\": \"" + testPath + "/folderA/node4\"\n" +
-        	"  }\n" +
-        	"]";
-		assertEquals(expectedTidyJson.length(), tidyJson.length());
-        assertEquals(expectedTidyJson, tidyJson);
+    	int noTidyCount = countOccurences(json, '\n');
+    	int tidyCount = countOccurences(tidyJson, '\n');
+    	int delta = tidyCount - noTidyCount;
+
+    	// tidy output contains at least 25 additional EOL chars
+    	int min = 25;
+    	assertTrue("The .tidy selector should add at least 25 EOL chars to json output (delta=" + delta + ")", delta > min);
     }
+    
+    protected static int countOccurences(String str, char toCount) {
+    	int result = 0;
+    	for(char c : str.toCharArray()) {
+    		if(c == toCount) {
+    			result++;
+    		}
+    	}
+    	return result;
+    }    
 }
