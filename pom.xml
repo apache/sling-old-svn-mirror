@@ -66,6 +66,10 @@
                         <Private-Package>
                             org.apache.sling.jackrabbit.usermanager.impl.*
                         </Private-Package>
+                        <Embed-Dependency>
+                            org.apache.sling.servlets.post;inline="org/apache/sling/servlets/post/impl/helper/RequestProperty*
+                                |org/apache/sling/servlets/post/impl/helper/DateParser*"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
