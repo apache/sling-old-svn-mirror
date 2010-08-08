@@ -234,7 +234,7 @@ public class JsonRenderingTest extends HttpTestBase {
     	// Output contains 3 properties and a subnode with one, so at least 5 EOL chars
     	int min = 5;
     	
-    	assertTrue("The .tidy selector should add at least 2 EOL chars to json output (delta=" + delta + ")", delta > min);
+    	assertTrue("The .tidy selector should add at least 5 EOL chars to json output (delta=" + delta + ")", delta > min);
     }
     
     public void testRootNoRecursion() throws IOException {
