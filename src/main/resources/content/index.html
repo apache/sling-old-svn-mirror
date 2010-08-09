@@ -70,17 +70,34 @@
 			Note that you can mount the repository via WebDAV to explore or modify content,
 			simply use the <a href="./">root URL</a> as the WebDAV server URL.
 		</p>
-        <p>
-           You are currently logged in as user <b id="username">????</b> to workspace <b id="workspace">????</b>. 
+		
+        <p id="logout" style="display:none">
+           You are currently logged in as user <b id="username">????</b> to
+           workspace <b id="workspace">????</b>. To login with a different
+           username (use <em>admin/admin</em> to be allowed to write to the
+           repository), follow <a href="system/sling/logout"
+           title="Click to Logout">this link</a> to logout first.
         </p>
-        <p>
-            To login with a different username (use <em>admin/admin</em> to be allowed to write to the repository),
-            use <a href="system/sling/login">this link</a>.
+        
+        <p id="login" style="display:none">
+           You are not currently logged in. To login (use <em>admin/admin</em>
+           to be allowed to write to the repository), follow
+           <a href="system/sling/login" title="Click to Login">this link</a>.
         </p>
+        
         <script language="javascript">
             var info = Sling.getSessionInfo();
             document.getElementById("username").innerHTML = info.userID;
             document.getElementById("workspace").innerHTML = info.workspace;
+            
+            if ("anonymous" == info.userID) {
+              // anonymous, assume not logged int
+              document.getElementById("login").style.display="block";
+              document.getElementById("logout").style.display="none";
+            } else {
+              document.getElementById("login").style.display="none";
+              document.getElementById("logout").style.display="block";
+            }
         </script>
         
         <h2>More info</h2>
