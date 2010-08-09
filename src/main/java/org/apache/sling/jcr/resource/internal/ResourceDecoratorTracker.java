@@ -107,7 +107,7 @@ public class ResourceDecoratorTracker {
      * called from a synchronized block.
      */
     protected void updateResourceDecoratorsArray() {
-        ResourceDecorator[] decorators = null;
+        final ResourceDecorator[] decorators;
         if (this.resourceDecorators.size() > 0) {
             decorators = new ResourceDecorator[this.resourceDecorators.size()];
             int index = 0;
@@ -116,6 +116,8 @@ public class ResourceDecoratorTracker {
                 decorators[index] = i.next().decorator;
                 index++;
             }
+        } else {
+            decorators = EMPTY_ARRAY;
         }
         this.resourceDecoratorsArray = decorators;
     }
