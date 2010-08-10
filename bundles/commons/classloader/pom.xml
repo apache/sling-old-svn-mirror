@@ -57,7 +57,7 @@
                             org.apache.sling.commons.classloader.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.commons.classloader;version=1.1.0
+                            org.apache.sling.commons.classloader;version=1.2.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.classloader.impl
