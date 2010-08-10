@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 import java.io.IOException;
 
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +61,7 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("Initial install", symbolicName, null, Bundle.ACTIVE);
         }
 
@@ -75,7 +75,7 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest3", highPriority));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         }
 
         assertNoOsgiTasks("At end of test");

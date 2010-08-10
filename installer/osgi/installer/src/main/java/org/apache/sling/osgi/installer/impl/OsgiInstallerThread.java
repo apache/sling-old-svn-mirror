@@ -32,6 +32,7 @@ import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -67,7 +68,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         setName(getClass().getSimpleName());
         this.ctx = ctx;
         final File f = ctx.getBundleContext().getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(ctx,f);
+        persistentList = new PersistentResourceList(f);
         registeredResources = persistentList.getData();
     }
 
@@ -92,21 +93,21 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             	    // No tasks to execute - wait until new resources are
             	    // registered
             	    cleanupInstallableResources();
-            	    ctx.logDebug("No tasks to process, going idle");
+            	    Logger.logDebug("No tasks to process, going idle");
 
-            	    ctx.setCounter(OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, 1);
-                    ctx.incrementCounter(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER);
+            	    ctx.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 1);
+                    ctx.incrementCounter(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER);
             	    synchronized (newResources) {
                         newResources.wait();
                     }
-            	    ctx.logDebug("Notified of new resources, back to work");
-                    ctx.setCounter(OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, 0);
+            	    Logger.logDebug("Notified of new resources, back to work");
+                    ctx.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 0);
             	    continue;
             	}
 
             	retriesScheduled = false;
                 if(executeTasks() > 0) {
-                    ctx.logDebug("Tasks have been executed, saving persistentList");
+                    Logger.logDebug("Tasks have been executed, saving persistentList");
                     persistentList.save();
                 }
 
@@ -115,18 +116,18 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 Thread.sleep(250);
                 cleanupInstallableResources();
             } catch(Exception e) {
-                ctx.logWarn(e.toString(), e);
+                Logger.logWarn(e.toString(), e);
                 try {
                     Thread.sleep(1000);
                 } catch(InterruptedException ignored) {
                 }
             }
         }
-        ctx.logInfo("Deactivated, exiting");
+        Logger.logInfo("Deactivated, exiting");
     }
 
     void addTaskToCurrentCycle(OsgiInstallerTask t) {
-        ctx.logDebug("adding task to current cycle:" + t);
+        Logger.logDebug("adding task to current cycle:" + t);
         synchronized (tasks) {
             tasks.add(t);
         }
@@ -135,7 +136,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     /** Register a resource for removal, or ignore if we don't have that URL */
     void removeResource(String url) {
 		// Will mark all resources which have r's URL as uninstallable
-		ctx.logDebug("Adding URL " + url + " to urlsToRemove");
+        Logger.logDebug("Adding URL " + url + " to urlsToRemove");
 
         synchronized (newResources) {
             urlsToRemove.add(url);
@@ -149,12 +150,12 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         try {
             rr = new RegisteredResourceImpl(ctx, r);
         } catch(IOException ioe) {
-            ctx.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+            Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
             return;
         }
 
         synchronized (newResources) {
-            ctx.logDebug("Adding new resource " + r);
+            Logger.logDebug("Adding new resource " + r);
             newResources.add(rr);
             newResources.notify();
         }
@@ -171,7 +172,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             try {
                 rr = new RegisteredResourceImpl(ctx, r);
             } catch(IOException ioe) {
-                ctx.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+                Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;
             }
 
@@ -180,7 +181,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                         "URL of all supplied InstallableResource must start with supplied scheme"
                         + ", scheme is not '" + urlScheme + "' for URL " + r.getUrl());
             }
-            ctx.logDebug("Adding new resource " + r);
+            Logger.logDebug("Adding new resource " + r);
             toAdd.add(rr);
         }
 
@@ -190,7 +191,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             }
             // Need to manage schemes separately: in case toAdd is empty we
             // want to mark all such resources as non-installable
-            ctx.logDebug("Adding to newResourcesSchemes: " + urlScheme);
+            Logger.logDebug("Adding to newResourcesSchemes: " + urlScheme);
             newResourcesSchemes.add(urlScheme);
             newResources.notify();
         }
@@ -203,25 +204,25 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             // all resources with the same scheme in newResources, and existing
             // registeredResources, as not installable
         	for(String scheme : newResourcesSchemes) {
-        	    ctx.logDebug("Processing set of new resources with scheme " + scheme);
+        	    Logger.logDebug("Processing set of new resources with scheme " + scheme);
                 for(RegisteredResource r : newResources) {
                     if(r.getUrlScheme().equals(scheme)) {
                         r.setInstallable(false);
-                        ctx.logDebug("New resource set to non-installable: " + r);
+                        Logger.logDebug("New resource set to non-installable: " + r);
                     }
                  }
                 for(SortedSet<RegisteredResource> ss : registeredResources.values()) {
                     for(RegisteredResource r : ss) {
                         if(r.getUrlScheme().equals(scheme)) {
                             r.setInstallable(false);
-                            ctx.logDebug("Existing resource set to non-installable: " + r);
+                            Logger.logDebug("Existing resource set to non-installable: " + r);
                         }
                     }
                 }
         	}
             for(SortedSet<RegisteredResource> s : newResourcesSets) {
                 newResources.addAll(s);
-                ctx.logDebug("Added set of " + s.size() + " new resources with scheme "
+                Logger.logDebug("Added set of " + s.size() + " new resources with scheme "
                             + s.first().getUrlScheme() + ": " + s);
             }
             newResourcesSets.clear();
@@ -239,7 +240,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 if(t.contains(r)) {
                 	for(RegisteredResource rr : t) {
                 		if(t.comparator().compare(rr, r) == 0) {
-                		    ctx.logDebug("Cleanup obsolete " + rr);
+                		    Logger.logDebug("Cleanup obsolete " + rr);
                 			rr.cleanup(ctx);
                 		}
                 	}
@@ -254,7 +255,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 for(SortedSet<RegisteredResource> group : registeredResources.values()) {
                 	for(RegisteredResource r : group) {
                 		if(urlsToRemove.contains(r.getUrl())) {
-                		    ctx.logDebug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
+                		    Logger.logDebug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
                 			r.setInstallable(false);
                 		}
                 	}
@@ -296,15 +297,14 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         // TODO do nothing for a group that's "stable" - i.e. one where no tasks were
         // created in the last cycle??
         for(SortedSet<RegisteredResource> group : registeredResources.values()) {
-            if(group.isEmpty()) {
+            if (group.isEmpty()) {
                 continue;
             }
-            final InstallableResource.Type rt = group.first().getResourceType();
-            switch (rt) {
-                case BUNDLE:bundleTaskCreator.createTasks(ctx, group, tasks);
-                            break;
-                case CONFIG:configTaskCreator.createTasks(ctx, group, tasks);
-                            break;
+            final String rt = group.first().getResourceType();
+            if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
+                bundleTaskCreator.createTasks(ctx, group, tasks);
+            } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
+                configTaskCreator.createTasks(ctx, group, tasks);
             }
         }
     }
@@ -322,7 +322,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 counter++;
             } catch(Exception e) {
             	if(!t.canRetry(ctx)) {
-            		ctx.logInfo("Task cannot be retried, removing from list:" + t);
+            	    Logger.logInfo("Task cannot be retried, removing from list:" + t);
                     removeTask(t);
             	}
             	throw e;
@@ -356,7 +356,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             for(RegisteredResource r : toDelete) {
                 group.remove(r);
                 r.cleanup(ctx);
-                ctx.logDebug("Removing RegisteredResource from list, not installable and has been processed: " + r);
+                Logger.logDebug("Removing RegisteredResource from list, not installable and has been processed: " + r);
             }
             if(group.isEmpty() && key != null) {
                 groupKeysToRemove.add(key);
@@ -367,9 +367,9 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             registeredResources.remove(key);
         }
 
-        ctx.setCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, resourceCount);
-        ctx.setCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, registeredResources.size());
-        ctx.incrementCounter(OsgiInstaller.INSTALLER_CYCLES_COUNTER);
+        ctx.setCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, resourceCount);
+        ctx.setCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, registeredResources.size());
+        ctx.incrementCounter(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER);
 
         // List of resources might have changed
         persistentList.save();
@@ -379,7 +379,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     private void scheduleRetries() {
     	final int toRetry = tasksForNextCycle.size();
     	if(toRetry > 0) {
-    	    ctx.logDebug(toRetry + " tasks scheduled for retrying");
+    	    Logger.logDebug(toRetry + " tasks scheduled for retrying");
             synchronized (newResources) {
                 newResources.notify();
                 retriesScheduled = true;
@@ -390,7 +390,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     public void bundleChanged(BundleEvent e) {
     	final int t = e.getType();
     	if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
-    	    ctx.logDebug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
+    	    Logger.logDebug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
     		scheduleRetries();
     	}
     }

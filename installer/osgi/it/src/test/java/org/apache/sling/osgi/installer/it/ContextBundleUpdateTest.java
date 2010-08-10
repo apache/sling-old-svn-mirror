@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,29 +40,29 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
- 
+
 	@Test
 	public void testContextUpdate() throws Exception {
-		
+
 		// Install V1.0 via installer
         final String symbolicName = "osgi-installer-testbundle";
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digest0"));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         final Bundle b = assertBundle("After initial install", symbolicName, "1.0", Bundle.ACTIVE);
-        
+
         // Update to 1.1, directly via bundle context
         final InputStream is = new FileInputStream(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"));
         try {
@@ -71,13 +71,13 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
         	is.close();
         }
         assertBundle("After direct update", symbolicName, "1.1", Bundle.ACTIVE);
-        
+
         // Install another bundle (to trigger installer queue activity), wait
         // for installer to be idle and check version
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("-snap bundle install", "osgi-installer-snapshot-test", null, Bundle.ACTIVE);
         assertBundle("After installing another bundle", symbolicName, "1.1", Bundle.ACTIVE);
 	}

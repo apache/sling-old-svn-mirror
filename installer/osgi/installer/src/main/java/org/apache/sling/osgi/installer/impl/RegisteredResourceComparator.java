@@ -35,8 +35,8 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
     private static final long serialVersionUID = 1L;
 
     public int compare(RegisteredResource a, RegisteredResource b) {
-    	final boolean aBundle = a.getResourceType() == InstallableResource.Type.BUNDLE;
-    	final boolean bBundle = b.getResourceType() == InstallableResource.Type.BUNDLE;
+    	final boolean aBundle = a.getResourceType().equals(InstallableResource.TYPE_BUNDLE);
+    	final boolean bBundle = b.getResourceType().equals(InstallableResource.TYPE_BUNDLE);
 
         if(aBundle && bBundle) {
             return compareBundles(a, b);

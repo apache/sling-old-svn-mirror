@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,26 +84,26 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         resetCounters();
         installer.addResource(r);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         resetCounters();
         installer.removeResource(r.getUrl());
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
 
         // Reinstalling with same digest must work
         resetCounters();
         installer.addResource(r);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         cfg = waitForConfiguration("After reinstalling", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         resetCounters();
         installer.removeResource(r.getUrl());
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
 
     }
@@ -133,11 +133,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         resetCounters();
         final InstallableResource r = getInstallableResource(cfgPid, cfgData);
         installer.addResource(r);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
         configAdmin.start();
     	waitForConfigAdmin(true);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("Config must be installed once ConfigurationAdmin restarts",
                 cfgPid, TIMEOUT, true);
 
@@ -145,12 +145,12 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         waitForConfigAdmin(false);
         resetCounters();
         installer.removeResource(r.getUrl());
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
         resetCounters();
         configAdmin.start();
         waitForConfigAdmin(true);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("Config must be removed once ConfigurationAdmin restarts",
                 cfgPid, TIMEOUT, false);
     }
@@ -170,11 +170,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 		Condition cond = new Condition() { public boolean isTrue() { return events.size() == 1; }};
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
 
-        long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+        long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(cfgPid, cfgData));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertEquals("Registering a Configuration that's already installed must not generate OSGi tasks",
-                nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
+                nOps, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
         assertEquals("Expected one ConfigurationEvent after (ignored) install via OsgiInstaller", 1, events.size());
 
     	// Reinstalling with a change must be executed

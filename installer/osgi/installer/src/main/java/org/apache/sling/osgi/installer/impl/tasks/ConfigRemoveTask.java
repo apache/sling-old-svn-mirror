@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -44,16 +45,16 @@ import org.osgi.service.cm.ConfigurationAdmin;
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
-            ctx.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
+            Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return;
         }
 
-        logExecution(ctx);
+        logExecution();
         final Configuration cfg = getConfiguration(ca, pid, false, ctx);
         if(cfg == null) {
-            ctx.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
+            Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
         } else {
-            ctx.logInfo("Deleting config " + pid + " (" + resource + ")");
+            Logger.logInfo("Deleting config " + pid + " (" + resource + ")");
             cfg.delete();
         }
     }

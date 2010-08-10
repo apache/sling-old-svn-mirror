@@ -19,7 +19,7 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	    resetCounters();
     	    installer.addResource(getInstallableResource(
     	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
     	    final Bundle b = assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
     	    bundleId = b.getBundleId();
     	}
@@ -72,7 +72,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	    resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"), "digestA"));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         	final Bundle b = assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);
         	assertEquals("Bundle ID must not change after update", bundleId, b.getBundleId());
     	}
@@ -86,7 +86,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestA"));
 
             // make sure no updates happen
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             final Bundle b = assertBundle("After ignored downgrade", symbolicName, "1.2", Bundle.ACTIVE);
             assertEquals("Bundle ID must not change after ignored downgrade", bundleId, b.getBundleId());
         }
@@ -94,8 +94,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	assertNoOsgiTasks("After test " + testIndex++);
 
     	// Verify number of registered resources and groups
-        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 3);
-        assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 1);
+        assertCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, 3);
+        assertCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, 1);
 
     	// Update to same version with different digest must be ignored
     	{
@@ -110,25 +110,25 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.removeResource(getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
             resetCounters();
             installer.removeResource(getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
             resetCounters();
             installer.removeResource(getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
             final Bundle b = findBundle(symbolicName);
             assertNull("Testbundle must be gone", b);
     	}
 
     	// No resources must be registered anymore
-        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 0);
-    	assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 0);
+        assertCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, 0);
+    	assertCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, 0);
 
     	assertNoOsgiTasks("After test " + testIndex++);
 
@@ -137,7 +137,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("After reinstalling 1.1", symbolicName, "1.1", Bundle.ACTIVE);
         }
 
@@ -154,7 +154,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
 	            resetCounters();
 	            installer.addResource(getInstallableResource(
 	                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-	            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+	            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 	            assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
 	        }
 
@@ -164,7 +164,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                 resetCounters();
                 installer.removeResource(getNonInstallableResourceUrl(
                         getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-                waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+                waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
                 assertNull("Test bundle must be gone", findBundle(symbolicName));
             }
 
@@ -174,7 +174,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                 resetCounters();
                 installer.addResource(getInstallableResource(
                         getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-                waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+                waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
                 assertBundle("After reinstalling", symbolicName, "1.1", Bundle.ACTIVE);
             }
 

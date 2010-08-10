@@ -35,7 +35,7 @@ class PersistentResourceList {
     private final File dataFile;
 
     @SuppressWarnings("unchecked")
-    PersistentResourceList(OsgiInstallerContext ctx, File dataFile) {
+    PersistentResourceList(final File dataFile) {
         this.dataFile = dataFile;
 
         ObjectInputStream ois = null;
@@ -44,7 +44,7 @@ class PersistentResourceList {
             ois = new ObjectInputStream(new FileInputStream(dataFile));
             restoredData = (HashMap<String, SortedSet<RegisteredResource>>)ois.readObject();
         } catch(Exception e) {
-            ctx.logInfo("Unable to restore data, starting with empty list (" + e.toString());
+            Logger.logInfo("Unable to restore data, starting with empty list (" + e.toString());
         } finally {
             if(ois != null) {
                 try {

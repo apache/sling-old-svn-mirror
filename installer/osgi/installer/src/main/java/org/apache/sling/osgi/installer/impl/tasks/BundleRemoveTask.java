@@ -18,33 +18,33 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 
-/** Remove a bundle from a RegisteredResource. 
- *  Creates a SynchronousRefreshPackagesTask when 
+/** Remove a bundle from a RegisteredResource.
+ *  Creates a SynchronousRefreshPackagesTask when
  *  executed.
  */
 public class BundleRemoveTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
-    
+
     public BundleRemoveTask(RegisteredResource r) {
         this.resource = r;
     }
-    
-    @Override 
+
+    @Override
     public String toString() {
     	return getClass().getSimpleName() + ": " + resource;
     }
-    
+
     @Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        logExecution(ctx);
+        logExecution();
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = ctx.getMatchingBundle(symbolicName);
         if(b == null) {
@@ -56,7 +56,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
         }
         b.uninstall();
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
-        ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
     }
 
     @Override

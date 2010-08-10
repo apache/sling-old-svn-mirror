@@ -19,7 +19,7 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,13 +53,13 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")));
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
     	}
         {
             resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
             final Bundle b = findBundle("osgi-installer-testB");
             assertNotNull("Test bundle B must be found", b);
             b.stop();
@@ -73,24 +73,24 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
         resetCounters();
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
 
         // Verify number of registered resources and groups
-        assertCounter(OsgiInstaller.REGISTERED_RESOURCES_COUNTER, 5);
-        assertCounter(OsgiInstaller.REGISTERED_GROUPS_COUNTER, 3);
+        assertCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, 5);
+        assertCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, 3);
 
         resetCounters();
         installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         resetCounters();
         installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         resetCounters();
         installer.removeResource(getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         assertNull("testbundle must be gone at end of test", findBundle("osgi-installer-testbundle"));
 

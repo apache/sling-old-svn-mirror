@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,43 +36,43 @@ import org.osgi.framework.Bundle;
  */
 @RunWith(JUnit4TestRunner.class)
 public class RemovedResourceDetectionTest extends OsgiInstallerTestBase {
-    
+
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     @Test
     public void testRemoveResourceAndRestart() throws Exception {
-        
+
         final String symbolicNameA = "osgi-installer-testbundle";
         final String symbolicNameB = "osgi-installer-testB";
-        
+
         // Install two bundles and verify
         assertNull(symbolicNameA + " must be absent before installing", findBundle(symbolicNameA));
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After initial install", symbolicNameA, "1.1", Bundle.ACTIVE);
-        
+
         assertNull(symbolicNameB + " must be absent before installing", findBundle(symbolicNameB));
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After initial install", symbolicNameB, "1.0", Bundle.ACTIVE);
-        
+
         // Restart installer, register only second bundle and verify that first one is gone
         restartInstaller();
         resetCounters();
@@ -80,7 +80,7 @@ public class RemovedResourceDetectionTest extends OsgiInstallerTestBase {
         data.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
         installer.registerResources(data, URL_SCHEME);
         sleep(500);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("After installer restart", symbolicNameB, "1.0", Bundle.ACTIVE);
         assertNull("Bundle not in second list should be removed", findBundle(symbolicNameA));
     }

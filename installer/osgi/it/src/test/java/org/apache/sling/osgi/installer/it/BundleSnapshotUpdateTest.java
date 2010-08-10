@@ -16,13 +16,13 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,22 +39,22 @@ import org.osgi.framework.BundleException;
  */
 @RunWith(JUnit4TestRunner.class)
 public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
-    
+
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
- 
+
     @Test
     public void testNonSnapshot() throws IOException {
         final String symbolicName = "osgi-installer-testbundle";
@@ -63,32 +63,32 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
         // wait for two tasks: install and start
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+        waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
         final Bundle b = findBundle(symbolicName);
         assertNotNull("Test bundle 1.1 must be found after waitForInstallerAction", b);
         assertNoOsgiTasks("At end of test");
-        
+
         // Update with same digest must be ignored
-        long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+        long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 1);
         assertEquals("Updating testbundle with same digest must not generate any OSGi tasks",
-                nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
-        
+                nOps, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
+
         // Update with different digest must be ignored
-        nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+        nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest2"));
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 1);
+        waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 1);
         assertEquals("Updating testbundle with different digest must not generate any OSGi tasks",
-                nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
-        
+                nOps, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
+
         assertNoOsgiTasks("At end of test");
     }
-    
+
     private void testSnapshotPrimitive(boolean restartInstaller) throws IOException, BundleException {
-        
+
         // Install test bundle
         final String symbolicName = "osgi-installer-snapshot-test";
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
@@ -96,31 +96,31 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
         // wait for two tasks: install and start
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+        waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
         final Bundle b = findBundle(symbolicName);
         assertNotNull("Snapshot bundle must be found after waitForInstallerAction", b);
 
         if(restartInstaller) {
             restartInstaller();
         }
-        
+
         // Update with same digest must be ignored
-        final long nOps = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
+        final long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 3);
+        waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 3);
         assertEquals("Updating snapshot bundle with same digest must not generate any OSGi tasks",
-                nOps, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
-        
+                nOps, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
+
         // Update with different digest must generate an OSGi update
         resetCounters();
         installer.addResource(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"));
         // update also generates a start task, as the bundle was started before, and a framework refresh
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 3);
-        
+        waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 3);
+
         // And no more OSGi tasks after that
-        waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 3);
+        waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 3);
         assertNoOsgiTasks("At end of test");
     }
 
@@ -128,7 +128,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
     public void testSnapshot() throws IOException, BundleException {
         testSnapshotPrimitive(false);
     }
-    
+
     @Test
     public void testSnapshotWithInstallerRestart() throws IOException, BundleException {
         testSnapshotPrimitive(true);

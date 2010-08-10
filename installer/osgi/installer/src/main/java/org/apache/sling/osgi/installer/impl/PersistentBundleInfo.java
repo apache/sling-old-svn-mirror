@@ -37,23 +37,22 @@ class PersistentBundleInfo {
 
     private Properties digests = new Properties();
     private final File dataFile;
-    private final OsgiInstallerContext ctx;
+   // private final OsgiInstallerContext ctx;
     private static final String VERSION_PREFIX = "V:";
 
     /**
      * Load the list from supplied file, which is also
      * used by purgeAndSave to save our data.
      */
-    PersistentBundleInfo(OsgiInstallerContext ctx, File dataFile) {
-        this.ctx = ctx;
+    PersistentBundleInfo(final File dataFile) {
         this.dataFile = dataFile;
         InputStream is = null;
         try {
             is = new FileInputStream(dataFile);
             digests.load(is);
-            ctx.logInfo("Digests restored from data file " + dataFile.getName());
+            Logger.logInfo("Digests restored from data file " + dataFile.getName());
         } catch(IOException ioe) {
-            ctx.logInfo("No digests retrieved, cannot read properties file " + dataFile.getName());
+            Logger.logInfo("No digests retrieved, cannot read properties file " + dataFile.getName());
         } finally {
             if (is != null) {
                 try {is.close(); } catch (final IOException ignore) {}
@@ -88,7 +87,7 @@ class PersistentBundleInfo {
                 try {os.close(); } catch (final IOException ignore) {}
             }
         }
-        ctx.logInfo("Stored digests of " + digests.size() + " bundles in data file " + dataFile.getName());
+        Logger.logInfo("Stored digests of " + digests.size() + " bundles in data file " + dataFile.getName());
     }
 
     /**

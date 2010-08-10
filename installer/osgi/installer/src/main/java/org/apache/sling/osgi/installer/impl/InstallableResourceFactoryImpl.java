@@ -20,16 +20,11 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
-import org.apache.sling.osgi.installer.InstallableResource.Type;
-import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
-import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 
 /**
  * Default implementation of the installable resource factory.
@@ -37,85 +32,45 @@ import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 public class InstallableResourceFactoryImpl implements InstallableResourceFactory {
 
     /**
-     * @see org.apache.sling.osgi.installer.InstallableResourceFactory#create(java.lang.String, java.io.InputStream, java.lang.String, org.apache.sling.osgi.installer.InstallableResource.Type, java.lang.Integer)
+     * @see org.apache.sling.osgi.installer.InstallableResourceFactory#create(java.lang.String, java.io.InputStream, java.util.Dictionary, java.lang.String, java.lang.String, java.lang.Integer)
      */
     public InstallableResource create(final String url,
                                final InputStream is,
+                               final Dictionary<String, Object> d,
                                final String digest,
-                               final InstallableResource.Type type,
-                               final Integer priority) {
+                               final String type,
+                               final Integer priority)
+    throws IOException {
         if ( url == null ) {
             throw new IllegalArgumentException("url must not be null.");
         }
         if ( is == null ) {
-            throw new IllegalArgumentException("input stream must not be null.");
-        }
-        final InstallableResource.Type resourceType = (type != null ? type : computeResourceType(getExtension(url)));
-        if ( resourceType == InstallableResource.Type.CONFIG ) {
+            // if input stream is null, config through dictionary is expected!
+            if ( d == null ) {
+                throw new IllegalArgumentException("dictionary must not be null.");
+            }
             try {
-                return this.create(url, readDictionary(is), digest, resourceType, priority);
-            } catch (IOException ignore) {
-                // TODO - log this
-                return null;
+                return new InstallableResourceImpl(url, null, d,
+                        (digest != null ? digest : url + ":" + DigestUtil.computeDigest(d)),
+                        (type != null ? type : InstallableResource.TYPE_CONFIG),
+                        (priority != null ? priority : DEFAULT_PRIORITY));
+            } catch ( final NoSuchAlgorithmException nsae) {
+                throw (IOException)new IOException("Digest not found.").initCause(nsae);
             }
         }
-
         // TODO - compute digest for bundle if digest is null - for now we throw
         if ( digest == null ) {
             throw new IllegalArgumentException("digest must not be null for a bundle.");
         }
 
-        return new InstallableResourceImpl(url, is, digest,
+        final String resourceType = (type != null ? type : computeResourceType(getExtension(url)));
+        if ( resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
+            throw new IOException("Resource type config not supported for input streams: " + url);
+        }
+
+        return new InstallableResourceImpl(url, is, d, digest,
                 resourceType,
                 (priority != null ? priority : DEFAULT_PRIORITY));
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.InstallableResourceFactory#create(java.lang.String, java.util.Dictionary, java.lang.String, org.apache.sling.osgi.installer.InstallableResource.Type, java.lang.Integer)
-     */
-    public InstallableResource create(final String url,
-                               final Dictionary<String, Object> d,
-                               final String digest,
-                               final InstallableResource.Type type,
-                               final Integer priority) {
-        if ( url == null ) {
-            throw new IllegalArgumentException("url must not be null.");
-        }
-        if ( d == null ) {
-            throw new IllegalArgumentException("dictionary must not be null.");
-        }
-        try {
-            return new InstallableResourceImpl(url, d,
-                    (digest != null ? digest : url + ":" + DigestUtil.computeDigest(d)),
-                    (type != null ? type : Type.CONFIG),
-                    (priority != null ? priority : DEFAULT_PRIORITY));
-        } catch (Exception ignore) {
-            // TODO - log this
-            return null;
-        }
-    }
-
-    /** Convert InputStream to Dictionary using our extended properties format,
-     *  which supports multi-value properties
-     */
-    private static Dictionary<String, Object> readDictionary(InputStream is) throws IOException {
-        try {
-            final Dictionary<String, Object> result = new Hashtable<String, Object>();
-            final PropertyConverter converter = new PropertyConverter();
-            final Properties p = new Properties();
-            p.load(is);
-            for(Map.Entry<Object, Object> e : p.entrySet()) {
-                final PropertyValue v = converter.convert((String)e.getKey(), (String)e.getValue());
-                result.put(v.getKey(), v.getValue());
-            }
-            return result;
-        } finally {
-            try {
-                is.close();
-            } catch (IOException ignore ) {
-                // we ignore this
-            }
-        }
     }
 
     /** Compute the extension */
@@ -124,10 +79,10 @@ public class InstallableResourceFactoryImpl implements InstallableResourceFactor
         return (pos < 0 ? "" : url.substring(pos+1));
     }
 
-    private static Type computeResourceType(String extension) {
-        if(extension.equals("jar")) {
-            return Type.BUNDLE;
+    private static String computeResourceType(String extension) {
+        if (extension.equals("jar")) {
+            return InstallableResource.TYPE_BUNDLE;
         }
-        return Type.CONFIG;
+        return InstallableResource.TYPE_CONFIG;
     }
 }

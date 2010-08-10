@@ -39,7 +39,7 @@ public abstract class DigestUtil {
     public static final String DIGEST_TYPE = "MD5";
 
     /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
-    public static String digestToString(MessageDigest d) {
+    private static String digestToString(MessageDigest d) {
         final BigInteger bigInt = new BigInteger(1, d.digest());
         return new String(bigInt.toString(16));
     }

@@ -22,6 +22,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -30,25 +31,36 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator, FrameworkListener, BundleListener {
 
+    /** Interface of the log service */
+    private static String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
+
+    /** Vendor of all registered services. */
     private static final String VENDOR = "The Apache Software Foundation";
 
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
     private ServiceRegistration factoryServiceReg;
 
+    /** Tracker for the log service. */
+    private ServiceTracker logServiceTracker;
+
     private static long eventsCount;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         // listen to framework and bundle events
         context.addFrameworkListener(this);
         context.addBundleListener(this);
 
+        this.logServiceTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
+        this.logServiceTracker.open();
+        Logger.setTracker(this.logServiceTracker);
         // register OsgiController service
         {
             final Hashtable<String, String> props = new Hashtable<String, String>();
@@ -57,7 +69,8 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
 
             this.osgiControllerService = new OsgiInstallerImpl(context);
             final String [] serviceInterfaces = {
-                    OsgiInstaller.class.getName()
+                    OsgiInstaller.class.getName(),
+                    OsgiInstallerStatistics.class.getName()
             };
             osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
         }
@@ -71,13 +84,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             factoryServiceReg = context.registerService(InstallableResourceFactory.class.getName(),
                     new InstallableResourceFactoryImpl(), props);
         }
-
-        // register EventsCounter service
-        {
-            final Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling EventsCounter Service");
-            props.put(Constants.SERVICE_VENDOR, VENDOR);
-        }
     }
 
     /**
@@ -87,18 +93,23 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     	context.removeBundleListener(this);
     	context.removeFrameworkListener(this);
 
-    	if ( this.factoryServiceReg != null ) {
-    	    this.factoryServiceReg.unregister();
-    	    this.factoryServiceReg = null;
-    	}
-        if ( this.osgiControllerServiceReg != null ) {
-            this.osgiControllerServiceReg.unregister();
-            this.osgiControllerServiceReg = null;
-        }
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
             this.osgiControllerService = null;
         }
+        if ( this.factoryServiceReg != null ) {
+            this.factoryServiceReg.unregister();
+            this.factoryServiceReg = null;
+        }
+        if ( this.osgiControllerServiceReg != null ) {
+            this.osgiControllerServiceReg.unregister();
+            this.osgiControllerServiceReg = null;
+        }
+        Logger.setTracker(null);
+    	if ( this.logServiceTracker != null ) {
+    	    this.logServiceTracker.close();
+    	    this.logServiceTracker = null;
+    	}
     }
 
     /** Used for tasks that wait for a framework or bundle event before retrying their operations */
@@ -106,11 +117,14 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         return eventsCount;
     }
 
-    public void frameworkEvent(FrameworkEvent arg0) {
+    /**
+     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
+     */
+    public void frameworkEvent(final FrameworkEvent event) {
         eventsCount++;
     }
 
-    public void bundleChanged(BundleEvent arg0) {
+    public void bundleChanged(final BundleEvent event) {
         eventsCount++;
     }
 }

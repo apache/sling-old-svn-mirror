@@ -18,7 +18,7 @@ package org.apache.sling.osgi.installer.it;
 
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,36 +29,36 @@ import org.osgi.framework.Bundle;
 
 @RunWith(JUnit4TestRunner.class)
 public class WorkerThreadIdleTest extends OsgiInstallerTestBase {
-    
+
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     @Test
     public void testWorkerThreadBecomesIdle() throws Exception {
         waitForInstallerAction("Worker thread should become idle soon after controller starts",
-                OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, -1);
-        
+                OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, -1);
+
         final String symbolicName = "osgi-installer-testbundle";
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
         installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         // wait for two tasks: install and start
-        waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+        waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
         assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
-        
+
         waitForInstallerAction("Worker thread should become idle after installing bundle",
-                OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER, -1);
+                OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, -1);
     }
 }

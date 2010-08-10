@@ -18,7 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -31,23 +31,23 @@ import org.osgi.framework.Version;
 public class BundleInstallTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
-    
+
     public BundleInstallTask(RegisteredResource r) {
         this.resource = r;
     }
-    
-    @Override 
+
+    @Override
     public String toString() {
     	return getClass().getSimpleName() + ": " + resource;
     }
-    
+
     public void execute(OsgiInstallerContext ctx) throws Exception {
         final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream(ctx.getBundleContext()));
         final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
-        logExecution(ctx);
+        logExecution();
         ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
-        ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
     }
 
     @Override

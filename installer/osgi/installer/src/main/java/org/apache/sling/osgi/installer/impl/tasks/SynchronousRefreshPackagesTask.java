@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
@@ -31,7 +32,6 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
 	private volatile int packageRefreshEventsCount;
-	private OsgiInstallerContext ctx;
 
     /**
      * Handles the PACKAGES_REFRESHED framework event which is sent after
@@ -42,9 +42,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-        	if (ctx!= null) {
-        	    ctx.logDebug("FrameworkEvent.PACKAGES_REFRESHED");
-        	}
+    	    Logger.logDebug("FrameworkEvent.PACKAGES_REFRESHED");
         	packageRefreshEventsCount++;
         }
     }
@@ -60,8 +58,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 	}
 
 	public void execute(OsgiInstallerContext ctx) throws Exception {
-        logExecution(ctx);
-		this.ctx = ctx;
+        logExecution();
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
@@ -73,7 +70,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     		if(b.getState() == Bundle.ACTIVE) {
     			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId());
     			ctx.addTaskToCurrentCycle(t);
-    			ctx.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
+    			Logger.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
     		}
     	}
 
@@ -84,14 +81,14 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
             ctx.getPackageAdmin().refreshPackages(null);
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
-                    ctx.logWarn("No FrameworkEvent.PACKAGES_REFRESHED event received within "
+                    Logger.logWarn("No FrameworkEvent.PACKAGES_REFRESHED event received within "
         	    				+ MAX_REFRESH_PACKAGES_WAIT_SECONDS
         	    				+ " seconds after refresh");
                     break;
                 }
                 if(packageRefreshEventsCount >= targetEventCount) {
                     final long delta = System.currentTimeMillis() - start;
-                    ctx.logDebug("FrameworkEvent.PACKAGES_REFRESHED received "
+                    Logger.logDebug("FrameworkEvent.PACKAGES_REFRESHED received "
         	    				+ delta
         	    				+ " msec after refreshPackages call");
                     break;

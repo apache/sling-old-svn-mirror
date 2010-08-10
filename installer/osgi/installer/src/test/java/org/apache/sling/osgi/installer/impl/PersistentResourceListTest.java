@@ -37,14 +37,14 @@ import org.osgi.framework.Version;
 public class PersistentResourceListTest {
     private final static int TEST_SCALE = 5;
     private final static String FAKE = "fakebundle.";
-    
+
     @Test
     public void testFileNotFound() throws IOException {
         File f = new File("NONEXISTENT");
-        PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
     }
-    
+
     @Test
     public void testBadDataFile() throws IOException {
         File f  = File.createTempFile(getClass().getSimpleName(), ".ser");
@@ -55,35 +55,35 @@ public class PersistentResourceListTest {
         } finally {
             oos.close();
         }
-        PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
         assertEquals("Constructor must fail gracefully with invalid data file", 0, p.getData().size());
     }
-    
+
     @Test
     public void testTestData() throws IOException {
         File f = new File("NONEXISTENT");
-        PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
         addTestData(p);
         assertTestData(p);
     }
-    
+
     @Test
     public void testSaveAndRetrieve() throws IOException {
         File f  = File.createTempFile(getClass().getSimpleName(), ".ser");
         f.deleteOnExit();
         {
-            PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
+            PersistentResourceList p = new PersistentResourceList(f);
             addTestData(p);
             p.save();
         }
         {
-            PersistentResourceList p = new PersistentResourceList(new MockOsgiInstallerContext(), f);
+            PersistentResourceList p = new PersistentResourceList(f);
             assertTestData(p);
         }
     }
-    
+
     private void addTestData(PersistentResourceList p) {
         for(int i = 0; i < TEST_SCALE; i++) {
             final String symbolicName = FAKE + i;
@@ -94,7 +94,7 @@ public class PersistentResourceListTest {
             p.getData().put(symbolicName, s);
         }
     }
-    
+
     private void assertTestData(PersistentResourceList p) {
         for(int i = 0; i < TEST_SCALE; i++) {
             final String symbolicName = FAKE + i;
@@ -114,7 +114,7 @@ public class PersistentResourceListTest {
             p.getData().put(symbolicName, s);
         }
     }
-    
+
     private String getFakeVersion(int i, int j) {
         return j + "." + i + ".0";
     }
