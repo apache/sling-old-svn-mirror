@@ -31,6 +31,8 @@ import org.osgi.framework.Constants;
  */
 public class BundleRemoveTask extends OsgiInstallerTask {
 
+    private static final String BUNDLE_REMOVE_ORDER = "30-";
+
     private final RegisteredResource resource;
 
     public BundleRemoveTask(RegisteredResource r) {
@@ -61,7 +63,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_REMOVE_ORDER + resource.getUrl();
+        return BUNDLE_REMOVE_ORDER + resource.getUrl();
     }
 
 }

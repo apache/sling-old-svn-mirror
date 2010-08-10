@@ -30,6 +30,8 @@ import org.osgi.framework.Version;
  *  Creates a BundleStartTask to start the bundle */
 public class BundleInstallTask extends OsgiInstallerTask {
 
+    private static final String BUNDLE_INSTALL_ORDER = "50-";
+
     private final RegisteredResource resource;
 
     public BundleInstallTask(RegisteredResource r) {
@@ -52,7 +54,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_INSTALL_ORDER + resource.getUrl();
+        return BUNDLE_INSTALL_ORDER + resource.getUrl();
     }
 
 }

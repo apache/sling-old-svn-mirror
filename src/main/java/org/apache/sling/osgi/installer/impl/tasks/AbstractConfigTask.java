@@ -27,22 +27,33 @@ import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for configuration-related tasks */
 abstract class AbstractConfigTask extends OsgiInstallerTask {
 
     protected final ConfigurationPid pid;
     protected final RegisteredResource resource;
-    
-    AbstractConfigTask(RegisteredResource r) {
+
+    private final ServiceTracker configAdminServiceTracker;
+    AbstractConfigTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+        this.configAdminServiceTracker = configAdminServiceTracker;
         resource = r;
         pid = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
         if(pid == null) {
             throw new IllegalArgumentException("RegisteredResource does not have CONFIG_PID_ATTRIBUTE: " + r);
         }
     }
-    
-    protected Configuration getConfiguration(ConfigurationAdmin ca, 
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getConfigurationAdmin()
+     */
+    protected ConfigurationAdmin getConfigurationAdmin() {
+        return (ConfigurationAdmin)this.configAdminServiceTracker.getService();
+    }
+
+
+    protected Configuration getConfiguration(ConfigurationAdmin ca,
             ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
     throws IOException, InvalidSyntaxException
     {
@@ -67,7 +78,7 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
 
         return result;
     }
-    
+
     @Override
     public String toString() {
         return getClass().getName() + ": " + resource;
@@ -75,6 +86,6 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
 
     @Override
     public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
-        return ctx.getConfigurationAdmin() != null;
+        return this.getConfigurationAdmin() != null;
     }
 }

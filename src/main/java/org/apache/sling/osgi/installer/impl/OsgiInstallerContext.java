@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
@@ -40,11 +39,6 @@ public interface OsgiInstallerContext {
      * Return the package admin.
      */
     PackageAdmin getPackageAdmin();
-
-    /**
-     * Return the config admin.
-     */
-    ConfigurationAdmin getConfigurationAdmin();
 
     void incrementCounter(int index);
     void setCounter(int index, long value);

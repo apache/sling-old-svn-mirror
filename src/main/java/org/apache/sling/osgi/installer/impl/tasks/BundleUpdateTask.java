@@ -35,6 +35,8 @@ import org.osgi.framework.Version;
  */
 public class BundleUpdateTask extends OsgiInstallerTask {
 
+    private static final String BUNDLE_UPDATE_ORDER = "40-";
+
     private final RegisteredResource resource;
     private boolean canRetry = true;
 
@@ -108,7 +110,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return TaskOrder.BUNDLE_UPDATE_ORDER + resource.getUrl();
+        return BUNDLE_UPDATE_ORDER + resource.getUrl();
     }
 
 }

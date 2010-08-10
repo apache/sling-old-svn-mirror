@@ -28,12 +28,29 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** TaskCreator that processes a list of config RegisteredResources */
 public class ConfigTaskCreator {
 
+    /** Interface of the config admin */
+    private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
+
     /** Store digests of the installed configs, keyed by config pid */
     private final Map<String, String> digests = new HashMap<String, String>();
+
+    private final ServiceTracker configAdminServiceTracker;
+
+    public ConfigTaskCreator(final BundleContext bc) {
+        this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
+        this.configAdminServiceTracker.open();
+    }
+
+    public void deactivate() {
+        this.configAdminServiceTracker.close();
+    }
 
 	/** Create tasks for a set of RegisteredResource that all represent the same config PID.
 	 */
@@ -53,7 +70,7 @@ public class ConfigTaskCreator {
 		    // None of our resources are installable, remove corresponding config
 		    // (task simply does nothing if config does not exist)
 		    final RegisteredResource first = resources.first();
-		    tasks.add(new ConfigRemoveTask(first));
+		    tasks.add(new ConfigRemoveTask(first, this.configAdminServiceTracker));
 		    digests.remove(getDigestKey(first));
 		} else {
 		    final String key = getDigestKey(toActivate);
@@ -61,7 +78,7 @@ public class ConfigTaskCreator {
 		    if(toActivate.getDigest().equals(previousDigest)) {
 		        Logger.logDebug("Configuration (" + key+ ") already installed, ignored: " + toActivate);
 		    } else {
-		        tasks.add(new ConfigInstallTask(toActivate));
+		        tasks.add(new ConfigInstallTask(toActivate, this.configAdminServiceTracker));
 		        digests.put(key, toActivate.getDigest());
 		        Logger.logDebug("Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
 		    }
