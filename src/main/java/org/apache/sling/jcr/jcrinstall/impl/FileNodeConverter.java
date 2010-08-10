@@ -87,7 +87,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return factory.create(urlScheme + ":" + path, is, digest, null, priority);
+        return factory.create(urlScheme + ":" + path, is, null, digest, null, priority);
 	}
 
 	boolean acceptNodeName(String name) {
