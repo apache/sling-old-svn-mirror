@@ -35,6 +35,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
+import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -77,7 +78,7 @@ public class JspServletWrapper {
     private ServletConfig config;
     private Options options;
     private boolean firstTime = true;
-    private boolean reload = true;
+    private volatile boolean reload = true;
     private boolean isTagFile;
     private int tripCount;
     private JasperException compileException;
@@ -131,6 +132,12 @@ public class JspServletWrapper {
     public Servlet getServlet()
         throws ServletException, IOException, FileNotFoundException
     {
+        // check if the used class loader is still alive
+        if (!reload) {
+            if ( servletClass.getClassLoader() instanceof DynamicClassLoader ) {
+                reload = !((DynamicClassLoader)servletClass.getClassLoader()).isLive();
+            }
+        }
         if (reload) {
             synchronized (this) {
                 // Synchronizing on jsw enables simultaneous loading
