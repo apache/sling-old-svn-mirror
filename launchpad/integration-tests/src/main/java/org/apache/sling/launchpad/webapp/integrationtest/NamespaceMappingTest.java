@@ -79,6 +79,8 @@ public class NamespaceMappingTest extends AbstractAuthenticatedTest {
             //remove the test user if it exists.
             String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
             List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+        	//SLING-1635 the sudo cookie messes up the user delete, so clear it out before deleting the test user
+            postParams.add(new NameValuePair("sudo", "-"));
             assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
         }
         super.tearDown();
