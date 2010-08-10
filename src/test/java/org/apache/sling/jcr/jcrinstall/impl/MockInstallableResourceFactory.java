@@ -27,20 +27,12 @@ import org.apache.sling.osgi.installer.InstallableResourceFactory;
 
 class MockInstallableResourceFactory implements InstallableResourceFactory {
 
-    public InstallableResource create(String url, Dictionary<String, Object> d,
-            String digest, String type, Integer priority) {
-        return new MockInstallableResource(url, d, digest, type, priority);
-    }
-
-    public InstallableResource create(String url, InputStream is,
-            String digest, String type, Integer priority) {
-        return new MockInstallableResource(url, is, digest, type, priority);
-    }
-
+    /**
+     * @see org.apache.sling.osgi.installer.InstallableResourceFactory#create(java.lang.String, java.io.InputStream, java.util.Dictionary, java.lang.String, java.lang.String, java.lang.Integer)
+     */
     public InstallableResource create(String url, InputStream is,
             Dictionary<String, Object> d, String digest, String type,
             Integer priority) {
-        // TODO Auto-generated method stub
-        return null;
+        return new MockInstallableResource(url, is, d, digest, type, priority);
     }
 }

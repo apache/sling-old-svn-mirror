@@ -18,71 +18,72 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
+import org.slf4j.LoggerFactory;
+
 /** Test that changes in folders to watch are correctly detected,
- *  including when root folders are created or deleted 
+ *  including when root folders are created or deleted
  */
 public class FolderDetectionTest extends JcrInstallTestBase {
-    
+
     protected boolean needsTestContent() {
         return false;
     }
-    
+
     public void testCreateAndDeleteLibs() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         assertRegistered("Before test", res, false);
-        
+
         assertFalse("/libs must not exist when test starts", session.itemExists("/libs"));
         contentHelper.createFolder("/libs");
         contentHelper.createFolder("/libs/foo");
         contentHelper.createFolder("/libs/foo/install");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
+
         contentHelper.createOrUpdateFile(res);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
         assertRegistered("After creating libs and test file", res, true);
-        
+
         contentHelper.delete("/libs");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegistered("After deleting libs", res, false);
     }
-    
+
     public void testMoveLibsToFoo() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         assertRegistered("Before test", res, false);
-        
+
         assertFalse("/libs must not exist when test starts", session.itemExists("/libs"));
         contentHelper.createFolder("/libs");
         contentHelper.createFolder("/libs/foo");
         contentHelper.createFolder("/libs/foo/install");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
+
         contentHelper.createOrUpdateFile(res);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
+
         assertRegistered("After creating libs and test file", res, true);
-        
+
         session.move("/libs", "/foo");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegistered("After moving /libs to /foo", res, false);
     }
-    
+
     public void testMoveLibsToApps() throws Exception {
         final String res = "/libs/foo/install/somefile.jar";
         final String appsRes = "/apps/foo/install/somefile.jar";
         assertRegistered("Before test", res, false);
-        
+
         assertFalse("/libs must not exist when test starts", session.itemExists("/libs"));
         contentHelper.createFolder("/libs");
         contentHelper.createFolder("/libs/foo");
         contentHelper.createFolder("/libs/foo/install");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
+
         contentHelper.createOrUpdateFile(res);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
-        
+
         assertRegistered("After creating libs and test file", res, true);
-        
+
         session.move("/libs", "/apps");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);

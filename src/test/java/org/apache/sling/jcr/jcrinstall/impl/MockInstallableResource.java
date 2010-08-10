@@ -56,6 +56,27 @@ public class MockInstallableResource implements InstallableResource {
         this.d = null;
     }
 
+    public MockInstallableResource(String uri, InputStream is, Dictionary<String, Object> d, String digest, String type, Integer priority) {
+        this.uri = uri;
+        this.is = is;
+        if ( type != null ) {
+            this.type = type;
+        } else {
+            this.type = (is != null ? InstallableResource.TYPE_BUNDLE : InstallableResource.TYPE_CONFIG);
+        }
+        if ( this.type.equals(InstallableResource.TYPE_CONFIG) && digest == null ) {
+            this.digest = computeDigest(d);
+        } else {
+            this.digest = digest;
+        }
+        if ( priority != null ) {
+            this.priority = priority;
+        } else {
+            this.priority = InstallableResourceFactory.DEFAULT_PRIORITY;
+        }
+        this.d = d;
+    }
+
     public MockInstallableResource(String uri, InputStream is, String digest, String type, Integer priority) {
         this.uri = uri;
         this.is = is;
