@@ -59,21 +59,21 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
 
         {
             resetCounters();
-            installer.addResource(getInstallableResource(
+            installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("Initial install", symbolicName, null, Bundle.ACTIVE);
         }
 
         {
-            installer.addResource(getInstallableResource(
+            installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2", lowPriority));
             assertNoOsgiTasks("Low-priority snapshot updated must be ignored");
         }
 
         {
             resetCounters();
-            installer.addResource(getInstallableResource(
+            installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest3", highPriority));
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         }

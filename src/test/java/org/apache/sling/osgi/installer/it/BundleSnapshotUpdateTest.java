@@ -60,7 +60,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         final String symbolicName = "osgi-installer-testbundle";
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
         // wait for two tasks: install and start
         waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
@@ -70,7 +70,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with same digest must be ignored
         long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
         waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 1);
         assertEquals("Updating testbundle with same digest must not generate any OSGi tasks",
@@ -78,7 +78,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with different digest must be ignored
         nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest2"));
         waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 1);
         assertEquals("Updating testbundle with different digest must not generate any OSGi tasks",
@@ -93,7 +93,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         final String symbolicName = "osgi-installer-snapshot-test";
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
         // wait for two tasks: install and start
         waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
@@ -106,7 +106,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with same digest must be ignored
         final long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
         waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 3);
         assertEquals("Updating snapshot bundle with same digest must not generate any OSGi tasks",
@@ -114,7 +114,7 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with different digest must generate an OSGi update
         resetCounters();
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"));
         // update also generates a start task, as the bundle was started before, and a framework refresh
         waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 3);

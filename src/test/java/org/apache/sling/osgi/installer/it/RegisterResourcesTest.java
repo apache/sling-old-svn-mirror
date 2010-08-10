@@ -66,7 +66,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
 
-        installer.registerResources(r, URL_SCHEME);
+        installer.registerResources(URL_SCHEME, r);
 
         // Wait for worker thread to wake up and become idle once
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
@@ -87,7 +87,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
 
-            installer.registerResources(r, URL_SCHEME);
+            installer.registerResources(URL_SCHEME, r);
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
             final String info = "After initial registration";
@@ -99,7 +99,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             // Add test 1.2 in between, to make sure it disappears in next registerResources call
             resetCounters();
-            installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertBundle("After adding testbundle V1.2", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
         }
@@ -107,8 +107,8 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             // Add a bundle with different URL scheme - must not be removed by registerResources
             resetCounters();
-            installer.addResource(new MockInstallableResource(
-                    "anotherscheme:testA.jar",
+            installer.addResource("anotherscheme", new MockInstallableResource(
+                    "osgi-installer-testA.jar",
                     new FileInputStream(getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")),
                     "digest1", null, null));
             waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
@@ -123,7 +123,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
 
-            installer.registerResources(r, URL_SCHEME);
+            installer.registerResources(URL_SCHEME, r);
             waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 2);
 
             assertBundle("Snapshot bundle must be started",
@@ -140,8 +140,8 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
 
         {
             // Re-add the missing bundles and recheck
-            installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
 
             waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 2);
 
@@ -168,7 +168,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
 
-            installer.registerResources(r, URL_SCHEME);
+            installer.registerResources(URL_SCHEME, r);
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
             final String info = "After initial registration";
@@ -179,7 +179,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
 
         {
         	resetCounters();
-        	installer.registerResources(new LinkedList<InstallableResource>(), URL_SCHEME);
+        	installer.registerResources(URL_SCHEME, new LinkedList<InstallableResource>());
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
             assertNull("After registration with no resources, testB bundle must be gone", findBundle("osgi-installer-testB"));
             assertNull("After registration with no resources, testB bundle must be gone", findBundle("osgi-installer-needsB"));

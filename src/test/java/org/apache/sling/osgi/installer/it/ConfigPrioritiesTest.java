@@ -78,16 +78,16 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         data.put("foo", "c");
         final InstallableResource c = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY + 1);
 
-        installer.addResource(b);
+        installer.addResource(URL_SCHEME, b);
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.addResource(c);
+        installer.addResource(URL_SCHEME, c);
         assertConfigValue(pid, "foo", "c", TIMEOUT);
-        installer.addResource(a);
-        installer.removeResource(c.getUrl());
+        installer.addResource(URL_SCHEME, a);
+        installer.removeResource(URL_SCHEME, c.getId());
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.removeResource(b.getUrl());
+        installer.removeResource(URL_SCHEME, b.getId());
         assertConfigValue(pid, "foo", "a", TIMEOUT);
-        installer.removeResource(a.getUrl());
+        installer.removeResource(URL_SCHEME, a.getId());
         waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
     }
 }

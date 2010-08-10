@@ -170,7 +170,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	for(File f : bundles) {
     		toInstall.add(getInstallableResource(f, f.getAbsolutePath() + f.lastModified()));
     	}
-    	installer.registerResources(toInstall, URL_SCHEME);
+    	installer.registerResources(URL_SCHEME, toInstall);
     }
 
     private void expectBundleCount(String info, final int nBundles) throws Exception {

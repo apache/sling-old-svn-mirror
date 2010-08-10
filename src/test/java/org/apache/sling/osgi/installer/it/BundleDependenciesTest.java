@@ -58,7 +58,7 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
         // without testB, needsB must not start
         {
             resetCounters();
-            installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
             waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
             assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
         }
@@ -66,7 +66,7 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
        // now install testB -> needsB must start
         {
             resetCounters();
-            installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
             waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
             assertNotNull(testB + " must be installed", findBundle(testB));
             assertBundle(needsB + " must be started now that testB is installed", needsB, null, Bundle.ACTIVE);

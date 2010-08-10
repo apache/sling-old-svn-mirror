@@ -273,7 +273,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected String getNonInstallableResourceUrl(File testBundle) throws IOException {
-    	return URL_SCHEME + ":" + testBundle.getAbsolutePath();
+    	return testBundle.getAbsolutePath();
     }
 
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
@@ -281,7 +281,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource getInstallableResource(File testBundle, String digest, int priority) throws IOException {
-        final String url = URL_SCHEME + ":" + testBundle.getAbsolutePath();
+        final String url = testBundle.getAbsolutePath();
         if(digest == null) {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
@@ -294,7 +294,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
-        final InstallableResource result = new MockInstallableResource(URL_SCHEME + ":/" + configPid, data, null, null, priority);
+        final InstallableResource result = new MockInstallableResource("/" + configPid, data, null, null, priority);
         return result;
     }
 
