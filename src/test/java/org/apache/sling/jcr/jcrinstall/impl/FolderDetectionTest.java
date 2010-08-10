@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import org.slf4j.LoggerFactory;
 
 /** Test that changes in folders to watch are correctly detected,
  *  including when root folders are created or deleted

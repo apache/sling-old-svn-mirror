@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
-import org.slf4j.LoggerFactory;
 
 
 class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
