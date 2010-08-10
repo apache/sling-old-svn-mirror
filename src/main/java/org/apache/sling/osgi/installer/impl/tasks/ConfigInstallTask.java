@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.sling.osgi.installer.impl.DigestUtil;
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -60,7 +61,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
         final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
-            ctx.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
+            Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return;
         }
 
@@ -88,7 +89,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
             config = getConfiguration(ca, pid, true, ctx);
         } else {
 			if(isSameData(config.getProperties(), resource.getDictionary())) {
-			    ctx.logDebug("Configuration " + config.getPid()
+			    Logger.logDebug("Configuration " + config.getPid()
 	                        + " already installed with same data, update request ignored: "
 	                        + resource);
 				config = null;
@@ -96,12 +97,12 @@ public class ConfigInstallTask extends AbstractConfigTask {
         }
 
         if(config != null) {
-            logExecution(ctx);
+            logExecution();
             if (config.getBundleLocation() != null) {
                 config.setBundleLocation(null);
             }
             config.update(dict);
-            ctx.logInfo("Configuration " + config.getPid()
+            Logger.logInfo("Configuration " + config.getPid()
                         + " " + (created ? "created" : "updated")
                         + " from " + resource);
         }

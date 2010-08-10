@@ -35,20 +35,15 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyConverter;
-import org.apache.sling.osgi.installer.impl.propertyconverter.PropertyValue;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
-/** A resource that's been registered in the OSGi controller.
- * 	Data can be either an InputStream or a Dictionary, and we store
- *  it locally to avoid holding up to classes or data from our
- *  clients, in case those disappear while we're installing stuff.
+/**
+ * Implementation of the registered resource
  */
 public class RegisteredResourceImpl implements RegisteredResource, Serializable {
     private static final long serialVersionUID = 2L;
@@ -64,11 +59,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
 
-    private final InstallableResource.Type resourceType;
-
-    public static final String ENTITY_JAR_PREFIX = "jar:";
-	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
-	public static final String ENTITY_CONFIG_PREFIX = "config:";
+    private final String resourceType;
 
 	/** Create a RegisteredResource from given data. If the data's extension
 	 *  maps to a configuration and the data provides an input stream, it is
@@ -87,7 +78,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             throw new IllegalArgumentException("Missing digest: " + input);
         }
 
-		if(resourceType == InstallableResource.Type.BUNDLE) {
+		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
 		    final InputStream is = input.getInputStream();
             if (is == null) {
                 throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
@@ -95,7 +86,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             try {
                 dictionary = null;
                 final File f = getDataFile(ctx);
-                osgiCtx.logDebug("Copying data to local storage " + f.getAbsolutePath());
+                Logger.logDebug("Copying data to local storage " + f.getAbsolutePath());
                 copyToLocalStorage(input.getInputStream(), f);
                 hasDataFile = true;
                 digest = input.getDigest();
@@ -110,7 +101,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             } finally {
                 is.close();
             }
-		} else {
+		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             hasDataFile = false;
             final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
@@ -118,6 +109,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             // config provided as a Dictionary
             dictionary = copy(input.getDictionary());
             digest = input.getDigest();
+		} else {
+		    throw new IOException("Unknown type " + resourceType);
 		}
 	}
 
@@ -140,7 +133,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	public void cleanup(OsgiInstallerContext ctx) {
 	    final File dataFile = getDataFile(ctx.getBundleContext());
 		if(dataFile.exists()) {
-		    ctx.logDebug("Deleting local storage file "
+		    Logger.logDebug("Deleting local storage file "
 		                + dataFile.getAbsolutePath());
 			dataFile.delete();
 		}
@@ -183,21 +176,6 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		}
 	}
 
-	/** Convert InputStream to Dictionary using our extended properties format,
-	 * 	which supports multi-value properties
-	 */
-	static Dictionary<String, Object> readDictionary(InputStream is) throws IOException {
-		final Dictionary<String, Object> result = new Hashtable<String, Object>();
-		final PropertyConverter converter = new PropertyConverter();
-		final Properties p = new Properties();
-        p.load(is);
-        for(Map.Entry<Object, Object> e : p.entrySet()) {
-            final PropertyValue v = converter.convert((String)e.getKey(), (String)e.getValue());
-            result.put(v.getKey(), v.getValue());
-        }
-        return result;
-	}
-
 	/** Copy given Dictionary, sorting keys */
 	static Dictionary<String, Object> copy(Dictionary<String, Object> d) {
 	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
@@ -217,7 +195,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return url;
 	}
 
-    public InstallableResource.Type getResourceType() {
+    public String getResourceType() {
         return resourceType;
     }
 

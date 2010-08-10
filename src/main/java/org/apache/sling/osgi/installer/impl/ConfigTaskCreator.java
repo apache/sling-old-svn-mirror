@@ -55,11 +55,11 @@ class ConfigTaskCreator {
 		    final String key = getDigestKey(toActivate);
 		    final String previousDigest = digests.get(key);
 		    if(toActivate.getDigest().equals(previousDigest)) {
-		        ctx.logDebug("Configuration (" + key+ ") already installed, ignored: " + toActivate);
+		        Logger.logDebug("Configuration (" + key+ ") already installed, ignored: " + toActivate);
 		    } else {
 		        tasks.add(new ConfigInstallTask(toActivate));
 		        digests.put(key, toActivate.getDigest());
-                ctx.logDebug("Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
+		        Logger.logDebug("Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
 		    }
 		}
 	}

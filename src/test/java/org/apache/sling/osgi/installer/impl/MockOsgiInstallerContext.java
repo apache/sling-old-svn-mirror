@@ -34,7 +34,7 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
     public MockOsgiInstallerContext() throws IOException {
         final File f = File.createTempFile(MockOsgiInstallerContext.class.getSimpleName(), ".data");
         f.deleteOnExit();
-        persistentBundleInfo = new PersistentBundleInfo(this, f);
+        persistentBundleInfo = new PersistentBundleInfo(f);
     }
 
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
@@ -83,47 +83,5 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
     public void saveInstalledBundleInfo(String symbolicName, String digest, String version) throws IOException {
         persistentBundleInfo.putInfo(symbolicName, digest, version);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String, java.lang.Throwable)
-     */
-    public void logDebug(String message, Throwable t) {
-        // nothing to do - no logging
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String)
-     */
-    public void logDebug(String message) {
-        // nothing to do - no logging
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String, java.lang.Throwable)
-     */
-    public void logInfo(String message, Throwable t) {
-        // nothing to do - no logging
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String)
-     */
-    public void logInfo(String message) {
-        // nothing to do - no logging
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String, java.lang.Throwable)
-     */
-    public void logWarn(String message, Throwable t) {
-        // nothing to do - no logging
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String)
-     */
-    public void logWarn(String message) {
-        // nothing to do - no logging
     }
 }

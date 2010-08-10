@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.BundleContext;
 
 /** A resource that's been registered in the OSGi controller.
@@ -46,7 +45,7 @@ public interface RegisteredResource {
 	String getUrl();
 	boolean isInstallable();
 	void setInstallable(boolean installable);
-	InstallableResource.Type getResourceType();
+	String getResourceType();
 	String getUrlScheme();
 	int getPriority();
 	long getSerialNumber();

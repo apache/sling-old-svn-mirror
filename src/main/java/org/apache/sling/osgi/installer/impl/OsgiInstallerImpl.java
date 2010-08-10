@@ -24,21 +24,20 @@ import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** OsgiInstaller service implementation */
-public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
+public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics, OsgiInstallerContext {
 
     /** Interface of the package admin */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
-    /** Interface of the log service */
-    private static String LOG_SERVICE_NAME = LogService.class.getName();
+
     /** Interface of the config admin */
     private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
 
@@ -55,8 +54,7 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 
     /** Tracker for the package admin. */
     private final ServiceTracker packageAdminTracker;
-    /** Tracker for the log service. */
-    private final ServiceTracker logServiceTracker;
+
     /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
 
@@ -68,13 +66,11 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         this.bundleContext = bc;
         // create and start tracker
         this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
-        this.logServiceTracker = new ServiceTracker(bc, LOG_SERVICE_NAME, null);
         this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
         this.packageAdminTracker.open();
-        this.logServiceTracker.open();
         this.configAdminServiceTracker.open();
 
-        bundleDigestsStorage = new PersistentBundleInfo(this, bc.getDataFile("bundle-digests.properties"));
+        bundleDigestsStorage = new PersistentBundleInfo(bc.getDataFile("bundle-digests.properties"));
 
         installerThread = new OsgiInstallerThread(this);
         installerThread.setDaemon(true);
@@ -88,16 +84,20 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         installerThread.deactivate();
 
         final TreeSet<String> installedBundlesSymbolicNames = new TreeSet<String>();
+        // do we really want to iterate here? Over all bundles? TODO
         for(Bundle b : bundleContext.getBundles()) {
-            installedBundlesSymbolicNames.add(b.getSymbolicName());
+            final String name = b.getSymbolicName();
+            if ( name != null ) {
+                installedBundlesSymbolicNames.add(b.getSymbolicName());
+            }
         }
         try {
             bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
         } catch (IOException e) {
-            logWarn(OsgiInstaller.class.getName() + " service failed to save state.", e);
+            Logger.logWarn(OsgiInstaller.class.getName() + " service failed to save state.", e);
         }
 
-        this.logInfo("Waiting for installer thread to stop");
+        Logger.logInfo("Waiting for installer thread to stop");
         try {
             installerThread.join();
         } catch (InterruptedException e) {
@@ -105,11 +105,10 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         }
 
         this.packageAdminTracker.close();
-        this.logServiceTracker.close();
         this.configAdminServiceTracker.close();
 
-        this.logWarn(OsgiInstaller.class.getName()
-                    + " service deactivated - this warning can be ignored if system is shutting down");
+        Logger.logWarn(OsgiInstaller.class.getName()
+                + " service deactivated - this warning can be ignored if system is shutting down");
     }
 
 	/**
@@ -119,12 +118,18 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 	    return (ConfigurationAdmin)this.configAdminServiceTracker.getService();
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToCurrentCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
+	 */
 	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
 		installerThread.addTaskToCurrentCycle(t);
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToNextCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
+	 */
 	public void addTaskToNextCycle(OsgiInstallerTask t) {
-		this.logDebug("adding task to next cycle:" + t);
+	    Logger.logDebug("adding task to next cycle:" + t);
 		installerThread.addTaskToNextCycle(t);
 	}
 
@@ -142,6 +147,9 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
 		return (PackageAdmin)this.packageAdminTracker.getService();
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.OsgiInstallerStatistics#getCounters()
+	 */
 	public long [] getCounters() {
 		return counters;
 	}
@@ -167,16 +175,22 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         installerThread.removeResource(url);
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#incrementCounter(int)
+	 */
 	public void incrementCounter(int index) {
 	    counters[index]++;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#setCounter(int, long)
+     */
     public void setCounter(int index, long value) {
         counters[index] = value;
     }
 
     /**
-     * Finds the bundle with given symbolic name in our BundleContext.
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getMatchingBundle(java.lang.String)
      */
     public Bundle getMatchingBundle(String bundleSymbolicName) {
         if (bundleSymbolicName != null) {
@@ -190,10 +204,16 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         return null;
     }
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#isSnapshot(org.osgi.framework.Version)
+	 */
 	public boolean isSnapshot(Version v) {
 		return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getInstalledBundleDigest(org.osgi.framework.Bundle)
+     */
     public String getInstalledBundleDigest(Bundle b) throws IOException {
         if(bundleDigestsStorage == null) {
             return null;
@@ -201,6 +221,9 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         return bundleDigestsStorage.getDigest(b.getSymbolicName());
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getInstalledBundleVersion(java.lang.String)
+     */
     public String getInstalledBundleVersion(String symbolicName) throws IOException {
         if(bundleDigestsStorage == null) {
             return null;
@@ -208,64 +231,10 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerContext {
         return bundleDigestsStorage.getInstalledVersion(symbolicName);
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#saveInstalledBundleInfo(org.osgi.framework.Bundle, java.lang.String, java.lang.String)
+     */
     public void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException {
         bundleDigestsStorage.putInfo(b.getSymbolicName(), digest, version);
     }
-
-    /**
-     * Internal method for logging.
-     * This method checks if the LogService is available and only then logs
-     */
-    private void log(final int level, final String message, final Throwable t) {
-        final LogService ls = (LogService) this.logServiceTracker.getService();
-        if ( ls != null ) {
-            if ( t != null ) {
-                ls.log(level, message, t);
-            } else {
-                ls.log(level, message);
-            }
-        }
-    }
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String, java.lang.Throwable)
-     */
-    public void logDebug(String message, Throwable t) {
-        log(LogService.LOG_DEBUG, message, t);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logDebug(java.lang.String)
-     */
-    public void logDebug(String message) {
-        log(LogService.LOG_DEBUG, message, null);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String, java.lang.Throwable)
-     */
-    public void logInfo(String message, Throwable t) {
-        log(LogService.LOG_INFO, message, t);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logInfo(java.lang.String)
-     */
-    public void logInfo(String message) {
-        log(LogService.LOG_INFO, message, null);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String, java.lang.Throwable)
-     */
-    public void logWarn(String message, Throwable t) {
-        log(LogService.LOG_WARNING, message, t);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#logWarn(java.lang.String)
-     */
-    public void logWarn(String message) {
-        log(LogService.LOG_WARNING, message, null);
-    }
-
 }

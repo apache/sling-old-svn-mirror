@@ -76,7 +76,6 @@ class BundleTaskCreator {
 			}
 		}
 
-		RegisteredResource toUpdate = null;
 		String digestToSave = null;
 		final RegisteredResource firstResource = resources.first();
 		final String symbolicName = firstResource == null ? null :
@@ -87,7 +86,7 @@ class BundleTaskCreator {
 		    // and if we installed it
 		    if(getBundleInfo(ctx, resources.first()) != null) {
 		        if(ctx.getInstalledBundleVersion(symbolicName) == null) {
-		            ctx.logInfo("Bundle " + symbolicName
+		            Logger.logInfo("Bundle " + symbolicName
                                 + " was not installed by this module, not removed");
 		        } else {
 		            tasks.add(new BundleRemoveTask(resources.first()));
@@ -97,7 +96,8 @@ class BundleTaskCreator {
 		} else {
 			final BundleInfo info = getBundleInfo(ctx, toActivate);
 			final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
-			if(info == null) {
+	        RegisteredResource toUpdate = null;
+			if (info == null) {
 			    // bundle is not installed yet: install and save digest to avoid
 			    // unnecessary updates
 				tasks.add(new BundleInstallTask(toActivate));
@@ -113,10 +113,10 @@ class BundleTaskCreator {
                     final String installedVersion = ctx.getInstalledBundleVersion(info.symbolicName);
                     if(info.version.toString().equals(installedVersion)) {
                         toUpdate = toActivate;
-                        ctx.logInfo("Bundle " + info.symbolicName + " " + installedVersion
+                        Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was installed by this module, downgrading to " + newVersion);
                     } else {
-                        ctx.logInfo("Bundle " + info.symbolicName + " " + installedVersion
+                        Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was not installed by this module, not downgraded");
                     }
 			    } else if(compare == 0 && ctx.isSnapshot(newVersion)){
@@ -127,13 +127,13 @@ class BundleTaskCreator {
 
 			// Save the digest of installed and updated resources, keyed by
 			// bundle symbolic name, to avoid unnecessary updates
-			if(toUpdate != null) {
+			if (toUpdate != null) {
 			    final String previousDigest = digests.get(symbolicName);
 			    if(toUpdate.getDigest().equals(previousDigest)) {
-			        ctx.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
+			        Logger.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
                     digestToSave = previousDigest;
 			    } else {
-			        ctx.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
+			        Logger.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
 			        tasks.add(new BundleUpdateTask(toUpdate));
 			        digestToSave = toUpdate.getDigest();
 			    }

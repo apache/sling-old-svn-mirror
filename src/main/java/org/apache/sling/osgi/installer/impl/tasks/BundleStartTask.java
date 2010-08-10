@@ -20,8 +20,9 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.Activator;
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
@@ -59,26 +60,26 @@ public class BundleStartTask extends OsgiInstallerTask {
 		boolean needToRetry = false;
 
         if(bundleId == 0) {
-            ctx.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
+            Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
             return;
         }
 
 		if(b == null) {
-		    ctx.logInfo("Cannot start bundle, id not found:" + bundleId);
+		    Logger.logInfo("Cannot start bundle, id not found:" + bundleId);
 			return;
 		}
 
 		try {
 	        if(b.getState() == Bundle.ACTIVE) {
-	            ctx.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
+	            Logger.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
 	        } else {
 	            // Try to start bundle, and if that doesn't work we'll need to retry
-	            logExecution(ctx);
+	            logExecution();
 	            try {
 	                b.start();
-	                ctx.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
+	                Logger.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
 	            } catch(BundleException e) {
-	                ctx.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
+	                Logger.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
 	                            + "), will retry: " + bundleId + "/" + b.getSymbolicName());
 	                needToRetry = true;
 	            }
@@ -100,7 +101,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 	        }
 		}
 		retryCount++;
-		ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+		ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
 	}
 
 	/** Do not execute this task if waiting for events */
@@ -108,7 +109,7 @@ public class BundleStartTask extends OsgiInstallerTask {
         final long eventsCount = Activator.getTotalEventsCount();
         final boolean result = eventsCount >= eventsCountForRetrying;
         if(!result) {
-            tctx.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
+            Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
         }
         return result;
     }

@@ -51,7 +51,7 @@ public class RegisteredResourceComparatorTest {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
-        final InstallableResource r = factory.create("test:" + url, data, null, null, priority);
+        final InstallableResource r = factory.create("test:" + url, null, data, null, null, priority);
         return new RegisteredResourceImpl(new MockOsgiInstallerContext(), r);
     }
 

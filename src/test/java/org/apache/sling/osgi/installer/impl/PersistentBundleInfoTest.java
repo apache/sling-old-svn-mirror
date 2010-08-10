@@ -19,8 +19,8 @@
 package org.apache.sling.osgi.installer.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,15 +34,15 @@ public class PersistentBundleInfoTest {
     private File testFile;
     private TreeSet<String> installedBundles;
     private static final String NO_VERSION = "";
-    
+
     @Before
     public void setUp() throws Exception {
         testFile = File.createTempFile(getClass().getSimpleName(), "properties");
         testFile.deleteOnExit();
-        storage = new PersistentBundleInfo(new MockOsgiInstallerContext(), testFile);
+        storage = new PersistentBundleInfo(testFile);
         installedBundles = new TreeSet<String>();
     }
-    
+
     @Test
     public void testCloseAndReopen() throws IOException {
         storage.putInfo("foo", "bar", NO_VERSION);
@@ -53,10 +53,10 @@ public class PersistentBundleInfoTest {
         storage.putInfo("foo", "wii", NO_VERSION);
         assertEquals("After change, expecting wii digest", "wii", storage.getDigest("foo"));
         storage = null;
-        final PersistentBundleInfo copy = new PersistentBundleInfo(new MockOsgiInstallerContext(), testFile);
+        final PersistentBundleInfo copy = new PersistentBundleInfo(testFile);
         assertEquals("In copy saved before change, expecting bar digest", "bar", copy.getDigest("foo"));
     }
-    
+
     @Test
     public void testPurge() throws IOException {
         for(int i=0; i < 50; i++) {
@@ -66,45 +66,45 @@ public class PersistentBundleInfoTest {
             }
         }
         for(int i=0; i < 50; i++) {
-            assertEquals("Before save, expecting digest to match at step " + i, "bar" + i, 
+            assertEquals("Before save, expecting digest to match at step " + i, "bar" + i,
                     storage.getDigest("foo" + i));
-            assertEquals("Before save, expecting version to match at step " + i, "1." + i, 
+            assertEquals("Before save, expecting version to match at step " + i, "1." + i,
                     storage.getInstalledVersion("foo" + i));
         }
         storage.purgeAndSave(installedBundles);
         for(int i=0; i < 50; i++) {
             if(i % 2 != 0) {
-                assertNull("After purge, expecting null digest at step " + i, 
+                assertNull("After purge, expecting null digest at step " + i,
                         storage.getDigest("foo" + i));
-                assertNull("After purge, expecting null version at step " + i, 
+                assertNull("After purge, expecting null version at step " + i,
                         storage.getInstalledVersion("foo" + i));
             } else {
-                assertNotNull("After purge, expecting non-null digest at step " + i, 
+                assertNotNull("After purge, expecting non-null digest at step " + i,
                         storage.getDigest("foo" + i));
-                assertEquals("After purge, expecting digest to match at step " + i, "bar" + i, 
+                assertEquals("After purge, expecting digest to match at step " + i, "bar" + i,
                         storage.getDigest("foo" + i));
-                assertNotNull("After purge, expecting non-null version at step " + i, 
+                assertNotNull("After purge, expecting non-null version at step " + i,
                         storage.getInstalledVersion("foo" + i));
-                assertEquals("After purge, expecting version to match at step " + i, "1." + i, 
+                assertEquals("After purge, expecting version to match at step " + i, "1." + i,
                         storage.getInstalledVersion("foo" + i));
             }
         }
         storage = null;
-        final PersistentBundleInfo copy = new PersistentBundleInfo(new MockOsgiInstallerContext(), testFile);
+        final PersistentBundleInfo copy = new PersistentBundleInfo(testFile);
         for(int i=0; i < 50; i++) {
             if(i % 2 != 0) {
-                assertNull("In copy, expecting null digest at step " + i, 
+                assertNull("In copy, expecting null digest at step " + i,
                         copy.getDigest("foo" + i));
-                assertNull("In copy, expecting null version at step " + i, 
+                assertNull("In copy, expecting null version at step " + i,
                         copy.getInstalledVersion("foo" + i));
             } else {
-                assertNotNull("In copy, expecting non-null digest at step " + i, 
+                assertNotNull("In copy, expecting non-null digest at step " + i,
                         copy.getDigest("foo" + i));
-                assertEquals("In copy, expecting digest to match at step " + i, "bar" + i, 
+                assertEquals("In copy, expecting digest to match at step " + i, "bar" + i,
                         copy.getDigest("foo" + i));
-                assertNotNull("In copy, expecting non-null version at step " + i, 
+                assertNotNull("In copy, expecting non-null version at step " + i,
                         copy.getInstalledVersion("foo" + i));
-                assertEquals("In copy, expecting version to match at step " + i, "1." + i, 
+                assertEquals("In copy, expecting version to match at step " + i, "1." + i,
                         copy.getInstalledVersion("foo" + i));
             }
         }

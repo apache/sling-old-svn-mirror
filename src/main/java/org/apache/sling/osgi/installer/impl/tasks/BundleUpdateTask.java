@@ -20,7 +20,8 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -64,7 +65,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
     	snapshot = ctx.isSnapshot(newVersion);
     	if(currentVersion.equals(newVersion) && !snapshot) {
-    	    ctx.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
+    	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
     		return;
     	}
 
@@ -74,12 +75,12 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         if(snapshot) {
             final String oldDigest = ctx.getInstalledBundleDigest(b);
             if(resource.getDigest().equals(oldDigest)) {
-                ctx.logDebug("Snapshot digest did not change, ignoring update:" + resource);
+                Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
                 return;
             }
         }
 
-        logExecution(ctx);
+        logExecution();
         if(b.getState() == Bundle.ACTIVE) {
             // bundle was active before the update - restart it once updated, but
             // in sequence, not right now
@@ -96,8 +97,8 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         b.update(is);
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
-        ctx.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
-        ctx.incrementCounter(OsgiInstaller.OSGI_TASKS_COUNTER);
+        Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
+        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
     }
 
     @Override

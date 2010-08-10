@@ -35,51 +35,23 @@ public class InstallableResourceImpl implements InstallableResource {
     private final InputStream inputStream;
     private final Dictionary<String, Object> dictionary;
     private final int priority;
-    private final Type resourceType;
+    private final String resourceType;
 
-    /** Create a data object that wraps an InputStream
-     *  @param url unique URL of the supplied data, must start with the scheme used
-     *     {@link OsgiInstaller#registerResources} call
-     *  @param is the resource contents
-     *  @param digest must be supplied by client. Does not need to be an actual digest
-     *     of the contents, but must change if the contents change. Having this supplied
-     *     by the client avoids having to compute real digests to find out if a resource
-     *     has changed, which can be expensive.
+    /**
+     * Create a data object.
      */
-    public InstallableResourceImpl(String url, InputStream is, String digest,
-            final Type type,
+    public InstallableResourceImpl(final String url,
+            final InputStream is,
+            final Dictionary<String, Object> dict,
+            String digest,
+            final String type,
             final int priority) {
         this.url = url;
         this.digest = digest;
         this.priority = priority;
         this.resourceType = type;
-//        if ( this.resourceType == Type.CONFIG ) {
-//            this.dictionary = null;
-//            this.inputStream = null;
-//        } else {
-            this.inputStream = is;
-            this.dictionary = null;
-//        }
-    }
-
-    /** Create a data object that wraps a Dictionary. Digest will be computed
-     *  by the installer in this case, as configuration dictionaries are
-     *  usually small so computing a real digest to find out if they changed
-     *  is ok.
-     *
-     *  @param url unique URL of the supplied data, must start with the scheme used
-     *     {@link OsgiInstaller#registerResources} call
-     */
-    public InstallableResourceImpl(final String url, final Dictionary<String, Object> d,
-            final String digest,
-            final Type type,
-            final int priority) {
-        this.url = url;
-        this.inputStream = null;
-        this.resourceType = type;
-        this.dictionary = d;
-        this.digest = digest;
-        this.priority = priority;
+        this.inputStream = is;
+        this.dictionary = dict;
     }
 
     /**
@@ -92,7 +64,7 @@ public class InstallableResourceImpl implements InstallableResource {
     /**
      * @see org.apache.sling.osgi.installer.InstallableResource#getType()
      */
-    public Type getType() {
+    public String getType() {
         return this.resourceType;
     }
 

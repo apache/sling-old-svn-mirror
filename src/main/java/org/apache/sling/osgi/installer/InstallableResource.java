@@ -30,11 +30,16 @@ import java.util.Dictionary;
  */
 public interface InstallableResource {
 
-    /** The supported resource types. */
-    public static enum Type {
-        BUNDLE,  // in this case getInputStream must return an input stream
-        CONFIG   // in this case getDictionary must return the dictionary
-    };
+    /** The type for a bundle - in this case {@link #getInputStream} must
+     * return an input stream to the bundle. {@link #getDictionary()} might
+     * return additional information.
+     */
+    String TYPE_BUNDLE = "bundle";
+
+    /** The type for a configuration - in this case {@link #getDictionary()}
+     * must return a dictionary with the configuration.
+     */
+    String TYPE_CONFIG = "config";
 
     /**
      * Return this data's URL. It is opaque for the {@link OsgiInstaller}
@@ -47,11 +52,11 @@ public interface InstallableResource {
 	 * Return the type of this resource.
 	 * @return The resource type.
 	 */
-    Type getType();
+    String getType();
 
 	/**
 	 * Return an input stream with the data of this resource.
-	 * Null if resource contains a dictionary instead. Caller is responsible for
+	 * Null if resource contains a configuration instead. Caller is responsible for
 	 * closing the stream.
 	 * If this resource is of type CONFIG it must not return an input stream and
 	 * if this resource is of type BUNDLE it must return an input stream!
@@ -63,7 +68,7 @@ public interface InstallableResource {
 	 * Return this resource's dictionary.
 	 * Null if resource contains an InputStream instead. If this resource is of
 	 * type CONFIG it must return a dictionary and if this resource is of type BUNDLE
-	 * it must not return a dictionary!
+	 * it might return a dictionary!
 	 * @return The resource's dictionary or null.
 	 */
 	Dictionary<String, Object> getDictionary();

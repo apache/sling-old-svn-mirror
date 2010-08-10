@@ -48,6 +48,9 @@ public interface OsgiInstallerContext {
 
     void incrementCounter(int index);
     void setCounter(int index, long value);
+    /**
+     * Finds the bundle with given symbolic name in our BundleContext.
+     */
     Bundle getMatchingBundle(String bundleSymbolicName);
     boolean isSnapshot(Version v);
 
@@ -71,34 +74,4 @@ public interface OsgiInstallerContext {
      *  @return null if no version was stored
      * */
     String getInstalledBundleVersion(String symbolicName) throws IOException;
-
-    /**
-     * Log a debug message.
-     */
-    void logDebug(final String message);
-
-    /**
-     * Log a debug message with exception.
-     */
-    void logDebug(final String message, final Throwable t);
-
-    /**
-     * Log a info message.
-     */
-    void logInfo(final String message);
-
-    /**
-     * Log a info message with exception.
-     */
-    void logInfo(final String message, final Throwable t);
-
-    /**
-     * Log a warning message.
-     */
-    void logWarn(final String message);
-
-    /**
-     * Log a warning message with exception.
-     */
-    void logWarn(final String message, final Throwable t);
 }

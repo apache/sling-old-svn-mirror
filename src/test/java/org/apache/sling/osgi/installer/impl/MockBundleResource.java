@@ -100,8 +100,8 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 		return null;
 	}
 
-	public InstallableResource.Type getResourceType() {
-		return InstallableResource.Type.BUNDLE;
+	public String getResourceType() {
+		return InstallableResource.TYPE_BUNDLE;
 	}
 
 	public String getUrl() {

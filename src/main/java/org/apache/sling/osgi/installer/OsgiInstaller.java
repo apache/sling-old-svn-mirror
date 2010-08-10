@@ -57,29 +57,4 @@ public interface OsgiInstaller {
 	/** Inform the installer that a resource is no longer available
 	 * 	@param r an empty InstallableResource, isEmpty() must return true */
 	void removeResource(String url);
-
-	/** Return counters used for statistics, console display, testing, etc. */
-	long [] getCounters();
-
-	/** Counter index: number of OSGi tasks executed */
-	int OSGI_TASKS_COUNTER = 0;
-
-    /** Counter index: number of installer cycles */
-    int INSTALLER_CYCLES_COUNTER = 1;
-
-    /** Counter index: number of currently registered resources */
-    int REGISTERED_RESOURCES_COUNTER = 2;
-
-    /** Counter index: number of currently registered resource groups
-     *  of resources having the same OSGi entity ID */
-    int REGISTERED_GROUPS_COUNTER = 3;
-
-    /** Counter index: is worker thread idle? (not really a counter: 1 means true) */
-    int WORKER_THREAD_IS_IDLE_COUNTER = 4;
-
-    /** Counter index: how many times did worker thread become idle */
-    int WORKER_THREAD_BECOMES_IDLE_COUNTER = 5;
-
-	/** Size of the counters array */
-	int COUNTERS_SIZE = 6;
 }
