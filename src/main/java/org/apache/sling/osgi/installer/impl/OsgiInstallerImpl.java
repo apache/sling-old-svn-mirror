@@ -155,24 +155,24 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(org.apache.sling.osgi.installer.InstallableResource)
+	 * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
 	 */
-	public void addResource(final InstallableResource r) {
-        installerThread.addNewResource(r);
+	public void addResource(final String scheme, final InstallableResource r) {
+        installerThread.addNewResource(r, scheme);
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.util.Collection, java.lang.String)
+	 * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, java.util.Collection)
 	 */
-	public void registerResources(final Collection<InstallableResource> data, String urlScheme) {
+	public void registerResources(final String urlScheme, final Collection<InstallableResource> data) {
         installerThread.addNewResources(data, urlScheme, bundleContext);
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String)
+	 * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String, String)
 	 */
-	public void removeResource(final String url) {
-        installerThread.removeResource(url);
+	public void removeResource(final String scheme, final String url) {
+        installerThread.removeResource(url, scheme);
 	}
 
 	/**

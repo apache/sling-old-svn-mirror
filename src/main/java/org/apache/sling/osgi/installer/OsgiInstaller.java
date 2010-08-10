@@ -46,15 +46,15 @@ public interface OsgiInstaller {
 	 * 	@param urlScheme identifies the client. All URLs of the supplied data
 	 * 		must use this scheme
 	 */
-	void registerResources(Collection<InstallableResource> data, String urlScheme);
+	void registerResources(String urlScheme, Collection<InstallableResource> data);
 
 	/** Inform the installer that a resource is available for installation.
 	 * 	also called if the resource has been modified since it was registered.
 	 *  Invalid resources are ignored.
 	 */
-	void addResource(InstallableResource r);
+	void addResource(String urlScheme, InstallableResource r);
 
 	/** Inform the installer that a resource is no longer available
 	 * 	@param r an empty InstallableResource, isEmpty() must return true */
-	void removeResource(String url);
+	void removeResource(String urlScheme, String id);
 }

@@ -33,6 +33,7 @@ import java.util.TreeSet;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
+import org.apache.sling.osgi.installer.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -134,7 +135,8 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     }
 
     /** Register a resource for removal, or ignore if we don't have that URL */
-    void removeResource(String url) {
+    void removeResource(String id, final String scheme) {
+        final String url = scheme + ':' + id;
 		// Will mark all resources which have r's URL as uninstallable
         Logger.logDebug("Adding URL " + url + " to urlsToRemove");
 
@@ -145,10 +147,10 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     }
 
     /** Register a single new resource, will be processed on the next cycle */
-    void addNewResource(final InstallableResource r) {
+    void addNewResource(final InstallableResource r, final String scheme) {
         RegisteredResource rr = null;
         try {
-            rr = new RegisteredResourceImpl(ctx, r);
+            rr = new RegisteredResourceImpl(ctx, r, scheme);
         } catch(IOException ioe) {
             Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
             return;
@@ -165,22 +167,16 @@ class OsgiInstallerThread extends Thread implements BundleListener {
      *  Used with {@link OsgiInstaller.registerResources}
      */
     void addNewResources(Collection<InstallableResource> data, String urlScheme, BundleContext bundleContext) {
-        // Check scheme, do nothing if at least one of them is wrong
         final SortedSet<RegisteredResource> toAdd = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(ctx, r);
+                rr = new RegisteredResourceImpl(ctx, r, urlScheme);
             } catch(IOException ioe) {
                 Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;
             }
 
-            if(!rr.getUrlScheme().equals(urlScheme)) {
-                throw new IllegalArgumentException(
-                        "URL of all supplied InstallableResource must start with supplied scheme"
-                        + ", scheme is not '" + urlScheme + "' for URL " + r.getUrl());
-            }
             Logger.logDebug("Adding new resource " + r);
             toAdd.add(rr);
         }

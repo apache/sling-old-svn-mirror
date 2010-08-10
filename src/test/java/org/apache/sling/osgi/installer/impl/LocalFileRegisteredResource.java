@@ -27,11 +27,11 @@ import org.osgi.framework.BundleContext;
 /** RegisteredResource that stores data to a local temporary file */
 class LocalFileRegisteredResource extends RegisteredResourceImpl {
 	private File storage;
-	
+
 	LocalFileRegisteredResource(InstallableResource r) throws IOException {
-		super(new MockOsgiInstallerContext(), r);
+		super(new MockOsgiInstallerContext(), r, "test");
 	}
-	
+
 	@Override
 	protected File getDataFile(BundleContext ctx) {
 		if(storage == null) {

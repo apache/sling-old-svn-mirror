@@ -51,7 +51,9 @@ public class TaskOrderingTest {
 	}
 
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(new MockOsgiInstallerContext(), factory.create(url, null, new Hashtable<String, Object>(), null, null, null));
+		return new RegisteredResourceImpl(new MockOsgiInstallerContext(),
+		        factory.create(url, null, new Hashtable<String, Object>(), null, null, null),
+		        "test");
 	}
 
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {

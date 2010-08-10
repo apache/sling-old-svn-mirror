@@ -46,7 +46,7 @@ public interface InstallableResource {
 	 * but the scheme must be the one used in the
 	 * {@link OsgiInstaller#registerResources} call.
 	 */
-    String getUrl();
+    String getId();
 
 	/**
 	 * Return the type of this resource.

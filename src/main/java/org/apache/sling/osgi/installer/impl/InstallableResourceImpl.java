@@ -30,7 +30,7 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
  */
 public class InstallableResourceImpl implements InstallableResource {
 
-    private final String url;
+    private final String id;
     private final String digest;
     private final InputStream inputStream;
     private final Dictionary<String, Object> dictionary;
@@ -40,13 +40,13 @@ public class InstallableResourceImpl implements InstallableResource {
     /**
      * Create a data object.
      */
-    public InstallableResourceImpl(final String url,
+    public InstallableResourceImpl(final String id,
             final InputStream is,
             final Dictionary<String, Object> dict,
             String digest,
             final String type,
             final int priority) {
-        this.url = url;
+        this.id = id;
         this.digest = digest;
         this.priority = priority;
         this.resourceType = type;
@@ -55,10 +55,10 @@ public class InstallableResourceImpl implements InstallableResource {
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.InstallableResource#getUrl()
+     * @see org.apache.sling.osgi.installer.InstallableResource#getId()
      */
-    public String getUrl() {
-        return this.url;
+    public String getId() {
+        return this.id;
     }
 
     /**
@@ -98,6 +98,6 @@ public class InstallableResourceImpl implements InstallableResource {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", priority=" + priority + ", url=" + url;
+        return getClass().getSimpleName() + ", priority=" + priority + ", id=" + id;
     }
 }
