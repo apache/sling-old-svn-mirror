@@ -31,7 +31,8 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>RepositoryClassLoaderFacade</code> TODO
  */
-class RepositoryClassLoaderFacade extends SecureClassLoader {
+class RepositoryClassLoaderFacade
+    extends SecureClassLoader {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
