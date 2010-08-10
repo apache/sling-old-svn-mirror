@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
+import org.slf4j.LoggerFactory;
 
 
 class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
@@ -53,7 +54,7 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
      */
     public void addResource(final String scheme, InstallableResource d) {
     	urls.add(scheme + ':' + d.getId());
-        recordCall("add", d);
+        recordCall("add", scheme, d);
     }
 
     public long[] getCounters() {
@@ -70,7 +71,7 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
         Collections.sort(sorted, new InstallableResourceComparator());
         for(InstallableResource r : data) {
         	urls.add(urlScheme + ':' + r.getId());
-            recordCall("register", r);
+            recordCall("register", urlScheme, r);
         }
     }
 
@@ -84,8 +85,8 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
     	}
     }
 
-    private synchronized void recordCall(String prefix, InstallableResource r) {
-        recordedCalls.add(prefix + ":" + r.getId() + ":" + r.getPriority());
+    private synchronized void recordCall(String prefix, String scheme, InstallableResource r) {
+        recordedCalls.add(prefix + ":" + scheme + ":" + r.getId() + ":" + r.getPriority());
     }
 
     synchronized void clearRecordedCalls() {
@@ -97,6 +98,7 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
     }
 
     boolean isRegistered(String urlScheme, String path) {
-    	return urls.contains(urlScheme + ":" + path);
+        final String url = urlScheme + ':' + path;
+    	return urls.contains(url);
     }
 }

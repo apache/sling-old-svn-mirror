@@ -30,8 +30,8 @@ import javax.jcr.observation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Listen for JCR events under one of our roots, to find out 
- *  when new WatchedFolders must be created, or when some might 
+/** Listen for JCR events under one of our roots, to find out
+ *  when new WatchedFolders must be created, or when some might
  *  have been deleted.
  */
 class RootFolderListener implements EventListener {
@@ -40,45 +40,45 @@ class RootFolderListener implements EventListener {
     private final FolderNameFilter folderNameFilter;
     private final RescanTimer timer;
     private final String watchedPath;
-    
+
     RootFolderListener(Session session, FolderNameFilter fnf, String path, RescanTimer timer) throws RepositoryException {
         folderNameFilter = fnf;
         this.timer = timer;
         this.watchedPath = path;
-        
+
         int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
         boolean isDeep = true;
         boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
                 isDeep, null, null, noLocal);
-        
+
         log.info("Watching {} to detect potential changes in subfolders", watchedPath);
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " (" + watchedPath + ")";
     }
-    
+
     void cleanup(Session session) throws RepositoryException {
         session.getWorkspace().getObservationManager().removeEventListener(this);
     }
-    
+
     /** Return our saved paths and clear the list
-     * 	@return null if no paths have been saved 
+     * 	@return null if no paths have been saved
      */
     Set<String> getAndClearPaths() {
     	if(paths.isEmpty()) {
     		return null;
     	}
-    	
+
         synchronized(paths) {
-            Set<String> result = paths; 
+            Set<String> result = paths;
             paths = new HashSet<String>();
             return result;
         }
     }
-    
+
     /** Store the paths of new WatchedFolders to create */
     public void onEvent(EventIterator it) {
         try {

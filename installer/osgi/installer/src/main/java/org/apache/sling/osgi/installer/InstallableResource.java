@@ -30,21 +30,23 @@ import java.util.Dictionary;
  */
 public interface InstallableResource {
 
-    /** The type for a bundle - in this case {@link #getInputStream} must
+    /**
+     * The type for a bundle - in this case {@link #getInputStream} must
      * return an input stream to the bundle. {@link #getDictionary()} might
      * return additional information.
      */
     String TYPE_BUNDLE = "bundle";
 
-    /** The type for a configuration - in this case {@link #getDictionary()}
+    /**
+     * The type for a configuration - in this case {@link #getDictionary()}
      * must return a dictionary with the configuration.
      */
     String TYPE_CONFIG = "config";
 
     /**
-     * Return this data's URL. It is opaque for the {@link OsgiInstaller}
-	 * but the scheme must be the one used in the
-	 * {@link OsgiInstaller#registerResources} call.
+     * Return this data's id. It is opaque for the {@link OsgiInstaller}
+	 * but should uniquely identify the resource within the namespace of
+	 * the used installation mechanism.
 	 */
     String getId();
 
@@ -73,14 +75,15 @@ public interface InstallableResource {
 	 */
 	Dictionary<String, Object> getDictionary();
 
-	/** Return this resource's digest. Not necessarily an actual md5 or other digest of the
-	 *  data, can be any string that changes if the data changes.
+	/**
+	 * Return this resource's digest. Not necessarily an actual md5 or other digest of the
+	 * data, can be any string that changes if the data changes.
 	 */
     String getDigest();
 
-	/** Return the priority of this resource. Priorities are used to decide which
-	 *  resource to install when several are registered for the same OSGi entity
-	 *  (bundle, config, etc.)
+	/**Return the priority of this resource. Priorities are used to decide which
+	 * resource to install when several are registered for the same OSGi entity
+	 * (bundle, config, etc.)
 	 */
     int getPriority();
 }
