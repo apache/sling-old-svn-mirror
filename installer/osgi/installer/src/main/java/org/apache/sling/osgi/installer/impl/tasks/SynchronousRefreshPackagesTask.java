@@ -28,6 +28,8 @@ import org.osgi.framework.FrameworkListener;
 /** Execute an OSGi "refresh packages" operation, synchronously */
 public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
 
+    private static final String REFRESH_PACKAGES_ORDER = "60-";
+
     /** Max time allowed to refresh packages (TODO configurable??) */
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
@@ -49,7 +51,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 
 	@Override
 	public String getSortKey() {
-		return TaskOrder.REFRESH_PACKAGES_ORDER;
+		return REFRESH_PACKAGES_ORDER;
 	}
 
 	@Override

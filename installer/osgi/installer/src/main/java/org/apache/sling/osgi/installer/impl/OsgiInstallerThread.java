@@ -63,9 +63,10 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     private final PersistentResourceList persistentList;
 
     private final BundleTaskCreator bundleTaskCreator = new BundleTaskCreator();
-    private final ConfigTaskCreator configTaskCreator = new ConfigTaskCreator();
+    private final ConfigTaskCreator configTaskCreator;
 
-    OsgiInstallerThread(OsgiInstallerContext ctx) {
+    OsgiInstallerThread(final OsgiInstallerContext ctx) {
+        this.configTaskCreator = new ConfigTaskCreator(ctx.getBundleContext());
         setName(getClass().getSimpleName());
         this.ctx = ctx;
         final File f = ctx.getBundleContext().getDataFile("RegisteredResourceList.ser");
@@ -74,6 +75,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     }
 
     void deactivate() {
+        this.configTaskCreator.deactivate();
         ctx.getBundleContext().removeBundleListener(this);
         active = false;
         synchronized (newResources) {
@@ -150,7 +152,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     void addNewResource(final InstallableResource r, final String scheme) {
         RegisteredResource rr = null;
         try {
-            rr = new RegisteredResourceImpl(ctx, r, scheme);
+            rr = new RegisteredResourceImpl(ctx.getBundleContext(), r, scheme);
         } catch(IOException ioe) {
             Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
             return;
@@ -171,7 +173,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(ctx, r, urlScheme);
+                rr = new RegisteredResourceImpl(ctx.getBundleContext(), r, urlScheme);
             } catch(IOException ioe) {
                 Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;

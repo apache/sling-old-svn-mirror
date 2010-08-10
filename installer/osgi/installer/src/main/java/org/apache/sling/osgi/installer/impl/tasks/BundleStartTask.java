@@ -35,14 +35,16 @@ import org.osgi.framework.BundleException;
  */
 public class BundleStartTask extends OsgiInstallerTask {
 
-	private final long bundleId;
+    private static final String BUNDLE_START_ORDER = "70-";
+
+    private final long bundleId;
 	private final String sortKey;
 	private long eventsCountForRetrying;
 	private int retryCount = 0;
 
 	public BundleStartTask(long bundleId) {
 		this.bundleId = bundleId;
-		sortKey = TaskOrder.BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
+		sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
 	}
 
 	@Override

@@ -51,7 +51,7 @@ public class TaskOrderingTest {
 	}
 
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(new MockOsgiInstallerContext(),
+		return new RegisteredResourceImpl(null,
 		        factory.create(url, null, new Hashtable<String, Object>(), null, null, null),
 		        "test");
 	}
@@ -70,8 +70,8 @@ public class TaskOrderingTest {
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-		    new ConfigRemoveTask(getRegisteredResource("test:a")),
-            new ConfigInstallTask(getRegisteredResource("test:a")),
+		    new ConfigRemoveTask(getRegisteredResource("test:a"), null),
+            new ConfigInstallTask(getRegisteredResource("test:a"), null),
 		    new BundleRemoveTask(getRegisteredResource("test:url")),
 		    new BundleUpdateTask(getRegisteredResource("test:url")),
 		    new BundleInstallTask(getRegisteredResource("test:url")),

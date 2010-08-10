@@ -125,10 +125,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 sleep(10L);
             }
         } finally {
-            if(is != null) {
-                is.close();
-            }
-            if(b != null) {
+            is.close();
+            if (b != null) {
                 b.uninstall();
             }
         }
@@ -219,10 +217,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         final long end = System.currentTimeMillis() + timeoutMsec;
         do {
             result = findConfiguration(pid);
-            if(result != null) {
-                break;
-            }
-            if(!shouldBePresent && result == null) {
+            if (result != null ||!shouldBePresent) {
                 break;
             }
             sleep(25);

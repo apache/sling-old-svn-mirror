@@ -30,9 +30,12 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Install/remove task for configurations */
 public class ConfigInstallTask extends AbstractConfigTask {
+
+    private static final String CONFIG_INSTALL_ORDER = "20-";
 
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
@@ -45,20 +48,20 @@ public class ConfigInstallTask extends AbstractConfigTask {
     	ignoredProperties.add(CONFIG_PATH_KEY);
     }
 
-    public ConfigInstallTask(RegisteredResource r) {
-        super(r);
+    public ConfigInstallTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+        super(r, configAdminServiceTracker);
     }
 
     @Override
     public String getSortKey() {
-        return TaskOrder.CONFIG_INSTALL_ORDER + pid.getCompositePid();
+        return CONFIG_INSTALL_ORDER + pid.getCompositePid();
     }
 
     @SuppressWarnings("unchecked")
 	@Override
     public void execute(OsgiInstallerContext ctx) throws Exception {
 
-        final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
+        final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);

@@ -66,7 +66,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	 *  maps to a configuration and the data provides an input stream, it is
 	 *  converted to a Dictionary
 	 */
-	public RegisteredResourceImpl(final OsgiInstallerContext osgiCtx,
+	public RegisteredResourceImpl(final BundleContext ctx,
 	        final InstallableResource input,
 	        final String scheme) throws IOException {
         if ( scheme == null || scheme.length() == 0 ) {
@@ -75,7 +75,6 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         if ( scheme.indexOf(':') != -1 ) {
             throw new IllegalArgumentException("Scheme must not contain a colon");
         }
-	    final BundleContext ctx = osgiCtx.getBundleContext();
 		url = scheme + ':' + input.getId();
 		urlScheme = scheme;
 		resourceType = input.getType();

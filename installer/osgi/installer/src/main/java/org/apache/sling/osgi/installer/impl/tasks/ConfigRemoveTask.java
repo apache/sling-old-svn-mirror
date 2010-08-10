@@ -23,26 +23,29 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Remove a Configuration */
- public class ConfigRemoveTask extends AbstractConfigTask {
+public class ConfigRemoveTask extends AbstractConfigTask {
+
+    private static final String CONFIG_REMOVE_ORDER = "10-";
 
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
 
-    public ConfigRemoveTask(RegisteredResource r) {
-        super(r);
+    public ConfigRemoveTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+        super(r, configAdminServiceTracker);
     }
 
     @Override
     public String getSortKey() {
-        return TaskOrder.CONFIG_REMOVE_ORDER + pid.getCompositePid();
+        return CONFIG_REMOVE_ORDER + pid.getCompositePid();
     }
 
     public void execute(OsgiInstallerContext ctx) throws Exception {
 
-        final ConfigurationAdmin ca = ctx.getConfigurationAdmin();
+        final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
