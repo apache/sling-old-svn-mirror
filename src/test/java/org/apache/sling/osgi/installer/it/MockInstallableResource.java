@@ -39,7 +39,7 @@ public class MockInstallableResource implements InstallableResource {
     private final String uri;
     private final InputStream is;
     private final String digest;
-    private final InstallableResource.Type type;
+    private final String type;
     private final int priority;
     private final Dictionary<String, Object> d;
 
@@ -51,19 +51,19 @@ public class MockInstallableResource implements InstallableResource {
         this.uri = uri;
         this.is = new ByteArrayInputStream(data.getBytes());
         this.digest = getNextDigest(digest);
-        this.type = InstallableResource.Type.BUNDLE;
+        this.type = InstallableResource.TYPE_BUNDLE;
         this.priority = InstallableResourceFactory.DEFAULT_PRIORITY;
         this.d = null;
     }
 
-    public MockInstallableResource(String uri, InputStream is, String digest, InstallableResource.Type type, Integer priority) {
+    public MockInstallableResource(String uri, InputStream is, String digest, String type, Integer priority) {
         this.uri = uri;
         this.is = is;
         this.digest = digest;
         if ( type != null ) {
             this.type = type;
         } else {
-            this.type = InstallableResource.Type.BUNDLE;
+            this.type = InstallableResource.TYPE_BUNDLE;
         }
         if ( priority != null ) {
             this.priority = priority;
@@ -73,13 +73,13 @@ public class MockInstallableResource implements InstallableResource {
         this.d = null;
     }
 
-    public MockInstallableResource(String uri, Dictionary<String, Object> d, String digest, InstallableResource.Type type, Integer priority) {
+    public MockInstallableResource(String uri, Dictionary<String, Object> d, String digest,String type, Integer priority) {
         this.uri = uri;
         this.is = null;
         if ( type != null ) {
             this.type = type;
         } else {
-            this.type = InstallableResource.Type.CONFIG;
+            this.type = InstallableResource.TYPE_CONFIG;
         }
         if ( priority != null ) {
             this.priority = priority;
@@ -119,7 +119,7 @@ public class MockInstallableResource implements InstallableResource {
         return this.priority;
     }
 
-    public Type getType() {
+    public String getType() {
         return this.type;
     }
 

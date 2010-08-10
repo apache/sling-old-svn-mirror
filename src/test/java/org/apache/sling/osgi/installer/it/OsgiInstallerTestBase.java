@@ -37,6 +37,7 @@ import java.util.Dictionary;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
@@ -59,6 +60,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	private int packageRefreshEventsCount;
 	private ServiceTracker configAdminTracker;
 	protected OsgiInstaller installer;
+	protected OsgiInstallerStatistics statistics;
+
 	private long [] counters;
 	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.osgi.installer.it-" + POM_VERSION;
@@ -86,6 +89,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     public void setupInstaller() {
         installer = getService(OsgiInstaller.class);
+        statistics = getService(OsgiInstallerStatistics.class);
         resetCounters();
     }
 
@@ -316,9 +320,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected void resetCounters() {
-        final long [] src = installer.getCounters();
+        final long [] src = statistics.getCounters();
         counters = new long[src.length];
-        System.arraycopy(installer.getCounters(), 0, counters, 0, src.length);
+        System.arraycopy(statistics.getCounters(), 0, counters, 0, src.length);
     }
 
     protected void sleep(long msec) {
@@ -344,24 +348,24 @@ class OsgiInstallerTestBase implements FrameworkListener {
             info += ": ";
         }
 
-        final boolean waitForCycles = counterType == OsgiInstaller.INSTALLER_CYCLES_COUNTER;
+        final boolean waitForCycles = counterType == OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER;
 
         long targetValue = howMany <  0 ? -howMany : counters[counterType] + howMany;
         if(waitForCycles) {
             // if waiting for installer cycles, get initial value from
             // that counter - we know we want to wait from now on, not from an
             // earlier resetCounters() call
-            targetValue = installer.getCounters()[counterType] + howMany;
+            targetValue = statistics.getCounters()[counterType] + howMany;
         }
 
         final long timeout = timeoutMsec > 0 ? timeoutMsec : WAIT_FOR_ACTION_TIMEOUT_MSEC;
         final long endTime = System.currentTimeMillis() + timeout;
         long lastValue = 0;
         while(System.currentTimeMillis() < endTime) {
-            lastValue = installer.getCounters()[counterType];
+            lastValue = statistics.getCounters()[counterType];
             if(lastValue >= targetValue) {
                 return;
-            } else if(waitForCycles && installer.getCounters()[OsgiInstaller.WORKER_THREAD_IS_IDLE_COUNTER] == 1) {
+            } else if(waitForCycles && statistics.getCounters()[OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER] == 1) {
                 // Waiting for controller cycles, but worker thread became idle -> ok
                 return;
             }
@@ -374,14 +378,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     /** Verify that no OSGi actions are executed in next two installer cycles */
     protected void assertNoOsgiTasks(String info) {
-    	final long actionsCounter = installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER];
-    	waitForInstallerAction(OsgiInstaller.INSTALLER_CYCLES_COUNTER, 2);
+    	final long actionsCounter = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
+    	waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 2);
     	assertEquals(info + ": OSGi tasks counter should not have changed",
-    			actionsCounter, installer.getCounters()[OsgiInstaller.OSGI_TASKS_COUNTER]);
+    			actionsCounter, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
     }
 
     public void assertCounter(int index, long value) {
-        assertEquals("Expected value matches for counter " + index, value, installer.getCounters()[index]);
+        assertEquals("Expected value matches for counter " + index, value, statistics.getCounters()[index]);
     }
 
     protected void log(int level, String msg) {

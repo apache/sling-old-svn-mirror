@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,17 +38,17 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     public static Option[] configuration() {
     	return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     @Test
     public void testRegisterInvalidBundles() throws Exception {
         final Collection<InstallableResource> data = new ArrayList<InstallableResource>();
@@ -60,15 +60,15 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
                 getTestBundle("test-classes/invalid-jar.jar")));
         data.add(getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-        
+
         resetCounters();
         installer.registerResources(data, URL_SCHEME);
-        waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
-        
+        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+
         final String info = "All valid bundles must be installed";
         assertBundle(info, "osgi-installer-testbundle", "1.1", Bundle.ACTIVE);
         assertBundle(info, "osgi-installer-testB", "1.0", Bundle.ACTIVE);
-        
+
         assertNoOsgiTasks("At the end of test");
     }
 
@@ -76,21 +76,21 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     public void testIndividualInvalidBundles() throws Exception {
     	final String symbolicName = "osgi-installer-testbundle";
     	int testIndex = 0;
-    	
+
     	assertNull("Test bundle must not be present before test", findBundle(symbolicName));
-    	
+
     	// Install first test bundle and check version
     	{
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
     	    resetCounters();
     	    installer.addResource(getInstallableResource(
     	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
     	    assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
     	}
-    	
+
     	assertNoOsgiTasks("After test " + testIndex++);
-    	
+
     	// Non-bundle must be ignored
     	{
             resetCounters();
@@ -110,12 +110,12 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
 
         assertNoOsgiTasks("After test " + testIndex++);
 
-    	// Make sure controller is not blocked, by testing an upgrade 
+    	// Make sure controller is not blocked, by testing an upgrade
     	{
     	    resetCounters();
             installer.addResource(getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-            waitForInstallerAction(OsgiInstaller.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         	assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);
     	}
 

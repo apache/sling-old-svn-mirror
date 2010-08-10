@@ -19,7 +19,7 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,39 +35,39 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
     public static Option[] configuration() {
     	return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
-    
+
     @After
     public void tearDown() {
         super.tearDown();
     }
-    
+
     // needsB bundle requires testB, try loading needsB first,
-    // then testB, and verify that in the end needsB is started     
+    // then testB, and verify that in the end needsB is started
     @Test
     public void testBundleDependencies() throws Exception {
         final String testB = "osgi-installer-testB";
         final String needsB = "osgi-installer-needsB";
-        
+
         assertNull("TestB bundle must not be present at beginning of test", findBundle(testB));
-        
+
         // without testB, needsB must not start
         {
             resetCounters();
             installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
             assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
         }
-        
+
        // now install testB -> needsB must start
         {
             resetCounters();
             installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            waitForInstallerAction(OsgiInstaller.OSGI_TASKS_COUNTER, 2);
+            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
             assertNotNull(testB + " must be installed", findBundle(testB));
             assertBundle(needsB + " must be started now that testB is installed", needsB, null, Bundle.ACTIVE);
         }
