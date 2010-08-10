@@ -42,9 +42,9 @@ import org.slf4j.LoggerFactory;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
-	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(java.lang.String, javax.jcr.Node, int, org.apache.sling.osgi.installer.InstallableResourceFactory)
+	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(javax.jcr.Node, int, org.apache.sling.osgi.installer.InstallableResourceFactory)
 	 */
-	public InstallableResource convertNode(final String urlScheme,
+	public InstallableResource convertNode(
 	        final Node n,
 	        final int priority,
 	        final InstallableResourceFactory factory)
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 		if(n.hasProperty(JCR_CONTENT_DATA) && n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
 			if(acceptNodeName(n.getName())) {
 				try {
-					result = convert(urlScheme, n, n.getPath(), priority, factory);
+					result = convert(n, n.getPath(), priority, factory);
 				} catch(IOException ioe) {
 					log.info("Conversion failed, node {} ignored ({})", n.getPath(), ioe);
 				}
@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 		return null;
 	}
 
-	private InstallableResource convert(final String urlScheme,
+	private InstallableResource convert(
 	        final Node n,
 	        final String path,
 	        final int priority,
@@ -87,7 +87,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return factory.create(urlScheme + ":" + path, is, null, digest, null, priority);
+        return factory.create(path, is, null, digest, null, priority);
 	}
 
 	boolean acceptNodeName(String name) {

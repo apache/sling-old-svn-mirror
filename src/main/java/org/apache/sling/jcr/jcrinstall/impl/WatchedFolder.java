@@ -50,7 +50,6 @@ class WatchedFolder implements EventListener{
     private final Session session;
     private static RescanTimer rescanTimer = new RescanTimer();
     private boolean needsScan;
-    private final String urlScheme;
     private final Collection <JcrInstaller.NodeConverter> converters;
     private final Set<String> existingResourceUrls = new HashSet<String>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -70,7 +69,6 @@ class WatchedFolder implements EventListener{
     WatchedFolder(final Session session,
             final String path,
             final int priority,
-    		final String urlScheme,
     		final Collection<JcrInstaller.NodeConverter> converters,
     		final InstallableResourceFactory factory)
     throws RepositoryException {
@@ -81,7 +79,6 @@ class WatchedFolder implements EventListener{
         this.path = path;
         this.converters = converters;
         this.priority = priority;
-        this.urlScheme = urlScheme;
 
         this.session = session;
 
@@ -157,10 +154,10 @@ class WatchedFolder implements EventListener{
             while(it.hasNext()) {
             	final Node n = it.nextNode();
             	for(JcrInstaller.NodeConverter nc : converters) {
-            		final InstallableResource r = nc.convertNode(urlScheme, n, priority, factory);
+            		final InstallableResource r = nc.convertNode(n, priority, factory);
             		if(r != null) {
-            			resourcesSeen.add(r.getUrl());
-            		    final String oldDigest = digests.get(r.getUrl());
+            			resourcesSeen.add(r.getId());
+            		    final String oldDigest = digests.get(r.getId());
             		    if(r.getDigest().equals(oldDigest)) {
             		    	log.debug("Digest didn't change, ignoring " + r);
             		    } else {
@@ -186,8 +183,8 @@ class WatchedFolder implements EventListener{
 
         // Update saved digests of the resources that we're returning
         for(InstallableResource r : result.toAdd) {
-            existingResourceUrls.add(r.getUrl());
-            digests.put(r.getUrl(), r.getDigest());
+            existingResourceUrls.add(r.getId());
+            digests.put(r.getId(), r.getDigest());
         }
 
         return result;

@@ -37,7 +37,7 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
 
     static class InstallableResourceComparator implements Comparator<InstallableResource> {
         public int compare(InstallableResource a, InstallableResource b) {
-            return a.getUrl().compareTo(b.getUrl());
+            return a.getId().compareTo(b.getId());
         }
 
     }
@@ -48,8 +48,11 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
     /** Keep track of registered URLS */
     private final Set<String> urls = new HashSet<String>();
 
-    public void addResource(InstallableResource d) {
-    	urls.add(d.getUrl());
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
+     */
+    public void addResource(final String scheme, InstallableResource d) {
+    	urls.add(scheme + ':' + d.getId());
         recordCall("add", d);
     }
 
@@ -57,29 +60,32 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
         return counters;
     }
 
-    public void registerResources(Collection<InstallableResource> data, String urlScheme) {
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, java.util.Collection)
+     */
+    public void registerResources(String urlScheme, Collection<InstallableResource> data) {
         // Sort the data to allow comparing the recorded calls reliably
         final List<InstallableResource> sorted = new LinkedList<InstallableResource>();
         sorted.addAll(data);
         Collections.sort(sorted, new InstallableResourceComparator());
         for(InstallableResource r : data) {
-        	urls.add(r.getUrl());
+        	urls.add(urlScheme + ':' + r.getId());
             recordCall("register", r);
         }
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String)
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String, String)
      */
-    public void removeResource(String url) {
-    	urls.remove(url);
+    public void removeResource(String urlScheme, String url) {
+    	urls.remove(urlScheme + ':' + url);
     	synchronized ( this) {
-            recordedCalls.add("remove:" + url + ":100");
+            recordedCalls.add("remove:" + urlScheme + ':' + url + ":100");
     	}
     }
 
     private synchronized void recordCall(String prefix, InstallableResource r) {
-        recordedCalls.add(prefix + ":" + r.getUrl() + ":" + r.getPriority());
+        recordedCalls.add(prefix + ":" + r.getId() + ":" + r.getPriority());
     }
 
     synchronized void clearRecordedCalls() {
