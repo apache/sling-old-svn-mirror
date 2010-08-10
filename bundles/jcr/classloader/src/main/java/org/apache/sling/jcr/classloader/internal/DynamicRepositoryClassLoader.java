@@ -41,6 +41,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,8 @@ import org.slf4j.LoggerFactory;
  * same, though.
  */
 public final class DynamicRepositoryClassLoader
-    extends SecureClassLoader implements EventListener {
+    extends SecureClassLoader
+    implements EventListener, DynamicClassLoader {
 
     /**
      * The special resource representing a resource which could not be
@@ -603,6 +605,13 @@ public final class DynamicRepositoryClassLoader
      */
     public boolean isDirty() {
         return destroyed || dirty || !session.isLive();
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.DynamicClassLoader#isLive()
+     */
+    public boolean isLive() {
+        return !this.isDirty();
     }
 
     /**
