@@ -40,7 +40,7 @@ public class BundleStartRetriesTest extends OsgiInstallerTestBase {
         // without testB, needsB must not start
         resetCounters();
         final long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-        installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
+        installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
         waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
         assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
 

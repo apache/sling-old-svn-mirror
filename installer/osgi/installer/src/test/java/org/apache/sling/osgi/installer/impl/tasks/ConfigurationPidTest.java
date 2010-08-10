@@ -20,7 +20,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.sling.osgi.installer.impl.ConfigurationPid;
+import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 
 public class ConfigurationPidTest {
 

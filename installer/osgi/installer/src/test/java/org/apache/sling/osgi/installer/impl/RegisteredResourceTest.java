@@ -125,27 +125,26 @@ public class RegisteredResourceTest {
                 "",
                 ":colonTooEarly",
                 ":colonTooEarlyAgain:",
-                "noColon"
         };
         for(String url : badOnes) {
             try {
-                new RegisteredResourceImpl(new MockOsgiInstallerContext(),factory.create(url, null, new Hashtable<String, Object>(), null, null, null));
+                new RegisteredResourceImpl(new MockOsgiInstallerContext(),
+                        factory.create("test", null, new Hashtable<String, Object>(), null, null, null),
+                        url);
                 fail("Expected bad URL '" + url + "' to throw IllegalArgumentException");
             } catch(IllegalArgumentException asExpected) {
             }
         }
 
         final String [] goodOnes = {
-            "foo:bar",
-            "foo:bar:",
-            "foo::bar",
-            "foo://bar",
+                "noColon"
         };
 
         for(String url : goodOnes) {
             final RegisteredResource r = new RegisteredResourceImpl(new MockOsgiInstallerContext(),
-                    factory.create(url, null, new Hashtable<String, Object>(), "digest1", null, null));
-            assertEquals("Expected scheme 'foo' for URL " + url, "foo", r.getUrlScheme());
+                    factory.create("test", null, new Hashtable<String, Object>(), "digest1", null, null),
+                    url);
+            assertEquals("Expected scheme '" + url + "' for URL " + url, url, r.getUrlScheme());
         }
     }
 }

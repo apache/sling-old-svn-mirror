@@ -43,8 +43,7 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 	/** Convert n to an InstallableData, or return null
 	 * 	if we don't know how to convert it.
 	 */
-	public InstallableResource convertNode(final String urlScheme,
-	        final Node n,
+	public InstallableResource convertNode(final Node n,
 	        final int priority,
 	        final InstallableResourceFactory factory)
 	throws Exception {
@@ -52,7 +51,7 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			result = factory.create(urlScheme + ":" + n.getPath(), null, load(n), null, null, priority);
+			result = factory.create(n.getPath(), null, load(n), null, null, priority);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());

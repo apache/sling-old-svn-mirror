@@ -123,7 +123,7 @@ public class MockInstallableResource implements InstallableResource {
         return this.type;
     }
 
-    public String getUrl() {
+    public String getId() {
         return this.uri;
     }
 

@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 

@@ -58,7 +58,7 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
         final String symbolicName = "osgi-installer-testbundle";
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digest0"));
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         final Bundle b = assertBundle("After initial install", symbolicName, "1.0", Bundle.ACTIVE);
@@ -75,7 +75,7 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
         // Install another bundle (to trigger installer queue activity), wait
         // for installer to be idle and check version
         resetCounters();
-        installer.addResource(getInstallableResource(
+        installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertBundle("-snap bundle install", "osgi-installer-snapshot-test", null, Bundle.ACTIVE);

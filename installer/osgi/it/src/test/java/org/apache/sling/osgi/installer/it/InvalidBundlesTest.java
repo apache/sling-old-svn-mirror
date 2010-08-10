@@ -62,7 +62,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
                 getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
 
         resetCounters();
-        installer.registerResources(data, URL_SCHEME);
+        installer.registerResources(URL_SCHEME, data);
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         final String info = "All valid bundles must be installed";
@@ -83,7 +83,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     	{
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
     	    resetCounters();
-    	    installer.addResource(getInstallableResource(
+    	    installer.addResource(URL_SCHEME, getInstallableResource(
     	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
     	    assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
@@ -94,7 +94,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     	// Non-bundle must be ignored
     	{
             resetCounters();
-            installer.addResource(getInstallableResource(
+            installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-notabundle.jar")));
             assertNoOsgiTasks("After installing non-bundle jar");
     	}
@@ -104,7 +104,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
         // Invalid archive must be ignored
         {
             resetCounters();
-            installer.addResource(getInstallableResource(getTestBundle("test-classes/invalid-jar.jar")));
+            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle("test-classes/invalid-jar.jar")));
             assertNoOsgiTasks("After installing invalid jar");
         }
 
@@ -113,7 +113,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     	// Make sure controller is not blocked, by testing an upgrade
     	{
     	    resetCounters();
-            installer.addResource(getInstallableResource(
+            installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
             waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         	assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);

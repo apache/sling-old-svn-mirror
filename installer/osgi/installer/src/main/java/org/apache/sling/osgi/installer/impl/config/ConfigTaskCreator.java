@@ -16,17 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.config;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 
+import org.apache.sling.osgi.installer.impl.Logger;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
 
 /** TaskCreator that processes a list of config RegisteredResources */
-class ConfigTaskCreator {
+public class ConfigTaskCreator {
 
     /** Store digests of the installed configs, keyed by config pid */
     private final Map<String, String> digests = new HashMap<String, String>();

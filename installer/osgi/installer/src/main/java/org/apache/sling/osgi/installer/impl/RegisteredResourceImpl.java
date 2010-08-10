@@ -39,6 +39,7 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
@@ -65,11 +66,18 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	 *  maps to a configuration and the data provides an input stream, it is
 	 *  converted to a Dictionary
 	 */
-	public RegisteredResourceImpl(OsgiInstallerContext osgiCtx, InstallableResource input) throws IOException {
-
+	public RegisteredResourceImpl(final OsgiInstallerContext osgiCtx,
+	        final InstallableResource input,
+	        final String scheme) throws IOException {
+        if ( scheme == null || scheme.length() == 0 ) {
+            throw new IllegalArgumentException("Scheme required");
+        }
+        if ( scheme.indexOf(':') != -1 ) {
+            throw new IllegalArgumentException("Scheme must not contain a colon");
+        }
 	    final BundleContext ctx = osgiCtx.getBundleContext();
-		url = input.getUrl();
-		urlScheme = getUrlScheme(url);
+		url = scheme + ':' + input.getId();
+		urlScheme = scheme;
 		resourceType = input.getType();
 		priority = input.getPriority();
 		serialNumber = getNextSerialNumber();
@@ -94,7 +102,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if(name == null) {
                     // not a bundle - use "jar" entity to make it easier to find out
-                    entity = ENTITY_JAR_PREFIX + input.getUrl();
+                    entity = ENTITY_JAR_PREFIX + url;
                 } else {
                     entity = ENTITY_BUNDLE_PREFIX + name;
                 }
@@ -103,7 +111,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             hasDataFile = false;
-            final ConfigurationPid pid = new ConfigurationPid(input.getUrl());
+            final ConfigurationPid pid = new ConfigurationPid(url);
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
             // config provided as a Dictionary
@@ -267,14 +275,6 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 
         attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
         attributes.put(Constants.BUNDLE_VERSION, v.toString());
-    }
-
-    static String getUrlScheme(String url) {
-        final int pos = url.indexOf(':');
-        if(pos <= 0) {
-            throw new IllegalArgumentException("URL does not contain (or starts with) scheme separator ':': " + url);
-        }
-        return url.substring(0, pos);
     }
 
     public String getUrlScheme() {

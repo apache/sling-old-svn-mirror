@@ -53,7 +53,7 @@ public class WorkerThreadIdleTest extends OsgiInstallerTestBase {
         final String symbolicName = "osgi-installer-testbundle";
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
         resetCounters();
-        installer.addResource(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+        installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         // wait for two tasks: install and start
         waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
         assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);

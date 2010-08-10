@@ -20,10 +20,10 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.impl.ConfigurationPid;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
+import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;

@@ -136,7 +136,7 @@ public class JcrInstaller implements EventListener {
 
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
-    	InstallableResource convertNode(String urlScheme, Node n, int priority, InstallableResourceFactory factory)
+    	InstallableResource convertNode(Node n, int priority, InstallableResourceFactory factory)
     	throws Exception;
     }
 
@@ -239,7 +239,7 @@ public class JcrInstaller implements EventListener {
     	}
 
     	log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
-    	installer.registerResources(resources, URL_SCHEME);
+    	installer.registerResources(URL_SCHEME, resources);
 
     	if (backgroundThread != null) {
     	    throw new IllegalStateException("Expected backgroundThread to be null in activate()");
@@ -318,7 +318,7 @@ public class JcrInstaller implements EventListener {
         final String path = n.getPath();
         final int priority = folderNameFilter.getPriority(path);
         if (priority > 0) {
-            result.add(new WatchedFolder(session, path, priority, URL_SCHEME, converters, installableResourceFactory));
+            result.add(new WatchedFolder(session, path, priority, converters, installableResourceFactory));
         }
         final int depth = path.split("/").length;
         if(depth > maxWatchedFolderDepth) {
@@ -378,7 +378,7 @@ public class JcrInstaller implements EventListener {
                     // Deletions are handled below
                     if(folderNameFilter.getPriority(path) > 0  && session.itemExists(path)) {
                         addWatchedFolder(new WatchedFolder(session, path,
-                                folderNameFilter.getPriority(path), URL_SCHEME, converters, installableResourceFactory));
+                                folderNameFilter.getPriority(path), converters, installableResourceFactory));
                     }
                 }
             }
@@ -441,11 +441,11 @@ public class JcrInstaller implements EventListener {
                     final WatchedFolder.ScanResult sr = wf.scan();
                     for(String r : sr.toRemove) {
                         log.info("Removing resource from OSGi installer: {}",r);
-                        installer.removeResource(r);
+                        installer.removeResource(URL_SCHEME, r);
                     }
                     for(InstallableResource r : sr.toAdd) {
                         log.info("Registering resource with OSGi installer: {}",r);
-                        installer.addResource(r);
+                        installer.addResource(URL_SCHEME, r);
                     }
                 }
             }
@@ -458,7 +458,7 @@ public class JcrInstaller implements EventListener {
                 final List<String> toRemove = updateFoldersList();
                 for(String r : toRemove) {
                     log.info("Removing resource from OSGi installer (folder deleted): {}",r);
-                    installer.removeResource(r);
+                    installer.removeResource(URL_SCHEME, r);
                 }
             }
 

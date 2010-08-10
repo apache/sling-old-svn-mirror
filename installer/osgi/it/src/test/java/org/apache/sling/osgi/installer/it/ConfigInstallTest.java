@@ -83,26 +83,26 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         resetCounters();
-        installer.addResource(r);
+        installer.addResource(URL_SCHEME, r);
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
 
         Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         resetCounters();
-        installer.removeResource(r.getUrl());
+        installer.removeResource(URL_SCHEME, r.getId());
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
 
         // Reinstalling with same digest must work
         resetCounters();
-        installer.addResource(r);
+        installer.addResource(URL_SCHEME, r);
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         cfg = waitForConfiguration("After reinstalling", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         resetCounters();
-        installer.removeResource(r.getUrl());
+        installer.removeResource(URL_SCHEME, r.getId());
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
 
@@ -132,7 +132,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     	waitForConfigAdmin(false);
         resetCounters();
         final InstallableResource r = getInstallableResource(cfgPid, cfgData);
-        installer.addResource(r);
+        installer.addResource(URL_SCHEME, r);
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
         configAdmin.start();
@@ -144,7 +144,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         configAdmin.stop();
         waitForConfigAdmin(false);
         resetCounters();
-        installer.removeResource(r.getUrl());
+        installer.removeResource(URL_SCHEME, r.getId());
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         sleep(1000L);
         resetCounters();
@@ -171,7 +171,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
 
         long nOps = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-        installer.addResource(getInstallableResource(cfgPid, cfgData));
+        installer.addResource(URL_SCHEME, getInstallableResource(cfgPid, cfgData));
         waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
         assertEquals("Registering a Configuration that's already installed must not generate OSGi tasks",
                 nOps, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
@@ -179,7 +179,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     	// Reinstalling with a change must be executed
         cfgData.put("foo", "changed");
-        installer.addResource(getInstallableResource(cfgPid, cfgData));
+        installer.addResource(URL_SCHEME, getInstallableResource(cfgPid, cfgData));
         waitForConfigValue("After changing value", cfgPid, TIMEOUT, "foo", "changed");
 		cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
