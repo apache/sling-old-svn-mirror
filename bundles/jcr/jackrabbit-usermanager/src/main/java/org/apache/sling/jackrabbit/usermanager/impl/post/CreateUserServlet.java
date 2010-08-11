@@ -148,7 +148,9 @@ public class CreateUserServlet extends AbstractUserPostServlet {
         super.activate(componentContext);
         Dictionary<?, ?> props = componentContext.getProperties();
         Object propValue = props.get(PROP_SELF_REGISTRATION_ENABLED);
-        if (propValue instanceof String) {
+        if (propValue instanceof Boolean) {
+        	selfRegistrationEnabled = (Boolean)propValue;
+        } else if (propValue instanceof String) {
             selfRegistrationEnabled = Boolean.parseBoolean((String) propValue);
         } else {
             selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
