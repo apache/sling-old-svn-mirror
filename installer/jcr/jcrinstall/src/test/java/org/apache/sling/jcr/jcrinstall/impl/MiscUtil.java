@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -119,12 +118,11 @@ class MiscUtil {
     }
 
     /** Return a JcrInstaller setup for testing */
-    static synchronized JcrInstaller getJcrInstaller(SlingRepository repository, OsgiInstaller osgiInstaller,
-            InstallableResourceFactory factory) throws Exception {
+    static synchronized JcrInstaller getJcrInstaller(SlingRepository repository,
+            OsgiInstaller osgiInstaller) throws Exception {
         final JcrInstaller installer = new JcrInstaller();
         setField(installer, "repository", repository);
         setField(installer, "installer", osgiInstaller);
-        setField(installer, "installableResourceFactory", factory);
         setField(installer, "runMode", new MockRunMode(RUN_MODES));
 
         installer.activate(getMockComponentContext());

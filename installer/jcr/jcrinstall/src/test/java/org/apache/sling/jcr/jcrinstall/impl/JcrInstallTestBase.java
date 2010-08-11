@@ -46,7 +46,7 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
             contentHelper.setupContent();
         }
         osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller, new MockInstallableResourceFactory());
+        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller);
     }
 
     @Override

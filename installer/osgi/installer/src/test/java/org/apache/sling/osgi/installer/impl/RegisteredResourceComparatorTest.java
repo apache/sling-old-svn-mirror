@@ -29,12 +29,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
-
-    private InstallableResourceFactory factory = new InstallableResourceFactoryImpl();
 
     private void assertOrder(Set<RegisteredResource> toTest, RegisteredResource[] inOrder) {
         assertEquals("Expected sizes to match", toTest.size(), inOrder.length);
@@ -51,7 +48,7 @@ public class RegisteredResourceComparatorTest {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
-        final InstallableResource r = factory.create(url, null, data, null, null, priority);
+        final InstallableResource r = new InstallableResource(url, null, data, null, null, priority);
         return new RegisteredResourceImpl(null, r, "test");
     }
 
@@ -176,7 +173,7 @@ public class RegisteredResourceComparatorTest {
 
     @Test
     public void testConfigAndBundle() throws IOException {
-    	final RegisteredResource cfg = getConfig("pid", null, InstallableResourceFactory.DEFAULT_PRIORITY);
+    	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
     	final RegisteredResource b = new MockBundleResource("a", "1.0");
     	final RegisteredResourceComparator c = new RegisteredResourceComparator();
     	assertEquals("bundle is > config when compared", 1, c.compare(b, cfg));

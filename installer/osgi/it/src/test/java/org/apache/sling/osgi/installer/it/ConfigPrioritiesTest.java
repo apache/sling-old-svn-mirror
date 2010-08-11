@@ -22,7 +22,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -72,11 +71,11 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
 
         data.put("foo", "a");
-        final InstallableResource a = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY - 1);
+        final InstallableResource a = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY - 1);
         data.put("foo", "b");
-        final InstallableResource b = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY);
+        final InstallableResource b = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY);
         data.put("foo", "c");
-        final InstallableResource c = getInstallableResource(pid, data, InstallableResourceFactory.DEFAULT_PRIORITY + 1);
+        final InstallableResource c = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY + 1);
 
         installer.addResource(URL_SCHEME, b);
         assertConfigValue(pid, "foo", "b", TIMEOUT);

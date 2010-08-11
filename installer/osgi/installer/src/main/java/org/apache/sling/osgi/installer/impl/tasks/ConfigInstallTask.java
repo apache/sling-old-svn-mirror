@@ -18,13 +18,11 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.impl.DigestUtil;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -42,7 +40,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
     public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
 
     /** Configuration properties to ignore when comparing configs */
-    public static Set<String> ignoredProperties = new HashSet<String>();
+    public static final Set<String> ignoredProperties = new HashSet<String>();
     static {
     	ignoredProperties.add("service.pid");
     	ignoredProperties.add(CONFIG_PATH_KEY);
@@ -117,13 +115,32 @@ public class ConfigInstallTask extends AbstractConfigTask {
         return Result.NOTHING;
     }
 
+    private Set<String> collectKeys(final Dictionary<String, Object>a) {
+        final Set<String> keys = new HashSet<String>();
+        final Enumeration<String> aI = a.keys();
+        while (aI.hasMoreElements() ) {
+            final String key = aI.nextElement();
+            if ( !ignoredProperties.contains(key) ) {
+                keys.add(key);
+            }
+        }
+        return keys;
+    }
+
     /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */
-    boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) throws NoSuchAlgorithmException, IOException {
+    boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) {
     	boolean result = false;
-    	if(a != null && b != null) {
-    		final String da = DigestUtil.computeDigest(a, ignoredProperties);
-    		final String db = DigestUtil.computeDigest(b, ignoredProperties);
-    		result = da.equals(db);
+    	if (a != null && b != null) {
+    	    final Set<String> keysA = collectKeys(a);
+            final Set<String> keysB = collectKeys(b);
+            if ( keysA.size() == keysB.size() && keysA.containsAll(keysB) ) {
+                for(final String key : keysA ) {
+                    if ( !a.get(key).equals(b.get(key)) ) {
+                        return result;
+                    }
+                }
+                result = true;
+            }
     	}
     	return result;
     }

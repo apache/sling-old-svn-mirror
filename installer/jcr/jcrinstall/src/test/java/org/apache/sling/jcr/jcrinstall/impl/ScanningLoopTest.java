@@ -40,7 +40,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         super.setUp();
         repository = getRepository();
         osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repository, osgiInstaller, new MockInstallableResourceFactory());
+        installer = MiscUtil.getJcrInstaller(repository, osgiInstaller);
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         eventHelper = new EventHelper(session);
         contentHelper = new ContentHelper(session);

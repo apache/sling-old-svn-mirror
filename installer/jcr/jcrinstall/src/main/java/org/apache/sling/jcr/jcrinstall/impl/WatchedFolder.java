@@ -36,7 +36,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +53,6 @@ class WatchedFolder implements EventListener{
     private final Set<String> existingResourceUrls = new HashSet<String>();
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** Installable resource factory. */
-    private final InstallableResourceFactory factory;
-
-
     static class ScanResult {
         List<InstallableResource> toAdd = new ArrayList<InstallableResource>();
         List<String> toRemove = new ArrayList<String>();
@@ -69,8 +64,7 @@ class WatchedFolder implements EventListener{
     WatchedFolder(final Session session,
             final String path,
             final int priority,
-    		final Collection<JcrInstaller.NodeConverter> converters,
-    		final InstallableResourceFactory factory)
+    		final Collection<JcrInstaller.NodeConverter> converters)
     throws RepositoryException {
         if(priority < 1) {
             throw new IllegalArgumentException("Cannot watch folder with priority 0:" + path);
@@ -90,8 +84,6 @@ class WatchedFolder implements EventListener{
         final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
-
-        this.factory = factory;
 
         log.info("Watching folder {} (priority {})", path, priority);
     }
@@ -154,7 +146,7 @@ class WatchedFolder implements EventListener{
             while(it.hasNext()) {
             	final Node n = it.nextNode();
             	for(JcrInstaller.NodeConverter nc : converters) {
-            		final InstallableResource r = nc.convertNode(n, priority, factory);
+            		final InstallableResource r = nc.convertNode(n, priority);
             		if(r != null) {
             			resourcesSeen.add(r.getId());
             		    final String oldDigest = digests.get(r.getId());
