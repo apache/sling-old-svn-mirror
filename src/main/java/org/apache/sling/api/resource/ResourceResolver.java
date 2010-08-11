@@ -108,7 +108,7 @@ public interface ResourceResolver extends Adaptable {
      *             data.
      * @since 2.1
      */
-    ResourceResolver copy(Map<String, Object> authenticationInfo)
+    ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException;
 
     /**
