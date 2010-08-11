@@ -30,68 +30,31 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 
-public class MockInstallableResource implements InstallableResource {
+public class MockInstallableResource extends InstallableResource {
 
     private static int counter;
-
-    private final String uri;
-    private final InputStream is;
-    private final String digest;
-    private final String type;
-    private final int priority;
-    private final Dictionary<String, Object> d;
 
     public MockInstallableResource(String uri) {
         this(uri, "", null);
     }
 
     public MockInstallableResource(String uri, String data, String digest) {
-        this.uri = uri;
-        this.is = new ByteArrayInputStream(data.getBytes());
-        this.digest = getNextDigest(digest);
-        this.type = InstallableResource.TYPE_BUNDLE;
-        this.priority = InstallableResourceFactory.DEFAULT_PRIORITY;
-        this.d = null;
+        super(uri, new ByteArrayInputStream(data.getBytes()),
+                null, getNextDigest(digest),
+                InstallableResource.TYPE_BUNDLE, null);
     }
 
     public MockInstallableResource(String uri, InputStream is, String digest, String type, Integer priority) {
-        this.uri = uri;
-        this.is = is;
-        this.digest = digest;
-        if ( type != null ) {
-            this.type = type;
-        } else {
-            this.type = InstallableResource.TYPE_BUNDLE;
-        }
-        if ( priority != null ) {
-            this.priority = priority;
-        } else {
-            this.priority = InstallableResourceFactory.DEFAULT_PRIORITY;
-        }
-        this.d = null;
+        super(uri, is,
+                null, digest,
+                type != null ? type : InstallableResource.TYPE_BUNDLE, priority);
     }
 
     public MockInstallableResource(String uri, Dictionary<String, Object> d, String digest,String type, Integer priority) {
-        this.uri = uri;
-        this.is = null;
-        if ( type != null ) {
-            this.type = type;
-        } else {
-            this.type = InstallableResource.TYPE_CONFIG;
-        }
-        if ( priority != null ) {
-            this.priority = priority;
-        } else {
-            this.priority = InstallableResourceFactory.DEFAULT_PRIORITY;
-        }
-        if ( digest != null ) {
-            this.digest = digest;
-        } else {
-            this.digest = computeDigest(d);
-        }
-        this.d = d;
+        super(uri, null,
+                d, digest != null ? digest : computeDigest(d),
+                type != null ? type : InstallableResource.TYPE_CONFIG, priority);
     }
 
     static String getNextDigest(String digest) {
@@ -101,30 +64,6 @@ public class MockInstallableResource implements InstallableResource {
         synchronized (MockInstallableResource.class) {
             return String.valueOf(System.currentTimeMillis() + (counter++));
         }
-    }
-
-    public Dictionary<String, Object> getDictionary() {
-        return this.d;
-    }
-
-    public String getDigest() {
-        return digest;
-    }
-
-    public InputStream getInputStream() {
-        return is;
-    }
-
-    public int getPriority() {
-        return this.priority;
-    }
-
-    public String getType() {
-        return this.type;
-    }
-
-    public String getId() {
-        return this.uri;
     }
 
     /** The digest to be used. */

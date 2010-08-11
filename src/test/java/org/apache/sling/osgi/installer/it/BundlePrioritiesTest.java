@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
+import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
@@ -54,8 +54,8 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         final String symbolicName = "osgi-installer-snapshot-test";
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
 
-        final int lowPriority = InstallableResourceFactory.DEFAULT_PRIORITY - 1;
-        final int highPriority = InstallableResourceFactory.DEFAULT_PRIORITY + 1;
+        final int lowPriority = InstallableResource.DEFAULT_PRIORITY - 1;
+        final int highPriority = InstallableResource.DEFAULT_PRIORITY + 1;
 
         {
             resetCounters();

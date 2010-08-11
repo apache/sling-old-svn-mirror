@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.util.Dictionary;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.ops4j.pax.exam.Inject;
@@ -272,7 +271,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
-        return getInstallableResource(testBundle, digest, InstallableResourceFactory.DEFAULT_PRIORITY);
+        return getInstallableResource(testBundle, digest, InstallableResource.DEFAULT_PRIORITY);
     }
 
     protected InstallableResource getInstallableResource(File testBundle, String digest, int priority) throws IOException {
@@ -285,7 +284,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data) {
-        return getInstallableResource(configPid, data, InstallableResourceFactory.DEFAULT_PRIORITY);
+        return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
     }
 
     protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
