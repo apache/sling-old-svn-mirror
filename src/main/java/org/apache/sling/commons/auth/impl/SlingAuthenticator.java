@@ -287,10 +287,7 @@ public class SlingAuthenticator implements Authenticator,
         // register as a service !
         final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME),
             DEFAULT_REALM);
-        final boolean forceRequestCredentials = true;
-        final boolean forceDropCredentials = false;
-        httpBasicHandler = new HttpBasicAuthenticationHandler(realm,
-            forceRequestCredentials, forceDropCredentials);
+        httpBasicHandler = new HttpBasicAuthenticationHandler(realm);
     }
 
     @SuppressWarnings("unused")
@@ -377,7 +374,7 @@ public class SlingAuthenticator implements Authenticator,
             request.setAttribute(REQUEST_ATTRIBUTE_AUTH_INFO, authInfo);
 
             log.debug("handleSecurity: No credentials in the request, anonymous");
-            return getAnonymousResolver(request, response, anonInfo);
+            return getAnonymousResolver(request, response);
 
         } else {
 
@@ -605,7 +602,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // try to connect
         try {
-            handleImpersonation(request, response, authInfo);
+            handleImpersonation(request, authInfo);
             ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
 
             setSudoCookie(request, response, authInfo);
@@ -657,7 +654,7 @@ public class SlingAuthenticator implements Authenticator,
 
     /** Try to acquire an anonymous ResourceResolver */
     private boolean getAnonymousResolver(final HttpServletRequest request,
-            final HttpServletResponse response, AuthenticationInfo anonInfo) {
+            final HttpServletResponse response) {
 
         // Get an anonymous session if allowed, or if we are handling
         // a request for the login servlet
@@ -894,21 +891,17 @@ public class SlingAuthenticator implements Authenticator,
      * If the sudo parameter is empty or missing, the current cookie setting for
      * impersonation is used. Else if the parameter is <code>-</code>, the
      * current cookie impersonation is removed and no impersonation will take
-     * place for this request. Else the parameter is assumed to contain the
-     * handle of a user page acceptable for the {@link Session#impersonate}
-     * method.
+     * place for this request. Else the parameter is assumed to contain the name
+     * of a user to impersonate as.
      *
      * @param req The {@link DeliveryHttpServletRequest} optionally containing
      *            the sudo parameter.
-     * @param res The {@link DeliveryHttpServletResponse} to send the
-     *            impersonation cookie.
-     * @param session The real {@link Session} to optionally replace with an
-     *            impersonated session.
-     * @see Session#impersonate for details on the user configuration
-     *      requirements for impersonation.
+     * @param authInfo The authentication info into which the
+     *            <code>sudo.user.id</code> property is set to the impersonator
+     *            user.
      */
     private void handleImpersonation(HttpServletRequest req,
-            HttpServletResponse res, AuthenticationInfo authInfo) {
+            AuthenticationInfo authInfo) {
         String currentSudo = getSudoCookieValue(req);
 
         /**
