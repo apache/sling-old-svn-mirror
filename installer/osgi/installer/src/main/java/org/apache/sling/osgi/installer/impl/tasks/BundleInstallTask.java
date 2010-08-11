@@ -44,7 +44,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
     }
 
     public void execute(OsgiInstallerContext ctx) throws Exception {
-        final Bundle b = ctx.getBundleContext().installBundle(resource.getUrl(), resource.getInputStream(ctx.getBundleContext()));
+        final Bundle b = ctx.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
         final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
         logExecution();
@@ -54,7 +54,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_INSTALL_ORDER + resource.getUrl();
+        return BUNDLE_INSTALL_ORDER + resource.getURL();
     }
 
 }

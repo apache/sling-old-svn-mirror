@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
  * Installer context, gives access to selected methods of the {@link OsgiInstallerImpl}
@@ -34,11 +33,6 @@ public interface OsgiInstallerContext {
      * Return the bundle context.
      */
     BundleContext getBundleContext();
-
-    /**
-     * Return the package admin.
-     */
-    PackageAdmin getPackageAdmin();
 
     void incrementCounter(int index);
     void setCounter(int index, long value);

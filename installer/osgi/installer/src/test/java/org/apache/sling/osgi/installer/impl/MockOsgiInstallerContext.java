@@ -24,8 +24,6 @@ import java.io.IOException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.packageadmin.PackageAdmin;
 
 public class MockOsgiInstallerContext implements OsgiInstallerContext {
 
@@ -44,14 +42,6 @@ public class MockOsgiInstallerContext implements OsgiInstallerContext {
 	}
 
 	public BundleContext getBundleContext() {
-		return null;
-	}
-
-	public ConfigurationAdmin getConfigurationAdmin() {
-		return null;
-	}
-
-	public PackageAdmin getPackageAdmin() {
 		return null;
 	}
 

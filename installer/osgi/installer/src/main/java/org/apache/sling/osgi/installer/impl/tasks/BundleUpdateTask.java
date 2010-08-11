@@ -28,6 +28,7 @@ import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -37,11 +38,15 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "40-";
 
+    /** Tracker for the package admin. */
+    private final ServiceTracker packageAdminTracker;
+
     private final RegisteredResource resource;
     private boolean canRetry = true;
 
-    public BundleUpdateTask(RegisteredResource r) {
+    public BundleUpdateTask(final RegisteredResource r, final ServiceTracker packageAdminTracker) {
         this.resource = r;
+        this.packageAdminTracker = packageAdminTracker;
     }
 
     public RegisteredResource getResource() {
@@ -89,7 +94,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
         }
         b.stop();
-        final InputStream is = resource.getInputStream(ctx.getBundleContext());
+        final InputStream is = resource.getInputStream();
         if(is == null) {
         	canRetry = false;
             throw new IllegalStateException(
@@ -98,7 +103,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         }
         b.update(is);
         ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
+        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
         Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
     }
@@ -110,7 +115,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_UPDATE_ORDER + resource.getUrl();
+        return BUNDLE_UPDATE_ORDER + resource.getURL();
     }
 
 }

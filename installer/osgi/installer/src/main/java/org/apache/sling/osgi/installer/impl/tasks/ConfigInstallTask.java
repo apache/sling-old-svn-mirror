@@ -76,7 +76,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
         }
 
         // Add pseudo-properties
-        dict.put(CONFIG_PATH_KEY, resource.getUrl());
+        dict.put(CONFIG_PATH_KEY, resource.getURL());
 
         // Factory?
         if(pid.getFactoryPid() != null) {

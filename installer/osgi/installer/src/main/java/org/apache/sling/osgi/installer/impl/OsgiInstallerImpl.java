@@ -28,14 +28,9 @@ import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
 /** OsgiInstaller service implementation */
 public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics, OsgiInstallerContext {
-
-    /** Interface of the package admin */
-    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
 
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
@@ -48,19 +43,12 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
     private long [] counters = new long[COUNTERS_SIZE];
     private PersistentBundleInfo bundleDigestsStorage;
 
-    /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
-
     /**
      * Construct a new service
      */
     public OsgiInstallerImpl(final BundleContext bc)
     throws IOException {
         this.bundleContext = bc;
-        // create and start tracker
-        this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
-        this.packageAdminTracker.open();
-
         bundleDigestsStorage = new PersistentBundleInfo(bc.getDataFile("bundle-digests.properties"));
 
         installerThread = new OsgiInstallerThread(this);
@@ -95,8 +83,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
             // we simply ignore this
         }
 
-        this.packageAdminTracker.close();
-
         Logger.logWarn(OsgiInstaller.class.getName()
                 + " service deactivated - this warning can be ignored if system is shutting down");
     }
@@ -121,13 +107,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	 */
 	public BundleContext getBundleContext() {
 		return bundleContext;
-	}
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getPackageAdmin()
-	 */
-	public PackageAdmin getPackageAdmin() {
-		return (PackageAdmin)this.packageAdminTracker.getService();
 	}
 
 	/**

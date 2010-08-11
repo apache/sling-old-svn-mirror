@@ -48,6 +48,7 @@ import org.osgi.framework.Constants;
  */
 public class RegisteredResourceImpl implements RegisteredResource, Serializable {
     private static final long serialVersionUID = 2L;
+    private final String id;
 	private final String url;
 	private final String urlScheme;
 	private final String digest;
@@ -62,6 +63,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 
     private final String resourceType;
 
+    private transient BundleContext bundleContext;
+
 	/** Create a RegisteredResource from given data. If the data's extension
 	 *  maps to a configuration and the data provides an input stream, it is
 	 *  converted to a Dictionary
@@ -69,12 +72,14 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	public RegisteredResourceImpl(final BundleContext ctx,
 	        final InstallableResource input,
 	        final String scheme) throws IOException {
+	    this.bundleContext = ctx;
         if ( scheme == null || scheme.length() == 0 ) {
             throw new IllegalArgumentException("Scheme required");
         }
         if ( scheme.indexOf(':') != -1 ) {
             throw new IllegalArgumentException("Scheme must not contain a colon");
         }
+        this.id = input.getId();
 		url = scheme + ':' + input.getId();
 		urlScheme = scheme;
 		resourceType = input.getType();
@@ -92,12 +97,12 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
             }
             try {
                 dictionary = null;
-                final File f = getDataFile(ctx);
+                final File f = getDataFile();
                 Logger.logDebug("Copying data to local storage " + f.getAbsolutePath());
                 copyToLocalStorage(input.getInputStream(), f);
                 hasDataFile = true;
                 digest = input.getDigest();
-                setAttributesFromManifest(ctx);
+                setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if(name == null) {
                     // not a bundle - use "jar" entity to make it easier to find out
@@ -121,6 +126,10 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		}
 	}
 
+	public void init(final BundleContext bc) {
+	    this.bundleContext = bc;
+	}
+
     private static long getNextSerialNumber() {
         synchronized (RegisteredResourceImpl.class) {
             return serialNumberCounter++;
@@ -132,13 +141,13 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
 	}
 
-	protected File getDataFile(BundleContext ctx) {
+	protected File getDataFile() {
 		final String filename = getClass().getSimpleName() + "." + serialNumber;
-		return ctx.getDataFile(filename);
+		return this.bundleContext.getDataFile(filename);
 	}
 
-	public void cleanup(OsgiInstallerContext ctx) {
-	    final File dataFile = getDataFile(ctx.getBundleContext());
+	public void cleanup() {
+	    final File dataFile = getDataFile();
 		if(dataFile.exists()) {
 		    Logger.logDebug("Deleting local storage file "
 		                + dataFile.getAbsolutePath());
@@ -150,9 +159,9 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		return url;
 	}
 
-	public InputStream getInputStream(BundleContext bc) throws IOException {
+	public InputStream getInputStream() throws IOException {
 	    if(hasDataFile) {
-	        final File dataFile = getDataFile(bc);
+	        final File dataFile = getDataFile();
 	        if(dataFile.exists()) {
 	            return new BufferedInputStream(new FileInputStream(dataFile));
 	        }
@@ -198,11 +207,11 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return result;
 	}
 
-	public String getUrl() {
-	    return url;
+	public String getId() {
+	    return id;
 	}
 
-    public String getResourceType() {
+    public String getType() {
         return resourceType;
     }
 
@@ -256,8 +265,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         return result;
     }
 
-    private void setAttributesFromManifest(BundleContext bc) throws IOException {
-    	final Manifest m = getManifest(getInputStream(bc));
+    private void setAttributesFromManifest() throws IOException {
+    	final Manifest m = getManifest(getInputStream());
     	if(m == null) {
             throw new IOException("Cannot get manifest of bundle resource");
     	}

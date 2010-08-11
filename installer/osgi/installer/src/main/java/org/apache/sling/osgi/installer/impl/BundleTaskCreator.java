@@ -27,17 +27,36 @@ import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** TaskCreator that processes a list of bundle RegisteredResources */
 class BundleTaskCreator {
+
+    /** Interface of the package admin */
+    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
+
+    /** Tracker for the package admin. */
+    private final ServiceTracker packageAdminTracker;
 
     /** Store the digests of the bundles for which we create update tasks,
      *  keyed by symbolic name, to avoid generating repated updates
      *  for snapshot bundles
      */
     private final Map<String, String> digests = new HashMap<String, String>();
+
+    public BundleTaskCreator(final BundleContext bc) {
+        // create and start tracker
+        this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
+        this.packageAdminTracker.open();
+    }
+
+    public void deactivate() {
+        this.packageAdminTracker.close();
+    }
 
     /** Holds the bundle info that we need, makes it easier to test
      *  without an OSGi framework */
@@ -89,7 +108,7 @@ class BundleTaskCreator {
 		            Logger.logInfo("Bundle " + symbolicName
                                 + " was not installed by this module, not removed");
 		        } else {
-		            tasks.add(new BundleRemoveTask(resources.first()));
+		            tasks.add(new BundleRemoveTask(resources.first(), this.packageAdminTracker));
 		        }
 	        }
 
@@ -134,7 +153,7 @@ class BundleTaskCreator {
                     digestToSave = previousDigest;
 			    } else {
 			        Logger.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
-			        tasks.add(new BundleUpdateTask(toUpdate));
+			        tasks.add(new BundleUpdateTask(toUpdate, this.packageAdminTracker));
 			        digestToSave = toUpdate.getDigest();
 			    }
 			}

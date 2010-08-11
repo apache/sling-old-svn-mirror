@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 
@@ -64,7 +65,7 @@ public interface InstallableResource {
 	 * if this resource is of type BUNDLE it must return an input stream!
 	 * @return The input stream or null.
 	 */
-    InputStream getInputStream();
+    InputStream getInputStream() throws IOException;
 
 	/**
 	 * Return this resource's dictionary.
