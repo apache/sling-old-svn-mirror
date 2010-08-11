@@ -83,6 +83,9 @@ public class InstallableResourceFactoryImpl implements InstallableResourceFactor
         if (extension.equals("jar")) {
             return InstallableResource.TYPE_BUNDLE;
         }
-        return InstallableResource.TYPE_CONFIG;
+        if ( extension.equals("cfg") || extension.equals("config") || extension.equals("xml") ) {
+            return InstallableResource.TYPE_CONFIG;
+        }
+        return extension;
     }
 }
