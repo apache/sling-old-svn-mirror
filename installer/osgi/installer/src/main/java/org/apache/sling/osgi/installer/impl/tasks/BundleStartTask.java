@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.Activator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
@@ -57,18 +56,18 @@ public class BundleStartTask extends OsgiInstallerTask {
 		return getClass().getSimpleName() + ": bundle " + bundleId;
 	}
 
-	public void execute(OsgiInstallerContext ctx) throws Exception {
+	public Result execute(OsgiInstallerContext ctx) {
 		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
 		boolean needToRetry = false;
 
         if(bundleId == 0) {
             Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
-            return;
+            return Result.NOTHING;
         }
 
 		if(b == null) {
 		    Logger.logInfo("Cannot start bundle, id not found:" + bundleId);
-			return;
+			return Result.NOTHING;
 		}
 
 		try {
@@ -103,7 +102,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 	        }
 		}
 		retryCount++;
-		ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
+        return Result.SUCCESS;
 	}
 
 	/** Do not execute this task if waiting for events */

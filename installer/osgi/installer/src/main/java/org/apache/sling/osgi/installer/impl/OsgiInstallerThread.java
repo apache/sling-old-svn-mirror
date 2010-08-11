@@ -46,7 +46,7 @@ import org.osgi.framework.BundleListener;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-class OsgiInstallerThread extends Thread implements BundleListener {
+class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstallerStatistics {
 
     private final OsgiInstallerContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
@@ -64,6 +64,8 @@ class OsgiInstallerThread extends Thread implements BundleListener {
 
     private final BundleTaskCreator bundleTaskCreator;
     private final ConfigTaskCreator configTaskCreator;
+
+    private long [] counters = new long[COUNTERS_SIZE];
 
     OsgiInstallerThread(final OsgiInstallerContext ctx) {
         this.configTaskCreator = new ConfigTaskCreator(ctx.getBundleContext());
@@ -85,6 +87,21 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         }
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstallerStatistics#getCounters()
+     */
+    public long [] getCounters() {
+        return counters;
+    }
+
+    public void incrementCounter(int index) {
+        counters[index]++;
+    }
+
+    public void setCounter(int index, long value) {
+        counters[index] = value;
+    }
+
     @Override
     public void run() {
         ctx.getBundleContext().addBundleListener(this);
@@ -100,13 +117,15 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             	    cleanupInstallableResources();
             	    Logger.logDebug("No tasks to process, going idle");
 
-            	    ctx.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 1);
-                    ctx.incrementCounter(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER);
+            	    this.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 1);
+                    this.incrementCounter(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER);
             	    synchronized (newResources) {
-                        newResources.wait();
+            	        try {
+            	            newResources.wait();
+            	        } catch (InterruptedException ignore) {}
                     }
             	    Logger.logDebug("Notified of new resources, back to work");
-                    ctx.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 0);
+                    this.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 0);
             	    continue;
             	}
 
@@ -309,32 +328,22 @@ class OsgiInstallerThread extends Thread implements BundleListener {
         }
     }
 
-    private int executeTasks() throws Exception {
+    private int executeTasks() {
         int counter = 0;
         while(!tasks.isEmpty()) {
             OsgiInstallerTask t = null;
             synchronized (tasks) {
                 t = tasks.first();
+                tasks.remove(t);
             }
-            try {
-                t.execute(ctx);
-                removeTask(t);
-                counter++;
-            } catch(Exception e) {
-            	if(!t.canRetry(ctx)) {
-            	    Logger.logInfo("Task cannot be retried, removing from list:" + t);
-                    removeTask(t);
-            	}
-            	throw e;
+            final OsgiInstallerTask.Result result = t.execute(ctx);
+            switch (result) {
+                case SUCCESS: this.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
+                              break;
             }
+            counter++;
         }
         return counter;
-    }
-
-    private void removeTask(OsgiInstallerTask t) {
-        synchronized (tasks) {
-            tasks.remove(t);
-        }
     }
 
     private void cleanupInstallableResources() throws IOException {
@@ -367,9 +376,9 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             registeredResources.remove(key);
         }
 
-        ctx.setCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, resourceCount);
-        ctx.setCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, registeredResources.size());
-        ctx.incrementCounter(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER);
+        this.setCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, resourceCount);
+        this.setCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, registeredResources.size());
+        this.incrementCounter(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER);
 
         // List of resources might have changed
         persistentList.save();

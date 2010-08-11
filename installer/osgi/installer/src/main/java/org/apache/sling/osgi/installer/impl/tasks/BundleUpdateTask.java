@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -59,7 +58,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     }
 
     @Override
-    public void execute(OsgiInstallerContext ctx) throws Exception {
+    public Result execute(OsgiInstallerContext ctx) {
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = ctx.getMatchingBundle(symbolicName);
         if(b == null) {
@@ -73,44 +72,48 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	snapshot = ctx.isSnapshot(newVersion);
     	if(currentVersion.equals(newVersion) && !snapshot) {
     	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
-    		return;
+    		return Result.NOTHING;
     	}
 
-        // If snapshot and ready to update, cancel if digest didn't change - as the list
-        // of RegisteredResources is not saved, this might not have been detected earlier,
-        // if the snapshot was installed and the installer was later restarted
-        if(snapshot) {
-            final String oldDigest = ctx.getInstalledBundleDigest(b);
-            if(resource.getDigest().equals(oldDigest)) {
-                Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
-                return;
+    	try {
+            // If snapshot and ready to update, cancel if digest didn't change - as the list
+            // of RegisteredResources is not saved, this might not have been detected earlier,
+            // if the snapshot was installed and the installer was later restarted
+            if(snapshot) {
+                final String oldDigest = ctx.getInstalledBundleDigest(b);
+                if(resource.getDigest().equals(oldDigest)) {
+                    Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
+                    return Result.NOTHING;
+                }
             }
-        }
 
-        logExecution();
-        if(b.getState() == Bundle.ACTIVE) {
-            // bundle was active before the update - restart it once updated, but
-            // in sequence, not right now
-            ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
-        }
-        b.stop();
-        final InputStream is = resource.getInputStream();
-        if(is == null) {
-        	canRetry = false;
-            throw new IllegalStateException(
-                    "RegisteredResource provides null InputStream, cannot update bundle: "
-                    + resource);
-        }
-        b.update(is);
-        ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
+            logExecution();
+            if(b.getState() == Bundle.ACTIVE) {
+                // bundle was active before the update - restart it once updated, but
+                // in sequence, not right now
+                ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
+            }
+            b.stop();
+            final InputStream is = resource.getInputStream();
+            if(is == null) {
+            	canRetry = false;
+                throw new IllegalStateException(
+                        "RegisteredResource provides null InputStream, cannot update bundle: "
+                        + resource);
+            }
+            b.update(is);
+            ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
+    	} catch (Exception e) {
+            if ( canRetry ) {
+                ctx.addTaskToCurrentCycle(this);
+                return Result.NOTHING;
+            }
+            Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
+            return Result.NOTHING;
+    	}
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
         Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
-        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
-    }
-
-    @Override
-    public boolean canRetry(OsgiInstallerContext ctx) {
-    	return canRetry;
+        return Result.SUCCESS;
     }
 
     @Override

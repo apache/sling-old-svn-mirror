@@ -22,7 +22,12 @@ package org.apache.sling.osgi.installer.impl;
 /** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
-    public abstract void execute(OsgiInstallerContext ctx) throws Exception;
+    public enum Result {
+        SUCCESS,
+        NOTHING
+    };
+
+    public abstract Result execute(OsgiInstallerContext ctx);
 
 	protected void logExecution() {
 	    Logger.logInfo("OsgiInstallerTask: executing  " + this);
@@ -39,11 +44,6 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	/** Is it worth executing this task now? */
 	public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
 	    return true;
-	}
-
-	/** Can the task be retried after {@link #execute(OsgiInstallerContext)} failed? */
-	public boolean canRetry(OsgiInstallerContext ctx) {
-		return true;
 	}
 
 	@Override
