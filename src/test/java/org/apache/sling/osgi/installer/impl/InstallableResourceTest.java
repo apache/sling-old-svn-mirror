@@ -26,17 +26,14 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.junit.Test;
 
 public class InstallableResourceTest {
 
-    private InstallableResourceFactory factory = new InstallableResourceFactoryImpl();
-
     @Test
     public void testDictionaryDigest() throws IOException {
         final Dictionary<String, Object> d = new Hashtable<String, Object>();
-        final InstallableResource r = factory.create("x:url", null, d, null, null, null);
+        final InstallableResource r = new InstallableResource("x:url", null, d, null, null, null);
         assertNotNull("Expected InstallableResource to compute its own digest", r.getDigest());
     }
 
@@ -52,8 +49,8 @@ public class InstallableResourceTest {
             d2.put(keys[i], keys[i] + "." + keys[i]);
         }
 
-        final InstallableResource r1 = factory.create("test:url1", null, d1, null, null, null);
-        final InstallableResource r2 = factory.create("test:url1", null, d2, null, null, null);
+        final InstallableResource r1 = new InstallableResource("test:url1", null, d1, null, null, null);
+        final InstallableResource r2 = new InstallableResource("test:url1", null, d2, null, null, null);
 
         assertEquals(
                 "Two InstallableResource (Dictionary) with same values but different key orderings must have the same key",

@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.BundleActivator;
@@ -43,7 +42,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
 
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
-    private ServiceRegistration factoryServiceReg;
 
     /** Tracker for the log service. */
     private ServiceTracker logServiceTracker;
@@ -74,16 +72,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
             };
             osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
         }
-
-        // register installable resource factory service
-        {
-            final Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installable Resource Factory");
-            props.put(Constants.SERVICE_VENDOR,VENDOR);
-
-            factoryServiceReg = context.registerService(InstallableResourceFactory.class.getName(),
-                    new InstallableResourceFactoryImpl(), props);
-        }
     }
 
     /**
@@ -96,10 +84,6 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
             this.osgiControllerService = null;
-        }
-        if ( this.factoryServiceReg != null ) {
-            this.factoryServiceReg.unregister();
-            this.factoryServiceReg = null;
         }
         if ( this.osgiControllerServiceReg != null ) {
             this.osgiControllerServiceReg.unregister();

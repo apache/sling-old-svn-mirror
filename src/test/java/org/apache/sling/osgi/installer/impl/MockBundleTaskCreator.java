@@ -65,12 +65,14 @@ class MockBundleTaskCreator extends BundleTaskCreator {
 
             }
 
+            @SuppressWarnings("unchecked")
             public ServiceRegistration registerService(String clazz, Object service,
                     Dictionary properties) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @SuppressWarnings("unchecked")
             public ServiceRegistration registerService(String[] clazzes,
                     Object service, Dictionary properties) {
                 // TODO Auto-generated method stub

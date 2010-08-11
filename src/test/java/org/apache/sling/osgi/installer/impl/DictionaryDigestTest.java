@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.osgi.installer.InstallableResource;
+
 
 public class DictionaryDigestTest {
 	private void setTestData(Hashtable<String, Object> d) {
@@ -34,7 +36,7 @@ public class DictionaryDigestTest {
 
 	private String testDigestChanged(Dictionary<String, Object> d,
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = DigestUtil.computeDigest(d);
+		final String newDigest = new InstallableResource("a", null, d, null, null, null).getDigest();
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -52,8 +54,8 @@ public class DictionaryDigestTest {
 
 		assertEquals(
 				"Two dictionary with same values have the same key",
-				DigestUtil.computeDigest(d1),
-				DigestUtil.computeDigest(d2)
+		        new InstallableResource("a", null, d1, null, null, null).getDigest(),
+                new InstallableResource("a", null, d2, null, null, null).getDigest()
 		);
 	}
 
@@ -101,8 +103,8 @@ public class DictionaryDigestTest {
 		b.put("three", "C");
 
 		assertEquals("Same data in different order must have same digest",
-		        DigestUtil.computeDigest(a),
-		        DigestUtil.computeDigest(b)
+                new InstallableResource("a", null, a, null, null, null).getDigest(),
+                new InstallableResource("a", null, b, null, null, null).getDigest()
 		);
 	}
 }
