@@ -27,6 +27,8 @@ import javax.jcr.LoginException;
  */
 public class TooManySessionsException extends LoginException {
 
+    private static final long serialVersionUID = 373941570783176462L;
+
     public TooManySessionsException(String message) {
         super(message);
     }
