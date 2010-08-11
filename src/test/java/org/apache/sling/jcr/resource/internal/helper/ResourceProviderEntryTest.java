@@ -188,6 +188,10 @@ public class ResourceProviderEntryTest extends TestCase {
             roots = new String[] { root };
         }
 
+        public ResourceResolver clone(Map<String, Object> authenticationInfo) {
+            throw new UnsupportedOperationException("copy");
+        }
+
         public Resource getResource(ResourceResolver resolver,
                 HttpServletRequest request, String path) {
             return getResource(resolver, path);

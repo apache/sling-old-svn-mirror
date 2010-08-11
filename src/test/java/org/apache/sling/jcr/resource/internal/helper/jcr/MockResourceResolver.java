@@ -38,6 +38,10 @@ public class MockResourceResolver implements ResourceResolver {
         this.session = session;
     }
 
+    public ResourceResolver clone(Map<String, Object> authenticationInfo) {
+        throw new UnsupportedOperationException("copy");
+    }
+
     public Iterator<Resource> findResources(String query, String language) {
         return null;
     }

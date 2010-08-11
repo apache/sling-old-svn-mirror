@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.jcr.Credentials;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -122,6 +123,33 @@ public class JcrResourceResolver
     }
 
     /**
+     * @see org.apache.sling.api.resource.ResourceResolver#copy(Map)
+     */
+    public ResourceResolver clone(Map<String, Object> authenticationInfo)
+            throws LoginException {
+
+        // create the merged map
+        Map<String, Object> newAuthenticationInfo = new HashMap<String, Object>();
+        if (originalAuthInfo != null) {
+            newAuthenticationInfo.putAll(originalAuthInfo);
+        }
+        if (authenticationInfo != null) {
+            newAuthenticationInfo.putAll(authenticationInfo);
+        }
+
+        // get an administrative resolver if this resolver isAdmin unless
+        // credentials and/or user name are present in the credentials
+        if (isAdmin
+            && !(newAuthenticationInfo.get("user.jcr.credentials") instanceof Credentials)
+            && !(newAuthenticationInfo.get("user.name") instanceof String)) {
+            return factory.getAdministrativeResourceResolver(newAuthenticationInfo);
+        }
+
+        // create a regular resource resolver
+        return factory.getResourceResolver(newAuthenticationInfo);
+    }
+
+    /**
      * @see org.apache.sling.api.resource.ResourceResolver#isLive()
      */
     public boolean isLive() {
@@ -143,7 +171,18 @@ public class JcrResourceResolver
         }
     }
 
-    /** Check if the resource resolver is already closed.
+    /**
+     * Calls the {@link #close()} method to ensure the resolver is properly
+     * cleaned up before it is being collected by the garbage collector because
+     * it is not referred to any more.
+     */
+    protected void finalize() {
+        close();
+    };
+
+    /**
+     * Check if the resource resolver is already closed.
+     *
      * @throws IllegalStateException If the resolver is already closed
      */
     private void checkClosed() {
