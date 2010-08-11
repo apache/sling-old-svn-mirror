@@ -36,7 +36,6 @@ import javax.jcr.observation.EventListener;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.runmode.RunMode;
 import org.osgi.service.component.ComponentContext;
@@ -89,11 +88,6 @@ public class JcrInstaller implements EventListener {
      */
     private OsgiInstaller installer;
 
-    /** The installable resource factory
-     *  @scr.reference
-     */
-    private InstallableResourceFactory installableResourceFactory;
-
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
 
@@ -136,7 +130,7 @@ public class JcrInstaller implements EventListener {
 
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
-    	InstallableResource convertNode(Node n, int priority, InstallableResourceFactory factory)
+    	InstallableResource convertNode(Node n, int priority)
     	throws Exception;
     }
 
@@ -318,7 +312,7 @@ public class JcrInstaller implements EventListener {
         final String path = n.getPath();
         final int priority = folderNameFilter.getPriority(path);
         if (priority > 0) {
-            result.add(new WatchedFolder(session, path, priority, converters, installableResourceFactory));
+            result.add(new WatchedFolder(session, path, priority, converters));
         }
         final int depth = path.split("/").length;
         if(depth > maxWatchedFolderDepth) {
@@ -378,7 +372,7 @@ public class JcrInstaller implements EventListener {
                     // Deletions are handled below
                     if(folderNameFilter.getPriority(path) > 0  && session.itemExists(path)) {
                         addWatchedFolder(new WatchedFolder(session, path,
-                                folderNameFilter.getPriority(path), converters, installableResourceFactory));
+                                folderNameFilter.getPriority(path), converters));
                     }
                 }
             }

@@ -24,7 +24,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.InstallableResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +45,13 @@ import org.slf4j.LoggerFactory;
 	 */
 	public InstallableResource convertNode(
 	        final Node n,
-	        final int priority,
-	        final InstallableResourceFactory factory)
+	        final int priority)
 	throws RepositoryException {
 		InstallableResource result = null;
 		if(n.hasProperty(JCR_CONTENT_DATA) && n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
 			if(acceptNodeName(n.getName())) {
 				try {
-					result = convert(n, n.getPath(), priority, factory);
+					result = convert(n, n.getPath(), priority);
 				} catch(IOException ioe) {
 					log.info("Conversion failed, node {} ignored ({})", n.getPath(), ioe);
 				}
@@ -70,8 +68,7 @@ import org.slf4j.LoggerFactory;
 	private InstallableResource convert(
 	        final Node n,
 	        final String path,
-	        final int priority,
-	        final InstallableResourceFactory factory)
+	        final int priority)
     throws IOException, RepositoryException {
 		String digest = null;
         if (n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
@@ -87,7 +84,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return factory.create(path, is, null, digest, null, priority);
+        return new InstallableResource(path, is, null, digest, InstallableResource.TYPE_BUNDLE, priority);
 	}
 
 	boolean acceptNodeName(String name) {
