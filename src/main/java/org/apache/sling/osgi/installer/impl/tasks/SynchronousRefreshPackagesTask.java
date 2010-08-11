@@ -24,9 +24,14 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Execute an OSGi "refresh packages" operation, synchronously */
 public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
+
+    /** Tracker for the package admin. */
+    private final ServiceTracker packageAdminTracker;
 
     private static final String REFRESH_PACKAGES_ORDER = "60-";
 
@@ -34,6 +39,10 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
 	private volatile int packageRefreshEventsCount;
+
+	public SynchronousRefreshPackagesTask(final ServiceTracker packageAdminTracker) {
+	    this.packageAdminTracker = packageAdminTracker;
+	}
 
     /**
      * Handles the PACKAGES_REFRESHED framework event which is sent after
@@ -59,7 +68,14 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 		return getClass().getSimpleName();
 	}
 
-	public void execute(OsgiInstallerContext ctx) throws Exception {
+    private PackageAdmin getPackageAdmin() {
+        return (PackageAdmin)this.packageAdminTracker.getService();
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+     */
+    public void execute(OsgiInstallerContext ctx) throws Exception {
         logExecution();
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
@@ -80,7 +96,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
         // if one happened very recently and there's nothing to refresh
         ctx.getBundleContext().addFrameworkListener(this);
         try {
-            ctx.getPackageAdmin().refreshPackages(null);
+            this.getPackageAdmin().refreshPackages(null);
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
                     Logger.logWarn("No FrameworkEvent.PACKAGES_REFRESHED event received within "

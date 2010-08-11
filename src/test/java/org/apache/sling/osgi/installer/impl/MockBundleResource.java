@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.InstallableResourceFactory;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 /** Mock RegisteredResource that simulates a bundle */
@@ -77,7 +76,8 @@ public class MockBundleResource implements RegisteredResource, Serializable {
         ;
 	}
 
-	public void cleanup(OsgiInstallerContext ctx) {
+	public void cleanup() {
+	    // nothing to do
 	}
 
 	public Map<String, Object> getAttributes() {
@@ -96,15 +96,15 @@ public class MockBundleResource implements RegisteredResource, Serializable {
 		return null;
 	}
 
-	public InputStream getInputStream(BundleContext ctx) throws IOException {
+	public InputStream getInputStream() throws IOException {
 		return null;
 	}
 
-	public String getResourceType() {
+	public String getType() {
 		return InstallableResource.TYPE_BUNDLE;
 	}
 
-	public String getUrl() {
+	public String getId() {
 		return null;
 	}
 

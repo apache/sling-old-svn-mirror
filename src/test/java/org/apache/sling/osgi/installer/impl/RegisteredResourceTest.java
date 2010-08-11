@@ -52,8 +52,8 @@ public class RegisteredResourceTest {
             final InputStream s = new FileInputStream(getTestBundle("testbundle-1.0.jar"));
             final RegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1.jar", s, null, "some digest", null, null));
             assertEquals(".jar URL creates a BUNDLE resource",
-                    InstallableResource.TYPE_BUNDLE, r.getResourceType());
-            final InputStream rs = r.getInputStream(null);
+                    InstallableResource.TYPE_BUNDLE, r.getType());
+            final InputStream rs = r.getInputStream();
             assertNotNull("BUNDLE resource provides an InputStream", rs);
             rs.close();
             assertNull("BUNDLE resource does not provide a Dictionary", r.getDictionary());
@@ -66,8 +66,8 @@ public class RegisteredResourceTest {
             data.put("other", 2);
             final RegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1", null, data, null, null, null));
             assertEquals("No-extension URL with Dictionary creates a CONFIG resource",
-                    InstallableResource.TYPE_CONFIG, r.getResourceType());
-            final InputStream rs = r.getInputStream(null);
+                    InstallableResource.TYPE_CONFIG, r.getType());
+            final InputStream rs = r.getInputStream();
             assertNull("CONFIG resource does not provide an InputStream", rs);
             final Dictionary<String, Object> d = r.getDictionary();
             assertNotNull("CONFIG resource provides a Dictionary", d);
@@ -80,9 +80,9 @@ public class RegisteredResourceTest {
 	    final File f = getTestBundle("testbundle-1.0.jar");
         final InputStream s = new FileInputStream(f);
 		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(factory.create("test:1.jar", s, null, "somedigest", null, null));
-		assertTrue("Local file exists", r.getDataFile(null).exists());
+		assertTrue("Local file exists", r.getDataFile().exists());
 
-		assertEquals("Local file length matches our data", f.length(), r.getDataFile(null).length());
+		assertEquals("Local file length matches our data", f.length(), r.getDataFile().length());
 	}
 
     @org.junit.Test public void testMissingDigest() throws Exception {

@@ -62,20 +62,22 @@ class OsgiInstallerThread extends Thread implements BundleListener {
     private final HashMap<String, SortedSet<RegisteredResource>> registeredResources;
     private final PersistentResourceList persistentList;
 
-    private final BundleTaskCreator bundleTaskCreator = new BundleTaskCreator();
+    private final BundleTaskCreator bundleTaskCreator;
     private final ConfigTaskCreator configTaskCreator;
 
     OsgiInstallerThread(final OsgiInstallerContext ctx) {
         this.configTaskCreator = new ConfigTaskCreator(ctx.getBundleContext());
+        this.bundleTaskCreator = new BundleTaskCreator(ctx.getBundleContext());
         setName(getClass().getSimpleName());
         this.ctx = ctx;
         final File f = ctx.getBundleContext().getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(f);
+        persistentList = new PersistentResourceList(ctx.getBundleContext(), f);
         registeredResources = persistentList.getData();
     }
 
     void deactivate() {
         this.configTaskCreator.deactivate();
+        this.bundleTaskCreator.deactivate();
         ctx.getBundleContext().removeBundleListener(this);
         active = false;
         synchronized (newResources) {
@@ -239,7 +241,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
                 	for(RegisteredResource rr : t) {
                 		if(t.comparator().compare(rr, r) == 0) {
                 		    Logger.logDebug("Cleanup obsolete " + rr);
-                			rr.cleanup(ctx);
+                			rr.cleanup();
                 		}
                 	}
                     t.remove(r);
@@ -252,7 +254,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             if(!urlsToRemove.isEmpty()) {
                 for(SortedSet<RegisteredResource> group : registeredResources.values()) {
                 	for(RegisteredResource r : group) {
-                		if(urlsToRemove.contains(r.getUrl())) {
+                		if(urlsToRemove.contains(r.getURL())) {
                 		    Logger.logDebug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
                 			r.setInstallable(false);
                 		}
@@ -298,7 +300,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             if (group.isEmpty()) {
                 continue;
             }
-            final String rt = group.first().getResourceType();
+            final String rt = group.first().getType();
             if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
                 bundleTaskCreator.createTasks(ctx, group, tasks);
             } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
@@ -353,7 +355,7 @@ class OsgiInstallerThread extends Thread implements BundleListener {
             }
             for(RegisteredResource r : toDelete) {
                 group.remove(r);
-                r.cleanup(ctx);
+                r.cleanup();
                 Logger.logDebug("Removing RegisteredResource from list, not installable and has been processed: " + r);
             }
             if(group.isEmpty() && key != null) {

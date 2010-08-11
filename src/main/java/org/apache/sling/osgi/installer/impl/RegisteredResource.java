@@ -18,36 +18,32 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Dictionary;
 import java.util.Map;
 
-import org.osgi.framework.BundleContext;
+import org.apache.sling.osgi.installer.InstallableResource;
 
 /** A resource that's been registered in the OSGi controller.
  * 	Data can be either an InputStream or a Dictionary, and we store
  *  it locally to avoid holding up to classes or data from our
  *  clients, in case those disappear while we're installing stuff.
  */
-public interface RegisteredResource {
+public interface RegisteredResource extends InstallableResource {
 
-	public static final String DIGEST_TYPE = "MD5";
-    public static final String ENTITY_JAR_PREFIX = "jar:";
-	public static final String ENTITY_BUNDLE_PREFIX = "bundle:";
-	public static final String ENTITY_CONFIG_PREFIX = "config:";
+	String DIGEST_TYPE = "MD5";
+    String ENTITY_JAR_PREFIX = "jar:";
+	String ENTITY_BUNDLE_PREFIX = "bundle:";
+	String ENTITY_CONFIG_PREFIX = "config:";
 
-	void cleanup(OsgiInstallerContext ctx);
+    /** Attribute key: configuration pid */
+    String CONFIG_PID_ATTRIBUTE = "config.pid";
+
+
+    void cleanup();
 	String getURL();
-	InputStream getInputStream(BundleContext bc) throws IOException;
-	Dictionary<String, Object> getDictionary();
-	String getDigest();
-	String getUrl();
+
 	boolean isInstallable();
 	void setInstallable(boolean installable);
-	String getResourceType();
 	String getUrlScheme();
-	int getPriority();
 	long getSerialNumber();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
@@ -58,8 +54,5 @@ public interface RegisteredResource {
      *  symbolic ID, or "config:PID" where PID is config's PID.
      */
     String getEntityId();
-
-    /** Attribute key: configuration pid */
-    String CONFIG_PID_ATTRIBUTE = "config.pid";
 
 }

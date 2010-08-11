@@ -72,10 +72,10 @@ public class TaskOrderingTest {
 		final OsgiInstallerTask [] tasksInOrder = {
 		    new ConfigRemoveTask(getRegisteredResource("test:a"), null),
             new ConfigInstallTask(getRegisteredResource("test:a"), null),
-		    new BundleRemoveTask(getRegisteredResource("test:url")),
-		    new BundleUpdateTask(getRegisteredResource("test:url")),
+		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
+		    new BundleUpdateTask(getRegisteredResource("test:url"), null),
 		    new BundleInstallTask(getRegisteredResource("test:url")),
-			new SynchronousRefreshPackagesTask(),
+			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(0),
 		};
 
@@ -130,7 +130,7 @@ public class TaskOrderingTest {
 		final OsgiInstallerTask [] tasksInOrder = {
 			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing")),
             new BundleInstallTask(getRegisteredResource("test:someURIb.nothing")),
-			new SynchronousRefreshPackagesTask(),
+			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(0),
 		};
 
@@ -153,8 +153,8 @@ public class TaskOrderingTest {
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-		    new BundleRemoveTask(getRegisteredResource("test:url")),
-			new SynchronousRefreshPackagesTask(),
+		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
+			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(0),
 			new BundleStartTask(1),
 		};
@@ -162,23 +162,23 @@ public class TaskOrderingTest {
 		taskSet.clear();
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[3]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[3]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask());
+		taskSet.add(new SynchronousRefreshPackagesTask(null));
 
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}

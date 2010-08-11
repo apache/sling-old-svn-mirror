@@ -24,6 +24,7 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Remove a bundle from a RegisteredResource.
  *  Creates a SynchronousRefreshPackagesTask when
@@ -35,8 +36,12 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
 
-    public BundleRemoveTask(RegisteredResource r) {
+    /** Tracker for the package admin. */
+    private final ServiceTracker packageAdminTracker;
+
+    public BundleRemoveTask(final RegisteredResource r, final ServiceTracker packageAdminTracker) {
         this.resource = r;
+        this.packageAdminTracker = packageAdminTracker;
     }
 
     @Override
@@ -57,13 +62,13 @@ public class BundleRemoveTask extends OsgiInstallerTask {
         	b.stop();
         }
         b.uninstall();
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
+        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
         ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
     }
 
     @Override
     public String getSortKey() {
-        return BUNDLE_REMOVE_ORDER + resource.getUrl();
+        return BUNDLE_REMOVE_ORDER + resource.getURL();
     }
 
 }
