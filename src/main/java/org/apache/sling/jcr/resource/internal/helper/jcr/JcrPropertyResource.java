@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JcrPropertyResource extends JcrItemResource {
+class JcrPropertyResource extends JcrItemResource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
