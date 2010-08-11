@@ -37,7 +37,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -51,6 +50,7 @@ import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.osgi.framework.ServiceRegistration;
@@ -87,7 +87,7 @@ public class JspScriptEngineFactory
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
-    @Reference
+    @Reference(unbind="unbindSlingServletContext")
     private ServletContext slingServletContext;
 
     @Reference
@@ -277,22 +277,44 @@ public class JspScriptEngineFactory
         }
 
         ioProvider = null;
+    }
 
-        // remove JspApplicationContextImpl from the servlet context, otherwise
-        // a ClassCastException may be caused after this component is recreated
-        // because the class loader of the JspApplicationContextImpl class
-        // object is different from the one stored in the servlet context
+    /**
+     * Unbinds the Sling ServletContext and removes any known servlet context
+     * attributes preventing the bundles's class loader from being collected.
+     *
+     * @param slingServletContext The <code>ServletContext</code> to be unbound
+     */
+    protected void unbindSlingServletContext(
+            final ServletContext slingServletContext) {
+
+        // remove JspApplicationContextImpl from the servlet context,
+        // otherwise a ClassCastException may be caused after this component
+        // is recreated because the class loader of the
+        // JspApplicationContextImpl class object is different from the one
+        // stored in the servlet context same for the AnnotationProcessor
+        // (which generally does not exist here)
         try {
-            slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
+            if (slingServletContext != null) {
+                slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
+                slingServletContext.removeAttribute(AnnotationProcessor.class.getName());
+            }
         } catch (NullPointerException npe) {
             // SLING-530, might be thrown on system shutdown in a servlet
             // container when using the Equinox servlet container bridge
-            logger.debug("deactivate: ServletContext might already be unavailable", npe);
+            logger.debug(
+                "unbindSlingServletContext: ServletContext might already be unavailable",
+                npe);
+        }
+
+        if (this.slingServletContext == slingServletContext) {
+            this.slingServletContext = null;
         }
     }
 
     /**
      * Bind the class load provider.
+     *
      * @param repositoryClassLoaderProvider the new provider
      */
     protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
