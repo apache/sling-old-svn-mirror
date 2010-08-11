@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.BackgroundHttpServletRequest;
 import org.apache.sling.bgservlets.BackgroundHttpServletResponse;
 import org.apache.sling.bgservlets.JobData;
@@ -36,7 +35,6 @@ import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.RuntimeState;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
 import org.apache.sling.engine.SlingServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,27 +55,21 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
     private final Date creationTime;
     private Date estimatedCompletionTime;
     private String progressMessage;
-    
+
     BackgroundRequestExecutionJob(SlingServlet slingServlet,
-            ResourceResolverFactory rrf, JobStorage storage, SlingHttpServletRequest request,
+            JobStorage storage, SlingHttpServletRequest request,
             HttpServletResponse hsr, String[] parametersToRemove)
             throws IOException, LoginException {
         this.request = new BackgroundHttpServletRequest(request,
                 parametersToRemove);
         this.slingServlet = slingServlet;
-        
+
         // Provide this as the RuntimeState for the background servlet
         this.request.setAttribute(RuntimeState.class.getName(), this);
 
         // Need a new ResourceResolver with the same credentials as the
         // current request, for the background request.
-        final AuthenticationInfo aa = (AuthenticationInfo) request
-                .getAttribute(AuthenticationInfo.class.getName());
-        if (aa == null) {
-            throw new IllegalArgumentException(
-                    "Missing AuthenticationInfo attribute");
-        }
-        resourceResolver = rrf.getResourceResolver(aa);
+        resourceResolver = request.getResourceResolver().clone(null);
 
         // Get JobData, defines path and used to save servlet output to the repository
         final Session s = resourceResolver.adaptTo(Session.class);
@@ -114,6 +106,9 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
                 // TODO report errors in the background job's output
                 log.error("ServletResponseWrapper cleanup failed", ioe);
             }
+
+            // cleanup the resource resolver
+            resourceResolver.close();
         }
     }
 
@@ -136,7 +131,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
     public Date getCreationTime() {
         return creationTime;
     }
-    
+
     public JobProgressInfo getProgressInfo() {
         return this;
     }
@@ -144,7 +139,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
     public String getProgressMessage() {
         return progressMessage;
     }
-    
+
     public Date getEstimatedCompletionTime() {
         return estimatedCompletionTime;
     }

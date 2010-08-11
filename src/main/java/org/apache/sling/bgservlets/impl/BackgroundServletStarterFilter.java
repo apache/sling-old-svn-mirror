@@ -35,7 +35,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.engine.SlingServlet;
@@ -48,8 +47,8 @@ import org.slf4j.LoggerFactory;
  * parameters are set. Must be placed early in the filter chain.
  */
 @Component(
-        metatype=true, 
-        label="%BackgroundServletStarterFilter.label", 
+        metatype=true,
+        label="%BackgroundServletStarterFilter.label",
         description="%BackgroundServletStarterFilter.description")
 @Service
 @Properties( {
@@ -66,12 +65,9 @@ public class BackgroundServletStarterFilter implements Filter {
     private SlingServlet slingServlet;
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory;
-    
-    @Reference
     private JobStorage jobStorage;
-    
-    /** Name of the property that defines the request parameter name to 
+
+    /** Name of the property that defines the request parameter name to
      *  use to start a servlet in the background.
      */
     @Property(value="sling:bg")
@@ -89,7 +85,7 @@ public class BackgroundServletStarterFilter implements Filter {
         }
         log.info("Request parameter {} will run servlets in the background", bgParamName);
     }
-    
+
     public void doFilter(final ServletRequest sreq,
             final ServletResponse sresp, final FilterChain chain)
             throws IOException, ServletException {
@@ -103,15 +99,15 @@ public class BackgroundServletStarterFilter implements Filter {
                             + sresp.getClass().getName());
         }
         final HttpServletRequest request = (HttpServletRequest) sreq;
-        final SlingHttpServletRequest slingRequest = 
+        final SlingHttpServletRequest slingRequest =
             (request instanceof SlingHttpServletRequest ? (SlingHttpServletRequest) request : null);
         final HttpServletResponse response = (HttpServletResponse) sresp;
         final String bgParam = sreq.getParameter(bgParamName);
         if (Boolean.valueOf(bgParam)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
-                        slingServlet, resourceResolverFactory, jobStorage,
-                        slingRequest, response, new String[] { bgParamName });
+                    slingServlet, jobStorage, slingRequest, response,
+                    new String[] { bgParamName });
                 log.debug("{} parameter true, running request in the background ({})",
                         bgParamName, job);
                 if (slingRequest != null) {
