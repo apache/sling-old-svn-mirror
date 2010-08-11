@@ -59,13 +59,13 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public void execute(OsgiInstallerContext ctx) throws Exception {
+    public Result execute(OsgiInstallerContext ctx) {
 
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
-            return;
+            return Result.NOTHING;
         }
 
         // Convert data to a configuration Dictionary
@@ -86,29 +86,35 @@ public class ConfigInstallTask extends AbstractConfigTask {
         // Get or create configuration, but do not
         // update if the new one has the same values.
         boolean created = false;
-        Configuration config = getConfiguration(ca, pid, false, ctx);
-        if(config == null) {
-            created = true;
-            config = getConfiguration(ca, pid, true, ctx);
-        } else {
-			if(isSameData(config.getProperties(), resource.getDictionary())) {
-			    Logger.logDebug("Configuration " + config.getPid()
-	                        + " already installed with same data, update request ignored: "
-	                        + resource);
-				config = null;
-			}
-        }
-
-        if(config != null) {
-            logExecution();
-            if (config.getBundleLocation() != null) {
-                config.setBundleLocation(null);
+        try {
+            Configuration config = getConfiguration(ca, pid, false, ctx);
+            if(config == null) {
+                created = true;
+                config = getConfiguration(ca, pid, true, ctx);
+            } else {
+    			if(isSameData(config.getProperties(), resource.getDictionary())) {
+    			    Logger.logDebug("Configuration " + config.getPid()
+    	                        + " already installed with same data, update request ignored: "
+    	                        + resource);
+    				config = null;
+    			}
             }
-            config.update(dict);
-            Logger.logInfo("Configuration " + config.getPid()
-                        + " " + (created ? "created" : "updated")
-                        + " from " + resource);
+
+            if(config != null) {
+                logExecution();
+                if (config.getBundleLocation() != null) {
+                    config.setBundleLocation(null);
+                }
+                config.update(dict);
+                Logger.logInfo("Configuration " + config.getPid()
+                            + " " + (created ? "created" : "updated")
+                            + " from " + resource);
+                return Result.SUCCESS;
+            }
+        } catch (Exception e) {
+            ctx.addTaskToNextCycle(this);
         }
+        return Result.NOTHING;
     }
 
     /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */

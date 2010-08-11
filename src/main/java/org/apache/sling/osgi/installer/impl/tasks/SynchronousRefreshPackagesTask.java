@@ -75,7 +75,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     /**
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
-    public void execute(OsgiInstallerContext ctx) throws Exception {
+    public Result execute(OsgiInstallerContext ctx) {
         logExecution();
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
@@ -119,5 +119,6 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
         } finally {
         	ctx.getBundleContext().removeFrameworkListener(this);
         }
+        return Result.SUCCESS;
 	}
 }

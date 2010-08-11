@@ -30,7 +30,7 @@ public interface OsgiInstallerStatistics {
 	long [] getCounters();
 
 	/** Counter index: number of OSGi tasks executed */
-	int OSGI_TASKS_COUNTER = 0;
+ 	int OSGI_TASKS_COUNTER = 0;
 
     /** Counter index: number of installer cycles */
     int INSTALLER_CYCLES_COUNTER = 1;

@@ -34,8 +34,6 @@ public interface OsgiInstallerContext {
      */
     BundleContext getBundleContext();
 
-    void incrementCounter(int index);
-    void setCounter(int index, long value);
     /**
      * Finds the bundle with given symbolic name in our BundleContext.
      */

@@ -40,7 +40,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	/** The actual worker thread. */
     private final OsgiInstallerThread installerThread;
 
-    private long [] counters = new long[COUNTERS_SIZE];
     private PersistentBundleInfo bundleDigestsStorage;
 
     /**
@@ -110,13 +109,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.OsgiInstallerStatistics#getCounters()
-	 */
-	public long [] getCounters() {
-		return counters;
-	}
-
-	/**
 	 * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
 	 */
 	public void addResource(final String scheme, final InstallableResource r) {
@@ -138,17 +130,10 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	}
 
 	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#incrementCounter(int)
+	 * @see org.apache.sling.osgi.installer.OsgiInstallerStatistics#getCounters()
 	 */
-	public void incrementCounter(int index) {
-	    counters[index]++;
-	}
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#setCounter(int, long)
-     */
-    public void setCounter(int index, long value) {
-        counters[index] = value;
+	public long[] getCounters() {
+        return this.installerThread.getCounters();
     }
 
     /**

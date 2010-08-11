@@ -43,22 +43,28 @@ public class ConfigRemoveTask extends AbstractConfigTask {
         return CONFIG_REMOVE_ORDER + pid.getCompositePid();
     }
 
-    public void execute(OsgiInstallerContext ctx) throws Exception {
+    public Result execute(OsgiInstallerContext ctx) {
 
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if(ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
-            return;
+            return Result.NOTHING;
         }
 
         logExecution();
-        final Configuration cfg = getConfiguration(ca, pid, false, ctx);
-        if(cfg == null) {
-            Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
-        } else {
-            Logger.logInfo("Deleting config " + pid + " (" + resource + ")");
-            cfg.delete();
+        try {
+            final Configuration cfg = getConfiguration(ca, pid, false, ctx);
+            if(cfg == null) {
+                Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
+            } else {
+                Logger.logInfo("Deleting config " + pid + " (" + resource + ")");
+                cfg.delete();
+                return Result.SUCCESS;
+            }
+        } catch (Exception e) {
+            ctx.addTaskToNextCycle(this);
         }
+        return Result.NOTHING;
     }
 }

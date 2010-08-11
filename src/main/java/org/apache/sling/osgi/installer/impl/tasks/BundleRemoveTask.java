@@ -18,11 +18,11 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -50,7 +50,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
     }
 
     @Override
-    public void execute(OsgiInstallerContext ctx) throws Exception {
+    public Result execute(OsgiInstallerContext ctx) {
         logExecution();
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = ctx.getMatchingBundle(symbolicName);
@@ -58,12 +58,17 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             throw new IllegalStateException("Bundle to remove (" + symbolicName + ") not found");
         }
         final int state = b.getState();
-        if(state == Bundle.ACTIVE || state == Bundle.STARTING) {
-        	b.stop();
+        try {
+            if (state == Bundle.ACTIVE || state == Bundle.STARTING) {
+            	b.stop();
+            }
+            b.uninstall();
+        } catch (BundleException be) {
+            ctx.addTaskToNextCycle(this);
+            return Result.NOTHING;
         }
-        b.uninstall();
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
-        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
+        return Result.SUCCESS;
     }
 
     @Override

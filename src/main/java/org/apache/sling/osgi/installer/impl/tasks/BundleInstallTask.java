@@ -18,7 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -43,13 +42,22 @@ public class BundleInstallTask extends OsgiInstallerTask {
     	return getClass().getSimpleName() + ": " + resource;
     }
 
-    public void execute(OsgiInstallerContext ctx) throws Exception {
-        final Bundle b = ctx.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
-        final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
-        ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
-        logExecution();
-        ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
-        ctx.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+     */
+    public Result execute(OsgiInstallerContext ctx) {
+        try {
+            final Bundle b = ctx.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
+            final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
+            ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
+            logExecution();
+            ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
+            return Result.SUCCESS;
+        } catch (Exception ex) {
+            // if something goes wrong we simply try it again
+            ctx.addTaskToCurrentCycle(this);
+            return Result.NOTHING;
+        }
     }
 
     @Override
