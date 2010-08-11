@@ -21,8 +21,11 @@ package org.apache.sling.api.resource;
 /**
  * Exception thrown by
  * <code>{@link ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)}</code>
- * and <code>{@link ResourceResolverFactory#getResourceResolver(java.util.Map)}</code> if
- * the specified credentials are invalid.
+ * ,
+ * <code>{@link ResourceResolverFactory#getResourceResolver(java.util.Map)}</code>
+ * , and <code>{@link ResourceResolver#copy(java.util.Map)}</code> if a resource
+ * resolver cannot be created because the credential data is not valid.
+ *
  * @since 2.1
  */
 public class LoginException extends Exception {
@@ -42,7 +45,7 @@ public class LoginException extends Exception {
      * message.
      *
      * @param message the detail message. The detail message is saved for later
-     *                retrieval by the {@link #getMessage()} method.
+     *            retrieval by the {@link #getMessage()} method.
      */
     public LoginException(String message) {
         super(message);
@@ -52,8 +55,8 @@ public class LoginException extends Exception {
      * Constructs a new instance of this class with the specified detail message
      * and root cause.
      *
-     * @param message   the detail message. The detail message is saved for later
-     *                  retrieval by the {@link #getMessage()} method.
+     * @param message the detail message. The detail message is saved for later
+     *            retrieval by the {@link #getMessage()} method.
      * @param rootCause root failure cause
      */
     public LoginException(String message, Throwable rootCause) {

@@ -71,12 +71,45 @@ import org.apache.sling.api.adapter.Adaptable;
  */
 public interface ResourceResolver extends Adaptable {
 
-    /** A request attribute containing the workspace to use for
-     * {@link #resolve(HttpServletRequest)} and {@link #resolve(HttpServletRequest, String)}
-     * if not the default workspace should be used to resolve the resource.
+    /**
+     * A request attribute containing the workspace to use for
+     * {@link #resolve(HttpServletRequest)} and
+     * {@link #resolve(HttpServletRequest, String)} if not the default workspace
+     * should be used to resolve the resource.
+     *
      * @since 2.1
      */
-    String REQUEST_ATTR_WORKSPACE_INFO = ResourceResolver.class.getName() + "/use.workspace";
+    String REQUEST_ATTR_WORKSPACE_INFO = ResourceResolver.class.getName()
+        + "/use.workspace";
+
+    /**
+     * Returns a new <code>ResourceResolver</code> instance based on the given
+     * <code>authenticationInfo</code> map and the original authentication info
+     * used to create this instance.
+     * <p>
+     * The new resource resolver is created according to the following
+     * algorithm:
+     *
+     * <pre>
+     * Map&lt;String, Object&gt; newAuthenticationInfo = new HashMap(
+     *     authenticationInfoOfThisInstance);
+     * newAuthenticationInfo.addAll(authenticationInfo);
+     * return resourceResolverFactory.getResourceResolver(newAuthenticationInfo);
+     * </pre>
+     *
+     * @param authenticationInfo The map or credential data to overlay the
+     *            orignal credential data with for the creation of a new
+     *            resource resolver. This may be <code>null</code> in which case
+     *            the same credential data is used as was used to create this
+     *            instance.
+     * @return A new <code>ResourceResolver</code>
+     * @throws LoginException If an error occurrs creating the new
+     *             <code>ResourceResolver</code> with the provided credential
+     *             data.
+     * @since 2.1
+     */
+    ResourceResolver copy(Map<String, Object> authenticationInfo)
+            throws LoginException;
 
     /**
      * Resolves the resource from the given <code>absPath</code> optionally
@@ -88,10 +121,8 @@ public interface ResourceResolver extends Adaptable {
      * The difference between this method and the {@link #resolve(String)}
      * method is, that this method may take request properties like the scheme,
      * the host header or request parameters into account to resolve the
-     * resource.
-     *
-     * If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the
-     * given workspace is used to resolve the resource.
+     * resource. If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set,
+     * the given workspace is used to resolve the resource.
      *
      * @param request The http servlet request object providing more hints at
      *            how to resolve the <code>absPath</code>. This parameter may be
