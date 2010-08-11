@@ -154,7 +154,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         ws2Session = getRepository().loginAdministrative("ws2");
 
-        rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
+        rootWs2Node = ws2Session.getRootNode().addNode(rootPath.substring(1),
+            "nt:unstructured");
         Node child = rootWs2Node.addNode("child1");
         child.addNode("child2");
         ws2Session.save();
@@ -242,6 +243,98 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals("Path must be the the root path", "/", res2.getPath());
     }
 
+    public void testClone_based_on_anonymous() throws Exception {
+        final ResourceResolver anon0 = resFac.getResourceResolver((Map<String, Object>) null);
+        final Session anon0Session = anon0.adaptTo(Session.class);
+        assertEquals("anonymous", anon0.getUserID());
+
+        // same user and workspace
+        final ResourceResolver anon1 = anon0.clone(null);
+        final Session anon1Session = anon1.adaptTo(Session.class);
+        assertEquals(anon0.getUserID(), anon1.getUserID());
+        assertEquals(anon0Session.getWorkspace().getName(),
+            anon1Session.getWorkspace().getName());
+        anon1.close();
+
+        // same workspace but admin user
+        final Map<String, Object> admin0Cred = new HashMap<String, Object>();
+        admin0Cred.put("user.name", "admin");
+        admin0Cred.put("user.password", "admin".toCharArray());
+        final ResourceResolver admin0 = anon0.clone(admin0Cred);
+        final Session admin0Session = admin0.adaptTo(Session.class);
+        assertEquals("admin", admin0.getUserID());
+        assertEquals(anon0Session.getWorkspace().getName(),
+            admin0Session.getWorkspace().getName());
+        admin0.close();
+
+        // same user but different workspace
+        final Map<String, Object> anon2Cred = new HashMap<String, Object>();
+        anon2Cred.put("internal.user.jcr.workspace", "ws2");
+        final ResourceResolver anon2 = anon0.clone(anon2Cred);
+        final Session anon2Session = anon2.adaptTo(Session.class);
+        assertEquals("anonymous", anon2.getUserID());
+        assertEquals("ws2", anon2Session.getWorkspace().getName());
+        anon2.close();
+
+        // different user and workspace
+        final Map<String, Object> admin1Cred = new HashMap<String, Object>();
+        admin1Cred.put("user.name", "admin");
+        admin1Cred.put("user.password", "admin".toCharArray());
+        admin1Cred.put("internal.user.jcr.workspace", "ws2");
+        final ResourceResolver admin1 = anon0.clone(admin1Cred);
+        final Session admin1Session = admin1.adaptTo(Session.class);
+        assertEquals("admin", admin1.getUserID());
+        assertEquals("ws2", admin1Session.getWorkspace().getName());
+        admin1.close();
+
+        anon0.close();
+    }
+
+    public void testClone_based_on_admin() throws Exception {
+        final ResourceResolver admin0 = resFac.getAdministrativeResourceResolver((Map<String, Object>) null);
+        final Session admin0Session = admin0.adaptTo(Session.class);
+        assertEquals("admin", admin0.getUserID());
+
+        // same user and workspace
+        final ResourceResolver admin1 = admin0.clone(null);
+        final Session admin1Session = admin1.adaptTo(Session.class);
+        assertEquals(admin0.getUserID(), admin1.getUserID());
+        assertEquals(admin0Session.getWorkspace().getName(),
+            admin1Session.getWorkspace().getName());
+        admin1.close();
+
+        // same workspace but anonymous user
+        final Map<String, Object> anon0Cred = new HashMap<String, Object>();
+        anon0Cred.put("user.name", "anonymous");
+        final ResourceResolver anon0 = admin0.clone(anon0Cred);
+        final Session anon0Session = anon0.adaptTo(Session.class);
+        assertEquals("anonymous", anon0.getUserID());
+        assertEquals(admin0Session.getWorkspace().getName(),
+            anon0Session.getWorkspace().getName());
+        anon0.close();
+
+        // same user but different workspace
+        final Map<String, Object> admin2Cred = new HashMap<String, Object>();
+        admin2Cred.put("internal.user.jcr.workspace", "ws2");
+        final ResourceResolver admin2 = admin0.clone(admin2Cred);
+        final Session admin2Session = admin2.adaptTo(Session.class);
+        assertEquals("admin", admin2.getUserID());
+        assertEquals("ws2", admin2Session.getWorkspace().getName());
+        admin2.close();
+
+        // different user and workspace
+        final Map<String, Object> anon1Cred = new HashMap<String, Object>();
+        anon1Cred.put("user.name", "anonymous");
+        anon1Cred.put("internal.user.jcr.workspace", "ws2");
+        final ResourceResolver anon1 = admin0.clone(anon1Cred);
+        final Session anon1Session = anon1.adaptTo(Session.class);
+        assertEquals("anonymous", anon1.getUserID());
+        assertEquals("ws2", anon1Session.getWorkspace().getName());
+        anon1.close();
+
+        anon0.close();
+    }
+
     public void testGetResource() throws Exception {
         // existing resource
         Resource res = resResolver.getResource(rootPath);
@@ -325,28 +418,35 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     public void testResolveResourceWithWS2() throws Exception {
         // before resolution, all resolvers adapt to sessions in the
         // default workspace
-        assertEquals("default", resResolver.adaptTo(Session.class).getWorkspace().getName());
-        assertEquals("default", mwResResolver.adaptTo(Session.class).getWorkspace().getName());
+        assertEquals("default",
+            resResolver.adaptTo(Session.class).getWorkspace().getName());
+        assertEquals("default",
+            mwResResolver.adaptTo(Session.class).getWorkspace().getName());
 
         // existing resource
         HttpServletRequest request = new ResourceResolverTestRequest(rootPath);
-        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO,
+            "ws2");
         Resource res = resResolver.resolve(request, rootPath);
         assertNotNull(res);
 
-        // because multi-workspace is disabled, this should return the resource from the
+        // because multi-workspace is disabled, this should return the resource
+        // from the
         // default workspace
         assertEquals(rootPath, res.getPath());
-        assertEquals("default", res.adaptTo(Node.class).getSession().getWorkspace().getName());
+        assertEquals("default",
+            res.adaptTo(Node.class).getSession().getWorkspace().getName());
 
         // and the request-bound session still isn't set
-        assertEquals("default", resResolver.adaptTo(Session.class).getWorkspace().getName());
+        assertEquals("default",
+            resResolver.adaptTo(Session.class).getWorkspace().getName());
 
         // now for the multi-workspace enabled resolver
         Resource ws2Res = mwResResolver.resolve(request, rootPath);
 
         // now the request-bound session is set
-        assertEquals("ws2", mwResResolver.adaptTo(Session.class).getWorkspace().getName());
+        assertEquals("ws2",
+            mwResResolver.adaptTo(Session.class).getWorkspace().getName());
 
         assertEquals("ws2:" + rootPath, ws2Res.getPath());
         assertEquals(rootWs2Node.getPrimaryNodeType().getName(),
@@ -368,15 +468,15 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals("ws2:" + rootPath + "/child1", child.getPath());
 
         // should be able to list children of a child
-        Iterator<Resource>children2 = mwResResolver.listChildren(child);
+        Iterator<Resource> children2 = mwResResolver.listChildren(child);
         assertTrue(children2.hasNext());
         Resource child2 = children2.next();
         assertNotNull(child2);
         assertEquals("ws2:" + rootPath + "/child1/child2", child2.getPath());
 
         // should also be able to list children of a synthetic resource
-        SyntheticResource synth = new SyntheticResource(null, "ws2:" +
-                rootPath+"/child1", "res/synth");
+        SyntheticResource synth = new SyntheticResource(null, "ws2:" + rootPath
+            + "/child1", "res/synth");
         children2 = mwResResolver.listChildren(synth);
         assertTrue(children2.hasNext());
         child2 = children2.next();
@@ -386,7 +486,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // missing resource below root should resolve "missing resource"
         String path = rootPath + "/missing";
         request = new ResourceResolverTestRequest(path);
-        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO,
+            "ws2");
         res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertEquals("ws2:" + path, res.getPath());
@@ -397,7 +498,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // root with selectors/ext should resolve root
         path = rootPath + ".print.a4.html";
         request = new ResourceResolverTestRequest(path);
-        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO,
+            "ws2");
         res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertEquals("ws2:" + rootPath, res.getPath());
@@ -410,7 +512,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // missing resource should return NON_EXISTING Resource
         path = rootPath + System.currentTimeMillis();
         request = new ResourceResolverTestRequest(path);
-        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO, "ws2");
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO,
+            "ws2");
         res = mwResResolver.resolve(request, path);
         assertNotNull(res);
         assertTrue(ResourceUtil.isNonExistingResource(res));
@@ -851,8 +954,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             "virtual.host.com", 4443, rootPath);
         Node virtualhost4443 = mapRoot.getNode("map/https").addNode(
             "virtual.host.com.4443", "sling:Mapping");
-        virtualhost4443.setProperty(
-            JcrResourceResolver.PROP_REDIRECT_INTERNAL, "/content/virtual");
+        virtualhost4443.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            "/content/virtual");
         session.save();
 
         Thread.sleep(1000L);
@@ -1068,8 +1171,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Node internalRedirect = mapRoot.getNode("map/http").addNode(
             mapHostInternal + ".80", "sling:Mapping");
-        internalRedirect.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
-            mapRootInternal);
+        internalRedirect.setProperty(
+            JcrResourceResolver.PROP_REDIRECT_INTERNAL, mapRootInternal);
         session.save();
 
         Thread.sleep(1000L);
@@ -1087,12 +1190,15 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // b) test map(HttpServletRequest, String) with "localhost"
         // => return full URL, escaped
-        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath), mapRootInternal + path);
+        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath),
+            mapRootInternal + path);
         assertEquals("http://" + mapHostInternal + escapedPath, mapped);
 
         // c) test map(HttpServletRequest, String) with "internal.host.com"
-        // => only return path, escaped, because request host/port matches (cut off host part)
-        mapped = resResolver.map(new ResourceResolverTestRequest(null, mapHostInternal, -1, rootPath), mapRootInternal + path);
+        // => only return path, escaped, because request host/port matches (cut
+        // off host part)
+        mapped = resResolver.map(new ResourceResolverTestRequest(null,
+            mapHostInternal, -1, rootPath), mapRootInternal + path);
         assertEquals(escapedPath, mapped);
 
         // ---------------------------------------------------------------------
@@ -1106,7 +1212,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(unmappedRoot + escapedPath, mapped);
 
         // b) test map(HttpServletRequest, String)
-        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath), unmappedRoot + path);
+        mapped = resResolver.map(new ResourceResolverTestRequest(rootPath),
+            unmappedRoot + path);
         assertEquals(unmappedRoot + escapedPath, mapped);
 
     }
@@ -1348,14 +1455,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/child", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/child",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals("", res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
         assertNotNull(resNode);
 
         assertEquals(child.getPath(), resNode.getPath());
-
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
@@ -1369,7 +1476,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/child/grandchild", resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/child/grandchild",
+            resEnkel.getResourceMetadata().getResolutionPath());
         assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
@@ -1392,13 +1500,13 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/child", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/child",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals(selExt, res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
         assertNotNull(resNode);
         assertEquals(child.getPath(), resNode.getPath());
-
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
@@ -1412,8 +1520,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/child/grandchild", resEnkel.getResourceMetadata().getResolutionPath());
-        assertEquals(selExt, resEnkel.getResourceMetadata().getResolutionPathInfo());
+        assertEquals(rootNode.getPath() + "/child/grandchild",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(selExt,
+            resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
         assertNotNull(resNodeEnkel);
@@ -1435,7 +1545,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/child", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/child",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals(selExt, res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
@@ -1454,8 +1565,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/child/grandchild", resEnkel.getResourceMetadata().getResolutionPath());
-        assertEquals(selExt, resEnkel.getResourceMetadata().getResolutionPathInfo());
+        assertEquals(rootNode.getPath() + "/child/grandchild",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(selExt,
+            resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
         assertNotNull(resNodeEnkel);
@@ -1482,7 +1595,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(child.getPath(), resNode.getPath());
     }
 
-
     public void test_resolve_with_sling_alias() throws Exception {
 
         Node child = rootNode.addNode("child");
@@ -1497,14 +1609,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/kind", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/kind",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals("", res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
         assertNotNull(resNode);
 
         assertEquals(child.getPath(), resNode.getPath());
-
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
@@ -1519,7 +1631,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/kind/enkel", resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/kind/enkel",
+            resEnkel.getResourceMetadata().getResolutionPath());
         assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
@@ -1543,13 +1656,13 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/kind", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/kind",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals(selExt, res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
         assertNotNull(resNode);
         assertEquals(child.getPath(), resNode.getPath());
-
 
         // second level alias
         Node grandchild = child.addNode("grandchild");
@@ -1564,15 +1677,18 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/kind/enkel", resEnkel.getResourceMetadata().getResolutionPath());
-        assertEquals(selExt, resEnkel.getResourceMetadata().getResolutionPathInfo());
+        assertEquals(rootNode.getPath() + "/kind/enkel",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(selExt,
+            resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
         assertNotNull(resNodeEnkel);
         assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
     }
 
-    public void test_resolve_with_sling_alias_selectors_extension() throws Exception {
+    public void test_resolve_with_sling_alias_selectors_extension()
+            throws Exception {
 
         final String selExt = ".sel1.sel2.html";
 
@@ -1588,7 +1704,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource res = resResolver.resolve(null, path);
         assertNotNull(res);
-        assertEquals(rootNode.getPath() + "/kind", res.getResourceMetadata().getResolutionPath());
+        assertEquals(rootNode.getPath() + "/kind",
+            res.getResourceMetadata().getResolutionPath());
         assertEquals(selExt, res.getResourceMetadata().getResolutionPathInfo());
 
         Node resNode = res.adaptTo(Node.class);
@@ -1608,15 +1725,18 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Resource resEnkel = resResolver.resolve(null, pathEnkel);
         assertNotNull(resEnkel);
-        assertEquals(rootNode.getPath() + "/kind/enkel", resEnkel.getResourceMetadata().getResolutionPath());
-        assertEquals(selExt, resEnkel.getResourceMetadata().getResolutionPathInfo());
+        assertEquals(rootNode.getPath() + "/kind/enkel",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals(selExt,
+            resEnkel.getResourceMetadata().getResolutionPathInfo());
 
         Node resNodeEnkel = resEnkel.adaptTo(Node.class);
         assertNotNull(resNodeEnkel);
         assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
     }
 
-    public void test_resolve_with_sling_alias_extension_suffix() throws Exception {
+    public void test_resolve_with_sling_alias_extension_suffix()
+            throws Exception {
 
         final String selExt = ".html/some/suffx.pdf";
 
