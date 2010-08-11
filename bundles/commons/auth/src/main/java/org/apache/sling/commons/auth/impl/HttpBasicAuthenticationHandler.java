@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>HttpBasicAuthenticationHandler</code> class supports plain old HTTP
  * Basic authentication. While {@link #extractCredentials(HttpServletRequest)}
- * always accesse the header if called and if present, the
+ * always accesses the header if called and if present, the
  * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)} and
  * {@link #dropCredentials(HttpServletRequest, HttpServletResponse)} methods
  * must be explicitly enabled to send back a 401/UNAUTHORIZED reply to force the
@@ -58,16 +58,8 @@ public class HttpBasicAuthenticationHandler extends
 
     private final String realm;
 
-    private final boolean forceRequestCredentials;
-
-    private final boolean forceDropCredentials;
-
-    public HttpBasicAuthenticationHandler(final String realm,
-            final boolean forceRequestCredentials,
-            final boolean forceDropCredentials) {
+    public HttpBasicAuthenticationHandler(final String realm) {
         this.realm = realm;
-        this.forceRequestCredentials = forceRequestCredentials;
-        this.forceDropCredentials = forceDropCredentials;
     }
 
     // ----------- AuthenticationHandler interface ----------------------------
@@ -144,9 +136,8 @@ public class HttpBasicAuthenticationHandler extends
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
-        if (forceRequestCredentials || isLoginRequested(request)) {
-            sendUnauthorized(response);
-            return true;
+        if (isLoginRequested(request, true)) {
+            return sendUnauthorized(response);
         }
 
         return false;
@@ -164,8 +155,7 @@ public class HttpBasicAuthenticationHandler extends
      */
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-        if (request.getHeader(HEADER_AUTHORIZATION) != null
-            && forceDropCredentials) {
+        if (request.getHeader(HEADER_AUTHORIZATION) != null) {
             sendUnauthorized(response);
         }
     }
@@ -174,8 +164,14 @@ public class HttpBasicAuthenticationHandler extends
      * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set to
      * the value <code>Basic</code> thus requesting plain basic authentication.
      */
-    private boolean isLoginRequested(HttpServletRequest request) {
-        return HttpServletRequest.BASIC_AUTH.equals(request.getParameter(REQUEST_LOGIN_PARAMETER));
+    private boolean isLoginRequested(HttpServletRequest request,
+            boolean optionalLoginParameter) {
+        final String reqLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        if (reqLogin == null) {
+            return optionalLoginParameter;
+        }
+        return "1".equals(reqLogin)
+            || HttpServletRequest.BASIC_AUTH.equals(reqLogin);
     }
 
     /**
@@ -201,7 +197,7 @@ public class HttpBasicAuthenticationHandler extends
         // presume 401/UNAUTHORIZED has not been sent
         boolean authenticationForced = false;
 
-        if (isLoginRequested(request)) {
+        if (isLoginRequested(request, false)) {
 
             authenticationForced = sendUnauthorized(response);
 
@@ -228,15 +224,24 @@ public class HttpBasicAuthenticationHandler extends
      *         been sent.
      */
     private boolean sendUnauthorized(HttpServletResponse response) {
-        response.setHeader(HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC
-            + " realm=\"" + this.realm + "\"");
 
-        try {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            response.flushBuffer();
-            return true;
-        } catch (IOException ioe) {
-            log.error("sendUnauthorized: Failed requesting authentication", ioe);
+        if (response.isCommitted()) {
+
+            log.error("sendUnauthorized: Cannot send 401/UNAUTHORIZED; response is already committed");
+
+        } else {
+
+            response.setHeader(HEADER_WWW_AUTHENTICATE,
+                AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
+
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                response.flushBuffer();
+                return true;
+            } catch (IOException ioe) {
+                log.error("sendUnauthorized: Failed requesting authentication",
+                    ioe);
+            }
         }
 
         return false;
