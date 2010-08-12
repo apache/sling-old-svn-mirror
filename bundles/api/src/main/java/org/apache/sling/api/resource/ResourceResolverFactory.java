@@ -32,12 +32,43 @@ import java.util.Map;
 public interface ResourceResolverFactory {
 
     /**
-     * If this property is set in the authentication information which is passed
-     * into {@link #getResourceResolver(Map)} or
-     * {@link #getAdministrativeResourceResolver(Map)} then after a successful
-     * authentication attempt, a sudo to the provided user id is tried.
+     * Name of the authentication information property providing the name of the
+     * user for which the {@link #getResourceResolver(Map)} and
+     * {@link #getAdministrativeResourceResolver(Map)} create resource
+     * resolvers. on whose behalf the request is being handled. This property
+     * may be missing in which case an anonymous (unauthenticated) resource
+     * resolver is returned if possible.
+     * <p>
+     * The type of this property, if present, is <code>String</code>.
      */
-    String SUDO_USER_ID = "sudo.user.id";
+    String USER = "user.name";
+
+    /**
+     * Name of the authentication information property providing the password of
+     * the user for which to create a resource resolver. If this property is
+     * missing an empty password is assumed.
+     * <p>
+     * The type of this property, if present, is <code>char[]</code>.
+     */
+    String PASSWORD = "user.password";
+
+    /**
+     * Name of the authentication information property causing the
+     * {@link #getResourceResolver(Map)} and
+     * {@link #getAdministrativeResourceResolver(Map)} methods to try to
+     * impersonate the created resource resolver to the requested user and
+     * return the impersonated resource resolver.
+     * <p>
+     * If this impersonation fails the actual creation of the resource resolver
+     * fails.
+     * <p>
+     * If this property is not set in the authentication info or is set to the
+     * same name as the {@link #USER user.name} property this property is
+     * ignored.
+     * <p>
+     * The type of this property, if present, is <code>String</code>.
+     */
+    String USER_IMPERSONATION = "user.impersonation";
 
     /**
      * Returns a new {@link ResourceResolver} instance with further
