@@ -22,13 +22,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.jmock.Expectations;
@@ -44,71 +38,6 @@ class MiscUtil {
     public static String SEARCH_PATHS [] = { "/libs/", "/apps/" };
     public static String RUN_MODES [] = { "dev", "staging" };
 
-    static class MockResourceResolver implements ResourceResolver {
-
-        public Iterator<Resource> findResources(String arg0, String arg1) {
-            return null;
-        }
-
-        public Resource getResource(Resource arg0, String arg1) {
-            return null;
-        }
-
-        public Resource getResource(String arg0) {
-            return null;
-        }
-
-        public String[] getSearchPath() {
-            return SEARCH_PATHS;
-        }
-
-        public Iterator<Resource> listChildren(Resource arg0) {
-            return null;
-        }
-
-        public String map(String arg0) {
-            return null;
-        }
-
-        public String map(HttpServletRequest request, String resourcePath) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public Resource resolve(HttpServletRequest request, String absPath) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        public Iterator<Map<String, Object>> queryResources(String arg0,
-                String arg1) {
-            return null;
-        }
-
-        public Resource resolve(HttpServletRequest arg0) {
-            return null;
-        }
-
-        public Resource resolve(String arg0) {
-            return null;
-        }
-
-        public <AdapterType> AdapterType adaptTo(Class<AdapterType> arg0) {
-            return null;
-        }
-
-        public void close() {
-            // nothing to do
-        }
-
-        public String getUserID() {
-            return null;
-        }
-
-        public boolean isLive() {
-            return true;
-        }
-    }
 
     /** Set a non-public Field */
     static void setField(Object target, String fieldName, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
