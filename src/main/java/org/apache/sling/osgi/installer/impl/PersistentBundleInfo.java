@@ -35,9 +35,8 @@ import java.util.TreeSet;
  */
 class PersistentBundleInfo {
 
-    private Properties digests = new Properties();
+    private final Properties digests = new Properties();
     private final File dataFile;
-   // private final OsgiInstallerContext ctx;
     private static final String VERSION_PREFIX = "V:";
 
     /**

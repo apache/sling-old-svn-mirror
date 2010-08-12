@@ -18,27 +18,12 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import java.io.IOException;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
 
 /**
- * Installer context, gives access to selected methods of the {@link OsgiInstallerImpl}
+ * Context for the installation tasks.
+ * Currently it allows to add a task to the current or the next cycle.
  */
 public interface OsgiInstallerContext {
-
-    /**
-     * Return the bundle context.
-     */
-    BundleContext getBundleContext();
-
-    /**
-     * Finds the bundle with given symbolic name in our BundleContext.
-     */
-    Bundle getMatchingBundle(String bundleSymbolicName);
-    boolean isSnapshot(Version v);
 
 	/** Schedule a task for execution in the current OsgiController cycle */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);
@@ -47,17 +32,4 @@ public interface OsgiInstallerContext {
 	 * 	usually to indicate that a task must be retried
 	 */
 	void addTaskToNextCycle(OsgiInstallerTask t);
-
-	/** Store a bundle's digest and installed version, keyed by symbolic ID */
-	void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException;
-
-	/** Retrieve a bundle's digest that was stored by saveInstalledBundleInfo
-	 *  @return null if no digest was stored
-	 * */
-	String getInstalledBundleDigest(Bundle b) throws IOException;
-
-    /** Retrieve a bundle's version that was stored by saveInstalledBundleInfo
-     *  @return null if no version was stored
-     * */
-    String getInstalledBundleVersion(String symbolicName) throws IOException;
 }

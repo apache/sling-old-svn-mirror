@@ -33,6 +33,8 @@ import org.osgi.framework.Version;
  */
 class RegisteredResourceComparator implements Comparator<RegisteredResource>, Serializable {
 
+    private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+
     private static final long serialVersionUID = 1L;
 
     public int compare(RegisteredResource a, RegisteredResource b) {
@@ -66,7 +68,7 @@ class RegisteredResourceComparator implements Comparator<RegisteredResource>, Se
         if(result == 0) {
             final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
             final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
-            isSnapshot = va.toString().contains(OsgiInstallerImpl.MAVEN_SNAPSHOT_MARKER);
+            isSnapshot = va.toString().contains(MAVEN_SNAPSHOT_MARKER);
             // higher version has more priority, must come first so invert comparison
             result = vb.compareTo(va);
         }

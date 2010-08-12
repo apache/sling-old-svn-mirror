@@ -18,13 +18,13 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.util.tracker.ServiceTracker;
 
 /** Remove a bundle from a RegisteredResource.
  *  Creates a SynchronousRefreshPackagesTask when
@@ -36,12 +36,12 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
 
-    /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
+    private final BundleTaskCreator creator;
 
-    public BundleRemoveTask(final RegisteredResource r, final ServiceTracker packageAdminTracker) {
+    public BundleRemoveTask(final RegisteredResource r,
+            final BundleTaskCreator creator) {
+        this.creator = creator;
         this.resource = r;
-        this.packageAdminTracker = packageAdminTracker;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
     public Result execute(OsgiInstallerContext ctx) {
         logExecution();
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = ctx.getMatchingBundle(symbolicName);
+        final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if(b == null) {
             throw new IllegalStateException("Bundle to remove (" + symbolicName + ") not found");
         }
@@ -67,7 +67,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             ctx.addTaskToNextCycle(this);
             return Result.NOTHING;
         }
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
+        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         return Result.SUCCESS;
     }
 

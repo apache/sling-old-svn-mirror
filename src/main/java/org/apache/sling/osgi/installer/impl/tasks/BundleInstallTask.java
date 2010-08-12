@@ -19,6 +19,7 @@
 package org.apache.sling.osgi.installer.impl.tasks;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -27,7 +28,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.startlevel.StartLevel;
-import org.osgi.util.tracker.ServiceTracker;
 
 /** Install a bundle supplied as a RegisteredResource.
  *  Creates a BundleStartTask to start the bundle */
@@ -37,11 +37,12 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
 
-    private final ServiceTracker startLevelServiceTracker;
+    private final BundleTaskCreator creator;
 
-    public BundleInstallTask(final RegisteredResource r, final ServiceTracker startLevelServiceTracker) {
+    public BundleInstallTask(final RegisteredResource r,
+            final BundleTaskCreator creator) {
+        this.creator = creator;
         this.resource = r;
-        this.startLevelServiceTracker = startLevelServiceTracker;
     }
 
     @Override
@@ -64,9 +65,9 @@ public class BundleInstallTask extends OsgiInstallerTask {
             }
         }
         // get the start level service (if possible) so we can set the initial start level
-        final StartLevel startLevelService = (StartLevel) startLevelServiceTracker.getService();
+        final StartLevel startLevelService = this.creator.getStartLevel();
         try {
-            final Bundle b = ctx.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
+            final Bundle b = this.creator.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
             // optionally set the start level
             if (startLevelService != null && startLevel > 0) {
                 startLevelService.setBundleStartLevel(b, startLevel);
@@ -74,9 +75,9 @@ public class BundleInstallTask extends OsgiInstallerTask {
                 Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
             }
             final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
-            ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
+            this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
             logExecution();
-            ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
+            ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));
             return Result.SUCCESS;
         } catch (Exception ex) {
             // if something goes wrong we simply try it again

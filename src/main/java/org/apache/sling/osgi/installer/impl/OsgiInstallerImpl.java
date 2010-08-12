@@ -20,19 +20,15 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
 
 /** OsgiInstaller service implementation */
-public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics, OsgiInstallerContext {
-
-    public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+public class OsgiInstallerImpl
+    implements OsgiInstaller, OsgiInstallerStatistics {
 
     /** The bundle context. */
 	private final BundleContext bundleContext;
@@ -40,17 +36,14 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	/** The actual worker thread. */
     private final OsgiInstallerThread installerThread;
 
-    private PersistentBundleInfo bundleDigestsStorage;
-
     /**
      * Construct a new service
      */
     public OsgiInstallerImpl(final BundleContext bc)
     throws IOException {
         this.bundleContext = bc;
-        bundleDigestsStorage = new PersistentBundleInfo(bc.getDataFile("bundle-digests.properties"));
 
-        installerThread = new OsgiInstallerThread(this);
+        installerThread = new OsgiInstallerThread(bc);
         installerThread.setDaemon(true);
         installerThread.start();
     }
@@ -60,20 +53,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
      */
     public void deactivate() {
         installerThread.deactivate();
-
-        final TreeSet<String> installedBundlesSymbolicNames = new TreeSet<String>();
-        // do we really want to iterate here? Over all bundles? TODO
-        for(Bundle b : bundleContext.getBundles()) {
-            final String name = b.getSymbolicName();
-            if ( name != null ) {
-                installedBundlesSymbolicNames.add(b.getSymbolicName());
-            }
-        }
-        try {
-            bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
-        } catch (IOException e) {
-            Logger.logWarn(OsgiInstaller.class.getName() + " service failed to save state.", e);
-        }
 
         Logger.logInfo("Waiting for installer thread to stop");
         try {
@@ -85,28 +64,6 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
         Logger.logWarn(OsgiInstaller.class.getName()
                 + " service deactivated - this warning can be ignored if system is shutting down");
     }
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToCurrentCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
-	 */
-	public void addTaskToCurrentCycle(OsgiInstallerTask t) {
-		installerThread.addTaskToCurrentCycle(t);
-	}
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToNextCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
-	 */
-	public void addTaskToNextCycle(OsgiInstallerTask t) {
-	    Logger.logDebug("adding task to next cycle:" + t);
-		installerThread.addTaskToNextCycle(t);
-	}
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getBundleContext()
-	 */
-	public BundleContext getBundleContext() {
-		return bundleContext;
-	}
 
 	/**
 	 * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
@@ -134,54 +91,5 @@ public class OsgiInstallerImpl implements OsgiInstaller, OsgiInstallerStatistics
 	 */
 	public long[] getCounters() {
         return this.installerThread.getCounters();
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getMatchingBundle(java.lang.String)
-     */
-    public Bundle getMatchingBundle(String bundleSymbolicName) {
-        if (bundleSymbolicName != null) {
-            Bundle[] bundles = bundleContext.getBundles();
-            for (Bundle bundle : bundles) {
-                if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
-                    return bundle;
-                }
-            }
-        }
-        return null;
-    }
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#isSnapshot(org.osgi.framework.Version)
-	 */
-	public boolean isSnapshot(Version v) {
-		return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
-	}
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getInstalledBundleDigest(org.osgi.framework.Bundle)
-     */
-    public String getInstalledBundleDigest(Bundle b) throws IOException {
-        if(bundleDigestsStorage == null) {
-            return null;
-        }
-        return bundleDigestsStorage.getDigest(b.getSymbolicName());
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getInstalledBundleVersion(java.lang.String)
-     */
-    public String getInstalledBundleVersion(String symbolicName) throws IOException {
-        if(bundleDigestsStorage == null) {
-            return null;
-        }
-        return bundleDigestsStorage.getInstalledVersion(symbolicName);
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#saveInstalledBundleInfo(org.osgi.framework.Bundle, java.lang.String, java.lang.String)
-     */
-    public void saveInstalledBundleInfo(Bundle b, String digest, String version) throws IOException {
-        bundleDigestsStorage.putInfo(b.getSymbolicName(), digest, version);
     }
 }

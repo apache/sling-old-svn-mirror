@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.text.DecimalFormat;
 
 import org.apache.sling.osgi.installer.impl.Activator;
+import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -41,8 +42,11 @@ public class BundleStartTask extends OsgiInstallerTask {
 	private long eventsCountForRetrying;
 	private int retryCount = 0;
 
-	public BundleStartTask(long bundleId) {
+	private final BundleTaskCreator creator;
+
+	public BundleStartTask(final long bundleId, final BundleTaskCreator btc) {
 		this.bundleId = bundleId;
+		this.creator = btc;
 		sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
 	}
 
@@ -57,7 +61,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 	}
 
 	public Result execute(OsgiInstallerContext ctx) {
-		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
+		final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
 		boolean needToRetry = false;
 
         if(bundleId == 0) {

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -25,13 +26,12 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
 /** Execute an OSGi "refresh packages" operation, synchronously */
 public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
 
     /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
+    private final BundleTaskCreator bundleTaskCreator;
 
     private static final String REFRESH_PACKAGES_ORDER = "60-";
 
@@ -40,8 +40,8 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 
 	private volatile int packageRefreshEventsCount;
 
-	public SynchronousRefreshPackagesTask(final ServiceTracker packageAdminTracker) {
-	    this.packageAdminTracker = packageAdminTracker;
+	public SynchronousRefreshPackagesTask(final BundleTaskCreator btc) {
+	    this.bundleTaskCreator = btc;
 	}
 
     /**
@@ -69,7 +69,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 	}
 
     private PackageAdmin getPackageAdmin() {
-        return (PackageAdmin)this.packageAdminTracker.getService();
+        return this.bundleTaskCreator.getPackageAdmin();
     }
 
     /**
@@ -84,9 +84,9 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
         // Refreshing packages might cause some bundles to be stopped,
         // make sure all currently active ones are restarted after
         // this task executes
-    	for(Bundle b : ctx.getBundleContext().getBundles()) {
+    	for(Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
     		if(b.getState() == Bundle.ACTIVE) {
-    			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId());
+    			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
     			Logger.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
     		}
@@ -94,7 +94,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 
         // It seems like (at least with Felix 1.0.4) we won't get a FrameworkEvent.PACKAGES_REFRESHED
         // if one happened very recently and there's nothing to refresh
-        ctx.getBundleContext().addFrameworkListener(this);
+        this.bundleTaskCreator.getBundleContext().addFrameworkListener(this);
         try {
             this.getPackageAdmin().refreshPackages(null);
             while(true) {
@@ -117,7 +117,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
                 }
             }
         } finally {
-        	ctx.getBundleContext().removeFrameworkListener(this);
+        	this.bundleTaskCreator.getBundleContext().removeFrameworkListener(this);
         }
         return Result.SUCCESS;
 	}
