@@ -19,6 +19,7 @@
 package org.apache.sling.osgi.installer.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -42,7 +43,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
 
     private final Map<String, BundleInfo> fakeBundleInfo = new HashMap<String, BundleInfo>();
 
-    public MockBundleTaskCreator() {
+    public MockBundleTaskCreator() throws IOException {
         super(new BundleContext() {
 
             public boolean ungetService(ServiceReference reference) {
@@ -112,8 +113,13 @@ class MockBundleTaskCreator extends BundleTaskCreator {
             }
 
             public File getDataFile(String filename) {
-                // TODO Auto-generated method stub
-                return null;
+                try {
+                    final File f = File.createTempFile(MockOsgiInstallerContext.class.getSimpleName(), ".data");
+                    f.deleteOnExit();
+                    return f;
+                } catch (final IOException ioe) {
+                    return null;
+                }
             }
 
             public Bundle[] getBundles() {

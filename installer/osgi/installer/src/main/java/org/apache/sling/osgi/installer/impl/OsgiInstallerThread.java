@@ -46,9 +46,11 @@ import org.osgi.framework.BundleListener;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstallerStatistics {
+class OsgiInstallerThread
+    extends Thread
+    implements BundleListener, OsgiInstallerStatistics, OsgiInstallerContext {
 
-    private final OsgiInstallerContext ctx;
+    private final BundleContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
     private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
@@ -67,20 +69,20 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
 
     private long [] counters = new long[COUNTERS_SIZE];
 
-    OsgiInstallerThread(final OsgiInstallerContext ctx) {
-        this.configTaskCreator = new ConfigTaskCreator(ctx.getBundleContext());
-        this.bundleTaskCreator = new BundleTaskCreator(ctx.getBundleContext());
+    OsgiInstallerThread(final BundleContext ctx) {
+        this.configTaskCreator = new ConfigTaskCreator(ctx);
+        this.bundleTaskCreator = new BundleTaskCreator(ctx);
         setName(getClass().getSimpleName());
         this.ctx = ctx;
-        final File f = ctx.getBundleContext().getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(ctx.getBundleContext(), f);
+        final File f = ctx.getDataFile("RegisteredResourceList.ser");
+        persistentList = new PersistentResourceList(ctx, f);
         registeredResources = persistentList.getData();
     }
 
     void deactivate() {
         this.configTaskCreator.deactivate();
         this.bundleTaskCreator.deactivate();
-        ctx.getBundleContext().removeBundleListener(this);
+        ctx.removeBundleListener(this);
         active = false;
         synchronized (newResources) {
             newResources.notify();
@@ -104,7 +106,7 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
 
     @Override
     public void run() {
-        ctx.getBundleContext().addBundleListener(this);
+        ctx.addBundleListener(this);
 
         while(active) {
             try {
@@ -150,7 +152,10 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
         Logger.logInfo("Deactivated, exiting");
     }
 
-    void addTaskToCurrentCycle(OsgiInstallerTask t) {
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToCurrentCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
+     */
+    public void addTaskToCurrentCycle(OsgiInstallerTask t) {
         Logger.logDebug("adding task to current cycle:" + t);
         synchronized (tasks) {
             tasks.add(t);
@@ -173,7 +178,7 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
     void addNewResource(final InstallableResource r, final String scheme) {
         RegisteredResource rr = null;
         try {
-            rr = new RegisteredResourceImpl(ctx.getBundleContext(), r, scheme);
+            rr = new RegisteredResourceImpl(ctx, r, scheme);
         } catch(IOException ioe) {
             Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
             return;
@@ -194,7 +199,7 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(ctx.getBundleContext(), r, urlScheme);
+                rr = new RegisteredResourceImpl(ctx, r, urlScheme);
             } catch(IOException ioe) {
                 Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;
@@ -284,7 +289,11 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
         }
     }
 
-    void addTaskToNextCycle(OsgiInstallerTask t) {
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToNextCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
+     */
+    public void addTaskToNextCycle(OsgiInstallerTask t) {
+        Logger.logDebug("adding task to next cycle:" + t);
         synchronized (tasksForNextCycle) {
             tasksForNextCycle.add(t);
         }
@@ -302,7 +311,7 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
         final List<OsgiInstallerTask> toKeep = new ArrayList<OsgiInstallerTask>();
         synchronized (tasksForNextCycle) {
             for(OsgiInstallerTask t : tasksForNextCycle) {
-                if(t.isExecutable(ctx)) {
+                if(t.isExecutable(this)) {
                     tasks.add(t);
                 } else {
                     toKeep.add(t);
@@ -321,9 +330,9 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
             }
             final String rt = group.first().getType();
             if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
-                bundleTaskCreator.createTasks(ctx, group, tasks);
+                bundleTaskCreator.createTasks(this, group, tasks);
             } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
-                configTaskCreator.createTasks(ctx, group, tasks);
+                configTaskCreator.createTasks(this, group, tasks);
             }
         }
     }
@@ -336,7 +345,7 @@ class OsgiInstallerThread extends Thread implements BundleListener, OsgiInstalle
                 t = tasks.first();
                 tasks.remove(t);
             }
-            final OsgiInstallerTask.Result result = t.execute(ctx);
+            final OsgiInstallerTask.Result result = t.execute(this);
             switch (result) {
                 case SUCCESS: this.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
                               break;

@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.InputStream;
 
+import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -27,7 +28,6 @@ import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.util.tracker.ServiceTracker;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -37,15 +37,15 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "40-";
 
-    /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
-
     private final RegisteredResource resource;
     private boolean canRetry = true;
 
-    public BundleUpdateTask(final RegisteredResource r, final ServiceTracker packageAdminTracker) {
+    private final BundleTaskCreator creator;
+
+    public BundleUpdateTask(final RegisteredResource r,
+            final BundleTaskCreator creator) {
+        this.creator = creator;
         this.resource = r;
-        this.packageAdminTracker = packageAdminTracker;
     }
 
     public RegisteredResource getResource() {
@@ -60,7 +60,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     @Override
     public Result execute(OsgiInstallerContext ctx) {
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = ctx.getMatchingBundle(symbolicName);
+        final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if(b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
@@ -69,7 +69,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         boolean snapshot = false;
     	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
     	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
-    	snapshot = ctx.isSnapshot(newVersion);
+    	snapshot = this.creator.isSnapshot(newVersion);
     	if(currentVersion.equals(newVersion) && !snapshot) {
     	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
     		return Result.NOTHING;
@@ -80,7 +80,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             // of RegisteredResources is not saved, this might not have been detected earlier,
             // if the snapshot was installed and the installer was later restarted
             if(snapshot) {
-                final String oldDigest = ctx.getInstalledBundleDigest(b);
+                final String oldDigest = this.creator.getInstalledBundleDigest(b);
                 if(resource.getDigest().equals(oldDigest)) {
                     Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
                     return Result.NOTHING;
@@ -91,7 +91,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             if(b.getState() == Bundle.ACTIVE) {
                 // bundle was active before the update - restart it once updated, but
                 // in sequence, not right now
-                ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
+                ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));
             }
             b.stop();
             final InputStream is = resource.getInputStream();
@@ -102,7 +102,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
                         + resource);
             }
             b.update(is);
-            ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
+            this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
     	} catch (Exception e) {
             if ( canRetry ) {
                 ctx.addTaskToCurrentCycle(this);
@@ -111,7 +111,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
             return Result.NOTHING;
     	}
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.packageAdminTracker));
+        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
         return Result.SUCCESS;
     }

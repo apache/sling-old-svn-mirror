@@ -78,7 +78,8 @@ public interface RegisteredResource {
      */
     String getDigest();
 
-    /**Return the priority of this resource. Priorities are used to decide which
+    /**
+     * Return the priority of this resource. Priorities are used to decide which
      * resource to install when several are registered for the same OSGi entity
      * (bundle, config, etc.)
      */
