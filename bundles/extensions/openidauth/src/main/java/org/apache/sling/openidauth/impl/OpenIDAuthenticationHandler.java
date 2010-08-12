@@ -652,28 +652,19 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     private AuthenticationInfo getAuthInfoFromUser(final OpenIdUser user) {
-        final SimpleCredentials credentials = getCredentials(user);
         final AuthenticationInfo info = new AuthenticationInfo(
-            OpenIDConstants.OPENID_AUTH, credentials.getUserID());
-        info.put(AuthenticationInfo.CREDENTIALS, credentials);
-        return info;
-    }
-
-    private SimpleCredentials getCredentials(final OpenIdUser user) {
-        final String userName = getUserName(user);
-        final SimpleCredentials creds = new SimpleCredentials(userName,
-            new char[0]);
+            OpenIDConstants.OPENID_AUTH, getUserName(user));
 
         // if there is no login module plugin service, set the credentials
         // attribute to the user's OpenID identity, otherwise set it to
         // the actual OpenIDUser object
         if (loginModule == null) {
-            creds.setAttribute(openIdAttribute, user.getIdentity());
+            info.put(openIdAttribute, user.getIdentity());
         } else {
-            creds.setAttribute(openIdAttribute, user);
+            info.put(openIdAttribute, user);
         }
 
-        return creds;
+        return info;
     }
 
     OpenIdUser getOpenIdUser(final Credentials credentials) {
