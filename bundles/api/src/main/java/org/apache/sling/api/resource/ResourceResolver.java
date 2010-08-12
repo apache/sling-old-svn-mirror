@@ -36,11 +36,14 @@ import org.apache.sling.api.adapter.Adaptable;
  * adapters to other types. A JCR based resource resolver might support adapting
  * to the JCR Session used by the resolver to access the JCR Repository.
  * <p>
- * A <code>ResourceResolver</code> is generally not thread safe! As a consequence,
- * an application which uses the resolver, its returned resources and/or objects
- * resulting from adapting either the resolver or a resource, must provide
- * proper synchronization to ensure no more than one thread concurrently operates
- * against a single resolver, resource or resulting objects.
+ * A <code>ResourceResolver</code> is generally not thread safe! As a
+ * consequence, an application which uses the resolver, its returned resources
+ * and/or objects resulting from adapting either the resolver or a resource,
+ * must provide proper synchronization to ensure no more than one thread
+ * concurrently operates against a single resolver, resource or resulting
+ * objects.
+ * <p>
+ * <b>Accessing Resources</b>
  * <p>
  * This interface defines two kinds of methods to access resources: The
  * <code>resolve</code> methods and the <code>getResource</code> methods. The
@@ -68,6 +71,27 @@ import org.apache.sling.api.adapter.Adaptable;
  * <td>Returns <code>null</code></td>
  * </tr>
  * </table>
+ * <p>
+ * <b>Lifecycle</b>
+ * <p>
+ * A Resource Resolver has a life cycle which begins with the creation of the
+ * Resource Resolver using any of the factory methods and ends with calling the
+ * {@link #close()} method. It is very important to call the {@link #close()}
+ * method once the resource resolver is not used any more to ensure any system
+ * resources are properly clean up.
+ * <p>
+ * To check whether a Resource Resolver can still be used, the {@link #isLive()}
+ * method can be called.
+ * <p>
+ * <b>Resource Resolver Attributes</b>
+ * <p>
+ * The authentication info properties provided to the
+ * {@link ResourceResolverFactory#getResourceResolver(Map)},
+ * {@link ResourceResolverFactory#getAdministrativeResourceResolver(Map)}, or
+ * {@link #clone(Map)} are available through the {@link #getAttributeNames()}
+ * and {@link #getAttribute(String)} methods with the exception of security
+ * sensitive properties like {@link ResourceResolverFactory#PASSWORD} which is
+ * not exposed.
  */
 public interface ResourceResolver extends Adaptable {
 
@@ -83,33 +107,15 @@ public interface ResourceResolver extends Adaptable {
         + "/use.workspace";
 
     /**
-     * Returns a new <code>ResourceResolver</code> instance based on the given
-     * <code>authenticationInfo</code> map and the original authentication info
-     * used to create this instance.
-     * <p>
-     * The new resource resolver is created according to the following
-     * algorithm:
+     * The name of the resource resolver attribute which is set if the resource
+     * resolver has been impersonated as per the
+     * {@link ResourceResolverFactory#USER_IMPERSONATION} property. The value of
+     * this attribute is the name of the primary user provided to the resource
+     * resolver factory method.
      *
-     * <pre>
-     * Map&lt;String, Object&gt; newAuthenticationInfo = new HashMap(
-     *     authenticationInfoOfThisInstance);
-     * newAuthenticationInfo.addAll(authenticationInfo);
-     * return resourceResolverFactory.getResourceResolver(newAuthenticationInfo);
-     * </pre>
-     *
-     * @param authenticationInfo The map or credential data to overlay the
-     *            orignal credential data with for the creation of a new
-     *            resource resolver. This may be <code>null</code> in which case
-     *            the same credential data is used as was used to create this
-     *            instance.
-     * @return A new <code>ResourceResolver</code>
-     * @throws LoginException If an error occurrs creating the new
-     *             <code>ResourceResolver</code> with the provided credential
-     *             data.
      * @since 2.1
      */
-    ResourceResolver clone(Map<String, Object> authenticationInfo)
-            throws LoginException;
+    String USER_IMPERSONATOR = "user.impersonator";
 
     /**
      * Resolves the resource from the given <code>absPath</code> optionally
@@ -180,10 +186,9 @@ public interface ResourceResolver extends Adaptable {
      * anymore. Implementations are expected to implement this method calling
      * the {@link #resolve(HttpServletRequest, String)} where the
      * <code>absPath</code> argument is the result of calling the
-     * <code>getPathInfo()</code> on the <code>request</code> object.
-     *
-     * If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the
-     * given workspace is used to resolve the resource.
+     * <code>getPathInfo()</code> on the <code>request</code> object. If the
+     * {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the given
+     * workspace is used to resolve the resource.
      *
      * @param request The http servlet request object used to resolve the
      *            resource for. This must not be <code>null</code>.
@@ -324,6 +329,7 @@ public interface ResourceResolver extends Adaptable {
      * character. Thus to create an absolute path from a search path entry and a
      * relative path, the search path entry and relative path may just be
      * concatenated.
+     *
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
@@ -403,6 +409,37 @@ public interface ResourceResolver extends Adaptable {
     Iterator<Map<String, Object>> queryResources(String query, String language);
 
     /**
+     * Returns a new <code>ResourceResolver</code> instance based on the given
+     * <code>authenticationInfo</code> map and the original authentication info
+     * used to create this instance.
+     * <p>
+     * The new resource resolver is created according to the following
+     * algorithm:
+     *
+     * <pre>
+     * Map&lt;String, Object&gt; newAuthenticationInfo = new HashMap(
+     *     authenticationInfoOfThisInstance);
+     * newAuthenticationInfo.addAll(authenticationInfo);
+     * return resourceResolverFactory.getResourceResolver(newAuthenticationInfo);
+     * </pre>
+     *
+     * @param authenticationInfo The map or credential data to overlay the
+     *            orignal credential data with for the creation of a new
+     *            resource resolver. This may be <code>null</code> in which case
+     *            the same credential data is used as was used to create this
+     *            instance.
+     * @return A new <code>ResourceResolver</code>
+     * @throws LoginException If an error occurrs creating the new
+     *             <code>ResourceResolver</code> with the provided credential
+     *             data.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.1
+     */
+    ResourceResolver clone(Map<String, Object> authenticationInfo)
+            throws LoginException;
+
+    /**
      * Returns <code>true</code> if this resource resolver has not been closed
      * yet.
      * <p>
@@ -438,4 +475,30 @@ public interface ResourceResolver extends Adaptable {
      * @since 2.1
      */
     String getUserID();
+
+    /**
+     * Returns an iterator of attribute names whose value can be retrieved
+     * calling the {@link #getAttribute(String)} method. This iterator will not
+     * include any attributes which are not accessible.
+     *
+     * @return An iterator of attribute names
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     */
+    Iterator<String> getAttributeNames();
+
+    /**
+     * Returns the value of the given resource resolver attribute or
+     * <code>null</code> if the attribute is not set (or not visible as is the
+     * case of the {@link ResourceResolverFactory#PASSWORD} or other security
+     * sensitive attributes).
+     *
+     * @param name The name of the attribute to access
+     * @return The value of the attribute or <code>null</code> if the attribute
+     *         is not set or not accessible.
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     */
+    Object getAttribute(String name);
 }
