@@ -75,7 +75,7 @@
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.jcr.resource;version=${project.version}
+                            org.apache.sling.jcr.resource;version=2.1
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.resource.internal.*
