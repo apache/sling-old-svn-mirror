@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -87,8 +88,9 @@ public class JcrResourceListener implements EventListener {
     throws LoginException, RepositoryException {
         this.workspaceName = workspaceName;
         final Map<String,Object> authInfo = new HashMap<String,Object>();
-        if ( workspaceName != null ) {
-            authInfo.put(JcrResourceResolverFactoryImpl.AUTH_INFO_WORKSPACE, workspaceName);
+        if (workspaceName != null) {
+            authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE,
+                workspaceName);
         }
         this.resolver = factory.getAdministrativeResourceResolver(authInfo);
         this.session = resolver.adaptTo(Session.class);
@@ -158,7 +160,7 @@ public class JcrResourceListener implements EventListener {
             // paths from changed and added
             addedEvents.remove(e.getKey());
             changedEvents.remove(e.getKey());
-          
+
             // Launch an OSGi event
             final Dictionary<String, String> properties = new Hashtable<String, String>();
             properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(e.getKey()));
@@ -169,7 +171,7 @@ public class JcrResourceListener implements EventListener {
         // add is stronger than changed
         for (Entry<String, Event> e : addedEvents.entrySet()) {
             changedEvents.remove(e.getKey());
-            
+
             // Launch an OSGi event.
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED, localEA);
         }

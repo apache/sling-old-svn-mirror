@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -271,6 +272,14 @@ public class ResourceProviderEntryTest extends TestCase {
         public String getUserID() {
             return null;
         }
+
+        public Object getAttribute(String name) {
+            return null;
+        }
+
+        public Iterator<String> getAttributeNames() {
+            return Collections.<String> emptyList().iterator();
+        }
     }
 
     private static class TestResource extends AbstractResource {
@@ -307,6 +316,5 @@ public class ResourceProviderEntryTest extends TestCase {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
-
     }
 }

@@ -23,13 +23,16 @@ import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
@@ -42,6 +45,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
@@ -243,7 +247,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals("Path must be the the root path", "/", res2.getPath());
     }
 
-    public void testClone_based_on_anonymous() throws Exception {
+    public void test_clone_based_on_anonymous() throws Exception {
         final ResourceResolver anon0 = resFac.getResourceResolver((Map<String, Object>) null);
         final Session anon0Session = anon0.adaptTo(Session.class);
         assertEquals("anonymous", anon0.getUserID());
@@ -258,8 +262,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // same workspace but admin user
         final Map<String, Object> admin0Cred = new HashMap<String, Object>();
-        admin0Cred.put("user.name", "admin");
-        admin0Cred.put("user.password", "admin".toCharArray());
+        admin0Cred.put(ResourceResolverFactory.USER, "admin");
+        admin0Cred.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
         final ResourceResolver admin0 = anon0.clone(admin0Cred);
         final Session admin0Session = admin0.adaptTo(Session.class);
         assertEquals("admin", admin0.getUserID());
@@ -269,7 +273,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // same user but different workspace
         final Map<String, Object> anon2Cred = new HashMap<String, Object>();
-        anon2Cred.put("internal.user.jcr.workspace", "ws2");
+        anon2Cred.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE, "ws2");
         final ResourceResolver anon2 = anon0.clone(anon2Cred);
         final Session anon2Session = anon2.adaptTo(Session.class);
         assertEquals("anonymous", anon2.getUserID());
@@ -278,9 +282,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // different user and workspace
         final Map<String, Object> admin1Cred = new HashMap<String, Object>();
-        admin1Cred.put("user.name", "admin");
-        admin1Cred.put("user.password", "admin".toCharArray());
-        admin1Cred.put("internal.user.jcr.workspace", "ws2");
+        admin1Cred.put(ResourceResolverFactory.USER, "admin");
+        admin1Cred.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
+        admin1Cred.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE,
+            "ws2");
         final ResourceResolver admin1 = anon0.clone(admin1Cred);
         final Session admin1Session = admin1.adaptTo(Session.class);
         assertEquals("admin", admin1.getUserID());
@@ -290,7 +295,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         anon0.close();
     }
 
-    public void testClone_based_on_admin() throws Exception {
+    public void test_clone_based_on_admin() throws Exception {
         final ResourceResolver admin0 = resFac.getAdministrativeResourceResolver((Map<String, Object>) null);
         final Session admin0Session = admin0.adaptTo(Session.class);
         assertEquals("admin", admin0.getUserID());
@@ -305,7 +310,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // same workspace but anonymous user
         final Map<String, Object> anon0Cred = new HashMap<String, Object>();
-        anon0Cred.put("user.name", "anonymous");
+        anon0Cred.put(ResourceResolverFactory.USER, "anonymous");
         final ResourceResolver anon0 = admin0.clone(anon0Cred);
         final Session anon0Session = anon0.adaptTo(Session.class);
         assertEquals("anonymous", anon0.getUserID());
@@ -315,7 +320,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // same user but different workspace
         final Map<String, Object> admin2Cred = new HashMap<String, Object>();
-        admin2Cred.put("internal.user.jcr.workspace", "ws2");
+        admin2Cred.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE,
+            "ws2");
         final ResourceResolver admin2 = admin0.clone(admin2Cred);
         final Session admin2Session = admin2.adaptTo(Session.class);
         assertEquals("admin", admin2.getUserID());
@@ -324,15 +330,109 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // different user and workspace
         final Map<String, Object> anon1Cred = new HashMap<String, Object>();
-        anon1Cred.put("user.name", "anonymous");
-        anon1Cred.put("internal.user.jcr.workspace", "ws2");
+        anon1Cred.put(ResourceResolverFactory.USER, "anonymous");
+        anon1Cred.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE, "ws2");
         final ResourceResolver anon1 = admin0.clone(anon1Cred);
         final Session anon1Session = anon1.adaptTo(Session.class);
         assertEquals("anonymous", anon1.getUserID());
         assertEquals("ws2", anon1Session.getWorkspace().getName());
         anon1.close();
 
-        anon0.close();
+        admin0.close();
+    }
+
+    public void test_attributes_from_session() throws Exception {
+        // test assumes admin password is admin (which is default)
+
+        final Credentials creds0 = new SimpleCredentials("admin",
+            "admin".toCharArray());
+        final Session session0 = getRepository().login(creds0);
+        final ResourceResolver resolver0 = resFac.getResourceResolver(session0);
+
+        final Iterator<String> attrNames0 = resolver0.getAttributeNames();
+        assertTrue("Expected one attribute", attrNames0.hasNext());
+        final String attrName0 = attrNames0.next();
+        assertEquals("Expected attribute name to address session",
+            JcrResourceConstants.AUTHENTICATION_INFO_SESSION, attrName0);
+        assertFalse("Expected no more attributes", attrNames0.hasNext());
+        assertEquals("Expected session attribute to be the session", session0,
+            resolver0.getAttribute(attrName0));
+
+        assertEquals("Expected no Session attributes", 0,
+            session0.getAttributeNames().length);
+
+        resolver0.close();
+        assertTrue("Expect session to still be live after resolver close",
+            session0.isLive());
+        session0.logout();
+
+        final SimpleCredentials creds1 = new SimpleCredentials("admin",
+            "admin".toCharArray());
+        creds1.setAttribute("testAttributeString", "AStringValue");
+        creds1.setAttribute("testAttributeNumber", 999);
+        final Session session1 = getRepository().login(creds1);
+        final ResourceResolver resolver1 = resFac.getResourceResolver(session1);
+
+        assertEquals("Expected 2 Session attributes", 2,
+            session1.getAttributeNames().length);
+        assertEquals("AStringValue",
+            session1.getAttribute("testAttributeString"));
+        assertEquals(999, session1.getAttribute("testAttributeNumber"));
+
+        assertEquals(
+            session1,
+            resolver1.getAttribute(JcrResourceConstants.AUTHENTICATION_INFO_SESSION));
+        assertEquals("AStringValue",
+            resolver1.getAttribute("testAttributeString"));
+        assertEquals(999, resolver1.getAttribute("testAttributeNumber"));
+
+        final Iterator<String> attrNames1 = resolver1.getAttributeNames();
+        assertTrue("Expecting first attribute", attrNames1.hasNext());
+        attrNames1.next();
+        assertTrue("Expecting second attribute", attrNames1.hasNext());
+        attrNames1.next();
+        assertTrue("Expecting third attribute", attrNames1.hasNext());
+        attrNames1.next();
+        assertFalse("Expecting no more attribute", attrNames1.hasNext());
+
+        resolver1.close();
+        assertTrue("Expect session to still be live after resolver close",
+            session1.isLive());
+        session1.logout();
+    }
+
+    public void test_attributes_from_authInfo() throws Exception {
+        final Map<String, Object> authInfo = new HashMap<String, Object>();
+        authInfo.put(ResourceResolverFactory.USER, "admin");
+        authInfo.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
+        authInfo.put("testAttributeString", "AStringValue");
+        authInfo.put("testAttributeNumber", 999);
+        final ResourceResolver rr = resFac.getResourceResolver(authInfo);
+        final Session s = rr.adaptTo(Session.class);
+
+        assertEquals("Expect 3 session attributes", 3,
+            s.getAttributeNames().length);
+        assertEquals("AStringValue", s.getAttribute("testAttributeString"));
+        assertEquals(999, s.getAttribute("testAttributeNumber"));
+        assertEquals("admin", s.getAttribute(ResourceResolverFactory.USER));
+        assertNull(session.getAttribute(ResourceResolverFactory.PASSWORD));
+
+        assertEquals("AStringValue", rr.getAttribute("testAttributeString"));
+        assertEquals(999, rr.getAttribute("testAttributeNumber"));
+        assertEquals("admin", rr.getAttribute(ResourceResolverFactory.USER));
+        assertNull(rr.getAttribute(ResourceResolverFactory.PASSWORD));
+
+        final HashSet<String> validNames = new HashSet<String>();
+        validNames.add(ResourceResolverFactory.USER);
+        validNames.add("testAttributeString");
+        validNames.add("testAttributeNumber");
+        final Iterator<String> names = rr.getAttributeNames();
+        assertTrue(validNames.remove(names.next()));
+        assertTrue(validNames.remove(names.next()));
+        assertTrue(validNames.remove(names.next()));
+        assertFalse("Expect no more names", names.hasNext());
+        assertTrue("Expect validNames set to be empty now",
+            validNames.isEmpty());
     }
 
     public void testGetResource() throws Exception {
