@@ -778,7 +778,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         // if a script user is configured we use this user to read the scripts
         final String scriptUser = OsgiUtil.toString(props.get(PROP_SCRIPT_USER), null);
         if (scriptUser != null && scriptUser.length() > 0) {
-            authInfo.put(ResourceResolverFactory.SUDO_USER_ID, scriptUser);
+            authInfo.put(ResourceResolverFactory.USER_IMPERSONATION, scriptUser);
         }
         return authInfo;
     }
