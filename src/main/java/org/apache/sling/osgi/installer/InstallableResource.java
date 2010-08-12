@@ -18,15 +18,21 @@
  */
 package org.apache.sling.osgi.installer;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.felix.cm.file.ConfigurationHandler;
 
 
 /**
@@ -71,8 +77,8 @@ public class InstallableResource {
      * @throws IllegalArgumentException if something is wrong
      */
     public InstallableResource(final String id,
-            final InputStream is,
-            final Dictionary<String, Object> dict,
+            InputStream is,
+            Dictionary<String, Object> dict,
             String digest,
             String type,
             final Integer priority) {
@@ -94,7 +100,11 @@ public class InstallableResource {
 
         final String resourceType = (type != null ? type : computeResourceType(getExtension(id)));
         if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
-            throw new IllegalArgumentException("Resource type config not supported for input streams: " + id);
+            dict = readDictionary(is, getExtension(id));
+            if ( dict == null ) {
+                throw new IllegalArgumentException("Unable to read dictionary from input stream: " + id);
+            }
+            is = null;
         }
         if ( resourceType == null ) {
             throw new IllegalArgumentException("Resource type must not be null");
@@ -185,7 +195,10 @@ public class InstallableResource {
         if (extension.equals("jar")) {
             return InstallableResource.TYPE_BUNDLE;
         }
-        if ( extension.equals("cfg") || extension.equals("config") || extension.equals("xml") ) {
+        if ( extension.equals("cfg")
+             || extension.equals("config")
+             || extension.equals("xml")
+             || extension.equals("properties")) {
             return InstallableResource.TYPE_CONFIG;
         }
         return extension;
@@ -222,5 +235,53 @@ public class InstallableResource {
         } catch (Exception ignore) {
             return data.toString();
         }
+    }
+
+    /**
+     * Read dictionary from an input stream.
+     * We use the same logic as Apache Felix FileInstall here:
+     * - *.cfg files are treated as property files
+     * - *.config files are handled by the Apache Felix ConfigAdmin file reader
+     * @param is
+     * @param extension
+     * @return
+     * @throws IOException
+     */
+    private static Dictionary<String, Object> readDictionary(
+            final InputStream is, final String extension) {
+        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
+        final InputStream in = new BufferedInputStream(is);
+        try {
+            if ( !extension.equals("config") ) {
+                final Properties p = new Properties();
+                in.mark(1);
+                boolean isXml = in.read() == '<';
+                in.reset();
+                if (isXml) {
+                    p.loadFromXML(in);
+                } else {
+                    p.load(in);
+                }
+                final Enumeration<Object> i = p.keys();
+                while ( i.hasMoreElements() ) {
+                    final Object key = i.nextElement();
+                    ht.put(key.toString(), p.get(key));
+                }
+            } else {
+                @SuppressWarnings("unchecked")
+                final Dictionary<String, Object> config = ConfigurationHandler.read(in);
+                final Enumeration<String> i = config.keys();
+                while ( i.hasMoreElements() ) {
+                    final String key = i.nextElement();
+                    ht.put(key, config.get(key));
+                }
+            }
+        } catch ( IOException ignore ) {
+            return null;
+        } finally {
+            try { in.close(); } catch (IOException ignore) {}
+        }
+
+        return ht;
     }
 }
