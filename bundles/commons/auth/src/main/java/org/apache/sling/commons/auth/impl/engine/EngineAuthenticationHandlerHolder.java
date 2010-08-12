@@ -68,9 +68,12 @@ public final class EngineAuthenticationHandlerHolder extends
             return AuthenticationInfo.DOING_AUTH;
         }
 
+        // backwards compatibility support for JCR credentials and workspace
+        // name now encapsulated in the JCR Resource bundle
         AuthenticationInfo info = new AuthenticationInfo(
             engineAuthInfo.getAuthType());
-        info.put(AuthenticationInfo.CREDENTIALS, engineAuthInfo.getCredentials());
+        info.put("user.jcr.credentials", engineAuthInfo.getCredentials());
+        info.put("user.jcr.workspace", engineAuthInfo.getWorkspaceName());
 
         return info;
     }

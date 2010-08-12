@@ -21,6 +21,8 @@ package org.apache.sling.commons.auth.spi;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
+
 /**
  * The <code>AuthenticationInfo</code> conveys any authentication credentials
  * and/or details extracted by the
@@ -76,41 +78,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     public static final String AUTH_TYPE = "sling.authType";
 
     /**
-     * The name of the property providing the name of the user on whose behalf
-     * the request is being handled. This property is set by the
-     * {@link #AuthenticationInfo(String, String, char[])} constructor
-     * and may be <code>null</code> if this instance is created by either the
-     * {@link #AuthenticationInfo(String, String)} or
-     * {@link #AuthenticationInfo(String, String, char[])} constructors.
-     * <p>
-     * The type of this property, if present, is <code>String</code>.
-     */
-    public static final String USER = "user.name";
-
-    /**
-     * The name of the property providing the password of the user on whose
-     * behalf the request is being handled. This property is set by the
-     * {@link #AuthenticationInfo(String, String, char[])} constructor
-     * and may be <code>null</code> if this instance is created by either the
-     * {@link #AuthenticationInfo(String, String)} or
-     * {@link #AuthenticationInfo(String, String, char[])} constructors.
-     * <p>
-     * The type of this property, if present, is <code>char[]</code>.
-     */
-    public static final String PASSWORD = "user.password";
-
-    /**
-     * The name of the property providing the JCR credentials. These credentials
-     * are preset to the credentials given to the
-     * {@link #AuthenticationInfo(String, String)} or
-     * {@link #AuthenticationInfo(String, String, char[])} constructors.
-     * is used the credentials property is set to a JCR
-     * <code>SimpleCredentials</code> instance containing the user id and
-     * password passed to the constructor.
-     */
-    public static final String CREDENTIALS = "user.jcr.credentials";
-
-    /**
      * Creates an instance of this class with just the authentication type. To
      * effectively use this instance the user Id with optional password and/or
      * the credentials should be set.
@@ -150,8 +117,8 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     public AuthenticationInfo(final String authType, final String userId,
             final char[] password) {
         super.put(AUTH_TYPE, authType);
-        putIfNotNull(USER, userId);
-        putIfNotNull(PASSWORD, password);
+        putIfNotNull(ResourceResolverFactory.USER, userId);
+        putIfNotNull(ResourceResolverFactory.PASSWORD, password);
     }
 
     /**
@@ -181,7 +148,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      *            <code>null</code> the current user name is not replaced.
      */
     public final void setUser(String user) {
-        putIfNotNull(USER, user);
+        putIfNotNull(ResourceResolverFactory.USER, user);
     }
 
     /**
@@ -189,7 +156,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * <code>null</code> if the user is not set in this map.
      */
     public final String getUser() {
-        return (String) get(USER);
+        return (String) get(ResourceResolverFactory.USER);
     }
 
     /**
@@ -197,7 +164,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      *            <code>null</code> the current password is not replaced.
      */
     public final void setPassword(char[] password) {
-        putIfNotNull(PASSWORD, password);
+        putIfNotNull(ResourceResolverFactory.PASSWORD, password);
     }
 
     /**
@@ -205,7 +172,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * <code>null</code> if the password is not set in this map.
      */
     public final char[] getPassword() {
-        return (char[]) get(PASSWORD);
+        return (char[]) get(ResourceResolverFactory.PASSWORD);
     }
 
     /**
@@ -224,10 +191,6 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * <tr>
      * <td>{@link #PASSWORD}</td>
      * <td><code>char[]</code></td>
-     * </tr>
-     * <tr>
-     * <td>{@link #CREDENTIALS}</td>
-     * <td><code>javax.jcr.Credentials</code></td>
      * </tr>
      * </table>
      * <p>
@@ -251,40 +214,19 @@ public class AuthenticationInfo extends HashMap<String, Object> {
                 + " property must be a String");
         }
 
-        if (USER.equals(key) && !(value instanceof String)) {
-            throw new IllegalArgumentException(USER
+        if (ResourceResolverFactory.USER.equals(key)
+            && !(value instanceof String)) {
+            throw new IllegalArgumentException(ResourceResolverFactory.USER
                 + " property must be a String");
         }
 
-        if (PASSWORD.equals(key) && !(value instanceof char[])) {
-            throw new IllegalArgumentException(PASSWORD
+        if (ResourceResolverFactory.PASSWORD.equals(key)
+            && !(value instanceof char[])) {
+            throw new IllegalArgumentException(ResourceResolverFactory.PASSWORD
                 + " property must be a char[]");
         }
 
-        if (CREDENTIALS.equals(key) && !isCredentialsObject(value)) {
-            throw new IllegalArgumentException(CREDENTIALS
-                + " property must be a javax.jcr.Credentials instance");
-        }
-
         return super.put(key, value);
-    }
-
-    /** We do this check in order to avoid an import to the javax.jcr.* package */
-    private boolean isCredentialsObject(final Object value) {
-        if ( value == null ) {
-            return false;
-        }
-        Class<?> checkClass = value.getClass();
-        do {
-            final Class<?>[] interfaces = value.getClass().getInterfaces();
-            for(final Class<?> current : interfaces) {
-                if ( current.getName().equals("javax.jcr.Credentials") ) {
-                    return true;
-                }
-            }
-            checkClass = checkClass.getSuperclass();
-        } while ( checkClass != null );
-        return false;
     }
 
     /**

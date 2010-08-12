@@ -910,7 +910,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // sudo the session if needed
         if (sudo != null && sudo.length() > 0) {
-            authInfo.put(ResourceResolverFactory.SUDO_USER_ID, sudo);
+            authInfo.put(ResourceResolverFactory.USER_IMPERSONATION, sudo);
         }
     }
 
@@ -930,7 +930,7 @@ public class SlingAuthenticator implements Authenticator,
 
     private void setSudoCookie(HttpServletRequest req,
             HttpServletResponse res, AuthenticationInfo authInfo) {
-        String sudo = (String) authInfo.get(ResourceResolverFactory.SUDO_USER_ID);
+        String sudo = (String) authInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
         String currentSudo = getSudoCookieValue(req);
 
         // set the (new) impersonation
