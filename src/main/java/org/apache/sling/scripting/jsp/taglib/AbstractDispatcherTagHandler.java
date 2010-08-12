@@ -148,14 +148,7 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
 
     public void setPageContext(PageContext pageContext) {
         super.setPageContext(pageContext);
-
-        // init local fields, since tag might be reused
-        resource = null;
-        resourceType = null;
-        replaceSelectors = null;
-        addSelectors = null;
-        replaceSuffix = null;
-        path = null;
+		clear();
     }
 
     public void setResource(Resource rsrc) {
@@ -200,5 +193,20 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
             return ResourceUtil.getResourceSuperType(getResourceResolver(),
                 getResourceType());
         }
+    }
+
+    @Override
+    public void release() {
+        clear();
+        super.release();
+    }
+
+    private void clear() {
+        resource = null;
+        resourceType = null;
+        replaceSelectors = null;
+        addSelectors = null;
+        replaceSuffix = null;
+        path = null;
     }
 }

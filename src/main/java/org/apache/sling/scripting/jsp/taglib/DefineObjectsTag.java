@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
@@ -146,6 +147,12 @@ public class DefineObjectsTag extends TagSupport {
 
     // --------------------------< setter methonds >----------------------------
 
+    @Override
+    public void setPageContext(PageContext pageContext) {
+        super.setPageContext(pageContext);
+        clear();
+    }
+
     public void setRequestName(String requestName) {
         this.requestName = requestName;
     }
@@ -176,5 +183,36 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setBindingsName(String name) {
         this.bindingsName = name;
+    }
+
+    @Override
+    public void release() {
+        clear();
+        super.release();
+    }
+
+    private void clear() {
+
+        // remove all attributes set on the page context to cleanup
+        if (pageContext != null) {
+            pageContext.removeAttribute(requestName);
+            pageContext.removeAttribute(responseName);
+            pageContext.removeAttribute(resourceName);
+            pageContext.removeAttribute(resourceResolverName);
+            pageContext.removeAttribute(slingName);
+            pageContext.removeAttribute(logName);
+            pageContext.removeAttribute(nodeName);
+            pageContext.removeAttribute(bindingsName);
+        }
+
+        // reset fields
+        requestName = DEFAULT_REQUEST_NAME;
+        responseName = DEFAULT_RESPONSE_NAME;
+        resourceName = DEFAULT_RESOURCE_NAME;
+        nodeName = DEFAULT_NODE_NAME;
+        slingName = DEFAULT_SLING_NAME;
+        logName = DEFAULT_LOG_NAME;
+        bindingsName = DEFAULT_BINDINGS_NAME;
+        resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
     }
 }
