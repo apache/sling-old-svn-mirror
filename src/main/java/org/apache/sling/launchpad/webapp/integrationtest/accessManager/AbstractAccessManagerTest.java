@@ -162,7 +162,8 @@ public abstract class AbstractAccessManagerTest extends HttpTestBase {
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
-		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		return testUserId;
 	}
