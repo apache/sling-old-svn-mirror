@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -37,10 +38,12 @@ import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
@@ -83,22 +86,6 @@ import org.slf4j.LoggerFactory;
  */
 public class JcrResourceResolverFactoryImpl implements
         JcrResourceResolverFactory, ResourceResolverFactory {
-
-    /**
-     * The name of the authentication info property containing the workspace name.
-     * This is only used internally and should never be used from anyone outside
-     * this bundle as we might change this mechanism.
-     */
-    static final String AUTH_INFO_WORKSPACE = "internal.user.jcr.workspace";
-
-    /**
-     * The name of the session attribute which is set if the session created by
-     * the {@link #handleSecurity(HttpServletRequest, HttpServletResponse)}
-     * method is an impersonated session. The value of this attribute is the
-     * name of the primary user authenticated with the credentials extracted
-     * from the request using the authenitcation handler.
-     */
-    private static final String SESSION_ATTR_IMPERSONATOR = "impersonator";
 
     public final static class ResourcePattern {
         public final Pattern pattern;
@@ -245,8 +232,113 @@ public class JcrResourceResolverFactoryImpl implements
      *
      * @see org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(javax.jcr.Session)
      */
-    public JcrResourceResolver getResourceResolver(Session session) {
-        return getResourceResolver(session, true, null);
+    public ResourceResolver getResourceResolver(Session session) {
+        Map<String, Object> authInfo = new HashMap<String, Object>(1);
+        authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+        try {
+            return getResourceResolver(authInfo);
+        } catch (LoginException le) {
+            // we don't expect a LoginException here because just a
+            // ResourceResolver wrapping the given session is to be created.
+            throw new InternalError("Unexpected LoginException");
+        }
+    }
+
+    // ---------- Resource Resolver Factory ------------------------------------
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
+     */
+    public ResourceResolver getAdministrativeResourceResolver(
+            final Map<String, Object> authenticationInfo) throws LoginException {
+        return getResourceResolverInternal(authenticationInfo, true);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
+     */
+    public ResourceResolver getResourceResolver(
+            final Map<String, Object> authenticationInfo) throws LoginException {
+        return getResourceResolverInternal(authenticationInfo, false);
+    }
+
+    /**
+     * Create a new ResourceResolver wrapping a Session object. Carries map of
+     * authentication info in order to create a new resolver as needed.
+     */
+    private ResourceResolver getResourceResolverInternal(
+            final Map<String, Object> authenticationInfo, final boolean isAdmin)
+            throws LoginException {
+
+        // by default any session used by the resource resolver returned is
+        // closed when the resource resolver is closed
+        boolean logoutSession = true;
+
+        // derive the session to be used
+        Session session;
+        try {
+            final String workspace = getWorkspace(authenticationInfo);
+            if (isAdmin) {
+                // requested admin session to any workspace (or default)
+                session = getRepository().loginAdministrative(workspace);
+
+            } else {
+
+                session = getSession(authenticationInfo);
+                if (session == null) {
+                    // requested non-admin session to any workspace (or default)
+                    final Credentials credentials = getCredentials(authenticationInfo);
+                    session = getRepository().login(credentials, workspace);
+
+                } else if (workspace != null) {
+                    // session provided by map; but requested a different
+                    // workspace impersonate can only change the user not switch
+                    // the workspace as a workaround we login to the requested
+                    // workspace with admin and then switch to the provided
+                    // session's user (if required)
+                    Session tmpSession = null;
+                    try {
+                        tmpSession = getRepository().loginAdministrative(
+                            workspace);
+                        if (tmpSession.getUserID().equals(session.getUserID())) {
+                            session = tmpSession;
+                            tmpSession = null;
+                        } else {
+                            session = tmpSession.impersonate(new SimpleCredentials(
+                                session.getUserID(), new char[0]));
+                        }
+                    } finally {
+                        if (tmpSession != null) {
+                            tmpSession.logout();
+                        }
+                    }
+
+                } else {
+                    // session provided; no special workspace; just make sure
+                    // the session is not logged out when the resolver is closed
+                    logoutSession = false;
+                }
+            }
+        } catch (RepositoryException re) {
+            throw getLoginException(re);
+        }
+
+        session = handleImpersonation(session, authenticationInfo, logoutSession);
+
+        final JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
+            session, rootProviderEntry, this.getDynamicClassLoader(),
+            useMultiWorkspaces);
+
+        if (logoutSession) {
+            return new JcrResourceResolver(sessionRoot, this, isAdmin,
+                authenticationInfo, useMultiWorkspaces);
+        }
+
+        return new JcrResourceResolver(sessionRoot, this, isAdmin,
+            authenticationInfo, useMultiWorkspaces) {
+            protected void closeSession() {
+            }
+        };
     }
 
     // ---------- Implementation helpers --------------------------------------
@@ -473,52 +565,6 @@ public class JcrResourceResolverFactoryImpl implements
         return repository;
     }
 
-    // ---------- Resource Resolver Factory ------------------------------------
-
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
-     */
-    public JcrResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
-    throws LoginException {
-        final String workspace = getWorkspace(authenticationInfo);
-        final Session session;
-        try {
-            session = this.getRepository().loginAdministrative(workspace);
-        } catch (RepositoryException re) {
-            throw getLoginException(re);
-        }
-        return this.getResourceResolver(handleSudo(session, authenticationInfo), true, authenticationInfo);
-    }
-
-    /**
-     * Create a new ResourceResolver wrapping a Session object. Carries map of
-     * authentication info in order to create a new resolver as needed.
-     */
-    private JcrResourceResolver getResourceResolver(final Session session,
-                                                 final boolean isAdmin,
-                                                 final Map<String, Object> authenticationInfo) {
-        final JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry, this.getDynamicClassLoader(), useMultiWorkspaces);
-
-        return new JcrResourceResolver(sessionRoot, this, isAdmin, authenticationInfo, useMultiWorkspaces);
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
-     */
-    public JcrResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo)
-    throws LoginException {
-        final Credentials credentials = getCredentials(authenticationInfo);
-        final String workspace = getWorkspace(authenticationInfo);
-        final Session session;
-        try {
-            session = this.getRepository().login(credentials, workspace);
-        } catch (RepositoryException re) {
-            throw getLoginException(re);
-        }
-        return this.getResourceResolver(handleSudo(session, authenticationInfo), false, authenticationInfo);
-    }
-
     /**
      * Create a login exception from a repository exception.
      * If the repository exception is a  {@link javax.jcr.LoginException}
@@ -551,6 +597,23 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /**
+     * Returns the session provided as the user.jcr.session property of the
+     * <code>authenticationInfo</code> map or <code>null</code> if the
+     * property is not contained in the map or is not a <code>javax.jcr.Session</code>.
+     * @param authenticationInfo Optional authentication info.
+     * @return The user.jcr.session property or <code>null</code>
+     */
+    private Session getSession(final Map<String, Object> authenticationInfo) {
+        if (authenticationInfo != null) {
+            final Object sessionObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_SESSION);
+            if (sessionObject instanceof Session) {
+                return (Session) sessionObject;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Return the workspace name.
      * If the workspace name is provided, it is returned, otherwise
      * <code>null</code> is returned.
@@ -558,8 +621,11 @@ public class JcrResourceResolverFactoryImpl implements
      * @return The configured workspace name or <code>null</code>
      */
     private String getWorkspace(final Map<String, Object> authenticationInfo) {
-        if ( authenticationInfo != null ) {
-            return (String) authenticationInfo.get(AUTH_INFO_WORKSPACE);
+        if (authenticationInfo != null) {
+            final Object workspaceObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE);
+            if (workspaceObject instanceof String) {
+                return (String) workspaceObject;
+            }
         }
         return null;
     }
@@ -572,39 +638,47 @@ public class JcrResourceResolverFactoryImpl implements
      * @return The configured sudo user information or <code>null</code>
      */
     private String getSudoUser(final Map<String, Object> authenticationInfo) {
-        if ( authenticationInfo != null ) {
-            return (String) authenticationInfo.get(ResourceResolverFactory.SUDO_USER_ID);
+        if (authenticationInfo != null) {
+            final Object sudoObject = authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
+            if (sudoObject instanceof String) {
+                return (String) sudoObject;
+            }
         }
         return null;
     }
 
     /**
-     * Handle the sudo if configured.
-     * If the authentication info does not contain a sudo info, this method simply returns
-     * the passed in session.
-     * If a sudo user info is available, the session is tried to be impersonated. The new
-     * impersonated session is returned. The original session is closed. The session is
-     * also closed if the impersonation fails.
+     * Handle the sudo if configured. If the authentication info does not
+     * contain a sudo info, this method simply returns the passed in session. If
+     * a sudo user info is available, the session is tried to be impersonated.
+     * The new impersonated session is returned. The original session is closed.
+     * The session is also closed if the impersonation fails.
+     *
      * @param session The session.
      * @param authenticationInfo The optional authentication info.
+     * @param logoutSession whether to logout the <code>session</code> after
+     *            impersonation or not.
      * @return The original session or impersonated session.
      * @throws LoginException If something goes wrong.
      */
-    private Session handleSudo(final Session session,
-            final Map<String, Object> authenticationInfo) throws LoginException {
+    private Session handleImpersonation(final Session session,
+            final Map<String, Object> authenticationInfo, boolean logoutSession)
+            throws LoginException {
         final String sudoUser = getSudoUser(authenticationInfo);
         if (sudoUser != null && !session.getUserID().equals(sudoUser)) {
             try {
                 final SimpleCredentials creds = new SimpleCredentials(sudoUser,
                     new char[0]);
                 copyAttributes(creds, authenticationInfo);
-                creds.setAttribute(SESSION_ATTR_IMPERSONATOR,
+                creds.setAttribute(ResourceResolver.USER_IMPERSONATOR,
                     session.getUserID());
                 return session.impersonate(creds);
             } catch (RepositoryException re) {
                 throw getLoginException(re);
             } finally {
-                session.logout();
+                if (logoutSession) {
+                    session.logout();
+                }
             }
         }
         return session;
@@ -628,15 +702,15 @@ public class JcrResourceResolverFactoryImpl implements
             return null;
         }
 
-        final Object credentialsObject = authenticationInfo.get("user.jcr.credentials");
+        final Object credentialsObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS);
         if (credentialsObject instanceof Credentials) {
             return (Credentials) credentialsObject;
         }
 
         // otherwise try to create SimpleCredentials if the userId is set
-        final Object userId = authenticationInfo.get("user.name");
+        final Object userId = authenticationInfo.get(USER);
         if (userId instanceof String) {
-            final Object password = authenticationInfo.get("user.password");
+            final Object password = authenticationInfo.get(PASSWORD);
             final SimpleCredentials credentials = new SimpleCredentials(
                 (String) userId, ((password instanceof char[])
                         ? (char[]) password
@@ -669,10 +743,26 @@ public class JcrResourceResolverFactoryImpl implements
         final Iterator<Map.Entry<String, Object>> i = source.entrySet().iterator();
         while (i.hasNext()) {
             final Map.Entry<String, Object> current = i.next();
-            if (!"user.password".equals(current.getKey())
-                && !"user.jcr.credentials".equals(current.getKey())) {
+            if (isAttributeVisible(current.getKey())) {
                 target.setAttribute(current.getKey(), current.getValue());
             }
         }
     }
+
+    /**
+     * Returns <code>true</code> unless the name is
+     * <code>user.jcr.credentials</code> (
+     * {@link JcrResourceConstants#AUTHENTICATION_INFO_CREDENTIALS}) or contains
+     * the string <code>password</code> as in <code>user.password</code> (
+     * {@link org.apache.sling.api.resource.ResourceResolverFactory#PASSWORD})
+     *
+     * @param name The name to check whether it is visible or not
+     * @return <code>true</code> if the name is assumed visible
+     * @throws NullPointerException if <code>name</code> is <code>null</code>
+     */
+    static boolean isAttributeVisible(final String name) {
+        return !name.equals(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS)
+            && !name.contains("password");
+    }
+
 }

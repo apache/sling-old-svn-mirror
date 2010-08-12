@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -115,5 +116,13 @@ public class MockResourceResolver implements ResourceResolver {
 
     public String getUserID() {
         return session.getUserID();
+    }
+
+    public Object getAttribute(String name) {
+        return null;
+    }
+
+    public Iterator<String> getAttributeNames() {
+        return Collections.<String> emptyList().iterator();
     }
 }

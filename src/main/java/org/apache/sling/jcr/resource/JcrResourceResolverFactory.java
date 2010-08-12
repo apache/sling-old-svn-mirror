@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 
 /**
  * The <code>JcrResourceResolverFactory</code> interface defines the service
@@ -31,17 +32,31 @@ import org.apache.sling.api.resource.ResourceResolver;
  * is implemented by this bundle and the implementation registered as a service
  * for use by client applications.
  *
- * @deprecated Use the {@link org.apache.sling.api.resource.ResourceResolverFactory}
+ * @deprecated Since 2.1. Use the
+ *             {@link org.apache.sling.api.resource.ResourceResolverFactory}
  */
 @Deprecated
-public interface JcrResourceResolverFactory {
+public interface JcrResourceResolverFactory extends ResourceResolverFactory {
 
     /**
      * Returns a <code>ResourceResolver</code> for the given session. Calling
      * this method repeatedly returns a new instance on each call.
+     * <p>
+     * This method is equivalent to:
      *
-     * @param session The JCR <code>Session</code> used by the created
-     *            resource manager to access the repository.
+     * <pre>
+     * Map&lt;String, Object&gt; authInfo = new HashMap&lt;String, Object&gt;();
+     * authInfo.put(SESSION, session);
+     * return getResourceResolver(authInfo);
+     * </pre>
+     * <p>
+     * <b>Note:</b> Closing the <code>ResourceResolver</code> returned by this
+     * method will <b>not</b> close the provided <code>Session</code> ! Likewise
+     * the provided <code>Session</code> should not be logged out before closing
+     * the returned <code>ResourceResolver</code>.
+     *
+     * @param session The JCR <code>Session</code> used by the created resource
+     *            manager to access the repository.
      */
     ResourceResolver getResourceResolver(Session session);
 
