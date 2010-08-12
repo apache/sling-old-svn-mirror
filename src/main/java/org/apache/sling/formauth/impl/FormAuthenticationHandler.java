@@ -592,7 +592,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             final AuthenticationInfo authInfo) {
 
         // get current authentication data, may be missing after first login
-        String authData = getCookieAuthData((Credentials)authInfo.get(AuthenticationInfo.CREDENTIALS));
+        String authData = getCookieAuthData(authInfo);
 
         // check whether we have to "store" or create the data
         final boolean refreshCookie = needsRefresh(authData,
@@ -660,15 +660,19 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             return null;
         }
 
-        final SimpleCredentials cookieAuthCredentials = new SimpleCredentials(
-            userId, new char[0]);
-        cookieAuthCredentials.setAttribute(attrCookieAuthData, authData);
-
         final AuthenticationInfo info = new AuthenticationInfo(
             HttpServletRequest.FORM_AUTH, userId);
-        info.put(AuthenticationInfo.CREDENTIALS, cookieAuthCredentials);
+        info.put(attrCookieAuthData, authData);
 
         return info;
+    }
+
+    private String getCookieAuthData(final AuthenticationInfo info) {
+        Object data = info.get(attrCookieAuthData);
+        if (data instanceof String) {
+            return (String) data;
+        }
+        return null;
     }
 
     // ---------- LoginModulePlugin support
