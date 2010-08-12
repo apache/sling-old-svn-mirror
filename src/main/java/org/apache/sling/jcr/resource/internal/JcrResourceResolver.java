@@ -21,9 +21,12 @@ package org.apache.sling.jcr.resource.internal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,8 +48,10 @@ import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
@@ -100,7 +105,7 @@ public class JcrResourceResolver
     private final Map<String, Object> originalAuthInfo;
 
     /** Resolvers for different workspaces. */
-    private Map<String,JcrResourceResolver> createdResolvers;
+    private Map<String, JcrResourceResolver> createdResolvers;
 
     /** Closed marker. */
     private volatile boolean closed = false;
@@ -128,6 +133,9 @@ public class JcrResourceResolver
     public ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException {
 
+        // ensure resolver is still live
+        checkClosed();
+
         // create the merged map
         Map<String, Object> newAuthenticationInfo = new HashMap<String, Object>();
         if (originalAuthInfo != null) {
@@ -138,10 +146,12 @@ public class JcrResourceResolver
         }
 
         // get an administrative resolver if this resolver isAdmin unless
-        // credentials and/or user name are present in the credentials
+        // credentials and/or user name are present in the credentials and/or
+        // a session is present
         if (isAdmin
-            && !(newAuthenticationInfo.get("user.jcr.credentials") instanceof Credentials)
-            && !(newAuthenticationInfo.get("user.name") instanceof String)) {
+            && !(newAuthenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS) instanceof Credentials)
+            && !(newAuthenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_SESSION) instanceof Session)
+            && !(newAuthenticationInfo.get(ResourceResolverFactory.USER) instanceof String)) {
             return factory.getAdministrativeResourceResolver(newAuthenticationInfo);
         }
 
@@ -160,12 +170,46 @@ public class JcrResourceResolver
      * @see org.apache.sling.api.resource.ResourceResolver#close()
      */
     public void close() {
-        if ( !this.closed ) {
+        if (!this.closed) {
             this.closed = true;
+            closeCreatedResolvers();
+            closeSession();
+        }
+    }
+
+    /**
+     * Closes the session underlying this resource resolver. This method is
+     * called by the {@link #close()} method.
+     * <p>
+     * Extensions can overwrite this method to do other work (or not close the
+     * session at all). Handle with care !
+     */
+    protected void closeSession() {
+        try {
             getSession().logout();
-            if ( this.createdResolvers != null ) {
-                for (final ResourceResolver resolver : createdResolvers.values()) {
+        } catch (Throwable t) {
+            LOGGER.debug(
+                "closeSession: Unexpected problem closing the session; ignoring",
+                t);
+        }
+    }
+
+    /**
+     * Closes any helper resource resolver created while this resource resolver
+     * was used.
+     * <p>
+     * Extensions can overwrite this method to do other work (or not close the
+     * created resource resovlers at all). Handle with care !
+     */
+    protected void closeCreatedResolvers() {
+        if (this.createdResolvers != null) {
+            for (final ResourceResolver resolver : createdResolvers.values()) {
+                try {
                     resolver.close();
+                } catch (Throwable t) {
+                    LOGGER.debug(
+                        "closeCreatedResolvers: Unexpected problem closing the created resovler "
+                            + resolver + "; ignoring", t);
                 }
             }
         }
@@ -190,6 +234,71 @@ public class JcrResourceResolver
             throw new IllegalStateException("Resource resolver is already closed.");
         }
     }
+
+    // ---------- attributes
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getAttributeNames()
+     */
+    public Iterator<String> getAttributeNames() {
+        checkClosed();
+        final Set<String> names = new HashSet<String>();
+        names.addAll(Arrays.asList(getSession().getAttributeNames()));
+        names.addAll(originalAuthInfo.keySet());
+        return new Iterator<String>() {
+            final Iterator<String> keys = names.iterator();
+
+            String nextKey = seek();
+
+            private String seek() {
+                while (keys.hasNext()) {
+                    final String key = keys.next();
+                    if (JcrResourceResolverFactoryImpl.isAttributeVisible(key)) {
+                        return key;
+                    }
+                }
+                return null;
+            }
+
+            public boolean hasNext() {
+                return nextKey != null;
+            }
+
+            public String next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                String toReturn = nextKey;
+                nextKey = seek();
+                return toReturn;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+        };
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getAttribute(String)
+     */
+    public Object getAttribute(String name) {
+        if (name == null) {
+            throw new NullPointerException("name");
+        }
+
+        if (JcrResourceResolverFactoryImpl.isAttributeVisible(name)) {
+            final Object sessionAttr = getSession().getAttribute(name);
+            if (sessionAttr != null) {
+                return sessionAttr;
+            }
+            return originalAuthInfo.get(name);
+        }
+
+        // not a visible attribute
+        return null;
+    }
+
     // ---------- resolving resources
 
     /**
@@ -828,20 +937,17 @@ public class JcrResourceResolver
     /**
      * Get a resolver for the workspace.
      */
-    private synchronized JcrResourceResolver getResolverForWorkspace(final String workspaceName) throws LoginException {
-        if ( createdResolvers == null ) {
-            createdResolvers = new HashMap<String,JcrResourceResolver>();
+    private synchronized JcrResourceResolver getResolverForWorkspace(
+            final String workspaceName) throws LoginException {
+        if (createdResolvers == null) {
+            createdResolvers = new HashMap<String, JcrResourceResolver>();
         }
         JcrResourceResolver wsResolver = createdResolvers.get(workspaceName);
         if (wsResolver == null) {
-            final Map<String,Object> newAuthInfo =
-                originalAuthInfo == null ? new HashMap<String, Object>() : new HashMap<String,Object>(originalAuthInfo);
-            newAuthInfo.put(JcrResourceResolverFactoryImpl.AUTH_INFO_WORKSPACE, workspaceName);
-            if (isAdmin) {
-                wsResolver = factory.getAdministrativeResourceResolver(newAuthInfo);
-            } else {
-                wsResolver = factory.getResourceResolver(newAuthInfo);
-            }
+            final Map<String, Object> newAuthInfo = new HashMap<String, Object>();
+            newAuthInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE,
+                workspaceName);
+            wsResolver = (JcrResourceResolver) clone(newAuthInfo);
             createdResolvers.put(workspaceName, wsResolver);
         }
         return wsResolver;
