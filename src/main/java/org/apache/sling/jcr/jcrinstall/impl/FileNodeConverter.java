@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
-	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(javax.jcr.Node, int, org.apache.sling.osgi.installer.InstallableResourceFactory)
+	 * @see org.apache.sling.jcr.jcrinstall.impl.JcrInstaller.NodeConverter#convertNode(javax.jcr.Node, int)
 	 */
 	public InstallableResource convertNode(
 	        final Node n,
@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return new InstallableResource(path, is, null, digest, InstallableResource.TYPE_BUNDLE, priority);
+        return new InstallableResource(path, is, null, digest, null, priority);
 	}
 
 	boolean acceptNodeName(String name) {
