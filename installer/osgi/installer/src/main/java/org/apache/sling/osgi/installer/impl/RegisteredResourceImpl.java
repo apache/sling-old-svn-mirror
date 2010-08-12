@@ -96,7 +96,7 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
             }
             try {
-                dictionary = null;
+                dictionary = copy(input.getDictionary());
                 final File f = getDataFile();
                 Logger.logDebug("Copying data to local storage " + f.getAbsolutePath());
                 copyToLocalStorage(input.getInputStream(), f);
@@ -193,7 +193,10 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	}
 
 	/** Copy given Dictionary, sorting keys */
-	static Dictionary<String, Object> copy(Dictionary<String, Object> d) {
+	static Dictionary<String, Object> copy(final Dictionary<String, Object> d) {
+	    if ( d == null ) {
+	        return null;
+	    }
 	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
 	    final List<String> keys = new ArrayList<String>();
 	    final Enumeration<String> e = d.keys();

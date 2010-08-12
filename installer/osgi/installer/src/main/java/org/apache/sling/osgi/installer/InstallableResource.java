@@ -49,6 +49,12 @@ public class InstallableResource {
      */
     public static final String TYPE_CONFIG = "config";
 
+    /**
+     * Optional parameter in the dictionary if a bundle is installed. If this
+     * is set with a valid start level, the bundle is installed in that start level.
+     */
+    public static final String BUNDLE_START_LEVEL = "bundle.startlevel";
+
     /** Default resource priority */
     public static final int DEFAULT_PRIORITY = 100;
 

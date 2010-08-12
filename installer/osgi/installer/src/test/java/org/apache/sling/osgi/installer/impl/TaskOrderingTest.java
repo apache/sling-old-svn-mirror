@@ -72,7 +72,7 @@ public class TaskOrderingTest {
             new ConfigInstallTask(getRegisteredResource("test:a"), null),
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
 		    new BundleUpdateTask(getRegisteredResource("test:url"), null),
-		    new BundleInstallTask(getRegisteredResource("test:url")),
+		    new BundleInstallTask(getRegisteredResource("test:url"), null),
 			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(0),
 		};
@@ -126,8 +126,8 @@ public class TaskOrderingTest {
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing")),
-            new BundleInstallTask(getRegisteredResource("test:someURIb.nothing")),
+			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing"), null),
+            new BundleInstallTask(getRegisteredResource("test:someURIb.nothing"), null),
 			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(0),
 		};

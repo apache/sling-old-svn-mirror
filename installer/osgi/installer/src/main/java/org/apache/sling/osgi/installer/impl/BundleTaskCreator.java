@@ -31,6 +31,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** TaskCreator that processes a list of bundle RegisteredResources */
@@ -39,8 +40,14 @@ class BundleTaskCreator {
     /** Interface of the package admin */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
 
+    /** Interface of the start level */
+    private static String START_LEVEL_NAME = StartLevel.class.getName();
+
     /** Tracker for the package admin. */
     private final ServiceTracker packageAdminTracker;
+
+    /** Tracker for the start level service. */
+    private final ServiceTracker startLevelTracker;
 
     /** Store the digests of the bundles for which we create update tasks,
      *  keyed by symbolic name, to avoid generating repated updates
@@ -52,10 +59,13 @@ class BundleTaskCreator {
         // create and start tracker
         this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
         this.packageAdminTracker.open();
+        this.startLevelTracker = new ServiceTracker(bc, START_LEVEL_NAME, null);
+        this.startLevelTracker.open();
     }
 
     public void deactivate() {
         this.packageAdminTracker.close();
+        this.startLevelTracker.close();
     }
 
     /** Holds the bundle info that we need, makes it easier to test
@@ -119,7 +129,7 @@ class BundleTaskCreator {
 			if (info == null) {
 			    // bundle is not installed yet: install and save digest to avoid
 			    // unnecessary updates
-				tasks.add(new BundleInstallTask(toActivate));
+				tasks.add(new BundleInstallTask(toActivate, this.startLevelTracker));
 				digestToSave = toActivate.getDigest();
 			} else {
 			    final int compare = info.version.compareTo(newVersion);
