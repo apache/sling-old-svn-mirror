@@ -18,12 +18,16 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.service.startlevel.StartLevel;
+import org.osgi.util.tracker.ServiceTracker;
 
 /** Install a bundle supplied as a RegisteredResource.
  *  Creates a BundleStartTask to start the bundle */
@@ -33,8 +37,11 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     private final RegisteredResource resource;
 
-    public BundleInstallTask(RegisteredResource r) {
+    private final ServiceTracker startLevelServiceTracker;
+
+    public BundleInstallTask(final RegisteredResource r, final ServiceTracker startLevelServiceTracker) {
         this.resource = r;
+        this.startLevelServiceTracker = startLevelServiceTracker;
     }
 
     @Override
@@ -45,9 +52,27 @@ public class BundleInstallTask extends OsgiInstallerTask {
     /**
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
-    public Result execute(OsgiInstallerContext ctx) {
+    public Result execute(final OsgiInstallerContext ctx) {
+        int startLevel = 0;
+        final Object providedLevel = (this.resource.getDictionary() != null
+            ? this.resource.getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);
+        if ( providedLevel != null ) {
+            if ( providedLevel instanceof Number ) {
+                startLevel = ((Number)providedLevel).intValue();
+            } else {
+                startLevel = Integer.valueOf(providedLevel.toString());
+            }
+        }
+        // get the start level service (if possible) so we can set the initial start level
+        final StartLevel startLevelService = (StartLevel) startLevelServiceTracker.getService();
         try {
             final Bundle b = ctx.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
+            // optionally set the start level
+            if (startLevelService != null && startLevel > 0) {
+                startLevelService.setBundleStartLevel(b, startLevel);
+            } else {
+                Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
+            }
             final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
             ctx.saveInstalledBundleInfo(b, resource.getDigest(), newVersion.toString());
             logExecution();
