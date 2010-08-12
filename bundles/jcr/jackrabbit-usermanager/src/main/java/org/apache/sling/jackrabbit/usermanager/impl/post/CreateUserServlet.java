@@ -100,7 +100,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
      */
     private static final String PROP_SELF_REGISTRATION_ENABLED = "self.registration.enabled";
 
-    private static final Boolean DEFAULT_SELF_REGISTRATION_ENABLED = Boolean.TRUE;
+    private static final Boolean DEFAULT_SELF_REGISTRATION_ENABLED = Boolean.FALSE;
 
     private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
 

@@ -63,11 +63,11 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair("marker", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
-		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		//fetch the user profile json to verify the settings
 		String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
@@ -81,7 +81,8 @@ public class CreateUserTest extends AbstractUserManagerTest {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateUserMissingPwd() throws IOException {
@@ -90,7 +91,8 @@ public class CreateUserTest extends AbstractUserManagerTest {
         String userId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", userId));
-		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateUserWrongConfirmPwd() throws IOException {
@@ -101,7 +103,8 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair(":name", userId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd2"));
-		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateUserUserAlreadyExists() throws IOException {
@@ -112,10 +115,11 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
-		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		//post the same info again, should fail
-		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	/*
@@ -139,11 +143,11 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 		postParams.add(new NameValuePair("displayName", "My Test User"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org"));
-		assertPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		//fetch the user profile json to verify the settings
 		String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
@@ -153,5 +157,22 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		assertFalse(jsonObj.has(":name"));
 		assertFalse(jsonObj.has("pwd"));
 		assertFalse(jsonObj.has("pwdConfirm"));
+	}
+
+	/**
+	 * Test for SLING-1642 to verify that user self-registration by the anonymous
+	 * user is not allowed by default.
+	 */
+	public void testAnonymousSelfRegistrationDisabled() throws IOException {
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
+
+		String userId = "testUser" + (counter++);
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":name", userId));
+		postParams.add(new NameValuePair("pwd", "testPwd"));
+		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
+		//user create without logging in as a privileged user should return a 500 error
+		httpClient.getState().clearCredentials();
+		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 }
