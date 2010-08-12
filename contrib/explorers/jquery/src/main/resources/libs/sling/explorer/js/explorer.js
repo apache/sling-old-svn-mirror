@@ -62,19 +62,21 @@ explorer_toggle = function(path){
 }
 
 load_branch = function(path){
-  var id= path.replace(/\//g, "_"); // replacing / with _
-  
-  $('p#'+id+">a").removeAttr('href');  // remove onclick
-  
-  // fetch children
-  $.get("/"+path + ".explorer.item.html", function(data){
-    if (data.length > 0) {
-      $('p#'+id).parent().addClass('branch'); // add css class
-      $('p#'+id).after(data); // add data
-      $('p#'+id+">a").attr('href', "#");  // reactivate onclick
-      $('p#'+id+">a").addClass('open');  // open
-    } 
-  });
+  if (path != '')
+  {
+     var id= path.replace(/\//g, "_"); // replacing / with _
+	 $('p#'+id+">a").removeAttr('href');  // remove onclick
+	  
+	  // fetch children
+	  $.get("/"+path + ".explorer.item.html", function(data){
+		if (data.length > 0) {
+		  $('p#'+id).parent().addClass('branch'); // add css class
+		  $('p#'+id).after(data); // add data
+		  $('p#'+id+">a").attr('href', "#");  // reactivate onclick
+		  $('p#'+id+">a").addClass('open');  // open
+		} 
+	  });
+  }
 }
 
 load_props = function(path) {
