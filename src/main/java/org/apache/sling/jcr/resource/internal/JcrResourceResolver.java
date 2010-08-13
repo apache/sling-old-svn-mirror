@@ -1103,12 +1103,16 @@ public class JcrResourceResolver
         Iterator<Resource> children = listChildren(parent);
         while (children.hasNext()) {
             child = children.next();
-            String alias = getProperty(child, PROP_ALIAS);
-            if (childName.equals(alias)) {
-                LOGGER.debug(
-                    "getChildInternal: Found Resource {} with alias {} to use",
-                    child, childName);
-                return child;
+            String[] aliases = getProperty(child, PROP_ALIAS, String[].class);
+            if (aliases != null) {
+                for (String alias : aliases) {
+                    if (childName.equals(alias)) {
+                        LOGGER.debug(
+                            "getChildInternal: Found Resource {} with alias {} to use",
+                            child, childName);
+                        return child;
+                    }
+                }
             }
         }
 
@@ -1135,11 +1139,16 @@ public class JcrResourceResolver
     }
 
     public String getProperty(Resource res, String propName) {
+        return getProperty(res, propName, String.class);
+    }
+
+    public <Type> Type getProperty(Resource res, String propName,
+            Class<Type> type) {
 
         // check the property in the resource itself
         ValueMap props = res.adaptTo(ValueMap.class);
         if (props != null) {
-            String prop = props.get(propName, String.class);
+            Type prop = props.get(propName, type);
             if (prop != null) {
                 LOGGER.debug("getProperty: Resource {} has property {}={}",
                     new Object[] { res, propName, prop });
@@ -1147,11 +1156,11 @@ public class JcrResourceResolver
             }
             // otherwise, check it in the jcr:content child resource
             // This is a special case checking for JCR based resources
-            // we directly use the deep resolving of properties of the
+            // we directly use the deep resolution of properties of the
             // JCR value map implementation - this does not work
-            // in none JCR environments, however in non JCR envs there
+            // in non JCR environments, however in non JCR envs there
             // is usually no "jcr:content" child node anyway
-            prop = props.get("jcr:content/" + propName, String.class);
+            prop = props.get("jcr:content/" + propName, type);
             return prop;
         }
 
