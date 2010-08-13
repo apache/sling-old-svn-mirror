@@ -423,7 +423,7 @@ public class ResourceUtil {
      *
      * @param resource the resource to check
      * @param resourceType the resource type to check the resource against
-     * @retrun <code>false</code> if <code>resource</code> is <code>null</code>.
+     * @return <code>false</code> if <code>resource</code> is <code>null</code>.
      *         Otherwise returns the result of calling
      *         {@link Resource#isResourceType(String)} with the given
      *         <code>resourceType</code>.
