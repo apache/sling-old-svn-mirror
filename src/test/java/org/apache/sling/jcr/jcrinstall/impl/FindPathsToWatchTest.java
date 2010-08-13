@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import javax.jcr.Session;
 
+import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
 
