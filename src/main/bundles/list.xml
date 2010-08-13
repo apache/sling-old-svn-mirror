@@ -45,6 +45,11 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.settings</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.auth</artifactId>
             <version>0.9.0-SNAPSHOT</version>
         </bundle>
