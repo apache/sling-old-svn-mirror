@@ -41,7 +41,7 @@ class ContentHelper {
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     public static final String JCR_ENCODING = "jcr:encoding";
     public static final String JCR_DATA = "jcr:data";
-    
+
     final String [] WATCHED_FOLDERS = {
         "/libs/foo/bar/install",
         "/libs/foo/wii/install",
@@ -52,7 +52,7 @@ class ContentHelper {
         "/libs/foo/bar/installed",
         "/apps/noninstall"
     };
-    
+
     final String [] FAKE_RESOURCES = {
         "/libs/foo/bar/install/bundle1.jar",
         "/libs/foo/bar/install/cfg3.cfg",
@@ -60,38 +60,38 @@ class ContentHelper {
         "/libs/foo/wii/install/cfg1.properties",
         "/libs/foo/wii/install/cfg2.properties",
     };
-    
+
     final String [] FAKE_CONFIGS = {
         "/libs/foo/bar/install/cfgA",
         "/libs/foo/wii/install/cfgB",
         "/libs/foo/wii/install/cfgC"
     };
-    
+
     private final Session session;
-    
+
     ContentHelper(Session s) throws RepositoryException, IOException {
     	session = s;
-    	
+
         final NamespaceRegistry r = session.getWorkspace().getNamespaceRegistry();
         try {
             r.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
         } catch(RepositoryException ignore) {
             // don't fail if already registered
         }
-        
+
         RepositoryUtil.registerNodeType(session,
                 this.getClass().getResourceAsStream("/SLING-INF/nodetypes/osgiconfig.cnd"));
     }
 
     void cleanupContent() throws Exception {
-    	final String [] paths = { "libs", "apps" }; 
+    	final String [] paths = { "libs", "apps" };
     	for(String path : paths) {
             if(session.getRootNode().hasNode(path)) {
                 session.getRootNode().getNode(path).remove();
             }
     	}
     }
-    
+
     void setupContent() throws Exception {
     	cleanupContent();
     	setupFolders();
@@ -102,7 +102,7 @@ class ContentHelper {
             createConfig(path, null);
         }
     }
-    
+
     void setupFolders() throws Exception {
         for(String folder : WATCHED_FOLDERS) {
             createFolder(folder);
@@ -111,7 +111,7 @@ class ContentHelper {
             createFolder(folder);
         }
     }
-    
+
     void createFolder(String path) throws Exception {
         final String [] parts = relPath(path).split("/");
         Node n = session.getRootNode();
@@ -124,26 +124,26 @@ class ContentHelper {
         }
         session.save();
     }
-    
+
     void delete(String path) throws RepositoryException {
         session.getItem(path).remove();
         session.save();
     }
-    
+
     void createOrUpdateFile(String path) throws RepositoryException {
         createOrUpdateFile(path, null, System.currentTimeMillis());
     }
-    
+
     void createOrUpdateFile(String path, MockInstallableResource d) throws RepositoryException {
     	createOrUpdateFile(path, d.getInputStream(), System.currentTimeMillis());
     }
-    
+
     void createOrUpdateFile(String path, InputStream data, long lastModified) throws RepositoryException {
     	if(data == null) {
             final String content = "Fake data for " + path;
             data = new ByteArrayInputStream(content.getBytes());
     	}
-    	
+
         final String relPath = relPath(path);
         Node f = null;
         Node res = null;
@@ -154,31 +154,28 @@ class ContentHelper {
             f = session.getRootNode().addNode(relPath,NT_FILE);
             res = f.addNode(JCR_CONTENT,NT_RESOURCE);
         }
-        
+
         final Calendar c = Calendar.getInstance();
         c.setTimeInMillis(lastModified);
         res.setProperty(JCR_LASTMODIFIED, c);
         res.setProperty(JCR_DATA, data);
         res.setProperty(JCR_MIMETYPE, "");
-        
-        f.getParent().save();
+
+        session.save();
     }
-    
+
     String relPath(String path) {
         if(path.startsWith("/")) {
             return path.substring(1);
         }
         return path;
     }
-    
+
     void createConfig(String path, Map<String, String> data) throws RepositoryException {
         path = relPath(path);
-        Node cfg = null;
-        if(session.getRootNode().hasNode(path)) {
-            cfg = session.getRootNode().getNode(path);
-        } else {
-            cfg = session.getRootNode().addNode(path, "sling:OsgiConfig");
+        if( !session.getRootNode().hasNode(path)) {
+            session.getRootNode().addNode(path, "sling:OsgiConfig");
+            session.save();
         }
-        cfg.getParent().save();
    }
 }
