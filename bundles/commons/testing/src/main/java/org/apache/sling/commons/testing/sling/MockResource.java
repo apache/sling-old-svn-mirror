@@ -25,16 +25,16 @@ public class MockResource extends SyntheticResource {
 
     private String resourceType;
     private String resourceSuperType;
-    
+
     public MockResource(ResourceResolver resourceResolver, String path,
             String resourceType) {
         this(resourceResolver, path, resourceType, null);
     }
-    
+
     public MockResource(ResourceResolver resourceResolver, String path,
             String resourceType, String resourceSuperType) {
         super(resourceResolver, path, resourceType);
-        
+
         setResourceType(resourceType);
         setResourceSuperType(resourceSuperType);
     }
@@ -43,17 +43,16 @@ public class MockResource extends SyntheticResource {
     public String getResourceType() {
         return resourceType;
     }
-    
-    @Override
+
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
-    
+
     @Override
     public String getResourceSuperType() {
         return resourceSuperType;
     }
-    
+
     public void setResourceSuperType(String resourceSuperType) {
         this.resourceSuperType = resourceSuperType;
     }
