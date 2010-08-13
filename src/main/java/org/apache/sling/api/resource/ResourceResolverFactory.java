@@ -97,7 +97,7 @@ public interface ResourceResolverFactory {
      * <code>authenticationInfo</code> map.
      * <p>
      * Note, that if the <code>authenticationInfo</code> map contains the
-     * {@link #SUDO_USER_ID} attribute the <code>ResourceResolver</code>
+     * {@link #USER_IMPERSONATION} attribute the <code>ResourceResolver</code>
      * returned will only have administrative privileges if the user identified
      * by the property has administrative privileges.
      *
@@ -105,7 +105,7 @@ public interface ResourceResolverFactory {
      *            may be used by the implementation to parametrize how the
      *            resource resolver is created. This may be <code>null</code>.
      * @return A {@link ResourceResolver} with administrative privileges unless
-     *         the {@link #SUDO_USER_ID} was set in the
+     *         the {@link #USER_IMPERSONATION} was set in the
      *         <code>authenticationInfo</code>.
      * @throws LoginException If an error occurrs creating the new
      *             <code>ResourceResolver</code> with the provided credential

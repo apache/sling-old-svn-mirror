@@ -23,7 +23,7 @@ package org.apache.sling.api.resource;
  * <code>{@link ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)}</code>
  * ,
  * <code>{@link ResourceResolverFactory#getResourceResolver(java.util.Map)}</code>
- * , and <code>{@link ResourceResolver#copy(java.util.Map)}</code> if a resource
+ * , and <code>{@link ResourceResolver#clone(java.util.Map)}</code> if a resource
  * resolver cannot be created because the credential data is not valid.
  *
  * @since 2.1
