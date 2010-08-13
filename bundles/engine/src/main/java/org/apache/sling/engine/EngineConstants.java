@@ -39,7 +39,7 @@ public class EngineConstants {
      * <code>BundleContext.getProperty(String)</code> method.
      *
      * @see #SLING_HOME_URL
-     * @deprecated Use {@link org.apache.sling.api.SlingConstants#SLING_HOME}
+     * @deprecated Use {@link org.apache.sling.settings.SlingSettingsService#SLING_HOME}
      */
     @Deprecated
     public static final String SLING_HOME = "sling.home";
@@ -56,7 +56,7 @@ public class EngineConstants {
      * <code>BundleContext.getProperty(String)</code> method.
      *
      * @see #SLING_HOME
-     * @deprecated Use {@link org.apache.sling.api.SlingConstants#SLING_HOME_URL}
+     * @deprecated Use {@link org.apache.sling.settings.SlingSettingsService#SLING_HOME_URL}
      */
     @Deprecated
     public static final String SLING_HOME_URL = "sling.home.url";
