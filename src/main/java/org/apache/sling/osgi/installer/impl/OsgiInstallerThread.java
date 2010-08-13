@@ -37,6 +37,8 @@ import org.apache.sling.osgi.installer.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 
 /** Worker thread where all OSGi tasks are executed.
  *  Runs cycles where the list of RegisteredResources is examined,
@@ -46,9 +48,10 @@ import org.osgi.framework.BundleListener;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-class OsgiInstallerThread
+public class OsgiInstallerThread
     extends Thread
-    implements BundleListener, OsgiInstallerStatistics, OsgiInstallerContext {
+    implements BundleListener, FrameworkListener,
+               OsgiInstaller, OsgiInstallerStatistics, OsgiInstallerContext {
 
     private final BundleContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
@@ -70,20 +73,24 @@ class OsgiInstallerThread
     private long [] counters = new long[COUNTERS_SIZE];
 
     OsgiInstallerThread(final BundleContext ctx) {
+        this.ctx = ctx;
+        // listen to framework and bundle events
+        this.ctx.addFrameworkListener(this);
+        this.ctx.addBundleListener(this);
         this.configTaskCreator = new ConfigTaskCreator(ctx);
         this.bundleTaskCreator = new BundleTaskCreator(ctx);
         setName(getClass().getSimpleName());
-        this.ctx = ctx;
         final File f = ctx.getDataFile("RegisteredResourceList.ser");
         persistentList = new PersistentResourceList(ctx, f);
         registeredResources = persistentList.getData();
     }
 
     void deactivate() {
+        this.active = false;
         this.configTaskCreator.deactivate();
         this.bundleTaskCreator.deactivate();
         ctx.removeBundleListener(this);
-        active = false;
+        ctx.removeFrameworkListener(this);
         synchronized (newResources) {
             newResources.notify();
         }
@@ -106,9 +113,7 @@ class OsgiInstallerThread
 
     @Override
     public void run() {
-        ctx.addBundleListener(this);
-
-        while(active) {
+        while (active) {
             try {
             	mergeNewResources();
             	computeTasks();
@@ -162,8 +167,20 @@ class OsgiInstallerThread
         }
     }
 
-    /** Register a resource for removal, or ignore if we don't have that URL */
-    void removeResource(String id, final String scheme) {
+    private void checkScheme(final String scheme) {
+        if ( scheme == null || scheme.length() == 0 ) {
+            throw new IllegalArgumentException("Scheme required");
+        }
+        if ( scheme.indexOf(':') != -1 ) {
+            throw new IllegalArgumentException("Scheme must not contain a colon");
+        }
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String, java.lang.String)
+     */
+    public void removeResource(final String scheme, final String id) {
+        checkScheme(scheme);
         final String url = scheme + ':' + id;
 		// Will mark all resources which have r's URL as uninstallable
         Logger.logDebug("Adding URL " + url + " to urlsToRemove");
@@ -174,8 +191,11 @@ class OsgiInstallerThread
         }
     }
 
-    /** Register a single new resource, will be processed on the next cycle */
-    void addNewResource(final InstallableResource r, final String scheme) {
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
+     */
+    public void addResource(final String scheme, final InstallableResource r) {
+        checkScheme(scheme);
         RegisteredResource rr = null;
         try {
             rr = new RegisteredResourceImpl(ctx, r, scheme);
@@ -191,15 +211,16 @@ class OsgiInstallerThread
         }
     }
 
-    /** Register a number of new resources, and mark others having the same scheme as not installable.
-     *  Used with {@link OsgiInstaller.registerResources}
+    /**
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, java.util.Collection)
      */
-    void addNewResources(Collection<InstallableResource> data, String urlScheme, BundleContext bundleContext) {
-        final SortedSet<RegisteredResource> toAdd = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+    public void registerResources(final String scheme, final Collection<InstallableResource> data) {
+        checkScheme(scheme);
+        final SortedSet<RegisteredResource> toAdd = new TreeSet<RegisteredResource>();
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(ctx, r, urlScheme);
+                rr = new RegisteredResourceImpl(ctx, r, scheme);
             } catch(IOException ioe) {
                 Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;
@@ -215,8 +236,8 @@ class OsgiInstallerThread
             }
             // Need to manage schemes separately: in case toAdd is empty we
             // want to mark all such resources as non-installable
-            Logger.logDebug("Adding to newResourcesSchemes: " + urlScheme);
-            newResourcesSchemes.add(urlScheme);
+            Logger.logDebug("Adding to newResourcesSchemes: " + scheme);
+            newResourcesSchemes.add(scheme);
             newResources.notify();
         }
     }
@@ -263,7 +284,7 @@ class OsgiInstallerThread
                 // new one which might have different attributes
                 if(t.contains(r)) {
                 	for(RegisteredResource rr : t) {
-                		if(t.comparator().compare(rr, r) == 0) {
+                		if(rr.compareTo(r) == 0) {
                 		    Logger.logDebug("Cleanup obsolete " + rr);
                 			rr.cleanup();
                 		}
@@ -301,24 +322,18 @@ class OsgiInstallerThread
 
     /** Factored out to use the exact same structure in tests */
     static SortedSet<RegisteredResource> createRegisteredResourcesEntry() {
-        return new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+        return new TreeSet<RegisteredResource>();
     }
 
 
     /** Compute OSGi tasks based on our resources, and add to supplied list of tasks */
     void computeTasks() throws Exception {
-        // Add tasks that were scheduled for next cycle and are executable now
-        final List<OsgiInstallerTask> toKeep = new ArrayList<OsgiInstallerTask>();
+        // Add tasks that were scheduled for next cycle
         synchronized (tasksForNextCycle) {
             for(OsgiInstallerTask t : tasksForNextCycle) {
-                if(t.isExecutable(this)) {
-                    tasks.add(t);
-                } else {
-                    toKeep.add(t);
-                }
+                tasks.add(t);
             }
             tasksForNextCycle.clear();
-            tasksForNextCycle.addAll(toKeep);
         }
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
@@ -405,11 +420,37 @@ class OsgiInstallerThread
     	}
     }
 
+    /**
+     * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
+     */
     public void bundleChanged(BundleEvent e) {
+        synchronized (LOCK) {
+            eventsCount++;
+        }
     	final int t = e.getType();
     	if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
     	    Logger.logDebug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
     		scheduleRetries();
     	}
+    }
+
+    private static volatile long eventsCount;
+
+    private static final Object LOCK = new Object();
+
+    /** Used for tasks that wait for a framework or bundle event before retrying their operations */
+    public static long getTotalEventsCount() {
+        synchronized (LOCK) {
+            return eventsCount;
+        }
+    }
+
+    /**
+     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
+     */
+    public void frameworkEvent(final FrameworkEvent event) {
+        synchronized (LOCK) {
+            eventsCount++;
+        }
     }
 }

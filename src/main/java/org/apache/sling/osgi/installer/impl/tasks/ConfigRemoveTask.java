@@ -34,7 +34,8 @@ public class ConfigRemoveTask extends AbstractConfigTask {
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
 
-    public ConfigRemoveTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+    public ConfigRemoveTask(final RegisteredResource r,
+            final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
     }
 
@@ -43,10 +44,12 @@ public class ConfigRemoveTask extends AbstractConfigTask {
         return CONFIG_REMOVE_ORDER + pid.getCompositePid();
     }
 
-    public Result execute(OsgiInstallerContext ctx) {
-
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+     */
+    public Result execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
-        if(ca == null) {
+        if (ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return Result.NOTHING;
@@ -54,7 +57,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
 
         logExecution();
         try {
-            final Configuration cfg = getConfiguration(ca, pid, false, ctx);
+            final Configuration cfg = getConfiguration(ca, pid, false);
             if(cfg == null) {
                 Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
             } else {

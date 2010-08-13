@@ -77,9 +77,9 @@ public class RegisteredResourceTest {
 	    final File f = getTestBundle("testbundle-1.0.jar");
         final InputStream s = new FileInputStream(f);
 		final LocalFileRegisteredResource r = new LocalFileRegisteredResource(new InstallableResource("test:1.jar", s, null, "somedigest", null, null));
-		assertTrue("Local file exists", r.getDataFile().exists());
+		assertTrue("Local file exists", r.getDataFile(null).exists());
 
-		assertEquals("Local file length matches our data", f.length(), r.getDataFile().length());
+		assertEquals("Local file length matches our data", f.length(), r.getDataFile(null).length());
 	}
 
     @org.junit.Test public void testMissingDigest() throws Exception {
@@ -115,33 +115,5 @@ public class RegisteredResourceTest {
         assertFalse(
                 "Expecting configs with same data but different URLs to have different digests",
                 rA.getDigest().equals(rB.getDigest()));
-    }
-
-    @org.junit.Test public void testUrlScheme() throws Exception {
-        final String [] badOnes = {
-                "",
-                ":colonTooEarly",
-                ":colonTooEarlyAgain:",
-        };
-        for(String url : badOnes) {
-            try {
-                new RegisteredResourceImpl(null,
-                        new InstallableResource("test", null, new Hashtable<String, Object>(), null, null, null),
-                        url);
-                fail("Expected bad URL '" + url + "' to throw IllegalArgumentException");
-            } catch(IllegalArgumentException asExpected) {
-            }
-        }
-
-        final String [] goodOnes = {
-                "noColon"
-        };
-
-        for(String url : goodOnes) {
-            final RegisteredResource r = new RegisteredResourceImpl(null,
-                    new InstallableResource("test", null, new Hashtable<String, Object>(), "digest1", null, null),
-                    url);
-            assertEquals("Expected scheme '" + url + "' for URL " + url, url, r.getUrlScheme());
-        }
     }
 }

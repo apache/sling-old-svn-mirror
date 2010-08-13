@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,7 @@ import org.apache.sling.osgi.installer.InstallableResource;
 import org.osgi.framework.Constants;
 
 /** Mock RegisteredResource that simulates a bundle */
-public class MockBundleResource implements RegisteredResource, Serializable {
+public class MockBundleResource implements RegisteredResource {
 
     private static final long serialVersionUID = 1L;
     private final Map<String, Object> attributes = new HashMap<String, Object>();
@@ -75,59 +74,108 @@ public class MockBundleResource implements RegisteredResource, Serializable {
         ;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#cleanup()
+	 */
 	public void cleanup() {
 	    // nothing to do
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getAttributes()
+	 */
 	public Map<String, Object> getAttributes() {
 		return attributes;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getDictionary()
+	 */
 	public Dictionary<String, Object> getDictionary() {
 		return null;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getDigest()
+	 */
 	public String getDigest() {
 		return digest;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getEntityId()
+	 */
 	public String getEntityId() {
 		return null;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getInputStream()
+	 */
 	public InputStream getInputStream() throws IOException {
 		return null;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getType()
+	 */
 	public String getType() {
 		return InstallableResource.TYPE_BUNDLE;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getId()
+	 */
 	public String getId() {
 		return null;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getURL()
+	 */
 	public String getURL() {
 		return null;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getUrlScheme()
+     */
     public String getUrlScheme() {
         return null;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#isInstallable()
+     */
     public boolean isInstallable() {
         return installable;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setInstallable(boolean)
+     */
     public void setInstallable(boolean installable) {
         this.installable = installable;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getPriority()
+     */
     public int getPriority() {
         return priority;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getSerialNumber()
+     */
     public long getSerialNumber() {
         return serialNumber;
+    }
+
+    /**
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(RegisteredResource o) {
+        return RegisteredResourceImpl.compare(this, o);
     }
 }

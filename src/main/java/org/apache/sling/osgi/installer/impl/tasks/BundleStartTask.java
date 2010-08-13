@@ -20,11 +20,11 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.impl.Activator;
 import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerThread;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -47,7 +47,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 	public BundleStartTask(final long bundleId, final BundleTaskCreator btc) {
 		this.bundleId = bundleId;
 		this.creator = btc;
-		sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
+		this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
 	}
 
 	@Override
@@ -60,62 +60,56 @@ public class BundleStartTask extends OsgiInstallerTask {
 		return getClass().getSimpleName() + ": bundle " + bundleId;
 	}
 
-	public Result execute(OsgiInstallerContext ctx) {
-		final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
-		boolean needToRetry = false;
-
-        if(bundleId == 0) {
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+	 */
+	public Result execute(final OsgiInstallerContext ctx) {
+	    // TODO : if bundle id is zero we should have created this task in the first place!
+        if (bundleId == 0) {
             Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
             return Result.NOTHING;
         }
 
-		if(b == null) {
-		    Logger.logInfo("Cannot start bundle, id not found:" + bundleId);
+        // Do not execute this task if waiting for events
+        final long eventsCount = OsgiInstallerThread.getTotalEventsCount();
+        if (eventsCount < eventsCountForRetrying) {
+            Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
+            ctx.addTaskToNextCycle(this);
+            return Result.NOTHING;
+        }
+
+        final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
+		if (b == null) {
+		    Logger.logInfo("Cannot start bundle, id not found: " + bundleId);
 			return Result.NOTHING;
 		}
 
-		try {
-	        if(b.getState() == Bundle.ACTIVE) {
-	            Logger.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
-	        } else {
-	            // Try to start bundle, and if that doesn't work we'll need to retry
-	            logExecution();
-	            try {
-	                b.start();
-	                Logger.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
-	            } catch(BundleException e) {
-	                Logger.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
-	                            + "), will retry: " + bundleId + "/" + b.getSymbolicName());
-	                needToRetry = true;
-	            }
+        if (b.getState() == Bundle.ACTIVE) {
+            Logger.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
+        } else {
+            // Try to start bundle, and if that doesn't work we'll need to retry
+            logExecution();
+            try {
+                b.start();
+                Logger.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
+            } catch(BundleException e) {
+                Logger.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
+                            + "), will retry: " + bundleId + "/" + b.getSymbolicName());
 
-	        }
-		} finally {
-	        if(needToRetry) {
+                // Do the first retry immediately (in case "something" happenened right now
+                // that warrants a retry), but for the next ones wait for at least one bundle
+                // event or framework event
+                if (retryCount == 0) {
+                    eventsCountForRetrying = OsgiInstallerThread.getTotalEventsCount();
+                } else {
+                    eventsCountForRetrying = OsgiInstallerThread.getTotalEventsCount() + 1;
+                }
 
-	            // Do the first retry immediately (in case "something" happenened right now
-	            // that warrants a retry), but for the next ones wait for at least one bundle
-	            // event or framework event
-	            if(retryCount == 0) {
-	                eventsCountForRetrying = Activator.getTotalEventsCount();
-	            } else {
-                    eventsCountForRetrying = Activator.getTotalEventsCount() + 1;
-	            }
+                ctx.addTaskToNextCycle(this);
+            }
 
-	            ctx.addTaskToNextCycle(this);
-	        }
-		}
+        }
 		retryCount++;
         return Result.SUCCESS;
 	}
-
-	/** Do not execute this task if waiting for events */
-    public boolean isExecutable(OsgiInstallerContext tctx) {
-        final long eventsCount = Activator.getTotalEventsCount();
-        final boolean result = eventsCount >= eventsCountForRetrying;
-        if(!result) {
-            Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
-        }
-        return result;
-    }
 }

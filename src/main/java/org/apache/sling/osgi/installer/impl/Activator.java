@@ -24,15 +24,15 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator implements BundleActivator, FrameworkListener, BundleListener {
+/**
+ * The activator sets up the logging and registers the
+ * OSGi installer service.
+ */
+public class Activator implements BundleActivator {
 
     /** Interface of the log service */
     private static String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
@@ -40,75 +40,64 @@ public class Activator implements BundleActivator, FrameworkListener, BundleList
     /** Vendor of all registered services. */
     private static final String VENDOR = "The Apache Software Foundation";
 
-    private OsgiInstallerImpl osgiControllerService;
+    private OsgiInstallerThread osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
 
     /** Tracker for the log service. */
     private ServiceTracker logServiceTracker;
 
-    private static long eventsCount;
-
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
-        // listen to framework and bundle events
-        context.addFrameworkListener(this);
-        context.addBundleListener(this);
-
+        // setup logging
         this.logServiceTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
         this.logServiceTracker.open();
         Logger.setTracker(this.logServiceTracker);
-        // register OsgiController service
-        {
-            final Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
-            props.put(Constants.SERVICE_VENDOR, VENDOR);
 
-            this.osgiControllerService = new OsgiInstallerImpl(context);
-            final String [] serviceInterfaces = {
-                    OsgiInstaller.class.getName(),
-                    OsgiInstallerStatistics.class.getName()
-            };
-            osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
-        }
+        // register osgi installer service
+        final Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
+
+        this.osgiControllerService = new OsgiInstallerThread(context);
+        this.osgiControllerService.setDaemon(true);
+        this.osgiControllerService.start();
+        final String [] serviceInterfaces = {
+                OsgiInstaller.class.getName(),
+                OsgiInstallerStatistics.class.getName()
+        };
+        osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) {
-    	context.removeBundleListener(this);
-    	context.removeFrameworkListener(this);
-
+        // stop osgi installer service
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
+            Logger.logInfo("Waiting for installer thread to stop");
+            try {
+                this.osgiControllerService.join();
+            } catch (InterruptedException e) {
+                // we simply ignore this
+            }
+
+            Logger.logWarn(OsgiInstaller.class.getName()
+                    + " service deactivated - this warning can be ignored if system is shutting down");
             this.osgiControllerService = null;
         }
+        // unregister service
         if ( this.osgiControllerServiceReg != null ) {
             this.osgiControllerServiceReg.unregister();
             this.osgiControllerServiceReg = null;
         }
+        // stop logging
         Logger.setTracker(null);
     	if ( this.logServiceTracker != null ) {
     	    this.logServiceTracker.close();
     	    this.logServiceTracker = null;
     	}
-    }
-
-    /** Used for tasks that wait for a framework or bundle event before retrying their operations */
-    public static long getTotalEventsCount() {
-        return eventsCount;
-    }
-
-    /**
-     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
-     */
-    public void frameworkEvent(final FrameworkEvent event) {
-        eventsCount++;
-    }
-
-    public void bundleChanged(final BundleEvent event) {
-        eventsCount++;
     }
 }

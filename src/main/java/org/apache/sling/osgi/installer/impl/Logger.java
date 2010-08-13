@@ -23,7 +23,10 @@ import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
- * Logger support
+ * Logger support.
+ * If a log service is available, log messages go
+ * to the log service - if no log service is
+ * available, log messages are ignored.
  */
 public class Logger {
 
