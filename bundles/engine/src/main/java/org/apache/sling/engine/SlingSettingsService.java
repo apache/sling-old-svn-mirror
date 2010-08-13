@@ -20,7 +20,7 @@ package org.apache.sling.engine;
 
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
- * @deprecated Use the {@link org.apache.sling.api.services.SlingSettingsService}
+ * @deprecated Use the {@link org.apache.sling.settings.SlingSettingsService}
  */
 @Deprecated
 public interface SlingSettingsService {
