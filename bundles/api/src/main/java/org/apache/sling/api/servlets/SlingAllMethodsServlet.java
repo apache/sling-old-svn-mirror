@@ -59,6 +59,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
+    @SuppressWarnings("unused")
     protected void doPost(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -82,6 +83,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
+    @SuppressWarnings("unused")
     protected void doPut(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -105,6 +107,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
+    @SuppressWarnings("unused")
     protected void doDelete(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
