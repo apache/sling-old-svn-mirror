@@ -39,7 +39,6 @@ import java.util.TreeSet;
 import java.util.Map.Entry;
 
 import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
