@@ -221,9 +221,14 @@ public class JspServletWrapper {
             }
             if (firstTime || this.lastModificationTest == 0) {
                 synchronized (this) {
-                    ctxt.compile();
-                    firstTime = false;
-                    this.lastModificationTest = System.currentTimeMillis();
+                    if (firstTime || this.lastModificationTest == 0 ) {
+                        ctxt.compile();
+                        this.lastModificationTest = System.currentTimeMillis();
+                        firstTime = false;
+                    } else if ( compileException != null ) {
+                        // Throw cached compilation exception
+                        throw compileException;
+                    }
                 }
             } else {
                 if (compileException != null) {
@@ -231,9 +236,18 @@ public class JspServletWrapper {
                 }
             }
 
+            if (!reload) {
+                if ( tagHandlerClass.getClassLoader() instanceof DynamicClassLoader ) {
+                    reload = !((DynamicClassLoader)tagHandlerClass.getClassLoader()).isLive();
+                }
+            }
             if (reload) {
-                tagHandlerClass = ctxt.load();
-                reload = false;
+                synchronized ( this ) {
+                    if ( reload ) {
+                        tagHandlerClass = ctxt.load();
+                        reload = false;
+                    }
+                }
             }
         } catch (IOException ex) {
             throw new JasperException(ex);
@@ -266,9 +280,18 @@ public class JspServletWrapper {
         try {
             Object target;
             if (isTagFile) {
+                if (!reload) {
+                    if ( tagHandlerClass.getClassLoader() instanceof DynamicClassLoader ) {
+                        reload = !((DynamicClassLoader)tagHandlerClass.getClassLoader()).isLive();
+                    }
+                }
                 if (reload) {
-                    tagHandlerClass = ctxt.load();
-                    reload = false;
+                    synchronized ( this ) {
+                        if ( reload ) {
+                            tagHandlerClass = ctxt.load();
+                            reload = false;
+                        }
+                    }
                 }
                 target = tagHandlerClass.newInstance();
             } else {

@@ -51,9 +51,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>
-                            org.apache.sling.scripting.jsp.Activator
-                        </Bundle-Activator>
                         <Export-Package>
                             org.apache.sling.scripting.jsp.jasper.runtime;
                             org.apache.sling.scripting.jsp.util;version=2.0.8,

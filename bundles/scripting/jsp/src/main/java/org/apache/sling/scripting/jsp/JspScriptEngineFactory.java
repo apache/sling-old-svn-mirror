@@ -37,6 +37,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -102,8 +103,7 @@ public class JspScriptEngineFactory
     /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
 
-    @Reference
-    private TaglibCache tldLocationsCache;
+    private SlingTldLocationsCache tldLocationsCache;
 
     private JspRuntimeContext jspRuntimeContext;
 
@@ -217,12 +217,14 @@ public class JspScriptEngineFactory
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
+            this.tldLocationsCache = new SlingTldLocationsCache(componentContext.getBundleContext());
+
             // prepare some classes
             ioProvider = new SlingIOProvider(classLoaderWriter);
 
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
-                componentContext, jspClassLoader, (SlingTldLocationsCache)tldLocationsCache);
+                componentContext, jspClassLoader, tldLocationsCache);
 
             // Initialize the JSP Runtime Context
             this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
@@ -232,7 +234,7 @@ public class JspScriptEngineFactory
             this.jspRuntimeContext.setIOProvider(ioProvider);
 
             jspServletContext = new JspServletContext(ioProvider,
-                slingServletContext, (SlingTldLocationsCache)tldLocationsCache);
+                slingServletContext, tldLocationsCache);
 
             servletConfig = new JspServletConfig(jspServletContext,
                 componentContext.getProperties());
@@ -261,6 +263,10 @@ public class JspScriptEngineFactory
     protected void deactivate(final ComponentContext componentContext) {
         logger.debug("JspScriptEngine.deactivate()");
 
+        if ( this.tldLocationsCache != null ) {
+            this.tldLocationsCache.deactivate(componentContext.getBundleContext());
+            this.tldLocationsCache = null;
+        }
         if ( this.eventHandlerRegistration != null ) {
             this.eventHandlerRegistration.unregister();
             this.eventHandlerRegistration = null;

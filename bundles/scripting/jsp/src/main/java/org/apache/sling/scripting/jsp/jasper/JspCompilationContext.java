@@ -36,7 +36,6 @@ import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspUtil;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
 import org.apache.sling.scripting.jsp.jasper.compiler.ServletWriter;
-import org.apache.sling.scripting.jsp.jasper.servlet.JasperLoader;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 
 /**
@@ -79,13 +78,11 @@ public class JspCompilationContext {
     protected String baseURI;
     protected String outputDir;
     protected ServletContext context;
-    protected ClassLoader loader;
 
     protected JspRuntimeContext rctxt;
 
     protected int removed = 0;
 
-    protected ClassLoader jspLoader;
     protected URL baseUrl;
     protected Class<?> servletClass;
 
@@ -148,45 +145,36 @@ public class JspCompilationContext {
 
     /**
      * The classpath that is passed off to the Java compiler.
-     */
     public String getClassPath() {
         if( classPath != null )
             return classPath;
         return rctxt.getClassPath();
     }
+     */
 
     /**
      * The classpath that is passed off to the Java compiler.
-     */
     public void setClassPath(String classPath) {
         this.classPath = classPath;
     }
+     */
 
     /**
      * What class loader to use for loading classes while compiling
      * this JSP?
      */
     public ClassLoader getClassLoader() {
-        if( loader != null )
-            return loader;
-        return rctxt.getParentClassLoader();
+        return getJspLoader();
     }
 
+    /**
     public void setClassLoader(ClassLoader loader) {
         this.loader = loader;
     }
+     */
 
     public ClassLoader getJspLoader() {
-        if( jspLoader == null ) {
-            ClassLoader jspLoader = options.getJspClassLoader();
-            if (jspLoader == null) {
-                jspLoader = new JasperLoader(new URL[] { baseUrl },
-                    getClassLoader(), rctxt.getPermissionCollection(),
-                    rctxt.getCodeSource());
-            }
-            this.jspLoader = jspLoader;
-        }
-        return jspLoader;
+        return options.getJspClassLoader();
     }
 
     /** ---------- Input/Output  ---------- */
@@ -608,7 +596,6 @@ public class JspCompilationContext {
         if (isPackagedTagFile || jspCompiler.isOutDated()) {
             try {
                 jspCompiler.removeGeneratedFiles();
-                jspLoader = null;
                 jspCompiler.compile();
                 jsw.setReload(true);
                 jsw.setCompilationException(null);
@@ -649,7 +636,7 @@ public class JspCompilationContext {
             } else {
                 name = getServletPackageName() + "." + getServletClassName();
             }
-            servletClass = jspLoader.loadClass(name);
+            servletClass = getJspLoader().loadClass(name);
         } catch (ClassNotFoundException cex) {
             throw new JasperException(Localizer.getMessage("jsp.error.unable.load"),
                                       cex);
