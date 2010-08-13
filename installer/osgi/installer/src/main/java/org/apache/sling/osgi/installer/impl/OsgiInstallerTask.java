@@ -19,7 +19,7 @@
 package org.apache.sling.osgi.installer.impl;
 
 
-/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */
+/** Base class for tasks that can be executed by the {@link OsgiInstallerThread} */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
     public enum Result {
@@ -39,11 +39,6 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	/** All comparisons are based on getSortKey() */
 	public final int compareTo(OsgiInstallerTask o) {
 		return getSortKey().compareTo(o.getSortKey());
-	}
-
-	/** Is it worth executing this task now? */
-	public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
-	    return true;
 	}
 
 	@Override

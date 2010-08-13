@@ -87,7 +87,7 @@ public class PersistentResourceListTest {
     private void addTestData(PersistentResourceList p) {
         for(int i = 0; i < TEST_SCALE; i++) {
             final String symbolicName = FAKE + i;
-            TreeSet<RegisteredResource> s = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+            TreeSet<RegisteredResource> s = new TreeSet<RegisteredResource>();
             for(int j= TEST_SCALE - 2; j >= 1; j--) {
                 s.add(new MockBundleResource(symbolicName, getFakeVersion(i, j)));
             }

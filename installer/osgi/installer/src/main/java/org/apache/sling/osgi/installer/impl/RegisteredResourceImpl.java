@@ -42,12 +42,15 @@ import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 /**
  * Implementation of the registered resource
  */
-public class RegisteredResourceImpl implements RegisteredResource, Serializable {
-    private static final long serialVersionUID = 2L;
+public class RegisteredResourceImpl
+    implements RegisteredResource, Serializable {
+
+    private static final long serialVersionUID = 3L;
     private final String id;
 	private final String url;
 	private final String urlScheme;
@@ -56,52 +59,37 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	private final Dictionary<String, Object> dictionary;
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private boolean installable = true;
-	private final boolean hasDataFile;
+	private final File dataFile;
 	private final int priority;
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
 
     private final String resourceType;
 
-    private transient BundleContext bundleContext;
-
-	/** Create a RegisteredResource from given data. If the data's extension
-	 *  maps to a configuration and the data provides an input stream, it is
-	 *  converted to a Dictionary
+	/**
+	 * Create a RegisteredResource from given data.
+	 * As this data object is filled from an {@link InstallableResource}
+	 * we don't have to validate values - this has already been done
+	 * by the installable resource!
 	 */
 	public RegisteredResourceImpl(final BundleContext ctx,
 	        final InstallableResource input,
 	        final String scheme) throws IOException {
-	    this.bundleContext = ctx;
-        if ( scheme == null || scheme.length() == 0 ) {
-            throw new IllegalArgumentException("Scheme required");
-        }
-        if ( scheme.indexOf(':') != -1 ) {
-            throw new IllegalArgumentException("Scheme must not contain a colon");
-        }
         this.id = input.getId();
-		url = scheme + ':' + input.getId();
-		urlScheme = scheme;
-		resourceType = input.getType();
-		priority = input.getPriority();
-		serialNumber = getNextSerialNumber();
-
-        if(input.getDigest() == null || input.getDigest().length() == 0) {
-            throw new IllegalArgumentException("Missing digest: " + input);
-        }
+        this.urlScheme = scheme;
+		this.url = scheme + ':' + input.getId();
+		this.resourceType = input.getType();
+		this.priority = input.getPriority();
+        this.dictionary = copy(input.getDictionary());
+        this.digest = input.getDigest();
+		this.serialNumber = getNextSerialNumber();
 
 		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
 		    final InputStream is = input.getInputStream();
-            if (is == null) {
-                throw new IllegalArgumentException("InputStream is required for BUNDLE resource type: " + input);
-            }
             try {
-                dictionary = copy(input.getDictionary());
-                final File f = getDataFile();
-                Logger.logDebug("Copying data to local storage " + f.getAbsolutePath());
-                copyToLocalStorage(input.getInputStream(), f);
-                hasDataFile = true;
-                digest = input.getDigest();
+                this.dataFile = getDataFile(ctx);
+                Logger.logDebug("Copying data to local storage " + this.dataFile);
+                copyToLocalStorage(input.getInputStream());
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if(name == null) {
@@ -114,20 +102,13 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
                 is.close();
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
-            hasDataFile = false;
+            this.dataFile = null;
             final ConfigurationPid pid = new ConfigurationPid(url);
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
-            // config provided as a Dictionary
-            dictionary = copy(input.getDictionary());
-            digest = input.getDigest();
 		} else {
 		    throw new IOException("Unknown type " + resourceType);
 		}
-	}
-
-	public void init(final BundleContext bc) {
-	    this.bundleContext = bc;
 	}
 
     private static long getNextSerialNumber() {
@@ -141,14 +122,13 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
 	}
 
-	protected File getDataFile() {
+	protected File getDataFile(final BundleContext bundleContext) {
 		final String filename = getClass().getSimpleName() + "." + serialNumber;
-		return this.bundleContext.getDataFile(filename);
+		return bundleContext.getDataFile(filename);
 	}
 
 	public void cleanup() {
-	    final File dataFile = getDataFile();
-		if(dataFile.exists()) {
+	    if ( this.dataFile != null && this.dataFile.exists() ) {
 		    Logger.logDebug("Deleting local storage file "
 		                + dataFile.getAbsolutePath());
 			dataFile.delete();
@@ -160,11 +140,8 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 	}
 
 	public InputStream getInputStream() throws IOException {
-	    if(hasDataFile) {
-	        final File dataFile = getDataFile();
-	        if(dataFile.exists()) {
-	            return new BufferedInputStream(new FileInputStream(dataFile));
-	        }
+	    if (this.dataFile != null && this.dataFile.exists() ) {
+	        return new BufferedInputStream(new FileInputStream(this.dataFile));
 	    }
         return  null;
 	}
@@ -177,9 +154,16 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
 		return digest;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getSerialNumber()
+     */
+    public long getSerialNumber() {
+        return this.serialNumber;
+    }
+
     /** Copy data to local storage */
-	private void copyToLocalStorage(InputStream data, File f) throws IOException {
-		final OutputStream os = new BufferedOutputStream(new FileOutputStream(f));
+	private void copyToLocalStorage(final InputStream data) throws IOException {
+		final OutputStream os = new BufferedOutputStream(new FileOutputStream(this.dataFile));
 		try {
 			final byte[] buffer = new byte[16384];
 			int count = 0;
@@ -296,7 +280,89 @@ public class RegisteredResourceImpl implements RegisteredResource, Serializable 
         return priority;
     }
 
-    public long getSerialNumber() {
-        return serialNumber;
+    /**
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(final RegisteredResource b) {
+        return compare(this, b);
+    }
+
+    public static int compare(final RegisteredResource a, final RegisteredResource b) {
+        final boolean aBundle = a.getType().equals(InstallableResource.TYPE_BUNDLE);
+        final boolean bBundle = b.getType().equals(InstallableResource.TYPE_BUNDLE);
+
+        if (aBundle && bBundle) {
+            return compareBundles(a, b);
+        } else if (!aBundle && !bBundle){
+            return compareConfig(a, b);
+        } else if (aBundle) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+
+    private static int compareBundles(final RegisteredResource a, final RegisteredResource b) {
+        boolean isSnapshot = false;
+        int result = 0;
+
+        // Order first by symbolic name
+        final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        if(nameA != null && nameB != null) {
+            result = nameA.compareTo(nameB);
+        }
+
+        // Then by version
+        if(result == 0) {
+            final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
+            final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
+            isSnapshot = va.toString().contains("SNAPSHOT");
+            // higher version has more priority, must come first so invert comparison
+            result = vb.compareTo(va);
+        }
+
+        // Then by priority, higher values first
+        if(result == 0) {
+            if(a.getPriority() < b.getPriority()) {
+                result = 1;
+            } else if(a.getPriority() > b.getPriority()) {
+                result = -1;
+            }
+        }
+
+        if(result == 0 && isSnapshot) {
+            // For snapshots, compare serial numbers so that snapshots registered
+            // later get priority
+            if(a.getSerialNumber() < b.getSerialNumber()) {
+                result = 1;
+            } else if(a.getSerialNumber() > b.getSerialNumber()) {
+                result = -1;
+            }
+        }
+
+        return result;
+    }
+
+    private static int compareConfig(final RegisteredResource a, final RegisteredResource b) {
+        int result = 0;
+
+        // First compare by pid
+        final ConfigurationPid pA = (ConfigurationPid)a.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        final ConfigurationPid pB = (ConfigurationPid)b.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        if(pA != null && pA.getCompositePid() != null && pB != null && pB.getCompositePid() != null) {
+            result = pA.getCompositePid().compareTo(pB.getCompositePid());
+        }
+
+        // Then by priority, higher values first
+        if(result == 0) {
+            if(a.getPriority() < b.getPriority()) {
+                result = 1;
+            } else if( a.getPriority() > b.getPriority()) {
+                result = -1;
+            }
+        }
+
+        return result;
     }
 }

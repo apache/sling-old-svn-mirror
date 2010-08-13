@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
 
-import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
@@ -35,12 +34,14 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     protected final ConfigurationPid pid;
     protected final RegisteredResource resource;
 
+    /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
+
     AbstractConfigTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
         this.configAdminServiceTracker = configAdminServiceTracker;
-        resource = r;
-        pid = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-        if(pid == null) {
+        this.resource = r;
+        this.pid = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        if (this.pid == null) {
             throw new IllegalArgumentException("RegisteredResource does not have CONFIG_PID_ATTRIBUTE: " + r);
         }
     }
@@ -53,10 +54,10 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     }
 
 
-    protected Configuration getConfiguration(ConfigurationAdmin ca,
-            ConfigurationPid cp, boolean createIfNeeded, OsgiInstallerContext ocs)
-    throws IOException, InvalidSyntaxException
-    {
+    protected Configuration getConfiguration(final ConfigurationAdmin ca,
+            final ConfigurationPid cp,
+            final boolean createIfNeeded)
+    throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
         if (cp.getFactoryPid() == null) {
@@ -82,10 +83,5 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     @Override
     public String toString() {
         return getClass().getName() + ": " + resource;
-    }
-
-    @Override
-    public boolean isExecutable(OsgiInstallerContext ctx) throws Exception {
-        return this.getConfigurationAdmin() != null;
     }
 }

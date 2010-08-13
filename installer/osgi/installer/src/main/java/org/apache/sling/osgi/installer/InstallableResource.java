@@ -94,7 +94,7 @@ public class InstallableResource {
             type = (type != null ? type : InstallableResource.TYPE_CONFIG);
         }
         // TODO - compute digest if digest is null - for now we throw
-        if ( digest == null ) {
+        if ( digest == null || digest.length() == 0 ) {
             throw new IllegalArgumentException("digest must not be null");
         }
 

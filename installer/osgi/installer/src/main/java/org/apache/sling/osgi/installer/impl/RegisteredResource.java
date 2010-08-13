@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
  *  it locally to avoid holding up to classes or data from our
  *  clients, in case those disappear while we're installing stuff.
  */
-public interface RegisteredResource {
+public interface RegisteredResource extends Serializable, Comparable<RegisteredResource> {
 
 	String DIGEST_TYPE = "MD5";
     String ENTITY_JAR_PREFIX = "jar:";
@@ -90,7 +91,6 @@ public interface RegisteredResource {
 	boolean isInstallable();
 	void setInstallable(boolean installable);
 	String getUrlScheme();
-	long getSerialNumber();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
 	Map<String, Object> getAttributes();
@@ -101,4 +101,5 @@ public interface RegisteredResource {
      */
     String getEntityId();
 
+    long getSerialNumber();
 }

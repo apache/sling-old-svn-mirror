@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.osgi.framework.BundleContext;
 
 /** RegisteredResource that stores data to a local temporary file */
 @SuppressWarnings("serial")
@@ -33,7 +34,7 @@ class LocalFileRegisteredResource extends RegisteredResourceImpl {
 	}
 
 	@Override
-	protected File getDataFile() {
+	protected File getDataFile(final BundleContext bc) {
 		if(storage == null) {
 	        try {
 	            storage = File.createTempFile(getClass().getName(), "test");

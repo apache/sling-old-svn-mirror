@@ -57,10 +57,9 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public Result execute(OsgiInstallerContext ctx) {
-
+    public Result execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
-        if(ca == null) {
+        if (ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
             return Result.NOTHING;
@@ -85,10 +84,10 @@ public class ConfigInstallTask extends AbstractConfigTask {
         // update if the new one has the same values.
         boolean created = false;
         try {
-            Configuration config = getConfiguration(ca, pid, false, ctx);
+            Configuration config = getConfiguration(ca, pid, false);
             if(config == null) {
                 created = true;
-                config = getConfiguration(ca, pid, true, ctx);
+                config = getConfiguration(ca, pid, true);
             } else {
     			if(isSameData(config.getProperties(), resource.getDictionary())) {
     			    Logger.logDebug("Configuration " + config.getPid()

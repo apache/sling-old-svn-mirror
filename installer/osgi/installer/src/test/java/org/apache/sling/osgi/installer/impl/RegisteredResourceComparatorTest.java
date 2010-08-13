@@ -53,7 +53,7 @@ public class RegisteredResourceComparatorTest {
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
-        final SortedSet<RegisteredResource> toTest = new TreeSet<RegisteredResource>(new RegisteredResourceComparator());
+        final SortedSet<RegisteredResource> toTest = new TreeSet<RegisteredResource>();
         for(int i = inOrder.length - 1 ; i >= 0; i--) {
             toTest.add(inOrder[i]);
         }
@@ -116,8 +116,7 @@ public class RegisteredResourceComparatorTest {
     public void testBundleDigests() {
         final RegisteredResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
         final RegisteredResource b = new MockBundleResource("a", "1.2.0", 0, "digestB");
-        final RegisteredResourceComparator c = new RegisteredResourceComparator();
-        assertEquals("Digests must not be included in bundles comparison", 0, c.compare(a, b));
+        assertEquals("Digests must not be included in bundles comparison", 0, a.compareTo(b));
     }
 
     @Test
@@ -148,8 +147,7 @@ public class RegisteredResourceComparatorTest {
         final RegisteredResource a = getConfig("pid", data, 0);
         data.put("foo", "changed");
         final RegisteredResource b = getConfig("pid", data, 0);
-        final RegisteredResourceComparator c = new RegisteredResourceComparator();
-        assertEquals("Digests must not be included in configs comparison", 0, c.compare(a, b));
+        assertEquals("Digests must not be included in configs comparison", 0, a.compareTo(b));
     }
 
     @Test
@@ -175,8 +173,7 @@ public class RegisteredResourceComparatorTest {
     public void testConfigAndBundle() throws IOException {
     	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
     	final RegisteredResource b = new MockBundleResource("a", "1.0");
-    	final RegisteredResourceComparator c = new RegisteredResourceComparator();
-    	assertEquals("bundle is > config when compared", 1, c.compare(b, cfg));
-    	assertEquals("config is < bundle when compared", -1, c.compare(cfg, b));
+    	assertEquals("bundle is > config when compared", 1, b.compareTo(cfg));
+    	assertEquals("config is < bundle when compared", -1, cfg.compareTo(b));
     }
 }

@@ -33,6 +33,7 @@
 	<modules>
 		<module>osgi/installer</module>
 		<module>osgi/it</module>
+		<module>fileinstall</module>
 		<module>jcr/jcrinstall</module>
 	</modules>
 </project>

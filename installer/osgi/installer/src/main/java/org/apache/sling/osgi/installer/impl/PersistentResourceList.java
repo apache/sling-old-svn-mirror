@@ -56,15 +56,6 @@ class PersistentResourceList {
                 }
             }
         }
-        if ( restoredData != null ) {
-            for(final SortedSet<RegisteredResource> set : restoredData.values() ) {
-                for(final RegisteredResource rr : set) {
-                    if ( rr instanceof RegisteredResourceImpl ) {
-                        ((RegisteredResourceImpl)rr).init(bc);
-                    }
-                }
-            }
-        }
         data = restoredData != null ? restoredData : new HashMap<String, SortedSet<RegisteredResource>>();
     }
 
