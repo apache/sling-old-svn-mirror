@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.sling.runmode.RunMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 class FolderNameFilter {
     private final Pattern pattern;
     private final String regexp;
-    private final RunMode runMode;
+    private final Set<String> runModes;
     private final String [] rootPaths;
     private final Map<String, Integer> rootPriorities = new HashMap<String, Integer>();
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -50,10 +50,10 @@ class FolderNameFilter {
     public static final int RUNMODE_PRIORITY_BOOST = 1;
     public static final int DEFAULT_ROOT_PRIORITY = 99;
 
-    FolderNameFilter(final String [] rootsConfig, final String regexp, final RunMode runMode) {
+    FolderNameFilter(final String [] rootsConfig, final String regexp, final Set<String> runModes) {
         this.regexp = regexp;
         this.pattern = Pattern.compile(regexp);
-        this.runMode = runMode;
+        this.runModes = runModes;
 
         // Each entry in rootsConfig is like /libs:100, where 100
         // is the priority.
@@ -131,8 +131,7 @@ class FolderNameFilter {
             // If path prefix matches, check that all our runmodes match
             if(result > 0) {
                 for(String m : modes) {
-                    final String [] toTest = { m };
-                    if(runMode.isActive(toTest)) {
+                    if(runModes.contains(m)) {
                     	result += RUNMODE_PRIORITY_BOOST;
                     } else {
                         result = 0;
@@ -160,7 +159,7 @@ class FolderNameFilter {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + " (" + regexp + "), RunMode=" + runMode;
+        return getClass().getSimpleName() + " (" + regexp + "), RunModes=" + runModes;
     }
 
     int getRootPriority(String path) {

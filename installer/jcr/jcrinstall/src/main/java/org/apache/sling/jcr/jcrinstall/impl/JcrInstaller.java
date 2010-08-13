@@ -37,7 +37,7 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.apache.sling.runmode.RunMode;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,7 @@ public class JcrInstaller implements EventListener {
      *  if the current run mode is "dev".
      *  @scr.reference
      */
-    private RunMode runMode;
+    private SlingSettingsService settings;
 
     /**	The OsgiInstaller installs resources in the OSGi framework.
      * 	@scr.reference
@@ -200,7 +200,7 @@ public class JcrInstaller implements EventListener {
 
     	// Setup folder filtering and watching
         folderNameFilter = new FolderNameFilter(OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
-                folderNameRegexp, runMode);
+                folderNameRegexp, settings.getRunModes());
         roots = folderNameFilter.getRootPaths();
         for (String path : roots) {
             listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));

@@ -16,38 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.runmode.impl;
+package org.apache.sling.jcr.jcrinstall.impl;
 
-import java.io.PrintWriter;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.sling.runmode.RunMode;
+import org.apache.sling.settings.SlingSettingsService;
 
-/**
- * @scr.component metatype="no"
- * @scr.service
- */
-public class RunModePanel implements ConfigurationPrinter {
-    private static final String TITLE = "Run Modes";
+public class MockSettings implements SlingSettingsService {
 
-    /** @scr.reference */
-    private RunMode runMode;
+    private final Set<String> runModes;
 
-    // ---------- ConfigurationPrinter
-
-    public void printConfiguration(PrintWriter pw) {
-        pw.print("Current Run Modes: ");
-
-        String[] modes = runMode.getCurrentRunModes();
-        if (modes == null || modes.length == 0) {
-            pw.println("-");
-        } else {
-            pw.println(Arrays.asList(runMode.getCurrentRunModes()));
-        }
+    public MockSettings(final String[] modes) {
+        this.runModes = new HashSet<String>();
+        this.runModes.addAll(Arrays.asList(modes));
     }
 
-    public String getTitle() {
-        return TITLE;
+    public Set<String> getRunModes() {
+        return this.runModes;
     }
+
+    public URL getSlingHome() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String getSlingHomePath() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String getSlingId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
