@@ -22,6 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Test;
 
 public class FolderNameFilterTest {
@@ -32,7 +35,7 @@ public class FolderNameFilterTest {
     public void testParseRootPaths() {
     	{
     		final String [] paths = { "a", "b/" };
-            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new HashSet<String>());
             assertEquals("/a", f.getRootPaths()[0]);
             assertEquals("/b", f.getRootPaths()[1]);
             assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/a/foo"));
@@ -41,7 +44,7 @@ public class FolderNameFilterTest {
     	}
     	{
     		final String [] paths = { "a:100", "/b/: 200 " };
-            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new HashSet<String>());
             assertEquals("/a", f.getRootPaths()[0]);
             assertEquals("/b", f.getRootPaths()[1]);
             assertEquals(100, f.getRootPriority("/a/foo"));
@@ -49,7 +52,7 @@ public class FolderNameFilterTest {
     	}
     	{
     		final String [] paths = { "a/:NOT_AN_INTEGER", "/b/: 200 " };
-            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+            final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new HashSet<String>());
             assertEquals("/a", f.getRootPaths()[0]);
             assertEquals("/b", f.getRootPaths()[1]);
             assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/a/foo"));
@@ -59,15 +62,16 @@ public class FolderNameFilterTest {
 
     @Test
     public void testNoRunMode() {
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(new String[0]));
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new HashSet<String>());
         assertTrue("Test 1", f.getPriority("/libs/install") > 0);
         assertFalse("Test 2", f.getPriority("/libs/install.bar") > 0);
     }
 
     @Test
     public void testSingleMode() {
-        final String [] m = { "dev" };
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
+        final Set<String> m = new HashSet<String>();
+        m.add("dev");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, m);
         assertTrue("Test 1", f.getPriority("/libs/install") > 0);
         assertFalse("Test 2", f.getPriority("/libs/install.bar") > 0);
         assertTrue("Test 3", f.getPriority("/libs/install.dev") > 0);
@@ -79,8 +83,11 @@ public class FolderNameFilterTest {
 
     @Test
     public void testThreeModes() {
-        final String [] m = { "dev", "web", "staging" };
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
+        final Set<String> m = new HashSet<String>();
+        m.add("dev");
+        m.add("web");
+        m.add("staging");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, m);
         assertTrue("Test 1",f.getPriority("/libs/install") > 0);
         assertFalse("Test 2",f.getPriority("/libs/install.bar") > 0);
         assertTrue("Test 3",f.getPriority("/libs/install.dev") > 0);
@@ -98,16 +105,20 @@ public class FolderNameFilterTest {
 
     @Test
     public void testRootPriorities() {
-        final String [] m = { "dev" };
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
+        final Set<String> m = new HashSet<String>();
+        m.add("dev");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, m);
     	assertEquals("/libs root", new Integer(100), (Integer)f.getPriority("/libs/install"));
     	assertEquals("/apps root", new Integer(200), (Integer)f.getPriority("/apps/install"));
     }
 
     @Test
     public void testRunModePriorities() {
-        final String [] m = { "dev", "prod", "staging" };
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
+        final Set<String> m = new HashSet<String>();
+        m.add("dev");
+        m.add("prod");
+        m.add("staging");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, m);
     	assertEquals("Matches no runmode", new Integer(100), (Integer)f.getPriority("/libs/install"));
     	assertEquals("Matches dev runmode", new Integer(201), (Integer)f.getPriority("/apps/install.dev"));
     	assertEquals("Matches staging runmode", new Integer(201), (Integer)f.getPriority("/apps/install.staging"));
@@ -118,8 +129,11 @@ public class FolderNameFilterTest {
 
     @Test
     public void testDotsInPath() {
-        final String [] m = { "dev", "prod", "staging" };
-        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, new MockRunMode(m));
+        final Set<String> m = new HashSet<String>();
+        m.add("dev");
+        m.add("prod");
+        m.add("staging");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, DEFAULT_REGEXP, m);
     	assertEquals("Matches no runmode", new Integer(100), (Integer)f.getPriority("/libs/foo.bar/install"));
     	assertEquals("Matches dev runmode", new Integer(201), (Integer)f.getPriority("/apps/foo.bar/install.dev"));
     	assertEquals("Matches staging runmode", new Integer(201), (Integer)f.getPriority("/apps/foo.bar/install.staging"));

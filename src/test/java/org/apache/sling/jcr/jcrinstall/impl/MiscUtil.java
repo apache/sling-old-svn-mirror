@@ -52,7 +52,7 @@ class MiscUtil {
         final JcrInstaller installer = new JcrInstaller();
         setField(installer, "repository", repository);
         setField(installer, "installer", osgiInstaller);
-        setField(installer, "runMode", new MockRunMode(RUN_MODES));
+        setField(installer, "settings", new MockSettings(RUN_MODES));
 
         installer.activate(getMockComponentContext());
         return installer;

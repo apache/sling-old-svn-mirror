@@ -18,33 +18,39 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import org.apache.sling.runmode.RunMode;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-class MockRunMode implements RunMode {
+import org.apache.sling.settings.SlingSettingsService;
 
-    private final String[] modes;
-    
-    MockRunMode(String [] modes) {
-        this.modes = modes;
-    }
-    
-    public String[] getCurrentRunModes() {
-        return modes;
+public class MockSettings implements SlingSettingsService {
+
+    private final Set<String> runModes;
+
+    public MockSettings(final String[] modes) {
+        this.runModes = new HashSet<String>();
+        this.runModes.addAll(Arrays.asList(modes));
     }
 
-    public boolean isActive(String[] runModes) {
-        boolean result = false;
-        
-        main:
-        for(String a : runModes) {
-            for(String b : modes) {
-                if(b.equals(a)) {
-                    result = true;
-                    break main;
-                }
-            }
-        }
-        
-        return result;
+    public Set<String> getRunModes() {
+        return this.runModes;
     }
+
+    public URL getSlingHome() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String getSlingHomePath() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String getSlingId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
