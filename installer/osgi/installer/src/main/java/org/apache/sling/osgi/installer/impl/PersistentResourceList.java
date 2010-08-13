@@ -27,8 +27,6 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.SortedSet;
 
-import org.osgi.framework.BundleContext;
-
 /** Persistent list of RegisteredResource, used by installer to
  *  keep track of all registered resources
  */
@@ -37,7 +35,7 @@ class PersistentResourceList {
     private final File dataFile;
 
     @SuppressWarnings("unchecked")
-    PersistentResourceList(final BundleContext bc, final File dataFile) {
+    PersistentResourceList(final File dataFile) {
         this.dataFile = dataFile;
 
         ObjectInputStream ois = null;

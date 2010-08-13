@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl.tasks;
+package org.apache.sling.osgi.installer.impl.config;
 
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;

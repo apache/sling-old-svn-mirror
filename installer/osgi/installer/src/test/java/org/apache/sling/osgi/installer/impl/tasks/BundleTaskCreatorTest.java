@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,9 +25,10 @@ import java.io.IOException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
-import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
-import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
+import org.apache.sling.osgi.installer.impl.MockBundleResource;
+import org.apache.sling.osgi.installer.impl.MockOsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -42,7 +43,7 @@ public class BundleTaskCreatorTest {
 	}
 
 	private SortedSet<OsgiInstallerTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) throws IOException {
-		final SortedSet<RegisteredResource> s = OsgiInstallerThread.createRegisteredResourcesEntry();
+		final SortedSet<RegisteredResource> s = new TreeSet<RegisteredResource>();
 		for(RegisteredResource r : resources) {
 			s.add(r);
 		}

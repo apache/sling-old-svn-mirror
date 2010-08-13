@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.TreeSet;
 
+import org.apache.sling.osgi.installer.impl.tasks.PersistentBundleInfo;
 import org.junit.Before;
 import org.junit.Test;
 

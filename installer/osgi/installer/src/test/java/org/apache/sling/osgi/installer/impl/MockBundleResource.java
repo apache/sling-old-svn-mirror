@@ -38,11 +38,11 @@ public class MockBundleResource implements RegisteredResource {
 	private final long serialNumber;
 	private static long serialNumberCounter = System.currentTimeMillis();
 
-    MockBundleResource(String symbolicName, String version) {
+    public MockBundleResource(String symbolicName, String version) {
         this(symbolicName, version, InstallableResource.DEFAULT_PRIORITY);
     }
 
-	MockBundleResource(String symbolicName, String version, int priority) {
+    public MockBundleResource(String symbolicName, String version, int priority) {
 		attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
 		attributes.put(Constants.BUNDLE_VERSION, version);
 		digest = symbolicName + "." + version;
@@ -50,7 +50,7 @@ public class MockBundleResource implements RegisteredResource {
 		serialNumber = getNextSerialNumber();
 	}
 
-    MockBundleResource(String symbolicName, String version, int priority, String digest) {
+    public MockBundleResource(String symbolicName, String version, int priority, String digest) {
         attributes.put(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
         attributes.put(Constants.BUNDLE_VERSION, version);
         this.digest = digest;

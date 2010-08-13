@@ -41,7 +41,7 @@ public class PersistentResourceListTest {
     @Test
     public void testFileNotFound() throws IOException {
         File f = new File("NONEXISTENT");
-        PersistentResourceList p = new PersistentResourceList(null, f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
     }
 
@@ -55,7 +55,7 @@ public class PersistentResourceListTest {
         } finally {
             oos.close();
         }
-        PersistentResourceList p = new PersistentResourceList(null, f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
         assertEquals("Constructor must fail gracefully with invalid data file", 0, p.getData().size());
     }
@@ -63,7 +63,7 @@ public class PersistentResourceListTest {
     @Test
     public void testTestData() throws IOException {
         File f = new File("NONEXISTENT");
-        PersistentResourceList p = new PersistentResourceList(null, f);
+        PersistentResourceList p = new PersistentResourceList(f);
         assertNotNull(p.getData());
         addTestData(p);
         assertTestData(p);
@@ -74,12 +74,12 @@ public class PersistentResourceListTest {
         File f  = File.createTempFile(getClass().getSimpleName(), ".ser");
         f.deleteOnExit();
         {
-            PersistentResourceList p = new PersistentResourceList(null, f);
+            PersistentResourceList p = new PersistentResourceList(f);
             addTestData(p);
             p.save();
         }
         {
-            PersistentResourceList p = new PersistentResourceList(null, f);
+            PersistentResourceList p = new PersistentResourceList(f);
             assertTestData(p);
         }
     }

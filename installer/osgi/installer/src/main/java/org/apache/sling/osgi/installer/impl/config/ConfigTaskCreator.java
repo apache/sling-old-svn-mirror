@@ -26,8 +26,6 @@ import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;

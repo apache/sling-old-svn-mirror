@@ -34,6 +34,7 @@ import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.config.ConfigTaskCreator;
+import org.apache.sling.osgi.installer.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -81,7 +82,7 @@ public class OsgiInstallerThread
         this.bundleTaskCreator = new BundleTaskCreator(ctx);
         setName(getClass().getSimpleName());
         final File f = ctx.getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(ctx, f);
+        persistentList = new PersistentResourceList(f);
         registeredResources = persistentList.getData();
     }
 
@@ -276,7 +277,7 @@ public class OsgiInstallerThread
             for(RegisteredResource r : newResources) {
                 SortedSet<RegisteredResource> t = registeredResources.get(r.getEntityId());
                 if(t == null) {
-                    t = createRegisteredResourcesEntry();
+                    t = new TreeSet<RegisteredResource>();
                     registeredResources.put(r.getEntityId(), t);
                 }
 
@@ -319,12 +320,6 @@ public class OsgiInstallerThread
             tasksForNextCycle.add(t);
         }
     }
-
-    /** Factored out to use the exact same structure in tests */
-    static SortedSet<RegisteredResource> createRegisteredResourcesEntry() {
-        return new TreeSet<RegisteredResource>();
-    }
-
 
     /** Compute OSGi tasks based on our resources, and add to supplied list of tasks */
     void computeTasks() throws Exception {

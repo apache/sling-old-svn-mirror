@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl.tasks;
+package org.apache.sling.osgi.installer.impl.config;
 
 import java.io.IOException;
 
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
-import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;

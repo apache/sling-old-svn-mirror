@@ -27,12 +27,12 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.osgi.installer.impl.config.ConfigInstallTask;
+import org.apache.sling.osgi.installer.impl.config.ConfigRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
 import org.apache.sling.osgi.installer.impl.tasks.BundleUpdateTask;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
-import org.apache.sling.osgi.installer.impl.tasks.ConfigRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.SynchronousRefreshPackagesTask;
 
 /** Test the ordering and duplicates elimination of
