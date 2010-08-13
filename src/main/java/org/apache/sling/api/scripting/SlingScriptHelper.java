@@ -170,7 +170,7 @@ public interface SlingScriptHelper {
      * }
      * </pre>
      *
-     * @param path The resource to include.
+     * @param resource The resource to include.
      * @param options influence the rendering of the included Resource
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the include.
@@ -278,7 +278,7 @@ public interface SlingScriptHelper {
      * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
      * constructor.
      *
-     * @param path The resource to forward to.
+     * @param resource The resource to forward to.
      * @param requestDispatcherOptions influence the rendering of the forwarded
      *            Resource
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
@@ -304,7 +304,7 @@ public interface SlingScriptHelper {
      * }
      * </pre>
      *
-     * @param path The resource to forward the request to.
+     * @param resource The resource to forward the request to.
      * @param options influence the rendering of the forwarded Resource
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the forward.

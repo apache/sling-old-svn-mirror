@@ -49,6 +49,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/api</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12314252</site.jira.version.id>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -59,7 +63,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-
+        
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -84,8 +88,14 @@
                             http://sling.apache.org/site/sling-api.html
                         </Bundle-DocURL>
                         <Export-Package>
+                            org.apache.sling.api;version=2.1, <!-- 2.0.8 -->
+                            org.apache.sling.api.adapter;version=2.1,
                             org.apache.sling.api.auth;version=1.0,
-                            org.apache.sling.api.*;version=2.1
+                            org.apache.sling.api.request;version=2.1,
+                            org.apache.sling.api.resource;version=2.1,
+                            org.apache.sling.api.scripting;version=2.1,
+                            org.apache.sling.api.servlets;version=2.1,
+                            org.apache.sling.api.wrappers;version=2.1
                         </Export-Package>
                         <!-- Require explicit version of the servlet API -->
                         <Import-Package>
