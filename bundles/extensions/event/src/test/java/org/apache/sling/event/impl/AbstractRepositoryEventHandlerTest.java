@@ -21,8 +21,10 @@ package org.apache.sling.event.impl;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -102,6 +104,10 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
             public String getSlingHomePath() {
                 return null;
+            }
+
+            public Set<String> getRunModes() {
+                return Collections.<String> emptySet();
             }
         };
 
