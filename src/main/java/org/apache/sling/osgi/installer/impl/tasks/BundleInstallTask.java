@@ -19,7 +19,6 @@
 package org.apache.sling.osgi.installer.impl.tasks;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;

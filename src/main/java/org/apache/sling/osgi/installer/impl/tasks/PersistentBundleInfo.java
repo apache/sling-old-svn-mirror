@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
+
+import org.apache.sling.osgi.installer.impl.Logger;
 
 /**
  * Store the digests and version numbers of installed bundles

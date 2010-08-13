@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.impl.BundleTaskCreator;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;

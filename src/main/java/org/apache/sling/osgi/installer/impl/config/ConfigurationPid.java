@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.config;
 
 import java.io.Serializable;
 
-import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallTask;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar

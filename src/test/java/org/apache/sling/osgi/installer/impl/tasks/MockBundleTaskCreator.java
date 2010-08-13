@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +25,10 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.osgi.installer.impl.MockOsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
+import org.apache.sling.osgi.installer.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
