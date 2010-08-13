@@ -24,6 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.sling.settings.SlingSettingsService;
@@ -45,20 +48,33 @@ public class SlingSettingsServiceImpl
     private String slingId;
 
     /** The sling home */
-    private final String slingHome;
+    private String slingHome;
 
     /** The sling home url */
     private URL slingHomeUrl;
 
+    private Set<String> runModes;
+
+    /** The name of the data file holding the sling id. */
     private static final String DATA_FILE = "sling.id.file";
 
     /**
      * Create the service and search the Sling home urls and
      * get/create a sling id.
+     * Setup run modes
      * @param context The bundle context
      */
     public SlingSettingsServiceImpl(final BundleContext context) {
-        // get sling home and sling home url
+        this.setupSlingHome(context);
+        this.setupSlingId(context);
+        this.setupRunModes(context);
+
+    }
+
+    /**
+     * Get sling home and sling home url
+     */
+    private void setupSlingHome(final BundleContext context) {
         this.slingHome = context.getProperty(SLING_HOME);
         final String url = context.getProperty(SLING_HOME_URL);
         if ( url != null ) {
@@ -68,7 +84,12 @@ public class SlingSettingsServiceImpl
                 logger.error("Sling home url is not a url: {}", url);
             }
         }
+    }
 
+    /**
+     * Get / create sling id
+     */
+    private void setupSlingId(final BundleContext context) {
         // try to read the id from the id file first
         final File idFile = context.getDataFile(DATA_FILE);
         if ( idFile == null ) {
@@ -98,7 +119,30 @@ public class SlingSettingsServiceImpl
         }
     }
 
-    /** Read the id from a file. */
+    /**
+     * Set up run modes.
+     */
+    private void setupRunModes(final BundleContext context) {
+        final String prop = context.getProperty(RUN_MODES_PROPERTY);
+        if (prop == null || prop.trim().length() == 0) {
+            this.runModes = Collections.emptySet();
+        } else {
+            final Set<String> modesSet = new HashSet<String>();
+            final String[] modes = prop.split(",");
+            for(int i=0; i < modes.length; i++) {
+                modesSet.add(modes[i].trim());
+            }
+            // make the set unmodifiable and synced
+            // we propably don't need a synced set as it is read only
+            this.runModes = Collections.synchronizedSet(Collections.unmodifiableSet(modesSet));
+            logger.info("Active run modes {}", this.runModes);
+        }
+    }
+
+
+    /**
+     * Read the id from a file.
+     */
     private String readSlingId(final File idFile) {
         if (idFile.exists() && idFile.length() >= 36) {
             FileInputStream fin = null;
@@ -129,7 +173,9 @@ public class SlingSettingsServiceImpl
         return null;
     }
 
-    /** Write the sling id file. */
+    /**
+     * Write the sling id file.
+     */
     private void writeSlingId(final File idFile, final String id) {
         idFile.delete();
         idFile.getParentFile().mkdirs();
@@ -180,5 +226,12 @@ public class SlingSettingsServiceImpl
      */
     public String getSlingHomePath() {
         return this.slingHome;
+    }
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#getRunModes()
+     */
+    public Set<String> getRunModes() {
+        return this.runModes;
     }
 }
