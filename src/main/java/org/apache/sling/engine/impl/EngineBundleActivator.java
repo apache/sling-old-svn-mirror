@@ -18,40 +18,21 @@
  */
 package org.apache.sling.engine.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * This is the bundle activator for the Sling engine.
- * It registers the SlingSettingsService.
+ * It registers the web console plugin
  *
  */
 public class EngineBundleActivator implements BundleActivator {
-
-    /** The service registration */
-    private ServiceRegistration serviceRegistration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        final Object service = new SlingSettingsServiceImpl(context);
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, service.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling Settings Service");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = context.registerService(new String[] {
-                                               org.apache.sling.api.services.SlingSettingsService.class.getName(),
-                                               SlingSettingsService.class.getName()},
-                                           service, props);
         try {
             RequestHistoryConsolePlugin.initPlugin(context);
         } catch (Throwable ignore) {
@@ -63,10 +44,6 @@ public class EngineBundleActivator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
-        if ( serviceRegistration != null ) {
-            serviceRegistration.unregister();
-            serviceRegistration = null;
-        }
         try {
             RequestHistoryConsolePlugin.destroyPlugin();
         } catch (Throwable ignore) {
