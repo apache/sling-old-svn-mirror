@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -170,5 +171,21 @@ public class MockResourceResolver implements ResourceResolver {
 
     public boolean isLive() {
         return true;
+    }
+
+    public ResourceResolver clone(Map<String, Object> authenticationInfo)
+    throws LoginException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Object getAttribute(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Iterator<String> getAttributeNames() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
