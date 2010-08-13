@@ -1740,6 +1740,85 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
     }
 
+    public void test_resolve_with_sling_alias_multi_value() throws Exception {
+
+        Node child = rootNode.addNode("child");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, new String[] {
+            "kind", "enfant" });
+        session.save();
+
+        // expect kind due to alias and no parent due to mapping
+        // the rootPath onto root
+        String path = "/kind";
+        String mapped = resResolver.map(child.getPath());
+        assertEquals(path, mapped);
+
+        Resource res = resResolver.resolve(null, path);
+        assertNotNull(res);
+        assertEquals(rootNode.getPath() + "/kind",
+            res.getResourceMetadata().getResolutionPath());
+        assertEquals("", res.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNode = res.adaptTo(Node.class);
+        assertNotNull(resNode);
+
+        assertEquals(child.getPath(), resNode.getPath());
+
+        // expect enfant due to alias and no parent due to mapping
+        // the rootPath onto root
+        String pathEnfant = "/enfant";
+        String mappedEnfant = resResolver.map(child.getPath());
+        assertEquals(path, mappedEnfant); // map always selects first alias
+
+        Resource resEnfant = resResolver.resolve(null, pathEnfant);
+        assertNotNull(resEnfant);
+        assertEquals(rootNode.getPath() + "/enfant",
+            resEnfant.getResourceMetadata().getResolutionPath());
+        assertEquals("", resEnfant.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNodeEnfant = resEnfant.adaptTo(Node.class);
+        assertNotNull(resNodeEnfant);
+
+        assertEquals(child.getPath(), resNodeEnfant.getPath());
+
+        // second level alias
+        Node grandchild = child.addNode("grandchild");
+        grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
+        session.save();
+
+        // expect kind/enkel due to alias and no parent due to mapping
+        // the rootPath onto root
+        String pathEnkel = "/kind/enkel";
+        String mappedEnkel = resResolver.map(grandchild.getPath());
+        assertEquals(pathEnkel, mappedEnkel);
+
+        Resource resEnkel = resResolver.resolve(null, pathEnkel);
+        assertNotNull(resEnkel);
+        assertEquals(rootNode.getPath() + "/kind/enkel",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNodeEnkel = resEnkel.adaptTo(Node.class);
+        assertNotNull(resNodeEnkel);
+        assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
+
+        // expect kind/enkel due to alias and no parent due to mapping
+        // the rootPath onto root
+        String pathEnfantEnkel = "/enfant/enkel";
+        String mappedEnfantEnkel = resResolver.map(grandchild.getPath());
+        assertEquals(pathEnkel, mappedEnfantEnkel); // map always selects first alias
+
+        Resource resEnfantEnkel = resResolver.resolve(null, pathEnfantEnkel);
+        assertNotNull(resEnfantEnkel);
+        assertEquals(rootNode.getPath() + "/enfant/enkel",
+            resEnfantEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals("", resEnfantEnkel.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNodeEnfantEnkel = resEnfantEnkel.adaptTo(Node.class);
+        assertNotNull(resNodeEnfantEnkel);
+        assertEquals(grandchild.getPath(), resNodeEnfantEnkel.getPath());
+    }
+
     public void test_resolve_with_sling_alias_extension() throws Exception {
 
         final String selExt = ".html";
