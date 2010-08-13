@@ -120,6 +120,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
+    @SuppressWarnings("unused")
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -144,6 +145,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws ServletException Not thrown by this implementation.
      * @throws IOException Not thrown by this implementation.
      */
+    @SuppressWarnings("unused")
     protected void doOptions(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -166,6 +168,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException May be thrown if there is an problem sending back the
      *             request headers in the response stream.
      */
+    @SuppressWarnings("unused")
     protected void doTrace(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -222,6 +225,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
+    @SuppressWarnings("unused")
     protected void doGeneric(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
