@@ -41,7 +41,7 @@ public class Activator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        final Object service = new SlingSettingsServiceImpl(context);
+        final SlingSettingsService service = new SlingSettingsServiceImpl(context);
         final Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, service.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -50,12 +50,42 @@ public class Activator implements BundleActivator {
         serviceRegistration = context.registerService(new String[] {
                                                SlingSettingsService.class.getName()},
                                            service, props);
+        try {
+            SlingPropertiesPrinter.initPlugin(context);
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
+        try {
+            SlingSettingsPrinter.initPlugin(context, service);
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
+        try {
+            RunModeCommand.initPlugin(context, service.getRunModes());
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
+        try {
+            RunModeCommand.destroyPlugin();
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
+        try {
+            SlingSettingsPrinter.destroyPlugin();
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
+        try {
+            SlingPropertiesPrinter.destroyPlugin();
+        } catch (Throwable ignore) {
+            // we just ignore this
+        }
         if ( serviceRegistration != null ) {
             serviceRegistration.unregister();
             serviceRegistration = null;

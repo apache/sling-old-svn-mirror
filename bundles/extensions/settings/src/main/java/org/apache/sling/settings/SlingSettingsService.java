@@ -19,10 +19,16 @@
 package org.apache.sling.settings;
 
 import java.net.URL;
+import java.util.Set;
 
 /**
  * The <code>SlingSettingsService</code> provides basic Sling settings.
+ * - Sling home : If the Sling launchpad is used
+ * - Sling Id : A unique id of the installation
  *
+ * Run Mode Support
+ * A run mode is simply a string like "author", "test", "development",...
+ * The server can have a set of active run modes.
  */
 public interface SlingSettingsService {
 
@@ -55,6 +61,14 @@ public interface SlingSettingsService {
     String SLING_HOME_URL = "sling.home.url";
 
     /**
+     * The name of the framework property defining the set of used
+     * run modes.
+     * The value is a comma separated list of run modes.
+     */
+    String RUN_MODES_PROPERTY = "sling.run.modes";
+
+
+    /**
      * The identifier of the running Sling instance.
      */
     String getSlingId();
@@ -70,4 +84,12 @@ public interface SlingSettingsService {
      * property.
      */
     URL getSlingHome();
+
+    /**
+     * Return the set of activate run modes.
+     * This set might be empty.
+     * @return A non modifiable set of run modes.
+     */
+    Set<String> getRunModes();
+
 }
