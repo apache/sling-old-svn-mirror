@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -28,18 +29,21 @@ import org.apache.sling.scripting.jsp.jasper.xmlparser.ParserUtils;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 
 /**
  * The <code>SlingTldLocationsCache</code> TODO
  */
 public class SlingTldLocationsCache
-    extends TldLocationsCache implements TaglibCache {
+    extends TldLocationsCache implements BundleListener {
 
     private static final String TLD_SCHEME = "tld:";
 
     private final Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
 
     public SlingTldLocationsCache(final BundleContext context) {
+        context.addBundleListener(this);
         final Bundle[] bundles = context.getBundles();
         for (int i = 0; i < bundles.length; i++) {
             if (bundles[i].getState() == Bundle.RESOLVED || bundles[i].getState() == Bundle.ACTIVE ) {
@@ -48,7 +52,19 @@ public class SlingTldLocationsCache
         }
     }
 
+    public void deactivate(final BundleContext context) {
+        context.removeBundleListener(this);
+    }
+
     // ---------- Tld Location URL support -------------------------------------
+
+    public void bundleChanged(final BundleEvent event) {
+        if ( event.getType() == BundleEvent.RESOLVED ) {
+            this.addBundle(event.getBundle());
+        } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
+            this.removeBundle(event.getBundle());
+        }
+    }
 
     URL getTldLocationURL(String tldLocation) {
         if (tldLocation.startsWith(TLD_SCHEME)) {
@@ -79,7 +95,7 @@ public class SlingTldLocationsCache
         return null;
     }
 
-    public void addBundle(Bundle bundle) {
+    private void addBundle(final Bundle bundle) {
         // currently only META-INF/*.tld is supported, this should
         // be extended for registration in a Bundle Manifest Header
 
@@ -99,15 +115,16 @@ public class SlingTldLocationsCache
         }
     }
 
-    public boolean isBundleUsed(Bundle bundle) {
+    private void removeBundle(final Bundle bundle) {
         synchronized (tldLocations) {
-            for(final TldLocationEntry tle : tldLocations.values()) {
-                if (tle.getBundleId() == bundle.getBundleId()) {
-                    return true;
+            final Iterator<Map.Entry<String, TldLocationEntry>> i = tldLocations.entrySet().iterator();
+            while ( i.hasNext() ) {
+                final Map.Entry<String, TldLocationEntry> entry = i.next();
+                if (entry.getValue().getBundleId() == bundle.getBundleId()) {
+                    i.remove();
                 }
             }
         }
-        return false;
     }
 
     /*
