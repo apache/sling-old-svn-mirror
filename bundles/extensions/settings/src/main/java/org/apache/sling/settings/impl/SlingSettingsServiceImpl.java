@@ -101,12 +101,11 @@ public class SlingSettingsServiceImpl
         // if we don't have an id yet, we look for the engine bundle for compatibility reasons
         if ( this.slingId == null ) {
             final Bundle engineBundle = this.searchEngineBundle(context);
-            if ( engineBundle != null ) {
+            // TODO - we need the bundle context, maybe we should wait for the engine bundle to become active?
+            if ( engineBundle != null && engineBundle.getBundleContext() != null ) {
                 final File engineIdFile = engineBundle.getBundleContext().getDataFile(DATA_FILE);
                 this.slingId = this.readSlingId(engineIdFile);
                 if ( this.slingId != null ) {
-                    // delete the old file
-                    engineIdFile.delete();
                     this.writeSlingId(idFile, this.slingId);
                 }
             }
