@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @since 2.0.4 This is version of the sling engine module where these classes where
  *              hosted before.
- * @deprecated use {@link org.apache.sling.commons.auth.AuthenticationSupport} instead
+ * @deprecated use {@link org.apache.sling.commons.auth.Authenticator} instead
  */
 @Deprecated
 public interface Authenticator {

@@ -25,7 +25,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.formauth</artifactId>
+    <artifactId>org.apache.sling.auth.form</artifactId>
     <version>0.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/formauth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/formauth</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/formauth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/form</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/form</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/auth/form</url>
     </scm>
 
     <build>
@@ -59,10 +59,10 @@
                             http://sling.apache.org/site/form-based-authenticationhandler.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.formauth;version=1.0
+                            org.apache.sling.auth.form;version=1.0
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.formauth.impl.*
+                            org.apache.sling.auth.form.impl.*
                         </Private-Package>
                         <Import-Package>
                             javax.security.auth.callback;
@@ -96,7 +96,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        org.apache.sling.formauth
+                        org.apache.sling.auth.form
                     </excludePackageNames>
                 </configuration>
             </plugin>
