@@ -79,7 +79,6 @@
         <module>bundles/api</module>
 
         <!-- The commons sub project -->
-        <module>bundles/commons/auth</module>
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
@@ -88,6 +87,11 @@
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
         <module>bundles/commons/threads</module>
+
+        <!-- Authentication Support -->
+        <module>bundles/auth/core</module>
+        <module>bundles/auth/openid</module>
+        <module>bundles/auth/form</module>
         
         <!-- The Sling Engine -->
         <module>bundles/engine</module>
@@ -123,9 +127,7 @@
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/event</module>
         <module>bundles/extensions/fsresource</module>
-        <module>bundles/extensions/formauth</module>
         <module>bundles/extensions/httpauth</module>
-        <module>bundles/extensions/openidauth</module>
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
