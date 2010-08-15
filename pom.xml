@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.commons.auth</artifactId>
+    <artifactId>org.apache.sling.auth.core</artifactId>
     <packaging>bundle</packaging>
     <version>0.9.0-SNAPSHOT</version>
 
@@ -41,9 +41,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/auth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/auth</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/auth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/auth/core</url>
     </scm>
 
     <build>
@@ -59,8 +59,8 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.auth;version=1.0.0,
-                            org.apache.sling.commons.auth.spi;version=1.0.0,
+                            org.apache.sling.auth.core;version=1.0.0,
+                            org.apache.sling.auth.core.spi;version=1.0.0,
                             org.apache.sling.engine.auth;version=2.0.6
                         </Export-Package>
                         <Import-Package>
@@ -68,7 +68,7 @@
                             *
                         </Import-Package>
                         <Private-Package>
-                            org.apache.sling.commons.auth.impl.*
+                            org.apache.sling.auth.core.impl.*
                         </Private-Package>
                         <Embed-Dependency>
                             org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/OsgiUtil.class,
