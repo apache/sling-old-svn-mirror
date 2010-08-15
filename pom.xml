@@ -27,7 +27,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.openidauth</artifactId>
+    <artifactId>org.apache.sling.auth.openid</artifactId>
     <packaging>bundle</packaging>
     <version>0.9.1-SNAPSHOT</version>
 
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/openidauth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/openidauth</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/openidauth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/auth/openid</url>
     </scm>
 
     <build>
@@ -59,11 +59,11 @@
                             http://sling.apache.org/site/openid-authenticationhandler.html
                         </Bundle-DocURL>
                         <Private-Package>
-                            org.apache.sling.openidauth.impl.*
+                            org.apache.sling.auth.openid.impl.*
                         </Private-Package>
 
                         <Export-Package>
-	                        org.apache.sling.openidauth;version=1.0
+	                        org.apache.sling.auth.openid;version=1.0
                         </Export-Package>
                         <Import-Package>
                         	*;resolution:=optional
@@ -84,7 +84,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        org.apache.sling.openidauth
+                        org.apache.sling.auth.openid
                     </excludePackageNames>
                 </configuration>
             </plugin>
