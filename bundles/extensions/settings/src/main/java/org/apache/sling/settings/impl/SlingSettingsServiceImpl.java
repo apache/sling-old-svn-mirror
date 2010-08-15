@@ -41,6 +41,8 @@ import org.slf4j.LoggerFactory;
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
 
+    public static final String ENGINE_SYMBOLIC_NAME = "org.apache.sling.engine";
+
     /** The logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -57,6 +59,9 @@ public class SlingSettingsServiceImpl
 
     /** The name of the data file holding the sling id. */
     private static final String DATA_FILE = "sling.id.file";
+
+    /** Flag indicating a delayed start of this service. */
+    private boolean delayedStart = false;
 
     /**
      * Create the service and search the Sling home urls and
@@ -101,9 +106,14 @@ public class SlingSettingsServiceImpl
         // if we don't have an id yet, we look for the engine bundle for compatibility reasons
         if ( this.slingId == null ) {
             final Bundle engineBundle = this.searchEngineBundle(context);
-            // TODO - we need the bundle context, maybe we should wait for the engine bundle to become active?
-            if ( engineBundle != null && engineBundle.getBundleContext() != null ) {
-                final File engineIdFile = engineBundle.getBundleContext().getDataFile(DATA_FILE);
+            if ( engineBundle != null && engineBundle.getState() != Bundle.UNINSTALLED ) {
+                final BundleContext engineCtx = engineBundle.getBundleContext();
+                if ( engineCtx == null ) {
+                    // we need a delayed start
+                    this.delayedStart = true;
+                    return;
+                }
+                final File engineIdFile = engineCtx.getDataFile(DATA_FILE);
                 this.slingId = this.readSlingId(engineIdFile);
                 if ( this.slingId != null ) {
                     this.writeSlingId(idFile, this.slingId);
@@ -199,7 +209,7 @@ public class SlingSettingsServiceImpl
     private Bundle searchEngineBundle(final BundleContext bc) {
         final Bundle[] bundles = bc.getBundles();
         for(final Bundle b : bundles) {
-            if ( "org.apache.sling.engine".equals(b.getSymbolicName()) ) {
+            if ( ENGINE_SYMBOLIC_NAME.equals(b.getSymbolicName()) ) {
                 return b;
             }
         }
@@ -232,5 +242,14 @@ public class SlingSettingsServiceImpl
      */
     public Set<String> getRunModes() {
         return this.runModes;
+    }
+
+    public boolean isDelayedStart() {
+        return this.delayedStart;
+    }
+
+    public void initDelayed(final BundleContext context) {
+        this.delayedStart = false;
+        this.setupSlingId(context);
     }
 }

@@ -24,6 +24,8 @@ import java.util.Hashtable;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
@@ -32,45 +34,79 @@ import org.osgi.framework.ServiceRegistration;
  * It registers the SlingSettingsService.
  *
  */
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator, BundleListener {
 
     /** The service registration */
     private ServiceRegistration serviceRegistration;
+
+    /** The bundle context. */
+    private BundleContext bundleContext;
+
+    /** The settings service. */
+    private SlingSettingsServiceImpl settingsService;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        final SlingSettingsService service = new SlingSettingsServiceImpl(context);
+        this.bundleContext = context;
+        this.settingsService = new SlingSettingsServiceImpl(context);
+        // for compatibility, we might have to wait for the engine bundle
+        // to be started to get the Sling ID
+
+        if ( this.settingsService.isDelayedStart() ) {
+            this.bundleContext.addBundleListener(this);
+        } else {
+            this.startService();
+        }
+    }
+
+    /**
+     * @param event
+     */
+    public void bundleChanged(BundleEvent event) {
+        if ( SlingSettingsServiceImpl.ENGINE_SYMBOLIC_NAME.equals(event.getBundle().getSymbolicName())) {
+            this.settingsService.initDelayed(this.bundleContext);
+            if ( !this.settingsService.isDelayedStart() ) {
+                this.bundleContext.removeBundleListener(this);
+                this.startService();
+            }
+        }
+
+    }
+
+    private void startService() {
         final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, service.getClass().getName());
+        props.put(Constants.SERVICE_PID, this.settingsService.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Settings Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = context.registerService(new String[] {
+        serviceRegistration = this.bundleContext.registerService(new String[] {
                                                SlingSettingsService.class.getName()},
-                                           service, props);
+                                               this.settingsService, props);
         try {
-            SlingPropertiesPrinter.initPlugin(context);
+            SlingPropertiesPrinter.initPlugin(this.bundleContext);
         } catch (Throwable ignore) {
             // we just ignore this
         }
         try {
-            SlingSettingsPrinter.initPlugin(context, service);
+            SlingSettingsPrinter.initPlugin(this.bundleContext, this.settingsService);
         } catch (Throwable ignore) {
             // we just ignore this
         }
         try {
-            RunModeCommand.initPlugin(context, service.getRunModes());
+            RunModeCommand.initPlugin(this.bundleContext, this.settingsService.getRunModes());
         } catch (Throwable ignore) {
             // we just ignore this
         }
+
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
+        this.bundleContext.removeBundleListener(this);
         try {
             RunModeCommand.destroyPlugin();
         } catch (Throwable ignore) {
@@ -90,5 +126,6 @@ public class Activator implements BundleActivator {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }
+        this.settingsService = null;
     }
 }
