@@ -127,7 +127,11 @@ public class HttpBasicAuthenticationHandler extends
     }
 
     /**
-     * Sends back the form to log into the system.
+     * Called by the SlingAuthenticator.login method in case no other
+     * authentication handler was willing to request credentials from the
+     * client. In this case this HTTP Basic authentication handler will
+     * send back a {@link #sendUnauthorized(HttpServletResponse) 401 response}
+     * to request HTTP Basic authentication from the client.
      *
      * @param request The request object
      * @param response The response object to which to send the request
@@ -135,12 +139,7 @@ public class HttpBasicAuthenticationHandler extends
      */
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-
-        if (isLoginRequested(request, true)) {
-            return sendUnauthorized(response);
-        }
-
-        return false;
+        return sendUnauthorized(response);
     }
 
     /**
@@ -161,17 +160,20 @@ public class HttpBasicAuthenticationHandler extends
     }
 
     /**
-     * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set to
-     * the value <code>Basic</code> thus requesting plain basic authentication.
+     * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set.
+     * <p>
+     * This method always returns <code>true</code> if the parameter is set
+     * regardless of its value because the client indicated it wanted to login
+     * but no authentication handler was willing to actually handle this
+     * request. So as a last fallback this handler request HTTP Basic
+     * Credentials.
+     *
+     * @return <code>true</code> if the
+     *         {@link AuthenticationHandler#REQUEST_LOGIN_PARAMETER} is set to
+     *         any value.
      */
-    private boolean isLoginRequested(HttpServletRequest request,
-            boolean optionalLoginParameter) {
-        final String reqLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
-        if (reqLogin == null) {
-            return optionalLoginParameter;
-        }
-        return "1".equals(reqLogin)
-            || HttpServletRequest.BASIC_AUTH.equals(reqLogin);
+    private boolean isLoginRequested(HttpServletRequest request) {
+        return request.getParameter(REQUEST_LOGIN_PARAMETER) != null;
     }
 
     /**
@@ -197,7 +199,7 @@ public class HttpBasicAuthenticationHandler extends
         // presume 401/UNAUTHORIZED has not been sent
         boolean authenticationForced = false;
 
-        if (isLoginRequested(request, false)) {
+        if (isLoginRequested(request)) {
 
             authenticationForced = sendUnauthorized(response);
 
