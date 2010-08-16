@@ -24,6 +24,8 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.auth.core.AuthenticationSupport;
 
 /**
  * The <code>SlingSessionProvider</code> is a Jackrabbit WebDAV server
@@ -62,7 +64,13 @@ public class SlingSessionProvider implements SessionProvider {
         }
 
         // otherwise return the session from the request attribute
-        return (Session) request.getAttribute(ATTR_SESSION_NAME);
+        ResourceResolver resourceResolver = (ResourceResolver) 
+            request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+        
+        if (resourceResolver == null) {
+            return null;
+        }
+        return resourceResolver.adaptTo(Session.class);
     }
 
     /**
