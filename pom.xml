@@ -127,7 +127,6 @@
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/event</module>
         <module>bundles/extensions/fsresource</module>
-        <module>bundles/extensions/httpauth</module>
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
