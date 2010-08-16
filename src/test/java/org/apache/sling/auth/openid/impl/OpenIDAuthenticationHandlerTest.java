@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth.impl;
+package org.apache.sling.auth.openid.impl;
 
 import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.auth.openid.impl.OpenIDAuthenticationHandler;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 

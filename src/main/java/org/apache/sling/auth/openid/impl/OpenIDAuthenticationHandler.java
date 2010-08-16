@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth.impl;
+package org.apache.sling.auth.openid.impl;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -36,13 +36,13 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.auth.Authenticator;
-import org.apache.sling.commons.auth.spi.AbstractAuthenticationHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
-import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.openid.OpenIDConstants;
+import org.apache.sling.auth.openid.OpenIDFailure;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.openidauth.OpenIDConstants;
-import org.apache.sling.openidauth.OpenIDFailure;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -60,15 +60,15 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  *
  * @scr.component immediate="false" label="%auth.openid.name"
  *                description="%auth.openid.description"
- *                name="org.apache.sling.openidauth.OpenIDAuthenticationHandler"
+ *                name="org.apache.sling.auth.openid.OpenIDAuthenticationHandler"
  * @scr.property name="service.description"
  *               value="Apache Sling OpenID Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef=
- *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.PATH_PROPERTY"
+ *               "org.apache.sling.auth.core.spi.AuthenticationHandler.PATH_PROPERTY"
  *               values.0="/"
  * @scr.property nameRef=
- *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.TYPE_PROPERTY"
+ *               "org.apache.sling.auth.core.spi.AuthenticationHandler.TYPE_PROPERTY"
  *               valueRef="OpenIDConstants.OPENID_AUTH" private="true"
  * @scr.service
  */

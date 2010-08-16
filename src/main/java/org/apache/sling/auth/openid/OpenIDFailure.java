@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth;
+package org.apache.sling.auth.openid;
 
 /**
  * The <code>OpenIDFailure</code> defines the OpenID authentication failure

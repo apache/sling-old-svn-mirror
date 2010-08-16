@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth.impl;
+package org.apache.sling.auth.openid.impl;
 
 import javax.servlet.http.HttpServletRequest;
-import org.apache.sling.commons.auth.spi.AbstractAuthenticationFormServlet;
-import org.apache.sling.openidauth.OpenIDConstants;
-import org.apache.sling.openidauth.OpenIDFailure;
+
+import org.apache.sling.auth.core.spi.AbstractAuthenticationFormServlet;
+import org.apache.sling.auth.openid.OpenIDConstants;
+import org.apache.sling.auth.openid.OpenIDFailure;
 
 /**
  * The <code>AuthenticationFormServlet</code> provides the default login form

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth.impl;
+package org.apache.sling.auth.openid.impl;
 
 import java.security.Principal;
 import java.util.Hashtable;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth;
+package org.apache.sling.auth.openid;
 
 /**
  * The <code>OpenIDConstants</code> class defines useful constants for
