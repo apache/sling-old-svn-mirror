@@ -58,6 +58,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-DocURL>
+                            http://sling.apache.org/site/authentication.html
+                        </Bundle-DocURL>
                         <Export-Package>
                             org.apache.sling.auth.core;version=1.0.0,
                             org.apache.sling.auth.core.spi;version=1.0.0,

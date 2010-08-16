@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine.auth;
+package org.apache.sling.auth.core.spi;
 
 import java.io.IOException;
 
@@ -27,19 +27,58 @@ import javax.servlet.http.HttpServletResponse;
  * The <code>AuthenticationHandler</code> interface defines the service API used
  * by the authentication implementation to support plugin various ways of
  * extracting credentials from the request.
- *
- * @deprecated use
- *             {@link org.apache.sling.auth.core.spi.AuthenticationHandler}
- *             instead
  */
 public interface AuthenticationHandler {
 
     /**
-     * An authentication handler is associated with url paths. If the handler is
-     * not configured with a path, it is regarded as inactive. If the handler
-     * should be used for all requests, the path should be '/'.
+     * The name under which an implementation of this interface must be
+     * registered to be used as an authentication handler.
      */
-    String PATH_PROPERTY = "path";
+    static final String SERVICE_NAME = "org.apache.sling.auth.core.spi.AuthenticationHandler";
+
+    /**
+     * The name of the service registration property listing one or more URL
+     * paths for which the authentication handler is to be used. The property
+     * may be a single string value or an array of strings or a Collection of
+     * strings.
+     * <p>
+     * Each string value may either be an absolute path (e.g. /content) or an
+     * absolute URL (e.g. http://thehost/content) to assign the authentication
+     * handler to authenticate request for a select virtual host.
+     * <p>
+     * Authentication handlers without a <code>path</code> service registration
+     * property are ignored.
+     */
+    static final String PATH_PROPERTY = "path";
+
+    /**
+     * The name of the service registration property (single string) providing
+     * the authentication type of authentication handler. This is the same value
+     * as will be returned as the {@link AuthenticationInfo#getAuthType()
+     * authentication type} returned by the
+     * {@link #extractCredentials(HttpServletRequest, HttpServletResponse)}
+     * method.
+     * <p>
+     * <p>
+     * This property is optional but allows the client to optionally select the
+     * authentication handler which will actually request credentials upon the
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * method.
+     *
+     * @see #REQUEST_LOGIN_PARAMETER
+     */
+    static final String TYPE_PROPERTY = "authtype";
+
+    /**
+     * The request parameter which may be used to explicitly select an
+     * authentication handler by its {@link #TYPE_PROPERTY type} if
+     * authentication will be requested through
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}.
+     *
+     * @see #requestCredentials(HttpServletRequest, HttpServletResponse)
+     * @see #TYPE_PROPERTY
+     */
+    static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
 
     /**
      * Extracts credential data from the request if at all contained.
@@ -59,7 +98,14 @@ public interface AuthenticationHandler {
      * <td>{@link AuthenticationInfo#DOING_AUTH}
      * <td>the handler is in an ongoing authentication transaction with the
      * client. Request processing should be aborted at this stage.
+     * </tr>
      * <tr>
+     * <td>{@link AuthenticationInfo#FAIL_AUTH}
+     * <td>the handler failed extracting the credentials from the request for
+     * any reason. An example of this result is that credentials are present in
+     * the request but they could not be validated and thus not be used for
+     * request processing.
+     * </tr>
      * <tr>
      * <td><code>AuthenticationInfo</code> object
      * <td>The user sent credentials. The returned object contains the
@@ -87,7 +133,7 @@ public interface AuthenticationHandler {
      *         In case of {@link AuthenticationInfo#DOING_AUTH}, the method must
      *         have sent a response indicating that fact to the client.
      */
-    AuthenticationInfo authenticate(HttpServletRequest request,
+    AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response);
 
     /**
@@ -96,22 +142,48 @@ public interface AuthenticationHandler {
      * processing can be terminated normally. Otherwise the authorization
      * information could not be requested.
      * <p>
-     * Any response sent by the handler though the <code>sendError</code> method
-     * is also handled by the error handler infrastructure.
+     * The <code>HttpServletResponse.sendError</code> methods should not be used
+     * by the implementation because these responses might be post-processed by
+     * the servlet container's error handling infrastructure thus preventing the
+     * correct operation of the authentication handler. To convey a HTTP
+     * response status the <code>HttpServletResponse.setStatus</code> method
+     * should be used.
      * <p>
      * The value of {@link #PATH_PROPERTY} service registration property value
      * triggering this call is available as the <code>path</code> request
      * attribute. If the service is registered with multiple path values, the
      * value of the <code>path</code> request attribute may be used to implement
      * specific handling.
+     * <p>
+     * If the {@link #REQUEST_LOGIN_PARAMETER} request parameter is set only
+     * those authentication handlers registered with an {@link #TYPE_PROPERTY
+     * authentication type} matching the parameter will be considered for
+     * requesting credentials through this method.
+     * <p>
+     * A handler not registered with an {@link #TYPE_PROPERTY authentication
+     * type} will, for backwards compatibility reasons, always be called
+     * ignoring the actual value of the {@link #REQUEST_LOGIN_PARAMETER}
+     * parameter.
      *
      * @param request The request object.
      * @param response The response object to which to send the request.
-     * @return <code>true</code> if the handler is able to end an authentication
+     * @return <code>true</code> if the handler is able to send an authentication
      *         inquiry for the given request. <code>false</code> otherwise.
      * @throws IOException If an error occurrs sending the authentication
      *             inquiry to the client.
      */
-    boolean requestAuthentication(HttpServletRequest request,
+    boolean requestCredentials(HttpServletRequest request,
+            HttpServletResponse response) throws IOException;
+
+    /**
+     * Drops any credential and authentication details from the request and asks
+     * the client to do the same.
+     *
+     * @param request The request object.
+     * @param response The response object to which to send the request.
+     * @throws IOException If an error occurrs asking the client to drop any
+     *             authentication traces.
+     */
+    void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 }
