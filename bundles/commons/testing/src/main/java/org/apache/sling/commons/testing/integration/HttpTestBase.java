@@ -41,6 +41,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.util.JavascriptEngine;
+import org.slf4j.MDC;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
@@ -118,6 +119,9 @@ public class HttpTestBase extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        
+        MDC.put("testclass", getClass().getName());
+        MDC.put("testcase", getName());
 
         // assume http and webdav are on the same host + port
         URL url = null;
@@ -141,6 +145,9 @@ public class HttpTestBase extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        MDC.remove("testcase");
+        MDC.remove("testclass");
+        
         super.tearDown();
 
         for(String url : urlsToDelete) {
