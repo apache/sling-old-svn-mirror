@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl;
+package org.apache.sling.auth.core.impl;
 
 import javax.servlet.http.HttpServletResponse;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth;
+package org.apache.sling.auth.core;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -68,7 +68,7 @@ public interface AuthenticationSupport {
     /**
      * The name under which this service is registered.
      */
-    static final String SERVICE_NAME = "org.apache.sling.commons.auth.AuthenticationSupport";
+    static final String SERVICE_NAME = "org.apache.sling.auth.core.AuthenticationSupport";
 
     /**
      * The name of the request attribute set by the
@@ -79,7 +79,7 @@ public interface AuthenticationSupport {
      * attached to the JCR repository using the credentials provided by the
      * request.
      */
-    static final String REQUEST_ATTRIBUTE_RESOLVER = "org.apache.sling.commons.auth.ResourceResolver";
+    static final String REQUEST_ATTRIBUTE_RESOLVER = "org.apache.sling.auth.core.ResourceResolver";
 
     /**
      * The name of the request parameter indicating where to redirect to after
@@ -91,7 +91,7 @@ public interface AuthenticationSupport {
      * because anonymous authentication fails or because anonymous
      * authentication is not allowed for the request, the parameter is ignored
      * and the
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
      * method is called to request authentication.
      */
     static final String REDIRECT_PARAMETER = "sling.auth.redirect";
@@ -100,7 +100,7 @@ public interface AuthenticationSupport {
      * Handles security on behalf of a custom OSGi Http Service
      * <code>HttpContext</code> instance extracting credentials from the request
      * using any registered
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler} services.
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} services.
      * If the credentials can be extracted and used to log into the JCR
      * repository this method sets the request attributes required by the OSGi
      * Http Service specification plus the {@link #REQUEST_ATTRIBUTE_RESOLVER}

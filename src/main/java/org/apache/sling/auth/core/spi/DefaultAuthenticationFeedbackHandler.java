@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.spi;
+package org.apache.sling.auth.core.spi;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.auth.AuthenticationSupport;
+import org.apache.sling.auth.core.AuthenticationSupport;
 import org.slf4j.LoggerFactory;
 
 public class DefaultAuthenticationFeedbackHandler implements

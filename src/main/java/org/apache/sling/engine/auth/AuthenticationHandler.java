@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
  * extracting credentials from the request.
  *
  * @deprecated use
- *             {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
+ *             {@link org.apache.sling.auth.core.spi.AuthenticationHandler}
  *             instead
  */
 public interface AuthenticationHandler {

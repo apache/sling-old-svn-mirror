@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl.engine;
+package org.apache.sling.auth.core.impl.engine;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +28,7 @@ import org.apache.sling.engine.auth.NoAuthenticationHandlerException;
  * The <code>EngineSlingAuthenticator</code> class is a simple proxy service
  * providing the old Sling Engine {@link Authenticator} service calling into the
  * new standalone Apache Sling
- * {@link org.apache.sling.commons.auth.Authenticator} service.
+ * {@link org.apache.sling.auth.core.Authenticator} service.
  *
  * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.engine.auth.Authenticator"

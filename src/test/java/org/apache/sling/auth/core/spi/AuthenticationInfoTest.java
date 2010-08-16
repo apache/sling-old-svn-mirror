@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.spi;
+package org.apache.sling.auth.core.spi;
 
 import static junit.framework.Assert.failNotEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +28,7 @@ import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.junit.Assert;
 import org.junit.Test;
 

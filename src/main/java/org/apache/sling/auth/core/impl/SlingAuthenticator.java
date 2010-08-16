@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl;
+package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,13 +38,13 @@ import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.auth.AuthenticationSupport;
-import org.apache.sling.commons.auth.impl.engine.EngineAuthenticationHandlerHolder;
-import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
-import org.apache.sling.commons.auth.spi.AuthenticationInfoPostProcessor;
-import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
+import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.AuthenticationInfoPostProcessor;
+import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
  *
  * Register for three services
  * @scr.service interface="org.apache.sling.api.auth.Authenticator"
- * @scr.service interface="org.apache.sling.commons.auth.AuthenticationSupport"
+ * @scr.service interface="org.apache.sling.auth.core.AuthenticationSupport"
  * @scr.service interface="javax.servlet.ServletRequestListener"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -144,7 +144,7 @@ public class SlingAuthenticator implements Authenticator,
 
     /**
      * The name of the {@link AuthenticationInfo} property providing the option
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler}
+     * {@link org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler}
      * handler to be called back on login failure or success.
      */
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
@@ -447,7 +447,7 @@ public class SlingAuthenticator implements Authenticator,
 
     /**
      * Logs out the user calling all applicable
-     * {@link org.apache.sling.commons.auth.spi.AuthenticationHandler}
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler}
      * authentication handlers.
      */
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -1091,7 +1091,7 @@ public class SlingAuthenticator implements Authenticator,
 
     private static class SlingAuthenticatorResourceResolver {
 
-        static final String ATTR_NAME = "$$org.apache.sling.commons.auth.impl.SlingAuthenticatorResourceResolver$$";
+        static final String ATTR_NAME = "$$org.apache.sling.auth.core.impl.SlingAuthenticatorResourceResolver$$";
 
         private ResourceResolver resolver;
 

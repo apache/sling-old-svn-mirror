@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl;
+package org.apache.sling.auth.core.impl;
+
+import org.apache.sling.auth.core.impl.SlingAuthenticator;
 
 import junit.framework.TestCase;
 

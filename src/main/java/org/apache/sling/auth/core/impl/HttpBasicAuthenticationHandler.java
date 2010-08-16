@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl;
+package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -25,9 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.commons.auth.spi.AuthenticationHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
-import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

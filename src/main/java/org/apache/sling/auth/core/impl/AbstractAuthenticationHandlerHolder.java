@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.impl;
+package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.auth.spi.AuthenticationFeedbackHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.osgi.framework.ServiceReference;
 
 /**

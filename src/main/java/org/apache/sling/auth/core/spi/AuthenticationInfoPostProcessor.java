@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.commons.auth.spi;
+package org.apache.sling.auth.core.spi;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,7 +30,7 @@ public interface AuthenticationInfoPostProcessor {
      * The name under which an implementation of this interface must be
      * registered to be used as an authentication info post processor.
      */
-    static final String SERVICE_NAME = "org.apache.sling.commons.auth.spi.AuthenticationInfoPostProcessor";
+    static final String SERVICE_NAME = "org.apache.sling.auth.core.spi.AuthenticationInfoPostProcessor";
 
     /**
      * Perform some post-processing on the AuthenticationInfo object.

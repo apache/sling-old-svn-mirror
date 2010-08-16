@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.auth.spi;
+package org.apache.sling.auth.core.spi;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ public interface AuthenticationHandler {
      * The name under which an implementation of this interface must be
      * registered to be used as an authentication handler.
      */
-    static final String SERVICE_NAME = "org.apache.sling.commons.auth.spi.AuthenticationHandler";
+    static final String SERVICE_NAME = "org.apache.sling.auth.core.spi.AuthenticationHandler";
 
     /**
      * The name of the service registration property listing one or more URL
