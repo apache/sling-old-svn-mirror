@@ -25,7 +25,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Session;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -132,15 +131,6 @@ public class SlingAuthenticator implements Authenticator,
      * The default realm for the built-in HTTP Basic authentication handler.
      */
     private static final String DEFAULT_REALM = "Sling (Development)";
-
-    /**
-     * The name of the request attribute providing the authenticated JCR
-     * Session. This is only provided for backwards compatibility and will be
-     * removed in a future release.
-     * <p>
-     * <b>DO NOT USE ANY MORE</b>
-     */
-    private static final String REQUEST_ATTRIBUTE_SESSION = "javax.jcr.Session";
 
     /**
      * The name of the {@link AuthenticationInfo} property providing the option
@@ -492,13 +482,10 @@ public class SlingAuthenticator implements Authenticator,
 
     public void requestDestroyed(ServletRequestEvent sre) {
         ServletRequest request = sre.getServletRequest();
-        Object resolverAttr = request.getAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME);
-        if (resolverAttr instanceof SlingAuthenticatorResourceResolver) {
-            ((SlingAuthenticatorResourceResolver) resolverAttr).logout();
-
+        Object resolverAttr = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
+        if (resolverAttr instanceof ResourceResolver) {
+            ((ResourceResolver) resolverAttr).close();
             request.removeAttribute(REQUEST_ATTRIBUTE_RESOLVER);
-            request.removeAttribute(REQUEST_ATTRIBUTE_SESSION);
-            request.removeAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME);
         }
     }
 
@@ -800,24 +787,16 @@ public class SlingAuthenticator implements Authenticator,
     private void setAttributes(final ResourceResolver resolver, final String authType,
             final HttpServletRequest request) {
 
-        final SlingAuthenticatorResourceResolver sar = new SlingAuthenticatorResourceResolver(
-            resolver);
-
         // HttpService API required attributes
         request.setAttribute(HttpContext.REMOTE_USER, resolver.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
 
         // resource resolver for down-stream use
         request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
-        request.setAttribute(SlingAuthenticatorResourceResolver.ATTR_NAME, sar);
-
-        // JCR session for backwards compatibility
-        Session session = resolver.adaptTo(Session.class);
-        request.setAttribute(REQUEST_ATTRIBUTE_SESSION, session);
 
         log.debug(
-            "setAttributes: ResourceResolver stored as request attribute: user={}, workspace={}",
-            resolver.getUserID(), session.getWorkspace().getName());
+            "setAttributes: ResourceResolver stored as request attribute: user={}",
+            resolver.getUserID());
     }
 
     /**
@@ -1087,35 +1066,6 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         return builder.toString();
-    }
-
-    private static class SlingAuthenticatorResourceResolver {
-
-        static final String ATTR_NAME = "$$org.apache.sling.auth.core.impl.SlingAuthenticatorResourceResolver$$";
-
-        private ResourceResolver resolver;
-
-        SlingAuthenticatorResourceResolver(final ResourceResolver resolver) {
-            this.resolver = resolver;
-        }
-
-        void logout() {
-            if (resolver != null) {
-                try {
-                    // logout if session is still alive (and not logged out)
-                    resolver.close();
-                } catch (Throwable t) {
-                    // TODO: might log
-                } finally {
-                    resolver = null;
-                }
-            }
-        }
-
-        @Override
-        protected void finalize() {
-            logout();
-        }
     }
 
     private static class SlingAuthenticatorServiceListener implements
