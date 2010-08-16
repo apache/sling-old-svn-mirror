@@ -50,7 +50,7 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.auth</artifactId>
+            <artifactId>org.apache.sling.auth.core</artifactId>
             <version>0.9.0-SNAPSHOT</version>
         </bundle>
         <bundle>
@@ -65,12 +65,12 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.openidauth</artifactId>
+            <artifactId>org.apache.sling.auth.openid</artifactId>
             <version>0.9.1-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.formauth</artifactId>
+            <artifactId>org.apache.sling.auth.form</artifactId>
             <version>0.9-SNAPSHOT</version>
         </bundle>
         <bundle>
