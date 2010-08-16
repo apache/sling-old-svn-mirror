@@ -781,8 +781,8 @@ public class SlingAuthenticator implements Authenticator,
     /**
      * Sets the request attributes required by the OSGi HttpContext interface
      * specification for the <code>handleSecurity</code> method. In addition the
-     * {@link SlingHttpContext#SESSION} request attribute is set with the JCR
-     * Session.
+     * {@link SlingAuthenticator#REQUEST_ATTRIBUTE_RESOLVER} request attribute is
+     * set to the ResourceResolver.
      */
     private void setAttributes(final ResourceResolver resolver, final String authType,
             final HttpServletRequest request) {
