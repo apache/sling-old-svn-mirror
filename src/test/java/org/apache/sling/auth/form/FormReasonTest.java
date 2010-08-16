@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth;
+package org.apache.sling.auth.form;
+
+import org.apache.sling.auth.form.FormReason;
 
 import junit.framework.TestCase;
 

@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth.impl;
+package org.apache.sling.auth.form.impl;
 
 import javax.servlet.http.HttpServletRequest;
-import org.apache.sling.commons.auth.spi.AbstractAuthenticationFormServlet;
-import org.apache.sling.formauth.FormReason;
+
+import org.apache.sling.auth.core.spi.AbstractAuthenticationFormServlet;
+import org.apache.sling.auth.form.FormReason;
 
 /**
  * The <code>AuthenticationFormServlet</code> provides the default login form

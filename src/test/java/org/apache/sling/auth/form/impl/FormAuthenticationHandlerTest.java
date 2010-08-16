@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth.impl;
+package org.apache.sling.auth.form.impl;
 
 import java.io.File;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.formauth.impl.FormAuthenticationHandler;
+import org.apache.sling.auth.form.impl.FormAuthenticationHandler;
 import org.hamcrest.Description;
 import org.hamcrest.text.StringStartsWith;
 import org.jmock.Expectations;

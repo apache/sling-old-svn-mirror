@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth;
+package org.apache.sling.auth.form;
 
 public enum FormReason {
 

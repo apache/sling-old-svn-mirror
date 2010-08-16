@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.formauth.impl;
+package org.apache.sling.auth.form.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,11 +42,11 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.auth.spi.AbstractAuthenticationHandler;
-import org.apache.sling.commons.auth.spi.AuthenticationInfo;
-import org.apache.sling.commons.auth.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
+import org.apache.sling.auth.form.FormReason;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.formauth.FormReason;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -60,15 +60,15 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="false" label="%auth.form.name"
  *                description="%auth.form.description"
- *                name="org.apache.sling.formauth.FormAuthenticationHandler"
+ *                name="org.apache.sling.auth.form.FormAuthenticationHandler"
  * @scr.property name="service.description"
  *               value="Apache Sling Form Based Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef=
- *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.PATH_PROPERTY"
+ *               "org.apache.sling.auth.core.spi.AuthenticationHandler.PATH_PROPERTY"
  *               values.0="/"
  * @scr.property nameRef=
- *               "org.apache.sling.commons.auth.spi.AuthenticationHandler.TYPE_PROPERTY"
+ *               "org.apache.sling.auth.core.spi.AuthenticationHandler.TYPE_PROPERTY"
  *               valueRef="javax.servlet.http.HttpServletRequest.FORM_AUTH"
  *               private="true"
  * @scr.service

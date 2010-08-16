@@ -105,7 +105,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.auth</artifactId>
+            <artifactId>org.apache.sling.auth.core</artifactId>
             <version>0.9.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
