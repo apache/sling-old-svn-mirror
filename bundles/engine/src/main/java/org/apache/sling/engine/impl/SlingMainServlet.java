@@ -57,7 +57,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.commons.auth.AuthenticationSupport;
+import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
@@ -190,10 +190,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             HttpServletRequest request = (HttpServletRequest) req;
 
-        	requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_INIT );
-
             // set the thread name according to the request
             String threadName = setThreadName(request);
+
+            requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_INIT );
 
             try {
                 if (!allowTrace && "TRACE".equals(request.getMethod())) {
@@ -245,6 +245,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             } finally {
 
                 requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_DESTROY );
+
                 // reset the thread name
                 if (threadName != null) {
                     Thread.currentThread().setName(threadName);
