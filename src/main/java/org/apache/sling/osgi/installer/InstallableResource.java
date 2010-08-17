@@ -90,15 +90,12 @@ public class InstallableResource {
             if ( dict == null ) {
                 throw new IllegalArgumentException("dictionary must not be null (or input stream must not be null).");
             }
-            digest = (digest != null ? digest : id + ":" + computeDigest(dict));
             type = (type != null ? type : InstallableResource.TYPE_CONFIG);
         }
-        // TODO - compute digest if digest is null - for now we throw
-        if ( digest == null || digest.length() == 0 ) {
-            throw new IllegalArgumentException("digest must not be null");
-        }
-
         final String resourceType = (type != null ? type : computeResourceType(getExtension(id)));
+        if ( resourceType == null ) {
+            throw new IllegalArgumentException("Resource type must not be null");
+        }
         if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
             dict = readDictionary(is, getExtension(id));
             if ( dict == null ) {
@@ -106,8 +103,13 @@ public class InstallableResource {
             }
             is = null;
         }
-        if ( resourceType == null ) {
-            throw new IllegalArgumentException("Resource type must not be null");
+        if ( resourceType.equals(InstallableResource.TYPE_CONFIG) ) {
+            digest = (digest != null ? digest : id + ":" + computeDigest(dict));
+        }
+
+        // TODO - compute digest if digest is null - for now we throw
+        if ( digest == null || digest.length() == 0 ) {
+            throw new IllegalArgumentException("digest must not be null");
         }
 
         this.id = id;
