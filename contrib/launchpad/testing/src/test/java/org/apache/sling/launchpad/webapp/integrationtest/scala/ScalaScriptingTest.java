@@ -34,7 +34,7 @@ public class ScalaScriptingTest extends HttpTestBase {
      */
     public void testIgnore() throws IOException {
         String url = HTTP_BASE_URL + "/content/helloworld.html";
-        getContent(url, CONTENT_TYPE_HTML);
+        getContent(url, CONTENT_TYPE_HTML, null, 500);
     }
 
     public void testHelloWorldApp() throws IOException {
