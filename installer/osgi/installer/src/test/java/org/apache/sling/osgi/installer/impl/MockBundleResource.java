@@ -138,9 +138,9 @@ public class MockBundleResource implements RegisteredResource {
 	}
 
     /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getUrlScheme()
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getScheme()
      */
-    public String getUrlScheme() {
+    public String getScheme() {
         return null;
     }
 

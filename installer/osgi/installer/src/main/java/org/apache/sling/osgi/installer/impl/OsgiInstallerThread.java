@@ -252,14 +252,14 @@ public class OsgiInstallerThread
         	for(String scheme : newResourcesSchemes) {
         	    Logger.logDebug("Processing set of new resources with scheme " + scheme);
                 for(RegisteredResource r : newResources) {
-                    if(r.getUrlScheme().equals(scheme)) {
+                    if(r.getScheme().equals(scheme)) {
                         r.setInstallable(false);
                         Logger.logDebug("New resource set to non-installable: " + r);
                     }
                  }
                 for(SortedSet<RegisteredResource> ss : registeredResources.values()) {
                     for(RegisteredResource r : ss) {
-                        if(r.getUrlScheme().equals(scheme)) {
+                        if(r.getScheme().equals(scheme)) {
                             r.setInstallable(false);
                             Logger.logDebug("Existing resource set to non-installable: " + r);
                         }
@@ -269,7 +269,7 @@ public class OsgiInstallerThread
             for(SortedSet<RegisteredResource> s : newResourcesSets) {
                 newResources.addAll(s);
                 Logger.logDebug("Added set of " + s.size() + " new resources with scheme "
-                            + s.first().getUrlScheme() + ": " + s);
+                            + s.first().getScheme() + ": " + s);
             }
             newResourcesSets.clear();
             newResourcesSchemes.clear();

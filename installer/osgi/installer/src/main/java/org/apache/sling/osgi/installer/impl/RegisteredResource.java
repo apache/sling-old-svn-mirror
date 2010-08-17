@@ -33,11 +33,6 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
  */
 public interface RegisteredResource extends Serializable, Comparable<RegisteredResource> {
 
-	String DIGEST_TYPE = "MD5";
-    String ENTITY_JAR_PREFIX = "jar:";
-	String ENTITY_BUNDLE_PREFIX = "bundle:";
-	String ENTITY_CONFIG_PREFIX = "config:";
-
     /** Attribute key: configuration pid */
     String CONFIG_PID_ATTRIBUTE = "config.pid";
 
@@ -90,7 +85,8 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
 
 	boolean isInstallable();
 	void setInstallable(boolean installable);
-	String getUrlScheme();
+
+	String getScheme();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
 	Map<String, Object> getAttributes();
