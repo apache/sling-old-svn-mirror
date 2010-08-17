@@ -68,10 +68,12 @@ public class BundleInstallTask extends OsgiInstallerTask {
         try {
             final Bundle b = this.creator.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
             // optionally set the start level
-            if (startLevelService != null && startLevel > 0) {
-                startLevelService.setBundleStartLevel(b, startLevel);
-            } else {
-                Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
+            if ( startLevel > 0 ) {
+                if (startLevelService != null) {
+                    startLevelService.setBundleStartLevel(b, startLevel);
+                } else {
+                    Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
+                }
             }
             final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
             this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());

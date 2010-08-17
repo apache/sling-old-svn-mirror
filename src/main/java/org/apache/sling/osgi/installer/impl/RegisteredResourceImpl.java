@@ -27,13 +27,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -50,9 +47,11 @@ import org.osgi.framework.Version;
 public class RegisteredResourceImpl
     implements RegisteredResource, Serializable {
 
+    private static final String ENTITY_BUNDLE_PREFIX = "bundle:";
+    private static final String ENTITY_CONFIG_PREFIX = "config:";
+
     private static final long serialVersionUID = 3L;
     private final String id;
-	private final String url;
 	private final String urlScheme;
 	private final String digest;
 	private final String entity;
@@ -77,7 +76,6 @@ public class RegisteredResourceImpl
 	        final String scheme) throws IOException {
         this.id = input.getId();
         this.urlScheme = scheme;
-		this.url = scheme + ':' + input.getId();
 		this.resourceType = input.getType();
 		this.priority = input.getPriority();
         this.dictionary = copy(input.getDictionary());
@@ -92,18 +90,17 @@ public class RegisteredResourceImpl
                 copyToLocalStorage(input.getInputStream());
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
-                if(name == null) {
-                    // not a bundle - use "jar" entity to make it easier to find out
-                    entity = ENTITY_JAR_PREFIX + url;
-                } else {
-                    entity = ENTITY_BUNDLE_PREFIX + name;
+                if (name == null) {
+                    // not a bundle
+                    throw new IOException("Bundle resource does not contain a bundle " + this.urlScheme + ":" + this.id);
                 }
+                entity = ENTITY_BUNDLE_PREFIX + name;
             } finally {
                 is.close();
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
-            final ConfigurationPid pid = new ConfigurationPid(url);
+            final ConfigurationPid pid = new ConfigurationPid(this.getURL());
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
 		} else {
@@ -119,7 +116,7 @@ public class RegisteredResourceImpl
 
 	@Override
 	public String toString() {
-	    return getClass().getSimpleName() + " " + url + ", digest=" + digest + ", serialNumber=" + serialNumber;
+	    return getClass().getSimpleName() + " " + this.getURL() + ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber();
 	}
 
 	protected File getDataFile(final BundleContext bundleContext) {
@@ -127,6 +124,9 @@ public class RegisteredResourceImpl
 		return bundleContext.getDataFile(filename);
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#cleanup()
+	 */
 	public void cleanup() {
 	    if ( this.dataFile != null && this.dataFile.exists() ) {
 		    Logger.logDebug("Deleting local storage file "
@@ -135,10 +135,16 @@ public class RegisteredResourceImpl
 		}
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getURL()
+	 */
 	public String getURL() {
-		return url;
+		return this.getScheme() + ':' + this.getId();
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getInputStream()
+	 */
 	public InputStream getInputStream() throws IOException {
 	    if (this.dataFile != null && this.dataFile.exists() ) {
 	        return new BufferedInputStream(new FileInputStream(this.dataFile));
@@ -146,10 +152,16 @@ public class RegisteredResourceImpl
         return  null;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getDictionary()
+	 */
 	public Dictionary<String, Object> getDictionary() {
 		return dictionary;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getDigest()
+	 */
 	public String getDigest() {
 		return digest;
 	}
@@ -176,54 +188,64 @@ public class RegisteredResourceImpl
 		}
 	}
 
-	/** Copy given Dictionary, sorting keys */
-	static Dictionary<String, Object> copy(final Dictionary<String, Object> d) {
+	/** Copy given Dictionary */
+	private Dictionary<String, Object> copy(final Dictionary<String, Object> d) {
 	    if ( d == null ) {
 	        return null;
 	    }
 	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
-	    final List<String> keys = new ArrayList<String>();
 	    final Enumeration<String> e = d.keys();
 	    while(e.hasMoreElements()) {
-	        keys.add(e.nextElement());
-	    }
-	    Collections.sort(keys);
-	    for(String key : keys) {
-	        result.put(key, d.get(key));
+	        final String key = e.nextElement();
+            result.put(key, d.get(key));
 	    }
 	    return result;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getId()
+	 */
 	public String getId() {
 	    return id;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getType()
+     */
     public String getType() {
         return resourceType;
     }
 
-    /** Return the identifier of the OSGi "entity" that this resource
-     *  represents, for example "bundle:SID" where SID is the bundle's
-     *  symbolic ID, or "config:PID" where PID is config's PID.
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getEntityId()
      */
     public String getEntityId() {
         return entity;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getAttributes()
+     */
     public Map<String, Object> getAttributes() {
 		return attributes;
 	}
 
+	/**
+	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#isInstallable()
+	 */
 	public boolean isInstallable() {
         return installable;
 	}
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setInstallable(boolean)
+     */
     public void setInstallable(boolean installable) {
         this.installable = installable;
     }
 
     /** Read the manifest from supplied input stream, which is closed before return */
-    static Manifest getManifest(InputStream ins) throws IOException {
+    private Manifest getManifest(InputStream ins) throws IOException {
         Manifest result = null;
 
         JarInputStream jis = null;
@@ -272,10 +294,16 @@ public class RegisteredResourceImpl
         attributes.put(Constants.BUNDLE_VERSION, v.toString());
     }
 
-    public String getUrlScheme() {
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getScheme()
+     */
+    public String getScheme() {
         return urlScheme;
     }
 
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getPriority()
+     */
     public int getPriority() {
         return priority;
     }
