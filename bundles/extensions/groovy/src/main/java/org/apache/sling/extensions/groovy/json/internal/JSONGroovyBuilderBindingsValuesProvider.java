@@ -18,19 +18,22 @@ package org.apache.sling.extensions.groovy.json.internal;
 
 import java.util.HashMap;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.extensions.groovy.json.JSONGroovyBuilder;
 
 /**
  * BindingsValuesProvider which binds an instance of JSONGroovyBuilder.
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service
- *
- * @scr.property name="service.description" value="JSONGroovyBuilder BindingsValuesProvider"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * @scr.property name="javax.script.name" value="groovy"
  */
+@Component(immediate=true, metatype=false)
+@Service
+@Properties({
+    @Property(name="service.description", value="JSONGroovyBuilder BindingsValuesProvider"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="javax.script.name", value="groovy")
+})
 public class JSONGroovyBuilderBindingsValuesProvider extends HashMap<String, Object> {
 
     public JSONGroovyBuilderBindingsValuesProvider() {
