@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,27 +59,34 @@ public class RemovedResourceDetectionTest extends OsgiInstallerTestBase {
 
         // Install two bundles and verify
         assertNull(symbolicNameA + " must be absent before installing", findBundle(symbolicNameA));
-        resetCounters();
+
+        Object listener = this.startObservingBundleEvents();
         installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        this.waitForBundleEvents("Bundle must be installed", listener,
+                new BundleEvent(symbolicNameA, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
+                new BundleEvent(symbolicNameA, "1.1", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After initial install", symbolicNameA, "1.1", Bundle.ACTIVE);
 
         assertNull(symbolicNameB + " must be absent before installing", findBundle(symbolicNameB));
-        resetCounters();
+        listener = this.startObservingBundleEvents();
         installer.addResource(URL_SCHEME, getInstallableResource(
                 getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        this.waitForBundleEvents("Bundle must be installed", listener,
+                new BundleEvent(symbolicNameB, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                new BundleEvent(symbolicNameB, "1.0", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After initial install", symbolicNameB, "1.0", Bundle.ACTIVE);
 
         // Restart installer, register only second bundle and verify that first one is gone
         restartInstaller();
-        resetCounters();
+        listener = this.startObservingBundleEvents();
         final List<InstallableResource> data = new ArrayList<InstallableResource>();
         data.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
         installer.registerResources(URL_SCHEME, data);
         sleep(500);
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        this.waitForBundleEvents("Bundle must be installed", listener,
+                new BundleEvent(symbolicNameA, org.osgi.framework.BundleEvent.STOPPED),
+                new BundleEvent(symbolicNameA, org.osgi.framework.BundleEvent.UNINSTALLED));
         assertBundle("After installer restart", symbolicNameB, "1.0", Bundle.ACTIVE);
         assertNull("Bundle not in second list should be removed", findBundle(symbolicNameA));
     }

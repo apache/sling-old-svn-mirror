@@ -20,12 +20,12 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,26 +142,61 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	logInstalledBundles();
 
     	// Start by installing all bundles
+    	Object listener = this.startObservingBundleEvents();
     	log(LogService.LOG_INFO,"Registering all test bundles, " + testBundles.size() + " resources");
     	install(testBundles);
-        waitForInstallerAction("After registering all bundles", OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER,
-        		1, expectBundlesTimeoutMsec);
+    	BundleEvent[] installedEvents = new BundleEvent[testBundles.size()];
+    	for(int i=0; i<installedEvents.length; i++) {
+    	    installedEvents[i] = new BundleEvent(null, null, org.osgi.framework.BundleEvent.INSTALLED);
+    	}
+    	this.waitForBundleEvents("All bundles should be installed", listener, expectBundlesTimeoutMsec, installedEvents);
     	expectBundleCount("After installing all test bundles", initialBundleCount + testBundles.size());
 
     	// And run a number of cycles where randomly selected bundles are removed and reinstalled
+    	final List<File> currentInstallation = new ArrayList<File>(testBundles);
     	for(int i=0; i < cycleCount; i++) {
     		final long start = System.currentTimeMillis();
     		log(LogService.LOG_DEBUG, "Test cycle " + i + ", semi-randomly selecting a subset of our test bundles");
+
     		final List<File> toInstall = selectRandomBundles();
         	log(LogService.LOG_INFO,"Re-registering " + toInstall.size() + " randomly selected resources (other test bundles should be uninstalled)");
+        	int updates = 0;
+        	int removes = 0;
+        	int installs = 0;
+        	for(final File f : toInstall ) {
+        	    if ( currentInstallation.contains(f) ) {
+        	        updates++;
+        	    } else {
+        	        installs++;
+        	    }
+        	}
+            for(final File f : currentInstallation ) {
+                if ( !toInstall.contains(f) ) {
+                    removes++;
+                }
+            }
+            installedEvents = new BundleEvent[removes + installs];
+            for(int m=0; m<installedEvents.length; m++) {
+                if ( m < removes ) {
+                    installedEvents[m] = new BundleEvent(null, null, org.osgi.framework.BundleEvent.UNINSTALLED);
+                } else {
+                    installedEvents[m] = new BundleEvent(null, null, org.osgi.framework.BundleEvent.INSTALLED);
+                }
+            }
+
+            listener = this.startObservingBundleEvents();
     		install(toInstall);
-            waitForInstallerAction("At cycle " + i, OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER,
-            		1, expectBundlesTimeoutMsec);
+            this.waitForBundleEvents("All bundles should be installed", listener, expectBundlesTimeoutMsec, installedEvents);
+
             eventsDetector.waitForNoEvents(MSEC_WITHOUT_EVENTS, expectBundlesTimeoutMsec);
         	expectBundleCount("At cycle " + i, initialBundleCount + toInstall.size());
         	log(LogService.LOG_INFO,"Test cycle " + i + " successful, "
         			+ toInstall.size() + " bundles, "
         			+ (System.currentTimeMillis() - start) + " msec");
+
+        	// update for next cycle
+            currentInstallation.clear();
+            currentInstallation.addAll(toInstall);
     	}
     }
 

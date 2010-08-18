@@ -16,12 +16,10 @@
  */
 package org.apache.sling.osgi.installer.it;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.io.IOException;
-
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +30,7 @@ import org.osgi.framework.Bundle;
 
 @RunWith(JUnit4TestRunner.class)
 public class BundlePrioritiesTest extends OsgiInstallerTestBase {
+
     @org.ops4j.pax.exam.junit.Configuration
     public static Option[] configuration() {
         return defaultConfiguration();
@@ -47,9 +46,11 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         super.tearDown();
     }
 
+    /**
+     *  Use snapshots, it's the only bundles which are updated even if their version doesn't change
+     */
     @Test
-    /** Use snapshots, it's the only bundles which are updated even if their version doesn't change */
-    public void testPrioritiesUsingSnapshots() throws IOException {
+    public void testPrioritiesUsingSnapshots() throws Exception {
         // Install test bundle
         final String symbolicName = "osgi-installer-snapshot-test";
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
@@ -57,27 +58,44 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         final int lowPriority = InstallableResource.DEFAULT_PRIORITY - 1;
         final int highPriority = InstallableResource.DEFAULT_PRIORITY + 1;
 
+        // we install the bundle with header SNAPSHOT and value A
         {
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
-            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+            this.waitForBundleEvents(symbolicName + " must be installed and active", listener,
+                    new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.STARTED));
             assertBundle("Initial install", symbolicName, null, Bundle.ACTIVE);
+            final Bundle b = findBundle(symbolicName);
+            assertEquals("A", b.getHeaders().get("SNAPSHOT"));
         }
 
+        // we try to install the bundle with header SNAPSHOT and value B
+        // it shouldn't be installed because of the low priority!
         {
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2", lowPriority));
-            assertNoOsgiTasks("Low-priority snapshot updated must be ignored");
+                    getTestBundle(BUNDLE_BASE_NAME + "-snapb.jar"), "digest2", lowPriority));
+            sleep(1000L);
+            this.assertNoBundleEvents("Low-priority snapshot updated must be ignored", listener, symbolicName);
+            assertBundle("Update one", symbolicName, null, Bundle.ACTIVE);
+            final Bundle b = findBundle(symbolicName);
+            assertEquals("Low-priority snapshot updated must be ignored", "A", b.getHeaders().get("SNAPSHOT"));
         }
 
+        // we try to install the bundle with header SNAPSHOT and value C
+        // it should be installed because of the high priority
         {
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest3", highPriority));
-            waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+                    getTestBundle(BUNDLE_BASE_NAME + "-snapc.jar"), "digest3", highPriority));
+            this.waitForBundleEvents(symbolicName + " must be installed and active", listener,
+                    new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.UPDATED),
+                    new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.STARTED));
+            assertBundle("Update two", symbolicName, null, Bundle.ACTIVE);
+            final Bundle b = findBundle(symbolicName);
+            assertEquals("High-priority snapshot updated must be processed", "C", b.getHeaders().get("SNAPSHOT"));
         }
-
-        assertNoOsgiTasks("At end of test");
     }
 }

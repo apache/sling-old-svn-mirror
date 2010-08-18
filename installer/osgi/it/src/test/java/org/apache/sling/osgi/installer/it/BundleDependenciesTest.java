@@ -19,7 +19,6 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,17 +56,21 @@ public class BundleDependenciesTest extends OsgiInstallerTestBase {
 
         // without testB, needsB must not start
         {
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
+            this.waitForBundleEvents(needsB + " must be installed", listener,
+                    new BundleEvent(needsB, org.osgi.framework.BundleEvent.INSTALLED));
             assertBundle(needsB + " must not be started, testB not present", needsB, null, Bundle.INSTALLED);
         }
 
        // now install testB -> needsB must start
         {
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
+            this.waitForBundleEvents(needsB + " and " + testB + " must be active", listener,
+                    new BundleEvent(testB, org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent(testB, org.osgi.framework.BundleEvent.STARTED),
+                    new BundleEvent(needsB, org.osgi.framework.BundleEvent.STARTED));
             assertNotNull(testB + " must be installed", findBundle(testB));
             assertBundle(needsB + " must be started now that testB is installed", needsB, null, Bundle.ACTIVE);
         }

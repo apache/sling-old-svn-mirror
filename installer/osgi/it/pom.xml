@@ -255,7 +255,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>snapshot-1.0</id>
+                        <id>snapshota-1.0</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>jar</goal>
@@ -276,6 +276,61 @@
                                         In real bundles, bnd and similar tools to the conversion.
                                      -->
                                     <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
+                                    <SNAPSHOT>A</SNAPSHOT>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>snapshotb-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>snapb</classifier>
+                            <includes>
+                                <include>**/b/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
+                                    <!-- 
+                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                        In real bundles, bnd and similar tools to the conversion.
+                                     -->
+                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
+                                    <SNAPSHOT>B</SNAPSHOT>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>snapshotc-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>snapc</classifier>
+                            <includes>
+                                <include>**/b/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
+                                    <!-- 
+                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                        In real bundles, bnd and similar tools to the conversion.
+                                     -->
+                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
+                                    <SNAPSHOT>C</SNAPSHOT>
                                 </manifestEntries>
                             </archive>
                         </configuration>
@@ -336,27 +391,29 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit</artifactId>
-            <version>0.5.0</version>
+            <version>1.2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-default</artifactId>
-            <version>0.5.0</version>
+            <version>1.2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
