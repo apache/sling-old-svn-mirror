@@ -26,21 +26,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.impl.MockBundleResource;
-import org.apache.sling.osgi.installer.impl.MockOsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
-import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
 public class BundleTaskCreatorTest {
 	public static final String SN = "TestSymbolicName";
-	private MockOsgiInstallerContext ctx;
-
-	@Before
-	public void setUp() throws IOException {
-	    ctx = new MockOsgiInstallerContext();
-	}
 
 	private SortedSet<OsgiInstallerTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) throws IOException {
 		final SortedSet<RegisteredResource> s = new TreeSet<RegisteredResource>();
@@ -49,7 +41,7 @@ public class BundleTaskCreatorTest {
 		}
 
 		final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
-		btc.createTasks(ctx, s, tasks);
+		btc.createTasks(s, tasks);
 		return tasks;
 	}
 

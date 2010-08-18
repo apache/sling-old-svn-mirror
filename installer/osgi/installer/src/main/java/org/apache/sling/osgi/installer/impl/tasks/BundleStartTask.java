@@ -62,11 +62,11 @@ public class BundleStartTask extends OsgiInstallerTask {
 	/**
 	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
 	 */
-	public Result execute(final OsgiInstallerContext ctx) {
+	public void execute(final OsgiInstallerContext ctx) {
 	    // this is just a sanity check which should never be reached
         if (bundleId == 0) {
             Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
-            return Result.NOTHING;
+            return;
         }
 
         // Do not execute this task if waiting for events
@@ -74,18 +74,18 @@ public class BundleStartTask extends OsgiInstallerTask {
         if (eventsCount < eventsCountForRetrying) {
             Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
             ctx.addTaskToNextCycle(this);
-            return Result.NOTHING;
+            return;
         }
 
         final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
 		if (b == null) {
 		    Logger.logInfo("Cannot start bundle, id not found: " + bundleId);
-			return Result.NOTHING;
+			return;
 		}
 
         if (b.getState() == Bundle.ACTIVE) {
             Logger.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
-            return Result.SUCCESS;
+            return;
         }
         // Try to start bundle, and if that doesn't work we'll need to retry
         logExecution();
@@ -108,6 +108,6 @@ public class BundleStartTask extends OsgiInstallerTask {
             ctx.addTaskToNextCycle(this);
         }
 
-        return Result.SUCCESS;
+        return;
 	}
 }

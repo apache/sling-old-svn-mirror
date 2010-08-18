@@ -26,7 +26,6 @@ import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.osgi.installer.impl.Logger;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
@@ -134,7 +133,7 @@ public class BundleTaskCreator {
 	 *  has desired state == active, and generates the appropriate OSGi tasks to
 	 *  reach this state.
 	 */
-	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) throws IOException {
+	public void createTasks(SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) throws IOException {
 
 		// Find the bundle that must be active: the resources collection is ordered according
 		// to priorities, so we just need to find the first one that is installable
@@ -154,7 +153,7 @@ public class BundleTaskCreator {
 		if (toActivate == null) {
 		    // None of our resources are installable, remove corresponding bundle if present
 		    // and if we installed it
-		    if (getBundleInfo(ctx, resources.first()) != null) {
+		    if (getBundleInfo(resources.first()) != null) {
 		        if (this.getInstalledBundleVersion(symbolicName) == null) {
 		            Logger.logInfo("Bundle " + symbolicName
                                 + " was not installed by this module, not removed");
@@ -165,7 +164,7 @@ public class BundleTaskCreator {
 	        }
 
 		} else {
-			final BundleInfo info = getBundleInfo(ctx, toActivate);
+			final BundleInfo info = getBundleInfo(toActivate);
 			final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
 	        RegisteredResource toUpdate = null;
 			if (info == null) {
@@ -222,7 +221,7 @@ public class BundleTaskCreator {
 		}
 	}
 
-	protected BundleInfo getBundleInfo(OsgiInstallerContext ctx, RegisteredResource bundle) {
+	protected BundleInfo getBundleInfo(final RegisteredResource bundle) {
 		final String symbolicName = (String)bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
 		final Bundle b = this.getMatchingBundle(symbolicName);
 		if (b == null) {

@@ -57,7 +57,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     }
 
     @Override
-    public Result execute(OsgiInstallerContext ctx) {
+    public void execute(OsgiInstallerContext ctx) {
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if(b == null) {
@@ -71,7 +71,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	snapshot = this.creator.isSnapshot(newVersion);
     	if(currentVersion.equals(newVersion) && !snapshot) {
     	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
-    		return Result.NOTHING;
+    		return;
     	}
 
     	try {
@@ -82,7 +82,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
                 final String oldDigest = this.creator.getInstalledBundleDigest(b);
                 if(resource.getDigest().equals(oldDigest)) {
                     Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
-                    return Result.NOTHING;
+                    return;
                 }
             }
 
@@ -105,14 +105,14 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	} catch (Exception e) {
             if ( canRetry ) {
                 ctx.addTaskToCurrentCycle(this);
-                return Result.NOTHING;
+                return;
             }
             Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
-            return Result.NOTHING;
+            return;
     	}
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
-        return Result.SUCCESS;
+        return;
     }
 
     @Override

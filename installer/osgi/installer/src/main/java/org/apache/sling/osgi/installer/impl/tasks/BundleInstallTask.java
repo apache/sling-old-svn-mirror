@@ -52,7 +52,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
     /**
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
-    public Result execute(final OsgiInstallerContext ctx) {
+    public void execute(final OsgiInstallerContext ctx) {
         int startLevel = 0;
         final Object providedLevel = (this.resource.getDictionary() != null
             ? this.resource.getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);
@@ -79,11 +79,11 @@ public class BundleInstallTask extends OsgiInstallerTask {
             this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
             logExecution();
             ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));
-            return Result.SUCCESS;
+            return;
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
             ctx.addTaskToCurrentCycle(this);
-            return Result.NOTHING;
+            return;
         }
     }
 

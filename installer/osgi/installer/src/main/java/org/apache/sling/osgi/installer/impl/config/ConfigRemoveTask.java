@@ -47,27 +47,27 @@ public class ConfigRemoveTask extends AbstractConfigTask {
     /**
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
-    public Result execute(final OsgiInstallerContext ctx) {
+    public void execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
-            return Result.NOTHING;
+            return;
         }
 
         logExecution();
         try {
             final Configuration cfg = getConfiguration(ca, pid, false);
-            if(cfg == null) {
+            if (cfg == null) {
                 Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
             } else {
                 Logger.logInfo("Deleting config " + pid + " (" + resource + ")");
                 cfg.delete();
-                return Result.SUCCESS;
+                return;
             }
         } catch (Exception e) {
             ctx.addTaskToNextCycle(this);
         }
-        return Result.NOTHING;
+        return;
     }
 }

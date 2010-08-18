@@ -25,10 +25,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.osgi.installer.impl.MockOsgiInstallerContext;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
-import org.apache.sling.osgi.installer.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -118,7 +115,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
 
             public File getDataFile(String filename) {
                 try {
-                    final File f = File.createTempFile(MockOsgiInstallerContext.class.getSimpleName(), ".data");
+                    final File f = File.createTempFile(MockBundleTaskCreator.class.getSimpleName(), ".data");
                     f.deleteOnExit();
                     return f;
                 } catch (final IOException ioe) {
@@ -180,7 +177,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     }
 
     @Override
-    protected BundleInfo getBundleInfo(OsgiInstallerContext ctx, RegisteredResource bundle) {
+    protected BundleInfo getBundleInfo(RegisteredResource bundle) {
         return fakeBundleInfo.get(bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
     }
 }
