@@ -28,12 +28,9 @@ import java.util.Set;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 
 
-class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
-
-    private final long [] counters = new long[OsgiInstallerStatistics.COUNTERS_SIZE];
+class MockOsgiInstaller implements OsgiInstaller {
 
     static class InstallableResourceComparator implements Comparator<InstallableResource> {
         public int compare(InstallableResource a, InstallableResource b) {
@@ -54,10 +51,6 @@ class MockOsgiInstaller implements OsgiInstaller, OsgiInstallerStatistics {
     public void addResource(final String scheme, InstallableResource d) {
     	urls.add(scheme + ':' + d.getId());
         recordCall("add", scheme, d);
-    }
-
-    public long[] getCounters() {
-        return counters;
     }
 
     /**
