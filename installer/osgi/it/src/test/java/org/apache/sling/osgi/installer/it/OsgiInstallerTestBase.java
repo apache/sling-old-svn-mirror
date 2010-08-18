@@ -226,12 +226,16 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
 
         Configuration result = null;
-        final long end = System.currentTimeMillis() + timeoutMsec;
+        final long start = System.currentTimeMillis();
+        final long end = start + timeoutMsec;
+        log(LogService.LOG_DEBUG, "Starting config check at " + start + "; ending by " + end);
         do {
             result = findConfiguration(pid);
-            if (result != null ||!shouldBePresent) {
+            if ((shouldBePresent && result != null) ||
+                    (!shouldBePresent && result == null)) {
                 break;
             }
+            log(LogService.LOG_DEBUG, "Config check failed at " + System.currentTimeMillis() + "; sleeping");
             sleep(25);
         } while(System.currentTimeMillis() < end);
 
@@ -340,7 +344,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected void log(int level, String msg) {
     	final LogService log = getService(LogService.class);
-    	log.log(LogService.LOG_INFO, msg);
+    	log.log(level, msg);
     }
 
     public static Option[] defaultConfiguration() {
