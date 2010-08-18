@@ -32,7 +32,6 @@ import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.apache.sling.osgi.installer.impl.config.ConfigTaskCreator;
 import org.apache.sling.osgi.installer.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleContext;
@@ -52,7 +51,7 @@ import org.osgi.framework.FrameworkListener;
 public class OsgiInstallerThread
     extends Thread
     implements BundleListener, FrameworkListener,
-               OsgiInstaller, OsgiInstallerStatistics, OsgiInstallerContext {
+               OsgiInstaller, OsgiInstallerContext {
 
     private final BundleContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
@@ -70,8 +69,6 @@ public class OsgiInstallerThread
 
     private final BundleTaskCreator bundleTaskCreator;
     private final ConfigTaskCreator configTaskCreator;
-
-    private long [] counters = new long[COUNTERS_SIZE];
 
     OsgiInstallerThread(final BundleContext ctx) {
         this.ctx = ctx;
@@ -97,21 +94,6 @@ public class OsgiInstallerThread
         }
     }
 
-    /**
-     * @see org.apache.sling.osgi.installer.OsgiInstallerStatistics#getCounters()
-     */
-    public long [] getCounters() {
-        return counters;
-    }
-
-    public void incrementCounter(int index) {
-        counters[index]++;
-    }
-
-    public void setCounter(int index, long value) {
-        counters[index] = value;
-    }
-
     @Override
     public void run() {
         while (active) {
@@ -125,15 +107,12 @@ public class OsgiInstallerThread
             	    cleanupInstallableResources();
             	    Logger.logDebug("No tasks to process, going idle");
 
-            	    this.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 1);
-                    this.incrementCounter(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER);
             	    synchronized (newResources) {
             	        try {
             	            newResources.wait();
             	        } catch (InterruptedException ignore) {}
                     }
             	    Logger.logDebug("Notified of new resources, back to work");
-                    this.setCounter(OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER, 0);
             	    continue;
             	}
 
@@ -355,11 +334,7 @@ public class OsgiInstallerThread
                 t = tasks.first();
                 tasks.remove(t);
             }
-            final OsgiInstallerTask.Result result = t.execute(this);
-            switch (result) {
-                case SUCCESS: this.incrementCounter(OsgiInstallerStatistics.OSGI_TASKS_COUNTER);
-                              break;
-            }
+            t.execute(this);
             counter++;
         }
         return counter;
@@ -394,10 +369,6 @@ public class OsgiInstallerThread
         for(String key : groupKeysToRemove) {
             registeredResources.remove(key);
         }
-
-        this.setCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, resourceCount);
-        this.setCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, registeredResources.size());
-        this.incrementCounter(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER);
 
         // List of resources might have changed
         persistentList.save();

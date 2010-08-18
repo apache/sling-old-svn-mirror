@@ -100,7 +100,7 @@ public class RegisteredResourceImpl
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
-            final ConfigurationPid pid = new ConfigurationPid(this.getURL());
+            final ConfigurationPid pid = new ConfigurationPid(scheme + ':' + input.getId());
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
 		} else {

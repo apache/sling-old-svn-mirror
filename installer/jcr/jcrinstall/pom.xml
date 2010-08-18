@@ -55,6 +55,11 @@
         <extensions>true</extensions>
         <configuration>
             <instructions>
+                <!-- As we're using JCR 2.0 for testing we explicitly have to
+                     import version 1.0 here  -->
+                <Import-Package>
+                    javax.jcr.*;version=1.0,*
+                </Import-Package>
                 <Private-Package>org.apache.sling.jcr.jcrinstall.impl.*</Private-Package>
                 <Sling-Nodetypes>SLING-INF/nodetypes/osgiconfig.cnd</Sling-Nodetypes>
                 <Sling-Namespaces>sling=http://sling.apache.org/jcr/sling/1.0</Sling-Namespaces>
@@ -91,6 +96,7 @@
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+      <version>2.0</version>      
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
