@@ -38,9 +38,9 @@ public class GSPScriptEngine extends AbstractSlingScriptEngine {
 
     private TemplateEngine templateEngine;
 
-    public GSPScriptEngine(ScriptEngineFactory scriptEngineFactory) {
+    public GSPScriptEngine(ScriptEngineFactory scriptEngineFactory, ClassLoader classLoader) {
         super(scriptEngineFactory);
-        this.templateEngine = new GStringTemplateEngine();
+        this.templateEngine = new GStringTemplateEngine(classLoader);
     }
     
     public Object eval(Reader reader, ScriptContext ctx) throws ScriptException {

@@ -22,7 +22,9 @@ import java.util.List;
 import javax.script.ScriptEngine;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 
 /**
@@ -31,6 +33,9 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 @Component
 @Service
 public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
+    
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public String getLanguageName() {
         return "Groovy Scripting Pages";
@@ -46,7 +51,7 @@ public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
     }
 
     public ScriptEngine getScriptEngine() {
-        return new GSPScriptEngine(this);
+        return new GSPScriptEngine(this, dynamicClassLoaderManager.getDynamicClassLoader());
     }
 
 }
