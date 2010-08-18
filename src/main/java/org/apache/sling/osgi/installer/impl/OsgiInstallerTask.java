@@ -22,12 +22,7 @@ package org.apache.sling.osgi.installer.impl;
 /** Base class for tasks that can be executed by the {@link OsgiInstallerThread} */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
-    public enum Result {
-        SUCCESS,
-        NOTHING
-    };
-
-    public abstract Result execute(OsgiInstallerContext ctx);
+    public abstract void execute(OsgiInstallerContext ctx);
 
 	protected void logExecution() {
 	    Logger.logInfo("OsgiInstallerTask: executing  " + this);

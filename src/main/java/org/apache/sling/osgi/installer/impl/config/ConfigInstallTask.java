@@ -57,12 +57,12 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public Result execute(final OsgiInstallerContext ctx) {
+    public void execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             ctx.addTaskToNextCycle(this);
             Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
-            return Result.NOTHING;
+            return;
         }
 
         // Convert data to a configuration Dictionary
@@ -76,7 +76,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
         dict.put(CONFIG_PATH_KEY, resource.getURL());
 
         // Factory?
-        if(pid.getFactoryPid() != null) {
+        if (pid.getFactoryPid() != null) {
             dict.put(ALIAS_KEY, pid.getFactoryPid());
         }
 
@@ -85,11 +85,11 @@ public class ConfigInstallTask extends AbstractConfigTask {
         boolean created = false;
         try {
             Configuration config = getConfiguration(ca, pid, false);
-            if(config == null) {
+            if (config == null) {
                 created = true;
                 config = getConfiguration(ca, pid, true);
             } else {
-    			if(isSameData(config.getProperties(), resource.getDictionary())) {
+    			if (isSameData(config.getProperties(), resource.getDictionary())) {
     			    Logger.logDebug("Configuration " + config.getPid()
     	                        + " already installed with same data, update request ignored: "
     	                        + resource);
@@ -97,7 +97,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
     			}
             }
 
-            if(config != null) {
+            if (config != null) {
                 logExecution();
                 if (config.getBundleLocation() != null) {
                     config.setBundleLocation(null);
@@ -106,12 +106,12 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 Logger.logInfo("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
                             + " from " + resource);
-                return Result.SUCCESS;
+                return;
             }
         } catch (Exception e) {
             ctx.addTaskToNextCycle(this);
         }
-        return Result.NOTHING;
+        return;
     }
 
     private Set<String> collectKeys(final Dictionary<String, Object>a) {

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.SortedSet;
 
 import org.apache.sling.osgi.installer.impl.Logger;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.BundleContext;
@@ -52,7 +51,7 @@ public class ConfigTaskCreator {
 
 	/** Create tasks for a set of RegisteredResource that all represent the same config PID.
 	 */
-	public void createTasks(OsgiInstallerContext ctx, SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
+	public void createTasks(SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
 
 		// Find the config that must be active: the resources collection is ordered according
 		// to priorities, so we just need to find the first one that is installable

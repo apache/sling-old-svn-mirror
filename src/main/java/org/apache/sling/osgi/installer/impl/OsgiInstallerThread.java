@@ -40,7 +40,8 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 
-/** Worker thread where all OSGi tasks are executed.
+/**
+ * Worker thread where all OSGi tasks are executed.
  *  Runs cycles where the list of RegisteredResources is examined,
  *  OsgiTasks are created accordingly and executed.
  *
@@ -51,17 +52,16 @@ import org.osgi.framework.FrameworkListener;
 public class OsgiInstallerThread
     extends Thread
     implements BundleListener, FrameworkListener,
-               OsgiInstaller, OsgiInstallerContext {
+               OsgiInstaller {
 
     private final BundleContext ctx;
     private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
-    private final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
     private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
     private final List<SortedSet<RegisteredResource>> newResourcesSets = new ArrayList<SortedSet<RegisteredResource>>();
     private final Set<String> newResourcesSchemes = new HashSet<String>();
     private final Set<String> urlsToRemove = new HashSet<String>();
-    private boolean active = true;
-    private boolean retriesScheduled;
+    private volatile boolean active = true;
+    private volatile boolean retriesScheduled;
 
     /** Group our RegisteredResource by OSGi entity */
     private final HashMap<String, SortedSet<RegisteredResource>> registeredResources;
@@ -99,9 +99,9 @@ public class OsgiInstallerThread
         while (active) {
             try {
             	mergeNewResources();
-            	computeTasks();
+                final SortedSet<OsgiInstallerTask> tasks = computeTasks();
 
-            	if(tasks.isEmpty() && !retriesScheduled) {
+            	if (tasks.isEmpty() && !retriesScheduled) {
             	    // No tasks to execute - wait until new resources are
             	    // registered
             	    cleanupInstallableResources();
@@ -117,7 +117,7 @@ public class OsgiInstallerThread
             	}
 
             	retriesScheduled = false;
-                if(executeTasks() > 0) {
+                if(executeTasks(tasks) > 0) {
                     Logger.logDebug("Tasks have been executed, saving persistentList");
                     persistentList.save();
                 }
@@ -135,16 +135,6 @@ public class OsgiInstallerThread
             }
         }
         Logger.logInfo("Deactivated, exiting");
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToCurrentCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
-     */
-    public void addTaskToCurrentCycle(OsgiInstallerTask t) {
-        Logger.logDebug("adding task to current cycle:" + t);
-        synchronized (tasks) {
-            tasks.add(t);
-        }
     }
 
     private void checkScheme(final String scheme) {
@@ -290,18 +280,10 @@ public class OsgiInstallerThread
         }
     }
 
-    /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#addTaskToNextCycle(org.apache.sling.osgi.installer.impl.OsgiInstallerTask)
-     */
-    public void addTaskToNextCycle(OsgiInstallerTask t) {
-        Logger.logDebug("adding task to next cycle:" + t);
-        synchronized (tasksForNextCycle) {
-            tasksForNextCycle.add(t);
-        }
-    }
 
     /** Compute OSGi tasks based on our resources, and add to supplied list of tasks */
-    void computeTasks() throws Exception {
+    SortedSet<OsgiInstallerTask> computeTasks() throws Exception {
+        final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
         // Add tasks that were scheduled for next cycle
         synchronized (tasksForNextCycle) {
             for(OsgiInstallerTask t : tasksForNextCycle) {
@@ -319,14 +301,31 @@ public class OsgiInstallerThread
             }
             final String rt = group.first().getType();
             if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
-                bundleTaskCreator.createTasks(this, group, tasks);
+                bundleTaskCreator.createTasks(group, tasks);
             } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
-                configTaskCreator.createTasks(this, group, tasks);
+                configTaskCreator.createTasks(group, tasks);
             }
         }
+        return tasks;
     }
 
-    private int executeTasks() {
+    private int executeTasks(final SortedSet<OsgiInstallerTask> tasks) {
+        final OsgiInstallerContext ctx = new OsgiInstallerContext() {
+
+            public void addTaskToNextCycle(final OsgiInstallerTask t) {
+                Logger.logDebug("adding task to next cycle:" + t);
+                synchronized (tasksForNextCycle) {
+                    tasksForNextCycle.add(t);
+                }
+            }
+
+            public void addTaskToCurrentCycle(final OsgiInstallerTask t) {
+                Logger.logDebug("adding task to current cycle:" + t);
+                synchronized ( tasks ) {
+                    tasks.add(t);
+                }
+            }
+        };
         int counter = 0;
         while(!tasks.isEmpty()) {
             OsgiInstallerTask t = null;
@@ -334,7 +333,7 @@ public class OsgiInstallerThread
                 t = tasks.first();
                 tasks.remove(t);
             }
-            t.execute(this);
+            t.execute(ctx);
             counter++;
         }
         return counter;

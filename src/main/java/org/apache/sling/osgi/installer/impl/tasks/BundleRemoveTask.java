@@ -49,7 +49,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
     }
 
     @Override
-    public Result execute(OsgiInstallerContext ctx) {
+    public void execute(OsgiInstallerContext ctx) {
         logExecution();
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
@@ -64,10 +64,10 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             b.uninstall();
         } catch (BundleException be) {
             ctx.addTaskToNextCycle(this);
-            return Result.NOTHING;
+            return;
         }
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
-        return Result.SUCCESS;
+        return;
     }
 
     @Override
