@@ -180,9 +180,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	    	final Configuration[] cfgs = ca.listConfigurations(null);
 	    	if (cfgs != null) {
 		    	for(Configuration cfg : cfgs) {
-		    		if(cfg.getPid().equals(pid)) {
-		    			return cfg;
-		    		}
+		    	    try {
+    		    		if(cfg.getPid().equals(pid)) {
+    		    			return cfg;
+    		    		}
+		    	    } catch (IllegalStateException e) {}
 		    	}
 	    	}
     	}
@@ -439,7 +441,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
     }
 
-    private final static class BundleEventListener implements SynchronousBundleListener {
+    private final class BundleEventListener implements SynchronousBundleListener {
 
         private final List<BundleEvent> events = new ArrayList<BundleEvent>();
 
@@ -449,13 +451,15 @@ class OsgiInstallerTestBase implements FrameworkListener {
             }
         }
 
-        public void wait(final String msg, final BundleEvent[] checkEvents, final long timeout)
+        public void wait(final String msg, final BundleEvent[] checkEvents, final long timeoutMsec)
         throws Exception {
             if ( checkEvents == null || checkEvents.length == 0 ) {
                 return;
             }
-            final long endTime = System.currentTimeMillis() + timeout;
-            while ( System.currentTimeMillis() < endTime ) {
+            final long start = System.currentTimeMillis();
+            final long end = start + timeoutMsec;
+            log(LogService.LOG_DEBUG, "Starting event check at " + start + "; ending by " + end);
+            while ( System.currentTimeMillis() < end ) {
                 synchronized ( this) {
                     if ( this.events.size() >= checkEvents.length ) {
                         int found = 0;
@@ -482,6 +486,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                         }
                     }
                 }
+                log(LogService.LOG_DEBUG, "Event check failed at " + System.currentTimeMillis() + "; sleeping");
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ignore) {}
