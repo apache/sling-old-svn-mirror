@@ -32,11 +32,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
@@ -46,6 +48,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -54,14 +58,14 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for OsgiInstaller testing */
 class OsgiInstallerTestBase implements FrameworkListener {
-	public final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
+	private final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
+
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
 	private ServiceTracker configAdminTracker;
-	protected OsgiInstaller installer;
-	protected OsgiInstallerStatistics statistics;
 
-	private long [] counters;
+	protected OsgiInstaller installer;
+
 	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.osgi.installer.it-" + POM_VERSION;
 
@@ -77,6 +81,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	long getMsecBetweenEvaluations() { return 100L; }
     }
 
+    /**
+     * Helper method to get a service of the given type
+     */
     @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
     	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
@@ -86,23 +93,26 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	return result;
     }
 
-    public void setupInstaller() {
+    /** Set up the installer service. */
+    protected void setupInstaller() {
         installer = getService(OsgiInstaller.class);
-        statistics = getService(OsgiInstallerStatistics.class);
-        resetCounters();
     }
 
+    /** Tear down everything. */
     public void tearDown() {
-        if(configAdminTracker != null) {
+        if (configAdminTracker != null) {
             configAdminTracker.close();
             configAdminTracker = null;
         }
     }
 
+    /**
+     * Restart the installer.
+     */
     protected void restartInstaller() throws BundleException {
         final String symbolicName = "org.apache.sling.osgi.installer";
         final Bundle b = findBundle(symbolicName);
-        if(b == null) {
+        if (b == null) {
             fail("Bundle " + symbolicName + " not found");
         }
         log(LogService.LOG_INFO, "Restarting " + symbolicName + " bundle");
@@ -131,6 +141,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
     }
 
+    /**
+     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
+     */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
             packageRefreshEventsCount++;
@@ -163,9 +176,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected Configuration findConfiguration(String pid) throws Exception {
     	final ConfigurationAdmin ca = getService(ConfigurationAdmin.class);
-    	if(ca != null) {
+    	if (ca != null) {
 	    	final Configuration[] cfgs = ca.listConfigurations(null);
-	    	if(cfgs != null) {
+	    	if (cfgs != null) {
 		    	for(Configuration cfg : cfgs) {
 		    		if(cfg.getPid().equals(pid)) {
 		    			return cfg;
@@ -232,7 +245,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected Bundle findBundle(String symbolicName) {
     	for(Bundle b : bundleContext.getBundles()) {
-    		if(symbolicName.equals(b.getSymbolicName())) {
+    		if (symbolicName.equals(b.getSymbolicName())) {
     			return b;
     		}
     	}
@@ -294,10 +307,12 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected ConfigurationAdmin waitForConfigAdmin(boolean shouldBePresent) {
     	ConfigurationAdmin result = null;
-        if(configAdminTracker == null) {
+        if (configAdminTracker == null) {
             synchronized (this) {
-                configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
-                configAdminTracker.open();
+                if (configAdminTracker == null) {
+                    configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+                    configAdminTracker.open();
+                }
             }
         }
 
@@ -313,73 +328,14 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	return result;
     }
 
-    protected void resetCounters() {
-        final long [] src = statistics.getCounters();
-        counters = new long[src.length];
-        System.arraycopy(statistics.getCounters(), 0, counters, 0, src.length);
-    }
-
+    /**
+     * Helper method for sleeping.
+     */
     protected void sleep(long msec) {
         try {
             Thread.sleep(msec);
         } catch(InterruptedException ignored) {
         }
-    }
-
-    protected void waitForInstallerAction(int counterType, long howMany) {
-        waitForInstallerAction(null, counterType, howMany);
-    }
-
-    protected void waitForInstallerAction(String info, int counterType, long howMany) {
-    	waitForInstallerAction(info, counterType, howMany, 0);
-    }
-
-    /** @param howMany negative values means absolute, instead of relative to current value */
-    protected void waitForInstallerAction(String info, int counterType, long howMany, long timeoutMsec) {
-        if(info == null) {
-            info = "";
-        } else {
-            info += ": ";
-        }
-
-        final boolean waitForCycles = counterType == OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER;
-
-        long targetValue = howMany <  0 ? -howMany : counters[counterType] + howMany;
-        if(waitForCycles) {
-            // if waiting for installer cycles, get initial value from
-            // that counter - we know we want to wait from now on, not from an
-            // earlier resetCounters() call
-            targetValue = statistics.getCounters()[counterType] + howMany;
-        }
-
-        final long timeout = timeoutMsec > 0 ? timeoutMsec : WAIT_FOR_ACTION_TIMEOUT_MSEC;
-        final long endTime = System.currentTimeMillis() + timeout;
-        long lastValue = 0;
-        while(System.currentTimeMillis() < endTime) {
-            lastValue = statistics.getCounters()[counterType];
-            if(lastValue >= targetValue) {
-                return;
-            } else if(waitForCycles && statistics.getCounters()[OsgiInstallerStatistics.WORKER_THREAD_IS_IDLE_COUNTER] == 1) {
-                // Waiting for controller cycles, but worker thread became idle -> ok
-                return;
-            }
-            sleep(10);
-        }
-        fail(info + "waitForInstallerAction(" + counterType + "," + howMany
-                + ") fails after " + WAIT_FOR_ACTION_TIMEOUT_MSEC + " msec"
-                + ", expected value " + targetValue + ", actual " + lastValue);
-    }
-
-    /** Verify that no OSGi actions are executed in next two installer cycles */
-    protected void assertNoOsgiTasks(String info) {
-    	final long actionsCounter = statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER];
-    	waitForInstallerAction(OsgiInstallerStatistics.INSTALLER_CYCLES_COUNTER, 2);
-    	assertEquals(info + ": OSGi tasks counter should not have changed",
-    			actionsCounter, statistics.getCounters()[OsgiInstallerStatistics.OSGI_TASKS_COUNTER]);
-    }
-
-    public void assertCounter(int index, long value) {
-        assertEquals("Expected value matches for counter " + index, value, statistics.getCounters()[index]);
     }
 
     protected void log(int level, String msg) {
@@ -421,5 +377,130 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION)
         		)
         );
+    }
+
+    protected Object startObservingBundleEvents() {
+        final BundleEventListener listener = new BundleEventListener();
+        this.bundleContext.addBundleListener(listener);
+        return listener;
+    }
+
+    public static final class BundleEvent {
+        public final String symbolicName;
+        public final Version version;
+        public final int    state;
+
+        public BundleEvent(final String sn, final String v, final int s) {
+            this.symbolicName = sn;
+            this.version = (v == null ? null : Version.parseVersion(v));
+            this.state = s;
+        }
+
+        public BundleEvent(final String sn, final int s) {
+            this(sn, null, s);
+        }
+
+        @Override
+        public String toString() {
+            return "BundleEvent " + symbolicName + ", version=" + version + ", state="+state;
+        }
+    }
+
+    protected void waitForBundleEvents(final String msg, final Object l, BundleEvent... events)
+    throws Exception {
+        final BundleEventListener listener = (BundleEventListener)l;
+        try {
+            listener.wait(msg, events, WAIT_FOR_ACTION_TIMEOUT_MSEC);
+        } finally {
+            this.bundleContext.removeBundleListener(listener);
+        }
+    }
+
+    protected void waitForBundleEvents(final String msg, final Object l, long timeout, BundleEvent... events)
+    throws Exception {
+        final BundleEventListener listener = (BundleEventListener)l;
+        try {
+            listener.wait(msg, events, timeout);
+        } finally {
+            this.bundleContext.removeBundleListener(listener);
+        }
+    }
+
+    protected void assertNoBundleEvents(final String msg, final Object l, final String symbolicName) {
+        final BundleEventListener listener = (BundleEventListener)l;
+        try {
+            listener.assertNoBundleEvents(msg, symbolicName);
+        } finally {
+            this.bundleContext.removeBundleListener(listener);
+        }
+    }
+
+    private final static class BundleEventListener implements SynchronousBundleListener {
+
+        private final List<BundleEvent> events = new ArrayList<BundleEvent>();
+
+        public void bundleChanged(org.osgi.framework.BundleEvent event) {
+            synchronized ( this ) {
+                events.add(new BundleEvent(event.getBundle().getSymbolicName(), event.getBundle().getVersion().toString(), event.getType()));
+            }
+        }
+
+        public void wait(final String msg, final BundleEvent[] checkEvents, final long timeout)
+        throws Exception {
+            if ( checkEvents == null || checkEvents.length == 0 ) {
+                return;
+            }
+            final long endTime = System.currentTimeMillis() + timeout;
+            while ( System.currentTimeMillis() < endTime ) {
+                synchronized ( this) {
+                    if ( this.events.size() >= checkEvents.length ) {
+                        int found = 0;
+                        for(final BundleEvent e : checkEvents ) {
+                            int startIndex = 0;
+                            final int oldFound = found;
+                            while ( oldFound == found && startIndex < this.events.size() ) {
+                                final BundleEvent bundleEvent = this.events.get(startIndex);
+                                // first check symbolic name
+                                if ( e.symbolicName == null || e.symbolicName.equals(bundleEvent.symbolicName) ) {
+                                    if ( e.version == null || e.version.equals(bundleEvent.version) ) {
+                                        if ( e.state == bundleEvent.state ) {
+                                            found++;
+                                        }
+                                    }
+                                }
+                                if ( oldFound == found ) {
+                                    startIndex++;
+                                }
+                            }
+                        }
+                        if ( found == checkEvents.length ) {
+                            return;
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignore) {}
+            }
+            fail(msg + " : Expected events=" + Arrays.toString(checkEvents) + ", received events=" + this.events);
+        }
+
+        public void assertNoBundleEvents(final String msg, final String symbolicName) {
+            boolean found = false;
+            synchronized ( this ) {
+                if ( symbolicName == null ) {
+                    found = this.events.size() > 0;
+                } else {
+                    for(BundleEvent e : this.events ) {
+                        if ( symbolicName.equals(e.symbolicName) ) {
+                            found = true;
+                        }
+                    }
+                }
+            }
+            if ( found ) {
+                fail(msg + " : Expected to receive no bundle events for bundle " + symbolicName);
+            }
+        }
     }
 }

@@ -19,7 +19,6 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.OsgiInstallerStatistics;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,16 +49,20 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
     public void testBundleStatePreserved() throws Exception {
     	// Install two bundles, one started, one stopped
     	{
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")));
-            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
+            this.waitForBundleEvents("Bundle must be installed", listener,
+                    new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.STARTED));
     	}
         {
-            resetCounters();
+            final Object listener = this.startObservingBundleEvents();
             installer.addResource(URL_SCHEME, getInstallableResource(
                     getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            waitForInstallerAction(OsgiInstallerStatistics.OSGI_TASKS_COUNTER, 2);
+            this.waitForBundleEvents("Bundle must be installed", listener,
+                    new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.STARTED));
             final Bundle b = findBundle("osgi-installer-testB");
             assertNotNull("Test bundle B must be found", b);
             b.stop();
@@ -69,28 +72,30 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
         assertBundle("Bundle B must be stopped", "osgi-installer-testB", null, Bundle.RESOLVED);
 
     	// Execute some OsgiController operations
+        Object listener = this.startObservingBundleEvents();
         installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
         installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-        resetCounters();
         installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        this.waitForBundleEvents("Bundle must be installed", listener,
+                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.INSTALLED),
+                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
 
-        // Verify number of registered resources and groups
-        assertCounter(OsgiInstallerStatistics.REGISTERED_RESOURCES_COUNTER, 5);
-        assertCounter(OsgiInstallerStatistics.REGISTERED_GROUPS_COUNTER, 3);
-
-        resetCounters();
+        listener = this.startObservingBundleEvents();
         installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        sleep(150);
+        this.assertNoBundleEvents("Update to same version should generate no OSGi tasks.", listener, "osgi-installer-testbundle");
 
-        resetCounters();
+        listener = this.startObservingBundleEvents();
         installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        sleep(150);
+        this.assertNoBundleEvents("Update to same version should generate no OSGi tasks.", listener, "osgi-installer-testbundle");
 
-        resetCounters();
+        listener = this.startObservingBundleEvents();
         installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-        waitForInstallerAction(OsgiInstallerStatistics.WORKER_THREAD_BECOMES_IDLE_COUNTER, 1);
+        this.waitForBundleEvents("Bundle must be uninstalled", listener,
+                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STOPPED),
+                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.UNINSTALLED));
 
         assertNull("testbundle must be gone at end of test", findBundle("osgi-installer-testbundle"));
 
