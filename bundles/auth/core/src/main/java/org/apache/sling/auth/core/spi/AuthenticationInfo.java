@@ -152,7 +152,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
-     * Returns the user name stored as the {@link #USER} property or
+     * Returns the user name stored as the {@link ResourceResolverFactory#USER} property or
      * <code>null</code> if the user is not set in this map.
      */
     public final String getUser() {
@@ -168,7 +168,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     }
 
     /**
-     * Returns the password stored as the {@link #PASSWORD} property or
+     * Returns the password stored as the {@link ResourceResolverFactory#PASSWORD} property or
      * <code>null</code> if the password is not set in this map.
      */
     public final char[] getPassword() {
@@ -185,11 +185,11 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * <td><code>String</code></td>
      * </tr>
      * <tr>
-     * <td>{@link #USER}</td>
+     * <td>{@link ResourceResolverFactory#USER}</td>
      * <td><code>String</code></td>
      * </tr>
      * <tr>
-     * <td>{@link #PASSWORD}</td>
+     * <td>{@link ResourceResolverFactory#PASSWORD}</td>
      * <td><code>char[]</code></td>
      * </tr>
      * </table>
