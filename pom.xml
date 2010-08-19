@@ -84,6 +84,9 @@
                                 |org/apache/commons/codec/EncoderException*
                                 |org/apache/commons/codec/DecoderException*"
                         </Embed-Dependency>
+                        <DynamicImport-Package>
+                            javax.jcr
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
