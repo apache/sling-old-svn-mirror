@@ -19,6 +19,9 @@ package org.apache.sling.auth.core.spi;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.LoginException;
+
 /**
  * Service interface which allows bundles to modify the AuthenticationInfo object
  * after authentication has been performed.
@@ -38,7 +41,14 @@ public interface AuthenticationInfoPostProcessor {
      * @param info
      * @param request
      * @param response
+     * @throws LoginException if SlingAuthenticator should handle the exception (eg. 
+     *         set the correct status in the response)
+     *         SlingException will not be caught by SlingAuthenticator, in this case
+     *         the method has to set the accurate status in the response
+     * @throws SlingException may be thrown to convey any problem while handling the 
+     * 		   credentials 
      */
-    void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response);
+    void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response) 
+    	throws LoginException;
 
 }
