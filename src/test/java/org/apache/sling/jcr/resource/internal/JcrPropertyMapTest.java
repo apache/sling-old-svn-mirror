@@ -231,7 +231,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         }
 
         node.setProperty(PROP_NAME, jcrValue);
-        node.save();
+        node.getSession().save();
 
         return createPropertyMap(node);
     }
