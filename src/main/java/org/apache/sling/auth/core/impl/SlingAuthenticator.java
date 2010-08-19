@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
+import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -336,39 +337,40 @@ public class SlingAuthenticator implements Authenticator,
         
         try
         {
-	        // 1. Ask all authentication handlers to try to extract credentials
+        // 1. Ask all authentication handlers to try to extract credentials
 	        authInfo = getAuthenticationInfo(request, response);
-	
+
 	        // 2. Check Credentials
-	        if (authInfo == AuthenticationInfo.DOING_AUTH) {
-	
-	            log.debug("handleSecurity: ongoing authentication in the handler");
-	            return false;
-	
-	        } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
-	
-	            log.debug("handleSecurity: Credentials present but not valid, request authentication again");
-	            // FIXME: ensure resource is not set !!!
-	            request.setAttribute(LOGIN_RESOURCE, request.getRequestURI());
-	            doLogin(request, response);
-	            return false;
-	
-	        } else if (authInfo == null) {
-	            // create an empty authentication info object which can be used with the post processors
-	            AuthenticationInfo anonInfo = new AuthenticationInfo("anonymous");
-	            postProcess(anonInfo, request, response);
-	
-	            log.debug("handleSecurity: No credentials in the request, anonymous");
-	            return getAnonymousResolver(request, response);
-	
-	        } else {
-	
-	            log.debug("handleSecurity: Trying to get a session for {}",
-	                authInfo.getUser());
-	            return getResolver(request, response, authInfo);
-	
-	        }
+        if (authInfo == AuthenticationInfo.DOING_AUTH) {
+
+            log.debug("handleSecurity: ongoing authentication in the handler");
+            return false;
+
+        } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
+
+            log.debug("handleSecurity: Credentials present but not valid, request authentication again");
+            request.setAttribute(LOGIN_RESOURCE,
+                AbstractAuthenticationHandler.getLoginResource(request,
+                    request.getRequestURI()));
+            doLogin(request, response);
+            return false;
+
+        } else if (authInfo == null) {
+            // create an empty authentication info object which can be used with the post processors
+            AuthenticationInfo anonInfo = new AuthenticationInfo("anonymous");
+            postProcess(anonInfo, request, response);
+
+            log.debug("handleSecurity: No credentials in the request, anonymous");
+            return getAnonymousResolver(request, response);
+
+        } else {
+
+            log.debug("handleSecurity: Trying to get a session for {}",
+                authInfo.getUser());
+            return getResolver(request, response, authInfo);
+
         }
+    }
     	catch ( LoginException e )
     	{
     		if ( authInfo != null ) {
