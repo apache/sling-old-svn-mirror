@@ -128,7 +128,7 @@ public class JcrResourceResolver
     }
 
     /**
-     * @see org.apache.sling.api.resource.ResourceResolver#copy(Map)
+     * @see org.apache.sling.api.resource.ResourceResolver#clone(Map)
      */
     public ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException {
@@ -594,12 +594,12 @@ public class JcrResourceResolver
             while (res != null) {
                 String alias = getProperty(res, PROP_ALIAS);
                 if (alias == null) {
-                    alias = ResourceUtil.getName(res);
+                    alias = res.getName();
                 }
                 if (alias != null && alias.length() > 0 && !alias.endsWith(":")) {
                     names.add(alias);
                 }
-                res = ResourceUtil.getParent(res);
+                res = res.getParent();
             }
 
             // build path from segment names
@@ -800,10 +800,9 @@ public class JcrResourceResolver
                         // we treat this as a not found resource
                         return Collections.EMPTY_LIST.iterator();
                     }
-                } else {
-                    // this is illegal
-                    return Collections.EMPTY_LIST.iterator();
                 }
+                // this is illegal
+                return Collections.EMPTY_LIST.iterator();
             } else if (parent instanceof WorkspaceDecoratedResource) {
                 parent = ((WorkspaceDecoratedResource) parent).getResource();
             } else {
@@ -897,7 +896,7 @@ public class JcrResourceResolver
     }
 
     /**
-     * @see org.apache.sling.api.resource.ResourceResolver#getUserID(java.lang.String)
+     * @see org.apache.sling.api.resource.ResourceResolver#getUserID()
      */
     public String getUserID() {
         checkClosed();
@@ -915,9 +914,8 @@ public class JcrResourceResolver
         if (type == Session.class) {
             if (requestBoundResolver != null) {
                 return (AdapterType) requestBoundResolver.adaptTo(Session.class);
-            } else {
-                return (AdapterType) getSession();
             }
+            return (AdapterType) getSession();
         }
 
         // fall back to default behaviour

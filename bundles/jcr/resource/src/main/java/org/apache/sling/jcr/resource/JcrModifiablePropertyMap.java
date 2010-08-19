@@ -165,7 +165,7 @@ public final class JcrModifiablePropertyMap
                     node.setProperty(name, (String)null);
                 }
             }
-            node.save();
+            node.getSession().save();
         } catch (RepositoryException re) {
             throw new PersistenceException("Unable to persist changes.", re);
         }

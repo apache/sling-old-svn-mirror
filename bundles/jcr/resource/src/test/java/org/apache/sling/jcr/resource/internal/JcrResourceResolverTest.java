@@ -1222,26 +1222,26 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // create a folder
         String folderPath = "folder";
         Node folder = rootNode.addNode(folderPath, "sling:Folder");
-        rootNode.save();
+        rootNode.getSession().save();
 
         // test default child node type
         Node child = folder.addNode("child0");
-        folder.save();
+        folder.getSession().save();
         assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
 
         // test explicit sling:Folder child
         child = folder.addNode("child1", "sling:Folder");
-        folder.save();
+        folder.getSession().save();
         assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
 
         // test explicit nt:folder child
         child = folder.addNode("child2", "nt:folder");
-        folder.save();
+        folder.getSession().save();
         assertEquals("nt:folder", child.getPrimaryNodeType().getName());
 
         // test any child node -- use nt:unstructured here
         child = folder.addNode("child3", "nt:unstructured");
-        folder.save();
+        folder.getSession().save();
         assertEquals("nt:unstructured", child.getPrimaryNodeType().getName());
     }
 
