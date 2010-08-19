@@ -28,7 +28,7 @@ import org.apache.sling.engine.auth.NoAuthenticationHandlerException;
  * The <code>EngineSlingAuthenticator</code> class is a simple proxy service
  * providing the old Sling Engine {@link Authenticator} service calling into the
  * new standalone Apache Sling
- * {@link org.apache.sling.auth.core.Authenticator} service.
+ * {@link org.apache.sling.auth.core.AuthenticationSupport} service.
  *
  * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.engine.auth.Authenticator"
