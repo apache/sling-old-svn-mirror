@@ -75,6 +75,9 @@ class BundleResourceIterator implements Iterator<Resource> {
             this.resourceResolver = parent.getResourceResolver();
             this.bundle = parent.getBundle();
             this.mappedPath = parent.getMappedPath();
+            
+            parentPath = mappedPath.getEntryPath(parentPath);
+            
             this.entries = parent.getBundle().getEntryPaths(parentPath);
             this.prefixLength = parentPath.length();
 

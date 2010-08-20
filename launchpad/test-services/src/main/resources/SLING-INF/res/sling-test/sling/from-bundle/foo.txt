@@ -1,0 +1,1 @@
+This is a text file provided by the bundle resource provider.

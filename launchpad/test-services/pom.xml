@@ -64,6 +64,7 @@
                             SLING-INF/nodetypes/test.cnd
                         </Sling-Nodetypes>
                         <Sling-Initial-Content>SLING-INF/content;path:=/sling-test</Sling-Initial-Content>
+                        <Sling-Bundle-Resources>/sling-test/sling/from-bundle;path:=/SLING-INF/res/sling-test/sling/from-bundle</Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
             </plugin>
