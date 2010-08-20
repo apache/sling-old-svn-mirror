@@ -18,6 +18,9 @@
  */
 package org.apache.sling.adapter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.adapter.internal.AdapterManagerImpl;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterManager;
@@ -34,9 +37,30 @@ import org.apache.sling.api.adapter.AdapterManager;
  */
 public abstract class SlingAdaptable implements Adaptable {
 
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        final AdapterManager mgr = AdapterManagerImpl.getInstance();
-        return (mgr == null ? null : mgr.getAdapter(this, type));
-    }
+    /** Cache */
+    private Map<Class<?>, Object> adaptersCache;
 
+    /**
+     * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        AdapterType result = null;
+        synchronized ( this ) {
+            if ( adaptersCache != null ) {
+                result = (AdapterType) adaptersCache.get(type);
+            }
+            if ( result == null ) {
+                final AdapterManager mgr = AdapterManagerImpl.getInstance();
+                result = (mgr == null ? null : mgr.getAdapter(this, type));
+                if ( result != null ) {
+                    if ( adaptersCache == null ) {
+                        adaptersCache = new HashMap<Class<?>, Object>();
+                    }
+                    adaptersCache.put(type, result);
+                }
+            }
+        }
+        return result;
+    }
 }
