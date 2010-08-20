@@ -39,15 +39,31 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The <code>SlingWebConsoleSecurityProvider</code> is security provider for the
+ * Apache Felix Web Console which validates the user name and password by loging
+ * into the repository and the checking whether the user is allowed access.
+ * Access granted by the {@link #authenticate(String, String)} method applies to
+ * all of the Web Console since the {@link #authorize(Object, String)} method
+ * always returns <code>true</code>.
+ * <p>
+ * This security provider requires a JCR Repository to operate. Therefore it is
+ * only registered as a security provider service once such a JCR Repository is
+ * available.
+ */
 @Component(specVersion = "1.1", metatype = true)
 @Service(WebConsoleSecurityProvider.class)
 public class SlingWebConsoleSecurityProvider implements
         WebConsoleSecurityProvider {
 
+    // name of the property providing list of authorized users
     private static final String PROP_USERS = "users";
 
+    // default user being authorized
     private static final String PROP_GROUPS_DEFAULT_USER = "admin";
 
+    // name of the property providing list of groups whose members are
+    // authorized
     private static final String PROP_GROUPS = "groups";
 
     /** default log */
@@ -72,6 +88,33 @@ public class SlingWebConsoleSecurityProvider implements
         this.groups = toSet(config.get(PROP_GROUPS));
     }
 
+    /**
+     * Authenticates and authorizes the user identified by the user name and
+     * password. The check applied to authorize access consists of the following
+     * steps:
+     * <ol>
+     * <li>User name and password are able to create a JCR session with the
+     * default repository workspace. If such a session cannot be created, the
+     * user is denied access.</li>
+     * <li>If the user is listed in the configured set of granted users, access
+     * is granted to all of the Web Console.</li>
+     * <li>If the user is a member of one of the groups configured to grant
+     * access to their members, access is granted to all of the Web Console.</li>
+     * </ol>
+     * <p>
+     * If the user name and password cannot be used to login to the default
+     * workspace of the repository or if the user neither one of the configured
+     * set of granted users or is not a member of the configured set of groups
+     * access is denied to the Web Console.
+     *
+     * @param userName The name of the user to grant access for
+     * @param password The password to authenticate the user. This may be
+     *            <code>null</code> to assume an empty password.
+     * @return The <code>userName</code> is currently returned to indicate
+     *         successfull authentication.
+     * @throws NullPointerException if <code>userName</code> is
+     *             <code>null</code>.
+     */
     public Object authenticate(String userName, String password) {
         final Credentials creds = new SimpleCredentials(userName,
             (password == null) ? new char[0] : password.toCharArray());
@@ -90,6 +133,7 @@ public class SlingWebConsoleSecurityProvider implements
                     }
 
                     // check groups
+                    @SuppressWarnings("unchecked")
                     Iterator<Group> gi = a.memberOf();
                     while (gi.hasNext()) {
                         if (groups.contains(gi.next().getID())) {
