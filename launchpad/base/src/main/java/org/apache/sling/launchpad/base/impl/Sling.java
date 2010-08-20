@@ -38,7 +38,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
+import javax.management.Attribute;
+import javax.management.AttributeList;
 import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
@@ -314,8 +317,28 @@ public class Sling implements BundleActivator {
 
         // register the platform MBeanServer
         MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+        Properties mbeanProps = new Properties();
+        try {
+            ObjectName beanName = ObjectName.getInstance("JMImplementation:type=MBeanServerDelegate");
+            AttributeList attrs = platformMBeanServer.getAttributes(beanName,
+                new String[] { "MBeanServerId", "SpecificationName",
+                    "SpecificationVersion", "SpecificationVendor",
+                    "ImplementationName", "ImplementationVersion",
+                    "ImplementationVendor" });
+            for (Object object : attrs) {
+                Attribute attr = (Attribute) object;
+                if (attr.getValue() != null) {
+                    mbeanProps.put(attr.getName(), attr.getValue().toString());
+                }
+            }
+        } catch (Exception je) {
+            logger.log(
+                Logger.LOG_INFO,
+                "start: Cannot set service properties of Platform MBeanServer service, registering without",
+                je);
+        }
         bundleContext.registerService(MBeanServer.class.getName(),
-                platformMBeanServer, null);
+            platformMBeanServer, mbeanProps);
 
         // execute optional bundle startup tasks of an extension
         this.doStartBundle();
