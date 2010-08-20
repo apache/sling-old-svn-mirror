@@ -25,52 +25,58 @@
     <script src="../system/sling.js"/></script>
   </head>
   <body>
-  	<div class="title">
-  		<div class="logo">
-		    <a href="http://sling.apache.org">
-		    	<img border="0" src="sling-logo.png"/>
-			</a>
-  		</div>
-	</div>
-	
-	<div class="menu">
-	</div>  		
+    <div class="title">
+        <div class="logo">
+            <a href="http://sling.apache.org">
+                <img border="0" src="sling-logo.png"/>
+            </a>
+        </div>
+    </div>
+    
+    <div class="menu">
+       <div id="menu_login" style="display:none; padding: 10px;">
+          <a href="/system/sling/login.html">Login</a> | <a href="signup.html">Sign Up</a>
+     </div>
+       <div id="menu_logout" style="display:none; padding: 10px;">
+          <strong id="menu_username"> ??? </strong> | <a href="/system/sling/logout.html">Logout</a>
+     </div>
+    </div>          
   
     <div class="main">
-	    <h1>Welcome to the Sling Launchpad</h1>
-	    
-		<p>
-			<a href="http://sling.apache.org">Apache Sling</a> is a web framework that uses a Java Content Repository, 
-			such as <a href="http://jackrabbit.apache.org">Apache Jackrabbit</a>, to store and manage content.
+        <h1>Welcome to the Sling Launchpad</h1>
+        
+        <p>
+            <a href="http://sling.apache.org">Apache Sling</a> is a web framework that uses a Java Content Repository, 
+            such as <a href="http://jackrabbit.apache.org">Apache Jackrabbit</a>, to store and manage content.
 
-			Sling applications use either scripts or Java servlets, selected based on simple name conventions, 
-			to process HTTP requests in a RESTful way.
+            Sling applications use either scripts or Java servlets, selected based on simple name conventions, 
+            to process HTTP requests in a RESTful way.
 
-			The embedded Apache Felix OSGi framework and <a href="system/console">console</a> provide a dynamic 
-			runtime environment, where code and content bundles can be loaded, unloaded and reconfigured at runtime.
-	    </p>
-	    <p>
-	    	The Sling Launchpad is a ready-to-run Sling configuration, providing an embedded 
-	    	JCR content repository and web server, a selection of Sling components, and 
-	    	documentation and examples. The Launchpad makes it easy to get started with Sling 
-	    	and to develop script-based applications.
-	    </p>
-	    
-	    <h2>Getting started</h2>
-		<p>
-			To get started with Sling, see our
-			<a href="http://sling.apache.org">website</a> and
-			the 
-			<a href="http://sling.apache.org/site/discover-sling-in-15-minutes.html">
-			Sling in 15 minutes
-			</a>
-			tutorial.
-		</p>    	
-		<p>
-			Note that you can mount the repository via WebDAV to explore or modify content,
-			simply use the <a href="./">root URL</a> as the WebDAV server URL.
-		</p>
-		
+            The embedded Apache Felix OSGi framework and <a href="system/console">console</a> provide a dynamic 
+            runtime environment, where code and content bundles can be loaded, unloaded and reconfigured at runtime.
+        </p>
+        <p>
+            The Sling Launchpad is a ready-to-run Sling configuration, providing an embedded 
+            JCR content repository and web server, a selection of Sling components, and 
+            documentation and examples. The Launchpad makes it easy to get started with Sling 
+            and to develop script-based applications.
+        </p>
+        
+        <h2>Getting started</h2>
+        <p>
+            To get started with Sling, see our
+            <a href="http://sling.apache.org">website</a> and
+            the 
+            <a href="http://sling.apache.org/site/discover-sling-in-15-minutes.html">
+            Sling in 15 minutes
+            </a>
+            tutorial.
+        </p>        
+        <p>
+            Note that you can mount the repository via WebDAV to explore or modify content,
+            simply use the <a href="./">root URL</a> as the WebDAV server URL.
+        </p>
+        
         <p id="logout" style="display:none">
            You are currently logged in as user <b id="username">????</b> to
            workspace <b id="workspace">????</b>. To login with a different
@@ -89,32 +95,37 @@
             var info = Sling.getSessionInfo();
             document.getElementById("username").innerHTML = info.userID;
             document.getElementById("workspace").innerHTML = info.workspace;
+            document.getElementById("menu_username").innerHTML = info.userID;
             
             if ("anonymous" == info.userID) {
               // anonymous, assume not logged int
               document.getElementById("login").style.display="block";
               document.getElementById("logout").style.display="none";
+              document.getElementById("menu_login").style.display="block";
+              document.getElementById("menu_logout").style.display="none";
             } else {
               document.getElementById("login").style.display="none";
               document.getElementById("logout").style.display="block";
+              document.getElementById("menu_login").style.display="none";
+              document.getElementById("menu_logout").style.display="block";
             }
         </script>
         
         <h2>More info</h2>
-		<p>
-			Use our 
-			<a href="http://sling.apache.org/site/project-information.html#ProjectInformation-lists">
-			mailing lists
-			</a> to contact the Sling developers team.
-		</p>	
-	    <p>
-	    	The Sling OSGi management console is available at <a href="system/console">system/console</a>,
-	    	use <em>admin/admin</em> to login.
-	    </p>
-	    <p>
-	    	The Sling client library tests are available at 
-	    	<a href="sling-test/sling/sling-test.html">sling-test/sling/sling-test.html</a>.
-	    </p>
+        <p>
+            Use our 
+            <a href="http://sling.apache.org/site/project-information.html#ProjectInformation-lists">
+            mailing lists
+            </a> to contact the Sling developers team.
+        </p>    
+        <p>
+            The Sling OSGi management console is available at <a href="system/console">system/console</a>,
+            use <em>admin/admin</em> to login.
+        </p>
+        <p>
+            The Sling client library tests are available at 
+            <a href="sling-test/sling/sling-test.html">sling-test/sling/sling-test.html</a>.
+        </p>
     </div>
   </body>
 </html>
