@@ -131,6 +131,7 @@
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
+        <module>bundles/extensions/webconsolesecurityprovider</module>
         <module>bundles/extensions/groovy</module>
 
         <!-- Launchpad -->
