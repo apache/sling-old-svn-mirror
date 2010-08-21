@@ -43,6 +43,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/webconsolesecurityprovider</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12315265</site.jira.version.id>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -56,6 +60,18 @@
             </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <dependencies>
         <dependency>
