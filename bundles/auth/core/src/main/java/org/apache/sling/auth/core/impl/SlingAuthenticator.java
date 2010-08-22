@@ -334,53 +334,50 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         AuthenticationInfo authInfo = null;
-        
-        try
-        {
-        // 1. Ask all authentication handlers to try to extract credentials
-	        authInfo = getAuthenticationInfo(request, response);
+        try {
+            // 1. Ask all authentication handlers to try to extract credentials
+            authInfo = getAuthenticationInfo(request, response);
 
-	        // 2. Check Credentials
-        if (authInfo == AuthenticationInfo.DOING_AUTH) {
+            // 2. Check Credentials
+            if (authInfo == AuthenticationInfo.DOING_AUTH) {
 
-            log.debug("handleSecurity: ongoing authentication in the handler");
+                log.debug("handleSecurity: ongoing authentication in the handler");
+                return false;
+
+            } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
+
+                log.debug("handleSecurity: Credentials present but not valid, request authentication again");
+                request.setAttribute(LOGIN_RESOURCE,
+                    AbstractAuthenticationHandler.getLoginResource(request,
+                        request.getRequestURI()));
+                doLogin(request, response);
+                return false;
+
+            } else if (authInfo == null) {
+                // create an empty authentication info object which can be used
+                // with the post processors
+                AuthenticationInfo anonInfo = new AuthenticationInfo(
+                    "anonymous");
+                postProcess(anonInfo, request, response);
+
+                log.debug("handleSecurity: No credentials in the request, anonymous");
+                return getAnonymousResolver(request, response);
+
+            } else {
+
+                log.debug("handleSecurity: Trying to get a session for {}",
+                    authInfo.getUser());
+                return getResolver(request, response, authInfo);
+
+            }
+        } catch (LoginException e) {
+            if (authInfo != null) {
+                handleLoginFailure(request, response, authInfo.getUser(), e);
+            } else {
+                handleLoginFailure(request, response, "<null>", e);
+            }
             return false;
-
-        } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
-
-            log.debug("handleSecurity: Credentials present but not valid, request authentication again");
-            request.setAttribute(LOGIN_RESOURCE,
-                AbstractAuthenticationHandler.getLoginResource(request,
-                    request.getRequestURI()));
-            doLogin(request, response);
-            return false;
-
-        } else if (authInfo == null) {
-            // create an empty authentication info object which can be used with the post processors
-            AuthenticationInfo anonInfo = new AuthenticationInfo("anonymous");
-            postProcess(anonInfo, request, response);
-
-            log.debug("handleSecurity: No credentials in the request, anonymous");
-            return getAnonymousResolver(request, response);
-
-        } else {
-
-            log.debug("handleSecurity: Trying to get a session for {}",
-                authInfo.getUser());
-            return getResolver(request, response, authInfo);
-
         }
-    }
-    	catch ( LoginException e )
-    	{
-    		if ( authInfo != null ) {
-    			handleLoginFailure(request, response, authInfo.getUser(), e);
-    		} else {
-    			handleLoginFailure(request, response, "<null>", e);
-    		}
-    		return false;
-    	}
-        
     }
 
     // ---------- Authenticator interface
@@ -519,7 +516,7 @@ public class SlingAuthenticator implements Authenticator,
     // ---------- internal
 
     private AuthenticationInfo getAuthenticationInfo(
-            HttpServletRequest request, HttpServletResponse response) 
+            HttpServletRequest request, HttpServletResponse response)
     		throws LoginException {
 
         // Get the path used to select the authenticator, if the SlingServlet
@@ -571,7 +568,7 @@ public class SlingAuthenticator implements Authenticator,
     /**
      * Run through the available post processors.
      */
-    private void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response) 
+    private void postProcess(AuthenticationInfo info, HttpServletRequest request, HttpServletResponse response)
     		throws LoginException {
         Object[] services = authInfoPostProcessorTracker.getServices();
         if (services != null) {
