@@ -222,12 +222,28 @@ public class SlingPropertyValueHandler {
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-                changes.add(Modification.onModified(
-                    parent.setProperty(prop.getName(), "").getPath()
-                ));
+        		if (parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
+        			//the existing property is multi-valued, so just delete it?
+                    final String removePath = removePropertyIfExists(parent, prop.getName());
+                    if ( removePath != null ) {
+                        changes.add(Modification.onDeleted(removePath));
+                    }
+        		} else {
+            		changes.add(Modification.onModified(
+                            parent.setProperty(prop.getName(), "").getPath()
+                        ));
+        		}
             }
         } else if (values.length == 1) {
-            // if the provided value is the empty string, just remove the existing property (if any).
+            //if a MultiValueTypeHint is supplied, or the current value is multiple,
+            // store the updated property as multi-value.
+            boolean storePropertyAsMultiValued = prop.hasMultiValueTypeHint();
+            if (!prop.hasMultiValueTypeHint() && parent.hasProperty(prop.getName()) ) {
+            	//no type hint supplied, so check the current property definition
+                storePropertyAsMultiValued = parent.getProperty(prop.getName()).getDefinition().isMultiple();
+            }
+
+        	// if the provided value is the empty string, just remove the existing property (if any).
             if ( values[0].length() == 0 ) {
                 final String removePath = removePropertyIfExists(parent, prop.getName());
                 if ( removePath != null ) {
@@ -239,7 +255,7 @@ public class SlingPropertyValueHandler {
                     // try conversion
                     Calendar c = dateParser.parse(values[0]);
                     if (c != null) {
-                        if ( prop.hasMultiValueTypeHint() ) {
+                        if ( storePropertyAsMultiValued ) {
                             final Value[] array = new Value[1];
                             array[0] = parent.getSession().getValueFactory().createValue(c);
                             changes.add(Modification.onModified(
@@ -255,7 +271,7 @@ public class SlingPropertyValueHandler {
                 } else if (isReferencePropertyType(type)) {
                     Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
                     if (v != null) {
-                        if ( prop.hasMultiValueTypeHint() ) {
+                        if ( storePropertyAsMultiValued ) {
                             final Value[] array = new Value[] { v };
                             changes.add(Modification.onModified(
                                 parent.setProperty(prop.getName(), array).getPath()
@@ -271,12 +287,17 @@ public class SlingPropertyValueHandler {
                 }
 
                 // fall back to default behaviour
-
                 final Property p;
                 if ( type == PropertyType.UNDEFINED ) {
-                    p = parent.setProperty(prop.getName(), values[0]);
+                	if ( storePropertyAsMultiValued ) {
+                        final Value[] array = new Value[1];
+                        array[0] = parent.getSession().getValueFactory().createValue(values[0]);
+                        p = parent.setProperty(prop.getName(), array);
+                	} else {
+                        p = parent.setProperty(prop.getName(), values[0]);
+                	}
                 } else {
-                    if ( prop.hasMultiValueTypeHint() ) {
+                    if ( storePropertyAsMultiValued ) {
                         final Value[] array = new Value[1];
                         array[0] = parent.getSession().getValueFactory().createValue(values[0], type);
                         p = parent.setProperty(prop.getName(), array);
@@ -287,6 +308,17 @@ public class SlingPropertyValueHandler {
                 changes.add(Modification.onModified(p.getPath()));
             }
         } else {
+        	if (parent.hasProperty(prop.getName())) {
+        		if (!parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
+        			//the existing property is single-valued, so we have to delete it before setting the
+        			// multi-value variation
+                    final String removePath = removePropertyIfExists(parent, prop.getName());
+                    if ( removePath != null ) {
+                        changes.add(Modification.onDeleted(removePath));
+                    }
+        		}
+        	}
+        			
             if (type == PropertyType.DATE) {
                 // try conversion
                 Value[] c = dateParser.parse(values, valFac);

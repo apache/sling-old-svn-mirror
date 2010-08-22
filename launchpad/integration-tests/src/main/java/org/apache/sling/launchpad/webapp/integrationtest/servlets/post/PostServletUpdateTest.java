@@ -40,6 +40,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.launchpad.webapp.integrationtest.AbstractAuthenticatedTest;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -196,22 +197,38 @@ public void testPostPathIsUnique() throws IOException {
     	testUserId = createTestUser();
 
     	//2. Create node as admin (OK)
-        // curl -F:name=node -FpropOne=propOneValue1 -FpropOne=propOneValue2 http://admin:admin@localhost:8080/test/
+        // curl -F:nameHint=node -FpropOne=propOneValue1 -FpropOne=propOneValue2 -FpropTwo=propTwoValue http://admin:admin@localhost:8080/test/
         final String createTestNodeUrl = postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
-        Map<String, String> nodeProperties = new HashMap<String, String>();
-        nodeProperties.put(SlingPostConstants.RP_NODE_NAME_HINT, getName());
-        nodeProperties.put("propOne", "propOneValue1");
-        nodeProperties.put("propOne", "propOneValue2");
-    	String testNodeUrl = testClient.createNode(createTestNodeUrl, nodeProperties);
+        NameValuePairList clientNodeProperties = new NameValuePairList();
+        clientNodeProperties.add(SlingPostConstants.RP_NODE_NAME_HINT, getName());
+        clientNodeProperties.add("propOne", "propOneValue1");
+        clientNodeProperties.add("propOne", "propOneValue2");
+        clientNodeProperties.add("propTwo", "propTwoValue");
+    	String testNodeUrl = testClient.createNode(createTestNodeUrl, clientNodeProperties, null, false);
 
+        String content = getContent(testNodeUrl + ".json", CONTENT_TYPE_JSON);
+        JSONObject json = new JSONObject(content);
+        Object propOneObj = json.opt("propOne");
+        assertTrue(propOneObj instanceof JSONArray);
+        assertEquals(2, ((JSONArray)propOneObj).length());
+        assertEquals("propOneValue1", ((JSONArray)propOneObj).get(0));
+        assertEquals("propOneValue2", ((JSONArray)propOneObj).get(1));
+    	
+        Object propTwoObj = json.opt("propTwo");
+        assertTrue(propTwoObj instanceof String);
+        assertEquals("propTwoValue", propTwoObj);
+    	
+    	
         //3. Attempt to update property of node as testUser (500: javax.jcr.AccessDeniedException: /test/node/propOne: not allowed to add or modify item)
-        // curl -FpropOne=propOneValueChanged http://myuser:password@localhost:8080/test/node
+        // curl -FpropOne=propOneValueChanged -FpropTwo=propTwoValueChanged1 -FpropTwo=propTwoValueChanged2 http://myuser:password@localhost:8080/test/node
     	List<NameValuePair> postParams = new ArrayList<NameValuePair>();
     	postParams.add(new NameValuePair("propOne", "propOneValueChanged"));
+    	postParams.add(new NameValuePair("propTwo", "propTwoValueChanged1"));
+    	postParams.add(new NameValuePair("propTwo", "propTwoValueChanged2"));
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 		String expectedMessage = "Expected javax.jcr.AccessDeniedException";
     	assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, expectedMessage);
-
+    	
         //4. Grant jcr:modifyProperties rights to testUser as admin (OK)
         // curl -FprincipalId=myuser -Fprivilege@jcr:modifyProperties=granted http://admin:admin@localhost:8080/test/node.modifyAce.html
         Map<String, String> nodeAceProperties = new HashMap<String, String>();
@@ -233,19 +250,27 @@ public void testPostPathIsUnique() throws IOException {
 					testNodePath, //absPath
 					true, //isDeep 
 					null, //uuid
-					null, //nodeTypeName new String[] {"mws:folder"}
+					null, //nodeTypeName
 					false); //noLocal
         
             //5. Attempt to update properties of node (OK)
-            // curl -FpropOne=propOneValueChanged http://myuser:password@localhost:8080/test/node
+            // curl -FpropOne=propOneValueChanged -FpropTwo=propTwoValueChanged1 -FpropTwo=propTwoValueChanged2 http://myuser:password@localhost:8080/test/node
         	assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_OK, postParams, expectedMessage);
         	
         	//verify the change happened
-            String content = getContent(testNodeUrl + ".json", CONTENT_TYPE_JSON);
-            JSONObject json = new JSONObject(content);
-            Object propOneObj = json.opt("propOne");
-            assertEquals("propOneValueChanged", propOneObj);
+            String afterUpdateContent = getContent(testNodeUrl + ".json", CONTENT_TYPE_JSON);
+            JSONObject afterUpdateJson = new JSONObject(afterUpdateContent);
+            Object afterUpdatePropOneObj = afterUpdateJson.opt("propOne");
+            assertTrue(afterUpdatePropOneObj instanceof JSONArray);
+            assertEquals(1, ((JSONArray)afterUpdatePropOneObj).length());
+            assertEquals("propOneValueChanged", ((JSONArray)afterUpdatePropOneObj).get(0));
         	
+            Object afterUpdatePropTwoObj = afterUpdateJson.opt("propTwo");
+            assertTrue(afterUpdatePropTwoObj instanceof JSONArray);
+            assertEquals(2, ((JSONArray)afterUpdatePropTwoObj).length());
+            assertEquals("propTwoValueChanged1", ((JSONArray)afterUpdatePropTwoObj).get(0));
+            assertEquals("propTwoValueChanged2", ((JSONArray)afterUpdatePropTwoObj).get(1));
+            
         	//wait for the expected JCR events to be delivered
 			for (int second = 0; second < 15; second++) {
 				if (listener.getEventBundlesProcessed() > 0) {
@@ -254,12 +279,15 @@ public void testPostPathIsUnique() throws IOException {
 				Thread.sleep(1000);
 			}
 			
-			assertEquals("Property Added Event was not expected: " + listener.toString(), 
-					0, listener.removedProperties.size());
-			assertEquals("Property Removed Event was not expected: " + listener.toString(), 
-					0, listener.addedProperties.size());
-			assertEquals("Property Changed Event was expected: " + listener.toString(), 
+			assertEquals("One property added event was expected: " + listener.toString(), 
+					1, listener.addedProperties.size());
+			assertEquals(testNodePath + "/propTwo", listener.addedProperties.get(0));
+			assertEquals("One property removed event was expected: " + listener.toString(), 
+					1, listener.removedProperties.size());
+			assertEquals(testNodePath + "/propTwo", listener.removedProperties.get(0));
+			assertEquals("One property changed event was expected: " + listener.toString(), 
 					1, listener.changedProperties.size());
+			assertEquals(testNodePath + "/propOne", listener.changedProperties.get(0));
         } finally {
         	//cleanup
         	if (observationManager != null) {
