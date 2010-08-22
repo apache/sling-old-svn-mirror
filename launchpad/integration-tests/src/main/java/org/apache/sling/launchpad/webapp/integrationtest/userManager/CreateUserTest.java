@@ -19,6 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.userManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +33,7 @@ import org.apache.sling.commons.json.JSONObject;
  * Tests for the 'createUser' Sling Post Operation
  */
 public class CreateUserTest extends AbstractUserManagerTest {
+    private static Random random = new Random(System.currentTimeMillis());
 
 	String testUserId = null;
 
@@ -57,7 +59,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testCreateUser() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-		testUserId = "testUser" + (counter++);
+		testUserId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("marker", testUserId));
@@ -88,7 +90,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testCreateUserMissingPwd() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-        String userId = "testUser" + (counter++);
+        String userId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", userId));
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
@@ -98,7 +100,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testCreateUserWrongConfirmPwd() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-        String userId = "testUser" + (counter++);
+        String userId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", userId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
@@ -110,7 +112,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testCreateUserUserAlreadyExists() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-		testUserId = "testUser" + (counter++);
+		testUserId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
@@ -135,7 +137,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testCreateUserWithExtraProperties() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-		testUserId = "testUser" + (counter++);
+		testUserId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("marker", testUserId));
@@ -166,7 +168,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	public void testAnonymousSelfRegistrationDisabled() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-		String userId = "testUser" + (counter++);
+		String userId = "testUser" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", userId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));

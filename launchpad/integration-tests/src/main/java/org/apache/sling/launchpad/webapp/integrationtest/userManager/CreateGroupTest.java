@@ -19,6 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.userManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +33,7 @@ import org.apache.sling.commons.json.JSONObject;
  * Tests for the 'createGroup' Sling Post Operation
  */
 public class CreateGroupTest extends AbstractUserManagerTest {
+    private static Random random = new Random(System.currentTimeMillis());
 
 	String testGroupId = null;
 
@@ -50,7 +52,7 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	public void testCreateGroup() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
-		testGroupId = "testGroup" + (counter++);
+		testGroupId = "testGroup" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
 		postParams.add(new NameValuePair("marker", testGroupId));
@@ -75,7 +77,7 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	public void testCreateGroupAlreadyExists() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
-		testGroupId = "testGroup" + (counter++);
+		testGroupId = "testGroup" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
@@ -87,7 +89,7 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	public void testCreateGroupWithExtraProperties() throws IOException, JSONException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
-		testGroupId = "testGroup" + (counter++);
+		testGroupId = "testGroup" + random.nextInt();
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testGroupId));
 		postParams.add(new NameValuePair("marker", testGroupId));
