@@ -227,9 +227,9 @@ public class SlingPropertyValueHandler {
                 ));
             }
         } else if (values.length == 1) {
-            final String removePath = removePropertyIfExists(parent, prop.getName());
-            // if the provided value is the empty string, we don't have to do anything.
+            // if the provided value is the empty string, just remove the existing property (if any).
             if ( values[0].length() == 0 ) {
+                final String removePath = removePropertyIfExists(parent, prop.getName());
                 if ( removePath != null ) {
                     changes.add(Modification.onDeleted(removePath));
                 }
@@ -287,8 +287,6 @@ public class SlingPropertyValueHandler {
                 changes.add(Modification.onModified(p.getPath()));
             }
         } else {
-            removePropertyIfExists(parent, prop.getName());
-
             if (type == PropertyType.DATE) {
                 // try conversion
                 Value[] c = dateParser.parse(values, valFac);
