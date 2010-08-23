@@ -109,8 +109,10 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     	final String cfgName = "org.apache.felix.configadmin";
     	Bundle configAdmin = null;
+    	// in some cases more than one config admin is installed!
+    	// therefore we just stopp all of them and restart the first one
     	for(Bundle b : bundleContext.getBundles()) {
-    		if(b.getSymbolicName().equals(cfgName)) {
+    		if (b.getSymbolicName().equals(cfgName)) {
     			configAdmin = b;
     			break;
     		}
@@ -124,7 +126,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
     	// Config installs must be deferred if ConfigAdmin service is stopped
-    	configAdmin.stop();
+        for(Bundle b : bundleContext.getBundles()) {
+            if (b.getSymbolicName().equals(cfgName)) {
+                b.stop();
+            }
+        }
     	waitForConfigAdmin(false);
         final InstallableResource r = getInstallableResource(cfgPid, cfgData);
         installer.addResource(URL_SCHEME, r);
