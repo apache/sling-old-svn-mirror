@@ -18,15 +18,21 @@
  */
 package org.apache.sling.scripting.wrapper;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
@@ -218,6 +224,62 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             return null;
         }
 
+        public String getName() {
+            return ResourceUtil.getName(getPath());
+        }
+
+		public Resource getChild(String relPath) {
+			try
+			{
+				Node childNode = node.getNode( relPath );
+				if ( childNode !=  null ) {
+					return new TestResource( childNode );
+				} else {
+					return null;
+				}
+			} catch ( RepositoryException re )
+			{
+				return null;
+			}
+		}
+
+		public Resource getParent() {
+			try
+			{
+				Node parentNode = node.getParent();
+				if ( parentNode !=  null ) {
+					return new TestResource( parentNode );
+				} else {
+					return null;
+				}
+			} catch ( RepositoryException re )
+			{
+				return null;
+			}
+		}
+
+		public boolean isResourceType(String resourceType) {
+			return getResourceType().equals( resourceType );
+		}
+
+		public Iterator<Resource> listChildren() {
+			try
+			{
+				List<Resource> childList = new ArrayList();
+				NodeIterator it = node.getNodes();
+				while ( it.hasNext() )
+				{
+					Node nextNode = it.nextNode();
+					childList.add( new TestResource( nextNode ) );
+				}
+				return childList.iterator();
+			} catch ( RepositoryException re )
+			{
+				return null;
+			}
+		}
+
+        
     }
 
 }
