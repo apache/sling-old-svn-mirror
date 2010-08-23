@@ -20,21 +20,29 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
 import org.osgi.framework.BundleContext;
@@ -65,44 +73,90 @@ public class RegisteredResourceImpl
 
     private final String resourceType;
 
+    /**
+     * Try to create a registered resource.
+     */
+    public static RegisteredResourceImpl create(final BundleContext ctx,
+            final InstallableResource input,
+            final String scheme) throws IOException {
+        // installable resource has an id, a priority and either
+        // an input stream or a dictionary
+        InputStream is = input.getInputStream();
+        Dictionary<String, Object> dict = input.getDictionary();
+        String type = input.getType();
+        if ( is == null ) {
+            // if input stream is null, config through dictionary is expected!
+            type = (type != null ? type : InstallableResource.TYPE_CONFIG);
+        }
+        final String resourceType = (type != null ? type : computeResourceType(getExtension(input.getId())));
+        if ( resourceType == null ) {
+            // unknown resource type
+            throw new IOException("Unknown resource type for resource " + input.getId());
+        }
+        if ( !resourceType.equals(InstallableResource.TYPE_CONFIG) && !resourceType.equals(InstallableResource.TYPE_BUNDLE) ) {
+            throw new IOException("Unsupported resource type " + resourceType + " for resource " + input.getId());
+        }
+        if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
+            dict = readDictionary(is, getExtension(input.getId()));
+            if ( dict == null ) {
+                throw new IOException("Unable to read dictionary from input stream: " + input.getId());
+            }
+            is = null;
+        }
+
+        return new RegisteredResourceImpl(ctx,
+                input.getId(),
+                is,
+                dict,
+                resourceType,
+                input.getDigest(),
+                input.getPriority(),
+                scheme);
+    }
+
 	/**
 	 * Create a RegisteredResource from given data.
-	 * As this data object is filled from an {@link InstallableResource}
+	 * As this data object is filled from an {@link #create(BundleContext, InstallableResource, String)}
 	 * we don't have to validate values - this has already been done
-	 * by the installable resource!
+	 * The only exception is the digest!
 	 */
-	public RegisteredResourceImpl(final BundleContext ctx,
-	        final InstallableResource input,
+	private RegisteredResourceImpl(final BundleContext ctx,
+	        final String id,
+	        final InputStream is,
+	        final Dictionary<String, Object> dict,
+	        final String type,
+	        final String digest,
+	        final int priority,
 	        final String scheme) throws IOException {
-        this.id = input.getId();
+        this.id = id;
         this.urlScheme = scheme;
-		this.resourceType = input.getType();
-		this.priority = input.getPriority();
-        this.dictionary = copy(input.getDictionary());
-        this.digest = input.getDigest();
+		this.resourceType = type;
+		this.priority = priority;
+        this.dictionary = copy(dict);
 		this.serialNumber = getNextSerialNumber();
 
 		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
-		    final InputStream is = input.getInputStream();
             try {
                 this.dataFile = getDataFile(ctx);
                 Logger.logDebug("Copying data to local storage " + this.dataFile);
-                copyToLocalStorage(input.getInputStream());
+                copyToLocalStorage(is);
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if (name == null) {
                     // not a bundle
                     throw new IOException("Bundle resource does not contain a bundle " + this.urlScheme + ":" + this.id);
                 }
+                this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
                 entity = ENTITY_BUNDLE_PREFIX + name;
             } finally {
                 is.close();
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
-            final ConfigurationPid pid = new ConfigurationPid(scheme + ':' + input.getId());
+            final ConfigurationPid pid = new ConfigurationPid(scheme + ':' + id);
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
+            this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(dict));
 		} else {
 		    throw new IOException("Unknown type " + resourceType);
 		}
@@ -392,5 +446,133 @@ public class RegisteredResourceImpl
         }
 
         return result;
+    }
+
+    /**
+     * Compute the extension
+     */
+    private static String getExtension(String url) {
+        final int pos = url.lastIndexOf('.');
+        return (pos < 0 ? "" : url.substring(pos+1));
+    }
+
+    /**
+     * Compute the resource type
+     */
+    private static String computeResourceType(String extension) {
+        if (extension.equals("jar")) {
+            return InstallableResource.TYPE_BUNDLE;
+        }
+        if ( extension.equals("cfg")
+             || extension.equals("config")
+             || extension.equals("xml")
+             || extension.equals("properties")) {
+            return InstallableResource.TYPE_CONFIG;
+        }
+        return extension;
+    }
+
+    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
+    private static String digestToString(MessageDigest d) {
+        final BigInteger bigInt = new BigInteger(1, d.digest());
+        return new String(bigInt.toString(16));
+    }
+
+    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
+    private static String computeDigest(Dictionary<String, Object> data) {
+        try {
+            final MessageDigest d = MessageDigest.getInstance("MD5");
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutputStream oos = new ObjectOutputStream(bos);
+
+            final SortedSet<String> sortedKeys = new TreeSet<String>();
+            if(data != null) {
+                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
+                    final String key = e.nextElement();
+                    sortedKeys.add(key);
+                }
+            }
+            for(String key : sortedKeys) {
+                oos.writeObject(key);
+                oos.writeObject(data.get(key));
+            }
+
+            bos.flush();
+            d.update(bos.toByteArray());
+            return digestToString(d);
+        } catch (Exception ignore) {
+            return data.toString();
+        }
+    }
+
+    /** Digest is needed to detect changes in data */
+    private static String computeDigest(final File data) throws IOException {
+        try {
+            final InputStream is = new FileInputStream(data);
+            try {
+                final MessageDigest d = MessageDigest.getInstance("MD5");
+
+                final byte[] buffer = new byte[8192];
+                int count = 0;
+                while( (count = is.read(buffer, 0, buffer.length)) > 0) {
+                    d.update(buffer, 0, count);
+                }
+                return digestToString(d);
+            } finally {
+                is.close();
+            }
+        } catch (IOException ioe) {
+            throw ioe;
+        } catch (Exception ignore) {
+            return data.toString();
+        }
+    }
+
+    /**
+     * Read dictionary from an input stream.
+     * We use the same logic as Apache Felix FileInstall here:
+     * - *.cfg files are treated as property files
+     * - *.config files are handled by the Apache Felix ConfigAdmin file reader
+     * @param is
+     * @param extension
+     * @return
+     * @throws IOException
+     */
+    private static Dictionary<String, Object> readDictionary(
+            final InputStream is, final String extension) {
+        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
+        final InputStream in = new BufferedInputStream(is);
+        try {
+            if ( !extension.equals("config") ) {
+                final Properties p = new Properties();
+                in.mark(1);
+                boolean isXml = in.read() == '<';
+                in.reset();
+                if (isXml) {
+                    p.loadFromXML(in);
+                } else {
+                    p.load(in);
+                }
+                final Enumeration<Object> i = p.keys();
+                while ( i.hasMoreElements() ) {
+                    final Object key = i.nextElement();
+                    ht.put(key.toString(), p.get(key));
+                }
+            } else {
+                @SuppressWarnings("unchecked")
+                final Dictionary<String, Object> config = ConfigurationHandler.read(in);
+                final Enumeration<String> i = config.keys();
+                while ( i.hasMoreElements() ) {
+                    final String key = i.nextElement();
+                    ht.put(key, config.get(key));
+                }
+            }
+        } catch ( IOException ignore ) {
+            return null;
+        } finally {
+            try { in.close(); } catch (IOException ignore) {}
+        }
+
+        return ht;
     }
 }

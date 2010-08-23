@@ -49,7 +49,7 @@ public class TaskOrderingTest {
 	}
 
 	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return new RegisteredResourceImpl(null,
+		return RegisteredResourceImpl.create(null,
 		        new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null),
 		        "test");
 	}

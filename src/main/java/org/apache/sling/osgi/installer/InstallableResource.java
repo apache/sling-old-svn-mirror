@@ -18,26 +18,19 @@
  */
 package org.apache.sling.osgi.installer;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import org.apache.felix.cm.file.ConfigurationHandler;
 
 
 /**
  * A piece of data that can be installed by the {@link OsgiInstaller}
  * Currently the OSGi installer supports bundles and configurations.
+ *
+ * The installable resource contains as much information as the client
+ * can provide. An input stream or dictionary is mandatory everything
+ * else is optional. All optional values will be tried to be evaluated
+ * by the OSGi installer. If such evaluation fails the resource will
+ * be ignore during installation.
  *
  */
 public class InstallableResource {
@@ -74,13 +67,21 @@ public class InstallableResource {
     /**
      * Create a data object - this is a simple constructor just using the
      * values as they are provided.
+     * @param id Unique id for the resource, For auto detection if the resource
+     *           type, the id should contain an extension like .jar, .cfg etc.
+     * @param is The input stream to the data or
+     * @param dict A dictionary with data
+     * @param digest A digest of the data
+     * @param type The resource type if known
+     * @param priority Optional priority - if not specified {@link #DEFAULT_PRIORITY}
+     *                 is used
      * @throws IllegalArgumentException if something is wrong
      */
     public InstallableResource(final String id,
-            InputStream is,
-            Dictionary<String, Object> dict,
-            String digest,
-            String type,
+            final InputStream is,
+            final Dictionary<String, Object> dict,
+            final String digest,
+            final String type,
             final Integer priority) {
         if ( id == null ) {
             throw new IllegalArgumentException("id must not be null.");
@@ -90,26 +91,6 @@ public class InstallableResource {
             if ( dict == null ) {
                 throw new IllegalArgumentException("dictionary must not be null (or input stream must not be null).");
             }
-            type = (type != null ? type : InstallableResource.TYPE_CONFIG);
-        }
-        final String resourceType = (type != null ? type : computeResourceType(getExtension(id)));
-        if ( resourceType == null ) {
-            throw new IllegalArgumentException("Resource type must not be null");
-        }
-        if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
-            dict = readDictionary(is, getExtension(id));
-            if ( dict == null ) {
-                throw new IllegalArgumentException("Unable to read dictionary from input stream: " + id);
-            }
-            is = null;
-        }
-        if ( resourceType.equals(InstallableResource.TYPE_CONFIG) ) {
-            digest = (digest != null ? digest : id + ":" + computeDigest(dict));
-        }
-
-        // TODO - compute digest if digest is null - for now we throw
-        if ( digest == null || digest.length() == 0 ) {
-            throw new IllegalArgumentException("digest must not be null");
         }
 
         this.id = id;
@@ -117,7 +98,7 @@ public class InstallableResource {
         this.dictionary = dict;
         this.digest = digest;
         this.priority = (priority != null ? priority : DEFAULT_PRIORITY);
-        this.resourceType = resourceType;
+        this.resourceType = type;
     }
 
     /**
@@ -131,7 +112,7 @@ public class InstallableResource {
 
     /**
      * Return the type of this resource.
-     * @return The resource type.
+     * @return The resource type or <code>null</code> if the type is unnown for the client.
      */
     public String getType() {
         return this.resourceType;
@@ -163,6 +144,7 @@ public class InstallableResource {
     /**
      * Return this resource's digest. Not necessarily an actual md5 or other digest of the
      * data, can be any string that changes if the data changes.
+     * @return The digest or null
      */
     public String getDigest() {
         return this.digest;
@@ -180,110 +162,5 @@ public class InstallableResource {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", priority=" + priority + ", id=" + id;
-    }
-
-    /**
-     * Compute the extension
-     */
-    private static String getExtension(String url) {
-        final int pos = url.lastIndexOf('.');
-        return (pos < 0 ? "" : url.substring(pos+1));
-    }
-
-    /**
-     * Compute the resource type
-     */
-    private static String computeResourceType(String extension) {
-        if (extension.equals("jar")) {
-            return InstallableResource.TYPE_BUNDLE;
-        }
-        if ( extension.equals("cfg")
-             || extension.equals("config")
-             || extension.equals("xml")
-             || extension.equals("properties")) {
-            return InstallableResource.TYPE_CONFIG;
-        }
-        return extension;
-    }
-
-    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
-    private static String digestToString(MessageDigest d) {
-        final BigInteger bigInt = new BigInteger(1, d.digest());
-        return new String(bigInt.toString(16));
-    }
-
-    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
-    private static String computeDigest(Dictionary<String, Object> data) {
-        try {
-            final MessageDigest d = MessageDigest.getInstance("MD5");
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            final ObjectOutputStream oos = new ObjectOutputStream(bos);
-
-            final SortedSet<String> sortedKeys = new TreeSet<String>();
-            if(data != null) {
-                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
-                    final String key = e.nextElement();
-                    sortedKeys.add(key);
-                }
-            }
-            for(String key : sortedKeys) {
-                oos.writeObject(key);
-                oos.writeObject(data.get(key));
-            }
-
-            bos.flush();
-            d.update(bos.toByteArray());
-            return digestToString(d);
-        } catch (Exception ignore) {
-            return data.toString();
-        }
-    }
-
-    /**
-     * Read dictionary from an input stream.
-     * We use the same logic as Apache Felix FileInstall here:
-     * - *.cfg files are treated as property files
-     * - *.config files are handled by the Apache Felix ConfigAdmin file reader
-     * @param is
-     * @param extension
-     * @return
-     * @throws IOException
-     */
-    private static Dictionary<String, Object> readDictionary(
-            final InputStream is, final String extension) {
-        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
-        final InputStream in = new BufferedInputStream(is);
-        try {
-            if ( !extension.equals("config") ) {
-                final Properties p = new Properties();
-                in.mark(1);
-                boolean isXml = in.read() == '<';
-                in.reset();
-                if (isXml) {
-                    p.loadFromXML(in);
-                } else {
-                    p.load(in);
-                }
-                final Enumeration<Object> i = p.keys();
-                while ( i.hasMoreElements() ) {
-                    final Object key = i.nextElement();
-                    ht.put(key.toString(), p.get(key));
-                }
-            } else {
-                @SuppressWarnings("unchecked")
-                final Dictionary<String, Object> config = ConfigurationHandler.read(in);
-                final Enumeration<String> i = config.keys();
-                while ( i.hasMoreElements() ) {
-                    final String key = i.nextElement();
-                    ht.put(key, config.get(key));
-                }
-            }
-        } catch ( IOException ignore ) {
-            return null;
-        } finally {
-            try { in.close(); } catch (IOException ignore) {}
-        }
-
-        return ht;
     }
 }

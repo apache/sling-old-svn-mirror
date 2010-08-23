@@ -49,7 +49,7 @@ import org.osgi.framework.FrameworkListener;
  *  that are updated or removed during a cycle, and merged with
  *  the main list at the end of the cycle.
  */
-public class OsgiInstallerThread
+public class OsgiInstallerImpl
     extends Thread
     implements BundleListener, FrameworkListener,
                OsgiInstaller {
@@ -70,7 +70,7 @@ public class OsgiInstallerThread
     private final BundleTaskCreator bundleTaskCreator;
     private final ConfigTaskCreator configTaskCreator;
 
-    OsgiInstallerThread(final BundleContext ctx) {
+    OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         // listen to framework and bundle events
         this.ctx.addFrameworkListener(this);
@@ -168,7 +168,7 @@ public class OsgiInstallerThread
         checkScheme(scheme);
         RegisteredResource rr = null;
         try {
-            rr = new RegisteredResourceImpl(ctx, r, scheme);
+            rr = RegisteredResourceImpl.create(ctx, r, scheme);
         } catch(IOException ioe) {
             Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
             return;
@@ -190,7 +190,7 @@ public class OsgiInstallerThread
         for(InstallableResource r : data) {
             RegisteredResource rr =  null;
             try {
-                rr = new RegisteredResourceImpl(ctx, r, scheme);
+                rr = RegisteredResourceImpl.create(ctx, r, scheme);
             } catch(IOException ioe) {
                 Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 continue;
