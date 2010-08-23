@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 class JcrPropertyResource extends JcrItemResource {
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JcrPropertyResource.class);
 
     private final Property property;
 
@@ -161,12 +161,12 @@ class JcrPropertyResource extends JcrItemResource {
             }
 
         } catch (ValueFormatException vfe) {
-            log.debug("adaptTo: Problem accessing the property value of {}: {}",
+            LOGGER.debug("adaptTo: Problem accessing the property value of {}: {}",
                 getPath(), vfe.getMessage());
-            log.debug("adaptTo: Cause", vfe);
+            LOGGER.debug("adaptTo: Cause", vfe);
 
         } catch (RepositoryException re) {
-            log.debug("adaptTo: Problem accessing the property " + getPath(), re);
+            LOGGER.debug("adaptTo: Problem accessing the property " + getPath(), re);
         }
 
         // try to use adapter factories
@@ -196,7 +196,7 @@ class JcrPropertyResource extends JcrItemResource {
             getResourceMetadata().setContentLength(length);
             return stream;
         } catch (RepositoryException re) {
-            log.error("getInputStream: Problem accessing the property "
+            LOGGER.error("getInputStream: Problem accessing the property "
                 + getPath() + " stream", re);
         }
 

@@ -57,7 +57,7 @@ class JcrNodeResource extends JcrItemResource {
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResource.class);
 
     private final Node node;
 
@@ -126,12 +126,12 @@ class JcrNodeResource extends JcrItemResource {
                 return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
-                log.debug(
+                LOGGER.debug(
                     "adaptTo(PersistableValueMap): Cannot set properties on {}",
                     this);
             } catch (RepositoryException e) {
                 // some other problem, cannot adapt
-                log.debug(
+                LOGGER.debug(
                     "adaptTo(PersistableValueMap): Unexpected problem for {}",
                     this);
             }
@@ -187,7 +187,7 @@ class JcrNodeResource extends JcrItemResource {
                         data = ((Property) item);
                     } catch (ItemNotFoundException infe) {
                         // we don't actually care, but log for completeness
-                        log.debug("getInputStream: No primary items for "
+                        LOGGER.debug("getInputStream: No primary items for "
                             + toString(), infe);
                         data = null;
                     }
@@ -206,7 +206,7 @@ class JcrNodeResource extends JcrItemResource {
                 }
 
             } catch (RepositoryException re) {
-                log.error("getInputStream: Cannot get InputStream for " + this,
+                LOGGER.error("getInputStream: Cannot get InputStream for " + this,
                     re);
             }
         }
@@ -219,7 +219,7 @@ class JcrNodeResource extends JcrItemResource {
         try {
             return URLFactory.createURL(node.getSession(), node.getPath());
         } catch (Exception ex) {
-            log.error("getURL: Cannot create URL for " + this, ex);
+            LOGGER.error("getURL: Cannot create URL for " + this, ex);
         }
 
         return null;
@@ -235,7 +235,7 @@ class JcrNodeResource extends JcrItemResource {
                     getNode().getNodes(), this.dynamicClassLoader);
             }
         } catch (RepositoryException re) {
-            log.error("listChildren: Cannot get children of " + this, re);
+            LOGGER.error("listChildren: Cannot get children of " + this, re);
         }
 
         return Collections.<Resource> emptyList().iterator();
@@ -268,12 +268,12 @@ class JcrNodeResource extends JcrItemResource {
                 try {
                     metadata.setModificationTime(prop.getLong());
                 } catch(ValueFormatException vfe) {
-                    log.debug("Property {} cannot be converted to a long, ignored ({})",
+                    LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
                             prop.getPath(), vfe);
                 }
             }
         } catch (RepositoryException re) {
-            log.info(
+            LOGGER.info(
                 "setMetaData: Problem extracting metadata information for "
                     + getPath(), re);
         }
