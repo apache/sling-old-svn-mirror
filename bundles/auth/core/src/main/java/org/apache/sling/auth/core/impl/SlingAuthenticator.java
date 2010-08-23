@@ -593,6 +593,9 @@ public class SlingAuthenticator implements Authenticator,
         final AuthenticationInfo authInfo = httpBasicHandler.extractCredentials(
             request, response);
         if (authInfo != null) {
+            // post process the AuthenticationInfo object
+            postProcess(authInfo, request, response);
+            
             authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER, httpBasicHandler);
             return authInfo;
         }
