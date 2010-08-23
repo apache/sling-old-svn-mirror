@@ -57,14 +57,26 @@ public class FolderDetectionTest extends JcrInstallTestBase {
         contentHelper.createFolder("/libs/foo/install");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
 
+        assertFalse("/foo must not exist when test starts", session.itemExists("/foo"));
+        contentHelper.createFolder("/foo");
+
         contentHelper.createOrUpdateFile(res);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
 
         assertRegistered("After creating libs and test file", res, true);
 
-        session.move("/libs", "/foo");
+        session.move("/libs/foo", "/foo/bar");
+        session.save();
+        assertFalse(session.itemExists("/libs/foo/install"));
+
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegistered("After moving /libs to /foo", res, false);
+
+        contentHelper.delete("/foo");
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
+
+        contentHelper.delete("/libs");
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
     }
 
     public void testMoveLibsToApps() throws Exception {
@@ -78,15 +90,25 @@ public class FolderDetectionTest extends JcrInstallTestBase {
         contentHelper.createFolder("/libs/foo/install");
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
 
+        assertFalse("/apps must not exist when test starts", session.itemExists("/apps"));
+        contentHelper.createFolder("/apps");
+
         contentHelper.createOrUpdateFile(res);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
 
         assertRegistered("After creating libs and test file", res, true);
 
-        session.move("/libs", "/apps");
+        session.move("/libs/foo", "/apps/foo");
+        session.save();
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         MiscUtil.waitAfterContentChanges(eventHelper, installer);
         assertRegistered("/apps resource must be registered", appsRes, true);
         assertRegistered("/libs resource must be gone", res, false);
+
+        contentHelper.delete("/apps");
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
+
+        contentHelper.delete("/libs");
+        MiscUtil.waitAfterContentChanges(eventHelper, installer);
     }
 }
