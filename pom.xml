@@ -40,6 +40,11 @@
         interface.
     </description>
 
+    <properties>
+        <site.jira.version.id>12314514</site.jira.version.id>
+        <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/core</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/core</developerConnection>
@@ -92,19 +97,7 @@
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <excludePackageNames>
-                        org.apache.sling.engine.impl
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
