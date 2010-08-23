@@ -311,7 +311,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         return result;
     }
 
-    protected ConfigurationAdmin waitForConfigAdmin(boolean shouldBePresent) {
+    protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {
     	ConfigurationAdmin result = null;
         if (configAdminTracker == null) {
             synchronized (this) {
@@ -322,15 +322,19 @@ class OsgiInstallerTestBase implements FrameworkListener {
             }
         }
 
-    	final int timeout = 5;
+        final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
+    	boolean isPresent;
     	do {
     		result = (ConfigurationAdmin)configAdminTracker.getService();
-    		boolean isPresent = result != null;
-    		assertEquals("Expected ConfigurationAdmin to be " + (shouldBePresent ? "present" : "absent"),
-    				shouldBePresent, isPresent);
+    		isPresent = result != null;
+    		if ( shouldBePresent == isPresent ) {
+    		    return result;
+    		}
     	} while(System.currentTimeMillis() < waitUntil);
 
+        assertEquals("Expected ConfigurationAdmin to be " + (shouldBePresent ? "present" : "absent"),
+                shouldBePresent, isPresent);
     	return result;
     }
 
