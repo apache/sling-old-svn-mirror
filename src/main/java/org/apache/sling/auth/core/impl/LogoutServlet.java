@@ -18,26 +18,34 @@
  */
 package org.apache.sling.auth.core.impl;
 
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The <code>LogoutServlet</code> lets the Authenticator
  * do the logout.
- *
- * @scr.component metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="Authenticator Logout Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.methods" values.0="GET" values.1="POST"
- *
  */
+@Component()
+@Service(value = Servlet.class)
+@Properties( {
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Authenticator Logout Servlet"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = "sling.servlet.methods", value = { "GET", "POST" }) })
 public class LogoutServlet extends SlingAllMethodsServlet {
 
     /** serialization UID */
@@ -46,11 +54,13 @@ public class LogoutServlet extends SlingAllMethodsServlet {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private Authenticator authenticator;
 
-    /** The servlet is registered on this path.
-     *  @scr.property name="sling.servlet.paths" */
+    /**
+     * The servlet is registered on this path.
+     */
+    @Property(name = "sling.servlet.paths")
     public static final String SERVLET_PATH = "/system/sling/logout";
 
     @Override
