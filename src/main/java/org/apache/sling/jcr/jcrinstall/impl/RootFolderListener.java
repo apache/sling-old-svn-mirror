@@ -40,7 +40,7 @@ class RootFolderListener implements EventListener {
         this.timer = timer;
         this.watchedPath = path;
 
-        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED | Event.NODE_MOVED;
+        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
         boolean isDeep = true;
         boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
