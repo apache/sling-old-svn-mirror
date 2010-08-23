@@ -125,9 +125,6 @@ public class JcrInstaller implements EventListener {
     /** The root folders that we watch */
     private String [] roots;
 
-    /** Path of newly created root folders */
-    private Set<String> newRoots = new HashSet<String>();
-
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(Node n, int priority)
@@ -171,7 +168,6 @@ public class JcrInstaller implements EventListener {
 
         // open session
     	session = repository.loginAdministrative(repository.getDefaultWorkspace());
-    	newRoots.clear();
 
     	// Setup converters
     	converters.add(new FileNodeConverter());
@@ -268,7 +264,6 @@ public class JcrInstaller implements EventListener {
                 session = null;
             }
             listeners.clear();
-            newRoots.clear();
         } catch(Exception e) {
             log.warn("Exception in deactivate()", e);
         }
@@ -345,42 +340,23 @@ public class JcrInstaller implements EventListener {
      *  	for folders that have been removed
      */
     private List<String> updateFoldersList() throws Exception {
-    	final List<String> result = new LinkedList<String>();
+        log.debug("Updating folder list.");
+        
+        final List<String> result = new LinkedList<String>();
 
-    	// If one of our root folders was just created, scan it for folders to watch
-    	if(newRoots.size() > 0) {
-    	    final Set<String> toScan = new HashSet<String>();
-    	    synchronized (newRoots) {
-                toScan.addAll(newRoots);
-                newRoots.clear();
-            }
-            final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
-    	    for(String root : toScan) {
-    	        findPathsToWatch(root, newFolders);
-    	    }
-    	    for(WatchedFolder wf : newFolders) {
-    	        addWatchedFolder(wf);
-    	    }
-    	}
-
-    	// If changed occured in our watched paths, rescan
-        for(RootFolderListener wfc : listeners) {
-            final Set<String> changedPaths = wfc.getAndClearPaths();
-            if(changedPaths != null && changedPaths.size() > 0) {
-                log.debug("Detected {} paths with possible watched folder changes", changedPaths.size());
-                for(String path : changedPaths) {
-                    // Deletions are handled below
-                    if(folderNameFilter.getPriority(path) > 0  && session.itemExists(path)) {
-                        addWatchedFolder(new WatchedFolder(session, path,
-                                folderNameFilter.getPriority(path), converters));
-                    }
-                }
-            }
-        }
+        final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
+	    for(String root : roots) {
+	        findPathsToWatch(root, newFolders);
+	    }
+	    for(WatchedFolder wf : newFolders) {
+	        addWatchedFolder(wf);
+	    }
 
         // Check all WatchedFolder, in case some were deleted
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
+            log.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
+
             if(!session.itemExists(wf.getPath())) {
                 result.addAll(wf.scan().toRemove);
                 wf.cleanup();
@@ -401,16 +377,11 @@ public class JcrInstaller implements EventListener {
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
+                log.debug("Got event {}", e);
+
                 for(String root : roots) {
-                    if (root.equals(e.getPath())) {
-                        if(e.getType() == Event.NODE_ADDED) {
-                            synchronized (newRoots) {
-                                newRoots.add(e.getPath());
-                            }
-                            log.info("Got create event for root {}, scheduling scanning of new folders", root);
-                        } else {
-                            log.info("Got delete event for root {}, scheduling folders rescan", root);
-                        }
+                    if (e.getPath().startsWith(root)) {
+                        log.info("Got event for root {}, scheduling scanning of new folders", root);
                         updateFoldersListTimer.scheduleScan();
                     }
                 }
@@ -422,10 +393,16 @@ public class JcrInstaller implements EventListener {
 
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
     public void runOneCycle() {
+        log.debug("Running watch cycle.");
+        
         try {
+            boolean didRefresh = true;
+
             // Rescan WatchedFolders if needed
             final boolean scanWf = WatchedFolder.getRescanTimer().expired();
             if(scanWf) {
+                session.refresh(false);
+                didRefresh = true;
                 for(WatchedFolder wf : watchedFolders) {
                     if(!wf.needsScan()) {
                         continue;
@@ -447,6 +424,10 @@ public class JcrInstaller implements EventListener {
             // Update list of WatchedFolder if we got any relevant events,
             // or if there were any WatchedFolder events
             if(scanWf || updateFoldersListTimer.expired()) {
+                if (!didRefresh) {
+                    session.refresh(false);
+                    didRefresh = true;
+                }
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
                 final List<String> toRemove = updateFoldersList();
