@@ -84,6 +84,8 @@ class RootFolderListener implements EventListener {
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
+
+                log.debug("Got event {}", e);
                 // Rescan on all NODE_REMOVED events, to be on the safe side:
                 // an install folder might have been removed, and (I think) this is
                 // the safest way of finding out.
