@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
@@ -44,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * an easy way for tools (like cURL) or libraries (like Apache HttpCLient) to
  * preemptively authenticate with HTTP Basic authentication.
  */
-public class HttpBasicAuthenticationHandler extends
+class HttpBasicAuthenticationHandler extends
         DefaultAuthenticationFeedbackHandler implements AuthenticationHandler {
 
     private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
@@ -56,47 +57,36 @@ public class HttpBasicAuthenticationHandler extends
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    /** The realm to send back with the 401 response */
     private final String realm;
 
-    public HttpBasicAuthenticationHandler(final String realm) {
+    /**
+     * Whether this authentication handler is fully enabled and sends back 401
+     * responses from the
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)} and
+     * {@link #dropCredentials(HttpServletRequest, HttpServletResponse)}
+     * methods.
+     */
+    private final boolean fullSupport;
+
+    HttpBasicAuthenticationHandler(final String realm,
+            final boolean fullSupport) {
         this.realm = realm;
+        this.fullSupport = fullSupport;
     }
 
     // ----------- AuthenticationHandler interface ----------------------------
 
     /**
-     * Extracts credential data from the request if at all contained. This check
-     * is only based on the original request object, no URI translation has
-     * taken place yet.
+     * Returns the credential present within in an HTTP Basic authentication
+     * header or <code>null</code> if no credentials are provided and the
+     * {@link AuthenticationHandler#REQUEST_LOGIN_PARAMETER} is neither set as a
+     * request parameter nor as a request attribute.
      * <p>
-     * The method returns any of the following values :
-     * <table>
-     * <tr>
-     * <th>value
-     * <th>description
-     * </tr>
-     * <tr>
-     * <td><code>null</code>
-     * <td>no user details were contained in the request
-     * </tr>
-     * <tr>
-     * <td>{@link AuthenticationInfo#DOING_AUTH}
-     * <td>the handler is in an ongoing authentication exchange with the client.
-     * The request handling is terminated.
-     * <tr>
-     * <tr>
-     * <td>valid credentials
-     * <td>The user sent credentials.
-     * </tr>
-     * </table>
-     * <p>
-     * The method must not request credential information from the client, if
-     * they are not found in the request.
-     * <p>
-     * Note : The implementation should pay special attention to the fact, that
-     * the request may be for an included servlet, in which case the values for
-     * some URI specific values are contained in javax.servlet.include.* request
-     * attributes.
+     * If the {@link AuthenticationHandler#REQUEST_LOGIN_PARAMETER} is set as a
+     * request parameter or request attribute, a 401 response is sent to the
+     * client and the method returns {@link AuthenticationInfo#DOING_AUTH} to
+     * indicate that the handler has started its own credentials requesting.
      *
      * @param request The request object containing the information for the
      *            authentication.
@@ -105,8 +95,8 @@ public class HttpBasicAuthenticationHandler extends
      * @return A valid Credentials instance identifying the request user,
      *         DOING_AUTH if the handler is in an authentication trasaction with
      *         the client or null if the request does not contain authentication
-     *         information. In case of DOING_AUTH, the method must have sent a
-     *         response indicating that fact to the client.
+     *         information. In case of DOING_AUTH, the method has sent back a
+     *         401 requesting the client to provide credentials.
      */
     public AuthenticationInfo extractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
@@ -129,23 +119,29 @@ public class HttpBasicAuthenticationHandler extends
     /**
      * Called by the SlingAuthenticator.login method in case no other
      * authentication handler was willing to request credentials from the
-     * client. In this case this HTTP Basic authentication handler will
-     * send back a {@link #sendUnauthorized(HttpServletResponse) 401 response}
-     * to request HTTP Basic authentication from the client.
+     * client. In this case this HTTP Basic authentication handler will send
+     * back a {@link #sendUnauthorized(HttpServletResponse) 401 response} to
+     * request HTTP Basic authentication from the client if full support has
+     * been configured in the
+     * {@link #HttpBasicAuthenticationHandler(String, boolean) constructor}
      *
      * @param request The request object
      * @param response The response object to which to send the request
-     * @return <code>true</code> is always returned by this handler
+     * @return <code>true</code> if full support is enabled and the 401 response
+     *         could be sent. If full support is not enabled <code>false</code>
+     *         is always returned.
      */
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-        return sendUnauthorized(response);
+        return fullSupport ? sendUnauthorized(response) : false;
     }
 
     /**
      * Sends a 401/UNATUHORIZED response if the request has an Authorization
      * header and if this handler is configured to actually send this response
-     * in response to a request to drop the credentials.
+     * in response to a request to drop the credentials; that is if full support
+     * has been enabled in the
+     * {@link #HttpBasicAuthenticationHandler(String, boolean) constructor}.
      * <p>
      * Note, that sending a 401/UNAUTHORIZED response is generally the only save
      * means to remove HTTP Basic credentials from a browser's cache. Yet, the
@@ -154,26 +150,29 @@ public class HttpBasicAuthenticationHandler extends
      */
     public void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) {
-        if (request.getHeader(HEADER_AUTHORIZATION) != null) {
+        if (fullSupport && request.getHeader(HEADER_AUTHORIZATION) != null) {
             sendUnauthorized(response);
         }
     }
 
     /**
-     * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter is set.
+     * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter or request
+     * attribute is set to any non-<code>null</code> value.
      * <p>
-     * This method always returns <code>true</code> if the parameter is set
-     * regardless of its value because the client indicated it wanted to login
-     * but no authentication handler was willing to actually handle this
-     * request. So as a last fallback this handler request HTTP Basic
-     * Credentials.
+     * This method always returns <code>true</code> if the parameter or request
+     * attribute is set regardless of its value because the client indicated it
+     * wanted to login but no authentication handler was willing to actually
+     * handle this request. So as a last fallback this handler request HTTP
+     * Basic Credentials.
      *
+     * @param request The request object providing the parameter or attribute.
      * @return <code>true</code> if the
-     *         {@link AuthenticationHandler#REQUEST_LOGIN_PARAMETER} is set to
-     *         any value.
+     *         {@link AuthenticationHandler#REQUEST_LOGIN_PARAMETER} parameter
+     *         or attribute is set to any value.
      */
     private boolean isLoginRequested(HttpServletRequest request) {
-        return request.getParameter(REQUEST_LOGIN_PARAMETER) != null;
+        return AbstractAuthenticationHandler.getAttributeOrParameter(request,
+            REQUEST_LOGIN_PARAMETER, null) != null;
     }
 
     /**

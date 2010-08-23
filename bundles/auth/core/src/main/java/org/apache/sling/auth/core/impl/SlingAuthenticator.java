@@ -32,6 +32,15 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.Services;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
@@ -69,69 +78,80 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Currently this class does not support multiple handlers for any one request
  * URL.
- * <p>
- *
- * @scr.component name="org.apache.sling.engine.impl.auth.SlingAuthenticator"
- *                label="%auth.name" description="%auth.description"
- *                modified="modified" immediate="true"
- *
- * Register for three services
- * @scr.service interface="org.apache.sling.api.auth.Authenticator"
- * @scr.service interface="org.apache.sling.auth.core.AuthenticationSupport"
- * @scr.service interface="javax.servlet.ServletRequestListener"
- *
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
+@Component(name = "org.apache.sling.engine.impl.auth.SlingAuthenticator", label = "%auth.name", description = "%auth.description", metatype = true)
+@Services( { @Service(value = Authenticator.class),
+    @Service(value = AuthenticationSupport.class),
+    @Service(value = ServletRequestListener.class) })
+@Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 public class SlingAuthenticator implements Authenticator,
         AuthenticationSupport, ServletRequestListener {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
 
-    /** @scr.property name="service.description" */
+    @Property(name = Constants.SERVICE_DESCRIPTION)
     static final String DESCRIPTION = "Apache Sling Request Authenticator";
-
-    /**
-     * @scr.property valueRef="DEFAULT_IMPERSONATION_COOKIE"
-     */
-    public static final String PAR_IMPERSONATION_COOKIE_NAME = "auth.sudo.cookie";
-
-    /**
-     * @scr.property valueRef="DEFAULT_IMPERSONATION_PARAMETER"
-     */
-    public static final String PAR_IMPERSONATION_PAR_NAME = "auth.sudo.parameter";
-
-    /**
-     * @scr.property valueRef="DEFAULT_ANONYMOUS_ALLOWED" type="Boolean"
-     */
-    public static final String PAR_ANONYMOUS_ALLOWED = "auth.annonymous";
-
-    /**
-     * @scr.property type="String" cardinality="+"
-     */
-    private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
     /** The default impersonation cookie name */
     private static final String DEFAULT_IMPERSONATION_COOKIE = "sling.sudo";
 
+    @Property(value = DEFAULT_IMPERSONATION_COOKIE)
+    public static final String PAR_IMPERSONATION_COOKIE_NAME = "auth.sudo.cookie";
+
     /** The default impersonation parameter name */
     private static final String DEFAULT_IMPERSONATION_PARAMETER = "sudo";
+
+    @Property(value = DEFAULT_IMPERSONATION_PARAMETER)
+    public static final String PAR_IMPERSONATION_PAR_NAME = "auth.sudo.parameter";
 
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
 
-    /**
-     * The name of the configuration property used to set the Realm of the
-     * built-in HTTP Basic authentication handler.
-     *
-     * @scr.property valueRef="DEFAULT_REALM"
-     */
-    public static final String PAR_REALM_NAME = "auth.http.realm";
+    @Property(boolValue = DEFAULT_ANONYMOUS_ALLOWED)
+    public static final String PAR_ANONYMOUS_ALLOWED = "auth.annonymous";
+
+    @Property(cardinality = 2147483647)
+    private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
     /**
      * The default realm for the built-in HTTP Basic authentication handler.
      */
     private static final String DEFAULT_REALM = "Sling (Development)";
+
+    /**
+     * The name of the configuration property used to set the Realm of the
+     * built-in HTTP Basic authentication handler.
+     */
+    @Property(value = DEFAULT_REALM)
+    public static final String PAR_REALM_NAME = "auth.http.realm";
+
+    /**
+     * Value of the {@link #PAR_HTTP_AUTH} property to fully enable the built-in
+     * HTTP Authentication Handler (value is "enabled").
+     */
+    private static final String HTTP_AUTH_ENABLED = "enabled";
+
+    /**
+     * Value of the {@link #PAR_HTTP_AUTH} property to completely disable the
+     * built-in HTTP Authentication Handler (value is "disabled").
+     */
+    private static final String HTTP_AUTH_DISABLED = "disabled";
+
+    /**
+     * Value of the {@link #PAR_HTTP_AUTH} property to enable extracting the
+     * credentials if the HTTP Basic authentication header is present (value is
+     * "preemptive"). In <i>preemptive</i> mode, though, the
+     * <code>requestCredentials</code> and <code>dropCredentials</code> methods
+     * will not send back a 401 response.
+     */
+    private static final String HTTP_AUTH_PREEMPTIVE = "preemptive";
+
+    @Property(value = HTTP_AUTH_PREEMPTIVE, options = {
+        @PropertyOption(name = HTTP_AUTH_ENABLED, value = "Enabled"),
+        @PropertyOption(name = HTTP_AUTH_PREEMPTIVE, value = "Enabled (Preemptive)"),
+        @PropertyOption(name = HTTP_AUTH_DISABLED, value = "Disabled") })
+    private static final String PAR_HTTP_AUTH = "auth.http";
 
     /**
      * The name of the {@link AuthenticationInfo} property providing the option
@@ -140,7 +160,7 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
 
-    /** @scr.reference */
+    @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
     private PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authHandlerCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
@@ -187,6 +207,7 @@ public class SlingAuthenticator implements Authenticator,
     // ---------- SCR integration
 
     @SuppressWarnings("unused")
+    @Activate
     private void activate(final BundleContext bundleContext,
             final Map<String, Object> properties) {
         modified(properties);
@@ -196,9 +217,10 @@ public class SlingAuthenticator implements Authenticator,
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("felix.webconsole.label", plugin.getLabel());
         props.put("felix.webconsole.title", plugin.getTitle());
-        props.put("service.description",
+        props.put(Constants.SERVICE_DESCRIPTION,
             "Sling Request Authenticator WebConsole Plugin");
-        props.put("service.vendor", properties.get("service.vendor"));
+        props.put(Constants.SERVICE_VENDOR,
+            properties.get(Constants.SERVICE_VENDOR));
 
         webConsolePlugin = bundleContext.registerService(
             "javax.servlet.Servlet", plugin, props);
@@ -214,6 +236,7 @@ public class SlingAuthenticator implements Authenticator,
         authInfoPostProcessorTracker.open();
     }
 
+    @Modified
     private void modified(Map<String, Object> properties) {
         if (properties == null) {
             properties = new HashMap<String, Object>();
@@ -272,10 +295,24 @@ public class SlingAuthenticator implements Authenticator,
         // register as a service !
         final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME),
             DEFAULT_REALM);
-        httpBasicHandler = new HttpBasicAuthenticationHandler(realm);
+        final String http = OsgiUtil.toString(properties.get(PAR_HTTP_AUTH),
+            HTTP_AUTH_PREEMPTIVE);
+        if (HTTP_AUTH_DISABLED.equals(http)) {
+            httpBasicHandler = new HttpBasicAuthenticationHandler(realm, false) {
+                @Override
+                public AuthenticationInfo extractCredentials(
+                        HttpServletRequest request, HttpServletResponse response) {
+                    return null;
+                }
+            };
+        } else {
+            httpBasicHandler = new HttpBasicAuthenticationHandler(realm,
+                HTTP_AUTH_ENABLED.equals(http));
+        }
     }
 
     @SuppressWarnings("unused")
+    @Deactivate
     private void deactivate(final BundleContext bundleContext) {
         if (engineAuthHandlerTracker != null) {
             engineAuthHandlerTracker.close();
