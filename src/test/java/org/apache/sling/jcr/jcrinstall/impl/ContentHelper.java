@@ -130,6 +130,12 @@ class ContentHelper {
         session.save();
     }
 
+    void deleteQuietly(String path) {
+        try {
+            delete(path);
+        } catch (RepositoryException e) {}
+    }
+
     void createOrUpdateFile(String path) throws RepositoryException {
         createOrUpdateFile(path, null, System.currentTimeMillis());
     }
