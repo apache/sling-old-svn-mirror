@@ -43,6 +43,10 @@
         Handler.
     </description>
 
+    <properties>
+        <site.jira.version.id>12315263</site.jira.version.id>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/selector</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/selector</developerConnection>
@@ -81,9 +85,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <excludePackageNames>
-                        org.apache.sling.auth.selector
-                    </excludePackageNames>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
