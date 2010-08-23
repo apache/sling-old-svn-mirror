@@ -37,6 +37,11 @@
         and logout support
     </description>
 
+    <properties>
+        <site.jira.version.id>12314515</site.jira.version.id>
+        <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</developerConnection>
@@ -77,19 +82,7 @@
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <excludePackageNames>
-                        org.apache.sling.auth.openid
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
+
     <repositories>
 	    <repository>
 	      <releases>
