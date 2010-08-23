@@ -18,9 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -43,7 +40,7 @@ class RootFolderListener implements EventListener {
         this.timer = timer;
         this.watchedPath = path;
 
-        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED;
+        int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED | Event.NODE_MOVED;
         boolean isDeep = true;
         boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, watchedPath,
@@ -63,6 +60,10 @@ class RootFolderListener implements EventListener {
 
     /** Schedule a scan */
     public void onEvent(EventIterator it) {
+        while(it.hasNext()) {
+            final Event e = it.nextEvent();
+            log.debug("Got event {}", e);
+        }
         timer.scheduleScan();
     }
 }
