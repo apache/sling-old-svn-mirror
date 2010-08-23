@@ -115,18 +115,6 @@ public class SlingAuthenticator implements Authenticator,
     private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
     /**
-     * The default realm for the built-in HTTP Basic authentication handler.
-     */
-    private static final String DEFAULT_REALM = "Sling (Development)";
-
-    /**
-     * The name of the configuration property used to set the Realm of the
-     * built-in HTTP Basic authentication handler.
-     */
-    @Property(value = DEFAULT_REALM)
-    public static final String PAR_REALM_NAME = "auth.http.realm";
-
-    /**
      * Value of the {@link #PAR_HTTP_AUTH} property to fully enable the built-in
      * HTTP Authentication Handler (value is "enabled").
      */
@@ -152,6 +140,18 @@ public class SlingAuthenticator implements Authenticator,
         @PropertyOption(name = HTTP_AUTH_PREEMPTIVE, value = "Enabled (Preemptive)"),
         @PropertyOption(name = HTTP_AUTH_DISABLED, value = "Disabled") })
     private static final String PAR_HTTP_AUTH = "auth.http";
+
+    /**
+     * The default realm for the built-in HTTP Basic authentication handler.
+     */
+    private static final String DEFAULT_REALM = "Sling (Development)";
+
+    /**
+     * The name of the configuration property used to set the Realm of the
+     * built-in HTTP Basic authentication handler.
+     */
+    @Property(value = DEFAULT_REALM)
+    public static final String PAR_REALM_NAME = "auth.http.realm";
 
     /**
      * The name of the {@link AuthenticationInfo} property providing the option
