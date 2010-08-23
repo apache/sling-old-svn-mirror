@@ -36,13 +36,10 @@ import org.slf4j.LoggerFactory;
  */
 class RootFolderListener implements EventListener {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-    private Set<String> paths = new HashSet<String>();
-    private final FolderNameFilter folderNameFilter;
     private final RescanTimer timer;
     private final String watchedPath;
 
     RootFolderListener(Session session, FolderNameFilter fnf, String path, RescanTimer timer) throws RepositoryException {
-        folderNameFilter = fnf;
         this.timer = timer;
         this.watchedPath = path;
 
@@ -64,41 +61,8 @@ class RootFolderListener implements EventListener {
         session.getWorkspace().getObservationManager().removeEventListener(this);
     }
 
-    /** Return our saved paths and clear the list
-     * 	@return null if no paths have been saved
-     */
-    Set<String> getAndClearPaths() {
-    	if(paths.isEmpty()) {
-    		return null;
-    	}
-
-        synchronized(paths) {
-            Set<String> result = paths;
-            paths = new HashSet<String>();
-            return result;
-        }
-    }
-
-    /** Store the paths of new WatchedFolders to create */
+    /** Schedule a scan */
     public void onEvent(EventIterator it) {
-        try {
-            while(it.hasNext()) {
-                final Event e = it.nextEvent();
-
-                log.debug("Got event {}", e);
-                // Rescan on all NODE_REMOVED events, to be on the safe side:
-                // an install folder might have been removed, and (I think) this is
-                // the safest way of finding out.
-                if(e.getType() == Event.NODE_REMOVED || folderNameFilter.getPriority(e.getPath()) > 0) {
-                    synchronized(paths) {
-                        paths.add(e.getPath());
-                    }
-                }
-            }
-        } catch(RepositoryException re) {
-            log.warn("RepositoryException in onEvent", re);
-        }
-        log.debug("{} got JCR events, scheduling rescan of {}", this, paths);
         timer.scheduleScan();
     }
 }
