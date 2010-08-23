@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResourceIterator.class);
 
     /** resource resolver used to create resources from nodes */
     private ResourceResolver resourceResolver;
@@ -90,17 +90,17 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
             try {
                 Resource resource = new JcrNodeResource(resourceResolver,
                     nodes.nextNode(), dynamicClassLoader);
-                log.debug("seek: Returning Resource {}", resource);
+                LOGGER.debug("seek: Returning Resource {}", resource);
                 return resource;
             } catch (Throwable t) {
-                log.error(
+                LOGGER.error(
                     "seek: Problem creating Resource for next node, skipping",
                     t);
             }
         }
 
         // no more results
-        log.debug("seek: No more nodes, iterator exhausted");
+        LOGGER.debug("seek: No more nodes, iterator exhausted");
         return null;
     }
 }
