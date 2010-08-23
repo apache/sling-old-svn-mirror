@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -28,15 +29,20 @@ import org.apache.sling.osgi.installer.InstallableResource;
 
 
 public class DictionaryDigestTest {
-	private void setTestData(Hashtable<String, Object> d) {
+
+    private void setTestData(Hashtable<String, Object> d) {
 		d.put("str", "value");
 		d.put("long", new Long(12));
 		d.put("array", new String[] { "a", "b"});
 	}
 
-	private String testDigestChanged(Dictionary<String, Object> d,
+    private RegisteredResourceImpl create(final InstallableResource is) throws IOException {
+        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test");
+    }
+
+    private String testDigestChanged(Dictionary<String, Object> d,
 			String oldDigest, int step, boolean shouldChange) throws Exception {
-		final String newDigest = new InstallableResource("a", null, d, null, null, null).getDigest();
+		final String newDigest = create(new InstallableResource("a", null, d, null, null, null)).getDigest();
 		if(shouldChange) {
 			assertTrue("Digest (" + newDigest + ") should have changed at step " + step, !newDigest.equals(oldDigest));
 		} else {
@@ -54,8 +60,8 @@ public class DictionaryDigestTest {
 
 		assertEquals(
 				"Two dictionary with same values have the same key",
-		        new InstallableResource("a", null, d1, null, null, null).getDigest(),
-                new InstallableResource("a", null, d2, null, null, null).getDigest()
+		        create(new InstallableResource("a", null, d1, null, null, null)).getDigest(),
+                create(new InstallableResource("a", null, d2, null, null, null)).getDigest()
 		);
 	}
 
@@ -103,8 +109,8 @@ public class DictionaryDigestTest {
 		b.put("three", "C");
 
 		assertEquals("Same data in different order must have same digest",
-                new InstallableResource("a", null, a, null, null, null).getDigest(),
-                new InstallableResource("a", null, b, null, null, null).getDigest()
+                create(new InstallableResource("a", null, a, null, null, null)).getDigest(),
+                create(new InstallableResource("a", null, b, null, null, null)).getDigest()
 		);
 	}
 }

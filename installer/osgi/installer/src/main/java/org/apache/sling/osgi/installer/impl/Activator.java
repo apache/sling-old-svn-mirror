@@ -39,7 +39,7 @@ public class Activator implements BundleActivator {
     /** Vendor of all registered services. */
     private static final String VENDOR = "The Apache Software Foundation";
 
-    private OsgiInstallerThread osgiControllerService;
+    private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
 
     /** Tracker for the log service. */
@@ -59,7 +59,7 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
 
-        this.osgiControllerService = new OsgiInstallerThread(context);
+        this.osgiControllerService = new OsgiInstallerImpl(context);
         this.osgiControllerService.setDaemon(true);
         this.osgiControllerService.start();
         final String [] serviceInterfaces = {

@@ -23,7 +23,7 @@ import java.text.DecimalFormat;
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerThread;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -70,7 +70,7 @@ public class BundleStartTask extends OsgiInstallerTask {
         }
 
         // Do not execute this task if waiting for events
-        final long eventsCount = OsgiInstallerThread.getTotalEventsCount();
+        final long eventsCount = OsgiInstallerImpl.getTotalEventsCount();
         if (eventsCount < eventsCountForRetrying) {
             Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
             ctx.addTaskToNextCycle(this);
@@ -100,9 +100,9 @@ public class BundleStartTask extends OsgiInstallerTask {
             // that warrants a retry), but for the next ones wait for at least one bundle
             // event or framework event
             if (retryCount == 0) {
-                eventsCountForRetrying = OsgiInstallerThread.getTotalEventsCount();
+                eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount();
             } else {
-                eventsCountForRetrying = OsgiInstallerThread.getTotalEventsCount() + 1;
+                eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
             }
             retryCount++;
             ctx.addTaskToNextCycle(this);

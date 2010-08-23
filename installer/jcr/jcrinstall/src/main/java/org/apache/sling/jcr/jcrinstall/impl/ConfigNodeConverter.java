@@ -18,9 +18,16 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -49,7 +56,8 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
-			result = new InstallableResource(n.getPath(), null, load(n), null, null, priority);
+		    final Dictionary<String, Object> dict = load(n);
+			result = new InstallableResource(n.getPath(), null, dict, computeDigest(dict), null, priority);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());
@@ -119,5 +127,38 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
         }
         log.debug("Value of type {} ignored", v.getType());
         return null;
+    }
+
+    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
+    private static String digestToString(MessageDigest d) {
+        final BigInteger bigInt = new BigInteger(1, d.digest());
+        return new String(bigInt.toString(16));
+    }
+
+    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
+    private static String computeDigest(Dictionary<String, Object> data) {
+        try {
+            final MessageDigest d = MessageDigest.getInstance("MD5");
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutputStream oos = new ObjectOutputStream(bos);
+
+            final SortedSet<String> sortedKeys = new TreeSet<String>();
+            if(data != null) {
+                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
+                    final String key = e.nextElement();
+                    sortedKeys.add(key);
+                }
+            }
+            for(String key : sortedKeys) {
+                oos.writeObject(key);
+                oos.writeObject(data.get(key));
+            }
+
+            bos.flush();
+            d.update(bos.toByteArray());
+            return digestToString(d);
+        } catch (Exception ignore) {
+            return data.toString();
+        }
     }
 }

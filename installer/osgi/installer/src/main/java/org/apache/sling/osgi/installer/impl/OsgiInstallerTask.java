@@ -19,7 +19,7 @@
 package org.apache.sling.osgi.installer.impl;
 
 
-/** Base class for tasks that can be executed by the {@link OsgiInstallerThread} */
+/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
     public abstract void execute(OsgiInstallerContext ctx);

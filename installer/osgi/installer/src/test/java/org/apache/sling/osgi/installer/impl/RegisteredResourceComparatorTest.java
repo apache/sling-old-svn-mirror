@@ -49,7 +49,7 @@ public class RegisteredResourceComparatorTest {
             data.put("foo", "bar");
         }
         final InstallableResource r = new InstallableResource(url, null, data, null, null, priority);
-        return new RegisteredResourceImpl(null, r, "test");
+        return RegisteredResourceImpl.create(null, r, "test");
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
