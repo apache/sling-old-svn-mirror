@@ -18,6 +18,7 @@
  */
 package org.apache.sling.servlets.get.impl;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -98,5 +99,17 @@ public class MockResourceResolver implements ResourceResolver {
 
     public boolean isLive() {
         return true;
+    }
+
+    public ResourceResolver clone(Map<String, Object> authenticationInfo) {
+        throw new UnsupportedOperationException("clone");
+    }
+
+    public Object getAttribute(String name) {
+        return null;
+    }
+
+    public Iterator<String> getAttributeNames() {
+        return Collections.<String> emptyList().iterator();
     }
 }
