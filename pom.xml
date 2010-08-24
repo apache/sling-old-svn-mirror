@@ -133,7 +133,10 @@
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
         <module>bundles/extensions/groovy</module>
-
+        
+        <!-- Installer -->
+        <module>installer</module>
+        
         <!-- Launchpad -->
         <module>launchpad/base</module>
         <module>launchpad/content</module>
