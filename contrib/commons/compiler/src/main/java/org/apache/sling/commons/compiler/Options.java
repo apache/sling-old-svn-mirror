@@ -23,6 +23,8 @@ import java.util.HashMap;
  */
 public class Options extends HashMap<String, Object> {
 
+    private static final long serialVersionUID = 1576005888428747431L;
+
     /** The key for the source version. */
     public static final String KEY_SOURCE_VERSION = "sourceVersion";
 
