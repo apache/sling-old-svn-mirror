@@ -140,7 +140,7 @@ public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleList
 
         @Override
         public URL getResource(String path) {
-            if (path.endsWith(".properties")) {
+            if (path.endsWith(".properties") || path.endsWith(".xml")) {
                 return getClass().getResource("/" + path);
             } else {
                 try {
