@@ -100,6 +100,12 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
     private File propertiesFile;
 
     /**
+     * @parameter expression="${resourceProviderRoot}"
+     *           default-value="src/test/resources"
+     */
+    private File resourceProviderRoot;
+
+    /**
      * @component
      */
     private MavenFileFilter mavenFileFilter;
@@ -155,13 +161,23 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
 
         @Override
         public URL getResource(String path) {
-            if (path.endsWith(".properties") || path.endsWith(".xml")) {
-                return getClass().getResource("/" + path);
+            File resourceFile = new File(resourceProviderRoot, path);
+            if (resourceFile.exists()) {
+                try {
+                    return resourceFile.toURI().toURL();
+                } catch (MalformedURLException e) {
+                    getLog().error("Unable to create URL for file", e);
+                    return null;
+                }
             } else {
+                URL fromClasspath = getClass().getResource("/" + path);
+                if (fromClasspath != null) {
+                    return fromClasspath;
+                }
+                
                 try {
                     return new URL(path);
                 } catch (MalformedURLException e) {
-                    getLog().error("Expecting a real URL", e);
                     return null;
                 }
             }
