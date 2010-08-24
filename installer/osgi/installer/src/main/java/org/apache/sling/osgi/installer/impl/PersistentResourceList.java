@@ -32,26 +32,28 @@ import java.util.SortedSet;
  *  keep track of all registered resources
  */
 class PersistentResourceList {
-    private final HashMap<String, SortedSet<RegisteredResource>> data;
+    private final Map<String, SortedSet<RegisteredResource>> data;
     private final File dataFile;
 
     @SuppressWarnings("unchecked")
     PersistentResourceList(final File dataFile) {
         this.dataFile = dataFile;
 
-        ObjectInputStream ois = null;
-        HashMap<String, SortedSet<RegisteredResource>> restoredData = null;
-        try {
-            ois = new ObjectInputStream(new FileInputStream(dataFile));
-            restoredData = (HashMap<String, SortedSet<RegisteredResource>>)ois.readObject();
-        } catch(Exception e) {
-            Logger.logInfo("Unable to restore data, starting with empty list (" + e.toString());
-        } finally {
-            if(ois != null) {
-                try {
-                    ois.close();
-                } catch(IOException ignore) {
-                    // ignore
+        Map<String, SortedSet<RegisteredResource>> restoredData = null;
+        if ( dataFile.exists() ) {
+            ObjectInputStream ois = null;
+            try {
+                ois = new ObjectInputStream(new FileInputStream(dataFile));
+                restoredData = (Map<String, SortedSet<RegisteredResource>>)ois.readObject();
+            } catch(Exception e) {
+                Logger.logInfo("Unable to restore data, starting with empty list (" + e.toString());
+            } finally {
+                if(ois != null) {
+                    try {
+                        ois.close();
+                    } catch(IOException ignore) {
+                        // ignore
+                    }
                 }
             }
         }
