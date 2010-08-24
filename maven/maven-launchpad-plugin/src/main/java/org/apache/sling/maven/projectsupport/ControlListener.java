@@ -48,7 +48,7 @@ class ControlListener implements Runnable {
     private static final int DEFAULT_LISTEN_PORT = 63000;
 
     /** The mojo */
-    private AbstractLaunchpadStartingPlugin mojo;
+    private AbstractLaunchpadStartingMojo mojo;
 
     /** The log object */
     private final Log log;
@@ -56,7 +56,7 @@ class ControlListener implements Runnable {
     /** The socket address used for control communication */
     private final SocketAddress socketAddress;
 
-    ControlListener(AbstractLaunchpadStartingPlugin mojo, Log log, String host, int port) {
+    ControlListener(AbstractLaunchpadStartingMojo mojo, Log log, String host, int port) {
         this.mojo = mojo;
         this.log = log;
         this.socketAddress = getSocketAddress(host, port);
