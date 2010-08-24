@@ -57,7 +57,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.settings
+                            org.apache.sling.settings;version=1.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.settings.impl
