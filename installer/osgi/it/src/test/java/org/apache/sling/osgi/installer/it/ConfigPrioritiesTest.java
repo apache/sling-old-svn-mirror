@@ -71,22 +71,22 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
 
         data.put("foo", "a");
-        final InstallableResource a = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY - 1);
+        final InstallableResource a = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY - 1)[0];
         data.put("foo", "b");
-        final InstallableResource b = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY);
+        final InstallableResource b = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY)[0];
         data.put("foo", "c");
-        final InstallableResource c = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY + 1);
+        final InstallableResource c = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY + 1)[0];
 
-        installer.addResource(URL_SCHEME, b);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {b}, null);
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.addResource(URL_SCHEME, c);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {c}, null);
         assertConfigValue(pid, "foo", "c", TIMEOUT);
-        installer.addResource(URL_SCHEME, a);
-        installer.removeResource(URL_SCHEME, c.getId());
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {a}, null);
+        installer.updateResources(URL_SCHEME, null, new String[] {c.getId()});
         assertConfigValue(pid, "foo", "b", TIMEOUT);
-        installer.removeResource(URL_SCHEME, b.getId());
+        installer.updateResources(URL_SCHEME, null, new String[] {b.getId()});
         assertConfigValue(pid, "foo", "a", TIMEOUT);
-        installer.removeResource(URL_SCHEME, a.getId());
+        installer.updateResources(URL_SCHEME, null, new String[] {a.getId()});
         waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
     }
 }

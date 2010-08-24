@@ -46,11 +46,24 @@ class MockOsgiInstaller implements OsgiInstaller {
     private final Set<String> urls = new HashSet<String>();
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.osgi.installer.InstallableResource[], java.lang.String[])
      */
-    public void addResource(final String scheme, InstallableResource d) {
-    	urls.add(scheme + ':' + d.getId());
-        recordCall("add", scheme, d);
+    public void updateResources(final String scheme,
+            final InstallableResource[] resources, final String[] ids) {
+        if ( resources != null ) {
+            for(final InstallableResource d : resources) {
+                urls.add(scheme + ':' + d.getId());
+                recordCall("add", scheme, d);
+            }
+        }
+        if ( ids != null ) {
+            for(final String id : ids ) {
+                urls.remove(scheme + ':' + id);
+                synchronized ( this) {
+                    recordedCalls.add("remove:" + scheme + ':' + id + ":100");
+                }
+            }
+        }
     }
 
     /**
@@ -65,16 +78,6 @@ class MockOsgiInstaller implements OsgiInstaller {
         	urls.add(urlScheme + ':' + r.getId());
             recordCall("register", urlScheme, r);
         }
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String, String)
-     */
-    public void removeResource(String urlScheme, String url) {
-    	urls.remove(urlScheme + ':' + url);
-    	synchronized ( this) {
-            recordedCalls.add("remove:" + urlScheme + ':' + url + ":100");
-    	}
     }
 
     private synchronized void recordCall(String prefix, String scheme, InstallableResource r) {

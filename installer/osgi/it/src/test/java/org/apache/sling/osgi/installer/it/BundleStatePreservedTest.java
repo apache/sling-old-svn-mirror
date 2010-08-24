@@ -50,16 +50,16 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
     	// Install two bundles, one started, one stopped
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")), null);
             this.waitForBundleEvents("Bundle must be installed", listener,
                     new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.STARTED));
     	}
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")), null);
             this.waitForBundleEvents("Bundle must be installed", listener,
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.STARTED));
@@ -73,26 +73,26 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
 
     	// Execute some OsgiController operations
         Object listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-        installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
-        installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+        installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")), null);
+        installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")), null);
+        installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
         this.waitForBundleEvents("Bundle must be installed", listener,
                 new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.INSTALLED),
                 new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
 
         listener = this.startObservingBundleEvents();
-        installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+        installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
         sleep(150);
         this.assertNoBundleEvents("Update to same version should generate no OSGi tasks.", listener, "osgi-installer-testbundle");
 
         listener = this.startObservingBundleEvents();
-        installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+        installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
         sleep(150);
         this.assertNoBundleEvents("Update to same version should generate no OSGi tasks.", listener, "osgi-installer-testbundle");
 
         listener = this.startObservingBundleEvents();
-        installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+        installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
         this.waitForBundleEvents("Bundle must be uninstalled", listener,
                 new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STOPPED),
                 new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.UNINSTALLED));

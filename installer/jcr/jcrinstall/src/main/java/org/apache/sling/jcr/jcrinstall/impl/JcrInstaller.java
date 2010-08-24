@@ -339,7 +339,7 @@ public class JcrInstaller implements EventListener {
      */
     private List<String> updateFoldersList() throws Exception {
         log.debug("Updating folder list.");
-        
+
         final List<String> result = new LinkedList<String>();
 
         final List<WatchedFolder> newFolders = new ArrayList<WatchedFolder>();
@@ -392,7 +392,7 @@ public class JcrInstaller implements EventListener {
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
     public void runOneCycle() {
         log.debug("Running watch cycle.");
-        
+
         try {
             boolean didRefresh = true;
 
@@ -408,14 +408,10 @@ public class JcrInstaller implements EventListener {
                     WatchedFolder.getRescanTimer().reset();
                     counters[SCAN_FOLDERS_COUNTER]++;
                     final WatchedFolder.ScanResult sr = wf.scan();
-                    for(String r : sr.toRemove) {
-                        log.info("Removing resource from OSGi installer: {}",r);
-                        installer.removeResource(URL_SCHEME, r);
-                    }
-                    for(InstallableResource r : sr.toAdd) {
-                        log.info("Registering resource with OSGi installer: {}",r);
-                        installer.addResource(URL_SCHEME, r);
-                    }
+                    log.info("Registering resource with OSGi installer: {}",sr.toAdd);
+                    log.info("Removing resource from OSGi installer: {}", sr.toRemove);
+                    installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
+                            sr.toRemove.toArray(new String[sr.toRemove.size()]));
                 }
             }
 
@@ -429,10 +425,9 @@ public class JcrInstaller implements EventListener {
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
                 final List<String> toRemove = updateFoldersList();
-                for(String r : toRemove) {
-                    log.info("Removing resource from OSGi installer (folder deleted): {}",r);
-                    installer.removeResource(URL_SCHEME, r);
-                }
+                log.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
+                installer.updateResources(URL_SCHEME, null,
+                        toRemove.toArray(new String[toRemove.size()]));
             }
 
             try {

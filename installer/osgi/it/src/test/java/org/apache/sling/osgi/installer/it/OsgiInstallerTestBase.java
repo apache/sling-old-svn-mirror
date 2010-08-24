@@ -281,34 +281,34 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	return new File(System.getProperty("osgi.installer.base.dir"), bundleName);
     }
 
-    protected InstallableResource getInstallableResource(File testBundle) throws IOException {
+    protected InstallableResource[] getInstallableResource(File testBundle) throws IOException {
         return getInstallableResource(testBundle, null);
     }
 
-    protected String getNonInstallableResourceUrl(File testBundle) throws IOException {
-    	return testBundle.getAbsolutePath();
+    protected String[] getNonInstallableResourceUrl(File testBundle) throws IOException {
+    	return new String[] {testBundle.getAbsolutePath()};
     }
 
-    protected InstallableResource getInstallableResource(File testBundle, String digest) throws IOException {
+    protected InstallableResource[] getInstallableResource(File testBundle, String digest) throws IOException {
         return getInstallableResource(testBundle, digest, InstallableResource.DEFAULT_PRIORITY);
     }
 
-    protected InstallableResource getInstallableResource(File testBundle, String digest, int priority) throws IOException {
+    protected InstallableResource[] getInstallableResource(File testBundle, String digest, int priority) throws IOException {
         final String url = testBundle.getAbsolutePath();
         if(digest == null) {
             digest = testBundle.getAbsolutePath() + testBundle.lastModified();
         }
         final InstallableResource result = new MockInstallableResource(url, new FileInputStream(testBundle), digest, null, priority);
-        return result;
+        return new InstallableResource[] {result};
     }
 
-    protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data) {
+    protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data) {
         return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
     }
 
-    protected InstallableResource getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
+    protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
         final InstallableResource result = new MockInstallableResource("/" + configPid, data, null, null, priority);
-        return result;
+        return new InstallableResource[] {result};
     }
 
     protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {

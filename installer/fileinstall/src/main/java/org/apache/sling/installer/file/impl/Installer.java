@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>Installer</code> is the service calling the
  * OSGi installer
+ *
+ * TODO - We should collect all changes from a scan and send
+ * them to the installer in a batch
  */
 public class Installer implements FileChangesListener {
 
@@ -57,7 +60,7 @@ public class Installer implements FileChangesListener {
     public void added(final File file) {
         LoggerFactory.getLogger(this.getClass()).info("Added file {}", file);
         final InstallableResource resource = this.createResource(file);
-        this.installer.addResource(this.scheme, resource);
+        this.installer.updateResources(this.scheme, new InstallableResource[] {resource}, null);
     }
 
     /**
@@ -66,7 +69,7 @@ public class Installer implements FileChangesListener {
     public void changed(final File file) {
         LoggerFactory.getLogger(this.getClass()).info("Changed file {}", file);
         final InstallableResource resource = this.createResource(file);
-        this.installer.addResource(this.scheme, resource);
+        this.installer.updateResources(this.scheme, new InstallableResource[] {resource}, null);
     }
 
     /**
@@ -115,6 +118,6 @@ public class Installer implements FileChangesListener {
      */
     public void removed(final File file) {
         LoggerFactory.getLogger(this.getClass()).info("Removed file {}", file);
-        this.installer.removeResource(this.scheme, file.getAbsolutePath());
+        this.installer.updateResources(this.scheme, null, new String[] {file.getAbsolutePath()});
     }
 }

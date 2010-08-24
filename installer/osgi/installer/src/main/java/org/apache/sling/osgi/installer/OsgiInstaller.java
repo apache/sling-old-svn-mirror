@@ -50,17 +50,17 @@ public interface OsgiInstaller {
 	void registerResources(String urlScheme, Collection<InstallableResource> data);
 
 	/**
-	 * Inform the installer that a resource is available for installation.
-	 * also called if the resource has been modified since it was registered.
+	 * Inform the installer that resources are available for installation
+	 * and/or other resources are no longer available.
+	 * This method is called if
+	 * - installed resources have been modified
+	 * - new resources are available
+	 * - installed resources should be uninstalled
 	 * Invalid resources are ignored.
      * @param urlScheme identifies the client.
+     * @param resource An array of updated/new resources - might be null
+     * @param ids An array of identifiers for removed resources - might be null
 	 */
-	void addResource(String urlScheme, InstallableResource r);
-
-	/**
-	 * Inform the installer that a resource is no longer available
-     * @param urlScheme identifies the client.
-	 * @param id The identifier for the resource
-	 */
-	void removeResource(String urlScheme, String id);
+	void updateResources(String urlScheme, InstallableResource[] resources,
+	        String[] ids);
 }
