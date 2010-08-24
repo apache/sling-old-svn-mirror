@@ -36,6 +36,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,10 +124,12 @@ public class JcrInstaller implements EventListener {
     /** The root folders that we watch */
     private String [] roots;
 
+    private ComponentContext componentContext;
+
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(Node n, int priority)
-    	throws Exception;
+    	throws RepositoryException;
     }
 
     /** Our NodeConverters*/
@@ -152,7 +155,53 @@ public class JcrInstaller implements EventListener {
         @Override
         public final void run() {
             log.info("Background thread {} starting", Thread.currentThread().getName());
-            while(active) {
+            try {
+                // open session
+                session = repository.loginAdministrative(repository.getDefaultWorkspace());
+
+                for (String path : roots) {
+                    listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
+                    log.debug("Configured root folder: {}", path);
+                }
+
+                // Watch for events on the root - that might be one of our root folders
+                session.getWorkspace().getObservationManager().addEventListener(JcrInstaller.this,
+                        Event.NODE_ADDED | Event.NODE_REMOVED,
+                        "/",
+                        false, // isDeep
+                        null,
+                        null,
+                        true); // noLocal
+                log.debug("Watching for node events on / to detect removal/add of our root folders");
+
+
+                // Find paths to watch and create WatchedFolders to manage them
+                watchedFolders = new LinkedList<WatchedFolder>();
+                for(String root : roots) {
+                    findPathsToWatch(root, watchedFolders);
+                }
+
+                // Scan watchedFolders and register resources with installer
+                final List<InstallableResource> resources = new LinkedList<InstallableResource>();
+                for(WatchedFolder f : watchedFolders) {
+                    final WatchedFolder.ScanResult r = f.scan();
+                    log.debug("Startup: {} provides resources {}", f, r.toAdd);
+                    resources.addAll(r.toAdd);
+                }
+
+                log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
+                installer.registerResources(URL_SCHEME, resources);
+            } catch (final RepositoryException re) {
+                log.error("Repository exception during startup - deactivating installer!", re);
+                active = false;
+                final ComponentContext ctx = componentContext;
+                if ( ctx  != null ) {
+                    final String name = (String) componentContext.getProperties().get(
+                            ComponentConstants.COMPONENT_NAME);
+                    ctx.disableComponent(name);
+                }
+            }
+            while (active) {
                 runOneCycle();
             }
             log.info("Background thread {} done", Thread.currentThread().getName());
@@ -161,11 +210,15 @@ public class JcrInstaller implements EventListener {
     };
     private StoppableThread backgroundThread;
 
-    protected void activate(ComponentContext context) throws Exception {
+    /**
+     * Activate this component.
+     */
+    protected void activate(final ComponentContext context) {
+        if (backgroundThread != null) {
+            throw new IllegalStateException("Expected backgroundThread to be null in activate()");
+        }
+        this.componentContext = context;
         log.info("Activating Apache Sling JCR Installer");
-
-        // open session
-    	session = repository.loginAdministrative(repository.getDefaultWorkspace());
 
     	// Setup converters
     	converters.add(new FileNodeConverter());
@@ -196,75 +249,45 @@ public class JcrInstaller implements EventListener {
         folderNameFilter = new FolderNameFilter(OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
                 folderNameRegexp, settings.getRunModes());
         roots = folderNameFilter.getRootPaths();
-        for (String path : roots) {
-            listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
-            log.debug("Configured root folder: {}", path);
-        }
-
-        // Watch for events on the root - that might be one of our root folders
-        session.getWorkspace().getObservationManager().addEventListener(this,
-                Event.NODE_ADDED | Event.NODE_REMOVED,
-                "/",
-                false, // isDeep
-                null,
-                null,
-                true); // noLocal
-        log.debug("Watching for node events on / to detect removal/add of our root folders");
-
-
-    	// Find paths to watch and create WatchedFolders to manage them
-    	watchedFolders = new LinkedList<WatchedFolder>();
-    	for(String root : roots) {
-    		findPathsToWatch(root, watchedFolders);
-    	}
-
-    	// Scan watchedFolders and register resources with installer
-    	final List<InstallableResource> resources = new LinkedList<InstallableResource>();
-    	for(WatchedFolder f : watchedFolders) {
-    		final WatchedFolder.ScanResult r = f.scan();
-    		log.debug("Startup: {} provides resources {}", f, r.toAdd);
-    		resources.addAll(r.toAdd);
-    	}
-
-    	log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
-    	installer.registerResources(URL_SCHEME, resources);
-
-    	if (backgroundThread != null) {
-    	    throw new IllegalStateException("Expected backgroundThread to be null in activate()");
-    	}
         backgroundThread = new StoppableThread();
         backgroundThread.start();
     }
 
-    protected void deactivate(ComponentContext context) {
+    /**
+     * Deactivate this component
+     */
+    protected void deactivate(final ComponentContext context) {
     	log.info("Deactivating Apache Sling JCR Installer");
 
     	final long timeout = 30000L;
+        backgroundThread.active = false;
+        log.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
     	try {
-            backgroundThread.active = false;
-            log.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
             backgroundThread.join(timeout);
-            backgroundThread = null;
     	} catch(InterruptedException iex) {
     	    throw new IllegalStateException("backgroundThread.join interrupted after " + timeout + " msec");
     	}
+        backgroundThread = null;
 
+        folderNameFilter = null;
+        watchedFolders = null;
+        converters.clear();
         try {
-            folderNameFilter = null;
-            watchedFolders = null;
-            converters.clear();
-            if(session != null) {
+            if (session != null) {
                 for(RootFolderListener wfc : listeners) {
                     wfc.cleanup(session);
                 }
                 session.getWorkspace().getObservationManager().removeEventListener(this);
-                session.logout();
-                session = null;
             }
-            listeners.clear();
-        } catch(Exception e) {
+        } catch (final RepositoryException e) {
             log.warn("Exception in deactivate()", e);
         }
+        if ( session != null ) {
+            session.logout();
+            session = null;
+        }
+        listeners.clear();
+        this.componentContext = null;
     }
 
     /** Get a property value from the component context or bundle context */

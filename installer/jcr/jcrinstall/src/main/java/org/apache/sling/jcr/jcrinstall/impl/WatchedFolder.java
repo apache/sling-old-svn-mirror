@@ -126,7 +126,7 @@ class WatchedFolder implements EventListener{
     }
 
     /** Scan the contents of our folder and return the corresponding InstallableResource */
-    ScanResult scan() throws Exception {
+    ScanResult scan() throws RepositoryException {
         log.debug("Scanning {}", path);
         needsScan = false;
 
