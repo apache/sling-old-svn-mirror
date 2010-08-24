@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.sling.osgi.installer.impl.Logger;
@@ -60,16 +61,27 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     public void execute(OsgiInstallerContext ctx) {
         final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
-        if(b == null) {
+        if (b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
+        final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
 
+        // check for system bundle update
+        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
+            logExecution();
+            try {
+                this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
+            } catch (final IOException e) {
+                Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
+                return;
+            }
+        }
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
     	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
-    	final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
     	snapshot = this.creator.isSnapshot(newVersion);
-    	if(currentVersion.equals(newVersion) && !snapshot) {
+    	if (currentVersion.equals(newVersion) && !snapshot) {
+    	    // TODO : Isn't this already checked in the task creator?
     	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
     		return;
     	}
@@ -78,16 +90,16 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             // If snapshot and ready to update, cancel if digest didn't change - as the list
             // of RegisteredResources is not saved, this might not have been detected earlier,
             // if the snapshot was installed and the installer was later restarted
-            if(snapshot) {
+            if (snapshot) {
                 final String oldDigest = this.creator.getInstalledBundleDigest(b);
-                if(resource.getDigest().equals(oldDigest)) {
+                if (resource.getDigest().equals(oldDigest)) {
                     Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
                     return;
                 }
             }
 
             logExecution();
-            if(b.getState() == Bundle.ACTIVE) {
+            if (b.getState() == Bundle.ACTIVE) {
                 // bundle was active before the update - restart it once updated, but
                 // in sequence, not right now
                 ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));

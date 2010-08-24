@@ -153,7 +153,7 @@ public class BundleTaskCreator {
 		if (toActivate == null) {
 		    // None of our resources are installable, remove corresponding bundle if present
 		    // and if we installed it
-		    if (getBundleInfo(resources.first()) != null) {
+		    if (firstResource != null && getBundleInfo(firstResource) != null) {
 		        if (this.getInstalledBundleVersion(symbolicName) == null) {
 		            Logger.logInfo("Bundle " + symbolicName
                                 + " was not installed by this module, not removed");
@@ -165,8 +165,6 @@ public class BundleTaskCreator {
 
 		} else {
 			final BundleInfo info = getBundleInfo(toActivate);
-			final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
-	        RegisteredResource toUpdate = null;
 			if (info == null) {
 			    // bundle is not installed yet: install and save digest to avoid
 			    // unnecessary updates
@@ -174,15 +172,17 @@ public class BundleTaskCreator {
 				        this));
 				digestToSave = toActivate.getDigest();
 			} else {
+	            RegisteredResource toUpdate = null;
+	            final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
 			    final int compare = info.version.compareTo(newVersion);
-                if(compare < 0) {
+                if (compare < 0) {
                     // installed version is lower -> update
                     toUpdate = toActivate;
-                } else if(compare > 0) {
+                } else if (compare > 0) {
 	                // installed version is higher -> downgrade only if
                     // we installed that version
                     final String installedVersion = this.getInstalledBundleVersion(info.symbolicName);
-                    if(info.version.toString().equals(installedVersion)) {
+                    if (info.version.toString().equals(installedVersion)) {
                         toUpdate = toActivate;
                         Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was installed by this module, downgrading to " + newVersion);
@@ -190,29 +190,33 @@ public class BundleTaskCreator {
                         Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was not installed by this module, not downgraded");
                     }
-			    } else if(compare == 0 && this.isSnapshot(newVersion)){
+			    } else if (compare == 0 && this.isSnapshot(newVersion)){
 			        // installed, same version but SNAPSHOT
                     toUpdate = toActivate;
 			    }
+                // Save the digest of installed and updated resources, keyed by
+                // bundle symbolic name, to avoid unnecessary updates
+                if (toUpdate != null) {
+                    final String previousDigest = digests.get(symbolicName);
+                    if(toUpdate.getDigest().equals(previousDigest)) {
+                        Logger.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
+                        digestToSave = previousDigest;
+                    } else {
+                        Logger.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
+                        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
+                            tasks.add(new SystemBundleUpdateTask(toUpdate, this));
+                        } else {
+                            tasks.add(new BundleUpdateTask(toUpdate,
+                                this));
+                        }
+                        digestToSave = toUpdate.getDigest();
+                    }
+                }
 			}
 
-			// Save the digest of installed and updated resources, keyed by
-			// bundle symbolic name, to avoid unnecessary updates
-			if (toUpdate != null) {
-			    final String previousDigest = digests.get(symbolicName);
-			    if(toUpdate.getDigest().equals(previousDigest)) {
-			        Logger.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
-                    digestToSave = previousDigest;
-			    } else {
-			        Logger.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
-			        tasks.add(new BundleUpdateTask(toUpdate,
-			                this));
-			        digestToSave = toUpdate.getDigest();
-			    }
-			}
 
-			if(digestToSave == null) {
-			    if(symbolicName != null) {
+			if (digestToSave == null) {
+			    if (symbolicName != null) {
 			        digests.remove(symbolicName);
 			    }
 			} else {
@@ -258,7 +262,11 @@ public class BundleTaskCreator {
      */
     public Bundle getMatchingBundle(String bundleSymbolicName) {
         if (bundleSymbolicName != null) {
-            Bundle[] bundles = bundleContext.getBundles();
+            // check if this is the system bundle
+            if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bundleSymbolicName) ) {
+                return bundleContext.getBundle(0);
+            }
+            final Bundle[] bundles = bundleContext.getBundles();
             for (Bundle bundle : bundles) {
                 if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
                     return bundle;

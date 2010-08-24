@@ -117,7 +117,7 @@ public class OsgiInstallerImpl
             	}
 
             	retriesScheduled = false;
-                if(executeTasks(tasks) > 0) {
+                if (executeTasks(tasks) > 0) {
                     Logger.logDebug("Tasks have been executed, saving persistentList");
                     persistentList.save();
                 }
@@ -129,7 +129,7 @@ public class OsgiInstallerImpl
             } catch(Exception e) {
                 Logger.logWarn(e.toString(), e);
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(1500);
                 } catch(InterruptedException ignored) {
                 }
             }
@@ -338,7 +338,7 @@ public class OsgiInstallerImpl
             }
         };
         int counter = 0;
-        while(!tasks.isEmpty()) {
+        while (!tasks.isEmpty()) {
             OsgiInstallerTask t = null;
             synchronized (tasks) {
                 t = tasks.first();
