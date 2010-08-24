@@ -61,8 +61,8 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         // we install the bundle with header SNAPSHOT and value A
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"), null);
             this.waitForBundleEvents(symbolicName + " must be installed and active", listener,
                     new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.STARTED));
@@ -75,8 +75,8 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         // it shouldn't be installed because of the low priority!
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-snapb.jar"), "digest2", lowPriority));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-snapb.jar"), "digest2", lowPriority), null);
             sleep(1000L);
             this.assertNoBundleEvents("Low-priority snapshot updated must be ignored", listener, symbolicName);
             assertBundle("Update one", symbolicName, null, Bundle.ACTIVE);
@@ -88,8 +88,8 @@ public class BundlePrioritiesTest extends OsgiInstallerTestBase {
         // it should be installed because of the high priority
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-snapc.jar"), "digest3", highPriority));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-snapc.jar"), "digest3", highPriority), null);
             this.waitForBundleEvents(symbolicName + " must be installed and active", listener,
                     new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.UPDATED),
                     new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.STARTED));

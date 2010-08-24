@@ -56,8 +56,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	{
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
             final Object listener = this.startObservingBundleEvents();
-    	    installer.addResource(URL_SCHEME, getInstallableResource(
-    	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+    	    installer.updateResources(URL_SCHEME, getInstallableResource(
+    	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
             this.waitForBundleEvents(symbolicName + " must be installed", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
@@ -68,8 +68,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Upgrade to later version, verify
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"), "digestA"));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"), "digestA"), null);
             this.waitForBundleEvents(symbolicName + " must be installed", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STOPPED),
                     new BundleEvent(symbolicName, "1.2", org.osgi.framework.BundleEvent.STARTED));
@@ -80,8 +80,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Downgrade to lower version, installed bundle must not change
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestA"));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestA"), null);
             sleep(150);
 
             // make sure no updates happen
@@ -93,8 +93,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Update to same version with different digest must be ignored
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestB"));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digestB"), null);
             sleep(150);
             this.assertNoBundleEvents("Update to same version should generate no OSGi tasks.", listener, symbolicName);
     	}
@@ -102,20 +102,20 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Uninstall
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(
+            installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
             sleep(150);
             this.assertNoBundleEvents("Older bundle remove should not cause a remove", listener, symbolicName);
     	}
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(
+            installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             this.assertNoBundleEvents("Older bundle remove should not cause a remove", listener, symbolicName);
     	}
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(
+            installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
             this.waitForBundleEvents(symbolicName + " must be installed", listener,
                     new BundleEvent(symbolicName, "1.2", org.osgi.framework.BundleEvent.STOPPED),
@@ -128,8 +128,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
     	// Reinstall lower version, must work
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
             this.waitForBundleEvents(symbolicName + " reinstall with lower version", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
@@ -145,8 +145,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
 
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
             this.waitForBundleEvents(symbolicName + " should be installed with version 1.1", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
@@ -154,7 +154,7 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
         }
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.removeResource(URL_SCHEME, getNonInstallableResourceUrl(
+            installer.updateResources(URL_SCHEME, null, getNonInstallableResourceUrl(
                     getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
             this.waitForBundleEvents(symbolicName + " should be gone", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STOPPED),
@@ -163,8 +163,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
         }
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
             this.waitForBundleEvents(symbolicName + " should be reinstalled with version 1.1", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));

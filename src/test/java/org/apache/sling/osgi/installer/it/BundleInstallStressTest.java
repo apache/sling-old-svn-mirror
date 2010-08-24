@@ -203,7 +203,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     private void install(List<File> bundles) throws IOException {
     	final List<InstallableResource> toInstall = new LinkedList<InstallableResource>();
     	for(File f : bundles) {
-    		toInstall.add(getInstallableResource(f, f.getAbsolutePath() + f.lastModified()));
+    		toInstall.add(getInstallableResource(f, f.getAbsolutePath() + f.lastModified())[0]);
     	}
     	installer.registerResources(URL_SCHEME, toInstall);
     }

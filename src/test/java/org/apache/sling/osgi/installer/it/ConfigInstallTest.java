@@ -83,23 +83,23 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         // install config
-        final InstallableResource r = getInstallableResource(cfgPid, cfgData);
-        installer.addResource(URL_SCHEME, r);
+        final InstallableResource[] rsrc = getInstallableResource(cfgPid, cfgData);
+        installer.updateResources(URL_SCHEME, rsrc, null);
 
         Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         // remove resource
-        installer.removeResource(URL_SCHEME, r.getId());
+        installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         waitForConfiguration("After removing", cfgPid, TIMEOUT, false);
 
         // Reinstalling with same digest must work
-        installer.addResource(URL_SCHEME, r);
+        installer.updateResources(URL_SCHEME, rsrc, null);
         cfg = waitForConfiguration("After reinstalling", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
 
         // remove again
-        installer.removeResource(URL_SCHEME, r.getId());
+        installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
 
     }
@@ -132,8 +132,8 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
             }
         }
     	waitForConfigAdmin(false);
-        final InstallableResource r = getInstallableResource(cfgPid, cfgData);
-        installer.addResource(URL_SCHEME, r);
+        final InstallableResource[] rsrc = getInstallableResource(cfgPid, cfgData);
+        installer.updateResources(URL_SCHEME, rsrc, null);
         sleep(1000L);
         configAdmin.start();
     	waitForConfigAdmin(true);
@@ -142,7 +142,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         configAdmin.stop();
         waitForConfigAdmin(false);
-        installer.removeResource(URL_SCHEME, r.getId());
+        installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         sleep(1000L);
         configAdmin.start();
         waitForConfigAdmin(true);
@@ -165,11 +165,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 		Condition cond = new Condition() { public boolean isTrue() { return events.size() == 1; }};
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
 
-        installer.addResource(URL_SCHEME, getInstallableResource(cfgPid, cfgData));
+        installer.updateResources(URL_SCHEME, getInstallableResource(cfgPid, cfgData), null);
 
     	// Reinstalling with a change must be executed
         cfgData.put("foo", "changed");
-        installer.addResource(URL_SCHEME, getInstallableResource(cfgPid, cfgData));
+        installer.updateResources(URL_SCHEME, getInstallableResource(cfgPid, cfgData), null);
         waitForConfigValue("After changing value", cfgPid, TIMEOUT, "foo", "changed");
 		cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
         waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);

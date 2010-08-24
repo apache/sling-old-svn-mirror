@@ -58,10 +58,10 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
     public void initialRegistrationTest() throws Exception {
         final Object listener = this.startObservingBundleEvents();
         final List<InstallableResource> r = new ArrayList<InstallableResource>();
-        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
-        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
+        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar"))[0]);
+        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
+        r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"))[0]);
 
         installer.registerResources(URL_SCHEME, r);
 
@@ -84,10 +84,10 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             final Object listener = this.startObservingBundleEvents();
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
 
             installer.registerResources(URL_SCHEME, r);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
@@ -107,7 +107,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             // Add test 1.2 in between, to make sure it disappears in next registerResources call
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")), null);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STARTED));
             assertBundle("After adding testbundle V1.2", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
@@ -116,10 +116,10 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             // Add a bundle with different URL scheme - must not be removed by registerResources
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource("anotherscheme", new MockInstallableResource(
+            installer.updateResources("anotherscheme", new InstallableResource[] {new MockInstallableResource(
                     "osgi-installer-testA.jar",
                     new FileInputStream(getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar")),
-                    "digest1", null, null));
+                    "digest1", null, null)}, null);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-testA", "1.0", org.osgi.framework.BundleEvent.STARTED));
@@ -132,9 +132,9 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             // Simulate later registration where some bundles have disappeared
             // the installer must mark them "not installable" and act accordingly
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1")[0]);
 
             installer.registerResources(URL_SCHEME, r);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
@@ -159,8 +159,8 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             final Object listener = this.startObservingBundleEvents();
 
             // Re-add the missing bundles and recheck
-            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")), null);
+            installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")), null);
 
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.UPDATED),
@@ -186,10 +186,10 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             final Object listener = this.startObservingBundleEvents();
             final List<InstallableResource> r = new ArrayList<InstallableResource>();
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
-            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-needsB.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
+            r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
 
             installer.registerResources(URL_SCHEME, r);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,

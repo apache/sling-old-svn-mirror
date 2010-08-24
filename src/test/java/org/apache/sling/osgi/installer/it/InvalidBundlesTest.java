@@ -52,13 +52,13 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     public void testRegisterInvalidBundles() throws Exception {
         final Collection<InstallableResource> data = new ArrayList<InstallableResource>();
         data.add(getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
         data.add(getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-notabundle.jar")));
+                getTestBundle(BUNDLE_BASE_NAME + "-notabundle.jar"))[0]);
         data.add(getInstallableResource(
-                getTestBundle("test-classes/invalid-jar.jar")));
+                getTestBundle("test-classes/invalid-jar.jar"))[0]);
         data.add(getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar")));
+                getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
 
         final Object listener = this.startObservingBundleEvents();
         installer.registerResources(URL_SCHEME, data);
@@ -84,8 +84,8 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
             assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
 
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-    	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+    	            getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
             this.waitForBundleEvents("Bundle must be installed and started.", listener,
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
@@ -95,23 +95,23 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
     	// Non-bundle must be ignored
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-notabundle.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-notabundle.jar")), null);
             this.assertNoBundleEvents("Invalid jar should be ignored", listener, null);
     	}
 
         // Invalid archive must be ignored
         {
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(getTestBundle("test-classes/invalid-jar.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle("test-classes/invalid-jar.jar")), null);
             this.assertNoBundleEvents("Invalid archive should be ignored", listener, null);
         }
 
     	// Make sure controller is not blocked, by testing an upgrade
     	{
             final Object listener = this.startObservingBundleEvents();
-            installer.addResource(URL_SCHEME, getInstallableResource(
-                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")));
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")), null);
             this.waitForBundleEvents("Bundle must be updated.", listener,
                     new BundleEvent(symbolicName, "1.2", org.osgi.framework.BundleEvent.STARTED));
         	assertBundle("After updating to 1.2", symbolicName, "1.2", Bundle.ACTIVE);

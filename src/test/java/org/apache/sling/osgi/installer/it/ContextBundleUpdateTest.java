@@ -59,8 +59,8 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
 
         Object listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digest0"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), "digest0"), null);
         this.waitForBundleEvents("Bundle must be active", listener,
                 new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                 new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.STARTED));
@@ -78,8 +78,8 @@ public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
         // Install another bundle (to trigger installer queue activity), wait
         // for installer to be idle and check version
         listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"), null);
         this.waitForBundleEvents("Bundle must be active", listener,
                 new BundleEvent("osgi-installer-snapshot-test", org.osgi.framework.BundleEvent.INSTALLED),
                 new BundleEvent("osgi-installer-snapshot-test", org.osgi.framework.BundleEvent.STARTED));

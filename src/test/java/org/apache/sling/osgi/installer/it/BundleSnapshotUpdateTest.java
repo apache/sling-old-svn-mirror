@@ -56,8 +56,8 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
 
         Object listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"), null);
         // wait for two tasks: install and start
         this.waitForBundleEvents("Test bundle 1.1 must be found after waitForInstallerAction", listener,
                 new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.INSTALLED),
@@ -66,16 +66,16 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with same digest must be ignored
         listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest1"), null);
         sleep(100);
         this.assertNoBundleEvents("Update with same digest must be ignored.", listener, symbolicName);
         this.assertBundle("Bundle version 1.1 must be installed.", symbolicName, "1.1", Bundle.ACTIVE);
 
         // Update with different digest must be ignored
         listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest2"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"), "digest2"), null);
         sleep(100);
         this.assertNoBundleEvents("Update with different digest must be ignored.", listener, symbolicName);
         this.assertBundle("Bundle version 1.1 must be installed.", symbolicName, "1.1", Bundle.ACTIVE);
@@ -88,8 +88,8 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
         assertNull("Snapshot test bundle must be absent before installing", findBundle(symbolicName));
 
         Object listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"), null);
         // wait for two tasks: install and start
         this.waitForBundleEvents("Test bundle must be found after waitForInstallerAction", listener,
                 new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.INSTALLED),
@@ -103,15 +103,15 @@ public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
         // Update with same digest must be ignored
         listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1"), null);
         sleep(100);
         this.assertNoBundleEvents("Update with same digest must be ignored.", listener, symbolicName);
 
         // Update with different digest must generate an OSGi update
         listener = this.startObservingBundleEvents();
-        installer.addResource(URL_SCHEME, getInstallableResource(
-                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"));
+        installer.updateResources(URL_SCHEME, getInstallableResource(
+                getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest2"), null);
         sleep(100);
         this.waitForBundleEvents("Test bundle must be updated with different digest and snapshot", listener,
                 new BundleEvent(symbolicName, org.osgi.framework.BundleEvent.STOPPED),
