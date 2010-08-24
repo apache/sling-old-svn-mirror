@@ -33,9 +33,9 @@ import org.osgi.framework.BundleException;
 
 /**
  * @author justin
- *
+ * 
  */
-public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleListMojo  implements Notifiable {
+public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleListMojo implements Notifiable {
 
     /** Default log level setting if no set on command line (value is "INFO"). */
     private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
@@ -68,7 +68,7 @@ public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleList
     /**
      * The definition of the package to be included to provide web support for
      * JAR-packaged projects (i.e. pax-web).
-     *
+     * 
      * @parameter
      */
     private ArtifactDefinition jarWebSupport;
@@ -169,16 +169,29 @@ public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleList
         sling = null;
     }
 
-    public void updated(File tmpFile) {
-        // TODO - should anything happen here?
-        getLog().info("File updated " + tmpFile.getAbsolutePath());
+    public void updated(File updateFile) {
+        // clear the reference to the framework
+        sling = null;
+
+        if (updateFile != null) {
+            getLog().warn("Maven Launchpad Plugin doesn't support updating the framework bundle.");
+        }
+        
+        getLog().info("Restarting Framework and Sling");
+    
+        try {
+            executeWithArtifacts();
+        } catch (MojoExecutionException e) {
+            getLog().error("Unable to restart Framework and Sling", e);
+            System.exit(1);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
+    protected void executeWithArtifacts() throws MojoExecutionException {
         try {
             final Map<String, String> props = new HashMap<String, String>();
 
@@ -208,8 +221,8 @@ public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleList
                 File tmp = null;
                 try {
                     tmp = File.createTempFile("sling", "props");
-                    mavenFileFilter.copyFile(propertiesFile, tmp, true, project, null, true, System
-                            .getProperty("file.encoding"), mavenSession);
+                    mavenFileFilter.copyFile(propertiesFile, tmp, true, project, null, true,
+                            System.getProperty("file.encoding"), mavenSession);
                     Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
                     for (Object key : loadedProps.keySet()) {
                         props.put((String) key, (String) loadedProps.get(key));
@@ -233,7 +246,8 @@ public abstract class AbstractLaunchpadStartingPlugin extends AbstractBundleList
 
     }
 
-    protected abstract Sling startSling(ResourceProvider resourceProvider, Map<String, String> props, Logger logger) throws BundleException;
+    protected abstract Sling startSling(ResourceProvider resourceProvider, Map<String, String> props, Logger logger)
+            throws BundleException;
 
     protected void stopSling() {
         if (sling != null) {
