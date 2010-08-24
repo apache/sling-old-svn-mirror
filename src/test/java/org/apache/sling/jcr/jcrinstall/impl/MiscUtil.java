@@ -56,6 +56,7 @@ class MiscUtil {
         setField(installer, "settings", new MockSettings(RUN_MODES));
 
         installer.activate(getMockComponentContext());
+        Thread.sleep(1000);
         return installer;
     }
 

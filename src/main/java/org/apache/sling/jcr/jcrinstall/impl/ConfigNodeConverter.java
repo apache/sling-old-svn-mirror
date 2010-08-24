@@ -51,7 +51,7 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
 	 */
 	public InstallableResource convertNode(final Node n,
 	        final int priority)
-	throws Exception {
+	throws RepositoryException {
 		InstallableResource result = null;
 
 		// We only consider CONFIG_NODE_TYPE nodes
