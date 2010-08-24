@@ -44,11 +44,12 @@ import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.servlets.post.impl.helper.DateParser;
-import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.impl.helper.DateParser;
+import org.apache.sling.servlets.post.impl.helper.JSONResponse;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +104,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             SlingHttpServletResponse httpResponse) throws ServletException,
             IOException {
         // prepare the response
-        HtmlResponse htmlResponse = new HtmlResponse();
+        HtmlResponse htmlResponse = createHtmlResponse(request);
         htmlResponse.setReferer(request.getHeader("referer"));
 
         // calculate the paths
@@ -190,6 +191,23 @@ public abstract class AbstractAuthorizablePostServlet extends
         htmlResponse.send(httpResponse, isSetStatus(request));
     }
 
+    /**
+     * Creates an instance of a HtmlResponse.
+     * @param req The request being serviced
+     * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
+     * <ul>
+     *   <li>the response content type is application/json
+     * </ul>
+     * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
+     */
+    protected HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
+    	if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(req.getResponseContentType())) {
+    		return new JSONResponse();
+    	} else {
+            return new HtmlResponse();
+    	}
+    }
+    
     /**
      * Extending Servlet should implement this operation to do the work
      * 

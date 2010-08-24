@@ -25,6 +25,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 
 /**
  * Tests for the 'removeAuthorizable' Sling Post Operation
@@ -111,5 +113,25 @@ public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
 		getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_NOT_FOUND, null); //make sure the profile request returns some data
 	}
+
 	
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testRemoveAuthorizablesResponseAsJSON() throws IOException, JSONException {
+		String userId = createTestUser();
+		String groupId = createTestGroup();
+		
+        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		
+		String postUrl = HTTP_BASE_URL + "/system/userManager.delete.json";
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":applyTo", "group/" + groupId));
+		postParams.add(new NameValuePair(":applyTo", "user/" + userId));
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		//make sure the json response can be parsed as a JSON object
+		JSONObject jsonObj = new JSONObject(json);
+		assertNotNull(jsonObj);
+	}	
 }

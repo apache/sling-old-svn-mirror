@@ -154,6 +154,62 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
         }
     }
 
+    /** retrieve the contents of given URL and assert its content type
+     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked 
+     * @throws IOException
+     * @throws HttpException */
+    protected String getAuthenticatedPostContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> postParams, int expectedStatusCode) throws IOException {
+        final PostMethod post = new PostMethod(url);
+
+        URL baseUrl = new URL(HTTP_BASE_URL);
+        AuthScope authScope = new AuthScope(baseUrl.getHost(), baseUrl.getPort(), AuthScope.ANY_REALM);
+        post.setDoAuthentication(true);
+        Credentials oldCredentials = httpClient.getState().getCredentials(authScope);
+    	try {
+			httpClient.getState().setCredentials(authScope, creds);
+			
+	        if(postParams!=null) {
+	            final NameValuePair [] nvp = {};
+	            post.setRequestBody(postParams.toArray(nvp));
+	        }
+
+	        final int status = httpClient.executeMethod(post);
+	        final InputStream is = post.getResponseBodyAsStream();
+	        final StringBuffer content = new StringBuffer();
+	        final String charset = post.getResponseCharSet();
+	        final byte [] buffer = new byte[16384];
+	        int n = 0;
+	        while( (n = is.read(buffer, 0, buffer.length)) > 0) {
+	            content.append(new String(buffer, 0, n, charset));
+	        }
+	        assertEquals("Expected status " + expectedStatusCode + " for " + url + " (content=" + content + ")",
+	                expectedStatusCode,status);
+	        final Header h = post.getResponseHeader("Content-Type");
+	        if(expectedContentType == null) {
+	            if(h!=null) {
+	                fail("Expected null Content-Type, got " + h.getValue());
+	            }
+	        } else if(CONTENT_TYPE_DONTCARE.equals(expectedContentType)) {
+	            // no check
+	        } else if(h==null) {
+	            fail(
+	                    "Expected Content-Type that starts with '" + expectedContentType
+	                    +" but got no Content-Type header at " + url
+	            );
+	        } else {
+	            assertTrue(
+	                "Expected Content-Type that starts with '" + expectedContentType
+	                + "' for " + url + ", got '" + h.getValue() + "'",
+	                h.getValue().startsWith(expectedContentType)
+	            );
+	        }
+	        return content.toString();
+			
+    	} finally {
+        	httpClient.getState().setCredentials(authScope, oldCredentials);
+    	}
+    }
+    
 
     private static Random random = new Random(System.currentTimeMillis());
 
