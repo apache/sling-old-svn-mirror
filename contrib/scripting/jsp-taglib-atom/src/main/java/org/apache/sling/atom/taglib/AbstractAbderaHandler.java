@@ -18,40 +18,21 @@
  */
 package org.apache.sling.atom.taglib;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.abdera.Abdera;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
+import org.apache.sling.atom.taglib.internal.AbderaActivator;
 
 public class AbstractAbderaHandler extends BodyTagSupport {
 
-    public static final String ABDERA_ATTRIBUTE = "org.apache.abdera.Abdera";
-
-    private static final long serialVersionUID = 1L;
-
-    public AbstractAbderaHandler() {
-        super();
-    }
+    private static final long serialVersionUID = 2L;
 
     protected Abdera getAbdera() throws JspException {
-        return getAbdera(pageContext);
-    }
-
-    protected Abdera getAbdera(PageContext pageContexxt) throws JspException {
-        ServletContext context = pageContext.getServletContext();
-
-        Object obj = context.getAttribute(ABDERA_ATTRIBUTE);
-        if (obj instanceof Abdera) {
-            return (Abdera) obj;
-        }
-
-        // fallback to failure !!
-        throw new JspException("Abdera not available");
+        return AbderaActivator.getAbdera();
     }
 
     protected Feed getFeed(ServletRequest request) throws JspException {

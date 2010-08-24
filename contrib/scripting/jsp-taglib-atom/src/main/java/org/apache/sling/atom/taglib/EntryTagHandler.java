@@ -22,7 +22,6 @@ import java.util.Date;
 
 import javax.servlet.jsp.JspException;
 
-import org.apache.abdera.i18n.text.UrlEncoding;
 import org.apache.abdera.model.Entry;
 
 public class EntryTagHandler extends AbstractAbderaHandler {
