@@ -204,8 +204,12 @@ public class SlingServerRepository extends AbstractSlingRepository
 
         // check for a file property
         InputStream source = entryURL.openStream();
+        copyStream(source, destFile);
+    }
 
-        OutputStream dest = null;
+    public static void copyStream(InputStream source, File destFile) throws FileNotFoundException, IOException {
+         OutputStream dest = null;
+
         try {
 
             // ensure path to parent folder of licFile
