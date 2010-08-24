@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,24 +62,13 @@ public class OsgiInstallerImpl
     private volatile boolean active = true;
     private volatile boolean retriesScheduled;
 
-    /** Group our RegisteredResource by OSGi entity */
-    private final HashMap<String, SortedSet<RegisteredResource>> registeredResources;
-    private final PersistentResourceList persistentList;
+    private PersistentResourceList persistentList;
 
-    private final BundleTaskCreator bundleTaskCreator;
-    private final ConfigTaskCreator configTaskCreator;
+    private BundleTaskCreator bundleTaskCreator;
+    private ConfigTaskCreator configTaskCreator;
 
     OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
-        // listen to framework and bundle events
-        this.ctx.addFrameworkListener(this);
-        this.ctx.addBundleListener(this);
-        this.configTaskCreator = new ConfigTaskCreator(ctx);
-        this.bundleTaskCreator = new BundleTaskCreator(ctx);
-        setName(getClass().getSimpleName());
-        final File f = ctx.getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(f);
-        registeredResources = persistentList.getData();
     }
 
     void deactivate() {
@@ -96,6 +84,14 @@ public class OsgiInstallerImpl
 
     @Override
     public void run() {
+        // listen to framework and bundle events
+        this.ctx.addFrameworkListener(this);
+        this.ctx.addBundleListener(this);
+        this.configTaskCreator = new ConfigTaskCreator(ctx);
+        this.bundleTaskCreator = new BundleTaskCreator(ctx);
+        setName(getClass().getSimpleName());
+        final File f = ctx.getDataFile("RegisteredResourceList.ser");
+        persistentList = new PersistentResourceList(f);
         while (active) {
             try {
             	mergeNewResources();
@@ -237,7 +233,7 @@ public class OsgiInstallerImpl
                         Logger.logDebug("New resource set to non-installable: " + r);
                     }
                  }
-                for(SortedSet<RegisteredResource> ss : registeredResources.values()) {
+                for(SortedSet<RegisteredResource> ss : this.persistentList.getData().values()) {
                     for(RegisteredResource r : ss) {
                         if(r.getScheme().equals(scheme)) {
                             r.setInstallable(false);
@@ -255,10 +251,10 @@ public class OsgiInstallerImpl
             newResourcesSchemes.clear();
 
             for(RegisteredResource r : newResources) {
-                SortedSet<RegisteredResource> t = registeredResources.get(r.getEntityId());
+                SortedSet<RegisteredResource> t = this.persistentList.getData().get(r.getEntityId());
                 if(t == null) {
                     t = new TreeSet<RegisteredResource>();
-                    registeredResources.put(r.getEntityId(), t);
+                    this.persistentList.getData().put(r.getEntityId(), t);
                 }
 
                 // If an object with same sort key is already present, replace with the
@@ -278,7 +274,7 @@ public class OsgiInstallerImpl
 
             // Mark resources for removal according to urlsToRemove
             if(!urlsToRemove.isEmpty()) {
-                for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+                for(SortedSet<RegisteredResource> group : this.persistentList.getData().values()) {
                 	for(RegisteredResource r : group) {
                 		if(urlsToRemove.contains(r.getURL())) {
                 		    Logger.logDebug("Marking " + r + " uninistallable, URL is included in urlsToRemove");
@@ -306,7 +302,7 @@ public class OsgiInstallerImpl
         // Walk the list of entities, and create appropriate OSGi tasks for each group
         // TODO do nothing for a group that's "stable" - i.e. one where no tasks were
         // created in the last cycle??
-        for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+        for(SortedSet<RegisteredResource> group : this.persistentList.getData().values()) {
             if (group.isEmpty()) {
                 continue;
             }
@@ -356,7 +352,7 @@ public class OsgiInstallerImpl
         int resourceCount = 0;
         final List<RegisteredResource> toDelete = new ArrayList<RegisteredResource>();
         final List<String> groupKeysToRemove = new ArrayList<String>();
-        for(SortedSet<RegisteredResource> group : registeredResources.values()) {
+        for(SortedSet<RegisteredResource> group : this.persistentList.getData().values()) {
             toDelete.clear();
             String key = null;
             for(RegisteredResource r : group) {
@@ -377,7 +373,7 @@ public class OsgiInstallerImpl
         }
 
         for(String key : groupKeysToRemove) {
-            registeredResources.remove(key);
+            this.persistentList.getData().remove(key);
         }
 
         // List of resources might have changed

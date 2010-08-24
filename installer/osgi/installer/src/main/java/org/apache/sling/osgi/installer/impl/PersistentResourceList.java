@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 
 /** Persistent list of RegisteredResource, used by installer to
@@ -57,7 +58,7 @@ class PersistentResourceList {
         data = restoredData != null ? restoredData : new HashMap<String, SortedSet<RegisteredResource>>();
     }
 
-    HashMap<String, SortedSet<RegisteredResource>>  getData() {
+    Map<String, SortedSet<RegisteredResource>>  getData() {
         return data;
     }
 
