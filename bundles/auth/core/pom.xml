@@ -41,7 +41,7 @@
     </description>
 
     <properties>
-        <site.jira.version.id>12314514</site.jira.version.id>
+        <site.jira.version.id>12315268</site.jira.version.id>
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
     </properties>
 
