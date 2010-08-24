@@ -177,4 +177,25 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		httpClient.getState().clearCredentials();
 		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
+	
+	
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testCreateUserResponseAsJSON() throws IOException, JSONException {
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.json";
+
+		testUserId = "testUser" + random.nextInt();
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":name", testUserId));
+		postParams.add(new NameValuePair("marker", testUserId));
+		postParams.add(new NameValuePair("pwd", "testPwd"));
+		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		//make sure the json response can be parsed as a JSON object
+		JSONObject jsonObj = new JSONObject(json);
+		assertNotNull(jsonObj);
+	}	
 }

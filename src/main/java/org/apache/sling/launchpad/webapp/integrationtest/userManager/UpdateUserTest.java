@@ -112,5 +112,23 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
-	
+
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testUpdateUserResponseAsJSON() throws IOException, JSONException {
+		testUserId = createTestUser();
+		
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".update.json";
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("displayName", "My Updated Test User"));
+		postParams.add(new NameValuePair("url", "http://www.apache.org/updated"));
+		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		//make sure the json response can be parsed as a JSON object
+		JSONObject jsonObj = new JSONObject(json);
+		assertNotNull(jsonObj);
+	}	
 }

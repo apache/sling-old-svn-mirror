@@ -141,5 +141,24 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
         return members;
     }
 
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testUpdateGroupResponseAsJSON() throws IOException, JSONException {
+		testGroupId = createTestGroup();
+
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.json";
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("displayName", "My Updated Test Group"));
+		postParams.add(new NameValuePair("url", "http://www.apache.org/updated"));
+
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		//make sure the json response can be parsed as a JSON object
+		JSONObject jsonObj = new JSONObject(json);
+		assertNotNull(jsonObj);
+	}	
 }
 

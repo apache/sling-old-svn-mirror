@@ -107,4 +107,23 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 		assertEquals("My Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org", jsonObj.getString("url"));
 	}
+	
+	
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testCreateGroupResponseAsJSON() throws IOException, JSONException {
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.json";
+
+		testGroupId = "testGroup" + random.nextInt();
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":name", testGroupId));
+		postParams.add(new NameValuePair("marker", testGroupId));
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		//make sure the json response can be parsed as a JSON object
+		JSONObject jsonObj = new JSONObject(json);
+		assertNotNull(jsonObj);
+	}	
 }
