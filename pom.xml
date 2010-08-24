@@ -32,25 +32,25 @@
 
     <name>Apache Sling OSGi Installer Integration Tests</name>
     <description>Integration tests of the Sling OSGi installer bundle</description>
-  
-  <properties>
-    <pax.exam.log.level>INFO</pax.exam.log.level>
-    <!-- This can be set to activate remote debugging of the Pax Exam tests -->
-    <pax.exam.debug.port></pax.exam.debug.port>
-    
-    <!-- BundleInstallStressTest parameters -->
-    <BundleInstallStressTest.default.bundles.folder>${project.build.directory}/bundle-install-stress-test-bundles</BundleInstallStressTest.default.bundles.folder>
-    <osgi.installer.BundleInstallStressTest.bundles.folder>${BundleInstallStressTest.default.bundles.folder}</osgi.installer.BundleInstallStressTest.bundles.folder>
-    <osgi.installer.BundleInstallStressTest.cycle.count>10</osgi.installer.BundleInstallStressTest.cycle.count>
-    <osgi.installer.BundleInstallStressTest.expect.timeout.seconds>30</osgi.installer.BundleInstallStressTest.expect.timeout.seconds>
-    
-  </properties>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/it</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/it</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/installer/osgi/it</url>
-  </scm>
+    <properties>
+        <pax.exam.log.level>INFO</pax.exam.log.level>
+        <!-- This can be set to activate remote debugging of the Pax Exam tests -->
+        <pax.exam.debug.port></pax.exam.debug.port>
+
+        <!-- BundleInstallStressTest parameters -->
+        <BundleInstallStressTest.default.bundles.folder>${project.build.directory}/bundle-install-stress-test-bundles</BundleInstallStressTest.default.bundles.folder>
+        <osgi.installer.BundleInstallStressTest.bundles.folder>${BundleInstallStressTest.default.bundles.folder}</osgi.installer.BundleInstallStressTest.bundles.folder>
+        <osgi.installer.BundleInstallStressTest.cycle.count>10</osgi.installer.BundleInstallStressTest.cycle.count>
+        <osgi.installer.BundleInstallStressTest.expect.timeout.seconds>30</osgi.installer.BundleInstallStressTest.expect.timeout.seconds>
+
+    </properties>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/it</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/it</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/installer/osgi/it</url>
+    </scm>
 
     <repositories>
         <repository>
