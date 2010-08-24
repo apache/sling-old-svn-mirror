@@ -248,6 +248,12 @@ class HttpBasicAuthenticationHandler extends
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "HTTP Basic Authentication Handler ("
+            + (fullSupport ? "enabled" : "preemptive") + ")";
+    }
+
     // ---------- internal -----------------------------------------------------
 
     /**
