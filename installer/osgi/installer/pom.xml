@@ -19,29 +19,29 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>9</version>
-    <relativePath>../../../parent/pom.xml</relativePath>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>9</version>
+        <relativePath>../../../parent/pom.xml</relativePath>
+    </parent>
 
-  <artifactId>org.apache.sling.osgi.installer</artifactId>
-  <version>3.0.0-SNAPSHOT</version>
-  <packaging>bundle</packaging>
+    <artifactId>org.apache.sling.osgi.installer</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
-  <name>Apache Sling OSGi Installer</name>
-  <description> 
-    Provides services to install OSGi bundles and configurations
-    by supplying input streams and dictionaries.
-  </description>
+    <name>Apache Sling OSGi Installer</name>
+    <description> 
+        Provides services to install OSGi bundles and configurations
+        by supplying input streams and dictionaries.
+    </description>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/installer/osgi/installer</url>
-  </scm>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/installer/osgi/installer</url>
+    </scm>
 
 	<build>
 		<plugins>
@@ -55,7 +55,7 @@
 							org.apache.sling.osgi.installer.impl.Activator
                         </Bundle-Activator>
 						<Export-Package>
-							org.apache.sling.osgi.installer
+							org.apache.sling.osgi.installer;version=3.0.0
                         </Export-Package>
 						<Private-Package>org.apache.sling.osgi.installer.impl.*</Private-Package>
                         <Embed-Dependency>
@@ -107,7 +107,7 @@
 			</plugin>
 		</plugins>
 	</build>
-  
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
