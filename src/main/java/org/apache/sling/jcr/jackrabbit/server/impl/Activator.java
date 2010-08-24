@@ -18,6 +18,7 @@ package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Hashtable;
@@ -328,8 +329,22 @@ public class Activator implements BundleActivator, ServiceListener {
 
         // ensure the configuration file (inside the home Dir !)
         File configFile = new File(homeDir, "repository.xml");
-        SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
-    	return configFile.toURI().toURL().toString();
+        boolean copied = false;
+        
+        try {
+            URL contextConfigURL = new URL("context:repository.xml");
+            InputStream contextConfigStream = contextConfigURL.openStream();
+            if (contextConfigStream != null) {
+                SlingServerRepository.copyStream(contextConfigStream, configFile);
+                copied = true;
+            }
+        } catch (Exception e) {}
+        
+        if (!copied) {
+            SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
+        }
+        return configFile.toURI().toURL().toString();
+
     }
 
 }
