@@ -30,7 +30,7 @@ import org.osgi.framework.BundleException;
  * @requiresDependencyResolution test
  *
  */
-public class RunMojo extends AbstractLaunchpadStartingPlugin {
+public class RunMojo extends AbstractLaunchpadStartingMojo {
 
 
 

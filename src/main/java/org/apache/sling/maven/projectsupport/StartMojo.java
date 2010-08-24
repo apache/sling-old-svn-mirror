@@ -30,7 +30,7 @@ import org.osgi.framework.BundleException;
  * @requiresDependencyResolution test
  *
  */
-public class StartMojo extends AbstractLaunchpadStartingPlugin {
+public class StartMojo extends AbstractLaunchpadStartingMojo {
 
     /**
      * @parameter expression="${sling.control.port}" default-value="63000"
