@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +36,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * Tests for the PrivilegesInfo Script Helper
  */
 public class PrivilegesInfoTest extends AbstractAccessManagerTest {
+    private static Random random = new Random(System.currentTimeMillis());
 	
 	String testUserId = null;
 	String testGroupId = null;

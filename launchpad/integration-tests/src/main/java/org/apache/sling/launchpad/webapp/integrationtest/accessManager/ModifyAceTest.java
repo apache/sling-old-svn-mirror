@@ -832,4 +832,27 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 	}
 	
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testModifyAceResponseAsJSON() throws IOException, JSONException {
+		testUserId = createTestUser();
+		
+		testFolderUrl = createTestFolder();
+		
+        String postUrl = testFolderUrl + ".modifyAce.json";
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
+		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "bogus")); //invalid value should be ignored.
+		
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+        //make sure the json response can be parsed as a JSON object
+        JSONObject jsonObject = new JSONObject(json);
+		assertNotNull(jsonObject);
+	}
 }

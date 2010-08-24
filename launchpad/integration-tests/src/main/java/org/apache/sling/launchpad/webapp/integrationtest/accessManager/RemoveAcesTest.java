@@ -180,4 +180,24 @@ public class RemoveAcesTest extends AbstractAccessManagerTest {
 		assertNotNull(jsonObject);
 		assertEquals(0, jsonObject.length());
 	}
+	
+	/**
+	 * Test for SLING-1677
+	 */
+	public void testRemoveAcesResponseAsJSON() throws IOException, JSONException {
+		String folderUrl = createFolderWithAces(true);
+		
+		//remove the ace for the testUser principal
+		String postUrl = folderUrl + ".deleteAce.json"; 
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":applyTo", testUserId));
+		postParams.add(new NameValuePair(":applyTo", testGroupId));
+        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+        String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+        //make sure the json response can be parsed as a JSON object
+        JSONObject jsonObject = new JSONObject(json);
+		assertNotNull(jsonObject);
+	}
 }
+
