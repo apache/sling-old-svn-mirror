@@ -147,37 +147,48 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#removeResource(java.lang.String, java.lang.String)
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.osgi.installer.InstallableResource[], java.lang.String[])
      */
-    public void removeResource(final String scheme, final String id) {
+    public void updateResources(final String scheme,
+            final InstallableResource[] resources,
+            final String[] ids) {
         checkScheme(scheme);
-        final String url = scheme + ':' + id;
-		// Will mark all resources which have r's URL as uninstallable
-        Logger.logDebug("Adding URL " + url + " to urlsToRemove");
-
-        synchronized (newResources) {
-            urlsToRemove.add(url);
-            newResources.notify();
+        List<RegisteredResource> updatedResources = null;
+        if ( resources != null && resources.length > 0 ) {
+            updatedResources = new ArrayList<RegisteredResource>();
+            for(final InstallableResource r : resources ) {
+                RegisteredResource rr = null;
+                try {
+                    rr = RegisteredResourceImpl.create(ctx, r, scheme);
+                } catch(IOException ioe) {
+                    Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+                    continue;
+                }
+                updatedResources.add(rr);
+            }
         }
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#addResource(java.lang.String, org.apache.sling.osgi.installer.InstallableResource)
-     */
-    public void addResource(final String scheme, final InstallableResource r) {
-        checkScheme(scheme);
-        RegisteredResource rr = null;
-        try {
-            rr = RegisteredResourceImpl.create(ctx, r, scheme);
-        } catch(IOException ioe) {
-            Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
-            return;
-        }
-
         synchronized (newResources) {
-            Logger.logDebug("Adding new resource " + r);
-            newResources.add(rr);
-            newResources.notify();
+            boolean doNotify = false;
+            if ( updatedResources != null ) {
+                for(final RegisteredResource rr : updatedResources ) {
+                    Logger.logDebug("Adding new resource " + rr);
+                    newResources.add(rr);
+                    doNotify = true;
+                }
+            }
+            if ( ids != null ) {
+                for(final String id : ids) {
+                    final String url = scheme + ':' + id;
+                    // Will mark all resources which have r's URL as uninstallable
+                    Logger.logDebug("Adding URL " + url + " to urlsToRemove");
+
+                    urlsToRemove.add(url);
+                    doNotify = true;
+                }
+            }
+            if ( doNotify ) {
+                newResources.notify();
+            }
         }
     }
 
