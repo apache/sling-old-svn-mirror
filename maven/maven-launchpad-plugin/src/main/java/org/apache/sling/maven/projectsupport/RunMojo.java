@@ -62,11 +62,16 @@ public class RunMojo extends AbstractLaunchpadStartingPlugin {
             stopSling();
         }
     };
+    
+    private boolean registeredHook = false;
 
     protected Sling startSling(ResourceProvider resourceProvider, final Map<String, String> props, Logger logger)
             throws BundleException {
-        Runtime.getRuntime().addShutdownHook(shutdown);
-
+        if (!registeredHook) {
+            Runtime.getRuntime().addShutdownHook(shutdown);
+            registeredHook = true;
+        }
+        
         // creating the instance launches the framework and we are done here
         Sling mySling = new Sling(this, logger, resourceProvider, props) {
 
