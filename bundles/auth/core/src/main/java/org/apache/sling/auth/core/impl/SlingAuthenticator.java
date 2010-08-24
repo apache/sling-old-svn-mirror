@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -298,13 +299,7 @@ public class SlingAuthenticator implements Authenticator,
         final String http = OsgiUtil.toString(properties.get(PAR_HTTP_AUTH),
             HTTP_AUTH_PREEMPTIVE);
         if (HTTP_AUTH_DISABLED.equals(http)) {
-            httpBasicHandler = new HttpBasicAuthenticationHandler(realm, false) {
-                @Override
-                public AuthenticationInfo extractCredentials(
-                        HttpServletRequest request, HttpServletResponse response) {
-                    return null;
-                }
-            };
+            httpBasicHandler = null;
         } else {
             httpBasicHandler = new HttpBasicAuthenticationHandler(realm,
                 HTTP_AUTH_ENABLED.equals(http));
@@ -469,7 +464,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // fall back to HTTP Basic handler (if not done already)
-        if (!done) {
+        if (!done && httpBasicHandler != null) {
             done = httpBasicHandler.requestCredentials(request, response);
         }
 
@@ -520,7 +515,10 @@ public class SlingAuthenticator implements Authenticator,
                 }
             }
         }
-        httpBasicHandler.dropCredentials(request, response);
+
+        if (httpBasicHandler != null) {
+            httpBasicHandler.dropCredentials(request, response);
+        }
 
         redirectAfterLogout(request, response);
     }
@@ -542,8 +540,19 @@ public class SlingAuthenticator implements Authenticator,
 
     // ---------- WebConsolePlugin support
 
-    List<AbstractAuthenticationHandlerHolder> getAuthenticationHandler() {
-        return authHandlerCache.getHolders();
+    /**
+     * Returns the list of registered authentication handlers as a map
+     */
+    Map<String, String> getAuthenticationHandler() {
+        List<AbstractAuthenticationHandlerHolder> registeredHolders = authHandlerCache.getHolders();
+        LinkedHashMap<String, String> handlerMap = new LinkedHashMap<String, String>();
+        for (AbstractAuthenticationHandlerHolder holder : registeredHolders) {
+            handlerMap.put(holder.fullPath, holder.getProvider());
+        }
+        if (httpBasicHandler != null) {
+            handlerMap.put("/", httpBasicHandler.toString());
+        }
+        return handlerMap;
     }
 
     List<AuthenticationRequirementHolder> getAuthenticationRequirements() {
@@ -590,14 +599,16 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // check whether the HTTP Basic handler can extract the header
-        final AuthenticationInfo authInfo = httpBasicHandler.extractCredentials(
-            request, response);
-        if (authInfo != null) {
-            // post process the AuthenticationInfo object
-            postProcess(authInfo, request, response);
-            
-            authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER, httpBasicHandler);
-            return authInfo;
+        if (httpBasicHandler != null) {
+            final AuthenticationInfo authInfo = httpBasicHandler.extractCredentials(
+                request, response);
+            if (authInfo != null) {
+                // post process the AuthenticationInfo object
+                postProcess(authInfo, request, response);
+
+                authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER, httpBasicHandler);
+                return authInfo;
+            }
         }
 
         // no handler found for the request ....

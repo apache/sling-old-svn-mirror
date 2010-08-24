@@ -21,6 +21,7 @@ package org.apache.sling.auth.core.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -80,12 +81,13 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content' colspan='2'>Handler</td>");
         pw.println("</tr>");
 
-        final List<AbstractAuthenticationHandlerHolder> holderList = slingAuthenticator.getAuthenticationHandler();
-        for (AbstractAuthenticationHandlerHolder handler : holderList) {
+        final Map<String, String> handlerMap = slingAuthenticator.getAuthenticationHandler();
+        for (Map.Entry<String, String> handler : handlerMap.entrySet()) {
 
             pw.println("<tr class='content'>");
-            pw.println("<td class='content'>" + handler.fullPath + "</td>");
-            pw.println("<td class='content' colspan='2'>" + handler.getProvider() + "</td>");
+            pw.println("<td class='content'>" + handler.getKey() + "</td>");
+            pw.println("<td class='content' colspan='2'>" + handler.getValue()
+                + "</td>");
             pw.println("</tr>");
 
         }
