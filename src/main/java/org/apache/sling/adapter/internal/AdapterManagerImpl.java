@@ -21,6 +21,7 @@ package org.apache.sling.adapter.internal;
 import static org.apache.sling.api.adapter.AdapterFactory.ADAPTABLE_CLASSES;
 import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -38,7 +39,6 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>AdapterManagerImpl</code> class implements the
@@ -85,7 +85,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * The OSGi <code>ComponentContext</code> to retrieve
      * {@link AdapterFactory} service instances.
      */
-    private ComponentContext context;
+    private volatile ComponentContext context;
 
     /**
      * A list of {@link AdapterFactory} services bound to this manager before
@@ -115,9 +115,11 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     private Map<String, Map<String, AdapterFactory>> factoryCache;
 
-    /** The service tracker for the event admin
+    /**
+     * The service tracker for the event admin
+     * @scr.reference cardinality="0..1" policy="dynamic"
      */
-    private ServiceTracker eventAdminTracker;
+    private EventAdmin eventAdmin;
 
     // ---------- AdapterManager interface -------------------------------------
 
@@ -155,18 +157,18 @@ public class AdapterManagerImpl implements AdapterManager {
 
     // ----------- SCR integration ---------------------------------------------
 
-    protected synchronized void activate(ComponentContext context) {
-        // setup tracker first as this is used in the bind/unbind methods
-        this.eventAdminTracker = new ServiceTracker(context.getBundleContext(),
-                EventAdmin.class.getName(), null);
-        this.eventAdminTracker.open();
+    protected void activate(ComponentContext context) {
         this.context = context;
 
         // register all adapter factories bound before activation
-        for (ServiceReference reference : boundAdapterFactories) {
+        final List<ServiceReference> refs;
+        synchronized ( this.boundAdapterFactories ) {
+            refs = new ArrayList<ServiceReference>(this.boundAdapterFactories);
+            boundAdapterFactories.clear();
+        }
+        for (ServiceReference reference : refs) {
             registerAdapterFactory(context, reference);
         }
-        boundAdapterFactories.clear();
 
         // final "enable" this manager by setting the instance
         // do not overwrite the field if already set (this is unexpected
@@ -184,7 +186,7 @@ public class AdapterManagerImpl implements AdapterManager {
     /**
      * @param context Not used
      */
-    protected synchronized void deactivate(ComponentContext context) {
+    protected void deactivate(ComponentContext context) {
         SyntheticResource.unsetAdapterManager(this);
         // "disable" the manager by clearing the instance
         // do not clear the field if not set to this instance
@@ -195,22 +197,25 @@ public class AdapterManagerImpl implements AdapterManager {
                 "Not clearing instance field: Set to another manager "
                     + AdapterManagerImpl.INSTANCE, null);
         }
-        if ( this.eventAdminTracker != null ) {
-            this.eventAdminTracker.close();
-            this.eventAdminTracker = null;
-        }
         this.context = null;
     }
 
-    protected synchronized void bindAdapterFactory(ServiceReference reference) {
+    protected void bindAdapterFactory(ServiceReference reference) {
+        boolean create = true;
         if (context == null) {
-            boundAdapterFactories.add(reference);
-        } else {
+            synchronized ( this.boundAdapterFactories ) {
+                if (context == null) {
+                    boundAdapterFactories.add(reference);
+                    create = false;
+                }
+            }
+        }
+        if ( create ) {
             registerAdapterFactory(context, reference);
         }
     }
 
-    protected synchronized void unbindAdapterFactory(ServiceReference reference) {
+    protected void unbindAdapterFactory(ServiceReference reference) {
         unregisterAdapterFactory(reference);
     }
 
@@ -251,14 +256,6 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     /**
-     * Get the event admin.
-     * @return The event admin or <code>null</code>
-     */
-    private EventAdmin getEventAdmin() {
-        return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
-    }
-
-    /**
      * Unregisters the {@link AdapterFactory} referred to by the service
      * <code>reference</code> from the registry.
      */
@@ -272,18 +269,13 @@ public class AdapterManagerImpl implements AdapterManager {
             return;
         }
 
-        AdapterFactory factory = (AdapterFactory) context.locateService(
-            "AdapterFactory", reference);
-        if ( factory == null ) {
-            return;
-        }
-        AdapterFactoryDescriptorKey factoryKey = new AdapterFactoryDescriptorKey(
+        final AdapterFactoryDescriptorKey factoryKey = new AdapterFactoryDescriptorKey(
             reference);
-        AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(
-            factory, adapters);
+        final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
+            reference, adapters);
 
         synchronized (factories) {
-            for (String adaptable : adaptables) {
+            for (final String adaptable : adaptables) {
                 AdapterFactoryDescriptorMap adfMap = factories.get(adaptable);
                 if (adfMap == null) {
                     adfMap = new AdapterFactoryDescriptorMap();
@@ -297,7 +289,7 @@ public class AdapterManagerImpl implements AdapterManager {
         factoryCache = null;
 
         // send event
-        final EventAdmin localEA = this.getEventAdmin();
+        final EventAdmin localEA = this.eventAdmin;
         if ( localEA != null ) {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
@@ -312,8 +304,9 @@ public class AdapterManagerImpl implements AdapterManager {
      * <code>reference</code> from the registry.
      */
     private void unregisterAdapterFactory(ServiceReference reference) {
-        boundAdapterFactories.remove(reference);
-
+        synchronized ( this.boundAdapterFactories ) {
+            boundAdapterFactories.remove(reference);
+        }
         final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
@@ -345,7 +338,7 @@ public class AdapterManagerImpl implements AdapterManager {
         }
 
         // send event
-        final EventAdmin localEA = this.getEventAdmin();
+        final EventAdmin localEA = this.eventAdmin;
         if ( localEA != null ) {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
@@ -431,7 +424,10 @@ public class AdapterManagerImpl implements AdapterManager {
                 String[] adapters = afd.getAdapters();
                 for (String adapter : adapters) {
                     if (!afm.containsKey(adapter)) {
-                        afm.put(adapter, afd.getFactory());
+                        final AdapterFactory factory = afd.getFactory();
+                        if ( factory != null ) {
+                            afm.put(adapter, factory);
+                        }
                     }
                 }
             }

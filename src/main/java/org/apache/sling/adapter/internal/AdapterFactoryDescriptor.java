@@ -19,6 +19,8 @@
 package org.apache.sling.adapter.internal;
 
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>AdapterFactoryDescriptor</code> is an entry in the
@@ -26,22 +28,37 @@ import org.apache.sling.api.adapter.AdapterFactory;
  * types and the respective {@link AdapterFactory}.
  */
 public class AdapterFactoryDescriptor {
-    
+
     private AdapterFactory factory;
 
-    private String[] adapters;
+    private final String[] adapters;
 
-    public AdapterFactoryDescriptor(AdapterFactory factory, String[] adapters) {
-        this.factory = factory;
+    private final ServiceReference reference;
+
+    private final ComponentContext context;
+
+    public AdapterFactoryDescriptor(
+            final ComponentContext context,
+            final ServiceReference reference,
+            final String[] adapters) {
+        this.reference = reference;
+        this.context = context;
         this.adapters = adapters;
     }
 
     public AdapterFactory getFactory() {
+        if ( factory == null ) {
+            synchronized ( this ) {
+                if ( factory == null ) {
+                    factory = (AdapterFactory) context.locateService(
+                            "AdapterFactory", reference);
+                }
+            }
+        }
         return factory;
     }
 
     public String[] getAdapters() {
         return adapters;
     }
-
 }
