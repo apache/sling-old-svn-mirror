@@ -342,17 +342,19 @@ public class JcrInstaller implements EventListener {
     }
 
     /** Add WatchedFolder to our list if it doesn't exist yet */
-    private void addWatchedFolder(WatchedFolder toAdd) {
+    private void addWatchedFolder(final WatchedFolder toAdd) {
         WatchedFolder existing = null;
         for(WatchedFolder wf : watchedFolders) {
-            if(wf.getPath().equals(toAdd.getPath())) {
+            if (wf.getPath().equals(toAdd.getPath())) {
                 existing = wf;
                 break;
             }
         }
-        if(existing == null) {
+        if (existing == null) {
             watchedFolders.add(toAdd);
             toAdd.scheduleScan();
+        } else {
+            toAdd.cleanup();
         }
     }
 
