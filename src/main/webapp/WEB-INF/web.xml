@@ -32,7 +32,7 @@
         
         <!--
         	Any init-params defined for the servlet will overwrite
-            the default settings in the repository.xml file.
+            the default settings in the sling.properties file.
             
             The most important init-param to be set here is the 
             sling.home parameter defining where Sling will place
