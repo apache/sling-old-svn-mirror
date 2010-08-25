@@ -135,7 +135,7 @@
         <module>bundles/extensions/groovy</module>
         
         <!-- Installer -->
-        <module>installer(osgi/installer</module>
+        <module>installer/osgi/installer</module>
         <module>installer/osgi/it</module>
         <module>installer/fileinstall</module>
         <module>installer/jcr/jcrinstall</module>
