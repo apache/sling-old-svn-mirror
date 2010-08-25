@@ -262,10 +262,11 @@ public class JcrInstaller implements EventListener {
     	final long timeout = 30000L;
         backgroundThread.active = false;
         log.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
+        backgroundThread.interrupt();
     	try {
             backgroundThread.join(timeout);
     	} catch(InterruptedException iex) {
-    	    throw new IllegalStateException("backgroundThread.join interrupted after " + timeout + " msec");
+    	    // ignore this as we want to shutdown
     	}
         backgroundThread = null;
 
