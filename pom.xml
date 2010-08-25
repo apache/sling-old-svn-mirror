@@ -135,7 +135,10 @@
         <module>bundles/extensions/groovy</module>
         
         <!-- Installer -->
-        <module>installer</module>
+        <module>installer(osgi/installer</module>
+        <module>installer/osgi/it</module>
+        <module>installer/fileinstall</module>
+        <module>installer/jcr/jcrinstall</module>
         
         <!-- Launchpad -->
         <module>launchpad/base</module>
