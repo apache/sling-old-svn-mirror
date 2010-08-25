@@ -82,8 +82,8 @@ public class Activator implements BundleActivator {
                 // we simply ignore this
             }
 
-            Logger.logWarn(OsgiInstaller.class.getName()
-                    + " service deactivated - this warning can be ignored if system is shutting down");
+            Logger.logInfo(OsgiInstaller.class.getName()
+                    + " service deactivated");
             this.osgiControllerService = null;
         }
         // unregister service
