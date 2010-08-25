@@ -36,4 +36,6 @@ import java.util.TreeMap;
 public class AdapterFactoryDescriptorMap extends
         TreeMap<AdapterFactoryDescriptorKey, AdapterFactoryDescriptor> {
 
+    private static final long serialVersionUID = 1L;
+
 }
