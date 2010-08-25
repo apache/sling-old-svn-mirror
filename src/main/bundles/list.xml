@@ -35,7 +35,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
-            <version>1.1.5-SNAPSHOT</version>
+            <version>1.2.1-SNAPSHOT</version>
         </bundle>
 
         <bundle>
@@ -111,7 +111,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.classloader</artifactId>
-            <version>3.1.1-SNAPSHOT</version>
+            <version>3.1.3-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -192,12 +192,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.webconsolebranding</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.webconsolesecurityprovider</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
