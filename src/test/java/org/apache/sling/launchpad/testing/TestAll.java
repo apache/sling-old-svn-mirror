@@ -83,7 +83,7 @@ public class TestAll extends TestCase {
             }
         }
         LOGGER.info(classSet.size() + " test classes found using Pattern " + testRegex);
-        TestSuite suite = new TestSuite(classSet.toArray(new Class[classSet.size()]),"Sling Integration Tests matching "+testPattern);
+        TestSuite suite = new LoggingSuite(classSet,"Sling Integration Tests matching "+testPattern,LOGGER);
       
         return suite;
     }
