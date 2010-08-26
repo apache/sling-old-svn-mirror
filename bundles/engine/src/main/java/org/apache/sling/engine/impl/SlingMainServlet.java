@@ -373,12 +373,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             // dispose any request data
             requestData.dispose();
 
-            // FIXME: This must be removed
-            // SLING-1270 Temporary solution to ensure session is logged out
+            // close the resource resolver (not relying on servlet request
+            // listener to do this for now; see SLING-1270)
             if (resolver != null) {
                 resolver.close();
             }
-            // END SLING-1270 Temporary solution to ensure session is logged out
         }
     }
 
