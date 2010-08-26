@@ -163,7 +163,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      *
      * @scr.property type="Boolean" valueRef="DEFAULT_INCLUDE_FORM"
      */
-    public static final String PAR_INCLUDE_FORM = "form.use.include";
+    private static final String PAR_INCLUDE_FORM = "form.use.include";
 
     /**
      * The default include value.
@@ -171,7 +171,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * @see #PAR_INCLUDE_FORM
      */
     private static final boolean DEFAULT_INCLUDE_FORM = false;
-
 
     /**
      * Whether to present a login form when a users cookie expires, the default
@@ -187,6 +186,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * @see #PAR_LOGIN_AFTER_EXPIRE
      */
     private static final boolean DEFAULT_LOGIN_AFTER_EXPIRE = false;
+
+    /**
+     * The default domain on which to see the auth cookie (if cookie storage is used)
+     *
+     * @scr.property
+     */
+    private static final String PAR_DEFAULT_COOKIE_DOMAIN = "form.default.cookie.domain";
 
     /**
      * The request method required for user name and password submission by the
@@ -248,6 +254,12 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final String PAR_SERVICE_RANKING = Constants.SERVICE_RANKING;
 
     /**
+     * Key in the AuthenticationInfo map which contains the domain on which the
+     * auth cookie should be set.
+     */
+    private static final String COOKIE_DOMAIN = "cookie.domain";
+
+    /**
      * The factor to convert minute numbers into milliseconds used internally
      */
     private static final long MINUTES = 60L * 1000L;
@@ -301,7 +313,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * If true the login form will be presented when the token expires.
      */
     private boolean loginAfterExpire;
-
 
     /**
      * Extracts cookie/session based credentials from the request. Returns
@@ -615,7 +626,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             }
 
             if (authData != null) {
-                authStorage.set(request, response, authData);
+                authStorage.set(request, response, authData, authInfo);
             } else {
                 authStorage.clear(request, response);
             }
@@ -725,6 +736,10 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
         final String authName = OsgiUtil.toString(
             properties.get(PAR_AUTH_NAME), DEFAULT_AUTH_NAME);
+
+        final String defaultCookieDomain = OsgiUtil.toString(
+            properties.get(PAR_DEFAULT_COOKIE_DOMAIN), null);
+        
         final String authStorage = OsgiUtil.toString(
             properties.get(PAR_AUTH_STORAGE), DEFAULT_AUTH_STORAGE);
         if (AUTH_STORAGE_SESSION_ATTRIBUTE.equals(authStorage)) {
@@ -735,7 +750,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
         } else {
 
-            this.authStorage = new CookieStorage(authName);
+            this.authStorage = new CookieStorage(authName, defaultCookieDomain);
             log.info("Using Cookie store with name {}", authName);
 
         }
@@ -772,7 +787,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         this.includeLoginForm = OsgiUtil.toBoolean(properties.get(PAR_INCLUDE_FORM), DEFAULT_INCLUDE_FORM);
 
         this.loginAfterExpire = OsgiUtil.toBoolean(properties.get(PAR_LOGIN_AFTER_EXPIRE), DEFAULT_LOGIN_AFTER_EXPIRE);
-
     }
 
     protected void deactivate(
@@ -872,7 +886,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         String extractAuthenticationInfo(HttpServletRequest request);
 
         void set(HttpServletRequest request, HttpServletResponse response,
-                String authData);
+                String authData, AuthenticationInfo info);
 
         void clear(HttpServletRequest request, HttpServletResponse response);
     }
@@ -883,9 +897,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     private static class CookieStorage implements AuthenticationStorage {
         private final String cookieName;
+        private final String domainCookieName;
+        private final String defaultCookieDomain;
 
-        public CookieStorage(final String cookieName) {
+        public CookieStorage(final String cookieName, final String defaultCookieDomain) {
             this.cookieName = cookieName;
+            this.domainCookieName = cookieName + "." + COOKIE_DOMAIN;
+            this.defaultCookieDomain = defaultCookieDomain;
         }
 
         public String extractAuthenticationInfo(HttpServletRequest request) {
@@ -912,7 +930,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         public void set(HttpServletRequest request,
-                HttpServletResponse response, String authData) {
+                HttpServletResponse response, String authData, AuthenticationInfo info) {
             // base64 encode to handle any special characters
             String cookieValue;
             try {
@@ -922,39 +940,52 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             }
 
             // send the cookie to the response
-            setCookie(request, response, cookieValue, -1);
+            String cookieDomain = (String) info.get(COOKIE_DOMAIN);
+            if (cookieDomain == null) {
+                cookieDomain = defaultCookieDomain;
+            }
+            setCookie(request, response, this.cookieName, cookieValue, -1, cookieDomain);
+            setCookie(request, response, this.domainCookieName, cookieDomain, -1, cookieDomain);
         }
 
         public void clear(HttpServletRequest request,
                 HttpServletResponse response) {
             Cookie oldCookie = null;
+            String oldCookieDomain = null;
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if (this.cookieName.equals(cookie.getName())) {
                         // found the cookie
                         oldCookie = cookie;
-                        break;
+                    } else if (this.domainCookieName.equals(cookie.getName())) {
+                        oldCookieDomain = cookie.getValue();
                     }
                 }
             }
 
             // remove the old cookie from the client
             if (oldCookie != null) {
-                setCookie(request, response, "", 0);
+                setCookie(request, response, this.cookieName, "", 0, oldCookieDomain);
+                if (oldCookieDomain != null) {
+                    setCookie(request, response, this.domainCookieName, "", 0, oldCookieDomain);
+                }
             }
         }
 
         private void setCookie(final HttpServletRequest request,
-                final HttpServletResponse response, final String value,
-                final int age) {
+                final HttpServletResponse response, final String name,
+                final String value, final int age, final String domain) {
 
             final String ctxPath = request.getContextPath();
             final String cookiePath = (ctxPath == null || ctxPath.length() == 0)
                     ? "/"
                     : ctxPath;
 
-            Cookie cookie = new Cookie(this.cookieName, value);
+            Cookie cookie = new Cookie(name, value);
+            if (domain != null) {
+                cookie.setDomain(domain);
+            }
             cookie.setMaxAge(age);
             cookie.setPath(cookiePath);
             cookie.setSecure(request.isSecure());
@@ -985,7 +1016,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         public void set(HttpServletRequest request,
-                HttpServletResponse response, String authData) {
+                HttpServletResponse response, String authData, AuthenticationInfo info) {
             // store the auth hash as a session attribute
             HttpSession session = request.getSession();
             session.setAttribute(sessionAttributeName, authData);
