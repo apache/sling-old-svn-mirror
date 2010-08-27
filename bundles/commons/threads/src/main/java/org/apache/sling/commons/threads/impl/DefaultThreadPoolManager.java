@@ -16,10 +16,8 @@
  */
 package org.apache.sling.commons.threads.impl;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,11 +29,8 @@ import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPoolPolicy;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,18 +53,13 @@ public class DefaultThreadPoolManager
     /** The bundle context. */
     protected final BundleContext bundleContext;
 
-    /** Service tracker for the config admin. */
-    protected final ServiceTracker configAdminTracker;
-
     /**
      * Constructor and activate this component.
      */
     public DefaultThreadPoolManager(final BundleContext bc, final Dictionary<String, Object> props) {
         this.properties = props;
         this.bundleContext = bc;
-        this.configAdminTracker = new ServiceTracker(bc, ConfigurationAdmin.class.getName(), null);
-        this.configAdminTracker.open();
-        this.logger.info("Started Apache Sling Thread Pool Manager: {}", getPid());
+        this.logger.info("Started Apache Sling Thread Pool Manager");
     }
 
     /**
@@ -78,42 +68,13 @@ public class DefaultThreadPoolManager
     public void destroy() {
         this.logger.debug("Disposing all thread pools");
 
-        this.configAdminTracker.close();
-
         synchronized ( this.pools ) {
             for (final Entry entry : this.pools.values()) {
                 entry.shutdown();
             }
             this.pools.clear();
         }
-        this.logger.info("Stopped Apache Sling Thread Pool Manager.");
-    }
-
-    /**
-     * Helper method to get the pid
-     */
-    private String getPid() {
-        // as the activator put a string in the props we know that this is a string
-        return this.properties.get(Constants.SERVICE_PID).toString();
-    }
-
-    /**
-     * Create a dictionary with configuration properties for the configuration
-     */
-    private Dictionary<String, Object> getProperties(final String poolName, final ThreadPoolConfig config) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ModifiableThreadPoolConfig.PROPERTY_MIN_POOL_SIZE, config.getMinPoolSize());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_MAX_POOL_SIZE, config.getMaxPoolSize());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_QUEUE_SIZE, config.getQueueSize());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_KEEP_ALIVE_TIME, config.getKeepAliveTime());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_BLOCK_POLICY, config.getBlockPolicy().toString());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_SHUTDOWN_GRACEFUL, config.isShutdownGraceful());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_SHUTDOWN_WAIT_TIME, config.getShutdownWaitTimeMs());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_PRIORITY, config.getPriority().toString());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_DAEMON, config.isDaemon());
-        props.put(ModifiableThreadPoolConfig.PROPERTY_NAME, poolName);
-
-        return props;
+        this.logger.info("Stopped Apache Sling Thread Pool Manager");
     }
 
     /**
@@ -162,30 +123,11 @@ public class DefaultThreadPoolManager
             if ( entry == null ) {
                 this.logger.debug("Creating new pool with name {}", poolName);
                 final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
-                // check for config admin
-                final ConfigurationAdmin ca = (ConfigurationAdmin) this.configAdminTracker.getService();
-                if ( ca != null ) {
-                    try {
-                        final Configuration caConfig = ca.createFactoryConfiguration(getPid());
-                        caConfig.update(this.getProperties(poolName, config));
-                        entry = new Entry(caConfig.getProperties().get(Constants.SERVICE_PID).toString(), config, poolName);
-                    } catch (IOException e) {
-                        // there is not much we can do if we get an io exception
-                        // just log and continue
-                        this.logger.error("Unable to create configuration for thread pool " + poolName, e);
-                    }
-                } else {
-                    this.logger.error("Configuration admin is not available.");
-                }
-                // sanity check - if CA is not available or a problem occured during persisting
-                // we don't have an entry
-                if ( entry == null ) {
-                    entry = new Entry(null, config, poolName);
-                }
+                entry = new Entry(null, config, poolName);
+
                 this.pools.put(poolName, entry);
             }
             return entry.incUsage();
-
         }
     }
 
@@ -227,6 +169,15 @@ public class DefaultThreadPoolManager
     }
 
     /**
+     * Return all configurations for the web console printer
+     */
+    public Entry[] getConfigurations() {
+        synchronized ( this.pools ) {
+            return this.pools.values().toArray(new Entry[this.pools.size()]);
+        }
+    }
+
+    /**
      * @see org.osgi.service.cm.ManagedServiceFactory#updated(java.lang.String, java.util.Dictionary)
      */
     @SuppressWarnings("unchecked")
@@ -238,15 +189,26 @@ public class DefaultThreadPoolManager
         }
         this.logger.debug("Updating {} with {}", pid, properties);
         synchronized ( this.pools ) {
+            final ThreadPoolConfig config = this.createConfig(properties);
+
             Entry foundEntry = null;
-            // we have to search the config by using the pid!
+            // we have to search the config by using the pid first!
             for (final Entry entry : this.pools.values()) {
                 if ( pid.equals(entry.getPid()) ) {
                     foundEntry = entry;
                     break;
                 }
             }
-            final ThreadPoolConfig config = this.createConfig(properties);
+            // if we haven't found it by pid we search by name
+            if ( foundEntry == null ) {
+                for (final Entry entry : this.pools.values()) {
+                    if ( name.equals(entry.getName()) ) {
+                        foundEntry = entry;
+                        break;
+                    }
+                }
+            }
+
             if ( foundEntry != null ) {
                 // if the name changed - we have to reregister(!)
                 if ( !name.equals(foundEntry.getName()) ) {
@@ -254,7 +216,7 @@ public class DefaultThreadPoolManager
                     this.pools.put(name, foundEntry);
                 }
                 // update
-                foundEntry.update(config, name);
+                foundEntry.update(config, name, pid);
             } else {
                 // create
                 this.pools.put(name, new Entry(pid, config, name));
@@ -283,16 +245,16 @@ public class DefaultThreadPoolManager
                 if ( foundEntry.isUsed() ) {
                     // we register this with a new name
                     final String name = "ThreadPool-" + UUID.randomUUID().toString();
-                    foundEntry.update(new ModifiableThreadPoolConfig(), name);
+                    foundEntry.update(new ModifiableThreadPoolConfig(), name, null);
                     this.pools.put(name, foundEntry);
                 }
             }
         }
     }
 
-    private static final class Entry {
+    protected static final class Entry {
         /** The configuration pid. (might be null for anonymous pools.*/
-        private final String pid;
+        private volatile String pid;
 
         /** Usage count. */
         private volatile int count;
@@ -338,7 +300,7 @@ public class DefaultThreadPoolManager
             }
         }
 
-        public void update(final ThreadPoolConfig config, final String name) {
+        public void update(final ThreadPoolConfig config, final String name, final String pid) {
             if ( this.pool != null ) {
                 this.pool.setName(name);
                 if ( !this.config.equals(config) ) {
@@ -347,6 +309,7 @@ public class DefaultThreadPoolManager
             }
             this.config = config;
             this.name = name;
+            this.pid = pid;
         }
 
         public String getName() {
@@ -355,6 +318,10 @@ public class DefaultThreadPoolManager
 
         public boolean isUsed() {
             return this.count > 0;
+        }
+
+        public ThreadPoolConfig getConfig() {
+            return this.config;
         }
     }
 }
