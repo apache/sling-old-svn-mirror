@@ -42,6 +42,11 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/sling/engine</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12314287</site.jira.version.id>
+        <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
