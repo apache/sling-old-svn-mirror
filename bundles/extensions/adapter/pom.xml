@@ -44,6 +44,11 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/adapter</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12314288</site.jira.version.id>
+        <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
