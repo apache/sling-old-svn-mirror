@@ -67,6 +67,10 @@
                         <Private-Package>
                             org.apache.sling.adapter.internal
                         </Private-Package>
+                        <Import-Package>
+                            org.apache.sling.api.adapter;version="[2.0,2.3)",
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
