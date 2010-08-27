@@ -32,7 +32,7 @@
             type="Integer" default="5" name="%minPoolSize.name"
             description="%minPoolSize.description"/>
         <metatype:AD id="maxPoolSize"
-            type="Integer" default="5" name="%queueSize.name"
+            type="Integer" default="5" name="%maxPoolSize.name"
             description="%maxPoolSize.description" />
         <metatype:AD id="queueSize"
             type="Integer" default="-1" name="%queueSize.name"
@@ -52,10 +52,10 @@
             type="Boolean" default="false" name="%shutdownGraceful.name"
             description="%shutdownGraceful.description" />
         <metatype:AD id="daemon"
-            type="Integer" default="-1" name="%daemon.name"
+            type="Boolean" default="false" name="%daemon.name"
             description="%daemon.description" />
         <metatype:AD id="shutdownWaitTime"
-            type="Boolean" default="false" name="%shutdownWaitTime.name"
+            type="Integer" default="-1" name="%shutdownWaitTime.name"
             description="%shutdownWaitTime.description" />
         <metatype:AD id="priority"
             type="String" default="NORM" name="%priority.name"
