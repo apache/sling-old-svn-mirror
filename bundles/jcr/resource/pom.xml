@@ -47,6 +47,11 @@
         </url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12314286</site.jira.version.id>
+        <site.javadoc.exclude>**.internal.**</site.javadoc.exclude>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -103,25 +108,13 @@
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <excludePackageNames>
-                        org.apache.sling.jcr.resource.internal
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
+    
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
             <version>1.2.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
