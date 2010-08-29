@@ -52,6 +52,7 @@ class JcrPropertyResource extends JcrItemResource {
         this.property = property;
         this.resourceType = getResourceTypeForNode(property.getParent())
             + "/" + property.getName();
+        this.getResourceMetadata().setContentLength(property.getLength());
     }
 
     public String getResourceType() {
@@ -186,15 +187,7 @@ class JcrPropertyResource extends JcrItemResource {
         Property prop = getProperty();
 
         try {
-            // we set the content length only if the input stream is
-            // fetched. otherwise the repository needs to load the
-            // binary property which could cause performance loss
-            // for all resources that do need to provide the stream
-            long length = prop.getLength();
-            InputStream stream =  prop.getStream();
-
-            getResourceMetadata().setContentLength(length);
-            return stream;
+            return prop.getStream();
         } catch (RepositoryException re) {
             LOGGER.error("getInputStream: Problem accessing the property "
                 + getPath() + " stream", re);
