@@ -55,6 +55,7 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
+import org.apache.sling.jcr.resource.internal.helper.ResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.URI;
 import org.apache.sling.jcr.resource.internal.helper.URIException;
@@ -816,8 +817,9 @@ public class JcrResourceResolver
             workspacePrefix = getSession().getWorkspace().getName();
         }
 
-        return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(), workspacePrefix,
-                rootProvider.listChildren(parent));
+        return new ResourceIteratorDecorator(
+            this.factory.getResourceDecoratorTracker(), workspacePrefix,
+            new ResourceIterator(parent, rootProvider));
     }
 
     // ---------- Querying resources

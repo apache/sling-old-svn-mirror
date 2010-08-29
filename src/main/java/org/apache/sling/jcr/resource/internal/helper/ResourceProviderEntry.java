@@ -23,13 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.collections.FastTreeMap;
@@ -117,6 +112,10 @@ public class ResourceProviderEntry implements
 
     }
 
+    String getPath() {
+        return path;
+    }
+
     /**
      * Returns the resource provider contained in this entry
      */
@@ -138,123 +137,6 @@ public class ResourceProviderEntry implements
      */
     public Resource getResource(ResourceResolver resourceResolver, String path) {
         return getInternalResource(resourceResolver, path);
-    }
-
-    public Iterator<Resource> listChildren(final Resource resource) {
-        LOGGER.debug("Child Iterator for {}",resource.getPath());
-        return new Iterator<Resource>() {
-            private final Iterator<ResourceProvider> providers;
-
-            private Iterator<Resource> resources;
-
-            private Resource nextResource;
-
-            private Map<String, Resource> delayed;
-
-            private Set<String> visited;
-
-            private String iteratorPath;
-
-            private Iterator<Resource> delayedIter;
-
-            {
-                String path = resource.getPath();
-                if (!path.endsWith("/")) {
-                    path += "/";
-                }
-
-                // gather the providers in linked set, such that we keep
-                // the order of addition and make sure we only get one entry
-                // for each resource provider
-                Set<ResourceProvider> providersSet = new LinkedHashSet<ResourceProvider>();
-                getResourceProviders(path, providersSet);
-
-                if ( LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(" Provider Set for path {} {} ",path,Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
-                }
-                this.iteratorPath = path;
-                providers = providersSet.iterator();
-                delayed = new HashMap<String, Resource>();
-                visited = new HashSet<String>();
-                nextResource = seek();
-            }
-
-            public boolean hasNext() {
-                return nextResource != null;
-            }
-
-            public Resource next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-
-                Resource result = nextResource;
-                nextResource = seek();
-                LOGGER.debug("  Child Resoruce [{}] [{}] ", iteratorPath, result.getPath());
-                return result;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException("remove");
-            }
-
-            private Resource seek() {
-                for (;;) {
-                    while ((resources == null || !resources.hasNext())
-                            && providers.hasNext()) {
-                        ResourceProvider provider = providers.next();
-                        resources = provider.listChildren(resource);
-                        LOGGER.debug("     Checking Provider {} ", provider);
-                    }
-
-                    if (resources != null && resources.hasNext()) {
-                        Resource res = resources.next();
-                        String resPath = res.getPath();
-
-                        if (visited.contains(resPath)) {
-
-                            // ignore a path, we have already visited and
-                            // ensure it will not be listed as a delayed
-                            // resource at the end
-                            delayed.remove(resPath);
-
-                        } else if (res instanceof SyntheticResource) {
-
-                            // don't return synthetic resources right away,
-                            // since a concrete resource for the same path
-                            // may be provided later on
-                            delayed.put(resPath, res);
-
-                        } else {
-
-                            // we use this concrete, unvisited resource but
-                            // mark it as visited
-                            visited.add(resPath);
-                            // also remove it from delayed if it was there.
-                            if ( delayed.containsKey(resPath) ) {
-                                delayed.remove(resPath);
-                            }
-                            LOGGER.debug("      resource {} {}", resPath, res.getClass());
-                            return res;
-
-                        }
-                    } else {
-                        break;
-                    }
-                }
-
-                // we exhausted all resource providers with their concrete
-                // resources. now lets do the delayed (synthetic) resources
-                if (delayedIter == null) {
-                    delayedIter = delayed.values().iterator();
-                }
-                Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
-                if ( res != null ) {
-                    LOGGER.debug("   D  resource {} {}", res.getPath(), res.getClass());
-                }
-                return res;
-            }
-        };
     }
 
     /**
@@ -460,14 +342,10 @@ public class ResourceProviderEntry implements
             }
 
             // resolve against this one
-            ResourceProvider[] rps = getResourceProviders();
-            for (ResourceProvider rp : rps) {
-                Resource resource = rp.getResource(resourceResolver, fullPath);
-                if (resource != null) {
-                    nreal++;
-                    LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
-                    return resource;
-                }
+            final Resource resource = getResourceFromProviders(
+                resourceResolver, fullPath);
+            if (resource != null) {
+                return resource;
             }
 
             // query: /libs/sling/servlet/default
@@ -497,65 +375,18 @@ public class ResourceProviderEntry implements
         }
     }
 
-
-    /**
-     * Returns all resource providers which provider resources whose prefix is
-     * the given path.
-     *
-     * @param path
-     *            The prefix path to match the resource provider roots against
-     * @param providers
-     *            The set of already found resource providers to which any
-     *            additional resource providers are added.
-     */
-    private void getResourceProviders(String path,
-            Set<ResourceProvider> providers) {
-        String[] elements = split(path, '/');
-        ResourceProviderEntry base = this;
-        for (String element : elements ) {
-            if ( base.containsKey(element)) {
-                base = base.get(element);
-                if ( LOGGER.isDebugEnabled() ) {
-                    LOGGER.debug("Loading from {}  {} ", element, base.getResourceProviders().length );
-                }
-                for ( ResourceProvider rp : base.getResourceProviders() ) {
-                    LOGGER.debug("Adding {} for {} ",rp,path);
-                    providers.add(rp);
-                }
-            } else {
-                LOGGER.debug("No container for {} ", element );
-                base = null;
-                break;
+    Resource getResourceFromProviders(final ResourceResolver resourceResolver,
+            final String fullPath) {
+        ResourceProvider[] rps = getResourceProviders();
+        for (ResourceProvider rp : rps) {
+            Resource resource = rp.getResource(resourceResolver, fullPath);
+            if (resource != null) {
+                nreal++;
+                LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
+                return resource;
             }
         }
-        // the path has been exausted and there is a subtree to be collected, so go and collect it.
-        if ( base != null ) {
-            LOGGER.debug("Loading All below {} ", base.path );
-            getResourceProviders(base, providers);
-        }
-        // add in providers at this node in the tree, ie the root provider
-        for ( ResourceProvider rp : getResourceProviders() ) {
-            LOGGER.debug("Loading All at {} ", path );
-            providers.add(rp);
-        }
-
-    }
-
-    /**
-     * @param base
-     * @param providers2
-     */
-    private void getResourceProviders(ResourceProviderEntry entry,
-            Set<ResourceProvider> providers) {
-        // recurse down the tree
-        LOGGER.debug(" Gathering For {} ",entry.prefix);
-        for ( ResourceProviderEntry e : entry.values() ) {
-            getResourceProviders(e, providers);
-        }
-        // add in providers at this node in the tree.
-        for ( ResourceProvider rp : entry.getResourceProviders() ) {
-            providers.add(rp);
-        }
+        return null;
     }
 
     /**
@@ -563,7 +394,7 @@ public class ResourceProviderEntry implements
      * @param sep
      * @return an array of the strings between the separator
      */
-    private String[] split(String st, char sep) {
+    static String[] split(String st, char sep) {
 
         if (st == null) {
             return new String[0];
