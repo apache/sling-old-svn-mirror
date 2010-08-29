@@ -20,6 +20,7 @@ package org.apache.sling.servlets.resolver.internal.resource;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.Servlet;
@@ -30,6 +31,21 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
 public class ServletResourceProvider implements ResourceProvider {
+
+    private static final Iterator<Resource> EMPTY_ITERATOR = new Iterator<Resource>() {
+
+        public boolean hasNext() {
+            return false;
+        }
+
+        public Resource next() {
+            throw new NoSuchElementException();
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     private Servlet servlet;
 
@@ -58,7 +74,7 @@ public class ServletResourceProvider implements ResourceProvider {
     }
 
     public Iterator<Resource> listChildren(final Resource parent) {
-        return new ServletResourceIterator(this, parent);
+        return EMPTY_ITERATOR;
     }
 
     Servlet getServlet() {
@@ -76,8 +92,8 @@ public class ServletResourceProvider implements ResourceProvider {
     /** Return suitable info for logging */
     @Override
     public String toString() {
-    	return getClass().getSimpleName()
-    	+ ": servlet=" + servlet.getClass().getName()
-    	+ ", paths=" + Arrays.toString(getServletPaths());
+        return getClass().getSimpleName() + ": servlet="
+            + servlet.getClass().getName() + ", paths="
+            + Arrays.toString(getServletPaths());
     }
 }
