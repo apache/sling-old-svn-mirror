@@ -185,6 +185,13 @@ class JcrNodeResource extends JcrItemResource {
                             item = ((Node) item).getPrimaryItem();
                         }
                         data = ((Property) item);
+
+                        // set the content lenght property as a side effect
+                        // for resources which are not nt:file based and whose
+                        // data is not in jcr:content/jcr:data this will lazily
+                        // set the correct content length
+                        getResourceMetadata().setContentLength(data.getLength());
+
                     } catch (ItemNotFoundException infe) {
                         // we don't actually care, but log for completeness
                         LOGGER.debug("getInputStream: No primary items for "
@@ -194,15 +201,7 @@ class JcrNodeResource extends JcrItemResource {
                 }
 
                 if (data != null) {
-                    // we set the content length only if the input stream is
-                    // fetched. otherwise the repository needs to load the
-                    // binary property which could cause performance loss
-                    // for all resources that do need to provide the stream
-                    long length = data.getLength();
-                    InputStream stream = data.getStream();
-
-                    getResourceMetadata().setContentLength(length);
-                    return stream;
+                    return data.getStream();
                 }
 
             } catch (RepositoryException re) {
@@ -270,6 +269,17 @@ class JcrNodeResource extends JcrItemResource {
                 } catch(ValueFormatException vfe) {
                     LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
                             prop.getPath(), vfe);
+                }
+            }
+
+            if (node.hasProperty(JCR_DATA)) {
+                final Property prop = node.getProperty(JCR_DATA);
+                try {
+                    metadata.setContentLength(prop.getLength());
+                } catch (ValueFormatException vfe) {
+                    LOGGER.debug(
+                        "Length of Property {} cannot be retrieved, ignored ({})",
+                        prop.getPath(), vfe);
                 }
             }
         } catch (RepositoryException re) {
