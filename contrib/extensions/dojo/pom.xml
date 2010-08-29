@@ -68,6 +68,7 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>download-dojo</id>
                         <phase>process-resources</phase>
                         <configuration>
                             <tasks>
@@ -75,7 +76,7 @@
                                 <condition property="testProxySetting">
                                     <equals arg1="${settings.activeProxy}" arg2="$${settings.activeProxy}"/>
                                 </condition>
-                                <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.compile.classpath" />
                                 <if>
                                     <isfalse value="${testProxySetting}"/>
                                     <then>
@@ -112,24 +113,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>ant</groupId>
-                        <artifactId>ant-nodeps</artifactId>
-                        <version>1.6.5</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>ant-contrib</groupId>
-                        <artifactId>ant-contrib</artifactId>
-                        <version>1.0b3</version>
-                              <exclusions>
-                                <exclusion> 
-                                  <groupId>ant</groupId>
-                                  <artifactId>ant</artifactId>
-                                </exclusion>
-                              </exclusions> 
-                    </dependency>
-                </dependencies>
             </plugin>
             
             <plugin>
@@ -162,4 +145,24 @@
         </plugins>
     </build>
 
+    <dependencies>
+        <dependency>
+            <groupId>ant</groupId>
+            <artifactId>ant-nodeps</artifactId>
+            <version>1.6.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ant-contrib</groupId>
+            <artifactId>ant-contrib</artifactId>
+            <version>1.0b3</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion> 
+                    <groupId>ant</groupId>
+                    <artifactId>ant</artifactId>
+                </exclusion>
+            </exclusions> 
+        </dependency>
+    </dependencies>
 </project>
