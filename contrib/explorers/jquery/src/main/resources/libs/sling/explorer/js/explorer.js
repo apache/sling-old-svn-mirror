@@ -16,86 +16,152 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- 
+
 /** load the initial tree on editor startup */
-init_load = function(path){
-  
-  // load root node
-  $.get("/.explorer.item.html", function(data){
-    $('#expl_sidebar').append(data);
-  });  
+init_load = function(path, resourceType) {
 
-  // load others
-  var paths = path.split("/");
-  paths.splice(0,1); // remove first slash
-  var rPath = "";
-  for (p in paths){
-    rPath += paths[p];
-    load_branch(rPath );    
-    rPath += "/";
-  }
-  
-  // load properties
-  load_props(path);  
+	// load root node
+
+	$.get("/.explorer.item.html", function(data) {
+	//$.get(path+".explorer.item.html", function(data) {
+		$('#expl_sidebar').append(data);
+	});
+
+	// load others
+	var paths = path.split("/");
+	paths.splice(0, 1); // remove first slash
+	var rPath = "";
+	for (p in paths) {
+		rPath += paths[p];
+		load_branch(rPath);
+		rPath += "/";
+	}
+
+	// load properties
+	load_props(path, resourceType);
 }
-
 
 /** toggle a node in the menu */
-explorer_toggle = function(path){
-  var id= path.replace(/\//g, "_"); // replacing / with _
-  var is_open = $('p#'+id+'>a').hasClass('open');
-  
-  load_props("/" + path);
-  
-  if (is_open){
-    //remove children
-    $('p#'+id).parent().find('ul').each(function(){
-      $(this).empty();
-      this.parentNode.removeChild( this )
-    });
-    $('p#'+id+">a").removeClass('open');  // closed
-    $('p#'+id).parent().removeClass('branch'); // remove css class
-    
-  } else {
-    load_branch(path);
-  }
+explorer_toggle = function(path, resourceType) {
+	var id = path_2_id( path ); // replacing / with _
+	var is_open = $('p#' + id + '>a').hasClass('open');
+
+	load_props("/" + path, resourceType);
+
+	var subtree = $('ul', $('p#' + id).parent());
+	if (is_open) {
+		if (subtree.length != 0) // should always resolve to true...
+		{
+			subtree.hide();
+		}
+		$('p#' + id + ">a").removeClass('open'); // closed
+		$('p#' + id).parent().removeClass('branch'); // remove css class
+	} else {
+		if (subtree.length === 0) {
+			load_branch(path);
+		} else {
+			$('p#' + id).parent().addClass('branch'); // add css class
+			$('p#' + id + ">a").addClass('open'); // opened
+			subtree.show();
+		}
+	}
 }
 
-load_branch = function(path){
-  if (path != '')
-  {
-     var id= path.replace(/\//g, "_"); // replacing / with _
-	 $('p#'+id+">a").removeAttr('href');  // remove onclick
-	  
-	  // fetch children
-	  $.get("/"+path + ".explorer.item.html", function(data){
+/** load branch/subtree **/
+load_branch = function( path, callback ) {
+	if (path != '') {
+		var id = path_2_id( path ); // replacing / with _
+		$('p#' + id + ">a").removeAttr('href'); // remove onclick
+
+		// fetch children
+		$.get("/" + path + ".explorer.item.html", function(data) {
+			if (data.length > 0) {
+				$('p#' + id).parent().addClass('branch'); // add css class
+				$('p#' + id).after(data); // add data
+				$('p#' + id + ">a").attr('href', "#"); // reactivate onclick
+				$('p#' + id + ">a").addClass('open'); // open
+				$('p#' + id).addClass('loaded');
+				if ( callback ) { callback() };
+			}
+		});
+	}
+}
+
+load_props = function(path, resourceType) {
+	var id = path_2_id( path ); // replacing / with _
+	//id = id.replace(/^_/, ""); // remove trailing _
+	if ($('p#' + id))
+	{
+		$('p', $('#expl_sidebar')).removeClass('selected'); // deselect all
+		$('p[id="' + id + '"]').addClass('selected'); // select the current node
+	}
+	else
+	{
+		alert('p#' + id);
+	}
+	$.get(path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':','_') + '.') ) + "html", function(data) {
 		if (data.length > 0) {
-		  $('p#'+id).parent().addClass('branch'); // add css class
-		  $('p#'+id).after(data); // add data
-		  $('p#'+id+">a").attr('href', "#");  // reactivate onclick
-		  $('p#'+id+">a").addClass('open');  // open
-		} 
-	  });
-  }
-}
-
-load_props = function(path) {
-  $.get(path + ".explorer.properties.html", function(data){
-    if (data.length > 0) {
-      $('#expl_content').html(data);
-    } 
-  });
+			$('#expl_content').html(data);
+		}
+	});
 }
 
 add_prop = function(node) {
-  var name  = $('#expl_add_prop_name').attr('value');
-  var type  = $('#expl_add_prop_type').val();
-  var value = $('#expl_add_prop_value').attr('value');
+	var name = $('#expl_add_prop_name').attr('value');
+	var type = $('#expl_add_prop_type').val();
+	if ( $('#expl_add_prop_multi').is(':checked') )
+	{
+		type += '[]';
+	}
+	var value = $('#expl_add_prop_value').attr('value');
 
-  var params = {};
-  params[name + '@TypeHint'] = type;
-  params[name] = value;
-  $.post(node, params, function(data){ 
-    window.location = node + '.explorer.html';
-  } );  
+	var params = {};
+	params[name + '@TypeHint'] = type;
+	params[name] = value;
+	$.post(node, params, function(data) {
+		window.location = node + '.explorer.html';
+	});
+}
+
+search = function(language, expression, page) {
+	// search and load search results
+	$.get("/.explorer.search.html", { "language" : language, "expression" : expression, "page" : page }, function(data) {
+		$('#sql_search_result').html(data);
+	});
+}
+
+skip_to = function(path, resourceType) {
+	expand_tree(path, function() { load_props(path, resourceType); } );
+}
+
+expand_tree = function( path, callback ) {
+	// expand tree and select corresponding node	
+	var pathParts = path.split('/');
+	var partialPath = '';
+	for (idx in pathParts)
+	{	
+		if (pathParts[idx] != '')
+		{
+			partialPath += (((partialPath != '') ? '/' : '') + pathParts[idx]);
+			var id = path_2_id( partialPath ); // replacing / with _
+			if (($('p#' + id).length === 0) || !$('p#' + id).hasClass('loaded'))
+			{
+				// asynchronous recursion: expand_tree is re-called after ajax call has finished
+				load_branch( partialPath, function() { expand_tree( path, callback ); } );
+				return;
+			}
+		}
+	}
+	callback();
+}
+
+path_2_id = function(path) {
+	// WARNING: have a look at item.esp - duplicate code!
+	var id = path.replace(/\//g, "_"); // replacing / with _
+	id = id.replace(/^_/, ""); // remove trailing _
+	id = id.replace(/\./g, '_');// due to the css selectors
+	id = id.replace(/:/g, '_');// due to the css selectors
+	id = id.replace(/\[/g, '_');// due to the css selectors
+	id = id.replace(/\]/g, '_');// due to the css selectors
+	return id;
 }

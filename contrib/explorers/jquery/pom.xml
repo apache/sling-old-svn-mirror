@@ -27,7 +27,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.extensions.explorer.jquery
     </artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Explorer using jQuery</name>
@@ -43,7 +43,7 @@
 
     <build>
         <plugins>
-            <plugin>
+		     <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
             </plugin>
@@ -53,15 +53,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Sling-Bundle-Resources>
-                            /libs/sling/explorer,
-                            /libs/sling/servlet/default/explorer
-                            <!-- 
-                            /libs/sling/servlet/default/explorer_item.esp,
-                            /libs/sling/servlet/default/explorer_properties.esp,
-                            /libs/sling/servlet/default/explorer.esp
-                            -->
-                        </Sling-Bundle-Resources>
+						<Sling-Bundle-Resources>
+							/libs/sling/explorer,
+							/libs/sling/servlet/default/explorer
+						</Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
             </plugin>

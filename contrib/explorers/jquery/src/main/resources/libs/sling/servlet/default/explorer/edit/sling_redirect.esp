@@ -1,0 +1,9 @@
+You are about to redirect to
+<% 
+var target = '!! sling:target property missing !!';
+if ( currentNode.hasProperty('sling:target') )
+{
+	target = currentNode.getProperty('sling:target'); 
+}
+%>
+<%= target %>

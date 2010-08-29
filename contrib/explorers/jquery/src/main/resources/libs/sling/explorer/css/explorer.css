@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -15,104 +16,675 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
+ 
+ 
+
+/* ################################################################# */
+/* --- Main-Seperator ---  */
+/* ################################################################# */
+	
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Sub-Seperator  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+ 
  */
  
-html, body {
+*
+{
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+html, body 
+{
+}
+
+html /* shows always scrollbar in Firefox*/
+{
+	overflow-y: scroll;
+}	
+	
+body
+{
+	font-size: 13px;
+	color: #545D66;
+	margin: 0;
+	padding: 0 0 20px 0;
+	text-align: center;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Titles ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+h1, h2, h3, h4, h5, h6
+{
+	font-family: Arial, Helvetica, sans-serif;
+	color: #485573;
+	margin: 0 0 20px 0;
+	padding: 0px;
+}
+	
+h1
+{
+	font-size: 22px;
+	line-height: /**/;
+}
+
+h2
+{
+	font-size: 18px;
+	line-height: /**/;
+}
+
+h3
+{
+	font-size: 16px;
+	line-height: /**/;
+}
+
+h4, h5, h6
+{
+	font-size: 13px;
+	line-height: /**/;
+}
+
+b, strong, b *, strong *
+{
+	font-weight: bold;
+}
+
+i, em, i *, em *
+{
+	font-style: italic;
+}
+
+ul, ol
+{
+	margin: 10px 0 10px 35px;
+}
+
+ul
+{
+}
+
+ol
+{
+}
+
+li
+{
+	margin: 3px 0;
+}
+
+p
+{
+	line-height: 18px;
+	margin: 0 0 10px 0;
+}
+
+div.hr
+{
+	clear: both;
+	height: 1px;
+}
+
+hr
+{
+	height: 1px;
+	color: #333333;
+	background-color: inherit;
+}
+
+a, a:visited
+{
+	color: #527EA3;
+	text-decoration: underline;
+}
+
+a:hover
+{
+	color: #ABC8E2;
+	text-decoration: underline;
+}
+
+a:focus, input:focus, button:focus
+{
+	outline: none;
+}
+
+button, .button
+{
+	background-color: #eff4f9;
+	border: 1px solid #354F66;
+	padding: 2px 5px;
+	font-size: 10px;
+	color: #354F66;
+	font-weight: bold;
+	width: auto!important;
+}
+
+input.button
+{
+	padding: 1px 3px;
+}
+
+button:hover, .button:hover
+{
+	background-color: #BDD2E5;
+	border: 2px solid #354F66;
+	padding: 1px 4px;
+	cursor: pointer;
+}
+
+input.button:hover
+{
+	padding: 0px 2px;
+}
+
+
+img, a img
+{
+	border: none;
+}
+
+/* <div class="clear"></div> or <br class="clear" /> in <p></p> */
+.clear
+{
+	clear:both;
+    height:0;
+    font-size: 1px;
+    line-height: 0px;
+	overflow: hidden;
+	white-space: nowrap;
 	margin: 0;
 	padding: 0;
 }
-body {
-	padding-bottom: 20px;
+
+/* ################################################################# */
+/* --- TABLE --- */
+/* ################################################################# */
+
+table
+{
+	font-size: inherit;
+	color: inherit;
+	border-collapse: collapse;
+	border-spacing: /**/;
+}
+	
+table caption, 
+table tr,
+table th, 
+table td
+{
+	text-align: left;
+	font-weight: normal;
+}
+
+table td
+{
+	padding: /**/;
+}
+
+		
+td.colLabel
+{
+	width: /**/;
+}
+
+td.colInput
+{
+	width: /**/;
+}
+
+td.colspan2
+{
+	width: /* FULL CONTENT WIDTH */;
+}
+
+/* ################################################################# */
+/* --- FORM --- */
+/* ################################################################# */
+
+form
+{
+}
+	
+fieldset
+{
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+form fieldset p
+{
+	clear: both;
+	padding-bottom: 15px;
+}
+
+.required
+{
+	margin-left: /* width von label*/;
+}
+
+.submit
+{
+	margin: 0;
+}
+		
+label
+{
+	width: 200px;
+	float: left;
+	display: inline;
+}
+
+
+/* ################################################################# */
+/* --- INPUT / SELECT / TEXTAREA --- */
+/* ################################################################# */
+
+input, select, textarea
+{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	color: #545D66;
+	background-color: #FFFFFF;
+	padding: 2px 4px;
+	line-height: 16px;
+	border: 1px solid #354F66;     
+	overflow: visible; /* Fix for IE */
+}
+
+input:focus, select:focus, textarea:focus
+{
+	border: 1px solid #527EA3;
+	background-color: #BDD2E5;
+}
+
+input[type=hidden], input.hidden
+{	
+	float: left;
+	display: inline;
+	border: none;
+	background-color: transparent;
+	height: 12px;
+	width: 12px;
+	padding: 0;
+	position: absolute;
+	top: -100px;
+}
+
+input.text
+{
+	display: inline;
+	width: 200px;
+}
+
+input.checkbox, input.radio
+{
+	float: none;
+	border: none;
+	background-color: transparent;
+	height: 12px;
+	width: 12px;
+	padding: 0;
+	position: absolute;
+}
+
+#newsletter input.checkbox
+{
+	position: relative;
+}
+
+input.radio
+{
+}
+
+input.checkbox	
+{
+}
+
+select
+{
+	display: inline;
+}
+
+textarea
+{
+	height: 100px;
+    width: 408px;
+}
+
+
+/* ################################################################# */
+/* --- Explorer --- */
+/* ################################################################# */
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Login Dialog  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#login-dialog
+{
+	background-color: #f6fbfe;
+	border-bottom: 2px solid #bdd2e5;
+}
+
+#menu_login
+{
 	text-align: center;
-	font-family: "lucida grande", tahoma, verdana, arial, sans-serif;
 }
-#expl_logo {
-        margin: 2px;
+
+#show_login_dialog
+{
+	float: right;
+	display: block;
+	margin: -2px 12px 0 auto;
+	background: url(../img/login_bg.png);
+	background-repeat: no-repeat;
+	background-position: 0 -27px;
+	height: 19px;
+	width: 70px;
+	padding: 6px 10px 0 0;
+	font-size: 10px;
+	text-decoration: none;
 }
-#expl_container {
+
+#show_login_dialog.login_open
+{
+	background-position: 0 0;
+}
+
+form#login-form
+{
+	padding: 20px;
+}
+
+form#login-form fieldset label
+{
+	width: auto;
+	float: none;
+	display: inline;
+}
+
+form#login-form fieldset p
+{
+	padding-bottom: 0px;
+	margin: 0;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Logout Dialog  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#menu_logout
+{
+	float: right;
+	display: inline;
+	margin: 10px 20px;
+	font-size: 11px;
+	background-color: #f6fbfe;
+	border: 2px solid #bdd2e5;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	padding: 5px 7px;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Query Dialog  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#query_container
+{
+	clear: both;
+	margin: 20px;
+	border: 2px solid #527EA3;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background-color: #F6FBFE;
+}
+
+#expl_search
+{
+	padding: 10px;
+	background-color: #F6FBFE;
+}
+
+#show_query_dialog
+{
+	background-color: transparent;
+	line-height: normal;
+	border: none;     
+	overflow: visible; /* Fix for IE */
+}
+
+button#show_query_dialog
+{
+	font-weight: normal;
+	text-decoration: underline;
+	width: 80px;
+	height: 25px;
+	margin: 0px 0px 0px 0px;
+	background: url(../img/query_bg.png);
+	background-repeat: no-repeat;
+	background-color: #F6FBFE;
+	background-position: 8px -24px;
+	height: 25px;
+	width: 100%;
+	display: block;
+	padding: 0px 0px 1px 18px;
+	font-size: 10px;
+	text-decoration: none;
+	text-align: left;
+}
+
+button#show_query_dialog.query_open
+{
+	background-position: 8px 1px;
+	border-bottom: 1px solid #BDD2E5;
+}
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Main Layout - Header / Logo / Content / Footer  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#expl_logo
+{
+	margin: 10px 20px;
+	float: left;
+	display: inline;
+}
+
+#expl_container
+{
 	text-align: left;
 	margin: 0 auto;
 	width: auto;
 }
-#expl_header {
-	padding: 20px;
+
+#expl_header
+{
 }
-#expl_sidebar {
-	border: 1px solid #D0D0D0;
+
+#expl_content_container
+{
+	margin: 0 20px;
+}
+
+#expl_sidebar
+{
+	border: 2px solid #527EA3;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 	width: 340px;
-	margin-left: 20px;
 	float: left;
 	display: inline;
-	font-size: 12px;
 	padding-bottom: 20px;
 	min-height: 600px;
+	background-color: #F6FBFE;
 }
-#expl_content {
-	margin-left: 382px;
-	margin-right: 20px;
-	border: 1px solid #D0D0D0;
+
+#expl_content
+{
+	margin: 0 0 0 354px;
+	border: 2px solid #527EA3;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 	padding: 20px;
-	font-size: 12px;
+	background-color: #F6FBFE;
 }
-#expl_footer {
+
+#expl_footer
+{
 	margin: 20px 20px 0 20px;
-	clear: left;
-    font-size: 12px;
-    color: gray;
+	clear: both;
+	font-size: 11px;
 }
 
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Sidebar Explorer  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 
-/* SIDEBAR *****************/
-#expl_sidebar li p {
+#expl_sidebar li p
+{
 	cursor: pointer;
 }
-#expl_sidebar  ul, #expl_sidebar li {
+
+#expl_sidebar ul, #expl_sidebar li
+{
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
-#expl_sidebar ul {
+
+#expl_sidebar ul
+{
 	padding-left: 1em;
 }
-#expl_sidebar li {
-	padding-left: 1em;
-	border: 1px dotted black;
+
+#expl_sidebar li
+{
+	padding-left: 10px;
+	border: 1px dotted #354F66;
 	border-width: 0 0 1px 1px;
 }
-#expl_sidebar li.branch {
+
+#expl_sidebar li.branch
+{
 	border-bottom: 0px;
 }
-#expl_sidebar li.empty {
+
+#expl_sidebar li.empty
+{
 	font-style: italic;
 	color: silver;
 	border-color: silver;
 }
-#expl_sidebar li p {
+
+#expl_sidebar li p
+{
 	margin: 0;
-	background: white;
+	padding: 0 10px 0 0;
 	position: relative;
-	top: 0.5em;
+	top: 12px;
+	background-color: #F6FBFE;
 }
-#expl_sidebar li ul {
+
+#expl_sidebar li p a
+{
+	display: block;
+	padding: 2px 5px;
+	text-decoration: none;
+	border: 1px solid #F6FBFE;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+
+#expl_sidebar li p a:hover
+{
+	border: 1px solid #BDD2E5;
+}
+
+#expl_sidebar li p.selected
+{
+	margin: 0;
+	position: relative;
+	top: 12px;
+}
+
+#expl_sidebar li p.selected a
+{
+	display: block;
+	padding: 2px 5px;
+	text-decoration: none;
+	border: 1px solid #354F66;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background-color: #527EA3;
+	color: #BDD2E5;
+}
+
+#expl_sidebar li p.selected a:hover
+{
+	color: #FFFFFF;
+}
+
+#expl_sidebar li ul
+{
 	border-top: 1px dotted black;
 	margin-left: -1em;
 	padding-left: 2em;
 }
 
-/** CONTENT **************/
-#expl_content h3 {
-	border-top: 1px dotted black;
-	padding-top: 15px;
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Content  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+.smallLabel
+{
+	color: #545D66;
+	font-size: 11px;
 }
-#expl_content label {
-  float:left;
-  width:200px;
+
+
+
+/* ################################################################# */
+/* --- Edit --- */
+/* ################################################################# */
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Properties  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+.edit_properties_container
+{
+	border-top: 1px dotted #354F66;
+	margin: 30px 0 0 0;
+	padding: 10px 0;
 }
-#expl_content h2 {
-  font-size: 18px;
-  background-color: #FFFFBB;
+
+.edit_properties_container form fieldset ul#multiyvalueproperty
+{
+	margin: 0 0 0 313px;
+	padding: 0;
 }
-.smallLabel {
-  color:gray;
-  font-size:60%;
+
+.add_property
+{
+	margin: 0 10px 0 300px;
+}
+
+.property_element
+{
+	padding: 10px;
+	border: 1px solid #BDD2E5;
+	margin: 0 0 10px 0;
 }

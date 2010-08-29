@@ -18,36 +18,40 @@
  * under the License.
  */
 --%>
- 
 <%
-var nodes = request.resourceResolver.listChildren(resource);
-
+var nodes = request.resourceResolver.listChildren( resource );
 if (nodes.hasNext()) {
-
     %>
     <ul>
     <%
-
     while (nodes.hasNext()) {
       var child = nodes.next();
-      var name = Packages.org.apache.sling.api.resource.ResourceUtil.getName(child);
-      var path = child.path.substr(1);
-      var id = path.replace(/\//g, "_");
-      
-      %>
-      <li>
+	var name = Packages.org.apache.sling.api.resource.ResourceUtil.getName(child);
+	var path = child.path.substr(1);
+	// WARNING: have a look at explorer.js - duplicate code!
+	var id = path.replace(/\//g, "_");
+	id = id.replace(/^_/, ""); // remove trailing _
+	id = id.replace(/\./g, '_');// due to the css selectors
+	id = id.replace(/:/g, '_');// due to the css selectors
+	id = id.replace(/\[/g, '_');// due to the css selectors
+	id = id.replace(/\]/g, '_');// due to the css selectors
+	%>
+	<li>
         <p id="<%= id %>">
-            <a href="#" onclick="explorer_toggle('<%= path %>')" ><%= name %></a>
+			<%
+				var resourceType = '';
+				var node = child.adaptTo(Packages.javax.jcr.Node);
+				if ( node && node.hasProperty( 'sling:resourceType' ) ) {
+					resourceType = node.getProperty('sling:resourceType');
+				}
+			%>
+            <a href="#" onclick="explorer_toggle('<%= path %>', '<%= resourceType %>')" ><%= name %></a>
         </p>
       </li>
-      <%
-    }
-
-    %>
-    </ul>
-    <%
-
-}
-
-
+	<%
+	} // while
+%>
+</ul>
+<%
+} // if (nodes.hasNext())
 %>
