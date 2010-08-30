@@ -35,7 +35,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
-            <version>1.2.1-SNAPSHOT</version>
+            <version>1.2.0</version>
         </bundle>
 
         <bundle>
@@ -111,7 +111,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.classloader</artifactId>
-            <version>3.1.3-SNAPSHOT</version>
+            <version>3.1.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
