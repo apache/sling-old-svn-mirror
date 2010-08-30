@@ -41,17 +41,31 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
     public VelocityTemplatesScriptEngine(ScriptEngineFactory factory) {
         super(factory);
 
-        velocity = new VelocityEngine();
+        final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+	        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+	        
+	        velocity = new VelocityEngine();
             velocity.init();
         } catch (Exception e) {
             throw new RuntimeException("Exception in Velocity.init() "
                 + e.getMessage(), e);
-        }
+	    } finally {
+	    	Thread.currentThread().setContextClassLoader(oldClassLoader);
+	    }
+
     }
 
     public Object eval(Reader script, ScriptContext scriptContext)
             throws ScriptException {
+		if (script == null) {
+			throw new IllegalArgumentException(
+					"Method argument script must not be null.");
+		}
+		if (scriptContext == null) {
+			throw new IllegalArgumentException(
+					"Method argument scriptContext must not be null.");
+		}
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
         SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
         if (helper == null) {
@@ -66,23 +80,31 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
 
         String scriptName = helper.getScript().getScriptResource().getPath();
 
-        // initialize the Velocity context
-        final VelocityContext c = new VelocityContext();
-        for (Object entryObj : bindings.entrySet()) {
-            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) entryObj;
-            c.put((String) entry.getKey(), entry.getValue());
-        }
-
-        // let Velocity evaluate the script, and send the output to the browser
-        final String logTag = getClass().getSimpleName();
-        Writer w = scriptContext.getWriter();
+        final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+        
         try {
-            velocity.evaluate(c, w, logTag, script);
-            w.toString();
-        } catch (Throwable t) {
-            throw new ScriptException("Failure running script " + scriptName
-                + ": " + t);
-        }
+        	Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+        	
+	        // initialize the Velocity context
+	        final VelocityContext c = new VelocityContext();
+	        for (Object entryObj : bindings.entrySet()) {
+	            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) entryObj;
+	            c.put((String) entry.getKey(), entry.getValue());
+	        }
+	
+	        // let Velocity evaluate the script, and send the output to the browser
+	        final String logTag = getClass().getSimpleName();
+	        Writer w = scriptContext.getWriter();
+	        try {
+	            velocity.evaluate(c, w, logTag, script);
+	            w.toString();
+	        } catch (Throwable t) {
+	            throw new ScriptException("Failure running script " + scriptName
+	                + ": " + t);
+	        }
+	    } finally {
+	    	Thread.currentThread().setContextClassLoader(oldClassLoader);
+	    }
 
         return null;
     }
