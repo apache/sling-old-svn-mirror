@@ -37,6 +37,10 @@ public class SessionInfoProvider implements SlingInfoProvider {
         result.put("workspace",s.getWorkspace().getName());
         result.put("userID",s.getUserID());
 
+        if (request.getAuthType() != null) {
+            result.put("authType", request.getAuthType());
+        }
+
         return result;
     }
 
