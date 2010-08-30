@@ -26,8 +26,12 @@ import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionException;
 import javax.servlet.ServletException;
@@ -82,35 +86,41 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 
         } else {
 
-            String[] mixins = getMixinTypes(reqProperties, path);
-            if (mixins != null) {
+            updateMixins(session, path, reqProperties, changes, versioningConfiguration);
+        }
+    }
 
-                Item item = session.getItem(path);
-                if (item.isNode()) {
+    protected void updateMixins(Session session, String path, Map<String, RequestProperty> reqProperties,
+            List<Modification> changes, VersioningConfiguration versioningConfiguration) throws PathNotFoundException,
+            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
+        String[] mixins = getMixinTypes(reqProperties, path);
+        if (mixins != null) {
 
-                    Set<String> newMixins = new HashSet<String>();
-                    newMixins.addAll(Arrays.asList(mixins));
+            Item item = session.getItem(path);
+            if (item.isNode()) {
 
-                    // clear existing mixins first
-                    Node node = (Node) item;
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                Set<String> newMixins = new HashSet<String>();
+                newMixins.addAll(Arrays.asList(mixins));
 
-                    for (NodeType mixin : node.getMixinNodeTypes()) {
-                        String mixinName = mixin.getName();
-                        if (!newMixins.remove(mixinName)) {
-                            node.removeMixin(mixinName);
-                        }
+                // clear existing mixins first
+                Node node = (Node) item;
+                checkoutIfNecessary(node, changes, versioningConfiguration);
+
+                for (NodeType mixin : node.getMixinNodeTypes()) {
+                    String mixinName = mixin.getName();
+                    if (!newMixins.remove(mixinName)) {
+                        node.removeMixin(mixinName);
                     }
+                }
 
-                    // add new mixins
-                    for (String mixin : newMixins) {
-                        node.addMixin(mixin);
-                        // this is a bit of a cheat; there isn't a formal checkout, but assigning
-                        // the mix:versionable mixin does an implicit checkout
-                        if (mixin.equals("mix:versionable") &&
-                                versioningConfiguration.isCheckinOnNewVersionableNode()) {
-                            changes.add(Modification.onCheckout(path));
-                        }
+                // add new mixins
+                for (String mixin : newMixins) {
+                    node.addMixin(mixin);
+                    // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                    // the mix:versionable mixin does an implicit checkout
+                    if (mixin.equals("mix:versionable") &&
+                            versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                        changes.add(Modification.onCheckout(path));
                     }
                 }
             }
@@ -364,6 +374,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
                 startingNode = session.getRootNode();
             } else if (session.itemExists(startingNodePath)) {
                 startingNode = (Node) session.getItem(startingNodePath);
+                updateMixins(session, startingNodePath, reqProperties, changes, versioningConfiguration);
             } else {
                 int pos = startingNodePath.lastIndexOf('/');
                 if (pos > 0) {
@@ -391,6 +402,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
             // we do a sanety check.
             if (node.hasNode(name)) {
                 node = node.getNode(name);
+                updateMixins(session, node.getPath(), reqProperties, changes, versioningConfiguration);
             } else {
                 final String tmpPath = to < 0 ? path : path.substring(0, to);
                 // check for node type
