@@ -26,32 +26,34 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /**
  * A Felix WebConsole ConfigurationPrinter which outputs the current JCR
  * namespace mappings.
- *
- * @scr.component immediate="true" label="%namespace.printer.name"
- *                description="%namespace.printer.description"
- *                metatype="no"
- * @scr.property name="service.description"
- *               value="JCR Namespace Configuration Printer"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.felix.webconsole.ConfigurationPrinter"
- *
  */
+@Component(label = "%namespace.printer.name", description = "%namespace.printer.description", metatype = false)
+@Service(ConfigurationPrinter.class)
+@Properties({
+    @Property(name = "service.description", value = "JCR Namespace Configuration Printer"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation")
+})
 public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
-    /**
-     * @scr.reference policy="dynamic"
-     */
+
+    @Reference(policy=ReferencePolicy.DYNAMIC)
     private SlingRepository slingRepository;
 
     /**
      * Get the title of the configuration status page.
-     *
+     * 
      * @return the title
      */
     public String getTitle() {
@@ -60,7 +62,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
     /**
      * Output a list of namespace prefixes and URIs from the NamespaceRegistry.
-     *
+     * 
      * @param pw a PrintWriter
      */
     public void printConfiguration(PrintWriter pw) {
