@@ -52,7 +52,9 @@ class JcrPropertyResource extends JcrItemResource {
         this.property = property;
         this.resourceType = getResourceTypeForNode(property.getParent())
             + "/" + property.getName();
-        this.getResourceMetadata().setContentLength(property.getLength());
+        if (!property.isMultiple()) {
+            this.getResourceMetadata().setContentLength(property.getLength());
+        }
     }
 
     public String getResourceType() {
