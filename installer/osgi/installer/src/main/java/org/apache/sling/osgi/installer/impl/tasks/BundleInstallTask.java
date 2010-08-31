@@ -82,7 +82,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
             return;
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
-            ctx.addTaskToCurrentCycle(this);
+            ctx.addTaskToNextCycle(this);
             return;
         }
     }

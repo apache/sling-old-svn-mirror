@@ -116,7 +116,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
     	} catch (Exception e) {
             if ( canRetry ) {
-                ctx.addTaskToCurrentCycle(this);
+                ctx.addTaskToNextCycle(this);
                 return;
             }
             Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
