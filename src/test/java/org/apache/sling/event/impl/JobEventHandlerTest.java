@@ -173,6 +173,13 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                     }
                 });
         jeh.handleEvent(getJobEvent(null, "myid", null));
+        // sleep a little to give the job handler time write the job
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+
         assertEquals(1, jeh.getAllJobs("sling/test").size());
         cb.block();
         // job is currently sleeping, therefore cancel fails
@@ -184,6 +191,44 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         }
         // the job is now in the queue again
         assertTrue(jeh.removeJob("sling/test", "myid"));
+        assertEquals(0, jeh.getAllJobs("sling/test").size());
+    }
+
+    /**
+     * Test force cancelling a job
+     * The job execution always fails
+     */
+    @org.junit.Test public void testForceCancelJob() throws Exception {
+        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final Barrier cb = new Barrier(2);
+        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+                new EventHandler[] {
+                    new EventHandler() {
+                        public void handleEvent(Event event) {
+                            EventUtil.acknowledgeJob(event);
+                            cb.block();
+                            try {
+                                Thread.sleep(400);
+                            } catch (InterruptedException e) {
+                                // ignore
+                            }
+                            EventUtil.rescheduleJob(event);
+                        }
+
+                    }
+                });
+        jeh.handleEvent(getJobEvent(null, "myid", null));
+        // sleep a little to give the job handler time write the job
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        assertEquals(1, jeh.getAllJobs("sling/test").size());
+        cb.block();
+        // job is currently sleeping, but force cancel always waits!
+        jeh.forceRemoveJob("sling/test", "myid");
+        // the job is now removed
         assertEquals(0, jeh.getAllJobs("sling/test").size());
     }
 

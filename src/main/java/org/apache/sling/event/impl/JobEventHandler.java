@@ -1652,6 +1652,7 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String, java.lang.String)
      */
+    @Deprecated
     public void cancelJob(String topic, String jobId) {
         this.removeJob(topic, jobId);
     }
@@ -1659,6 +1660,7 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String)
      */
+    @Deprecated
     public void cancelJob(String jobId) {
         this.removeJob(jobId);
     }
@@ -1719,9 +1721,37 @@ public class JobEventHandler
 
 
     /**
+     * @see org.apache.sling.event.JobStatusProvider#forceRemoveJob(java.lang.String, java.lang.String)
+     */
+    public void forceRemoveJob(final String topic, final String jobId) {
+        while ( this.backgroundSession != null && !this.removeJob(topic, jobId) ) {
+            // instead of using complicated syncs, waits and notifies we simply poll
+            try {
+                Thread.sleep(50);
+            } catch (final InterruptedException ignore) {
+                this.ignoreException(ignore);
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#forceRemoveJob(java.lang.String)
+     */
+    public void forceRemoveJob(final String jobId) {
+        while ( this.backgroundSession != null && !this.removeJob(jobId) ) {
+            // instead of using complicated syncs, waits and notifies we simply poll
+            try {
+                Thread.sleep(50);
+            } catch (final InterruptedException ignore) {
+                this.ignoreException(ignore);
+            }
+        }
+    }
+
+    /**
      * @see org.apache.sling.event.JobStatusProvider#wakeUpJobQueue(java.lang.String)
      */
-    public void wakeUpJobQueue(String jobQueueName) {
+    public void wakeUpJobQueue(final String jobQueueName) {
         if ( jobQueueName != null ) {
             synchronized ( this.jobQueues ) {
                 final JobBlockingQueue queue = this.jobQueues.get(jobQueueName);

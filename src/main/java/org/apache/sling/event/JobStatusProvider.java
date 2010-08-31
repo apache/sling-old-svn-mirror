@@ -124,6 +124,28 @@ public interface JobStatusProvider {
     boolean removeJob(String topic, String jobId);
 
     /**
+     * Cancel this job.
+     * This method acts like {@link #removeJob(String)} with the exception that it waits
+     * for a job to finish. The job will be removed when this method returns - however
+     * this method blocks until the job is finished!
+     * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
+     * @since 2.4.0
+     */
+    void forceRemoveJob(String jobId);
+
+    /**
+     * Cancel this job.
+     * This method acts like {@link #removeJob(String, String)} with the exception that it waits
+     * for a job to finish. The job will be removed when this method returns - however
+     * this method blocks until the job is finished!
+     * This method can be used if the topic and the provided job id is known.
+     * @param topic The job topic as put into the property {@link EventUtil#PROPERTY_JOB_TOPIC}.
+     * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
+     * @since 2.4.0
+     */
+    void forceRemoveJob(String topic, String jobId);
+
+    /**
      * Wake up the named job queue.
      * If a job failed, the job queue waits (sleeps) for a configured time. By calling this
      * method, the job queue can be woken up and force an immediate reprocessing.
