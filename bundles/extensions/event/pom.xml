@@ -54,11 +54,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!-- As we're using JCR 2.0 for testing we explicitly have to
-                             import version 1.0 here  -->
-                        <Import-Package>
-                            javax.jcr.*;version=1.0,*
-                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.event;version=2.4.0
                         </Export-Package>
@@ -95,16 +90,14 @@
     </reporting>
     <dependencies>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -158,16 +151,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Testing -->
+      <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -184,6 +173,12 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
             <version>2.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
