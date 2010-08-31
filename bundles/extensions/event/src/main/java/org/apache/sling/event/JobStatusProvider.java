@@ -37,7 +37,9 @@ public interface JobStatusProvider {
      * Return a list of currently scheduled jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @return A non null collection.
+     * @deprecated Use {@link #queryScheduledJobs(String, Map...)} instead.
      */
+    @Deprecated
     Collection<Event> getScheduledJobs(String topic);
 
     /**
@@ -45,7 +47,9 @@ public interface JobStatusProvider {
      * in the cluster, there could be more than one job in processing
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @return A non null collection.
+     * @deprecated Use {@link #queryCurrentJobs(String, Map...)} instead.
      */
+    @Deprecated
     Collection<Event> getCurrentJobs(String topic);
 
     /**
@@ -55,7 +59,9 @@ public interface JobStatusProvider {
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
      * @return A non null collection.
+     * @deprecated Use {@link #queryScheduledJobs(String, Map...)} instead.
      */
+    @Deprecated
     Collection<Event> getScheduledJobs(String topic, Map<String, Object>... filterProps);
 
     /**
@@ -66,7 +72,9 @@ public interface JobStatusProvider {
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
      * @return A non null collection.
+     * @deprecated Use {@link #queryCurrentJobs(String, Map...)} instead.
      */
+    @Deprecated
     Collection<Event> getCurrentJobs(String topic, Map<String, Object>... filterProps);
 
     /**
@@ -78,7 +86,9 @@ public interface JobStatusProvider {
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
      * @return A non null collection.
+     * @deprecated Use {@link #queryAllJobs(String, Map...)} instead.
      */
+    @Deprecated
     Collection<Event> getAllJobs(String topic, Map<String, Object>... filterProps);
 
     /**
@@ -152,4 +162,40 @@ public interface JobStatusProvider {
      * @param jobQueueName The name of the queue.
      */
     void wakeUpJobQueue(final String jobQueueName);
+
+    /**
+     * Return a list of currently scheduled jobs.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @since 2.4
+     */
+    JobsIterator queryScheduledJobs(String topic, Map<String, Object>... filterProps);
+
+    /**
+     * Return the jobs which are currently in processing. If there are several application nodes
+     * in the cluster, there could be more than one job in processing
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @since 2.4
+     */
+    JobsIterator queryCurrentJobs(String topic, Map<String, Object>... filterProps);
+
+    /**
+     * Return all jobs either running or scheduled.
+     * This is actually a convenience method and collects the results from {@link #getScheduledJobs(String, Map...)}
+     * and {@link #getCurrentJobs(String, Map...)}
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @since 2.4
+     */
+    JobsIterator queryAllJobs(String topic, Map<String, Object>... filterProps);
 }

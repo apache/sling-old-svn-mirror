@@ -251,7 +251,8 @@ public abstract class EventHelper {
      * @throws ClassNotFoundException
      */
     public static Dictionary<String, Object> readEventProperties(final Node node,
-                                                                 final ClassLoader objectClassLoader)
+                                                                 final ClassLoader objectClassLoader,
+                                                                 final boolean forceLoad)
     throws RepositoryException, ClassNotFoundException {
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
@@ -266,10 +267,18 @@ public abstract class EventHelper {
                     final Object value = ois.readObject();
                     properties.put(key, value);
                 }
+            } catch (ClassNotFoundException cnfe) {
+                if ( !forceLoad ) {
+                    throw cnfe;
+                }
             } catch (java.io.InvalidClassException ice) {
-                throw new ClassNotFoundException("Found invalid class.", ice);
+                if ( !forceLoad ) {
+                    throw new ClassNotFoundException("Found invalid class.", ice);
+                }
             } catch (IOException ioe) {
-                throw new RepositoryException("Unable to deserialize event properties.", ioe);
+                if ( !forceLoad ) {
+                    throw new RepositoryException("Unable to deserialize event properties.", ioe);
+                }
             }
         }
         // now all properties that have been set directly

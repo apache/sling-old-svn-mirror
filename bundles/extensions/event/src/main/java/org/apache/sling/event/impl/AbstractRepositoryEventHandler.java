@@ -290,9 +290,20 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
+        return this.readEvent(eventNode, false);
+    }
+
+    /**
+     * Read an event from the repository.
+     * @return
+     * @throws RepositoryException
+     * @throws ClassNotFoundException
+     */
+    protected Event readEvent(Node eventNode, final boolean forceLoad)
+    throws RepositoryException, ClassNotFoundException {
         final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
         final ClassLoader cl = this.getDynamicClassLoader();
-        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode, cl);
+        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode, cl, forceLoad);
 
         eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
         this.addEventProperties(eventNode, eventProps);
