@@ -163,7 +163,7 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                             EventUtil.acknowledgeJob(event);
                             cb.block();
                             try {
-                                Thread.sleep(400);
+                                Thread.sleep(500);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
@@ -173,19 +173,12 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                     }
                 });
         jeh.handleEvent(getJobEvent(null, "myid", null));
-        // sleep a little to give the job handler time write the job
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-
-        assertEquals(1, jeh.getAllJobs("sling/test").size());
         cb.block();
+        assertEquals(1, jeh.getAllJobs("sling/test").size());
         // job is currently sleeping, therefore cancel fails
         assertFalse(jeh.removeJob("sling/test", "myid"));
         try {
-            Thread.sleep(800);
+            Thread.sleep(900);
         } catch (InterruptedException e) {
             // ignore
         }
@@ -208,7 +201,7 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                             EventUtil.acknowledgeJob(event);
                             cb.block();
                             try {
-                                Thread.sleep(400);
+                                Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
@@ -218,14 +211,8 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                     }
                 });
         jeh.handleEvent(getJobEvent(null, "myid", null));
-        // sleep a little to give the job handler time write the job
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        assertEquals(1, jeh.getAllJobs("sling/test").size());
         cb.block();
+        assertEquals(1, jeh.getAllJobs("sling/test").size());
         // job is currently sleeping, but force cancel always waits!
         jeh.forceRemoveJob("sling/test", "myid");
         // the job is now removed
