@@ -97,7 +97,7 @@ public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
      * Mark this queue for cleanup.
      */
     public void markForCleanUp() {
-        if ( !this.isWaiting ) {
+        if ( !this.isWaiting && jobCount == 0 ) {
             this.markForCleanUp = true;
         }
     }
