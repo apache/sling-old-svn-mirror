@@ -407,7 +407,7 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
             if ( System.currentTimeMillis() - startTime > 25000 ) {
                 throw new Exception("Timeout during notification test.");
             }
-        } while ( count < 5);
+        } while ( count < 5 && started.size() < 10 );
         assertEquals("Finished count", 4, finished.size());
         assertEquals("Cancelled count", 1, cancelled.size());
         assertEquals("Started count", 10, started.size());
