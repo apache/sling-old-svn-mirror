@@ -59,9 +59,11 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
+import org.apache.sling.event.JobsIterator;
 import org.apache.sling.event.impl.job.JobBlockingQueue;
 import org.apache.sling.event.impl.job.JobStatusNotifier;
 import org.apache.sling.event.impl.job.JobUtil;
+import org.apache.sling.event.impl.job.JobsIteratorImpl;
 import org.apache.sling.event.impl.job.ParallelInfo;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
@@ -1104,6 +1106,29 @@ public class JobEventHandler
     }
 
     /**
+     * Read an event from the repository.
+     * This method is similar as {@link #readEvent(Node)} with the exception
+     * that it even loads the event if classes are missing
+     * @throws RepositoryException
+     */
+    public Event forceReadEvent(Node eventNode)
+    throws RepositoryException {
+        try {
+            return this.readEvent(eventNode);
+        } catch (ClassNotFoundException cnfe) {
+            this.ignoreException(cnfe);
+        }
+        // we try it again and set the force load flag
+        try {
+            return this.readEvent(eventNode, true);
+        } catch (ClassNotFoundException cnfe) {
+            // this can never happen but we catch it anyway and rethrow
+            this.ignoreException(cnfe);
+            throw new RepositoryException(cnfe);
+        }
+    }
+
+    /**
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
     public void onEvent(EventIterator iter) {
@@ -1513,12 +1538,12 @@ public class JobEventHandler
      * @return
      * @throws RepositoryException
      */
-    private Collection<Event> queryJobs(final String topic,
-                                        final Boolean locked,
-                                        final Map<String, Object>... filterProps)  {
+    private JobsIterator queryJobs(final String topic,
+                                   final Boolean locked,
+                                   final Map<String, Object>... filterProps)  {
         // we create a new session
         Session s = null;
-        final List<Event> jobs = new ArrayList<Event>();
+        boolean closeSession = true;
         try {
             s = this.createSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
@@ -1591,23 +1616,26 @@ public class JobEventHandler
             }
 
             final NodeIterator iter = q.execute().getNodes();
-            while ( iter.hasNext() ) {
-                final Node eventNode = iter.nextNode();
-                try {
-                    final Event event = this.readEvent(eventNode);
-                    jobs.add(event);
-                } catch (ClassNotFoundException cnfe) {
-                    // in the case of a class not found exception we just ignore the exception
-                    this.ignoreException(cnfe);
-                }
-            }
+            closeSession = false;
+            return new JobsIteratorImpl(iter, s, this);
         } catch (RepositoryException e) {
             // in the case of an error, we return an empty list
             this.ignoreException(e);
         } finally {
-            if ( s != null) {
+            if ( s != null && closeSession) {
                 s.logout();
             }
+        }
+        return new JobsIteratorImpl(null, null, null);
+    }
+
+    private Collection<Event> queryJobsAsList(final String topic,
+            final Boolean locked,
+            final Map<String, Object>... filterProps)  {
+        final JobsIterator ji = this.queryJobs(topic, locked, filterProps);
+        final List<Event> jobs = new ArrayList<Event>();
+        while ( ji.hasNext() ) {
+            jobs.add(ji.next());
         }
         return jobs;
     }
@@ -1615,6 +1643,7 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String)
      */
+    @Deprecated
     public Collection<Event> getCurrentJobs(String topic) {
         return this.getCurrentJobs(topic, (Map<String, Object>[])null);
     }
@@ -1622,6 +1651,7 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String)
      */
+    @Deprecated
     public Collection<Event> getScheduledJobs(String topic) {
         return this.getScheduledJobs(topic, (Map<String, Object>[])null);
     }
@@ -1629,25 +1659,27 @@ public class JobEventHandler
     /**
      * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String, java.util.Map...)
      */
+    @Deprecated
     public Collection<Event> getCurrentJobs(String topic, Map<String, Object>... filterProps) {
-        return this.queryJobs(topic, true, filterProps);
+        return this.queryJobsAsList(topic, true, filterProps);
     }
 
     /**
      * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String, java.util.Map...)
      */
+    @Deprecated
     public Collection<Event> getScheduledJobs(String topic, Map<String, Object>... filterProps) {
-        return this.queryJobs(topic, false, filterProps);
+        return this.queryJobsAsList(topic, false, filterProps);
     }
 
 
     /**
      * @see org.apache.sling.event.JobStatusProvider#getAllJobs(java.lang.String, java.util.Map...)
      */
+    @Deprecated
     public Collection<Event> getAllJobs(String topic, Map<String, Object>... filterProps) {
-        return this.queryJobs(topic, null, filterProps);
+        return this.queryJobsAsList(topic, null, filterProps);
     }
-
 
     /**
      * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String, java.lang.String)
@@ -1696,7 +1728,7 @@ public class JobEventHandler
                     if ( this.backgroundSession.itemExists(jobId) ) {
                         final Node eventNode = (Node) this.backgroundSession.getItem(jobId);
                         if ( eventNode.isLocked() ) {
-                            this.logger.info("Attempted to cancel a running job at {}", jobId);
+                            this.logger.debug("Attempted to cancel a running job at {}", jobId);
                             return false;
                         }
                         // try to load job to send notification
@@ -1788,6 +1820,27 @@ public class JobEventHandler
             props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
             localEA.postEvent(new Event(topic, props));
         }
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#queryAllJobs(String, Map...)
+     */
+    public JobsIterator queryAllJobs(final String topic, final Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, null, filterProps);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#queryCurrentJobs(String, Map...)
+     */
+    public JobsIterator queryCurrentJobs(final String topic, final Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, true, filterProps);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#queryScheduledJobs(String, Map...)
+     */
+    public JobsIterator queryScheduledJobs(final String topic, final Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, false, filterProps);
     }
 
     private static final class StartedJobInfo {
