@@ -601,6 +601,10 @@ public class JobEventHandler
                         if ( this.jobQueues.size() >= this.maxJobQueues ) {
                             this.logger.warn("Unable to create new job queue named {} as there are already {} job queues." +
                                     " Try to increase the maximum number of job queues!", queueName, this.jobQueues.size());
+                            // if the job is not put into a queue, we have to remove the queue name property
+                            final EventPropertiesMap newEvent = new EventPropertiesMap(info.event);
+                            newEvent.remove(EventUtil.PROPERTY_JOB_QUEUE_NAME);
+                            info.event = new Event(info.event.getTopic(), (Dictionary<String, Object>)newEvent);
                         } else {
                             final boolean orderedQueue = info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_ORDERED) != null;
                             final JobBlockingQueue jq = new JobBlockingQueue(queueName, orderedQueue, this.logger);
