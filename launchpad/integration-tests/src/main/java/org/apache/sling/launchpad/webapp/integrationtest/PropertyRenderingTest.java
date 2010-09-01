@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the rendering of JCR Properties, directly addressed by URLs.
@@ -28,6 +29,9 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 public class PropertyRenderingTest extends RenderingTestBase {
 
     private String slingResourceType;
+    
+    private String testMultiText1;
+    private String testMultiText2;
 
     @Override
     protected void setUp() throws Exception {
@@ -35,19 +39,27 @@ public class PropertyRenderingTest extends RenderingTestBase {
 
         // set test values
         testText = "This is a test " + System.currentTimeMillis();
+        testMultiText1 = "This is a multivalued test " + System.currentTimeMillis();
+        testMultiText2 = "This is another multivalued test " + System.currentTimeMillis();
+        
         slingResourceType = getClass().getName();
 
         // create the test node, under a path that's specific to this class to allow collisions
         final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
-        final Map<String,String> props = new HashMap<String,String>();
-        props.put("sling:resourceType", slingResourceType);
-        props.put("text", testText);
-        displayUrl = testClient.createNode(url, props);
+        
+        NameValuePairList list = new NameValuePairList();
+        list.add("sling:resourceType", slingResourceType);
+        list.add("text", testText);
+        list.add("multiText", testMultiText1);
+        list.add("multiText", testMultiText2);
+        displayUrl = testClient.createNode(url, list, null, true);
     }
 
     public void testNodeAccess() throws IOException {
         final String json = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.println(data.text)");
+        assertJavascript(testMultiText1, json, "out.println(data.multiText[0])");
+        assertJavascript(testMultiText2, json, "out.println(data.multiText[1])");
     }
 
     public void testTextJson() throws IOException {
@@ -68,6 +80,18 @@ public class PropertyRenderingTest extends RenderingTestBase {
     public void testTextNoExt() throws IOException {
         final String data = getContent(displayUrl + "/text", null);
         assertEquals(testText, data);
+    }
+
+    public void testMultiValuedTextJson() throws IOException {
+        final String json = getContent(displayUrl + "/multiText.json", CONTENT_TYPE_JSON);
+        assertEquals("{\"multiText\":[\"" + testMultiText1 + "\",\""+ testMultiText2 + "\"]}",json);
+    }
+
+    public void testMultiValuedTextHtml() throws IOException {
+        final String data = getContent(displayUrl + "/multiText.html", CONTENT_TYPE_HTML);
+        System.out.println(data);
+        assertTrue(data.contains(testMultiText1));
+        assertTrue(data.contains(testMultiText2));
     }
 
     public void testResourceTypeNoExt() throws IOException {

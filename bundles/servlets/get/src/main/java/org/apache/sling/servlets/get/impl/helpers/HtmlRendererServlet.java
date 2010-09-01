@@ -70,6 +70,11 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
             printResourceInfo(pw, r);
             render(pw, r, r.adaptTo(String.class));
             printEpilog(pw, isIncluded);
+        } else if ( r.adaptTo(String[].class) != null ) {
+            printProlog(pw, isIncluded);
+            printResourceInfo(pw, r);
+            render(pw, r, r.adaptTo(String[].class));
+            printEpilog(pw, isIncluded);
         } else {
             if ( !isIncluded ) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
@@ -125,6 +130,12 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
     private void render(PrintWriter pw, Resource r, String value) {
         printPropertyValue(pw, "Resource Value", value);
+    }
+
+    private void render(PrintWriter pw, Resource r, String[] values) {
+        for (String value : values) {
+            printPropertyValue(pw, "Resource Value", value);
+        }
     }
 
     private void printPropertyValue(PrintWriter pw, String name, Object value) {
