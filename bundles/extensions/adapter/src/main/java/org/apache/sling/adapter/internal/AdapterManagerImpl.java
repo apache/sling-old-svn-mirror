@@ -55,26 +55,6 @@ import org.osgi.service.log.LogService;
  */
 public class AdapterManagerImpl implements AdapterManager {
 
-    /**
-     * The singleton instance of this manager. This field is set when the
-     * instance is {@link #activate(ComponentContext) activated} and cleared
-     * when the instance is {@link #deactivate(ComponentContext) deactivated}.
-     *
-     * This field is set to public to make it easier for testing to provide
-     * an own adapter manager implementation which can be used together
-     * with {@link org.apache.sling.adapter.SlingAdaptable}s. (see SLING-1195).
-     * As this class is private this field is not accessible in an OSGi environment!
-     */
-    public static AdapterManager INSTANCE;
-
-    /**
-     * Returns the instance of this class or <code>null</code> if no activate
-     * yet.
-     */
-    public static AdapterManager getInstance() {
-        return INSTANCE;
-    }
-
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private LogService log;
 
@@ -171,15 +151,6 @@ public class AdapterManagerImpl implements AdapterManager {
         }
 
         // final "enable" this manager by setting the instance
-        // do not overwrite the field if already set (this is unexpected
-        // actually)
-        if (AdapterManagerImpl.INSTANCE == null) {
-            AdapterManagerImpl.INSTANCE = this;
-        } else {
-            log(LogService.LOG_WARNING,
-                "Not setting Instance field: Set to another manager "
-                    + AdapterManagerImpl.INSTANCE, null);
-        }
         SyntheticResource.setAdapterManager(this);
     }
 
@@ -188,15 +159,6 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     protected void deactivate(ComponentContext context) {
         SyntheticResource.unsetAdapterManager(this);
-        // "disable" the manager by clearing the instance
-        // do not clear the field if not set to this instance
-        if (AdapterManagerImpl.INSTANCE == this) {
-            AdapterManagerImpl.INSTANCE = null;
-        } else {
-            log(LogService.LOG_WARNING,
-                "Not clearing instance field: Set to another manager "
-                    + AdapterManagerImpl.INSTANCE, null);
-        }
         this.context = null;
     }
 
