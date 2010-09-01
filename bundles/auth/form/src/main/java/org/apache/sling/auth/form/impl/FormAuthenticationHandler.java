@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * The <code>FormAuthenticationHandler</code> class implements the authorization
  * steps based on a cookie.
  */
-@Component(label = "%auth.form.name", description = "%auth.form.description", name = "org.apache.sling.auth.form.FormAuthenticationHandler")
+@Component(label = "%auth.form.name", description = "%auth.form.description", metatype = true, name = "org.apache.sling.auth.form.FormAuthenticationHandler")
 @Properties( {
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Form Based Authentication Handler"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
