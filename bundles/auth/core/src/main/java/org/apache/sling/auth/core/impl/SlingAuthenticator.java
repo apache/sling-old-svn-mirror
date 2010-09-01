@@ -669,6 +669,11 @@ public class SlingAuthenticator implements Authenticator,
                 // so desired by the handler
                 if (feedbackHandler.authenticationSucceeded(request, response,
                     authInfo)) {
+
+                    // request will now be terminated, so close the resolver
+                    // to release resources
+                    resolver.close();
+
                     return false;
                 }
 
@@ -678,6 +683,11 @@ public class SlingAuthenticator implements Authenticator,
                 // asked for redirect after authentication and/or impersonation
                 if (DefaultAuthenticationFeedbackHandler.handleRedirect(
                     request, response)) {
+
+                    // request will now be terminated, so close the resolver
+                    // to release resources
+                    resolver.close();
+
                     return false;
                 }
 
@@ -723,6 +733,11 @@ public class SlingAuthenticator implements Authenticator,
                 // authentication and/or impersonation
                 if (DefaultAuthenticationFeedbackHandler.handleRedirect(
                     request, response)) {
+
+                    // request will now be terminated, so close the resolver
+                    // to release resources
+                    resolver.close();
+
                     return false;
                 }
 
