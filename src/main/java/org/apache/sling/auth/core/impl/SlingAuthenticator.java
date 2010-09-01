@@ -543,14 +543,24 @@ public class SlingAuthenticator implements Authenticator,
     /**
      * Returns the list of registered authentication handlers as a map
      */
-    Map<String, String> getAuthenticationHandler() {
+    Map<String, List<String>> getAuthenticationHandler() {
         List<AbstractAuthenticationHandlerHolder> registeredHolders = authHandlerCache.getHolders();
-        LinkedHashMap<String, String> handlerMap = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, List<String>> handlerMap = new LinkedHashMap<String, List<String>>();
         for (AbstractAuthenticationHandlerHolder holder : registeredHolders) {
-            handlerMap.put(holder.fullPath, holder.getProvider());
+            List<String> provider = handlerMap.get(holder.fullPath);
+            if (provider == null) {
+                provider = new ArrayList<String>();
+                handlerMap.put(holder.fullPath, provider);
+            }
+            provider.add(holder.getProvider());
         }
         if (httpBasicHandler != null) {
-            handlerMap.put("/", httpBasicHandler.toString());
+            List<String> provider = handlerMap.get("/");
+            if (provider == null) {
+                provider = new ArrayList<String>();
+                handlerMap.put("/", provider);
+            }
+            provider.add(httpBasicHandler.toString());
         }
         return handlerMap;
     }

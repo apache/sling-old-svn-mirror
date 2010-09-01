@@ -81,15 +81,15 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content' colspan='2'>Handler</td>");
         pw.println("</tr>");
 
-        final Map<String, String> handlerMap = slingAuthenticator.getAuthenticationHandler();
-        for (Map.Entry<String, String> handler : handlerMap.entrySet()) {
-
-            pw.println("<tr class='content'>");
-            pw.println("<td class='content'>" + handler.getKey() + "</td>");
-            pw.println("<td class='content' colspan='2'>" + handler.getValue()
-                + "</td>");
-            pw.println("</tr>");
-
+        final Map<String, List<String>> handlerMap = slingAuthenticator.getAuthenticationHandler();
+        for (Map.Entry<String, List<String>> handler : handlerMap.entrySet()) {
+            final String path = handler.getKey();
+            for (String name : handler.getValue()) {
+                pw.println("<tr class='content'>");
+                pw.println("<td class='content'>" + path + "</td>");
+                pw.println("<td class='content' colspan='2'>" + name + "</td>");
+                pw.println("</tr>");
+            }
         }
     }
 
