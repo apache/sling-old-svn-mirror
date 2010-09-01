@@ -94,6 +94,16 @@ public class PropertyRenderingTest extends RenderingTestBase {
         assertTrue(data.contains(testMultiText2));
     }
 
+    public void testMultiValuedTextTxt() throws IOException {
+        final String data = getContent(displayUrl + "/multiText.txt", CONTENT_TYPE_PLAIN);
+        assertEquals("[" + testMultiText1 + ", " + testMultiText2 + "]", data);
+    }
+
+    public void testMultiValuedTextNoExt() throws IOException {
+        // multi-valued properties can't be adapted to a stream, so this returns an error
+        assertHttpStatus(displayUrl + "/multiText", 403);
+    }
+
     public void testResourceTypeNoExt() throws IOException {
         final String data = getContent(displayUrl + "/sling:resourceType", null);
         assertEquals(slingResourceType, data);

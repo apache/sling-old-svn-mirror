@@ -65,6 +65,8 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
             dump(pw, r, map);
         } else if ( r.adaptTo(String.class) != null ) {
             printPropertyValue(pw, ResourceUtil.getName(r), r.adaptTo(String.class), false);
+        } else if ( r.adaptTo(String[].class) != null ) {
+            printPropertyValue(pw, ResourceUtil.getName(r), r.adaptTo(String[].class), false);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
