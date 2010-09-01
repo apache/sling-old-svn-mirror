@@ -665,6 +665,9 @@ public class SlingAuthenticator implements Authenticator,
             // handle success feedback
             if (feedbackHandler != null) {
 
+                // provide the resource resolver to the feedback handler
+                request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
+
                 // call the feedback handler, terminating the request if
                 // so desired by the handler
                 if (feedbackHandler.authenticationSucceeded(request, response,
