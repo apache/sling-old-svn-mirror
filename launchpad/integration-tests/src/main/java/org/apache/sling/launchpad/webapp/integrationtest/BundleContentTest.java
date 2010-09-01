@@ -33,4 +33,10 @@ public class BundleContentTest extends HttpTestBase {
         final String content = getContent(HTTP_BASE_URL + "/sling-test/sling/from-bundle.2.json", CONTENT_TYPE_JSON);
         assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
     }
+    
+    public void testBundleContentParentList() throws IOException {
+        final String expected = "from-bundle";
+        final String content = getContent(HTTP_BASE_URL + "/sling-test/sling.2.json", CONTENT_TYPE_JSON);
+        assertTrue("Content contains " + expected + " (" + content + ")", content.contains(expected));
+    }
 }
