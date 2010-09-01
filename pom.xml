@@ -61,7 +61,7 @@
                 <configuration>
                     <instructions>
 						<Export-Package>
-                            org.apache.sling.jackrabbit.usermanager;version=${project.version},
+                            org.apache.sling.jackrabbit.usermanager;version=2.0.6,
 						</Export-Package>
                         <Private-Package>
                             org.apache.sling.jackrabbit.usermanager.impl.*
