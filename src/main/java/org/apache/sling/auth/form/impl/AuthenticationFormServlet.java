@@ -18,37 +18,39 @@
  */
 package org.apache.sling.auth.form.impl;
 
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationFormServlet;
 import org.apache.sling.auth.form.FormReason;
 
 /**
  * The <code>AuthenticationFormServlet</code> provides the default login form
  * used for Form Based Authentication.
- *
- * @scr.component metatype="no"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *               value="Default Login Form for Form Based Authentication"
- * @scr.service interface="javax.servlet.Servlet"
  */
+@Component
+@Properties( {
+    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
+    @Property(name = "service.description", value = "Default Login Form for Form Based Authentication") })
+@Service(value = Servlet.class)
 @SuppressWarnings("serial")
 public class AuthenticationFormServlet extends AbstractAuthenticationFormServlet {
 
     /**
      * The constant is used to provide the service registration path
-     *
-     * @scr.property name="sling.servlet.paths"
      */
+    @Property(name = "sling.servlet.paths")
     static final String SERVLET_PATH = "/system/sling/form/login";
 
     /**
      * This constant is used to provide the service registration property
      * indicating to pass requests to this servlet unauthenticated.
-     *
-     * @scr.property name="sling.auth.requirements"
      */
+    @Property(name = "sling.auth.requirements")
     @SuppressWarnings("unused")
     private static final String AUTH_REQUIREMENT = "-" + SERVLET_PATH;
 
