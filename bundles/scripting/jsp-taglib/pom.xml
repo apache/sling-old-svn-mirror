@@ -50,7 +50,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.jsp.taglib.*;version=${project.version}
+                            org.apache.sling.scripting.jsp.taglib.*;version=2.0.8
                         </Export-Package>
                         <Import-Package>
                             javax.jcr;resolution:=optional,
