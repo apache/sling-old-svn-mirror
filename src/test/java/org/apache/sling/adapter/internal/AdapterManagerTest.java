@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
-import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.adapter.mock.MockAdapterFactory;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.adapter.SlingAdaptable;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -53,9 +53,7 @@ public class AdapterManagerTest {
     }
 
     @org.junit.After public void tearDown() {
-        if (AdapterManagerImpl.getInstance() == am) {
-            am.deactivate(null); // not correct, but argument unused
-        }
+        am.deactivate(null); // not correct, but argument unused
     }
 
     /**
