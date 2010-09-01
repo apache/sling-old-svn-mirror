@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
-import org.apache.sling.api.adapter.AdapterManager;
+import org.apache.sling.api.adapter.SlingAdaptable;
 
 /**
  * The <code>AbstractResource</code> is an abstract implementation of the
@@ -34,36 +34,9 @@ import org.apache.sling.api.adapter.AdapterManager;
  *
  * @since 2.1.0
  */
-public abstract class AbstractResource implements Resource {
-
-    /** The adapter manager used for adapting the synthetic resource. */
-    private static volatile AdapterManager ADAPTER_MANAGER;
-
-    /**
-     * Set the adapter manager to be used by a synthetic resource. A bundle
-     * implementing the adapter manager can set the manager through this method.
-     * The set adapter manager will be used in the {@link #adaptTo(Class)}
-     * method of a synthetic resource.
-     *
-     * @param adapterMgr The adapter manager.
-     */
-    public static void setAdapterManager(final AdapterManager adapterMgr) {
-        ADAPTER_MANAGER = adapterMgr;
-    }
-
-    /**
-     * Unset an adapter manager previously set with
-     * {@link #setAdapterManager(AdapterManager)}. If this method is called with
-     * an <code>AdapterManager</code> different from the currently set one it
-     * has no effect.
-     *
-     * @param adapterMgr The adapter manager
-     */
-    public static void unsetAdapterManager(final AdapterManager adapterMgr) {
-        if (ADAPTER_MANAGER == adapterMgr) {
-            ADAPTER_MANAGER = null;
-        }
-    }
+public abstract class AbstractResource
+    extends SlingAdaptable
+    implements Resource {
 
     /**
      * Returns the name of this resource.
@@ -85,12 +58,12 @@ public abstract class AbstractResource implements Resource {
      */
     @SuppressWarnings("deprecation")
     public Resource getParent() {
-        /*
-         * Implemented calling the deprecated ResourceUtil.getParent method
-         * (which actually has the implementation) to prevent problems if there
-         * are implementations of the pre-2.1.0 Resource interface in the
-         * framework.
-         */
+        //
+        // Implemented calling the deprecated ResourceUtil.getParent method
+        // (which actually has the implementation) to prevent problems if there
+        // are implementations of the pre-2.1.0 Resource interface in the
+        // framework.
+        //
         return ResourceUtil.getParent(this);
     }
 
@@ -134,31 +107,11 @@ public abstract class AbstractResource implements Resource {
      * methods.
      */
     public boolean isResourceType(String resourceType) {
-        /*
-         * Implemented calling the ResourceUtil.isA method (which actually has
-         * the implementation) to prevent problems if there are implementations
-         * of the pre-2.1.0 Resource interface in the framework.
-         */
+        //
+        // Implemented calling the ResourceUtil.isA method (which actually has
+        // the implementation) to prevent problems if there are implementations
+        // of the pre-2.1.0 Resource interface in the framework.
+        //
         return ResourceUtil.isA(this, resourceType);
     }
-
-    /**
-     * If a adapter manager has been set through
-     * {@link #setAdapterManager(AdapterManager)} this adapter manager is used
-     * to adapt the resource to the given type. Otherwise this method returns
-     * <code>null</code>.
-     * <p>
-     * This default base implementation is intended to be overwritten by
-     * extensions. Overwriting implementations are are encouraged to call this
-     * base class implementation if they themselves cannot adapt to the
-     * requested type.
-     */
-    public <Type> Type adaptTo(Class<Type> type) {
-        final AdapterManager adapterMgr = ADAPTER_MANAGER;
-        if (adapterMgr != null) {
-            return adapterMgr.getAdapter(this, type);
-        }
-        return null;
-    }
-
 }
