@@ -37,12 +37,21 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.auth.form.FormReason;
@@ -57,36 +66,21 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>FormAuthenticationHandler</code> class implements the authorization
  * steps based on a cookie.
- *
- * @scr.component immediate="false" label="%auth.form.name"
- *                description="%auth.form.description"
- *                name="org.apache.sling.auth.form.FormAuthenticationHandler"
- * @scr.property name="service.description"
- *               value="Apache Sling Form Based Authentication Handler"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef=
- *               "org.apache.sling.auth.core.spi.AuthenticationHandler.PATH_PROPERTY"
- *               values.0="/"
- * @scr.property nameRef=
- *               "org.apache.sling.auth.core.spi.AuthenticationHandler.TYPE_PROPERTY"
- *               valueRef="javax.servlet.http.HttpServletRequest.FORM_AUTH"
- *               private="true"
- * @scr.service
  */
+@Component(label = "%auth.form.name", description = "%auth.form.description", name = "org.apache.sling.auth.form.FormAuthenticationHandler")
+@Properties( {
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Form Based Authentication Handler"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = AuthenticationHandler.PATH_PROPERTY, value = "/", cardinality = 100),
+    @Property(name = AuthenticationHandler.TYPE_PROPERTY, value = HttpServletRequest.FORM_AUTH, propertyPrivate = true) })
+@Service
 public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /**
      * The name of the parameter providing the login form URL.
-     *
-     * @scr.property valueRef="AuthenticationFormServlet.SERVLET_PATH"
      */
+    @Property(value=AuthenticationFormServlet.SERVLET_PATH)
     private static final String PAR_LOGIN_FORM = "form.login.form";
-
-    /**
-     * @scr.property valueRef="DEFAULT_AUTH_STORAGE" options "cookie"="Cookie"
-     *               "session"="Session Attribute"
-     */
-    private static final String PAR_AUTH_STORAGE = "form.auth.storage";
 
     /**
      * The value of the {@link #PAR_AUTH_STORAGE} parameter indicating the use
@@ -106,13 +100,10 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     private static final String DEFAULT_AUTH_STORAGE = AUTH_STORAGE_COOKIE;
 
-    /**
-     * The name of the configuration parameter providing the Cookie or session
-     * attribute name.
-     *
-     * @scr.property valueRef="DEFAULT_AUTH_NAME"
-     */
-    private static final String PAR_AUTH_NAME = "form.auth.name";
+    @Property(value = DEFAULT_AUTH_STORAGE, options = {
+        @PropertyOption(name = AUTH_STORAGE_COOKIE, value = "Cookie"),
+        @PropertyOption(name = AUTH_STORAGE_SESSION_ATTRIBUTE, value = "Session Attribute") })
+    private static final String PAR_AUTH_STORAGE = "form.auth.storage";
 
     /**
      * The default Cookie or session attribute name
@@ -122,12 +113,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final String DEFAULT_AUTH_NAME = "sling.formauth";
 
     /**
-     * This is the name of the SimpleCredentials attribute that holds the auth
-     * info extracted from the cookie value.
-     *
-     * @scr.property valueRef="DEFAULT_CREDENTIALS_ATTRIBUTE_NAME"
+     * The name of the configuration parameter providing the Cookie or session
+     * attribute name.
      */
-    private static final String PAR_CREDENTIALS_ATTRIBUTE_NAME = "form.credentials.name";
+    @Property(value = DEFAULT_AUTH_NAME)
+    private static final String PAR_AUTH_NAME = "form.auth.name";
 
     /**
      * Default value for the {@link #PAR_CREDENTIALS_ATTRIBUTE_NAME} property
@@ -135,12 +125,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final String DEFAULT_CREDENTIALS_ATTRIBUTE_NAME = DEFAULT_AUTH_NAME;
 
     /**
-     * The number of minutes after which a login session times out. This value
-     * is used as the expiry time set in the authentication data.
-     *
-     * @scr.property type="Integer" valueRef="DEFAULT_AUTH_TIMEOUT"
+     * This is the name of the SimpleCredentials attribute that holds the auth
+     * info extracted from the cookie value.
      */
-    public static final String PAR_AUTH_TIMEOUT = "form.auth.timeout";
+    @Property(value = DEFAULT_CREDENTIALS_ATTRIBUTE_NAME)
+    private static final String PAR_CREDENTIALS_ATTRIBUTE_NAME = "form.credentials.name";
 
     /**
      * The default authentication data time out value.
@@ -150,20 +139,19 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final int DEFAULT_AUTH_TIMEOUT = 30;
 
     /**
-     * The name of the file used to persist the security tokens
-     *
-     * @scr.property valueRef="DEFAULT_TOKEN_FILE"
+     * The number of minutes after which a login session times out. This value
+     * is used as the expiry time set in the authentication data.
      */
-    private static final String PAR_TOKEN_FILE = "form.token.file";
+    @Property(intValue = DEFAULT_AUTH_TIMEOUT)
+    public static final String PAR_AUTH_TIMEOUT = "form.auth.timeout";
 
     private static final String DEFAULT_TOKEN_FILE = "cookie-tokens.bin";
 
     /**
-     * Whether to redirect to the login form or simple do an include.
-     *
-     * @scr.property type="Boolean" valueRef="DEFAULT_INCLUDE_FORM"
+     * The name of the file used to persist the security tokens
      */
-    private static final String PAR_INCLUDE_FORM = "form.use.include";
+    @Property(value = DEFAULT_TOKEN_FILE)
+    private static final String PAR_TOKEN_FILE = "form.token.file";
 
     /**
      * The default include value.
@@ -173,12 +161,10 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final boolean DEFAULT_INCLUDE_FORM = false;
 
     /**
-     * Whether to present a login form when a users cookie expires, the default
-     * is not to present the form.
-     *
-     * @scr.property type="Boolean" valueRef="DEFAULT_LOGIN_AFTER_EXPIRE"
+     * Whether to redirect to the login form or simple do an include.
      */
-    private static final String PAR_LOGIN_AFTER_EXPIRE = "form.onexpire.login";
+    @Property(boolValue = DEFAULT_INCLUDE_FORM)
+    public static final String PAR_INCLUDE_FORM = "form.use.include";
 
     /**
      * The default login after expire of a cookie.
@@ -188,10 +174,16 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final boolean DEFAULT_LOGIN_AFTER_EXPIRE = false;
 
     /**
-     * The default domain on which to see the auth cookie (if cookie storage is used)
-     *
-     * @scr.property
+     * Whether to present a login form when a users cookie expires, the default
+     * is not to present the form.
      */
+    @Property(boolValue = DEFAULT_LOGIN_AFTER_EXPIRE)
+    private static final String PAR_LOGIN_AFTER_EXPIRE = "form.onexpire.login";
+
+    /**
+     * The default domain on which to see the auth cookie (if cookie storage is used)
+     */
+    @Property
     private static final String PAR_DEFAULT_COOKIE_DOMAIN = "form.default.cookie.domain";
 
     /**
@@ -247,9 +239,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /**
      * The service ranking property.
-     *
-     * @scr.property type="Integer" value="0" private="false"
      */
+    @Property(intValue = 0, propertyPrivate = false)
     @SuppressWarnings("unused")
     private static final String PAR_SERVICE_RANKING = Constants.SERVICE_RANKING;
 
@@ -304,9 +295,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /**
      * The resource resolver factory used to resolve the login form as a resource
-     *
-     * @scr.reference policy="dynamic" cardinality="0..1"
      */
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private ResourceResolverFactory resourceResolverFactory;
 
     /**
@@ -739,7 +729,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
         final String defaultCookieDomain = OsgiUtil.toString(
             properties.get(PAR_DEFAULT_COOKIE_DOMAIN), null);
-        
+
         final String authStorage = OsgiUtil.toString(
             properties.get(PAR_AUTH_STORAGE), DEFAULT_AUTH_STORAGE);
         if (AUTH_STORAGE_SESSION_ATTRIBUTE.equals(authStorage)) {
