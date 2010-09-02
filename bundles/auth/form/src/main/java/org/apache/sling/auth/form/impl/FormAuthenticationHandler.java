@@ -25,7 +25,6 @@ import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
-
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
@@ -72,7 +71,8 @@ import org.slf4j.LoggerFactory;
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Form Based Authentication Handler"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
     @Property(name = AuthenticationHandler.PATH_PROPERTY, value = "/", cardinality = 100),
-    @Property(name = AuthenticationHandler.TYPE_PROPERTY, value = HttpServletRequest.FORM_AUTH, propertyPrivate = true) })
+    @Property(name = AuthenticationHandler.TYPE_PROPERTY, value = HttpServletRequest.FORM_AUTH, propertyPrivate = true),
+    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false) })
 @Service
 public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
@@ -236,13 +236,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * {@link FormReason} value.
      */
     static final String PAR_J_REASON = "j_reason";
-
-    /**
-     * The service ranking property.
-     */
-    @Property(intValue = 0, propertyPrivate = false)
-    @SuppressWarnings("unused")
-    private static final String PAR_SERVICE_RANKING = Constants.SERVICE_RANKING;
 
     /**
      * Key in the AuthenticationInfo map which contains the domain on which the
@@ -727,8 +720,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         final String authName = OsgiUtil.toString(
             properties.get(PAR_AUTH_NAME), DEFAULT_AUTH_NAME);
 
-        final String defaultCookieDomain = OsgiUtil.toString(
-            properties.get(PAR_DEFAULT_COOKIE_DOMAIN), null);
+        String defaultCookieDomain = OsgiUtil.toString(
+            properties.get(PAR_DEFAULT_COOKIE_DOMAIN), "");
+        if (defaultCookieDomain.length() == 0) {
+            defaultCookieDomain = null;
+        }
 
         final String authStorage = OsgiUtil.toString(
             properties.get(PAR_AUTH_STORAGE), DEFAULT_AUTH_STORAGE);
@@ -931,11 +927,17 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
             // send the cookie to the response
             String cookieDomain = (String) info.get(COOKIE_DOMAIN);
-            if (cookieDomain == null) {
+            if (cookieDomain == null || cookieDomain.length() == 0) {
                 cookieDomain = defaultCookieDomain;
             }
-            setCookie(request, response, this.cookieName, cookieValue, -1, cookieDomain);
-            setCookie(request, response, this.domainCookieName, cookieDomain, -1, cookieDomain);
+            setCookie(request, response, this.cookieName, cookieValue, -1,
+                cookieDomain);
+
+            // send the cookie domain cookie if domain is not null
+            if (cookieDomain != null) {
+                setCookie(request, response, this.domainCookieName,
+                    cookieDomain, -1, cookieDomain);
+            }
         }
 
         public void clear(HttpServletRequest request,
@@ -957,7 +959,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             // remove the old cookie from the client
             if (oldCookie != null) {
                 setCookie(request, response, this.cookieName, "", 0, oldCookieDomain);
-                if (oldCookieDomain != null) {
+                if (oldCookieDomain != null && oldCookieDomain.length() > 0) {
                     setCookie(request, response, this.domainCookieName, "", 0, oldCookieDomain);
                 }
             }
