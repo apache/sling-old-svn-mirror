@@ -595,7 +595,7 @@ public class JcrResourceResolver
             while (res != null) {
                 String alias = getProperty(res, PROP_ALIAS);
                 if (alias == null) {
-                    alias = res.getName();
+                    alias = ResourceUtil.getName(res);
                 }
                 if (alias != null && alias.length() > 0 && !alias.endsWith(":")) {
                     names.add(alias);
