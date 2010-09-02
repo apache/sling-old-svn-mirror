@@ -78,7 +78,6 @@
                         </Import-Package>
                         <Embed-Dependency>
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/OsgiUtil.*",
-                            commons-lang;inline="org/apache/commons/lang/StringUtils.class",
                             commons-codec;inline="org/apache/commons/codec/binary/Base64.*
                             |org/apache/commons/codec/binary/Hex*
                             |org/apache/commons/codec/binary/StringUtils*
