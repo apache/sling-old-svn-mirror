@@ -42,7 +42,7 @@ html, body
 
 html /* shows always scrollbar in Firefox*/
 {
-	overflow-y: scroll;
+	overflow: visible;
 }	
 	
 body
@@ -50,9 +50,10 @@ body
 	font-size: 13px;
 	color: #545D66;
 	margin: 0;
-	padding: 0 0 20px 0;
+	padding: 0;
 	text-align: center;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
+	overflow: hidden;
 }
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
@@ -81,14 +82,24 @@ h2
 
 h3
 {
-	font-size: 16px;
-	line-height: /**/;
+	font-size: 14px;
+	background-color: #527EA3;
+	color: #F6FBFE;
+	padding: 5px 10px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	margin: 0 0 10px 0;
 }
 
 h4, h5, h6
 {
-	font-size: 13px;
-	line-height: /**/;
+	font-size: 12px;
+	background-color: #a4bcd0;
+	color: #FFFFFF;
+	padding: 5px 10px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	margin: 0 0 10px 0;
 }
 
 b, strong, b *, strong *
@@ -103,7 +114,8 @@ i, em, i *, em *
 
 ul, ol
 {
-	margin: 10px 0 10px 35px;
+	clear: both;
+/*	margin: 10px 0 10px 35px; */
 }
 
 ul
@@ -116,7 +128,7 @@ ol
 
 li
 {
-	margin: 3px 0;
+	margin: 5px 0;
 }
 
 p
@@ -150,7 +162,7 @@ a:hover
 	text-decoration: underline;
 }
 
-a:focus, input:focus, button:focus
+a:focus, input:focus, button:focus, :focus
 {
 	outline: none;
 }
@@ -164,6 +176,8 @@ button, .button
 	color: #354F66;
 	font-weight: bold;
 	width: auto!important;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
 }
 
 input.button
@@ -171,8 +185,16 @@ input.button
 	padding: 1px 3px;
 }
 
+
+a.button
+{
+	color: #354F66;
+	text-decoration: none;
+}
+
 button:hover, .button:hover
 {
+	color: #354F66;
 	background-color: #BDD2E5;
 	border: 2px solid #354F66;
 	padding: 1px 4px;
@@ -278,7 +300,7 @@ form fieldset p
 		
 label
 {
-	width: 200px;
+	width: 25%;
 	float: left;
 	display: inline;
 }
@@ -319,21 +341,28 @@ input[type=hidden], input.hidden
 	top: -100px;
 }
 
-input.text
+input[type=disabled], input.disabled, select[type=disabled], select.disabled, .protected
 {
-	display: inline;
-	width: 200px;
+	background-color: #CCCCCC;
 }
 
-input.checkbox, input.radio
+input.text
+{
+	float: left;
+	display: inline;
+	width: 65%;
+	margin: 0 5px 0 5%;
+}
+
+input.checkbox, input.radio, input[type=checkbox], input[type=radio]
 {
 	float: none;
 	border: none;
 	background-color: transparent;
-	height: 12px;
-	width: 12px;
+	height: 16px!important;
+	width: 16px!important;
 	padding: 0;
-	position: absolute;
+	margin: 2px 2px 2px 5%!important;
 }
 
 #newsletter input.checkbox
@@ -351,7 +380,11 @@ input.checkbox
 
 select
 {
+	float: left;
 	display: inline;
+	width: 65%;
+	margin: 0 5px 0 5%;
+	padding: 1px 2px;
 }
 
 textarea
@@ -431,7 +464,7 @@ form#login-form fieldset p
 	margin: 10px 20px;
 	font-size: 11px;
 	background-color: #f6fbfe;
-	border: 2px solid #bdd2e5;
+	border: 1px solid #bdd2e5;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	padding: 5px 7px;
@@ -439,23 +472,27 @@ form#login-form fieldset p
 
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
-/* --- Query Dialog  ---*/
+/* --- Query Search Dialog  ---*/
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 
 #query_container
 {
 	clear: both;
 	margin: 20px;
-	border: 2px solid #527EA3;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	border: 1px solid #527EA3;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	background-color: #F6FBFE;
 }
 
 #expl_search
 {
-	padding: 10px;
-	background-color: #F6FBFE;
+	margin: 10px;
+}
+
+#expl_search form
+{
+	height: 90px;
 }
 
 #show_query_dialog
@@ -463,7 +500,17 @@ form#login-form fieldset p
 	background-color: transparent;
 	line-height: normal;
 	border: none;     
+	float: left;
+	display: inline;
 	overflow: visible; /* Fix for IE */
+}
+
+.foundQueries
+{
+	float: left;
+	display: inline;
+	margin: 8px 0 0 50px;
+	font-size: 10px;
 }
 
 button#show_query_dialog
@@ -472,7 +519,8 @@ button#show_query_dialog
 	text-decoration: underline;
 	width: 80px;
 	height: 25px;
-	margin: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 5px;
+	padding: 0px 0px 1px 18px;
 	background: url(../img/query_bg.png);
 	background-repeat: no-repeat;
 	background-color: #F6FBFE;
@@ -480,8 +528,7 @@ button#show_query_dialog
 	height: 25px;
 	width: 100%;
 	display: block;
-	padding: 0px 0px 1px 18px;
-	font-size: 10px;
+	font-size: 13px;
 	text-decoration: none;
 	text-align: left;
 }
@@ -489,8 +536,30 @@ button#show_query_dialog
 button#show_query_dialog.query_open
 {
 	background-position: 8px 1px;
-	border-bottom: 1px solid #BDD2E5;
 }
+
+#sql_search_result h4
+{
+	margin-left: -40px;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Page Navigation  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#page_navigation
+{
+	margin: 20px 0;
+	font-size: 10px;
+}
+
+#page_navigation a
+{
+	margin-right: 5px;	
+}
+
+
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 /* --- Main Layout - Header / Logo / Content / Footer  ---*/
@@ -521,32 +590,39 @@ button#show_query_dialog.query_open
 
 #expl_sidebar
 {
-	border: 2px solid #527EA3;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	border: 1px solid #527EA3;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	width: 340px;
 	float: left;
 	display: inline;
 	padding-bottom: 20px;
-	min-height: 600px;
 	background-color: #F6FBFE;
+	overflow: auto;
 }
 
 #expl_content
 {
 	margin: 0 0 0 354px;
-	border: 2px solid #527EA3;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	border: 1px solid #527EA3;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	padding: 20px;
 	background-color: #F6FBFE;
+	overflow: auto;
 }
 
 #expl_footer
 {
-	margin: 20px 20px 0 20px;
+	height: 20px;
+	margin: 20px;
 	clear: both;
 	font-size: 11px;
+}
+
+#expl_footer p 
+{
+	margin: 0;
 }
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
@@ -579,7 +655,7 @@ button#show_query_dialog.query_open
 
 #expl_sidebar li.branch
 {
-	border-bottom: 0px;
+	border-bottom: none;
 }
 
 #expl_sidebar li.empty
@@ -600,16 +676,18 @@ button#show_query_dialog.query_open
 
 #expl_sidebar li p a
 {
+	color: #545D66;
 	display: block;
 	padding: 2px 5px;
 	text-decoration: none;
 	border: 1px solid #F6FBFE;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 }
 
 #expl_sidebar li p a:hover
 {
+	color: #545D66;
 	border: 1px solid #BDD2E5;
 }
 
@@ -626,22 +704,23 @@ button#show_query_dialog.query_open
 	padding: 2px 5px;
 	text-decoration: none;
 	border: 1px solid #354F66;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	background-color: #527EA3;
-	color: #BDD2E5;
+	color: #FFFFFF;
 }
 
 #expl_sidebar li p.selected a:hover
 {
 	color: #FFFFFF;
+	background-color: #83a3be;
 }
 
 #expl_sidebar li ul
 {
 	border-top: 1px dotted black;
-	margin-left: -1em;
-	padding-left: 2em;
+	margin-left: -10px;
+	padding-left: 18px;
 }
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
@@ -661,30 +740,133 @@ button#show_query_dialog.query_open
 /* ################################################################# */
 
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Header  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#expl_content_header h2
+{
+	float: left;
+	display: inline;
+}
+
+
+#expl_content_header form.deleteNote
+{
+	float: right;
+	display: inline;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 /* --- Properties  ---*/
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 
 .edit_properties_container
 {
-	border-top: 1px dotted #354F66;
-	margin: 30px 0 0 0;
+	margin: 10px 0 0 0;
 	padding: 10px 0;
-}
-
-.edit_properties_container form fieldset ul#multiyvalueproperty
-{
-	margin: 0 0 0 313px;
-	padding: 0;
 }
 
 .add_property
 {
-	margin: 0 10px 0 300px;
 }
 
 .property_element
 {
 	padding: 10px;
 	border: 1px solid #BDD2E5;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	margin: 0 0 10px 0;
+}
+
+.edit_properties
+{
+	margin: 20px 0 0 30%;
+}
+
+.saveAs
+{
+	float: left;
+	display: inline;
+	margin-left: 5%;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Multivalue Properties  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+.multivalued ul
+{
+	width: 66%;
+	float: left;
+	display: inline;
+	margin-left: 5%;
+	clear: none;
+	padding: 0 0 0 15px;
+}
+
+.addMultivalueproperty
+{
+	clear: both;
+	margin: 0 0 0 30%;
+}
+
+.addMultivalueproperty input,
+.addMultivalueproperty select
+{
+	width: 88%;
+	margin-left: 0;
+}
+
+.addMultivalueproperty a.button
+{
+	float: left;
+	display: inline;
+	margin-top: 2px;
+}
+
+.multivalued ul li
+{
+	padding: 3px 5px 5px 5px;
+}
+
+.multivalued ul li a.button
+{
+	float: right;
+	display: inline;
+}
+
+.multivalued ul li:hover
+{
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background-color: #BDD2E5;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Propoerty Table  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+table.propoerty_table
+{
+	border-collapse: separate;
+	border-spacing: 0;
+	table-layout: fixed;
+	width: 100%;
+}
+
+table.propoerty_table td 
+{
+	text-align: left;
+	vertical-align: top;
+}
+
+table.propoerty_table td input,
+table.propoerty_table td select
+{
+	margin: 0;
+	width: 90%;
 }

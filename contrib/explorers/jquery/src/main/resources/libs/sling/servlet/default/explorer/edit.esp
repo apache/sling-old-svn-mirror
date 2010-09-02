@@ -22,6 +22,7 @@
 <%
     var path = resource.path;
     var readonly = false;    
+
     var session = request.resourceResolver.adaptTo(Packages.javax.jcr.Session);
     if (session)
     {
@@ -36,20 +37,25 @@
 		isJcrNode = true;
 	} catch (e) {}
 %>
-<h2><%= Packages.org.apache.sling.api.resource.ResourceUtil.getName(resource) %></h2>
+	<div id="expl_content_header">
+	<h2><%= Packages.org.apache.sling.api.resource.ResourceUtil.getName( resource ) %></h2>
+	<form class="deleteNote" action="<%=path%>" method="post">
+	  <input name=":operation" type="hidden" value="delete">
+	  <input name=":redirect" type="hidden" value="<%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
+	  <input type="submit" class="button" value="delete this node">
+	</form>
+	<div class="clear"></div>
+</div>
+  
 <p><a href="<%= path %>.explorer.html"><%=path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
     <%
     try {
         if ( session ) { // currentNode && 
             session.checkPermission(path, "remove");
             %>
-<div>
-  <form action="<%=path%>" method="post">
-  <input name=":operation" type="hidden" value="delete">
-  <input name=":redirect" type="hidden" value="<%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
-  <input type="submit" class="button" value="delete this node">
-  </form>
-</div>
+
+
+
 
             <%
         }
@@ -58,151 +64,136 @@
     }
     %>
 
-<div class="edit_properties_container">
-  <h3>properties</h3>
+
   <%
   
-    var props = resource.adaptTo(Packages.org.apache.sling.api.resource.PersistableValueMap);
-    if (!props) {
+    var properties = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+    if (!properties) {
         readonly = true;
-        props = Packages.org.apache.sling.api.resource.ResourceUtil.getValueMap(resource)
+        properties = Packages.org.apache.sling.api.resource.ResourceUtil.getValueMap(resource)
     }
-  
-    var propKeys = props.keySet().toArray();
-    for (var idx in propKeys) {
-        var id = propKeys[idx];
-        var val = props.get(id, Packages.javax.jcr.Property);
-        var type;
-		var isProperty = false;
-		var isMultivalueProperty = false;
-
-        if ( val ) 
-		{
-			isProperty = true;
-            type = Packages.javax.jcr.PropertyType.nameFromValue( val.type );
-			isMultivalueProperty = val.isMultiple();
-        } 
-		else 
-		{
-            val = props.get( id );
-            type = "String";
-        }
-
-        %>
-		<div id="property_element_<%= id %>" class="property_element">
-        <form id="properties_form_<%= id %>" action="<%=path%>" method="post">
-			<fieldset>
-				<label for="<%= id %>"><%= id %> [ <%= type %> <% if ( isMultivalueProperty ) {%>MULTIVALUE<% } %>] </label>
-				<% if ( isMultivalueProperty ) 
-				{ %>			
-					<input type="hidden" name="<%= id %>@TypeHint" value="<%= type %>[]" /> 
-					<ul id="<%= id %>_entries">
-					<% 
-					for ( var idx in val.getValues() )
-					{ 
-						var entry = val.getValues()[idx];	%>
-						<li>
-							<input type="hidden" name="<%= id %>" value="<%= entry.getString() %>" />
-							<%= entry.getString() %> 
-							<% if ( canModifyProperties && !val.getDefinition().isProtected() ) { %>
-							<a href="#" onclick="$(this).parent().remove();update_property('<%= id %>');">x</a>
-							<% } %>
-						</li>
-					<% 
-					} 
+	var primaryNodeTypeId = "jcr:primaryType";
+	var primaryNodeType = properties.get(primaryNodeTypeId, Packages.javax.jcr.Property);
+	if ( primaryNodeType ) {
+	%>		
+	<div class="edit_properties_container">
+		<h3>general</h3>
+		<div id="property_element_<%= primaryNodeTypeId %>" class="property_element">
+		<fieldset>
+			<label for="<%= primaryNodeTypeId %>"><%= primaryNodeTypeId %> [ <%= Packages.javax.jcr.PropertyType.nameFromValue( primaryNodeType.type ) %>] </label>
+			<%  
+			var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
+			if ( primaryNodeTypes.hasNext() ) { %>
+			<select class="prop_value protected" name ="<%= primaryNodeTypeId %>" id="<%= primaryNodeTypeId %>">
+				<% while ( primaryNodeTypes.hasNext() ) {
+					var primaryNodeType = primaryNodeTypes.nextNodeType();
 					%>
-					</ul>
-					<% if ( canModifyProperties && !val.getDefinition().isProtected() ) { %>
-						<input id="<%= id %>_new_entry" type="text" class="text add_property" /><a href="#" onclick="add_property_entry('<%= id %>')" class="button">add</a>
-					<% } %>
-			
-				<% 
-				} else { %>
-	            <% if ( id.equals( "jcr:primaryType" ) ) { %>            	
-	                <%  var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
-	                	if ( primaryNodeTypes.hasNext() ) { %>
-					    <select class="prop_value" name ="<%= id %>" id="<%= id %>">
-					    	<% while ( primaryNodeTypes.hasNext() ) {
-					    		var primaryNodeType = primaryNodeTypes.nextNodeType();
-					    		%>
-					    		<option <% if ( primaryNodeType.getName().equals( val.toString() ) ) { %> selected <%}%>><%=primaryNodeType.getName()%></option>
-					    	<% } %>
-					    </select>
-				    <% } %>
-	            <% } 
-				else 
-				{ 
-					if ( isProperty )
-					{
-						switch ( val.getType() ) { 
-							case Packages.javax.jcr.PropertyType.DATE : %>
-								<input  class="prop_value text datepicker" name="<%= id %>" id="<%= id %>" value="<%= val %>" />
-							<%
-							break; 
-							case Packages.javax.jcr.PropertyType.BOOLEAN : %>
-								<input type="hidden" name="<%= id %>" id="<%= id %>_cb" value="<%= val %>" >
-								<input type="checkbox" id="<%= id %>" <% if ( val.getBoolean() ) { %>checked<% } %> onchange="$('#<%= id %>_cb').val(this.checked ? 'true' : 'false');">
-							<% 
-								break;
-							case Packages.javax.jcr.PropertyType.REFERENCE :
-							case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
-							case Packages.javax.jcr.PropertyType.PATH :
-								try {
-									var refNode = val.getNode();
-									var resourceType = '';
-									/*
-									var node = refNode.adaptTo(Packages.javax.jcr.Node);
-									if ( node && node.hasProperty( 'sling:resourceType' ) ) {
-										resourceType = node.getProperty('sling:resourceType');
-									}
-									*/
-							%>
-								-> <a href="#" onclick="skip_to('<%= refNode.getPath() %>', '<%= resourceType %>')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a><input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" />
-							<% 
-								} catch ( ex ) {}
-								break;
-							default: %>
-								<input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" />							
-							<% 
-								break; 
-						} // switch 
-					}
-					else {
-					%>
-						<input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" /> [not a property!]
-					<%
-					}
-						%>
-	            <% } 
-			} 
-		%>
-			<input name=":redirect" type="hidden" value="<%=path%>.explorer.html">
+					<option <% if ( primaryNodeType.getName().equals( primaryNodeType.toString() ) ) { %> selected <%}%>><%= primaryNodeType.getName() %></option>
+				<% } %>
+			</select>				
+			<% } %>
 			</fieldset>
-        </form>       	
-
-	
-        <% if ( canModifyProperties && isProperty && !val.getDefinition().isProtected() ) { %>
-			<div class="edit_properties">
-				<button class="button_update_property" onclick="update_property('<%= id %>'); return false;">update property</button>
-				<button class="button_delete_property" onclick="delete_property('<%= id %>'); return false;">delete property</button>
-			</div>			
-        <% } %>
-      </div>  
-
-        <%
-    } // for
-    %>
-</div>
-	<div id="mixintypes">
-		<h3>mixin types...still to come</h3>
-	</div>
-
+		</div>
 	<%
-    if (!readonly) {
+	}
+	
+	// var mixinTypes = resource.getMixinTypes();
+	var mixinTypesId = "jcr:mixinTypes";
+	var mixinTypes = properties.get( mixinTypesId, Packages.javax.jcr.Property );
+	if ( mixinTypes || canModifyProperties ) { %>
+		<h3>mixin types</h3>
+		<div id="property_element_<%= mixinTypesId %>" class="multivalued property_element">
+			<form id="properties_form_<%= mixinTypesId %>" action="<%= path %>" method="post">
+				<fieldset>
+					<label for="<%= mixinTypesId %>"><%= mixinTypesId %></label>
+					<%	
+					create_multivalueinput_for_type( mixinTypesId, "Name", mixinTypes, false );
+					%>
+					<% if (canModifyProperties) { %>
+						<select id="<%= mixinTypesId %>_new_entry" >
+						<%
+							var mixinNodeTypes = session.getWorkspace().getNodeTypeManager().getMixinNodeTypes();
+							while ( mixinNodeTypes.hasNext() ) {
+								var nodeType = mixinNodeTypes.nextNodeType();
+						%>
+							<option><%= nodeType.getName() %></option>
+						<% } %>
+						</select>
+						<a href="#" onclick="add_property_entry('<%= mixinTypesId %>')" class="button">add</a>
+					<% } %>
+				</fieldset>
+			</form>
+		</div>
+	<%  
+	}	
+    var propKeys = properties.keySet().toArray();
+	if ( (propKeys.length > 0) || canModifyProperties ) { %>
+		<h3>properties</h3>
+	<%
+		for (var idx in propKeys) {
+			var id = propKeys[idx];
+			var isProperty = false;
+			var isMultivalueProperty = false;
+			var val = properties.get( id, Packages.javax.jcr.Property );
+			var type;
+			if ( val ) 
+			{
+				isProperty = true;
+				type = Packages.javax.jcr.PropertyType.nameFromValue( val.type );
+				isMultivalueProperty = val.isMultiple();
+			} 
+			else 
+			{
+				val = properties.get( id );
+				type = "String";
+			} 
+			if ( !id.equals( primaryNodeTypeId ) && !id.equals( mixinTypesId ) ) { %>
+			<div id="property_element_<%= id %>" class="<% if ( isMultivalueProperty ) {%> multivalued <% } %> property_element">
+			<form id="properties_form_<%= id %>" action="<%=path%>" method="post">
+				<fieldset>
+					<label for="<%= id %>"><%= id %> [ <%= type %> <% if ( isMultivalueProperty ) {%>MULTIVALUE<% } %>] </label>
+					<% if ( isMultivalueProperty ) 
+					{  
+						create_multivalueinput_for_type( id, type, val, true );
+					} else { 
+						if ( isProperty )
+						{
+							create_input_for_type( id, val.getType(), val, ( canModifyProperties && !val.getDefinition().isProtected() ), false  );
+						}
+						else {
+						%>
+							<input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" /> [not a property!]
+						<%
+						}
+					} 
+			%>
+				<input name=":redirect" type="hidden" value="<%=path%>.explorer.html">
+				</fieldset>
+			</form>       	
+
+		
+			<% if ( canModifyProperties && isProperty && !val.getDefinition().isProtected() ) { %>
+				<div class="edit_properties">
+				<% if (!isMultivalueProperty) { %>
+					<button class="button_update_property" onclick="update_property('<%= id %>'); return false;">update property</button>
+				<% } %>
+					<button class="button_delete_property" onclick="delete_property('<%= id %>'); return false;">delete property</button>
+				</div>			
+			<% } %>
+		  </div>
+		  
+		<% }
+		} // for
+	}
+	%>
+	</div>
+	<%
+    if (!readonly && canModifyProperties ) {
     %>
-		<div >
-		  <h3>add property</h3>
-		  <table>
+		<div class="blubb">
+		  <h4>add property</h4>
+		  <div class="property_element">
+		  <table class="propoerty_table">
 		  <thead class="smallLabel">
 		  <tr>
 		  <td>Name</td>
@@ -214,7 +205,7 @@
 		  <tbody>
 		  <tr>
 			  <td><input id="expl_add_prop_name" type="text" class="text"/></td>
-			  <td><input id="expl_add_prop_multi" type="checkbox"></td>
+			  <td><input id="expl_add_prop_multi" class="checkbox" type="checkbox"></td>
 			  <td>
 				  <select id="expl_add_prop_type">
 					<option>Name</option>
@@ -233,13 +224,11 @@
 			  </tr>
 		  </tbody>
 		  </table>
+		  </div>
 		</div>
 
     <%
     }
-    %>
-   
-    <%
     if (session) {
         try {       
           session.checkPermission(path, "add_node");
@@ -247,7 +236,8 @@
 <div >
   <h3>add new sub-node</h3>
   <form action="<%=path%>/*" method="post">
-  <table>
+  <div class="property_element">
+  <table class="propoerty_table">
   <thead class="smallLabel">
   <tr>
   <td>Name hint</td>
@@ -282,6 +272,7 @@
   </tr>
   </tbody>
   </table>
+  </div>
   </form>
 </div>
 
@@ -304,6 +295,9 @@
 		$("#expl_add_prop_type").change( function (e) {
 			$("#prop_value_div").html( create_edit_field_for_type( 'expl_add_prop_value', $("#expl_add_prop_type").val() ) );
 		});
+		
+		// disable protected fields
+		$(".protected").attr("disabled", "disabled");
 	
 		$.datetimebox.setDefaults({
 			showOn: 'both',
@@ -346,7 +340,7 @@
 			case 'Boolean' :
 				prop_val_input = '<input type="hidden" name="' 
 						+ field_name + '" id="'
-						+ field_name + '" value="false"><input type="checkbox" onchange="$(\'#'
+						+ field_name + '" value="false"><input class="checkbox" type="checkbox" onchange="$(\'#'
 						+ field_name + '\').val(this.checked ? \'true\' : \'false\');">';
 				break;
 			case 'Date' :
@@ -363,21 +357,23 @@
 	// adding click handlers for "delete property" links (x)
 	function add_property_entry( id )
 	{				
-		var value = $("input:text[id="+ id +"_new_entry]").val();
+		var value = $("[id="+ id +"_new_entry]").val();
 		var li_html = '<li><input type="hidden" name="' 
 					+ id + '" value="' 
 					+ value + '" />'
-					+ value + ' <a href="#" onclick="$(this).parent().remove();">x</a></li>';
+					+ value + ' <a href="#" class="button" onclick="$(this).parent().remove();update_property(\'' + id + '\');">delete</a></li>';
 		$("ul[id='" + id + "_entries']").append(li_html);
-		update_property(id);
+		update_property( id );
 	}
 
+	// submit property
 	function update_property( id )
 	{
 		$.post('<%= path %>', 
-			$('#properties_form_'+id).serialize(), 
+			$("form[id='properties_form_"+id+"']" ).serialize(), 
 			function( data ) {
 				// todo: animate "Saved"
+				reload_properties();
 		} );
 	}
 	
@@ -389,22 +385,22 @@
 			params, 
 			function( data ) {
 				// todo: success? if yes...
-				$("#property_element_" + id).remove();
+				$("[id=property_element_" + id+"]").remove();
 				// todo: animate "Deleted"
 		} );
 	}
 			
 	function decorate_datepicker() {
-		$(".datepicker").datetimebox({
+		$(".datepicker:not(.protected)").datetimebox({
 		showOn: 'both',
 		buttonImageOnly: true,
-		buttonImage: 'calendar.gif',
+		buttonImage: '/libs/sling/explorer/img/calendar.gif',
 		buttonText: 'Calendar',
 		dateFormat: 'yy-mm-dd hh:ii',
 		changeYear: true,
 		changeMonth: true,
 		closeText: 'Confirm',
-		closeImage: 'calendar_close.gif',
+		closeImage: '/libs/sling/explorer/img/calendar.gif',
 		timeText: 'Time (hh:mm): ',
 		prevText: 'Previous',
 		nextText: 'Next',
@@ -428,4 +424,79 @@
 		});
 }
 </script>
+
+<% function create_input_for_type( id, type, val, editable, omitName ) { 
+	switch ( type ) { 
+		case Packages.javax.jcr.PropertyType.DATE : %>
+			<input  class="prop_value text datepicker" <% if (!omitName) { %> name="<%= id %>" <% } %> id="<%= id %>" value="<%= val %>" />
+		<%
+		break; 
+		case Packages.javax.jcr.PropertyType.BOOLEAN : %>
+			<input type="hidden" name="<%= id %>" id="<%= id %>_cb" value="<%= val %>" >
+			<input type="checkbox" class="checkbox" id="<%= id %>" <% if(!editable) { %> class="protected" <%}%> <% if ( val.getBoolean() ) { %>checked<% } %> onchange="$('[id=<%= id %>_cb]').val( this.checked ? 'true' : 'false' );">
+		<% 
+			break;
+		case Packages.javax.jcr.PropertyType.REFERENCE :
+		case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
+		case Packages.javax.jcr.PropertyType.PATH :
+			try {
+				var refNode = val.getNode();
+				var resourceType = '';
+				/*
+				var node = refNode.adaptTo(Packages.javax.jcr.Node);
+				if ( node && node.hasProperty( 'sling:resourceType' ) ) {
+					resourceType = node.getProperty('sling:resourceType');
+				}
+				*/
+		%>
+			-> <a href="#" onclick="skip_to('<%= refNode.getPath() %>', '<%= resourceType %>')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a>
+			<input class="prop_value text <% if(!editable) { %> protected <%}%>" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>" />
+		<% 
+			} catch ( ex ) {}
+			break;
+		case Packages.javax.jcr.PropertyType.BINARY :
+		%>
+			<a class="saveAs" href="<%= path %>" target="_blank">Download content (use "Save as...")</a>
+		<%
+			break;
+		default: %>
+			<input class="prop_value text <% if(!editable) { %> protected <%}%>" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>" />							
+		<% 
+			break; 
+	} // switch 
+} %>
     
+<% function create_multivalueinput_for_type( id, type, multivalue_property, include_add_field ) {
+%>
+	<input type="hidden" name="<%= id %>@TypeHint" value="<%= type %>[]" /> 
+	<ul id="<%= id %>_entries">
+	<% 
+	if ( multivalue_property ) {
+		for ( var idx in multivalue_property.getValues() )
+		{ 
+			var entry = multivalue_property.getValues()[idx];	%>
+			<li>
+				<input type="hidden" name="<%= id %>" value="<%= entry.getString() %>" />
+				<%= entry.getString() %> 
+				<% if ( canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { %>
+					<a href="#" class="button" onclick="$(this).parent().remove();update_property('<%= id %>');">delete</a>
+				<% } %>
+			</li>
+		<% 
+		} // for
+	} // if
+	%>
+	</ul>
+	<div class="addMultivalueproperty">
+		<% if ( include_add_field && canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { 
+			create_input_for_type( id+"_new_entry", type, '', true, true );
+			%>
+			<a href="#" onclick="add_property_entry('<%= id %>')" class="button">add</a>
+			<div class="clear"></div>
+	</div>	
+		<% 
+
+	}
+
+}
+%>

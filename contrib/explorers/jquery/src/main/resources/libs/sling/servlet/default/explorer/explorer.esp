@@ -64,82 +64,13 @@ catch (ex) {  }
 						
 			<fieldset>			
 				<p>
-					<label for="j_username">Username:</label>&nbsp;<input type="text" class="text" accesskey="u" name="j_username" id="j_username" />&nbsp;
+					<label for="j_username">Username:</label>&nbsp;<input type="text" class="" accesskey="u" name="j_username" id="j_username" />&nbsp;
 					<label for="j_password">Password:</label>&nbsp;<input type="password" accesskey="p" name="j_password" id="j_password" />&nbsp;
 				 	<button class="form-button" accesskey="l" id="do_login">Login</button>
 				</p>     
 			</fieldset>	
 			
 		</form>
-		 
-		<script type="text/javascript">
-		// <![CDATA[
-			$( function() {		
-				// query - sliding window
-				$("button#show_query_dialog").click(function () {
-					$('button#show_query_dialog').toggleClass('query_open');
-					$("#expl_search").slideToggle("slow");
-				});
-				
-				
-				// login - sliding window
-				$("a#show_login_dialog").click(function () {
-					$('a#show_login_dialog').toggleClass('login_open');
-					$("#login-dialog").slideToggle("slow");
-				});
-				
-				$('button#do_login').click( function(e) {
-					var userId = $("input#j_username").val();
-					// ajax login
-					$.post('/j_security_check', 
-						$("#login-form").serialize(),
-						function(data) {
-							if ( userId == Sling.getSessionInfo().userID )
-							{
-								$("#login-dialog").slideToggle("slow");
-								update_credentials();
-							}
-							else
-							{
-								// failed to login!
-							}
-					});
-					return false;
-				});
-				
-				$('a#do_logout').click( function(e) {
-					// ajax logout
-					$.get( '/system/sling/logout.html', function(data) { 
-						update_credentials();
-					} );
-				});
-				
-				update_credentials();
-			});
-			
-			function update_credentials()
-			{		
-				var info = Sling.getSessionInfo();
-				document.getElementById("username").innerHTML = info.userID;
-				document.getElementById("workspace").innerHTML = info.workspace;
-				document.getElementById("menu_username").innerHTML = info.userID;
-				
-				if ("anonymous" == info.userID) {
-				  // anonymous, assume not logged int
-				  document.getElementById("login").style.display="block";
-				  document.getElementById("logout").style.display="none";
-				  document.getElementById("menu_login").style.display="block";
-				  document.getElementById("menu_logout").style.display="none";
-				} else {
-				  document.getElementById("login").style.display="none";
-				  document.getElementById("logout").style.display="block";
-				  document.getElementById("menu_login").style.display="none";
-				  document.getElementById("menu_logout").style.display="block";
-				}
-			}
-		// ]]>
-		</script>
-	
 	</div>
 	
     <div class="menu">
@@ -155,11 +86,12 @@ catch (ex) {  }
           <div id="expl_logo">
             <a href="http://incubator.apache.org/sling">
 	            <img width="51" height="30" src="http://incubator.apache.org/sling/site/media.data/logo.png" alt="Apache Sling"/>
-            </a>
+            </a><!-- <span id="height"></span> -->
           </div>
 	
 		<div id="query_container">	
-			<button id="show_query_dialog">Query</button>
+			<button id="show_query_dialog">Query</button> <span class="foundQueries"></span>
+			<div class="clear"></div>
 			<div id="expl_search" style="display:none;">
 				<form action="#">
 					<p>
@@ -181,20 +113,21 @@ catch (ex) {  }
 								} // if
 							%>
 						</select>
+						<br class="clear" />
 					</p>
 					<p>
 						<label>
 							Query expression:
 						</label>
 						<input type="text" class="text" name="search_expression" id="search_expression" ></input>
+						<br class="clear" />
 					</p>
 					<p>
 						<input class="button" type="submit" value="Execute!" onclick="search($('#query_language').val(), $('#search_expression').val(), 1 ); return false;" /> 
-					</p>
-					
+						<br class="clear" />
+					</p>					
 				</form>
-				<div id="sql_search_result">
-				</div>
+				<div id="sql_search_result"></div>
 			</div>
 		</div>
 
@@ -209,8 +142,7 @@ catch (ex) {  }
 
 		<div id="expl_content">
 			content
-		</div>
-		
+		</div>		
 		<div class="clear"></div>
 	
 	</div>
@@ -218,10 +150,7 @@ catch (ex) {  }
 		<div id="expl_footer">
 		<p id="logout" style="display:none">
            You are currently logged in as user <b id="username">????</b> to
-           workspace <b id="workspace">????</b>. To login with a different
-           username (use <em>admin/admin</em> to be allowed to write to the
-           repository), follow <a href="system/sling/logout"
-           title="Click to Logout">this link</a> to logout first.
+           workspace <b id="workspace">????</b>.
         </p>
         
         <p id="login" style="display:none">
@@ -229,16 +158,77 @@ catch (ex) {  }
            to be allowed to write to the repository), follow
            <a href="system/sling/login" title="Click to Login">this link</a>.
         </p>
-        
-        <script type="text/javascript">
-			$( function() {
-				init_load('<%= resource.path %>', '<%= resourceType %>');
-			});
-        </script>
-		  Note that this explorer is still <b>experimental</b>
-		  - 
-		  <a href="http://svn.apache.org/repos/asf/sling/trunk/contrib/explorers/jquery" target="_new">patches</a> are welcome!
+<!--		
+Resource resolver user ID: <%= request.resourceResolver.getUserID() %>(<%=request.getAuthType() %>)<br/>
+Session user ID: <span id="sessionuserid"></span>
+-->
 		</div>
 	</div>	
+		 
+		<script type="text/javascript">
+		// <![CDATA[
+			$( function() {
+				// window resizing -> adjust sidebar and content height
+				$(window).resize( function() {
+					adjust_height();
+				});
+				
+				// query - sliding window
+				$("button#show_query_dialog").click(function () {
+					$('button#show_query_dialog').toggleClass('query_open');
+					$("#expl_search").slideToggle( "slow", adjust_height );
+				});
+				
+				
+				// login - sliding window
+				$("a#show_login_dialog").click(function () {
+					$('a#show_login_dialog').toggleClass('login_open');
+					$("#login-dialog").slideToggle("slow", adjust_height );
+				});
+				
+				$('button#do_login').click( function(e) {
+					var userId = $("input#j_username").val();
+					// ajax login
+					$.post('/j_security_check', 
+						$("#login-form").serialize(),
+						function(data) {
+							if ( userId == Sling.getSessionInfo().userID )
+							{
+								$("#login-dialog").slideToggle("slow", adjust_height );
+								update_credentials();
+								load_props( currentPath, currentResourceType );
+							}
+							else
+							{
+								// failed to login!
+							}
+					});
+					return false;
+				});
+				
+				$('a#do_logout').click( function(e) {
+					// ajax logout
+					$.get( '/system/sling/logout.html', function(data) { 
+						update_credentials();
+						load_props( currentPath, currentResourceType );
+					} );
+				});
+				
+				update_credentials();
+				init_load('<%= resource.path %>', '<%= resourceType %>');
+				adjust_height();
+			});
+			
+			function adjust_height() {
+				var newHeight = $(window).height() - $("#expl_logo").outerHeight(true) - $("#query_container").outerHeight(true) - $("#expl_footer").outerHeight(true);
+				var offset_top = $("#expl_content_container").offset().top;
+				var newHeight2 = $(window).height() - offset_top -  $("#expl_footer").outerHeight(true);
+				// $("#height").html(" window height " + $(window).height() + " height1 " + newHeight + " offset top " + offset_top + " height2 " + newHeight2 );
+				$("#expl_sidebar").height(newHeight2 - 25);
+				$("#expl_content").height(newHeight2 - 45);
+			}
+			
+		// ]]>
+		</script>	
 </body>
 </html>

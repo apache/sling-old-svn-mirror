@@ -42,15 +42,35 @@ init_load = function(path, resourceType) {
 }
 
 /** toggle a node in the menu */
-explorer_toggle = function(path, resourceType) {
+explorer_toggle = function( path, resourceType ) {
+  var id = path_2_id( path ); // replacing / with _
+  var is_open = $('p#'+id+'>a').hasClass('open');
+  
+  load_props("/" + path);
+  
+  if (is_open){
+    //remove children
+    $('p#'+id).parent().find('ul').each(function(){
+      $(this).empty();
+      this.parentNode.removeChild( this )
+    });
+    $('p#'+id+">a").removeClass('open');  // closed
+    $('p#'+id).parent().removeClass('branch'); // remove css class    
+  } else {
+    load_branch(path);
+  }
+}
+
+/** NOT IN USE: cached toggling - subtree is cached **/
+explorer_toggle2 = function( path, resourceType ) {
 	var id = path_2_id( path ); // replacing / with _
 	var is_open = $('p#' + id + '>a').hasClass('open');
 
 	load_props("/" + path, resourceType);
 
 	var subtree = $('ul', $('p#' + id).parent());
-	if (is_open) {
-		if (subtree.length != 0) // should always resolve to true...
+	if ( is_open ) {
+		if ( subtree.length != 0 ) // should always resolve to true...
 		{
 			subtree.hide();
 		}
@@ -70,7 +90,7 @@ explorer_toggle = function(path, resourceType) {
 /** load branch/subtree **/
 load_branch = function( path, callback ) {
 	if (path != '') {
-		var id = path_2_id( path ); // replacing / with _
+		var id = path_2_id( path );
 		$('p#' + id + ">a").removeAttr('href'); // remove onclick
 
 		// fetch children
@@ -87,23 +107,32 @@ load_branch = function( path, callback ) {
 	}
 }
 
-load_props = function(path, resourceType) {
-	var id = path_2_id( path ); // replacing / with _
-	//id = id.replace(/^_/, ""); // remove trailing _
+var currentPath = null;
+var currentResourceType = null;
+load_props = function( path, resourceType ) {
+	// check whether currently selected node is on 'path'
+	//var currently_selected_node = $('#expl_content').data( "currently_selected_node" );
+	//if (currently_selected_node && path == currently_selected_node) return;
+	
+	$('#expl_content').data("currently_selected_node", path);
+	
+	var id = path_2_id( path );
 	if ($('p#' + id))
 	{
 		$('p', $('#expl_sidebar')).removeClass('selected'); // deselect all
 		$('p[id="' + id + '"]').addClass('selected'); // select the current node
 	}
-	else
-	{
-		alert('p#' + id);
-	}
 	$.get(path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':','_') + '.') ) + "html", function(data) {
-		if (data.length > 0) {
-			$('#expl_content').html(data);
+		if ( data.length > 0 ) {
+			$('#expl_content').html( data );
+			currentPath = path;
+			currentResourceType = resourceType;
 		}
 	});
+}
+
+reload_properties = function() {
+	load_props(currentPath, currentResourceType);
 }
 
 add_prop = function(node) {
@@ -119,7 +148,8 @@ add_prop = function(node) {
 	params[name + '@TypeHint'] = type;
 	params[name] = value;
 	$.post(node, params, function(data) {
-		window.location = node + '.explorer.html';
+		reload_properties();
+		// window.location = node + '.explorer.html';
 	});
 }
 
@@ -127,6 +157,7 @@ search = function(language, expression, page) {
 	// search and load search results
 	$.get("/.explorer.search.html", { "language" : language, "expression" : expression, "page" : page }, function(data) {
 		$('#sql_search_result').html(data);
+		adjust_height();
 	});
 }
 
@@ -164,4 +195,25 @@ path_2_id = function(path) {
 	id = id.replace(/\[/g, '_');// due to the css selectors
 	id = id.replace(/\]/g, '_');// due to the css selectors
 	return id;
+}
+
+update_credentials = function() {
+	var info = Sling.getSessionInfo();
+	if ( info )
+	{
+		document.getElementById("username").innerHTML = info.userID;
+		document.getElementById("workspace").innerHTML = info.workspace;
+		document.getElementById("menu_username").innerHTML = info.userID;
+	}
+	if ( info && info.authType ) { 	
+	  document.getElementById("login").style.display="none";
+	  document.getElementById("logout").style.display="block";
+	  document.getElementById("menu_login").style.display="none";
+	  document.getElementById("menu_logout").style.display="block";
+	} else {	
+	  document.getElementById("login").style.display="block";
+	  document.getElementById("logout").style.display="none";
+	  document.getElementById("menu_login").style.display="block";
+	  document.getElementById("menu_logout").style.display="none";
+	}
 }

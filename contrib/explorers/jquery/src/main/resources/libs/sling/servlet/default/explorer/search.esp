@@ -31,7 +31,7 @@ if ( session )
 	var page = parseInt(request.getParameter("page") || 1);
 	var queryManager = session.getWorkspace().getQueryManager();
 %>
-Query results:
+<h3>Query results:</h3>
 <ul>
 <%	
 	var countExpression = expression; // must contain an 'order by' clause
@@ -57,15 +57,19 @@ Query results:
 		}
 	}
 	var overallEntryCount = 'unknown';
+	var durationInMs = 'unknown';
 	if ( countExpression.toLowerCase().match(/order\s*by/) )
 	{
-		var countQuery = queryManager.createQuery( countExpression , language );  
+		var countQuery = queryManager.createQuery( countExpression , language );
+		var start = new Date();
 		var results = countQuery.execute();
+		var end = new Date();
+		var durationInMs = end.getTime() - start.getTime();
 		overallEntryCount = results.getRows().getSize();
 		knownNumberOfHits = true;
 	}
 	%>
-	<br/>Hits: <%= overallEntryCount %><br/>
+	<h4>Hits: <%= overallEntryCount %> (took <%= durationInMs %>ms)</h4>
 	<%
 	
 	var query = queryManager.createQuery( expression, language ); 
@@ -108,8 +112,8 @@ Query results:
 </ul>
 <div id="page_navigation">
 <% if (page > 1) { %>
-	<a href="#" id="first_page" title="first page">|&lt;</a> 
-	<a href="#" id="previous_page" title="previous page">
+	<a href="#" class="button" id="first_page" title="first page">|&lt;</a> 
+	<a href="#" class="button" id="previous_page" title="previous page">
 	<%= ((page - 2) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) %>
 	</a> 
 <script>
@@ -123,11 +127,11 @@ $('#first_page').click( function(e) {
 <% } %>
 <%= ((page - 1) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) + count %>
 <% if ( moreToCome ) { %>
-<a href="#" id="next_page" title="next page">
+<a href="#" class="button" id="next_page" title="next page">
 <%= (page * entriesPerPage) + 1 %>..<%= ((page + 1) * entriesPerPage) %>
 </a>
 <% if (lastPage) { %>
-<a href="#" id="last_page">&gt;|</a>
+<a href="#" class="button" id="last_page">&gt;|</a>
 <% } %>
 </div>
 <script>
