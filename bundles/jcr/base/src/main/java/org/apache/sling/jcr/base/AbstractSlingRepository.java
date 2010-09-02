@@ -36,9 +36,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -54,7 +52,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * @scr.component metatype="no"
  */
 public abstract class AbstractSlingRepository implements SlingRepository,
-        SynchronousBundleListener, Runnable {
+        Runnable {
 
     /** @scr.property value="" */
     public static final String PROPERTY_DEFAULT_WORKSPACE = "defaultWorkspace";
@@ -442,7 +440,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      */
     protected void setupRepository(Repository repository) {
         BundleContext bundleContext = componentContext.getBundleContext();
-        this.namespaceHandler = new Loader(this, bundleContext.getBundles());
+        this.namespaceHandler = new Loader(this, bundleContext);
         this.sessionProxyHandler = new SessionProxyHandler(this);
     }
 
@@ -567,36 +565,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // nothing to do here ...
     }
 
-    // ---------- SynchronousBundleListener ------------------------------------
-
-    /**
-     * Loads and unloads any components provided by the bundle whose state
-     * changed. If the bundle has been started, the components are loaded. If
-     * the bundle is about to stop, the components are unloaded.
-     *
-     * @param event The <code>BundleEvent</code> representing the bundle state
-     *            change.
-     */
-    public void bundleChanged(BundleEvent event) {
-        // Take care: This is synchronous - take care to not block the system !!
-        Loader theLoader = this.namespaceHandler;
-        if (theLoader != null) {
-            switch (event.getType()) {
-                case BundleEvent.INSTALLED:
-                    // register types when the bundle gets installed
-                    theLoader.registerBundle(event.getBundle());
-                    break;
-
-                case BundleEvent.UNINSTALLED:
-                    theLoader.unregisterBundle(event.getBundle());
-                    break;
-
-                case BundleEvent.UPDATED:
-                    theLoader.updateBundle(event.getBundle());
-            }
-        }
-    }
-
     // --------- SCR integration -----------------------------------------------
 
     protected ComponentContext getComponentContext() {
@@ -632,8 +600,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         setPollTimeActive(getIntProperty(properties, PROPERTY_POLL_ACTIVE));
         setPollTimeInActive(getIntProperty(properties, PROPERTY_POLL_INACTIVE));
 
-        componentContext.getBundleContext().addBundleListener(this);
-
         // immediately try to start the repository while activating
         // this component instance
         try {
@@ -659,8 +625,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      */
     protected void deactivate(ComponentContext componentContext) {
         this.namespaceMapperTracker.close();
-
-        componentContext.getBundleContext().removeBundleListener(this);
 
         // stop the background thread
         stopRepositoryPinger();

@@ -25,7 +25,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -38,6 +37,9 @@ import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.NodeTypeLoader;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>Loader</code> TODO
  */
-public class Loader implements NamespaceMapper {
+public class Loader implements NamespaceMapper, BundleListener {
 
     public static final String NODETYPES_BUNDLE_HEADER = "Sling-Nodetypes";
 
@@ -53,23 +55,26 @@ public class Loader implements NamespaceMapper {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(Loader.class);
+    
+    private final BundleContext bundleContext;
 
-    private AbstractSlingRepository slingRepository;
+    private final AbstractSlingRepository slingRepository;
 
     // bundles whose registration failed and should be retried
-    private List<Bundle> delayedBundles;
+    private final List<Bundle> delayedBundles;
 
     /** Namespace prefix table. */
     private final Map<Long, NamespaceEntry[]> namespaceTable = new HashMap<Long, NamespaceEntry[]>();
 
-    public Loader(AbstractSlingRepository repository, Bundle[] existingBundles) {
+    public Loader(AbstractSlingRepository repository, BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
         this.slingRepository = repository;
-        this.delayedBundles = new LinkedList<Bundle>();
+        this.delayedBundles = new ArrayList<Bundle>();
 
         // scan existing bundles
-        for (Bundle bundle : existingBundles) {
-            // Ignore bundles which are in an inactive state
-            if ((bundle.getState() & (Bundle.UNINSTALLED | Bundle.STOP_TRANSIENT | Bundle.STOPPING )) == 0) {
+        bundleContext.addBundleListener(this);
+        for (Bundle bundle : bundleContext.getBundles()) {
+            if (bundle.getState() != Bundle.UNINSTALLED) {
                 registerBundle(bundle);
             }
         }
@@ -77,14 +82,86 @@ public class Loader implements NamespaceMapper {
     }
 
     public void dispose() {
-        if (this.delayedBundles != null) {
-            this.delayedBundles.clear();
-            this.delayedBundles = null;
+        bundleContext.removeBundleListener(this);
+
+        synchronized (delayedBundles) {
+            delayedBundles.clear();
         }
-        this.slingRepository = null;
     }
 
-    public void registerBundle(Bundle bundle) {
+    //---------- NamespaceMapper interface
+
+    public void defineNamespacePrefixes(Session session)
+    throws RepositoryException {
+        final Iterator<NamespaceEntry[]> iter = this.namespaceTable.values().iterator();
+        while ( iter.hasNext() ) {
+            final NamespaceEntry[] entries = iter.next();
+            for(int i=0; i<entries.length; i++) {
+
+                // the namespace prefixing is a little bit tricky:
+                String mappedPrefix = null;
+                // first, we check if the namespace is registered with a prefix
+                try {
+                    mappedPrefix = session.getNamespacePrefix(entries[i].namespace);
+                } catch (NamespaceException ne) {
+                    // the namespace is not registered yet, so we should do this
+                    // can we directly use the desired prefix?
+                    mappedPrefix = entries[i].prefix + "_new";
+                    try {
+                        session.getNamespaceURI(entries[i].prefix);
+                    } catch (NamespaceException ne2) {
+                        // as an exception occured we can directly use the new prefix
+                        mappedPrefix = entries[i].prefix;
+                    }
+                    session.getWorkspace().getNamespaceRegistry().registerNamespace(mappedPrefix, entries[i].namespace);
+                }
+                // do we have to remap?
+                if ( mappedPrefix != null && !mappedPrefix.equals(entries[i].prefix ) ) {
+                    // check if the prefix is already used?
+                    String oldUri = null;
+                    try {
+                        oldUri = session.getNamespaceURI(entries[i].prefix);
+                        session.setNamespacePrefix(entries[i].prefix + "_old", oldUri);
+                    } catch (NamespaceException ne) {
+                        // ignore: prefix is not used
+                    }
+                    // finally set prefix
+                    session.setNamespacePrefix(entries[i].prefix, entries[i].namespace);
+                }
+            }
+        }
+    }
+
+    // ---------- BundleListener ------------------------------------
+
+    /**
+     * Loads and unloads any components provided by the bundle whose state
+     * changed. If the bundle has been started, the components are loaded. If
+     * the bundle is about to stop, the components are unloaded.
+     *
+     * @param event The <code>BundleEvent</code> representing the bundle state
+     *            change.
+     */
+    public final void bundleChanged(BundleEvent event) {
+        // Take care: This is synchronous - take care to not block the system !!
+        switch (event.getType()) {
+            case BundleEvent.INSTALLED:
+                // register types when the bundle gets installed
+                registerBundle(event.getBundle());
+                break;
+
+            case BundleEvent.UNINSTALLED:
+                unregisterBundle(event.getBundle());
+                break;
+
+            case BundleEvent.UPDATED:
+                updateBundle(event.getBundle());
+        }
+    }
+
+    //---------- internal
+
+    private void registerBundle(Bundle bundle) {
         this.registerNamespaces(bundle);
         if (this.registerBundleInternal(bundle, false)) {
             // handle delayed bundles, might help now
@@ -99,19 +176,20 @@ public class Loader implements NamespaceMapper {
                 currentSize = this.delayedBundles.size();
             }
         } else {
-            // add to delayed bundles
-            this.delayedBundles.add(bundle);
+            synchronized (delayedBundles) {
+                delayedBundles.add(bundle);
+            }
         }
     }
 
-    public void unregisterBundle(Bundle bundle) {
+    private void unregisterBundle(Bundle bundle) {
         this.unregisterNamespaces(bundle);
-        if ( this.delayedBundles.contains(bundle) ) {
-            this.delayedBundles.remove(bundle);
+        synchronized (delayedBundles) {
+            delayedBundles.remove(bundle);
         }
     }
 
-    public void updateBundle(Bundle bundle) {
+    private void updateBundle(Bundle bundle) {
         unregisterBundle(bundle);
         registerBundle(bundle);
     }
@@ -120,7 +198,7 @@ public class Loader implements NamespaceMapper {
      * Register namespaces defined in the bundle in the namespace table.
      * @param bundle The bundle.
      */
-    protected void registerNamespaces(Bundle bundle) {
+    private void registerNamespaces(Bundle bundle) {
         final String definition = (String) bundle.getHeaders().get(NAMESPACES_BUNDLE_HEADER);
         if ( definition != null ) {
             log.debug("registerNamespaces: Bundle {} tries to register: {}",
@@ -263,49 +341,8 @@ public class Loader implements NamespaceMapper {
             session.logout();
         }
     }
-
-    public void defineNamespacePrefixes(Session session)
-    throws RepositoryException {
-        final Iterator<NamespaceEntry[]> iter = this.namespaceTable.values().iterator();
-        while ( iter.hasNext() ) {
-            final NamespaceEntry[] entries = iter.next();
-            for(int i=0; i<entries.length; i++) {
-
-                // the namespace prefixing is a little bit tricky:
-                String mappedPrefix = null;
-                // first, we check if the namespace is registered with a prefix
-                try {
-                    mappedPrefix = session.getNamespacePrefix(entries[i].namespace);
-                } catch (NamespaceException ne) {
-                    // the namespace is not registered yet, so we should do this
-                    // can we directly use the desired prefix?
-                    mappedPrefix = entries[i].prefix + "_new";
-                    try {
-                        session.getNamespaceURI(entries[i].prefix);
-                    } catch (NamespaceException ne2) {
-                        // as an exception occured we can directly use the new prefix
-                        mappedPrefix = entries[i].prefix;
-                    }
-                    session.getWorkspace().getNamespaceRegistry().registerNamespace(mappedPrefix, entries[i].namespace);
-                }
-                // do we have to remap?
-                if ( mappedPrefix != null && !mappedPrefix.equals(entries[i].prefix ) ) {
-                    // check if the prefix is already used?
-                    String oldUri = null;
-                    try {
-                        oldUri = session.getNamespaceURI(entries[i].prefix);
-                        session.setNamespacePrefix(entries[i].prefix + "_old", oldUri);
-                    } catch (NamespaceException ne) {
-                        // ignore: prefix is not used
-                    }
-                    // finally set prefix
-                    session.setNamespacePrefix(entries[i].prefix, entries[i].namespace);
-                }
-            }
-        }
-    }
-
-    public static class NamespaceEntry {
+    
+    private static class NamespaceEntry {
 
         public final String prefix;
         public final String namespace;
