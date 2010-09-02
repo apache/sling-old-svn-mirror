@@ -38,8 +38,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -48,7 +48,6 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-import javax.script.SimpleScriptContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -165,6 +164,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     // ---------- Servlet interface --------------------------------------------
+    private static final Integer[] SCOPES = { SlingScriptConstants.SLING_SCOPE, Integer.valueOf(100), Integer.valueOf(200) };
 
     /**
      * @see org.apache.sling.api.scripting.SlingScript#call(org.apache.sling.api.scripting.SlingBindings, java.lang.String, java.lang.Object[])
@@ -177,40 +177,161 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         try {
             bindings = verifySlingBindings(props);
 
-            final ScriptContext ctx = new SimpleScriptContext() {
+            // use final variable for inner class!
+            final Bindings b = bindings;
+            // create script context
+            final ScriptContext ctx = new ScriptContext() {
 
-                private final Map<String, Object> slingScope = new HashMap<String, Object>();
+                private Bindings globalScope;
+                private Bindings engineScope = b;
+                private Writer writer = (Writer) b.get(OUT);
+                private Writer errorWriter = new LogWriter((Logger) b.get(LOG));
+                private Reader reader = (Reader)b.get(READER);
+                private Bindings slingScope = new SimpleBindings();
 
-                @Override
-                public Object getAttribute(String name, int scope) {
-                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
-                        return slingScope.get(name);
+
+                /**
+                 * @see javax.script.ScriptContext#setBindings(javax.script.Bindings, int)
+                 */
+                public void setBindings(final Bindings bindings, final int scope) {
+                    switch (scope) {
+                        case SlingScriptConstants.SLING_SCOPE : this.slingScope = bindings;
+                                                                break;
+                        case 100: if (bindings == null) throw new NullPointerException("Bindings for ENGINE scope is null");
+                                  this.engineScope = bindings;
+                                  break;
+                        case 200: this.globalScope = bindings;
+                                  break;
+                        default: throw new IllegalArgumentException("Invaild scope");
                     }
-                    return super.getAttribute(name, scope);
                 }
 
-                @Override
-                public Object removeAttribute(String name, int scope) {
-                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
-                        return slingScope.remove(name);
+                /**
+                 * @see javax.script.ScriptContext#getBindings(int)
+                 */
+                public Bindings getBindings(final int scope) {
+                    switch (scope) {
+                        case SlingScriptConstants.SLING_SCOPE : return slingScope;
+                        case 100: return this.engineScope;
+                        case 200: return this.globalScope;
                     }
-                    return super.removeAttribute(name, scope);
+                    throw new IllegalArgumentException("Invaild scope");
                 }
 
-                @Override
-                public void setAttribute(String name, Object value, int scope) {
-                    if ( scope == SlingScriptConstants.SLING_SCOPE ) {
-                        slingScope.put(name, value);
-                        return;
+                /**
+                 * @see javax.script.ScriptContext#setAttribute(java.lang.String, java.lang.Object, int)
+                 */
+                public void setAttribute(final String name, final Object value, final int scope) {
+                    if (name == null) throw new IllegalArgumentException("Name is null");
+                    final Bindings bindings = getBindings(scope);
+                    if (bindings != null) {
+                        bindings.put(name, value);
                     }
-                    super.setAttribute(name, value, scope);
                 }
 
+                /**
+                 * @see javax.script.ScriptContext#getAttribute(java.lang.String, int)
+                 */
+                public Object getAttribute(final String name, final int scope) {
+                    if (name == null) throw new IllegalArgumentException("Name is null");
+                    final Bindings bindings = getBindings(scope);
+                    if (bindings != null) {
+                        return bindings.get(name);
+                    }
+                    return null;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#removeAttribute(java.lang.String, int)
+                 */
+                public Object removeAttribute(final String name, final int scope) {
+                    if (name == null) throw new IllegalArgumentException("Name is null");
+                    final Bindings bindings = getBindings(scope);
+                    if (bindings != null) {
+                        return bindings.remove(name);
+                    }
+                    return null;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getAttribute(java.lang.String)
+                 */
+                public Object getAttribute(String name) {
+                    if (name == null) throw new IllegalArgumentException("Name is null");
+                    for (final int scope : SCOPES) {
+                        final Bindings bindings = getBindings(scope);
+                        if ( bindings != null ) {
+                            final Object o = bindings.get(name);
+                            if ( o != null ) {
+                                return o;
+                            }
+                        }
+                    }
+                    return null;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getAttributesScope(java.lang.String)
+                 */
+                public int getAttributesScope(String name) {
+                    if (name == null) throw new IllegalArgumentException("Name is null");
+                    for (final int scope : SCOPES) {
+                       if ((getBindings(scope) != null) && (getBindings(scope).containsKey(name))) {
+                           return scope;
+                       }
+                    }
+                    return -1;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getScopes()
+                 */
+                public List<Integer> getScopes() {
+                    return Arrays.asList(SCOPES);
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getWriter()
+                 */
+                public Writer getWriter() {
+                    return this.writer;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getErrorWriter()
+                 */
+                public Writer getErrorWriter() {
+                    return this.errorWriter;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#setWriter(java.io.Writer)
+                 */
+                public void setWriter(Writer writer) {
+                    this.writer = writer;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#setErrorWriter(java.io.Writer)
+                 */
+                public void setErrorWriter(Writer writer) {
+                    this.errorWriter = writer;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#getReader()
+                 */
+                public Reader getReader() {
+                    return this.reader;
+                }
+
+                /**
+                 * @see javax.script.ScriptContext#setReader(java.io.Reader)
+                 */
+                public void setReader(Reader reader) {
+                    this.reader = reader;
+                }
             };
-            ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-            ctx.setReader((Reader) bindings.get(READER));
-            ctx.setWriter((Writer) bindings.get(OUT));
-            ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 
             // set the current resource resolver if a request is available from the bindings
             if ( props.getRequest() != null ) {
