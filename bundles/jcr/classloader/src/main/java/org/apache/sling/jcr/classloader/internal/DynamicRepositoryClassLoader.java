@@ -140,7 +140,7 @@ public final class DynamicRepositoryClassLoader
      * @see #NOT_FOUND_RESOURCE
      * @see #findClassLoaderResource(String)
      */
-    private final Map<String, ClassLoaderResource> cache = new HashMap<String, ClassLoaderResource>();
+   private final Map<String, ClassLoaderResource> cache = new HashMap<String, ClassLoaderResource>();
 
     /**
      * Flag indicating whether the {@link #destroy()} method has already been
@@ -261,16 +261,20 @@ public final class DynamicRepositoryClassLoader
 
         // clear the cache of loaded resources and flush cached class
         // introspections of the JavaBean framework
-        final Iterator<ClassLoaderResource> ci = cache.values().iterator();
-        while ( ci.hasNext() ) {
-            final ClassLoaderResource res = ci.next();
-            if (res.getLoadedClass() != null) {
-                Introspector.flushFromCaches(res.getLoadedClass());
-                res.setLoadedClass(null);
+        synchronized ( cache ) {
+            final Iterator<ClassLoaderResource> ci = cache.values().iterator();
+            while ( ci.hasNext() ) {
+                final ClassLoaderResource res = ci.next();
+                if (res.getLoadedClass() != null) {
+                    Introspector.flushFromCaches(res.getLoadedClass());
+                    res.setLoadedClass(null);
+                }
             }
+            cache.clear();
         }
-        cache.clear();
-        modTimeCache.clear();
+        synchronized ( modTimeCache ) {
+            modTimeCache.clear();
+        }
     }
 
     //---------- URLClassLoader overwrites -------------------------------------
@@ -389,10 +393,12 @@ public final class DynamicRepositoryClassLoader
      *      destroyed.
      */
     private void cleanCache() {
-        final Iterator<ClassLoaderResource> ci = this.cache.values().iterator();
-        while (ci.hasNext()) {
-            if (ci.next() == NOT_FOUND_RESOURCE) {
-                ci.remove();
+        synchronized ( cache ) {
+            final Iterator<ClassLoaderResource> ci = this.cache.values().iterator();
+            while (ci.hasNext()) {
+                if (ci.next() == NOT_FOUND_RESOURCE) {
+                    ci.remove();
+                }
             }
         }
     }
@@ -515,30 +521,32 @@ public final class DynamicRepositoryClassLoader
      *      destroyed.
      */
     private ClassLoaderResource findClassLoaderResource(String name) {
-
+        ClassLoaderResource res = null;
         // check for cached resources first
-        ClassLoaderResource res = cache.get(name);
-        if (res == NOT_FOUND_RESOURCE) {
-            log.debug("Resource '{}' known to not exist in class path", name);
-            return null;
-        } else if (res == null) {
-            // walk the repository list and try to find the resource
-            for (int i = 0; i < repository.length; i++) {
-                final ClassPathEntry cp = repository[i];
-                log.debug("Checking {}", cp);
-
-                res = cp.getResource(name);
-                if (res != null) {
-                    log.debug("Found resource in {}, created ", res, new Date(
-                        res.getLastModificationTime()));
-                    cache.put(name, res);
-                    break;
-                }
-            }
-            if ( res == null ) {
-                log.debug("No classpath entry contains {}", name);
-                cache.put(name, NOT_FOUND_RESOURCE);
+        synchronized ( cache ) {
+            res = cache.get(name);
+            if (res == NOT_FOUND_RESOURCE) {
+                log.debug("Resource '{}' known to not exist in class path", name);
                 return null;
+            } else if (res == null) {
+                // walk the repository list and try to find the resource
+                for (int i = 0; i < repository.length; i++) {
+                    final ClassPathEntry cp = repository[i];
+                    log.debug("Checking {}", cp);
+
+                    res = cp.getResource(name);
+                    if (res != null) {
+                        log.debug("Found resource in {}, created ", res, new Date(
+                            res.getLastModificationTime()));
+                        cache.put(name, res);
+                        break;
+                    }
+                }
+                if ( res == null ) {
+                    log.debug("No classpath entry contains {}", name);
+                    cache.put(name, NOT_FOUND_RESOURCE);
+                    return null;
+                }
             }
         }
         // if it could be found, we register it with the caches
@@ -547,7 +555,9 @@ public final class DynamicRepositoryClassLoader
         Property prop = res.getExpiryProperty();
         if (prop != null) {
             try {
-                modTimeCache.put(prop.getPath(), res);
+                synchronized ( modTimeCache ) {
+                    modTimeCache.put(prop.getPath(), res);
+                }
             } catch (RepositoryException re) {
                 log.warn("Cannot register the resource " + res +
                     " for expiry", re);
@@ -669,7 +679,10 @@ public final class DynamicRepositoryClassLoader
             log.debug(
                 "onEvent: Item {} has been modified, checking with cache", path);
 
-            ClassLoaderResource resource = modTimeCache.get(path);
+            final ClassLoaderResource resource;
+            synchronized ( modTimeCache ) {
+                resource = modTimeCache.get(path);
+            }
             if (resource != null) {
                 log.debug("pageModified: Expiring cache entry {}", resource);
                 expireResource(resource);
