@@ -247,7 +247,7 @@ public class MapEntries implements EventListener {
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
         // scheme list
-        Iterator<Resource> children = parent.listChildren();
+        Iterator<Resource> children = ResourceUtil.listChildren(parent);
         while (children.hasNext()) {
             Resource child = children.next();
 
@@ -255,7 +255,7 @@ public class MapEntries implements EventListener {
                 JcrResourceResolver.PROP_REG_EXP);
             boolean trailingSlash = false;
             if (name == null) {
-                name = child.getName().concat("/");
+                name = ResourceUtil.getName(child).concat("/");
                 trailingSlash = true;
             }
 

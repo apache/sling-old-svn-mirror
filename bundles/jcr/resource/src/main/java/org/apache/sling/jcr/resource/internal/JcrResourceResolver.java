@@ -600,7 +600,7 @@ public class JcrResourceResolver
                 if (alias != null && alias.length() > 0 && !alias.endsWith(":")) {
                     names.add(alias);
                 }
-                res = res.getParent();
+                res = ResourceUtil.getParent(res);
             }
 
             // build path from segment names

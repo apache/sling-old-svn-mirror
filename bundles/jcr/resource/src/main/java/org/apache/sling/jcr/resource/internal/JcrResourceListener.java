@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -199,7 +200,7 @@ public class JcrResourceListener implements EventListener {
                 if ( node != null ) {
                     try {
                         if (node.getParent().isNodeType("nt:file") ) {
-                            final Resource parentResource = resource.getParent();
+                            final Resource parentResource = ResourceUtil.getParent(resource);
                             if ( parentResource != null ) {
                                 resource = parentResource;
                             }
