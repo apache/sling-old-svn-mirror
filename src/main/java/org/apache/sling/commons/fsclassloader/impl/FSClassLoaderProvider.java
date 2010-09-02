@@ -27,7 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
@@ -47,12 +48,19 @@ public class FSClassLoaderProvider
     /** File root */
     private File root;
 
+    /** All classloaders */
+    private List<FSDynamicClassLoader> loaders = new ArrayList<FSDynamicClassLoader>();
+
     /**
      * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader(ClassLoader)
      */
     public ClassLoader getClassLoader(final ClassLoader parent) {
         try {
-            return new URLClassLoader(new URL[] {this.root.toURL()}, parent);
+            final FSDynamicClassLoader cl = new FSDynamicClassLoader(new URL[] {this.root.toURL()}, parent);
+            synchronized ( this.loaders ) {
+                this.loaders.add(cl);
+            }
+            return cl;
         } catch (MalformedURLException e) {
             // this should never happen, but who knows
             throw new RuntimeException(e);
@@ -62,20 +70,38 @@ public class FSClassLoaderProvider
     /**
      * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#release(java.lang.ClassLoader)
      */
-    public void release(ClassLoader classLoader) {
-        // nothing to do here
+    public void release(final ClassLoader classLoader) {
+        synchronized ( this.loaders ) {
+            this.loaders.remove(classLoader);
+        }
     }
 
+    private void checkClassLoaders(final String filePath) {
+        if ( filePath.endsWith(".class") ) {
+            // remove store directory and .class
+            final String path = filePath.substring(this.root.getAbsolutePath().length() + 1, filePath.length() - 6);
+            // convert to a class name
+            final String className = path.replace(File.separatorChar, '.');
+            synchronized ( this.loaders ) {
+                for(final FSDynamicClassLoader cl : this.loaders ) {
+                    cl.check(className);
+                }
+            }
+        }
+    }
     //---------- SCR Integration ----------------------------------------------
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
      */
-    public boolean delete(String name) {
+    public boolean delete(final String name) {
         final String path = cleanPath(name);
         final File file = new File(path);
         if ( file.exists() ) {
-            return file.delete();
+            final boolean result = file.delete();
+            if ( result ) {
+                this.checkClassLoaders(file.getAbsolutePath());
+            }
         }
         // file does not exist so we return false
         return false;
@@ -84,7 +110,7 @@ public class FSClassLoaderProvider
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
-    public OutputStream getOutputStream(String name) {
+    public OutputStream getOutputStream(final String name) {
         final String path = cleanPath(name);
         final File file = new File(path);
         final File parentDir = file.getParentFile();
@@ -92,6 +118,9 @@ public class FSClassLoaderProvider
             parentDir.mkdirs();
         }
         try {
+            if ( file.exists() ) {
+                this.checkClassLoaders(path);
+            }
             return new FileOutputStream(path);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -101,11 +130,15 @@ public class FSClassLoaderProvider
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
      */
-    public boolean rename(String oldName, String newName) {
+    public boolean rename(final String oldName, final String newName) {
         final String oldPath = cleanPath(oldName);
         final String newPath = cleanPath(newName);
         final File old = new File(oldPath);
-        return old.renameTo(new File(newPath));
+        final boolean result = old.renameTo(new File(newPath));
+        if ( result ) {
+            this.checkClassLoaders(oldPath);
+        }
+        return result;
     }
 
     /**
@@ -131,7 +164,7 @@ public class FSClassLoaderProvider
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
      */
-    public InputStream getInputStream(String name)
+    public InputStream getInputStream(final String name)
     throws IOException {
         final String path = cleanPath(name);
         final File file = new File(path);
@@ -141,7 +174,7 @@ public class FSClassLoaderProvider
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
-    public long getLastModified(String name) {
+    public long getLastModified(final String name) {
         final String path = cleanPath(name);
         final File file = new File(path);
         if ( file.exists() ) {
@@ -157,7 +190,7 @@ public class FSClassLoaderProvider
      * Create the root directory.
      * @param componentContext
      */
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(final ComponentContext componentContext) {
         // get the file root
         this.root = new File(componentContext.getBundleContext().getDataFile(""), "classes");
         this.root.mkdirs();
@@ -168,7 +201,7 @@ public class FSClassLoaderProvider
      * Create the root directory.
      * @param componentContext
      */
-    protected void deactivate(ComponentContext componentContext) {
+    protected void deactivate(final ComponentContext componentContext) {
         this.root = null;
     }
 }
