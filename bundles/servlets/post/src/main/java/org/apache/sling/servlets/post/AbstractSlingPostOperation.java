@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -134,6 +135,10 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                 }
             }
 
+        } catch ( AccessDeniedException e ) {
+            log.error("Access Denied {} ",e.getMessage());
+            log.debug("Access Denied Cause ", e);
+            response.setError(e);
         } catch (Exception e) {
 
             log.error("Exception during response processing.", e);
