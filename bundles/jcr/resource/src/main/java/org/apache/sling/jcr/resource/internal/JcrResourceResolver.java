@@ -75,7 +75,7 @@ public class JcrResourceResolver
 
     private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
 
-    private static final String MANGLE_NAMESPACE_IN = "/_([^_]+)_";
+    private static final String MANGLE_NAMESPACE_IN = "/_([^_/]+)_";
 
     private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
 
