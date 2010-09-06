@@ -153,6 +153,19 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     @Property(value = DEFAULT_TOKEN_FILE)
     private static final String PAR_TOKEN_FILE = "form.token.file";
 
+    private static final boolean DEFAULT_TOKEN_FAST_SEED = false;
+
+    /**
+     * Whether to use a less secure but faster seeding mechanism to seed the
+     * random number generator in the {@link TokenStore}. By default the faster
+     * mechanism is disabled and the platform provided seeding is used. This may
+     * however block the startup considerably, particularly on Linux and Solaris
+     * platforms which use the (blocking but secure) <code>/dev/random</code>
+     * device for seeding.
+     */
+    @Property(boolValue = DEFAULT_TOKEN_FAST_SEED)
+    private static final String PAR_TOKEN_FAST_SEED = "form.token.fastseed";
+
     /**
      * The default include value.
      *
@@ -758,8 +771,10 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             properties.get(PAR_TOKEN_FILE), DEFAULT_TOKEN_FILE);
         final File tokenFile = getTokenFile(tokenFileName,
             componentContext.getBundleContext());
+        final boolean fastSeed = OsgiUtil.toBoolean(
+            properties.get(PAR_TOKEN_FAST_SEED), DEFAULT_TOKEN_FAST_SEED);
         log.info("Storing tokens in {}", tokenFile.getAbsolutePath());
-        this.tokenStore = new TokenStore(tokenFile, sessionTimeout);
+        this.tokenStore = new TokenStore(tokenFile, sessionTimeout, fastSeed);
 
         this.loginModule = null;
         try {

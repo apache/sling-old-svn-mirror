@@ -25,9 +25,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -109,9 +109,10 @@ class TokenStore {
      * @throws NullPointerException if <code>tokenFile</code> is
      *             <code>null</code>.
      */
-    TokenStore(final File tokenFile, final long sessionTimeout)
-            throws NoSuchAlgorithmException, InvalidKeyException,
-            IllegalStateException, UnsupportedEncodingException {
+    TokenStore(final File tokenFile, final long sessionTimeout,
+            final boolean fastSeed) throws NoSuchAlgorithmException,
+            InvalidKeyException, IllegalStateException,
+            UnsupportedEncodingException {
 
         if (tokenFile == null) {
             throw new NullPointerException("tokenfile");
@@ -126,6 +127,9 @@ class TokenStore {
         loadTokens();
 
         // warm up the crypto API
+        if (fastSeed) {
+            random.setSeed(getFastEntropy());
+        }
         byte[] b = new byte[20];
         random.nextBytes(b);
         final SecretKey secretKey = new SecretKeySpec(b, HMAC_SHA1);
@@ -376,5 +380,64 @@ class TokenStore {
             c[i++] = TOHEX[j % 0x10];
         }
         return new String(c);
+    }
+
+    /**
+     * Creates a byte array of entry from the current state of the system:
+     * <ul>
+     * <li>The current system time in milliseconds since the epoch</li>
+     * <li>The number of nanoseconds since system startup</li>
+     * <li>The name, size and last modification time of the files in the
+     * <code>java.io.tmpdir</code> folder.</li>
+     * </ul>
+     * <p>
+     * <b>NOTE</b> This method generates entropy fast but not necessairily
+     * secure enough for seeding the random number generator.
+     *
+     * @return bytes of entropy
+     */
+    private static byte[] getFastEntropy() {
+        final MessageDigest md;
+
+        try {
+            md = MessageDigest.getInstance("SHA");
+        } catch (NoSuchAlgorithmException nsae) {
+            throw new InternalError("internal error: SHA-1 not available.");
+        }
+
+        // update with XorShifted time values
+        update(md, System.currentTimeMillis());
+        update(md, System.nanoTime());
+
+        // scan the temp file system
+        File file = new File(System.getProperty("java.io.tmpdir"));
+        File[] entries = file.listFiles();
+        if (entries != null) {
+            for (File entry : entries) {
+                md.update(entry.getName().getBytes());
+                update(md, entry.lastModified());
+                update(md, entry.length());
+            }
+        }
+
+        return md.digest();
+    }
+
+    /**
+     * Updates the message digest with an XOR-Shifted value.
+     *
+     * @param md The MessageDigest to update
+     * @param value The original value to be XOR-Shifted first before taking the
+     *            bytes ot update the message digest
+     */
+    private static void update(final MessageDigest md, long value) {
+        value ^= (value << 21);
+        value ^= (value >>> 35);
+        value ^= (value << 4);
+
+        for (int i = 0; i < 8; i++) {
+            md.update((byte) value);
+            value >>= 8;
+        }
     }
 }
