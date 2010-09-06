@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.velocity</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Velocity Support</name>
@@ -36,13 +36,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.velocity-2.0.0
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/velocity
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.velocity-2.0.0
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/velocity
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.velocity-2.0.0
+            http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/velocity
         </url>
     </scm>
 
