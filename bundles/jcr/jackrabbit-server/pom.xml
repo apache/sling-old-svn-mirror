@@ -94,7 +94,7 @@
                             org.apache.sling.jcr.jackrabbit.server.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.jcr.jackrabbit.server;version=2.0.7,
+                            org.apache.sling.jcr.jackrabbit.server;version=2.1.0,
                             org.apache.sling.jcr.jackrabbit.server.security.*;version=2.0.4-incubator,
                             org.apache.jackrabbit.core.security.principal;version=2.1.1
                         </Export-Package>
@@ -201,7 +201,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.0.7-SNAPSHOT</version>
+            <version>2.1.0</version>
             <scope>compile</scope>
         </dependency>
 
