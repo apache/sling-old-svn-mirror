@@ -129,6 +129,13 @@ class TokenStore {
         // warm up the crypto API
         if (fastSeed) {
             random.setSeed(getFastEntropy());
+        } else {
+            log.info("Seeding the secure random number generator can take "
+                + "up to several minutes on some operating systems depending "
+                + "upon environment factors. If this is a problem for you, "
+                + "set the system property 'java.security.egd' to "
+                + "'file:/dev/./urandom' or enable the Fast Seed Generator "
+                + "in the Web Console");
         }
         byte[] b = new byte[20];
         random.nextBytes(b);
