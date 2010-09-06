@@ -49,7 +49,7 @@ public class ServiceCache implements ServiceListener {
 
     public void dispose() {
         this.bundleContext.removeServiceListener(this);
-        for(final Reference ref : cache.values()) {
+        for (final Reference ref : cache.values()) {
             if ( ref != NULL_REFERENCE ) {
                 this.bundleContext.ungetService(ref.reference);
             }
@@ -66,33 +66,44 @@ public class ServiceCache implements ServiceListener {
     public <ServiceType> ServiceType getService(Class<ServiceType> type) {
         final String key = type.getName();
         Reference reference = this.cache.get(key);
-        if (reference == null ) {
-            // if the service is not in the cache, we have to go into a synchronized
-            // block to avoid concurrent gets of the same service
-            synchronized (this) {
-                reference = this.cache.get(key);
-                if ( reference == null ) {
-                    // try to get service from bundle context
-                    final ServiceReference ref = this.bundleContext.getServiceReference(key);
-                    if (ref != null) {
-                        final Object service = this.bundleContext.getService(ref);
-                        if ( service != null ) {
-                            reference = new Reference();
-                            reference.service = service;
-                            reference.reference = ref;
-                        }
-                    }
-                    if ( reference == null ) {
-                        reference = NULL_REFERENCE;
-                    }
-                    this.cache.put(key, reference);
+        if (reference == null) {
+
+            // get the service
+            ServiceReference ref = this.bundleContext.getServiceReference(key);
+            if (ref != null) {
+                final Object service = this.bundleContext.getService(ref);
+                if (service != null) {
+                    reference = new Reference();
+                    reference.service = service;
+                    reference.reference = ref;
+                } else {
+                    ref = null;
                 }
             }
 
+            // assume missing service
+            if (reference == null) {
+                reference = NULL_REFERENCE;
+            }
+
+            // check to see whether another thread has not done the same thing
+            synchronized (this) {
+                Reference existing = this.cache.get(key);
+                if (existing == null) {
+                    this.cache.put(key, reference);
+                    ref = null;
+                } else {
+                    reference = existing;
+                }
+            }
+
+            // unget the service if another thread was faster
+            if (ref != null) {
+                this.bundleContext.ungetService(ref);
+            }
         }
-        if ( reference == NULL_REFERENCE ) {
-            return null;
-        }
+
+        // return whatever we got (which may be null)
         return (ServiceType) reference.service;
     }
 
