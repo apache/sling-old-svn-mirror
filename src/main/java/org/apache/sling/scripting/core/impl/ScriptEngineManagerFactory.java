@@ -76,7 +76,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     private ServiceRegistration scriptEngineManagerRegistration;
 
-    @SuppressWarnings("unchecked")
     private void refreshScriptEngineManager() {
 
         if (scriptEngineManagerRegistration != null) {
@@ -104,7 +103,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
         if (bundleContext != null) {
             scriptEngineManagerRegistration = bundleContext.registerService(
                 ScriptEngineManager.class.getName(), scriptEngineManager,
-                new Hashtable());
+                new Hashtable<String, Object>());
         }
 
         // Log messages to verify which ScriptEngine is actually used
@@ -256,9 +255,8 @@ public class ScriptEngineManagerFactory implements BundleListener {
         return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
     }
 
-    @SuppressWarnings("unchecked")
-    private String[] toArray(List list) {
-        return (String[]) list.toArray(new String[list.size()]);
+    private String[] toArray(final List<String> list) {
+        return list.toArray(new String[list.size()]);
     }
 
     private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {

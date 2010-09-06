@@ -187,6 +187,7 @@ public class ScriptHelper implements SlingScriptHelper {
     /**
      * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
      */
+    @Deprecated
     public void dispose() {
         LoggerFactory.getLogger(this.getClass()).error("ScriptHelper#dispose has been called. This method is deprecated and should never be called by clients!");
     }
