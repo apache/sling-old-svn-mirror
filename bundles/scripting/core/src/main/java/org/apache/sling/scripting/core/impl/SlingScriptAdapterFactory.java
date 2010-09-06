@@ -227,7 +227,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
             Object serviceId = ref.getProperty(Constants.SERVICE_ID);
             Object service = bundleContext.getService(ref);
             if (service instanceof Map) {
-                service = new MapWrappingBindingsValuesProvider((Map) service);
+                service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
             }
             if (engineName == null || ANY_ENGINE.contains(engineName.toUpperCase())) {
                 genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
