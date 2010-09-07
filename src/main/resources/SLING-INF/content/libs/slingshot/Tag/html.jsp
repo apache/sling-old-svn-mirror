@@ -24,7 +24,7 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
     final ValueMap attributes = ResourceUtil.getValueMap(resource);
-    final String name = ResourceUtil.getName(resource);
+    final String name = resource.getName();
     final ResourceResolver resolver = resource.getResourceResolver();
 %><html>
   <head>

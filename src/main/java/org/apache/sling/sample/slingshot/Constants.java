@@ -17,7 +17,6 @@
 package org.apache.sling.sample.slingshot;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 
 public abstract class Constants {
 
@@ -53,7 +52,7 @@ public abstract class Constants {
      * and we also exclude the preview folder.
      */
     public static boolean includeAsAlbum(final Resource resource) {
-        final String name = ResourceUtil.getName(resource);
+        final String name = resource.getName();
         if ( name.equals(FOLDER_NAME_PREVIEW) || name.startsWith(".") ) {
             return false;
         }
@@ -64,7 +63,7 @@ public abstract class Constants {
      * Exclude all files starting with a dot
      */
     public static boolean includeAsMedia(final Resource resource) {
-        final String name = ResourceUtil.getName(resource);
+        final String name = resource.getName();
         if ( name.startsWith(".") ) {
             return false;
         }

@@ -27,11 +27,11 @@
    <%
    final Resource tags = resource.getResourceResolver().getResource("/slingshot/tags");
    if ( tags != null ) {
-       final Iterator<Resource> ni = tags.getResourceResolver().listChildren(tags);
+       final Iterator<Resource> ni = tags.listChildren();
        while ( ni.hasNext() ) {
            final Resource current = ni.next();
            final ValueMap attr = ResourceUtil.getValueMap(current);
-           %><div class="tag"><a href="<%= request.getContextPath() %><%= current.getPath() %>.html"><%=ResourceUtil.getName(current) %></a></div><%
+           %><div class="tag"><a href="<%= request.getContextPath() %><%= current.getPath() %>.html"><%=current.getName() %></a></div><%
        }
    }
    %>

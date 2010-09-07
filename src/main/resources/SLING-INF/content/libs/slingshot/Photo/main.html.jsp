@@ -25,11 +25,11 @@
 %><div class="photo">
 <%
     final ValueMap attr = ResourceUtil.getValueMap(resource);
-    final String albumName = ResourceUtil.getName(ResourceUtil.getParent(resource));
-    final String photoName = attr.get("jcr:title", ResourceUtil.getName(resource));
+    final String albumName = resource.getParent().getName();
+    final String photoName = attr.get("jcr:title", resource.getName());
     final String relPath = resource.getPath();
     String imagePath = relPath;
-    String previewPath = ResourceUtil.getParent(resource).getPath() + '/' + Constants.FOLDER_NAME_PREVIEW + '/' + ResourceUtil.getName(resource);
+    String previewPath = resource.getParent().getPath() + '/' + Constants.FOLDER_NAME_PREVIEW + '/' + resource.getName();
     if ( resource.getResourceResolver().getResource(previewPath) != null ) {
         imagePath = previewPath;
     }

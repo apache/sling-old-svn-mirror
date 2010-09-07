@@ -22,6 +22,6 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
   ValueMap attributes = ResourceUtil.getValueMap(resource);
-  Resource parent = ResourceUtil.getParent(resource);
-  String name = ResourceUtil.getName(resource);
-%>- <a href="<%=ResourceUtil.getName(parent) %>/<%=name %>.slingshot.html"><%=attributes.get("jcr:title", name) %></a><br/>
+  Resource parent = resource.getParent();
+  String name = resource.getName();
+%>- <a href="<%=parent.getName() %>/<%=name %>.slingshot.html"><%=attributes.get("jcr:title", name) %></a><br/>
