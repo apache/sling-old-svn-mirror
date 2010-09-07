@@ -46,45 +46,41 @@ public class TestAll extends TestCase {
 
     @SuppressWarnings("unchecked")
     public static Test suite() {
-        ClassLoader sysClassLoader = TestAll.class.getClassLoader();
-        
-        
-        
-        List<String> matchingClasses = new ArrayList<String>();
+        final ClassLoader sysClassLoader = TestAll.class.getClassLoader();
+        final List<String> matchingClasses = new ArrayList<String>();
         // Get the URLs
-        URL[] urls = ((URLClassLoader) sysClassLoader).getURLs();
-        String testPattern = System.getProperty("integrationTestPattern",
-                "**/launchpad/webapp/integrationtest/**/*Test");
-        String testRegex = convertToRegex(testPattern);
-        Pattern pattern = Pattern.compile(testRegex);
+        final URL[] urls = ((URLClassLoader) sysClassLoader).getURLs();
+        final String testPattern = System.getProperty("integrationTestPattern",
+            "**/launchpad/webapp/integrationtest/**/*Test");
+        final String testRegex = convertToRegex(testPattern);
+        final Pattern pattern = Pattern.compile(testRegex);
         for (URL u : urls) {
             try {
                 matchingClasses.addAll(scanFile(new File(u.toURI()), pattern));
             } catch (URISyntaxException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
-        ClassLoader cl = TestAll.class.getClassLoader();
-        Set<Class<TestCase>> classSet = new HashSet<Class<TestCase>>();
+        final Set<Class<TestCase>> classSet = new HashSet<Class<TestCase>>();
         for (String classFile : matchingClasses) {
             String className = classFileToName(classFile);
             try {
-                Class<TestCase> c = (Class<TestCase>) cl.loadClass(className);
-                if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers()) ) {
-                    LOGGER.info("Added "+className);
+                final Class<TestCase> c = (Class<TestCase>) sysClassLoader.loadClass(className);
+                if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
+                    LOGGER.info("Added " + className);
                     classSet.add(c);
                 }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
-        LOGGER.info(classSet.size() + " test classes found using Pattern " + testRegex);
-        TestSuite suite = new LoggingSuite(classSet,"Sling Integration Tests matching "+testPattern,LOGGER);
-      
+        LOGGER.info(classSet.size() + " test classes found using Pattern "
+            + testRegex);
+        TestSuite suite = new LoggingSuite(classSet,
+            "Sling Integration Tests matching " + testPattern, LOGGER);
+
         return suite;
     }
 
@@ -93,9 +89,9 @@ public class TestAll extends TestCase {
      * @return
      */
     private static String classFileToName(String classFile) {
-        String className =  classFile.substring(0, classFile.length() - (".class".length()))
-                .replace('/', '.');
-        if ( className.charAt(0) == '.' ) {
+        String className = classFile.substring(0,
+            classFile.length() - (".class".length())).replace('/', '.');
+        if (className.charAt(0) == '.') {
             className = className.substring(1);
         }
         return className;
@@ -107,8 +103,8 @@ public class TestAll extends TestCase {
      */
     private static String convertToRegex(String testPattern) {
         return testPattern.replace("**/", ".a?").replace("*", ".a?").replace(
-                ".a?", ".*?").replace("/", "\\/")
-                + "\\.class$";
+            ".a?", ".*?").replace("/", "\\/")
+            + "\\.class$";
     }
 
     /**
