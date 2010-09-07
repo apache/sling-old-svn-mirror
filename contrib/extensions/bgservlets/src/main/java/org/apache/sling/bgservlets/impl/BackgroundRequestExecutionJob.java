@@ -35,7 +35,7 @@ import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.RuntimeState;
-import org.apache.sling.engine.SlingServlet;
+import org.apache.sling.engine.SlingRequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,20 +49,20 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
     private final BackgroundHttpServletResponse response;
     private final SuspendableOutputStream stream;
     private final ResourceResolver resourceResolver;
-    private final SlingServlet slingServlet;
+    private final SlingRequestProcessor slingRequestProcessor;
     private final String path;
     private final String streamPath;
     private final Date creationTime;
     private Date estimatedCompletionTime;
     private String progressMessage;
 
-    BackgroundRequestExecutionJob(SlingServlet slingServlet,
+    BackgroundRequestExecutionJob(SlingRequestProcessor slingRequestProcessor,
             JobStorage storage, SlingHttpServletRequest request,
             HttpServletResponse hsr, String[] parametersToRemove)
             throws IOException, LoginException {
         this.request = new BackgroundHttpServletRequest(request,
                 parametersToRemove);
-        this.slingServlet = slingServlet;
+        this.slingRequestProcessor = slingRequestProcessor;
 
         // Provide this as the RuntimeState for the background servlet
         this.request.setAttribute(RuntimeState.class.getName(), this);
@@ -95,7 +95,7 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
 
     public void run() {
         try {
-            slingServlet.processRequest(request, response, resourceResolver);
+            slingRequestProcessor.processRequest(request, response, resourceResolver);
         } catch (Exception e) {
             // TODO report errors in the background job's output
             log.error("Exception in background request processing", e);

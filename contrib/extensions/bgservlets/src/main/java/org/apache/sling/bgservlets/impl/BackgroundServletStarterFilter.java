@@ -37,7 +37,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobStorage;
-import org.apache.sling.engine.SlingServlet;
+import org.apache.sling.engine.SlingRequestProcessor;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class BackgroundServletStarterFilter implements Filter {
     private ExecutionEngine executionEngine;
 
     @Reference
-    private SlingServlet slingServlet;
+    private SlingRequestProcessor slingRequestProcessor;
 
     @Reference
     private JobStorage jobStorage;
@@ -106,7 +106,7 @@ public class BackgroundServletStarterFilter implements Filter {
         if (Boolean.valueOf(bgParam)) {
             try {
                 final BackgroundRequestExecutionJob job = new BackgroundRequestExecutionJob(
-                    slingServlet, jobStorage, slingRequest, response,
+                    slingRequestProcessor, jobStorage, slingRequest, response,
                     new String[] { bgParamName });
                 log.debug("{} parameter true, running request in the background ({})",
                         bgParamName, job);
