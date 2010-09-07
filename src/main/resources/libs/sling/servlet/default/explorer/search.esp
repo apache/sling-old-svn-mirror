@@ -1,0 +1,148 @@
+<%--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+--%>
+<%--
+
+--%>
+<%
+var entriesPerPage = 10;
+var session = request.resourceResolver.adaptTo(Packages.javax.jcr.Session);
+if ( session )
+{
+	var expression = request.getParameter("expression");
+	var language = request.getParameter("language");
+	var page = parseInt(request.getParameter("page") || 1);
+	var queryManager = session.getWorkspace().getQueryManager();
+%>
+<h3>Query results:</h3>
+<ul>
+<%	
+	var countExpression = expression; // must contain an 'order by' clause
+	var knownNumberOfHits = false;
+	if ( !countExpression.toLowerCase().match(/order\s*by/) )
+	{	
+		/* this switch does not seem to work...
+		switch ( language ) {
+			case 'JCR-SQL2' :			
+				countExpression += ' order by [jcr:score] desc';
+				break;
+			case 'xpath' :
+				countExpression += ' order by @jcr:score descending';
+				break;
+			default:
+		}; // switch
+		*/
+		if ( language == 'JCR-SQL2' ) { 
+			countExpression += ' order by [jcr:score] desc'; 
+		}
+		if ( language == 'xpath' ) { 
+			countExpression += ' order by @jcr:score descending';
+		}
+	}
+	var overallEntryCount = 'unknown';
+	var durationInMs = 'unknown';
+	if ( countExpression.toLowerCase().match(/order\s*by/) )
+	{
+		var countQuery = queryManager.createQuery( countExpression , language );
+		var start = new Date();
+		var results = countQuery.execute();
+		var end = new Date();
+		var durationInMs = end.getTime() - start.getTime();
+		overallEntryCount = results.getRows().getSize();
+		knownNumberOfHits = true;
+	}
+	%>
+	<h4>Hits: <%= overallEntryCount %> (took <%= durationInMs %>ms)</h4>
+	<%
+	
+	var query = queryManager.createQuery( expression, language ); 
+	query.setOffset( (page - 1) * entriesPerPage );
+	query.setLimit(entriesPerPage);
+	var results = query.execute();
+	var ri = results.getRows(); // RowIterator
+	var count = 0;
+	while ( ri.hasNext() ) {
+	    var row = ri.nextRow(); // row
+	    var score = row.getScore(); // double
+	    /*
+	    var values = row.getValues();
+	    var excerpt = '';
+	    for (idx in values)
+	    {
+	    	excerpt += (values[idx]).getString();
+	    } 
+	    */
+		var resourceType = '';
+		var node = row.getNode();
+		if ( node && node.hasProperty( 'sling:resourceType' ) ) {
+			resourceType = node.getProperty('sling:resourceType');
+		}
+%>
+<li>
+<a href="#" onclick="skip_to('<%= row.getPath() %>', '<%= resourceType %>')"><%= row.getPath() %></a> (score: <%= score %>)
+</li>
+<%	    
+		count++;
+	} // while
+	var moreToCome = (count == entriesPerPage);
+	if ( knownNumberOfHits )
+	{
+		var lastPage = Math.round(overallEntryCount / entriesPerPage) + (((overallEntryCount % 10) < 5 && (overallEntryCount % 10) > 0)  ? 1 : 0);
+		moreToCome = ((lastPage > 0) && lastPage != page);
+	}
+
+%>
+</ul>
+<div id="page_navigation">
+<% if (page > 1) { %>
+	<a href="#" class="button" id="first_page" title="first page">|&lt;</a> 
+	<a href="#" class="button" id="previous_page" title="previous page">
+	<%= ((page - 2) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) %>
+	</a> 
+<script>
+$('#previous_page').click( function(e) {
+	search('<%= language %>', '<%= expression %>', <%= page - 1 %> );
+});
+$('#first_page').click( function(e) {
+	search('<%= language %>', '<%= expression %>', 1 );
+});
+</script>	
+<% } %>
+<%= ((page - 1) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) + count %>
+<% if ( moreToCome ) { %>
+<a href="#" class="button" id="next_page" title="next page">
+<%= (page * entriesPerPage) + 1 %>..<%= ((page + 1) * entriesPerPage) %>
+</a>
+<% if (lastPage) { %>
+<a href="#" class="button" id="last_page">&gt;|</a>
+<% } %>
+</div>
+<script>
+$('#next_page').click( function(e) {
+	search('<%= language %>', '<%= expression %>', <%= page + 1 %> );
+});
+$('#last_page').click( function(e) {
+	search('<%= language %>', '<%= expression %>', <%= lastPage %> );
+});
+</script>
+<% } %>
+<%
+} // if	
+%>
