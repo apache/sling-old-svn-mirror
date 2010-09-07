@@ -37,7 +37,7 @@ public class SlingFilterChainHelper {
 
     Filter[] filters;
 
-    public SlingFilterChainHelper() {
+    SlingFilterChainHelper() {
     }
 
     public synchronized Filter addFilter(Filter filter,
@@ -76,7 +76,7 @@ public class SlingFilterChainHelper {
         return null;
     }
 
-    public synchronized Filter removeFilterById(Object filterId) {
+    public synchronized boolean removeFilterById(Object filterId) {
         if (filterList != null) {
             filters = null;
             for (Iterator<FilterListEntry> fi = filterList.iterator(); fi.hasNext();) {
@@ -85,13 +85,13 @@ public class SlingFilterChainHelper {
                     || (test.getFitlerId() != null && test.getFitlerId().equals(
                         filterId))) {
                     fi.remove();
-                    return test.getFilter();
+                    return true;
                 }
             }
         }
 
         // no removed ComponentFilter
-        return null;
+        return false;
     }
 
     /**

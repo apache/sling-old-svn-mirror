@@ -99,7 +99,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
         try {
 
-            dispatch(request, sResponse);
+            dispatch(request, sResponse, true);
 
         } finally {
 
@@ -140,7 +140,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         request.removeAttribute(SlingConstants.ATTR_INCLUDE_SERVLET_PATH);
 
         // now just include as normal
-        dispatch(request, response);
+        dispatch(request, response, false);
 
         // finally, we would have to ensure the response is committed
         // and closed. Let's just flush the buffer and thus commit the
@@ -165,8 +165,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         return uri + '/' + path;
     }
 
-    private void dispatch(ServletRequest request, ServletResponse sResponse)
-            throws ServletException, IOException {
+    private void dispatch(ServletRequest request, ServletResponse sResponse,
+            boolean include) throws ServletException, IOException {
 
         /**
          * TODO: I have made some quick fixes in this method for SLING-221 and
@@ -186,8 +186,6 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             return;
         }
 
-        final HttpServletResponse response = (HttpServletResponse) sResponse;
-
         if (resource == null) {
 
             // resolve the absolute path in the resource resolver, using
@@ -204,6 +202,24 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         // ensure request path info and optional merges
+        SlingRequestPathInfo info = getMergedRequestPathInfo(cRequest);
+        cRequest.getRequestProgressTracker().log(
+            "Including resource {0} ({1})", resource, info);
+        rd.getSlingRequestProcessor().dispatchRequest(request, sResponse, resource,
+            info, include);
+    }
+
+    /**
+     * Returns a {@link SlingRequestPathInfo} object to use to select the
+     * servlet or script to call to render the resource to be dispatched to.
+     * <p>
+     * <b>Note:</b> If this request dispatcher has been created with resource
+     * type overwriting request dispatcher options, the resource to dispatch to
+     * may be wrapped with a {@link TypeOverwritingResourceWrapper} as a result
+     * of calling this method.
+     */
+    private SlingRequestPathInfo getMergedRequestPathInfo(
+            final SlingHttpServletRequest cRequest) {
         SlingRequestPathInfo info = new SlingRequestPathInfo(resource);
         info = info.merge(cRequest.getRequestPathInfo());
 
@@ -220,10 +236,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             }
         }
 
-        cRequest.getRequestProgressTracker().log(
-            "Including resource {0} ({1})", resource, info);
-        rd.getSlingMainServlet().includeContent(request, response, resource,
-            info);
+        return info;
     }
 
     private Object setAttribute(final ServletRequest request,
@@ -236,6 +249,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
     private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
 
         private final String resourceType;
+
         TypeOverwritingResourceWrapper(Resource delegatee, String resourceType) {
             super(delegatee);
             this.resourceType = resourceType;
@@ -251,7 +265,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
          */
         @Override
         public String getResourceSuperType() {
-        return null;
+            return null;
         }
     }
 }

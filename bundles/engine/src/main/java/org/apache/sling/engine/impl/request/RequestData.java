@@ -40,7 +40,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
@@ -51,6 +50,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
@@ -108,8 +108,10 @@ public class RequestData implements BufferProvider {
      */
     private static int maxCallCounter = DEFAULT_MAX_CALL_COUNTER;
 
+    private static SlingMainServlet SLING_MAIN_SERVLET;
+
     /** The SlingMainServlet used for request dispatching and other stuff */
-    private final SlingMainServlet slingMainServlet;
+    private final SlingRequestProcessorImpl slingRequestProcessor;
 
     /** The original servlet Servlet Request Object */
     private HttpServletRequest servletRequest;
@@ -166,10 +168,14 @@ public class RequestData implements BufferProvider {
         return maxInclusionCounter;
     }
 
-    public RequestData(SlingMainServlet slingMainServlet,
+    public static void setSlingMainServlet(final SlingMainServlet slingMainServlet) {
+        RequestData.SLING_MAIN_SERVLET = slingMainServlet;
+    }
+
+    public RequestData(SlingRequestProcessorImpl slingRequestProcessor,
             HttpServletRequest request, HttpServletResponse response) {
 
-        this.slingMainServlet = slingMainServlet;
+        this.slingRequestProcessor = slingRequestProcessor;
 
         this.servletRequest = request;
         this.servletResponse = response;
@@ -208,7 +214,7 @@ public class RequestData implements BufferProvider {
 	    requestProgressTracker.log("Resource Path Info: {0}", requestPathInfo);
 
         // finally resolve the servlet for the resource
-        ServletResolver sr = slingMainServlet.getServletResolver();
+        ServletResolver sr = slingRequestProcessor.getServletResolver();
         if (sr != null) {
             requestProgressTracker.startTimer("ServletResolution");
             Servlet servlet = sr.resolveServlet(slingRequest);
@@ -247,8 +253,8 @@ public class RequestData implements BufferProvider {
         resourceResolver = null;
     }
 
-    public SlingMainServlet getSlingMainServlet() {
-        return slingMainServlet;
+    public SlingRequestProcessorImpl getSlingRequestProcessor() {
+        return slingRequestProcessor;
     }
 
     public HttpServletRequest getServletRequest() {
@@ -616,13 +622,12 @@ public class RequestData implements BufferProvider {
         return activeServletName;
     }
 
-    /**
-     * Returns the <code>AdapterManager</code> instance bound to the
-     * {@link SlingMainServlet} of this request data instance. This may be
-     * <code>null</code> if no adapter manager is bound to the SlingMainServlet.
-     */
-    public AdapterManager getAdapterManager() {
-        return slingMainServlet.getAdapterManager();
+    public <Type> Type adaptTo(Object object, Class<Type> type) {
+        return SLING_MAIN_SERVLET.adaptTo(object, type);
+    }
+
+    public String getMimeType(String fileName) {
+        return SLING_MAIN_SERVLET.getMimeType(fileName);
     }
 
     // ---------- BufferProvider -----------------------------------------

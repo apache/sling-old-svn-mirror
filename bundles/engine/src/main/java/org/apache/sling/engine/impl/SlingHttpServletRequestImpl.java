@@ -38,7 +38,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
@@ -68,7 +67,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             HttpServletRequest servletRequest) {
         super(servletRequest);
         this.requestData = requestData;
-        
+
         // prepare the pathInfo property
         String pathInfo = servletRequest.getServletPath();
         if (servletRequest.getPathInfo() != null) {
@@ -86,17 +85,11 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     //---------- Adaptable interface
-    
+
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        AdapterManager adapterManager = getRequestData().getAdapterManager();
-        if (adapterManager != null) {
-            return adapterManager.getAdapter(this, type);
-        }
-        
-        // no adapter manager, nothing to adapt to
-        return null;
+        return getRequestData().adaptTo(this, type);
     }
-    
+
     //---------- SlingHttpServletRequest interface
 
     ParameterSupport getParameterSupport() {
@@ -242,7 +235,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public String getResponseContentType() {
         if(responseContentType == null) {
             final String ext = getRequestPathInfo().getExtension();
-            responseContentType = requestData.getSlingMainServlet().getServletContext().getMimeType("dummy." + ext);
+            responseContentType = requestData.getMimeType("dummy." + ext);
         }
         return responseContentType;
     }
@@ -306,7 +299,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public String getServletPath() {
         return "";
     }
-    
+
     /**
      * Returns the part of the request URL without the leading servlet context
      * path.
@@ -315,7 +308,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public String getPathInfo() {
         return pathInfo;
     }
-    
+
     /**
      * A <code>UserPrincipal</code> ...
      */

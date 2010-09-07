@@ -35,9 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.engine.impl.request.RequestData;
-import org.apache.sling.engine.servlets.ErrorHandler;
 
 /**
  * The <code>SlingHttpServletResponseImpl</code> TODO
@@ -123,13 +121,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     //---------- Adaptable interface
 
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        AdapterManager adapterManager = getRequestData().getAdapterManager();
-        if (adapterManager != null) {
-            return adapterManager.getAdapter(this, type);
-        }
-
-        // no adapter manager, nothing to adapt to
-        return null;
+        return getRequestData().adaptTo(this, type);
     }
 
     //---------- SlingHttpServletResponse interface
@@ -249,7 +241,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         checkCommitted();
 
         this.status = status;
-        ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
+        SlingRequestProcessorImpl eh = getRequestData().getSlingRequestProcessor();
         eh.handleError(status, message, requestData.getSlingRequest(), this);
     }
 

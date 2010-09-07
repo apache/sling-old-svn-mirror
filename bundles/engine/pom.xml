@@ -60,7 +60,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.engine;version=2.0.6,
+                            org.apache.sling.engine;version=2.1,
                             org.apache.sling.engine.servlets;version=2.0.6
                         </Export-Package>
                         <Private-Package>
@@ -166,6 +166,12 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.3.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
