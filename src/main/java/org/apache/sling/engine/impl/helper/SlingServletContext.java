@@ -33,6 +33,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
@@ -90,14 +91,15 @@ public class SlingServletContext implements ServletContext {
      * method may cause a {@link NullPointerException} !
      * @see #dispose()
      */
-    public SlingServletContext(SlingMainServlet slingMainServlet) {
+    public SlingServletContext(final BundleContext bundleContext,
+            final SlingMainServlet slingMainServlet) {
         this.slingMainServlet = slingMainServlet;
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Sling ServletContext");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        registration = slingMainServlet.getBundleContext().registerService(
+        registration = bundleContext.registerService(
             ServletContext.class.getName(), this, props);
     }
 

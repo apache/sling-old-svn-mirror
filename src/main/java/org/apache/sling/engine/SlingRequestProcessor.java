@@ -36,6 +36,11 @@ import org.apache.sling.api.resource.ResourceResolver;
 public interface SlingRequestProcessor {
 
     /**
+     * The name of the <code>SlingRequestProcessor</code> service.
+     */
+    static final String NAME = SlingRequestProcessor.class.getName();
+
+    /**
      * Process an HTTP request through the Sling request processing engine.
      * <p>
      * This method does <b>not</b> close the provided resource resolver !
