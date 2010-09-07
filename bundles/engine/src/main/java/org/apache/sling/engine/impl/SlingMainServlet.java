@@ -23,6 +23,8 @@ import java.net.SocketException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
+
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -30,7 +32,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -44,6 +48,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
@@ -52,8 +57,8 @@ import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,8 +115,6 @@ public class SlingMainServlet extends GenericServlet {
 
     private SlingServletContext slingServletContext;
 
-    private ComponentContext osgiComponentContext;
-
     /**
      * The server information to report in the {@link #getServerInfo()} method.
      * By default this is just the {@link #PRODUCT_NAME}. The
@@ -134,6 +137,8 @@ public class SlingMainServlet extends GenericServlet {
     private ServletFilterManager filterManager;
 
     private final SlingRequestProcessorImpl requestProcessor = new SlingRequestProcessorImpl();
+
+    private ServiceRegistration requestProcessorRegistration;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -234,18 +239,13 @@ public class SlingMainServlet extends GenericServlet {
         return serverInfo;
     }
 
-    public BundleContext getBundleContext() {
-        return osgiComponentContext.getBundleContext();
-    }
-
     // ---------- Property Setter for SCR --------------------------------------
 
-    protected void activate(ComponentContext componentContext) {
-
-        osgiComponentContext = componentContext;
+    @Activate
+    protected void activate(final BundleContext bundleContext,
+            final Map<String, Object> componentConfig) {
 
         // setup server info
-        final BundleContext bundleContext = componentContext.getBundleContext();
         final Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
         final Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
         final String productVersion = bundleVersion.getMajor() + "."
@@ -259,12 +259,8 @@ public class SlingMainServlet extends GenericServlet {
         this.requestProcessor.setServerInfo(serverInfo);
 
         // prepare the servlet configuration from the component config
-        final Hashtable<String, Object> configuration = new Hashtable<String, Object>();
-        final Dictionary<?, ?> componentConfig = componentContext.getProperties();
-        for (Enumeration<?> cce = componentConfig.keys(); cce.hasMoreElements();) {
-            Object key = cce.nextElement();
-            configuration.put(String.valueOf(key), componentConfig.get(key));
-        }
+        final Hashtable<String, Object> configuration = new Hashtable<String, Object>(
+            componentConfig);
 
         // ensure the servlet name
         if (!(configuration.get("servlet-name") instanceof String)) {
@@ -300,13 +296,13 @@ public class SlingMainServlet extends GenericServlet {
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        slingServletContext = new SlingServletContext(this);
+        slingServletContext = new SlingServletContext(bundleContext, this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
         // context to be required (see SLING-42)
-        filterManager = new ServletFilterManager(
-            componentContext.getBundleContext(), slingServletContext);
+        filterManager = new ServletFilterManager(bundleContext,
+            slingServletContext);
         filterManager.open();
         requestProcessor.setFilterManager(filterManager);
 
@@ -319,9 +315,23 @@ public class SlingMainServlet extends GenericServlet {
         } catch (Throwable t) {
             log.debug("Unable to register web console configuration printer.", t);
         }
+
+        // provide the SlingRequestProcessor service
+        Hashtable<String, String> srpProps = new Hashtable<String, String>();
+        srpProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        srpProps.put(Constants.SERVICE_DESCRIPTION, "Sling Request Processor");
+        requestProcessorRegistration = bundleContext.registerService(
+            SlingRequestProcessor.NAME, requestProcessor, srpProps);
     }
 
-    protected void deactivate(ComponentContext componentContext) {
+    @Deactivate
+    protected void deactivate() {
+        // unregister the sling request processor
+        if (requestProcessorRegistration != null) {
+            requestProcessorRegistration.unregister();
+            requestProcessorRegistration = null;
+        }
+
         // this reverses the activation setup
         if ( this.printerRegistration != null ) {
             WebConsoleConfigPrinter.unregister(this.printerRegistration);
@@ -353,8 +363,6 @@ public class SlingMainServlet extends GenericServlet {
 
         // reset the sling main servlet reference (help GC and be nice)
         RequestData.setSlingMainServlet(null);
-
-        this.osgiComponentContext = null;
 
         log.info(this.getServerInfo() + " shut down");
     }
