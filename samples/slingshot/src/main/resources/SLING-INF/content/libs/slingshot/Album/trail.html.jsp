@@ -30,14 +30,14 @@
     // let's create the trail
     final List<Object[]> parents = new ArrayList<Object[]>();
     if ( resource.getPath().startsWith(Constants.ALBUMS_ROOT + '/') ) {
-        Resource parent = ResourceUtil.getParent(resource);
+        Resource parent = resource.getParent();
         String prefix = "../";
         boolean continueProcessing = true;
         do {
             final ValueMap parentAttr = ResourceUtil.getValueMap(parent);
-            final String parentName = ResourceUtil.getName(parent);
+            final String parentName = parent.getName();
             parents.add(new Object[] {prefix + parentName, parentAttr.get("jcr:title", parentName)});
-            parent = ResourceUtil.getParent(parent);
+            parent = parent.getParent();
             prefix = prefix + "../";
             if ( parent.getPath().equals(Constants.APP_ROOT) ) {
                 continueProcessing = false;

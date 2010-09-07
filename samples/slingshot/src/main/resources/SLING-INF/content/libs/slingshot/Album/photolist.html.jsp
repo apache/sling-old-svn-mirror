@@ -19,17 +19,16 @@
 %><%@page import="java.util.Iterator,
                   java.util.List,
                   org.apache.sling.api.resource.Resource,
-                  org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.sample.slingshot.Constants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="photolist">
  <%
      int i = 0;
-     final Iterator<Resource> fi = ResourceUtil.listChildren(resource);
+     final Iterator<Resource> fi = resource.listChildren();
      while ( fi.hasNext()) {
          final Resource current = fi.next();
-         if ( ResourceUtil.isA(current, Constants.RESOURCETYPE_FILE) 
+         if ( current.isResourceType(Constants.RESOURCETYPE_FILE) 
               && Constants.includeAsMedia(current)) {
              %>
              <sling:include resource="<%= current %>" resourceType="slingshot/Photo" replaceSelectors="main"/>

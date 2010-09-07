@@ -18,7 +18,6 @@
 --%><%@page session="false" %><%
 %><%@page import="java.util.Iterator,
                   org.apache.sling.api.resource.Resource,
-                  org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.sample.slingshot.Constants" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
@@ -26,10 +25,10 @@
   <div class="albumlist">
     <h2>Contained Albums</h2>
     <%
-    final Iterator<Resource> ri = ResourceUtil.listChildren(resource);
+    final Iterator<Resource> ri = resource.listChildren();
     while ( ri.hasNext()) {
         final Resource current = ri.next();
-        if ( ResourceUtil.isA(current, Constants.RESOURCETYPE_FOLDER) 
+        if ( current.isResourceType(Constants.RESOURCETYPE_FOLDER) 
              && Constants.includeAsAlbum(current)) {
             %><sling:include resource="<%= current %>" resourceType="slingshot/Album"  replaceSelectors="treeentry"/><%
         }

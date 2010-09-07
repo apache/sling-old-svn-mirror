@@ -21,14 +21,14 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
     final ValueMap attributes = ResourceUtil.getValueMap(resource);
-    final String photoName = attributes.get("jcr:title", ResourceUtil.getName(resource));
+    final String photoName = attributes.get("jcr:title", resource.getName());
 %><html>
   <head>
     <title><%= photoName %></title>
   </head>
   <body>
     <h1><%= photoName %></h1>
-    <img src="<%=ResourceUtil.getName(resource) %>"/>
+    <img src="<%=resource.getName() %>"/>
     <p>Description: <%=attributes.get("jcr:description", "")%></p>
     <p>Location: <%=attributes.get("slingshot:location", "")%></p>
     <p>Tags:&nbsp
