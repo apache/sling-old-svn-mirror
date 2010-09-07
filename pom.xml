@@ -77,7 +77,7 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
       <version>1.2.0</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -88,7 +88,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.engine</artifactId>
-      <version>2.0.7-SLING-1603-SNAPSHOT</version>
+      <version>2.1.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
