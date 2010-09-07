@@ -23,7 +23,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
+import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -35,13 +37,10 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class WebConsoleConfigPrinter implements ConfigurationPrinter {
 
-    private final SlingFilterChainHelper requestFilterChain;
-    private final SlingFilterChainHelper innerFilterChain;
+    private final ServletFilterManager filterManager;
 
-    public WebConsoleConfigPrinter(final SlingFilterChainHelper requestFilterChain,
-            final SlingFilterChainHelper innerFilterChain) {
-        this.requestFilterChain = requestFilterChain;
-        this.innerFilterChain = innerFilterChain;
+    public WebConsoleConfigPrinter(final ServletFilterManager filterManager) {
+        this.filterManager = filterManager;
     }
 
     private static final class Registration {
@@ -49,12 +48,11 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
     }
 
     public static Object register(final BundleContext bundleContext,
-            final SlingFilterChainHelper requestFilterChain,
-            final SlingFilterChainHelper innerFilterChain) {
+            final ServletFilterManager filterManager) {
         final Registration reg = new Registration();
 
         // first we register the plugin for the filters
-        final WebConsoleConfigPrinter filterPrinter = new WebConsoleConfigPrinter(requestFilterChain, innerFilterChain);
+        final WebConsoleConfigPrinter filterPrinter = new WebConsoleConfigPrinter(filterManager);
         final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Servlet Filter Configuration Printer");
@@ -108,11 +106,11 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
      */
     public void printConfiguration(PrintWriter pw) {
         pw.println("Current Apache Sling Servlet Filter Configuration");
-        pw.println();
-        pw.println("Request Filters:");
-        printFilterChain(pw, requestFilterChain.getFilterListEntries());
-        pw.println();
-        pw.println("Component Filters:");
-        printFilterChain(pw, innerFilterChain.getFilterListEntries());
+        for (FilterChainType type : FilterChainType.values()) {
+            pw.println();
+            pw.println(type + " Filters:");
+            printFilterChain(pw,
+                filterManager.getFilterChain(type).getFilterListEntries());
+        }
     }
 }
