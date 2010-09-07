@@ -40,7 +40,7 @@ import org.osgi.service.event.EventAdmin;
  * implemented in terms of a component factory, that is multiple instances of
  * this provider may be created by creating respective configuration.
  * <p>
- * Each provider instance is configured with to properties: The location in the
+ * Each provider instance is configured with two properties: The location in the
  * resource tree where resources are provided ({@link ResourceProvider#ROOTS})
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
