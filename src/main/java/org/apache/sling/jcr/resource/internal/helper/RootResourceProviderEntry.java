@@ -57,27 +57,26 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         if (roots != null && roots.length > 0) {
             final EventAdmin localEA = (EventAdmin) ( eventAdminTracker != null ? eventAdminTracker.getService() : null);
 
-            // synchronized insertion of new resource providers into
-            // the tree to not inadvertently loose an entry
-            synchronized (this) {
+            for (String root : roots) {
+                // cut off trailing slash
+                if (root.endsWith("/") && root.length() > 1) {
+                    root = root.substring(0, root.length() - 1);
+                }
 
-                for (String root : roots) {
-                    // cut off trailing slash
-                    if (root.endsWith("/") && root.length() > 1) {
-                        root = root.substring(0, root.length() - 1);
-                    }
+                // synchronized insertion of new resource providers into
+                // the tree to not inadvertently loose an entry
+                synchronized (this) {
 
                     this.addResourceProvider(root,
                         provider, OsgiUtil.getComparableForServiceRanking(props));
-
-                    logger.debug("bindResourceProvider: {}={} ({})",
-                        new Object[] { root, provider, serviceName });
-                    if ( localEA != null ) {
-                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
-                                eventProps));
-                    }
+                }
+                logger.debug("bindResourceProvider: {}={} ({})",
+                    new Object[] { root, provider, serviceName });
+                if ( localEA != null ) {
+                    final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+                    eventProps.put(SlingConstants.PROPERTY_PATH, root);
+                    localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
+                            eventProps));
                 }
             }
         }
@@ -98,28 +97,27 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
 
             final EventAdmin localEA = (EventAdmin) ( eventAdminTracker != null ? eventAdminTracker.getService() : null);
 
-            // synchronized insertion of new resource providers into
-            // the tree to not inadvertently loose an entry
-            synchronized (this) {
-                for (String root : roots) {
-                    // cut off trailing slash
-                    if (root.endsWith("/") && root.length() > 1) {
-                        root = root.substring(0, root.length() - 1);
-                    }
+            for (String root : roots) {
+                // cut off trailing slash
+                if (root.endsWith("/") && root.length() > 1) {
+                    root = root.substring(0, root.length() - 1);
+                }
 
+                // synchronized insertion of new resource providers into
+                // the tree to not inadvertently loose an entry
+                synchronized (this) {
                     // TODO: Do not remove this path, if another resource
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
                     this.removeResourceProvider(root, provider, OsgiUtil.getComparableForServiceRanking(props));
-
-                    logger.debug("unbindResourceProvider: root={} ({})", root,
-                        serviceName);
-                    if ( localEA != null ) {
-                        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-                        eventProps.put(SlingConstants.PROPERTY_PATH, root);
-                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
-                                eventProps));
-                    }
+                }
+                logger.debug("unbindResourceProvider: root={} ({})", root,
+                    serviceName);
+                if ( localEA != null ) {
+                    final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+                    eventProps.put(SlingConstants.PROPERTY_PATH, root);
+                    localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
+                            eventProps));
                 }
             }
         }
