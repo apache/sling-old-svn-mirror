@@ -64,7 +64,10 @@
                             SLING-INF/nodetypes/test.cnd
                         </Sling-Nodetypes>
                         <Sling-Initial-Content>SLING-INF/content;path:=/sling-test</Sling-Initial-Content>
-                        <Sling-Bundle-Resources>/sling-test/sling/from-bundle;path:=/SLING-INF/res/sling-test/sling/from-bundle</Sling-Bundle-Resources>
+                        <Sling-Bundle-Resources>
+                        	/sling-test/sling/from-bundle;path:=/SLING-INF/res/sling-test/sling/from-bundle,
+                        	/system;path:=/SLING-INF/res/sling-test/sling/SLING-1733
+                        </Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
             </plugin>
