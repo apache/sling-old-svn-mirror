@@ -21,7 +21,8 @@
  
 <%
     var path = resource.path;
-    var readonly = false;    
+    var readonly = false; 
+	var dateFormatter = new Packages.java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss");				
 
     var session = request.resourceResolver.adaptTo(Packages.javax.jcr.Session);
     if (session)
@@ -396,7 +397,7 @@
 		buttonImageOnly: true,
 		buttonImage: '/libs/sling/explorer/img/calendar.gif',
 		buttonText: 'Calendar',
-		dateFormat: 'yy-mm-dd hh:ii',
+		dateFormat: 'dd.mm.yy hh:ii:00',
 		changeYear: true,
 		changeMonth: true,
 		closeText: 'Confirm',
@@ -428,7 +429,7 @@
 <% function create_input_for_type( id, type, val, editable, omitName ) { 
 	switch ( type ) { 
 		case Packages.javax.jcr.PropertyType.DATE : %>
-			<input  class="prop_value text datepicker" <% if (!omitName) { %> name="<%= id %>" <% } %> id="<%= id %>" value="<%= val %>" />
+			<input  class="prop_value text datepicker<% if(!editable) { %> protected<%}%>" <% if (!omitName) { %> name="<%= id %>" <% } %> id="<%= id %>" value="<%= dateFormatter.format( val.getDate().getTime() ) %>" />
 		<%
 		break; 
 		case Packages.javax.jcr.PropertyType.BOOLEAN : %>
