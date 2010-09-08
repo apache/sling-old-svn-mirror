@@ -148,7 +148,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
                     filters);
 
                 request.getRequestProgressTracker().log(
-                    "Applying request filters");
+                    "Applying " + FilterChainType.REQUEST + "filters");
 
                 processor.doFilter(request, response);
 
@@ -245,7 +245,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         if (filters != null) {
 
             FilterChain processor = new SlingComponentFilterChain(filters);
-            request.getRequestProgressTracker().log("Applying inner filters");
+            request.getRequestProgressTracker().log(
+                "Applying " + filterChainType + "filters");
             processor.doFilter(request, response);
 
         } else {
@@ -307,7 +308,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
                     errorHandler.handleError(status, message, request, response);
                 }
             };
-            request.getRequestProgressTracker().log("Applying error filters");
+            request.getRequestProgressTracker().log(
+                "Applying " + FilterChainType.ERROR + " filters");
 
             try {
                 processor.doFilter(request, response);
@@ -333,7 +335,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
                     errorHandler.handleError(throwable, request, response);
                 }
             };
-            request.getRequestProgressTracker().log("Applying error filters");
+            request.getRequestProgressTracker().log(
+                "Applying " + FilterChainType.ERROR + " filters");
 
             try {
                 processor.doFilter(request, response);
