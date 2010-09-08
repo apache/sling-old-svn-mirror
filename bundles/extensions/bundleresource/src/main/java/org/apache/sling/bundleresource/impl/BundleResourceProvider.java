@@ -114,10 +114,11 @@ public class BundleResourceProvider implements ResourceProvider {
     public Iterator<Resource> listChildren(final Resource parent)
             throws SlingException {
 
-        // bundle resources can handle this request directly
-        if (parent instanceof BundleResource) {
-            return ((BundleResource) parent).listChildren();
-        }
+     	if (((BundleResource)parent).getBundle() == this.bundle) { 
+            // bundle resources can handle this request directly when the parent
+    		//  resource is in the same bundle as this provider.
+            return ((BundleResource) parent).listChildren(); 
+    	}
 
         // ensure this provider may have children of the parent
         String parentPath = parent.getPath();
