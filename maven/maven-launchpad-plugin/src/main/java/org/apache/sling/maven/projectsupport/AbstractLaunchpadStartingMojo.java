@@ -187,7 +187,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
     private Sling sling;
 
     /**
-     * @parameter expression="${sling.home}" default-value="sling"
+     * @parameter expression="${sling.home}" default-value="${basedir}/sling"
      */
     private String slingHome;
 
