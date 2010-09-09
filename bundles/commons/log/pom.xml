@@ -66,15 +66,14 @@
                         <Export-Package>
                             org.apache.commons.logging;version=1.1.1,
                             org.apache.log4j;version=1.2.15,
-                            org.slf4j;
-                                org.slf4j.helpers;
-                                org.slf4j.spi;version=${slf4j.version},
+                            org.slf4j;version=${slf4j.version},
                             org.osgi.service.cm, org.osgi.service.log
                         </Export-Package>
                         <Private-Package>
                             org.apache.commons.logging.impl,
                             org.apache.sling.commons.log.*,
-                            org.slf4j.impl
+                            org.slf4j.impl,
+                            org.slf4j.helpers,org.slf4j.spi
                         </Private-Package>
                         <Import-Package>
                             javax.servlet.*;resolution:=optional,
