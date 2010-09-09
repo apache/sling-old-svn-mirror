@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -50,8 +51,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * <dl>
  * <dt><code>print(args, ...)</code></dt>
- * <dd>Prints the arguments <code>args</code> in a single message to the
- * scripts logger available as the global <em>log</em> variable.</dd>
+ * <dd>Prints the arguments <code>args</code> in a single message to the scripts
+ * logger available as the global <em>log</em> variable.</dd>
  * <dt><code>load(args, ...)</code></dt>
  * <dd>Loads the scripts named as parameters into the current scope one, after
  * the other. Usually the script files are read as plain JavaScript files. If
@@ -62,182 +63,300 @@ import org.slf4j.LoggerFactory;
  * </dl>
  */
 public class SlingGlobal implements Serializable, IdFunctionCall {
-    static final long serialVersionUID = 6080442165748707530L;
+	static final long serialVersionUID = 6080442165748707530L;
 
-    private static final Object FTAG = new Object();
+	private static final Object FTAG = new Object();
 
-    private static final int Id_load = 1;
+	private static final int Id_load = 1;
 
-    private static final int Id_print = 2;
+	private static final int Id_print = 2;
 
-    private static final int LAST_SCOPE_FUNCTION_ID = 2;
+	private static final int Id_require = 3;
 
-    /** default log */
-    private final Logger defaultLog = LoggerFactory.getLogger(getClass());
+	private static final int LAST_SCOPE_FUNCTION_ID = 3;
 
-    public static void init(Scriptable scope, boolean sealed) {
-        SlingGlobal obj = new SlingGlobal();
+	/** default log */
+	private final Logger defaultLog = LoggerFactory.getLogger(getClass());
 
-        for (int id = 1; id <= LAST_SCOPE_FUNCTION_ID; ++id) {
-            String name;
-            int arity = 1;
-            switch (id) {
-                case Id_load:
-                    name = "load";
-                    break;
-                case Id_print:
-                    name = "print";
-                    break;
-                default:
-                    throw Kit.codeBug();
-            }
-            IdFunctionObject f = new IdFunctionObject(obj, FTAG, id, name,
-                arity, scope);
-            if (sealed) {
-                f.sealObject();
-            }
-            f.exportAsScopeProperty();
-        }
+	public static void init(Scriptable scope, boolean sealed) {
+		SlingGlobal obj = new SlingGlobal();
 
-    }
+		for (int id = 1; id <= LAST_SCOPE_FUNCTION_ID; ++id) {
+			String name;
+			int arity = 1;
+			switch (id) {
+			case Id_load:
+				name = "load";
+				break;
+			case Id_print:
+				name = "print";
+				break;
+			case Id_require:
+				name = "require";
+				break;
+			default:
+				throw Kit.codeBug();
+			}
+			IdFunctionObject f = new IdFunctionObject(obj, FTAG, id, name,
+					arity, scope);
+			if (sealed) {
+				f.sealObject();
+			}
+			f.exportAsScopeProperty();
+		}
 
-    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
-            Scriptable thisObj, Object[] args) {
-        if (f.hasTag(FTAG)) {
-            int methodId = f.methodId();
-            switch (methodId) {
-                case Id_load: {
-                    load(cx, thisObj, args);
-                    return Context.getUndefinedValue();
-                }
+	}
 
-                case Id_print: {
-                    print(cx, thisObj, args);
-                    return Context.getUndefinedValue();
-                }
-            }
-        }
-        throw f.unknown();
-    }
+	public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
+			Scriptable thisObj, Object[] args) {
+		if (f.hasTag(FTAG)) {
+			int methodId = f.methodId();
+			switch (methodId) {
+			case Id_load: {
+				load(cx, thisObj, args);
+				return Context.getUndefinedValue();
+			}
 
-    private void print(Context cx, Scriptable thisObj, Object[] args) {
-        StringBuffer message = new StringBuffer();
-        for (int i = 0; i < args.length; i++) {
-            if (i > 0) {
-                message.append(" ");
-            }
-            // Convert the arbitrary JavaScript value into a string form.
-            String s = ScriptRuntime.toString(args[i]);
+			case Id_print: {
+				print(cx, thisObj, args);
+				return Context.getUndefinedValue();
+			}
 
-            message.append(s);
-        }
+			case Id_require: {
+				return require(cx, thisObj, args);
+			}
+			}
+		}
+		throw f.unknown();
+	}
 
-        getLogger(cx, thisObj).info(message.toString());
-    }
+	private void print(Context cx, Scriptable thisObj, Object[] args) {
+		StringBuffer message = new StringBuffer();
+		for (int i = 0; i < args.length; i++) {
+			if (i > 0) {
+				message.append(" ");
+			}
+			// Convert the arbitrary JavaScript value into a string form.
+			String s = ScriptRuntime.toString(args[i]);
 
-    private void load(Context cx, Scriptable thisObj, Object[] args) {
+			message.append(s);
+		}
 
-        SlingScriptHelper sling = getProperty(cx, thisObj, SlingBindings.SLING,
-            SlingScriptHelper.class);
-        if (sling == null) {
-            throw new NullPointerException(SlingBindings.SLING);
-        }
+		getLogger(cx, thisObj).info(message.toString());
+	}
 
-        Scriptable globalScope = ScriptableObject.getTopLevelScope(thisObj);
+	private void load(Context cx, Scriptable thisObj, Object[] args) {
 
-        Resource scriptResource = sling.getScript().getScriptResource();
-        ResourceResolver resolver = scriptResource.getResourceResolver();
+		SlingScriptHelper sling = getProperty(cx, thisObj, SlingBindings.SLING,
+				SlingScriptHelper.class);
+		if (sling == null) {
+			throw new NullPointerException(SlingBindings.SLING);
+		}
 
-        // the path of the current script to resolve realtive paths
-        String currentScript = sling.getScript().getScriptResource().getPath();
-        String scriptParent = ResourceUtil.getParent(currentScript);
+		Scriptable globalScope = ScriptableObject.getTopLevelScope(thisObj);
 
-        for (Object arg : args) {
-            String scriptName = ScriptRuntime.toString(arg);
+		Resource scriptResource = sling.getScript().getScriptResource();
+		ResourceResolver resolver = scriptResource.getResourceResolver();
 
-            Resource loadScript = null;
-            if (!scriptName.startsWith("/")) {
-                String absScriptName = scriptParent + "/" + scriptName;
-                loadScript = resolver.resolve(absScriptName);
-            }
+		// the path of the current script to resolve realtive paths
+		String currentScript = sling.getScript().getScriptResource().getPath();
+		String scriptParent = ResourceUtil.getParent(currentScript);
 
-            // not resolved relative to the current script
-            if (loadScript == null) {
-                loadScript = resolver.resolve(scriptName);
-            }
+		for (Object arg : args) {
+			String scriptName = ScriptRuntime.toString(arg);
 
-            if (loadScript == null) {
-                throw Context.reportRuntimeError("Script file " + scriptName
-                    + " not found");
-            }
+			Resource loadScript = null;
+			if (!scriptName.startsWith("/")) {
+				String absScriptName = scriptParent + "/" + scriptName;
+				loadScript = resolver.resolve(absScriptName);
+			}
 
-            InputStream scriptStream = loadScript.adaptTo(InputStream.class);
-            if (scriptStream == null) {
-                throw Context.reportRuntimeError("Script file " + scriptName
-                    + " cannot be read from");
-            }
+			// not resolved relative to the current script
+			if (loadScript == null) {
+				loadScript = resolver.resolve(scriptName);
+			}
 
-            try {
-                // reader for the stream
-                Reader scriptReader = new InputStreamReader(scriptStream);
+			if (loadScript == null) {
+				throw Context.reportRuntimeError("Script file " + scriptName
+						+ " not found");
+			}
 
-                // check whether we have to wrap the basic reader
-                if (scriptName.endsWith(RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION)) {
-                    scriptReader = new EspReader(scriptReader);
-                }
+			InputStream scriptStream = loadScript.adaptTo(InputStream.class);
+			if (scriptStream == null) {
+				throw Context.reportRuntimeError("Script file " + scriptName
+						+ " cannot be read from");
+			}
 
-                // read the suff buffered for better performance
-                scriptReader = new BufferedReader(scriptReader);
+			try {
+				// reader for the stream
+				Reader scriptReader = new InputStreamReader(scriptStream);
 
-                // now, let's go
-                cx.evaluateReader(globalScope, scriptReader, scriptName, 1,
-                    null);
+				// check whether we have to wrap the basic reader
+				if (scriptName
+						.endsWith(RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION)) {
+					scriptReader = new EspReader(scriptReader);
+				}
 
-            } catch (IOException ioe) {
+				// read the suff buffered for better performance
+				scriptReader = new BufferedReader(scriptReader);
 
-                throw Context.reportRuntimeError("Failure reading file "
-                    + scriptName + ": " + ioe);
+				// now, let's go
+				cx.evaluateReader(globalScope, scriptReader, scriptName, 1,
+						null);
 
-            } finally {
-                // ensure the script input stream is closed
-                try {
-                    scriptStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-    }
+			} catch (IOException ioe) {
 
-    /**
-     * Returns the script logger or the logger of this class as a fallback
-     * default if the global log variable is not accessible.
-     */
-    private Logger getLogger(Context cx, Scriptable scope) {
-        Logger log = getProperty(cx, scope, SlingBindings.LOG, Logger.class);
-        if (log == null) {
-            log = this.defaultLog;
-        }
-        return log;
-    }
+				throw Context.reportRuntimeError("Failure reading file "
+						+ scriptName + ": " + ioe);
 
-    /**
-     * Returns the named toplevel property converted to the requested
-     * <code>type</code> or <code>null</code> if no such property exists or
-     * the property is of the wrong type.
-     */
-    @SuppressWarnings("unchecked")
-    private <Type> Type getProperty(Context cx, Scriptable scope, String name,
-            Class<Type> type) {
-        Object prop = ScriptRuntime.name(cx, scope, name);
+			} finally {
+				// ensure the script input stream is closed
+				try {
+					scriptStream.close();
+				} catch (IOException ignore) {
+				}
+			}
+		}
+	}
 
-        if (prop instanceof Wrapper) {
-            prop = ((Wrapper) prop).unwrap();
-        }
+	public Object require(Context cx, Scriptable thisObj, Object[] args) {
+		if (args.length != 1 || !(args[0] instanceof String)) {
+			throw Context
+					.reportRuntimeError("require() requires a String argument");
+		}
+		String modulePath = (String) args[0];
 
-        if (type.isInstance(prop)) {
-            return (Type) prop; // unchecked case
-        }
+		ModuleScope moduleScope = null;
+		if (thisObj instanceof ModuleScope) {
+			moduleScope = (ModuleScope) thisObj;
+		}
 
-        return null;
-    }
+		ModuleScope module = loadModule(cx, modulePath.trim(), moduleScope,
+				thisObj);
+		return module.getExports();
+	}
+
+	private ModuleScope loadModule(Context cx, String modulePath,
+			ModuleScope moduleScope, Scriptable thisObj) {
+		String absolutePath = modulePath;
+		if (modulePath.startsWith(".")) {
+			// relative
+			if (moduleScope == null) {
+				throw Context
+						.reportRuntimeError("Cannot resolve relative module name outside of a module scope.");
+			}
+			absolutePath = (moduleScope.getModuleName() + "/" + modulePath)
+					.replaceAll("[^/]*/\\./", "");
+			while (absolutePath.matches("([^/]*/)?[^/]*/\\.\\./")) {
+				absolutePath = absolutePath
+						.replaceAll("([^/]*/)?[^/]*/\\.\\./", "");
+			}
+		}
+		absolutePath = absolutePath + ".js";
+
+		SlingScriptHelper sling = getProperty(cx, thisObj, SlingBindings.SLING,
+				SlingScriptHelper.class);
+		if (sling == null) {
+			throw new NullPointerException(SlingBindings.SLING);
+		}
+		ResourceResolver resrev = sling.getScript().getScriptResource().getResourceResolver();
+
+		Resource script = null;
+		String scriptName = null;
+		for (String basepath : resrev.getSearchPath()) {
+			script = resrev.resolve(basepath + absolutePath);
+			if (script!=null&&!(script instanceof NonExistingResource)) {
+				scriptName = basepath + absolutePath;
+				break;
+			}
+		}
+		if (script==null) {
+			throw Context.reportRuntimeError("Unable to resolve module " + absolutePath + " in search path");
+		}
+
+		InputStream scriptStream = script.adaptTo(InputStream.class);
+		if (scriptStream == null) {
+			//try once again
+			 scriptStream = resrev.resolve(scriptName).adaptTo(InputStream.class);
+			if (scriptStream==null) {
+				throw Context.reportRuntimeError("Script file " + script.getPath()
+						+ " cannot be read");
+			}
+		}
+
+
+		try {
+			// reader for the stream
+			Reader scriptReader = new InputStreamReader(scriptStream);
+
+			// check whether we have to wrap the basic reader
+			if (scriptName
+					.endsWith(RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION)) {
+				scriptReader = new EspReader(scriptReader);
+			}
+
+			// read the suff buffered for better performance
+			scriptReader = new BufferedReader(scriptReader);
+
+			//TODO: execute script with ModuleScope
+			// now, let's go
+
+			ModuleScope scope = moduleScope;
+			if (scope==null) {
+				scope = new ModuleScope(thisObj, absolutePath.substring(0, absolutePath.length() - 3));
+			} else {
+				scope.reset();
+			}
+
+			cx.evaluateReader(scope, scriptReader, scriptName, 1,
+					null);
+
+			return scope;
+
+		} catch (IOException ioe) {
+
+			throw Context.reportRuntimeError("Failure reading file "
+					+ scriptName + ": " + ioe);
+
+		} finally {
+			// ensure the script input stream is closed
+			try {
+				scriptStream.close();
+			} catch (IOException ignore) {
+			}
+		}
+	}
+
+	/**
+	 * Returns the script logger or the logger of this class as a fallback
+	 * default if the global log variable is not accessible.
+	 */
+	private Logger getLogger(Context cx, Scriptable scope) {
+		Logger log = getProperty(cx, scope, SlingBindings.LOG, Logger.class);
+		if (log == null) {
+			log = this.defaultLog;
+		}
+		return log;
+	}
+
+	/**
+	 * Returns the named toplevel property converted to the requested
+	 * <code>type</code> or <code>null</code> if no such property exists or the
+	 * property is of the wrong type.
+	 */
+	@SuppressWarnings("unchecked")
+	private <Type> Type getProperty(Context cx, Scriptable scope, String name,
+			Class<Type> type) {
+		Object prop = ScriptRuntime.name(cx, scope, name);
+
+		if (prop instanceof Wrapper) {
+			prop = ((Wrapper) prop).unwrap();
+		}
+
+		if (type.isInstance(prop)) {
+			return (Type) prop; // unchecked case
+		}
+
+		return null;
+	}
 }
