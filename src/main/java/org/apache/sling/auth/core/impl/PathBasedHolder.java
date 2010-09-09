@@ -172,7 +172,7 @@ public abstract class PathBasedHolder implements Comparable<PathBasedHolder> {
             return pathResult;
         }
 
-        // no compare the service references giving priority to
+        // now compare the service references giving priority to
         // to the higher priority service
         if (serviceReference == null) {
             return -1;
