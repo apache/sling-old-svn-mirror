@@ -232,11 +232,16 @@ class HttpBasicAuthenticationHandler extends
 
         } else {
 
+            response.resetBuffer();
+
+            // just set the status because this may be called as part of an
+            // error handler in which case sendError would result in an error
+            // handler loop and thus be ignored.
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setHeader(HEADER_WWW_AUTHENTICATE,
                 AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
 
             try {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                 response.flushBuffer();
                 return true;
             } catch (IOException ioe) {
