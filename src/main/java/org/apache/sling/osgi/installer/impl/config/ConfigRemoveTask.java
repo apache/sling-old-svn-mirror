@@ -62,6 +62,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
             } else {
                 this.getLogger().debug("Deleting config {} ({})", pid, getResource());
                 cfg.delete();
+                ctx.log("Deleted configuration {} from resource {}", pid, getResource());
                 this.getResource().setState(RegisteredResource.State.UNINSTALLED);
             }
         } catch (Exception e) {

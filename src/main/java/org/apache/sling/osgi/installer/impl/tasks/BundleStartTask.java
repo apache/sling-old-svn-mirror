@@ -64,12 +64,12 @@ public class BundleStartTask extends OsgiInstallerTask {
 	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
 	 */
 	public void execute(final OsgiInstallerContext ctx) {
-	    if ( this.getResource() != null ) {
-	        this.getResource().setState(RegisteredResource.State.INSTALLED);
-	    }
 	    // this is just a sanity check which should never be reached
         if (bundleId == 0) {
             this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");
+            if ( this.getResource() != null ) {
+                this.getResource().setState(RegisteredResource.State.INSTALLED);
+            }
             return;
         }
 
@@ -78,7 +78,9 @@ public class BundleStartTask extends OsgiInstallerTask {
         if (eventsCount < eventsCountForRetrying) {
             this.getLogger().debug("Task is not executable at this time, counters={}/{}",
                     eventsCountForRetrying, eventsCount);
-            ctx.addTaskToNextCycle(this);
+            if ( this.getResource() == null ) {
+                ctx.addTaskToNextCycle(this);
+            }
             return;
         }
 
@@ -90,11 +92,17 @@ public class BundleStartTask extends OsgiInstallerTask {
 
         if (b.getState() == Bundle.ACTIVE) {
             this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
+            if ( this.getResource() != null ) {
+                this.getResource().setState(RegisteredResource.State.INSTALLED);
+            }
             return;
         }
         // Try to start bundle, and if that doesn't work we'll need to retry
         try {
             b.start();
+            if ( this.getResource() != null ) {
+                this.getResource().setState(RegisteredResource.State.INSTALLED);
+            }
             this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
                     new Object[] {retryCount, bundleId, b.getSymbolicName()});
         } catch(BundleException e) {
@@ -110,9 +118,9 @@ public class BundleStartTask extends OsgiInstallerTask {
                 eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
             }
             retryCount++;
-            ctx.addTaskToNextCycle(this);
+            if ( this.getResource() == null ) {
+                ctx.addTaskToNextCycle(this);
+            }
         }
-
-        return;
 	}
 }

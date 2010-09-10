@@ -100,6 +100,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
                         + getResource());
             }
             b.update(is);
+            ctx.log("Updated bundle {} from resource {}", b, getResource());
             this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
     	} catch (Exception e) {
             if ( canRetry ) {

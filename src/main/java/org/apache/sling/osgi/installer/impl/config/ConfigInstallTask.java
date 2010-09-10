@@ -96,6 +96,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
                     config.setBundleLocation(null);
                 }
                 config.update(dict);
+                ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
                 this.getResource().setState(RegisteredResource.State.INSTALLED);
                 this.getLogger().debug("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")

@@ -62,6 +62,9 @@ public class OsgiInstallerImpl
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
+    /** The audit logger */
+    private final Logger auditLogger =  LoggerFactory.getLogger("org.apache.sling.audit.osgi.installer");
+
     /** The bundle context. */
     private final BundleContext ctx;
 
@@ -311,7 +314,8 @@ public class OsgiInstallerImpl
                             }
                             if ( !found) {
                                 logger.debug("Resource {} seems to be removed.", r);
-                                if ( r.getState() == RegisteredResource.State.INSTALLED && first ) {
+                                if ( first && (r.getState() == RegisteredResource.State.INSTALLED
+                                           ||  r.getState() == RegisteredResource.State.INSTALL)) {
                                      r.setState(RegisteredResource.State.UNINSTALL);
                                 } else {
                                     toRemove.add(r);
@@ -346,6 +350,7 @@ public class OsgiInstallerImpl
 
             // if we have changes we have to process the resources per entity to update states
             if ( changed ) {
+                printResources("Merged");
                 for(final String entityId : this.persistentList.getEntityIds()) {
                     final Collection<RegisteredResource> group = this.persistentList.getResources(entityId);
                     if ( !group.isEmpty() ) {
@@ -381,10 +386,36 @@ public class OsgiInstallerImpl
                         }
                     }
                 }
+                printResources("Prepared");
                 // persist list
                 this.persistentList.save();
             }
         }
+    }
+
+    private void printResources(String hint) {
+        if ( !logger.isDebugEnabled() ) {
+            return;
+        }
+        final StringBuilder sb = new StringBuilder();
+        sb.append(hint);
+        sb.append(" Resources={\n");
+        for(final String id : this.persistentList.getEntityIds() ) {
+            sb.append("- ");
+            sb.append(id);
+            sb.append(" : [");
+            boolean first = true;
+            for(final RegisteredResource rr : this.persistentList.getResources(id)) {
+                if ( !first) {
+                    sb.append(", ");
+                }
+                first = false;
+                sb.append(rr);
+            }
+            sb.append("]\n");
+        }
+        sb.append("}\n");
+        logger.debug(sb.toString());
     }
 
     /**
@@ -456,8 +487,7 @@ public class OsgiInstallerImpl
             }
 
             public void log(String message, Object... args) {
-                // TODO Auto-generated method stub
-
+                auditLogger.info(message, args);
             }
         };
         while (this.active && !tasks.isEmpty()) {
@@ -478,6 +508,7 @@ public class OsgiInstallerImpl
         if ( this.persistentList.compact() ) {
             persistentList.save();
         }
+        printResources("Compacted");
     }
 
     /** If we have any tasks waiting to be retried, schedule their execution */

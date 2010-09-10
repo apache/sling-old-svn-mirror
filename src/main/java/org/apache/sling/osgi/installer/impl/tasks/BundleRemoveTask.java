@@ -49,7 +49,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             // nothing to do, so just stop
-            this.getResource().setState(RegisteredResource.State.IGNORED);
+            this.getResource().setState(RegisteredResource.State.UNINSTALLED);
             return;
         }
         final int state = b.getState();
@@ -58,6 +58,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             	b.stop();
             }
             b.uninstall();
+            ctx.log("Uninstalled bundle {} from resource {}", b, getResource());
             this.getResource().setState(RegisteredResource.State.UNINSTALLED);
             ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         } catch (final BundleException be) {
