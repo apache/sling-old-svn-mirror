@@ -29,6 +29,7 @@ var Sling = null;
 
 	Sling = new Object();
 	Sling.NAME_OF_THIS_FILE = "sling.js";
+	Sling.PATH_OF_THIS_FILE = "/system/sling.js";
 	
 	/** This method tries to figure out what to do with a page */
 	Sling.wizard = function() {
@@ -412,7 +413,7 @@ var Sling = null;
 	// obtain the base_url to communicate with sling on the server
 	var scripts = document.getElementsByTagName("SCRIPT")
 	var script = scripts[scripts.length-1].src
-	Sling.baseurl = script.substring(0,script.length - ("/" + Sling.NAME_OF_THIS_FILE.length));
+	Sling.baseurl = script.substring(0,script.length - Sling.PATH_OF_THIS_FILE.length);
 	Sling.currentPath = Sling._getPath();
 	Sling.isNew  = (Sling.currentPath.indexOf("/*")>=0)?true:false;
 
