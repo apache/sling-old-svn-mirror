@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
@@ -63,7 +62,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
         r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar"))[0]);
 
-        installer.registerResources(URL_SCHEME, r);
+        installer.registerResources(URL_SCHEME, r.toArray(new InstallableResource[r.size()]));
 
         this.waitForBundleEvents("Bundles must be installed and started.", listener,
                 new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
@@ -89,7 +88,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
 
-            installer.registerResources(URL_SCHEME, r);
+            installer.registerResources(URL_SCHEME, r.toArray(new InstallableResource[r.size()]));
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.STARTED),
@@ -136,12 +135,14 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-snap.jar"), "digest1")[0]);
 
-            installer.registerResources(URL_SCHEME, r);
+            installer.registerResources(URL_SCHEME, r.toArray(new InstallableResource[r.size()]));
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-snapshot-test", "1.0.0.SNAPSHOT", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-snapshot-test", "1.0.0.SNAPSHOT", org.osgi.framework.BundleEvent.STARTED),
                     new BundleEvent("osgi-installer-testB", org.osgi.framework.BundleEvent.STOPPED),
-                    new BundleEvent("osgi-installer-testB", org.osgi.framework.BundleEvent.UNINSTALLED));
+                    new BundleEvent("osgi-installer-testB", org.osgi.framework.BundleEvent.UNINSTALLED),
+                    new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.STARTED));
 
             assertBundle("Snapshot bundle must be started",
                     "osgi-installer-snapshot-test", "1.0.0.SNAPSHOT", Bundle.ACTIVE);
@@ -191,7 +192,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"))[0]);
             r.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar"))[0]);
 
-            installer.registerResources(URL_SCHEME, r);
+            installer.registerResources(URL_SCHEME, r.toArray(new InstallableResource[r.size()]));
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.STARTED),
@@ -209,7 +210,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
         {
             final Object listener = this.startObservingBundleEvents();
 
-            installer.registerResources(URL_SCHEME, new LinkedList<InstallableResource>());
+            installer.registerResources(URL_SCHEME, new InstallableResource[0]);
             this.waitForBundleEvents("Bundles must be installed and started.", listener,
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.STOPPED),
                     new BundleEvent("osgi-installer-testB", "1.0", org.osgi.framework.BundleEvent.UNINSTALLED),

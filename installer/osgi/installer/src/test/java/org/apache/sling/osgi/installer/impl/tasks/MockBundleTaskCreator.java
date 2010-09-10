@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.osgi.installer.impl.MockBundleContext;
-import org.apache.sling.osgi.installer.impl.RegisteredResource;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 /** BundleTaskCreator that simulates the presence and state of bundles */
@@ -37,11 +35,11 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     }
 
     void addBundleInfo(String symbolicName, String version, int state) {
-        fakeBundleInfo.put(symbolicName, new BundleInfo(symbolicName, new Version(version), state));
+        fakeBundleInfo.put(symbolicName, new BundleInfo(symbolicName, new Version(version), state, 1));
     }
 
     @Override
-    protected BundleInfo getBundleInfo(RegisteredResource bundle) {
-        return fakeBundleInfo.get(bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
+    protected BundleInfo getBundleInfo(String symbolicName) {
+        return fakeBundleInfo.get(symbolicName);
     }
 }

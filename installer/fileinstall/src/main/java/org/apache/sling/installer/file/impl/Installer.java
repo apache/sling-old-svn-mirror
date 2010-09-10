@@ -85,7 +85,7 @@ public class Installer implements FileChangesListener {
                 resources.add(resource);
             }
         }
-        this.installer.registerResources(this.scheme, resources);
+        this.installer.registerResources(this.scheme, resources.toArray(new InstallableResource[resources.size()]));
     }
 
     private InstallableResource createResource(final File file) {

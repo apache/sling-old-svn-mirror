@@ -61,7 +61,7 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
                 getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
 
         final Object listener = this.startObservingBundleEvents();
-        installer.registerResources(URL_SCHEME, data);
+        installer.registerResources(URL_SCHEME, data.toArray(new InstallableResource[data.size()]));
         this.waitForBundleEvents("All valid bundles must be installed and started.", listener,
                 new BundleEvent("osgi-installer-testbundle", "1.1", org.osgi.framework.BundleEvent.INSTALLED),
                 new BundleEvent("osgi-installer-testbundle", "1.1", org.osgi.framework.BundleEvent.STARTED),

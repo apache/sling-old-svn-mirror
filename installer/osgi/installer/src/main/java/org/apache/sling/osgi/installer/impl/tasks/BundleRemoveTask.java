@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -33,28 +34,24 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_REMOVE_ORDER = "30-";
 
-    private final RegisteredResource resource;
-
     private final BundleTaskCreator creator;
 
     public BundleRemoveTask(final RegisteredResource r,
-            final BundleTaskCreator creator) {
+                            final BundleTaskCreator creator) {
+        super(r);
         this.creator = creator;
-        this.resource = r;
     }
 
-    @Override
-    public String toString() {
-    	return getClass().getSimpleName() + ": " + resource;
-    }
-
-    @Override
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+     */
     public void execute(OsgiInstallerContext ctx) {
-        logExecution();
-        final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
-        if(b == null) {
-            throw new IllegalStateException("Bundle to remove (" + symbolicName + ") not found");
+        if (b == null) {
+            // nothing to do, so just stop
+            this.getResource().setState(RegisteredResource.State.IGNORED);
+            return;
         }
         final int state = b.getState();
         try {
@@ -62,17 +59,17 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             	b.stop();
             }
             b.uninstall();
-        } catch (BundleException be) {
+            this.getResource().setState(RegisteredResource.State.UNINSTALLED);
+            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
+        } catch (final BundleException be) {
+            Logger.logDebug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
             ctx.addTaskToNextCycle(this);
-            return;
         }
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
-        return;
     }
 
     @Override
     public String getSortKey() {
-        return BUNDLE_REMOVE_ORDER + resource.getURL();
+        return BUNDLE_REMOVE_ORDER + getResource().getURL();
     }
 
 }

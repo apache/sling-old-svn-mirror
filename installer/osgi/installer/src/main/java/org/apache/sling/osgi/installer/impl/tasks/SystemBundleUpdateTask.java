@@ -37,40 +37,32 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "99-";
 
-    private final RegisteredResource resource;
-
     private final BundleTaskCreator creator;
 
     public SystemBundleUpdateTask(final RegisteredResource r,
             final BundleTaskCreator creator) {
+        super(r);
         this.creator = creator;
-        this.resource = r;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + ": " + resource;
     }
 
     @Override
     public void execute(OsgiInstallerContext ctx) {
-        final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
-        final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
+        final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
 
-        logExecution();
         InputStream is = null;
         try {
-            is = resource.getInputStream();
+            is = getResource().getInputStream();
             if (is == null) {
                 throw new IllegalStateException(
                         "RegisteredResource provides null InputStream, cannot update bundle: "
-                        + resource);
+                        + getResource());
             }
-            this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
+            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
             // delayed system bundle update
             final InputStream backgroundIS = is;
             is = null;
@@ -110,7 +102,7 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_UPDATE_ORDER + resource.getURL();
+        return BUNDLE_UPDATE_ORDER + getResource().getURL();
     }
 
 }

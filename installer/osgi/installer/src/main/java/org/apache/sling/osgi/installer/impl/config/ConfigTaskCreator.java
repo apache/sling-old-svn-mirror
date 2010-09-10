@@ -18,75 +18,50 @@
  */
 package org.apache.sling.osgi.installer.impl.config;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedSet;
-
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** TaskCreator that processes a list of config RegisteredResources */
+/**
+ * Task creator for configurations.
+ */
 public class ConfigTaskCreator {
 
     /** Interface of the config admin */
     private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
 
-    /** Store digests of the installed configs, keyed by config pid */
-    private final Map<String, String> digests = new HashMap<String, String>();
-
+    /** Service tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
 
+    /**
+     * Constructor
+     */
     public ConfigTaskCreator(final BundleContext bc) {
         this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
         this.configAdminServiceTracker.open();
     }
 
+    /**
+     * Deactivate this creator.
+     */
     public void deactivate() {
         this.configAdminServiceTracker.close();
     }
 
-	/** Create tasks for a set of RegisteredResource that all represent the same config PID.
+	/**
+     * Create a task to install or uninstall a configuration.
 	 */
-	public void createTasks(SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) {
-
-		// Find the config that must be active: the resources collection is ordered according
-		// to priorities, so we just need to find the first one that is installable
-		RegisteredResource toActivate = null;
-		for(RegisteredResource r : resources) {
-			if (r.isInstallable()) {
-				toActivate = r;
-				break;
-			}
-		}
-
-		if(toActivate == null) {
+	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
+	    final OsgiInstallerTask result;
+		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
 		    // None of our resources are installable, remove corresponding config
 		    // (task simply does nothing if config does not exist)
-		    final RegisteredResource first = resources.first();
-		    tasks.add(new ConfigRemoveTask(first, this.configAdminServiceTracker));
-		    digests.remove(getDigestKey(first));
+		    result = new ConfigRemoveTask(toActivate, this.configAdminServiceTracker);
 		} else {
-		    final String key = getDigestKey(toActivate);
-		    final String previousDigest = digests.get(key);
-		    if(toActivate.getDigest().equals(previousDigest)) {
-		        Logger.logDebug("Configuration (" + key+ ") already installed, ignored: " + toActivate);
-		    } else {
-		        tasks.add(new ConfigInstallTask(toActivate, this.configAdminServiceTracker));
-		        digests.put(key, toActivate.getDigest());
-		        Logger.logDebug("Scheduling update/install of config " + toActivate + ", digest has changed or was absent");
-		    }
+	        result = new ConfigInstallTask(toActivate, this.configAdminServiceTracker);
 		}
-	}
-
-	private String getDigestKey(RegisteredResource r) {
-        final ConfigurationPid cp = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-        if(cp == null) {
-            throw new IllegalArgumentException("Resource does not provide a CONFIG_PID_ATTRIBUTE: " + r);
-        }
-        return cp.getCompositePid();
+		return result;
 	}
 }

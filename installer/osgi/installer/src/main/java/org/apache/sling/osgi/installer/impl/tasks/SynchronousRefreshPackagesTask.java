@@ -40,6 +40,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
 	private volatile int packageRefreshEventsCount;
 
 	public SynchronousRefreshPackagesTask(final BundleTaskCreator btc) {
+	    super(null);
 	    this.bundleTaskCreator = btc;
 	}
 
@@ -75,7 +76,6 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
     public void execute(OsgiInstallerContext ctx) {
-        logExecution();
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
@@ -85,7 +85,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
         // this task executes
     	for(Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
     		if(b.getState() == Bundle.ACTIVE) {
-    			final OsgiInstallerTask t = new BundleStartTask(b.getBundleId(), this.bundleTaskCreator);
+    			final OsgiInstallerTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
     			Logger.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
     		}

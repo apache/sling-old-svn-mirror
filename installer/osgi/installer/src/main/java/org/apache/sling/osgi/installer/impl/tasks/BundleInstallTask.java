@@ -34,19 +34,12 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_INSTALL_ORDER = "50-";
 
-    private final RegisteredResource resource;
-
     private final BundleTaskCreator creator;
 
     public BundleInstallTask(final RegisteredResource r,
             final BundleTaskCreator creator) {
+        super(r);
         this.creator = creator;
-        this.resource = r;
-    }
-
-    @Override
-    public String toString() {
-    	return getClass().getSimpleName() + ": " + resource;
     }
 
     /**
@@ -54,8 +47,8 @@ public class BundleInstallTask extends OsgiInstallerTask {
      */
     public void execute(final OsgiInstallerContext ctx) {
         int startLevel = 0;
-        final Object providedLevel = (this.resource.getDictionary() != null
-            ? this.resource.getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);
+        final Object providedLevel = (this.getResource().getDictionary() != null
+            ? this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);
         if ( providedLevel != null ) {
             if ( providedLevel instanceof Number ) {
                 startLevel = ((Number)providedLevel).intValue();
@@ -66,7 +59,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
         // get the start level service (if possible) so we can set the initial start level
         final StartLevel startLevelService = this.creator.getStartLevel();
         try {
-            final Bundle b = this.creator.getBundleContext().installBundle(resource.getURL(), resource.getInputStream());
+            final Bundle b = this.creator.getBundleContext().installBundle(getResource().getURL(), getResource().getInputStream());
             // optionally set the start level
             if ( startLevel > 0 ) {
                 if (startLevelService != null) {
@@ -75,21 +68,21 @@ public class BundleInstallTask extends OsgiInstallerTask {
                     Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
                 }
             }
-            final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
-            this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
-            logExecution();
-            ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));
-            return;
+            final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
+            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
+
+            // mark this resource as installed and to be started
+            this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
+            ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
+            Logger.logDebug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
             ctx.addTaskToNextCycle(this);
-            return;
         }
     }
 
     @Override
     public String getSortKey() {
-        return BUNDLE_INSTALL_ORDER + resource.getURL();
+        return BUNDLE_INSTALL_ORDER + getResource().getURL();
     }
-
 }

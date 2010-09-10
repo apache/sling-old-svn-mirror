@@ -19,14 +19,25 @@
 package org.apache.sling.osgi.installer.impl;
 
 
-/** Base class for tasks that can be executed by the {@link OsgiInstallerImpl} */
+/**
+ * Base class for tasks that can be executed by the {@link OsgiInstallerImpl}
+ */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
-    public abstract void execute(OsgiInstallerContext ctx);
+    private final RegisteredResource resource;
 
-	protected void logExecution() {
-	    Logger.logInfo("OsgiInstallerTask: executing  " + this);
-	}
+    public OsgiInstallerTask(final RegisteredResource r) {
+        this.resource = r;
+    }
+
+    /**
+     * Return the corresponding resource - depending on the task this might be null.
+     */
+    public RegisteredResource getResource() {
+        return this.resource;
+    }
+
+    public abstract void execute(OsgiInstallerContext ctx);
 
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
@@ -36,7 +47,12 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 		return getSortKey().compareTo(o.getSortKey());
 	}
 
-	@Override
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": " + resource;
+    }
+
+    @Override
 	public final boolean equals(Object o) {
 		if(o instanceof OsgiInstallerTask) {
 			return getSortKey().equals(((OsgiInstallerTask)o).getSortKey());

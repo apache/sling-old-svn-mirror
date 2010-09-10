@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -44,11 +45,15 @@ public class RegisteredResourceComparatorTest {
     }
 
     private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority) throws IOException {
+        return getConfig(url, data, priority, null);
+    }
+
+    private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority, String digest) throws IOException {
         if(data == null) {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
-        final InstallableResource r = new InstallableResource(url, null, data, null, null, priority);
+        final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
         return RegisteredResourceImpl.create(null, r, "test");
     }
 
@@ -139,15 +144,17 @@ public class RegisteredResourceComparatorTest {
     }
 
     @Test
-    /** Digests must not be included in comparisons: a and b might represent the same
-     * 	config even if their digests are different */
     public void testConfigDigests() throws IOException {
     	final Dictionary<String, Object> data = new Hashtable<String, Object>();
         data.put("foo", "bar");
         final RegisteredResource a = getConfig("pid", data, 0);
         data.put("foo", "changed");
         final RegisteredResource b = getConfig("pid", data, 0);
-        assertEquals("Digests must not be included in configs comparison", 0, a.compareTo(b));
+        assertEquals("Entity urls must be the same", a.getEntityId(), b.getEntityId());
+        assertTrue("Digests must be included in configs comparison", a.compareTo(b) != 0);
+        final RegisteredResource a2 = getConfig("pid", data, 0);
+        final RegisteredResource b2 = getConfig("pid", data, 0);
+        assertEquals("Digests must be included in configs comparison", 0, a2.compareTo(b2));
     }
 
     @Test
@@ -173,7 +180,7 @@ public class RegisteredResourceComparatorTest {
     public void testConfigAndBundle() throws IOException {
     	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
     	final RegisteredResource b = new MockBundleResource("a", "1.0");
-    	assertEquals("bundle is > config when compared", 1, b.compareTo(cfg));
-    	assertEquals("config is < bundle when compared", -1, cfg.compareTo(b));
+    	assertEquals("bundle is > config when compared", -1, b.compareTo(cfg));
+    	assertEquals("config is < bundle when compared", 1, cfg.compareTo(b));
     }
 }

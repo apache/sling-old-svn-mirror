@@ -58,20 +58,28 @@ public class RegisteredResourceImpl
     private static final String ENTITY_BUNDLE_PREFIX = "bundle:";
     private static final String ENTITY_CONFIG_PREFIX = "config:";
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
+
+    /** The resource id. */
     private final String id;
+    /** The installer scheme. */
 	private final String urlScheme;
+	/** The digest for the resource. */
 	private final String digest;
+	/** The entity id. */
 	private final String entity;
+	/** The dictionary for configurations. */
 	private final Dictionary<String, Object> dictionary;
+	/** Additional attributes. */
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
-	private boolean installable = true;
 	private final File dataFile;
 	private final int priority;
     private final long serialNumber;
     private static long serialNumberCounter = System.currentTimeMillis();
 
     private final String resourceType;
+
+    private State state = State.INSTALL;
 
     /**
      * Try to create a registered resource.
@@ -170,7 +178,10 @@ public class RegisteredResourceImpl
 
 	@Override
 	public String toString() {
-	    return getClass().getSimpleName() + " " + this.getURL() + ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber();
+	    return getClass().getSimpleName() + " " + this.getURL() +
+	        ", entity=" + this.getEntityId() +
+	        ", state=" + this.state +
+	        ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber();
 	}
 
 	protected File getDataFile(final BundleContext bundleContext) {
@@ -284,20 +295,6 @@ public class RegisteredResourceImpl
 		return attributes;
 	}
 
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#isInstallable()
-	 */
-	public boolean isInstallable() {
-        return installable;
-	}
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setInstallable(boolean)
-     */
-    public void setInstallable(boolean installable) {
-        this.installable = installable;
-    }
-
     /** Read the manifest from supplied input stream, which is closed before return */
     private Manifest getManifest(InputStream ins) throws IOException {
         Manifest result = null;
@@ -363,85 +360,101 @@ public class RegisteredResourceImpl
     }
 
     /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getState()
+     */
+    public State getState() {
+        return this.state;
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setState(org.apache.sling.osgi.installer.impl.RegisteredResource.State)
+     */
+    public void setState(State s) {
+        this.state = s;
+    }
+
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    public boolean equals(Object obj) {
+        if ( obj == this ) {
+            return true;
+        }
+        if ( ! (obj instanceof RegisteredResource) ) {
+            return false;
+        }
+        return compareTo((RegisteredResource)obj) == 0;
+    }
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        return this.entity.hashCode();
+    }
+
+    /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo(final RegisteredResource b) {
         return compare(this, b);
     }
 
+    /**
+     * Compare resources.
+     * First we compare the entity id - the entity id contains the resource type
+     * together with an entity identifier for the to be installed resource like
+     * the symbolic name of a bundle, the pid for a configuration etc.
+     */
     public static int compare(final RegisteredResource a, final RegisteredResource b) {
-        final boolean aBundle = a.getType().equals(InstallableResource.TYPE_BUNDLE);
-        final boolean bBundle = b.getType().equals(InstallableResource.TYPE_BUNDLE);
+        // check entity id first
+        int result = a.getEntityId().compareTo(b.getEntityId());
+        if ( result == 0 ) {
+            if (a.getType().equals(InstallableResource.TYPE_BUNDLE)) {
+                // we need a special comparison for bundles
+                result = compareBundles(a, b);
+            } else {
+                // all other types: check prio and then digest
+                result = Integer.valueOf(b.getPriority()).compareTo(a.getPriority());
 
-        if (aBundle && bBundle) {
-            return compareBundles(a, b);
-        } else if (!aBundle && !bBundle){
-            return compareConfig(a, b);
-        } else if (aBundle) {
-            return 1;
-        } else {
-            return -1;
+                // check digest
+                if ( result == 0 ) {
+                    result = a.getDigest().compareTo(b.getDigest());
+                }
+            }
         }
+        return result;
     }
 
+    /**
+     * Bundles are compared differently than other resource types:
+     * - higher versions have always priority - regardless of the priority attribute!
+     * - priority matters only if version is same
+     * - if the version is a snapshot version, the serial number and the digest are used
+     *   in addition
+     */
     private static int compareBundles(final RegisteredResource a, final RegisteredResource b) {
         boolean isSnapshot = false;
         int result = 0;
 
-        // Order first by symbolic name
-        final String nameA = (String)a.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        final String nameB = (String)b.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-        if(nameA != null && nameB != null) {
-            result = nameA.compareTo(nameB);
-        }
-
-        // Then by version
-        if(result == 0) {
-            final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
-            final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
-            isSnapshot = va.toString().contains("SNAPSHOT");
-            // higher version has more priority, must come first so invert comparison
-            result = vb.compareTo(va);
-        }
+        // Order by version
+        final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
+        final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
+        isSnapshot = va.toString().contains("SNAPSHOT");
+        // higher version has more priority, must come first so invert comparison
+        result = vb.compareTo(va);
 
         // Then by priority, higher values first
-        if(result == 0) {
-            if(a.getPriority() < b.getPriority()) {
-                result = 1;
-            } else if(a.getPriority() > b.getPriority()) {
-                result = -1;
-            }
+        if (result == 0) {
+            result = Integer.valueOf(b.getPriority()).compareTo(a.getPriority());
         }
 
-        if(result == 0 && isSnapshot) {
+        if (result == 0 && isSnapshot) {
+            result = a.getDigest().compareTo(b.getDigest());
             // For snapshots, compare serial numbers so that snapshots registered
             // later get priority
-            if(a.getSerialNumber() < b.getSerialNumber()) {
-                result = 1;
-            } else if(a.getSerialNumber() > b.getSerialNumber()) {
-                result = -1;
-            }
-        }
-
-        return result;
-    }
-
-    private static int compareConfig(final RegisteredResource a, final RegisteredResource b) {
-        int result = 0;
-
-        // First compare by pid
-        final ConfigurationPid pA = (ConfigurationPid)a.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-        final ConfigurationPid pB = (ConfigurationPid)b.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-        if(pA != null && pA.getCompositePid() != null && pB != null && pB.getCompositePid() != null) {
-            result = pA.getCompositePid().compareTo(pB.getCompositePid());
-        }
-
-        // Then by priority, higher values first
-        if(result == 0) {
-            if(a.getPriority() < b.getPriority()) {
-                result = 1;
-            } else if( a.getPriority() > b.getPriority()) {
-                result = -1;
+            if ( result != 0 ) {
+                result = Long.valueOf(b.getSerialNumber()).compareTo(a.getSerialNumber());
             }
         }
 

@@ -66,14 +66,10 @@ public class ConfigInstallTask extends AbstractConfigTask {
         }
 
         // Convert data to a configuration Dictionary
-        Dictionary<String, Object> dict = resource.getDictionary();
-
-        if (dict == null) {
-            throw new IllegalArgumentException("Null Dictionary for resource " + resource);
-        }
+        final Dictionary<String, Object> dict = getResource().getDictionary();
 
         // Add pseudo-properties
-        dict.put(CONFIG_PATH_KEY, resource.getURL());
+        dict.put(CONFIG_PATH_KEY, getResource().getURL());
 
         // Factory?
         if (pid.getFactoryPid() != null) {
@@ -89,29 +85,30 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 created = true;
                 config = getConfiguration(ca, pid, true);
             } else {
-    			if (isSameData(config.getProperties(), resource.getDictionary())) {
+    			if (isSameData(config.getProperties(), getResource().getDictionary())) {
     			    Logger.logDebug("Configuration " + config.getPid()
     	                        + " already installed with same data, update request ignored: "
-    	                        + resource);
+    	                        + getResource());
     				config = null;
     			}
             }
 
             if (config != null) {
-                logExecution();
                 if (config.getBundleLocation() != null) {
                     config.setBundleLocation(null);
                 }
                 config.update(dict);
+                this.getResource().setState(RegisteredResource.State.INSTALLED);
                 Logger.logInfo("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
-                            + " from " + resource);
-                return;
+                            + " from " + getResource());
+            } else {
+                this.getResource().setState(RegisteredResource.State.IGNORED);
             }
         } catch (Exception e) {
+            Logger.logDebug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             ctx.addTaskToNextCycle(this);
         }
-        return;
     }
 
     private Set<String> collectKeys(final Dictionary<String, Object>a) {

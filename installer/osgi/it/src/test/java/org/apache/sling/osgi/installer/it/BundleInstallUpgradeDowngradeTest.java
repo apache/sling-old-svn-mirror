@@ -170,5 +170,5 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
             assertBundle("After reinstalling", symbolicName, "1.1", Bundle.ACTIVE);
         }
-   }
+    }
 }

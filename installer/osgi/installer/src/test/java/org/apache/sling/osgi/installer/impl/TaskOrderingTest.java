@@ -74,7 +74,7 @@ public class TaskOrderingTest {
 		    new BundleUpdateTask(getRegisteredResource("test:url"), null),
 		    new BundleInstallTask(getRegisteredResource("test:url"), null),
 			new SynchronousRefreshPackagesTask(null),
-			new BundleStartTask(0, null),
+			new BundleStartTask(null, 0, null),
 		};
 
 		taskSet.clear();
@@ -129,7 +129,7 @@ public class TaskOrderingTest {
 			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing"), null),
             new BundleInstallTask(getRegisteredResource("test:someURIb.nothing"), null),
 			new SynchronousRefreshPackagesTask(null),
-			new BundleStartTask(0, null),
+			new BundleStartTask(null, 0, null),
 		};
 
 		taskSet.clear();
@@ -153,8 +153,8 @@ public class TaskOrderingTest {
 		final OsgiInstallerTask [] tasksInOrder = {
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
 			new SynchronousRefreshPackagesTask(null),
-			new BundleStartTask(0, null),
-			new BundleStartTask(1, null),
+			new BundleStartTask(null, 0, null),
+			new BundleStartTask(null, 1, null),
 		};
 
 		taskSet.clear();
@@ -185,11 +185,11 @@ public class TaskOrderingTest {
 	public void testBundleStartOrder() {
 		int testIndex = 1;
 		final OsgiInstallerTask [] tasksInOrder = {
-			new BundleStartTask(0, null),
-			new BundleStartTask(1, null),
-			new BundleStartTask(5, null),
-			new BundleStartTask(11, null),
-			new BundleStartTask(51, null)
+			new BundleStartTask(null, 0, null),
+			new BundleStartTask(null, 1, null),
+			new BundleStartTask(null, 5, null),
+			new BundleStartTask(null, 11, null),
+			new BundleStartTask(null, 51, null)
 		};
 
 		taskSet.clear();

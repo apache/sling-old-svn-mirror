@@ -22,8 +22,9 @@ import java.text.DecimalFormat;
 
 import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
-import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
+import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
+import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -43,7 +44,8 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	private final BundleTaskCreator creator;
 
-	public BundleStartTask(final long bundleId, final BundleTaskCreator btc) {
+	public BundleStartTask(final RegisteredResource r, final long bundleId, final BundleTaskCreator btc) {
+	    super(r);
 		this.bundleId = bundleId;
 		this.creator = btc;
 		this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
@@ -63,6 +65,9 @@ public class BundleStartTask extends OsgiInstallerTask {
 	 * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
 	 */
 	public void execute(final OsgiInstallerContext ctx) {
+	    if ( this.getResource() != null ) {
+	        this.getResource().setState(RegisteredResource.State.INSTALLED);
+	    }
 	    // this is just a sanity check which should never be reached
         if (bundleId == 0) {
             Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
@@ -88,7 +93,6 @@ public class BundleStartTask extends OsgiInstallerTask {
             return;
         }
         // Try to start bundle, and if that doesn't work we'll need to retry
-        logExecution();
         try {
             b.start();
             Logger.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());

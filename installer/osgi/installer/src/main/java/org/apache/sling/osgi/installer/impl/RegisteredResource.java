@@ -33,6 +33,14 @@ import org.apache.sling.osgi.installer.OsgiInstaller;
  */
 public interface RegisteredResource extends Serializable, Comparable<RegisteredResource> {
 
+    enum State {
+        INSTALL,
+        UNINSTALL,
+        INSTALLED,
+        UNINSTALLED,
+        IGNORED
+    }
+
     /** Attribute key: configuration pid */
     String CONFIG_PID_ATTRIBUTE = "config.pid";
 
@@ -83,9 +91,6 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
     void cleanup();
 	String getURL();
 
-	boolean isInstallable();
-	void setInstallable(boolean installable);
-
 	String getScheme();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
@@ -98,4 +103,8 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
     String getEntityId();
 
     long getSerialNumber();
+
+    State getState();
+
+    void setState(final State s);
 }

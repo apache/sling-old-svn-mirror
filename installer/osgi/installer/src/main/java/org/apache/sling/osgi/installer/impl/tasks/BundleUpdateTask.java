@@ -18,7 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.sling.osgi.installer.impl.Logger;
@@ -37,44 +36,34 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "40-";
 
-    private final RegisteredResource resource;
     private boolean canRetry = true;
 
     private final BundleTaskCreator creator;
 
     public BundleUpdateTask(final RegisteredResource r,
-            final BundleTaskCreator creator) {
+                            final BundleTaskCreator creator) {
+        super(r);
         this.creator = creator;
-        this.resource = r;
     }
 
-    public RegisteredResource getResource() {
-        return resource;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + ": " + resource;
-    }
-
-    @Override
+    /**
+     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
+     */
     public void execute(OsgiInstallerContext ctx) {
-        final String symbolicName = (String)resource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
-            throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
+            Logger.logDebug("Bundle to update (" + symbolicName + ") not found");
+            this.getResource().setState(RegisteredResource.State.IGNORED);
+            return;
         }
-        final Version newVersion = new Version((String)resource.getAttributes().get(Constants.BUNDLE_VERSION));
+
+        this.getResource().setState(RegisteredResource.State.INSTALLED);
+        final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
 
         // check for system bundle update
         if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-            logExecution();
-            try {
-                this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
-            } catch (final IOException e) {
-                Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
-                return;
-            }
+            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
         }
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
@@ -82,7 +71,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	snapshot = this.creator.isSnapshot(newVersion);
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
-    	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + resource);
+    	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + getResource());
     		return;
     	}
 
@@ -91,29 +80,28 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             // of RegisteredResources is not saved, this might not have been detected earlier,
             // if the snapshot was installed and the installer was later restarted
             if (snapshot) {
-                final String oldDigest = this.creator.getInstalledBundleDigest(b);
-                if (resource.getDigest().equals(oldDigest)) {
-                    Logger.logDebug("Snapshot digest did not change, ignoring update:" + resource);
+                final String oldDigest = this.creator.getBundleDigestStorage().getDigest(symbolicName);
+                if (getResource().getDigest().equals(oldDigest)) {
+                    Logger.logDebug("Snapshot digest did not change, ignoring update:" + getResource());
                     return;
                 }
             }
 
-            logExecution();
             if (b.getState() == Bundle.ACTIVE) {
                 // bundle was active before the update - restart it once updated, but
                 // in sequence, not right now
-                ctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId(), this.creator));
+                ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
             }
             b.stop();
-            final InputStream is = resource.getInputStream();
+            final InputStream is = getResource().getInputStream();
             if(is == null) {
             	canRetry = false;
                 throw new IllegalStateException(
                         "RegisteredResource provides null InputStream, cannot update bundle: "
-                        + resource);
+                        + getResource());
             }
             b.update(is);
-            this.creator.saveInstalledBundleInfo(b.getSymbolicName(), resource.getDigest(), newVersion.toString());
+            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
     	} catch (Exception e) {
             if ( canRetry ) {
                 ctx.addTaskToNextCycle(this);
@@ -129,7 +117,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_UPDATE_ORDER + resource.getURL();
+        return BUNDLE_UPDATE_ORDER + getResource().getEntityId();
     }
 
 }

@@ -33,7 +33,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
 
@@ -490,12 +489,24 @@ class OsgiInstallerTestBase implements FrameworkListener {
                         }
                     }
                 }
-                log(LogService.LOG_DEBUG, "Event check failed at " + System.currentTimeMillis() + "; sleeping");
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ignore) {}
             }
-            fail(msg + " : Expected events=" + Arrays.toString(checkEvents) + ", received events=" + this.events);
+            final StringBuilder sb = new StringBuilder();
+            sb.append(msg);
+            sb.append(" : Expected events=[\n");
+            for(final BundleEvent be : checkEvents) {
+                sb.append(be);
+                sb.append("\n");
+            }
+            sb.append("]\nreceived events=[\n");
+            for(final BundleEvent be : this.events) {
+                sb.append(be);
+                sb.append("\n");
+            }
+            sb.append("]\n");
+            fail(sb.toString());
         }
 
         public void assertNoBundleEvents(final String msg, final String symbolicName) {
