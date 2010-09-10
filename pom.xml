@@ -34,7 +34,7 @@
     <description>Integration tests of the Sling OSGi installer bundle</description>
 
     <properties>
-        <pax.exam.log.level>DEBUG</pax.exam.log.level>
+        <pax.exam.log.level>INFO</pax.exam.log.level>
         <!-- This can be set to activate remote debugging of the Pax Exam tests -->
         <pax.exam.debug.port></pax.exam.debug.port>
 
