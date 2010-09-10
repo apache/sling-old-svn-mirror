@@ -146,7 +146,6 @@ public class RegisteredResourceImpl
 		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
             try {
                 this.dataFile = getDataFile(ctx);
-                Logger.logDebug("Copying data to local storage " + this.dataFile);
                 copyToLocalStorage(is);
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
@@ -194,8 +193,6 @@ public class RegisteredResourceImpl
 	 */
 	public void cleanup() {
 	    if ( this.dataFile != null && this.dataFile.exists() ) {
-		    Logger.logDebug("Deleting local storage file "
-		                + dataFile.getAbsolutePath());
 			dataFile.delete();
 		}
 	}

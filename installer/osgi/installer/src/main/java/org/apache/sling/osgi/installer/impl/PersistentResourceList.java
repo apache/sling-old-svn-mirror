@@ -33,11 +33,17 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Persistent list of RegisteredResource, used by installer to
  * keep track of all registered resources
  */
 public class PersistentResourceList {
+
+    /** The logger */
+    private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
     /**
      * Map of registered resource sets.
@@ -58,9 +64,9 @@ public class PersistentResourceList {
             try {
                 ois = new ObjectInputStream(new FileInputStream(dataFile));
                 restoredData = (Map<String, SortedSet<RegisteredResource>>)ois.readObject();
-                Logger.logDebug("Restored rsource list: " + restoredData);
+                logger.debug("Restored rsource list: {}", restoredData);
             } catch (final Exception e) {
-                Logger.logWarn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
+                logger.warn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
             } finally {
                 if (ois != null) {
                     try {
@@ -84,12 +90,12 @@ public class PersistentResourceList {
             final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFile));
             try {
                 oos.writeObject(data);
-                Logger.logDebug("Persisted resource list.");
+                logger.debug("Persisted resource list.");
             } finally {
                 oos.close();
             }
         } catch (final Exception e) {
-            Logger.logWarn("Unable to save persistent list: " + e.getMessage(), e);
+            logger.warn("Unable to save persistent list: " + e.getMessage(), e);
         }
     }
 
@@ -98,7 +104,7 @@ public class PersistentResourceList {
     }
 
     public void addOrUpdate(final RegisteredResource r) {
-        Logger.logDebug("Adding " + r);
+        logger.debug("Adding: {}", r);
         SortedSet<RegisteredResource> t = this.data.get(r.getEntityId());
         if (t == null) {
             t = new TreeSet<RegisteredResource>();
@@ -110,7 +116,7 @@ public class PersistentResourceList {
         boolean first = true;
         for(final RegisteredResource rr : t) {
             if ( rr.getURL().equals(r.getURL()) ) {
-                Logger.logDebug("Cleanup obsolete resource " + rr);
+                logger.debug("Cleanup obsolete resource: {}", rr);
                 rr.cleanup();
                 t.remove(rr);
                 if ( first && rr.equals(r) ) {
@@ -131,10 +137,10 @@ public class PersistentResourceList {
                 final RegisteredResource r = i.next();
                 if ( r.getURL().equals(url) ) {
                     if ( first && r.getState() == RegisteredResource.State.INSTALLED ) {
-                        Logger.logDebug("Marking " + r + " for uninstalling");
+                        logger.debug("Marking for uninstalling: {}", r);
                         r.setState(RegisteredResource.State.UNINSTALL);
                     } else {
-                        Logger.logDebug("Removing unused " + r);
+                        logger.debug("Removing unused: {}", r);
                         i.remove();
                         r.cleanup();
                     }
@@ -147,7 +153,7 @@ public class PersistentResourceList {
     public void remove(final RegisteredResource r) {
         final SortedSet<RegisteredResource> group = this.data.get(r.getEntityId());
         if ( group != null ) {
-            Logger.logDebug("Removing unused " + r);
+            logger.debug("Removing unused: {}", r);
             group.remove(r);
             r.cleanup();
         }
@@ -173,7 +179,7 @@ public class PersistentResourceList {
                 changed = true;
                 entry.getValue().remove(r);
                 r.cleanup();
-                Logger.logDebug("Removing from list, uninstalled: " + r);
+                logger.debug("Removing from list, uninstalled: {}", r);
             }
 
             if ( entry.getValue().isEmpty() ) {

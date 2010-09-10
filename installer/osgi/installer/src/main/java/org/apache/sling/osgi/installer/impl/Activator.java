@@ -25,7 +25,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The activator sets up the logging and registers the
@@ -33,27 +32,16 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class Activator implements BundleActivator {
 
-    /** Interface of the log service */
-    private static String LOG_SERVICE_NAME = "org.osgi.service.log.LogService";
-
     /** Vendor of all registered services. */
     private static final String VENDOR = "The Apache Software Foundation";
 
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
 
-    /** Tracker for the log service. */
-    private ServiceTracker logServiceTracker;
-
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
-        // setup logging
-        this.logServiceTracker = new ServiceTracker(context, LOG_SERVICE_NAME, null);
-        this.logServiceTracker.open();
-        Logger.setTracker(this.logServiceTracker);
-
         // register osgi installer service
         final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
@@ -75,15 +63,6 @@ public class Activator implements BundleActivator {
         // stop osgi installer service
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
-            Logger.logInfo("Waiting for installer thread to stop");
-            try {
-                this.osgiControllerService.join();
-            } catch (InterruptedException e) {
-                // we simply ignore this
-            }
-
-            Logger.logInfo(OsgiInstaller.class.getName()
-                    + " service deactivated");
             this.osgiControllerService = null;
         }
         // unregister service
@@ -91,11 +70,5 @@ public class Activator implements BundleActivator {
             this.osgiControllerServiceReg.unregister();
             this.osgiControllerServiceReg = null;
         }
-        // stop logging
-        Logger.setTracker(null);
-    	if ( this.logServiceTracker != null ) {
-    	    this.logServiceTracker.close();
-    	    this.logServiceTracker = null;
-    	}
     }
 }

@@ -21,7 +21,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -79,7 +78,7 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
                     try {
                         b.update(backgroundIS);
                     } catch (final BundleException be) {
-                        Logger.logWarn("Unable to update system bundle", be);
+                        getLogger().warn("Unable to update system bundle", be);
                     } finally {
                         try {
                             backgroundIS.close();
@@ -90,7 +89,7 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
             t.setDaemon(true);
             t.start();
         } catch (final IOException e) {
-            Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
+            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
         } finally {
             if ( is != null ) {
                 try {

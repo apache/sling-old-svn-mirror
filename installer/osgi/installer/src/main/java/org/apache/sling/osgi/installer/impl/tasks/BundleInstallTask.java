@@ -19,7 +19,6 @@
 package org.apache.sling.osgi.installer.impl.tasks;
 
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -65,7 +64,8 @@ public class BundleInstallTask extends OsgiInstallerTask {
                 if (startLevelService != null) {
                     startLevelService.setBundleStartLevel(b, startLevel);
                 } else {
-                    Logger.logWarn("Ignoring start level " + startLevel + " for bundle " + b + " - start level service not available.");
+                    this.getLogger().warn("Ignoring start level {} for bundle {} - start level service not available.",
+                            startLevel, b);
                 }
             }
             final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
@@ -76,7 +76,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
             ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
-            Logger.logDebug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
+            this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
             ctx.addTaskToNextCycle(this);
         }
     }

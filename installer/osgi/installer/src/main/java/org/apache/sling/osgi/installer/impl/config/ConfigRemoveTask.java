@@ -18,7 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.config;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -51,22 +50,22 @@ public class ConfigRemoveTask extends AbstractConfigTask {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             ctx.addTaskToNextCycle(this);
-            Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
+            this.getLogger().debug("ConfigurationAdmin not available, task will be retried later: {}", this);
             return;
         }
 
         try {
             final Configuration cfg = getConfiguration(ca, pid, false);
             if (cfg == null) {
-                Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + getResource() + ")");
+                this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", pid, getResource());
                 this.getResource().setState(RegisteredResource.State.IGNORED);
             } else {
-                Logger.logInfo("Deleting config " + pid + " (" + getResource() + ")");
+                this.getLogger().debug("Deleting config {} ({})", pid, getResource());
                 cfg.delete();
                 this.getResource().setState(RegisteredResource.State.UNINSTALLED);
             }
         } catch (Exception e) {
-            Logger.logDebug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
+            this.getLogger().debug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             ctx.addTaskToNextCycle(this);
         }
     }

@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -61,7 +60,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             ctx.addTaskToNextCycle(this);
-            Logger.logDebug("ConfigurationAdmin not available, task will be retried later: " + this);
+            this.getLogger().debug("ConfigurationAdmin not available, task will be retried later: {}", this);
             return;
         }
 
@@ -86,9 +85,8 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 config = getConfiguration(ca, pid, true);
             } else {
     			if (isSameData(config.getProperties(), getResource().getDictionary())) {
-    			    Logger.logDebug("Configuration " + config.getPid()
-    	                        + " already installed with same data, update request ignored: "
-    	                        + getResource());
+    			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
+    	                        config.getPid(), getResource());
     				config = null;
     			}
             }
@@ -99,14 +97,14 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 }
                 config.update(dict);
                 this.getResource().setState(RegisteredResource.State.INSTALLED);
-                Logger.logInfo("Configuration " + config.getPid()
+                this.getLogger().debug("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
                             + " from " + getResource());
             } else {
                 this.getResource().setState(RegisteredResource.State.IGNORED);
             }
         } catch (Exception e) {
-            Logger.logDebug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
+            this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             ctx.addTaskToNextCycle(this);
         }
     }
