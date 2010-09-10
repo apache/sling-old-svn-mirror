@@ -74,22 +74,22 @@
         properties = Packages.org.apache.sling.api.resource.ResourceUtil.getValueMap(resource)
     }
 	var primaryNodeTypeId = "jcr:primaryType";
-	var primaryNodeType = properties.get(primaryNodeTypeId, Packages.javax.jcr.Property);
+	var primaryNodeType = properties.get(primaryNodeTypeId, Packages.java.lang.String);
 	if ( primaryNodeType ) {
 	%>		
 	<div class="edit_properties_container">
 		<h3>general</h3>
 		<div id="property_element_<%= primaryNodeTypeId %>" class="property_element">
 		<fieldset>
-			<label for="<%= primaryNodeTypeId %>"><%= primaryNodeTypeId %> [ <%= Packages.javax.jcr.PropertyType.nameFromValue( primaryNodeType.type ) %>] </label>
+			<label for="<%= primaryNodeTypeId %>"><%= primaryNodeTypeId %></label>
 			<%  
 			var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
 			if ( primaryNodeTypes.hasNext() ) { %>
 			<select class="prop_value protected" name ="<%= primaryNodeTypeId %>" id="<%= primaryNodeTypeId %>">
 				<% while ( primaryNodeTypes.hasNext() ) {
-					var primaryNodeType = primaryNodeTypes.nextNodeType();
+					var nodeType = primaryNodeTypes.nextNodeType();
 					%>
-					<option <% if ( primaryNodeType.getName().equals( primaryNodeType.toString() ) ) { %> selected <%}%>><%= primaryNodeType.getName() %></option>
+					<option <% if ( nodeType.getName().equals( primaryNodeType ) ) { %> selected <%}%>><%= nodeType.getName() %></option>
 				<% } %>
 			</select>				
 			<% } %>
