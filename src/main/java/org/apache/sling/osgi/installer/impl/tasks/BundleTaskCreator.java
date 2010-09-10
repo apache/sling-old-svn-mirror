@@ -19,9 +19,6 @@
 package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.installer.OsgiInstaller;
@@ -36,8 +33,12 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** TaskCreator that processes a list of bundle RegisteredResources */
+/**
+ * Task creator for bundles
+ */
 public class BundleTaskCreator {
+
+    public static final String ATTR_START = "sling.osgi.installer.start.bundle";
 
     /** Interface of the package admin */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
@@ -62,12 +63,9 @@ public class BundleTaskCreator {
     /** The bundle context. */
     private final BundleContext bundleContext;
 
-    /** Store the digests of the bundles for which we create update tasks,
-     *  keyed by symbolic name, to avoid generating repated updates
-     *  for snapshot bundles
+    /**
+     * Constructor
      */
-    private final Map<String, String> digests = new HashMap<String, String>();
-
     public BundleTaskCreator(final BundleContext bc) {
         this.bundleContext = bc;
         // create and start tracker
@@ -78,6 +76,9 @@ public class BundleTaskCreator {
         this.bundleDigestsStorage = new PersistentBundleInfo(bc.getDataFile(FILE_DIGEST_STORAGE));
     }
 
+    /**
+     * Deactivate creator.
+     */
     public void deactivate() {
         this.packageAdminTracker.close();
         this.startLevelTracker.close();
@@ -114,119 +115,93 @@ public class BundleTaskCreator {
         final String symbolicName;
         final Version version;
         final int state;
+        final long id;
 
-        BundleInfo(String symbolicName, Version version, int state) {
+        BundleInfo(String symbolicName, Version version, int state, long id) {
             this.symbolicName = symbolicName;
             this.version = version;
             this.state = state;
+            this.id = id;
         }
 
         BundleInfo(Bundle b) {
             this.symbolicName = b.getSymbolicName();
             this.version = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
             this.state = b.getState();
+            this.id = b.getBundleId();
         }
     }
 
-	/** Create tasks for a set of RegisteredResource that all represent the same bundle.
-	 * 	Selects the bundle with the highest priority (i.e. the first one in the group that
-	 *  has desired state == active, and generates the appropriate OSGi tasks to
-	 *  reach this state.
+	/**
+     * Create a bundle task - install, update or remove
 	 */
-	public void createTasks(SortedSet<RegisteredResource> resources, SortedSet<OsgiInstallerTask> tasks) throws IOException {
+	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
+	    final OsgiInstallerTask result;
 
-		// Find the bundle that must be active: the resources collection is ordered according
-		// to priorities, so we just need to find the first one that is installable
-		RegisteredResource toActivate = null;
-		for(RegisteredResource r : resources) {
-			if (r.isInstallable()) {
-				toActivate = r;
-				break;
-			}
-		}
+        final String symbolicName = (String)toActivate.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final BundleInfo info = this.getBundleInfo(symbolicName);
 
-		String digestToSave = null;
-		final RegisteredResource firstResource = resources.first();
-		final String symbolicName = firstResource == null ? null :
-		    (String)firstResource.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
-
-		if (toActivate == null) {
-		    // None of our resources are installable, remove corresponding bundle if present
-		    // and if we installed it
-		    if (firstResource != null && getBundleInfo(firstResource) != null) {
-		        if (this.getInstalledBundleVersion(symbolicName) == null) {
-		            Logger.logInfo("Bundle " + symbolicName
-                                + " was not installed by this module, not removed");
-		        } else {
-		            tasks.add(new BundleRemoveTask(resources.first(),
-		                    this));
-		        }
+		// Uninstall
+		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
+		    // Remove corresponding bundle if present and if we installed it
+		    if (info != null && this.bundleDigestsStorage.getInstalledVersion(symbolicName) != null) {
+		        result = new BundleRemoveTask(toActivate, this);
+		    } else {
+	            Logger.logInfo("Bundle " + symbolicName
+                            + " was not installed by this module, not removed");
+	            result = new ChangeStateTask(toActivate, RegisteredResource.State.UNINSTALLED);
 	        }
 
+		// Install
 		} else {
-			final BundleInfo info = getBundleInfo(toActivate);
-			if (info == null) {
-			    // bundle is not installed yet: install and save digest to avoid
-			    // unnecessary updates
-				tasks.add(new BundleInstallTask(toActivate,
-				        this));
-				digestToSave = toActivate.getDigest();
+		    // check if we should start the bundle
+		    if (info == null) {
+			    // bundle is not installed yet: install
+			    result = new BundleInstallTask(toActivate, this);
+		    } else if ( toActivate.getAttributes().get(ATTR_START) != null ) {
+	            result = new BundleStartTask(toActivate, info.id, this);
 			} else {
-	            RegisteredResource toUpdate = null;
+	            boolean doUpdate = false;
+
 	            final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
 			    final int compare = info.version.compareTo(newVersion);
                 if (compare < 0) {
                     // installed version is lower -> update
-                    toUpdate = toActivate;
+                    doUpdate = true;
                 } else if (compare > 0) {
 	                // installed version is higher -> downgrade only if
                     // we installed that version
-                    final String installedVersion = this.getInstalledBundleVersion(info.symbolicName);
+                    final String installedVersion = this.bundleDigestsStorage.getInstalledVersion(info.symbolicName);
                     if (info.version.toString().equals(installedVersion)) {
-                        toUpdate = toActivate;
+                        doUpdate = true;
                         Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was installed by this module, downgrading to " + newVersion);
                     } else {
                         Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was not installed by this module, not downgraded");
                     }
-			    } else if (compare == 0 && this.isSnapshot(newVersion)){
+			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
 			        // installed, same version but SNAPSHOT
-                    toUpdate = toActivate;
+			        doUpdate = true;
 			    }
-                // Save the digest of installed and updated resources, keyed by
-                // bundle symbolic name, to avoid unnecessary updates
-                if (toUpdate != null) {
-                    final String previousDigest = digests.get(symbolicName);
-                    if(toUpdate.getDigest().equals(previousDigest)) {
-                        Logger.logDebug("Ignoring update of " + toUpdate + ", digest didn't change");
-                        digestToSave = previousDigest;
+                if (doUpdate) {
+
+                    Logger.logDebug("Scheduling update of " + toActivate);
+                    if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
+                        result = new SystemBundleUpdateTask(toActivate, this);
                     } else {
-                        Logger.logDebug("Scheduling update of " + toUpdate + ", digest has changed");
-                        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-                            tasks.add(new SystemBundleUpdateTask(toUpdate, this));
-                        } else {
-                            tasks.add(new BundleUpdateTask(toUpdate,
-                                this));
-                        }
-                        digestToSave = toUpdate.getDigest();
+                        result = new BundleUpdateTask(toActivate, this);
                     }
+                } else {
+                    Logger.logDebug("Nothing to install for " + toActivate + ", same version " + newVersion + " already installed.");
+                    result = new ChangeStateTask(toActivate, RegisteredResource.State.IGNORED);
                 }
 			}
-
-
-			if (digestToSave == null) {
-			    if (symbolicName != null) {
-			        digests.remove(symbolicName);
-			    }
-			} else {
-			    digests.put(symbolicName, digestToSave);
-			}
 		}
+		return result;
 	}
 
-	protected BundleInfo getBundleInfo(final RegisteredResource bundle) {
-		final String symbolicName = (String)bundle.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+	protected BundleInfo getBundleInfo(final String symbolicName) {
 		final Bundle b = this.getMatchingBundle(symbolicName);
 		if (b == null) {
 		    return null;
@@ -235,30 +210,13 @@ public class BundleTaskCreator {
 	}
 
     /**
-     * Retrieve a bundle's digest that was stored by saveInstalledBundleInfo
-     * @return null if no digest was stored
+     * Get the digest storage.
      */
-    public String getInstalledBundleDigest(Bundle b) throws IOException {
-        return bundleDigestsStorage.getDigest(b.getSymbolicName());
+    public PersistentBundleInfo getBundleDigestStorage() {
+        return this.bundleDigestsStorage;
     }
-
     /**
-     * Retrieve a bundle's version that was stored by saveInstalledBundleInfo
-     * @return null if no version was stored
-     */
-    public String getInstalledBundleVersion(String symbolicName) throws IOException {
-        return bundleDigestsStorage.getInstalledVersion(symbolicName);
-    }
-
-    /**
-     * Store a bundle's digest and installed version, keyed by symbolic ID
-     */
-    public void saveInstalledBundleInfo(String symbolicName, String digest, String version) throws IOException {
-        bundleDigestsStorage.putInfo(symbolicName, digest, version);
-    }
-
-    /**
-     * Finds the bundle with given symbolic name in our BundleContext.
+     * Finds the bundle with given symbolic name in our bundle context.
      */
     public Bundle getMatchingBundle(String bundleSymbolicName) {
         if (bundleSymbolicName != null) {

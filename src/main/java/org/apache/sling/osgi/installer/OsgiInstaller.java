@@ -18,7 +18,6 @@
  */
 package org.apache.sling.osgi.installer;
 
-import java.util.Collection;
 
 /**
  * OSGi Service that installs/updates/removes installable data
@@ -45,9 +44,9 @@ public interface OsgiInstaller {
      * Invalid resources are ignored.
 	 *
      * @param urlScheme identifies the client.
-	 * @param data the list of available resources
+	 * @param resources the list of available resources
 	 */
-	void registerResources(String urlScheme, Collection<InstallableResource> data);
+	void registerResources(String urlScheme, InstallableResource[] resources);
 
 	/**
 	 * Inform the installer that resources are available for installation

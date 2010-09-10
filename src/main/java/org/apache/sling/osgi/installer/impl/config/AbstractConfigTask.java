@@ -31,22 +31,18 @@ import org.osgi.util.tracker.ServiceTracker;
 abstract class AbstractConfigTask extends OsgiInstallerTask {
 
     protected final ConfigurationPid pid;
-    protected final RegisteredResource resource;
 
     /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
 
     AbstractConfigTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+        super(r);
         this.configAdminServiceTracker = configAdminServiceTracker;
-        this.resource = r;
         this.pid = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
-        if (this.pid == null) {
-            throw new IllegalArgumentException("RegisteredResource does not have CONFIG_PID_ATTRIBUTE: " + r);
-        }
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.impl.OsgiInstallerContext#getConfigurationAdmin()
+     * Get the configuration admin - if available
      */
     protected ConfigurationAdmin getConfigurationAdmin() {
         return (ConfigurationAdmin)this.configAdminServiceTracker.getService();
@@ -54,8 +50,8 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
 
 
     protected Configuration getConfiguration(final ConfigurationAdmin ca,
-            final ConfigurationPid cp,
-            final boolean createIfNeeded)
+                                             final ConfigurationPid cp,
+                                             final boolean createIfNeeded)
     throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
@@ -77,10 +73,5 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getName() + ": " + resource;
     }
 }

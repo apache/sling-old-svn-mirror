@@ -32,7 +32,7 @@ public class MockBundleResource implements RegisteredResource {
 
     private static final long serialVersionUID = 1L;
     private final Map<String, Object> attributes = new HashMap<String, Object>();
-	private boolean installable = true;
+	private State state = State.INSTALL;
 	private final String digest;
 	private final int priority;
 	private final long serialNumber;
@@ -106,7 +106,7 @@ public class MockBundleResource implements RegisteredResource {
 	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getEntityId()
 	 */
 	public String getEntityId() {
-		return null;
+		return "bundle:" + this.attributes.get(Constants.BUNDLE_SYMBOLICNAME);
 	}
 
 	/**
@@ -145,20 +145,6 @@ public class MockBundleResource implements RegisteredResource {
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#isInstallable()
-     */
-    public boolean isInstallable() {
-        return installable;
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setInstallable(boolean)
-     */
-    public void setInstallable(boolean installable) {
-        this.installable = installable;
-    }
-
-    /**
      * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getPriority()
      */
     public int getPriority() {
@@ -178,4 +164,19 @@ public class MockBundleResource implements RegisteredResource {
     public int compareTo(RegisteredResource o) {
         return RegisteredResourceImpl.compare(this, o);
     }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getState()
+     */
+    public State getState() {
+        return state;
+    }
+
+    /**
+     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#setState(org.apache.sling.osgi.installer.impl.RegisteredResource.State)
+     */
+    public void setState(State s) {
+        this.state = s;
+    }
+
 }

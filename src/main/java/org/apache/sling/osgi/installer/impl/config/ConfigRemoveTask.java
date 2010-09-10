@@ -55,19 +55,19 @@ public class ConfigRemoveTask extends AbstractConfigTask {
             return;
         }
 
-        logExecution();
         try {
             final Configuration cfg = getConfiguration(ca, pid, false);
             if (cfg == null) {
-                Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + resource + ")");
+                Logger.logDebug("Cannot delete config , pid=" + pid + " not found, ignored (" + getResource() + ")");
+                this.getResource().setState(RegisteredResource.State.IGNORED);
             } else {
-                Logger.logInfo("Deleting config " + pid + " (" + resource + ")");
+                Logger.logInfo("Deleting config " + pid + " (" + getResource() + ")");
                 cfg.delete();
-                return;
+                this.getResource().setState(RegisteredResource.State.UNINSTALLED);
             }
         } catch (Exception e) {
+            Logger.logDebug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             ctx.addTaskToNextCycle(this);
         }
-        return;
     }
 }
