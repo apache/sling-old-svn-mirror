@@ -157,9 +157,6 @@ public class JobEventHandler
     /** Unloaded jobs. */
     private Set<String>unloadedJobs = new HashSet<String>();
 
-    /** List of deleted jobs. */
-    private Set<String>deletedJobs = new HashSet<String>();
-
     /** Default clean up time is 5 minutes. */
     private static final int DEFAULT_CLEANUP_PERIOD = 5;
 
@@ -664,8 +661,7 @@ public class JobEventHandler
         this.backgroundSession = this.createSession();
         this.backgroundSession.getWorkspace().getObservationManager()
                 .addEventListener(this,
-                                  javax.jcr.observation.Event.PROPERTY_REMOVED
-                                    |javax.jcr.observation.Event.NODE_REMOVED,
+                                  javax.jcr.observation.Event.PROPERTY_REMOVED,
                                   this.repositoryPath,
                                   true,
                                   null,
@@ -1141,8 +1137,7 @@ public class JobEventHandler
         try {
             while ( iter.hasNext() ) {
                 final javax.jcr.observation.Event event = iter.nextEvent();
-                if ( event.getType() == javax.jcr.observation.Event.PROPERTY_CHANGED
-                   || event.getType() == javax.jcr.observation.Event.PROPERTY_REMOVED) {
+                if ( event.getType() == javax.jcr.observation.Event.PROPERTY_REMOVED) {
                     try {
                         final String propPath = event.getPath();
                         int pos = propPath.lastIndexOf('/');
@@ -1151,14 +1146,11 @@ public class JobEventHandler
 
                         // we are only interested in unlocks
                         if ( "jcr:lockOwner".equals(propertyName) ) {
-                            boolean doNotProcess = false;
-                            synchronized ( this.deletedJobs ) {
-                                doNotProcess = this.deletedJobs.remove(nodePath);
+                            if ( s == null ) {
+                                s = this.createSession();
                             }
-                            if ( !doNotProcess ) {
-                                if ( s == null ) {
-                                    s = this.createSession();
-                                }
+                            // we do a sanity check if the node exists first
+                            if ( s.itemExists(nodePath) ) {
                                 final Node eventNode = (Node) s.getItem(nodePath);
                                 tryToLoadJob(eventNode, this.unloadedJobs);
                             }
@@ -1402,12 +1394,9 @@ public class JobEventHandler
                 errorOccured = false;
             }
             if ( eventNode != null ) {
-                synchronized ( this.deletedJobs ) {
-                    this.deletedJobs.add(eventNodePath);
-                }
                 // unlock node
                 try {
-                    eventNode.getSession().getWorkspace().getLockManager().unlock(eventNode.getPath());
+                    this.backgroundSession.getWorkspace().getLockManager().unlock(eventNode.getPath());
                 } catch (RepositoryException e) {
                     // if unlock fails, we silently ignore this
                     this.ignoreException(e);
