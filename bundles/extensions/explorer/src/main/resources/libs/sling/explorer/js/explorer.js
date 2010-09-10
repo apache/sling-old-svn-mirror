@@ -16,6 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ 
+/** replace the default get and post jQuery utility functions */
+(function($) {
+    $.getRaw = $.get;
+    $.getJSONRaw = $.getJSON;
+    $.postRaw = $.post;
+    $.get = function(url, parameters, callback) {
+       return $.getRaw(Sling.baseurl + url, parameters, callback)
+    };
+    $.getJson = function(url, parameters, callback) {
+       return $.getJSONRaw(Sling.baseurl + url, parameters, callback)
+    };
+    $.post = function(url, parameters, callback) {
+       return $.postRaw(Sling.baseurl + url, parameters, callback)
+    };
+})(jQuery);
 
 /** load the initial tree on editor startup */
 init_load = function(path, resourceType) {

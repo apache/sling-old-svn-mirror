@@ -25,19 +25,19 @@
 
 <title>Sling || JCR Explorer</title>
 
-	<link rel="stylesheet" href="/libs/sling/explorer/css/explorer.css" type="text/css"/>
+	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/explorer.css" type="text/css"/>
 	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.3/themes/base/jquery-ui.css" type="text/css" media="all" />
 	<link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" type="text/css" media="all" />
 	
-	<script type="text/javascript" src="/system/sling.js"></script>
+	<script type="text/javascript" src="<%= request.getContextPath() %>/system/sling.js"></script>
 	
-	<!-- <script type="text/javascript" src="/libs/sling/explorer/js/jquery-1.4.2.min.js"></script> -->
+	<!-- <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/jquery-1.4.2.min.js"></script> -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 	
-	<script type="text/javascript" src="/libs/sling/explorer/js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/libs/sling/explorer/js/ui.datetimebox.js"></script>
+	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/ui.datetimebox.js"></script>
 
-	<script type="text/javascript" src="/libs/sling/explorer/js/explorer.js"></script> 
+	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/explorer.js"></script> 
 	
 </head>
 
@@ -156,7 +156,7 @@ catch (ex) {  }
         <p id="login" style="display:none">
            You are not currently logged in. To login (use <em>admin/admin</em>
            to be allowed to write to the repository), follow
-           <a href="system/sling/login" title="Click to Login">this link</a>.
+           <a href="<%= request.getContextPath() %>/system/sling/login" title="Click to Login">this link</a>.
         </p>
 <!--		
 Resource resolver user ID: <%= request.resourceResolver.getUserID() %>(<%=request.getAuthType() %>)<br/>

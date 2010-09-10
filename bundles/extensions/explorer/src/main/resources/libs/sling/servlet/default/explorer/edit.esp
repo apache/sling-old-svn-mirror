@@ -42,13 +42,13 @@
 	<h2><%= Packages.org.apache.sling.api.resource.ResourceUtil.getName( resource ) %></h2>
 	<form class="deleteNote" action="<%=path%>" method="post">
 	  <input name=":operation" type="hidden" value="delete">
-	  <input name=":redirect" type="hidden" value="<%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
+	  <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
 	  <input type="submit" class="button" value="delete this node">
 	</form>
 	<div class="clear"></div>
 </div>
   
-<p><a href="<%= path %>.explorer.html"><%=path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
+<p><a href="<%= request.getContextPath() %><%= path %>.explorer.html"><%=path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
     <%
     try {
         if ( session ) { // currentNode && 
@@ -168,7 +168,7 @@
 						}
 					} 
 			%>
-				<input name=":redirect" type="hidden" value="<%=path%>.explorer.html">
+				<input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%=path%>.explorer.html">
 				</fieldset>
 			</form>       	
 

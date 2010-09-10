@@ -25,7 +25,7 @@
 %>
 
 <h2><%= Packages.org.apache.sling.api.resource.ResourceUtil.getName(resource) %></h2>
-<p><a href="<%= path %>.explorer.html"><%=path%></a></p>
+<p><a href="<%request.getContextPath()%><%= path %>.explorer.html"><%=path%></a></p>
 
 <div>
   <h3>properties</h3>
@@ -51,17 +51,17 @@
         }
 
         %>
-        <form style="display:inline;margin:0px;" action="<%=path%>" method="post">
+        <form style="display:inline;margin:0px;" action="<%request.getContextPath()%><%=path%>" method="post">
             <label><%= id %> [<%= type %>]</label>
             <input class="prop_value" name ="<%= id %>" value="<%= val %>" />
-            <input name=":redirect" type="hidden" value="<%=path%>.explorer.html">
+            <input name=":redirect" type="hidden" value="<%request.getContextPath()%><%=path%>.explorer.html">
             <input type="submit" value="update">
         </form>
         
-        <form style="display:inline;margin:0px;" action="<%=path%>" method="post">
+        <form style="display:inline;margin:0px;" action="<%request.getContextPath()%><%=path%>" method="post">
             <input type="submit" value="delete">
             <input type="hidden" name ="<%= id %>@Delete" value="a" />
-            <input name=":redirect" type="hidden" value="<%=path%>.explorer.html">
+            <input name=":redirect" type="hidden" value="<%request.getContextPath()%><%=path%>.explorer.html">
         </form>
         
         <br/>
@@ -117,7 +117,7 @@
             %>   
 <div>
   <h3>add new node</h3>
-  <form action="<%=path%>/*" method="post">
+  <form action="<%request.getContextPath()%><%=path%>/*" method="post">
   <table>
   <thead class="smallLabel">
   <tr>
@@ -135,7 +135,7 @@
     </td><td>
     <input name="jcr:primaryType" type="text">
     </td><td>
-    <input name=":redirect" type="hidden" value="<%=path%>/*.explorer.html">
+    <input name=":redirect" type="hidden" value="<%request.getContextPath()%><%=path%>/*.explorer.html">
     <input type="submit" value="new node">
     </td>
   </tr>
@@ -160,7 +160,7 @@
   <h3>delete node</h3>
   <form action="<%=path%>" method="post">
   <input name=":operation" type="hidden" value="delete">
-  <input name=":redirect" type="hidden" value="<%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
+  <input name=":redirect" type="hidden" value="<%request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
   <input type="submit" value="delete this node">
   </form>
 </div>
