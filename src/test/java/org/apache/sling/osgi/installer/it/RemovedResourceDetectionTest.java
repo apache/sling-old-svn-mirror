@@ -76,13 +76,14 @@ public class RemovedResourceDetectionTest extends OsgiInstallerTestBase {
                 new BundleEvent(symbolicNameB, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
                 new BundleEvent(symbolicNameB, "1.0", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After initial install", symbolicNameB, "1.0", Bundle.ACTIVE);
+        assertBundle("After initial install", symbolicNameA, "1.1", Bundle.ACTIVE);
 
         // Restart installer, register only second bundle and verify that first one is gone
         restartInstaller();
         listener = this.startObservingBundleEvents();
         final List<InstallableResource> data = new ArrayList<InstallableResource>();
         data.add(getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testB-1.0.jar"))[0]);
-        installer.registerResources(URL_SCHEME, data);
+        installer.registerResources(URL_SCHEME, data.toArray(new InstallableResource[data.size()]));
         sleep(500);
         this.waitForBundleEvents("Bundle must be installed", listener,
                 new BundleEvent(symbolicNameA, org.osgi.framework.BundleEvent.STOPPED),
