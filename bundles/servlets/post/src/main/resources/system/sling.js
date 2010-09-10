@@ -412,10 +412,16 @@ var Sling = null;
     
     // obtain the base_url to communicate with sling on the server
     var scripts = document.getElementsByTagName("SCRIPT")
-    var script = scripts[scripts.length-1].src
-    Sling.baseurl = script.substring(0,script.length - Sling.PATH_OF_THIS_FILE.length);
-    Sling.currentPath = Sling._getPath();
-    Sling.isNew  = (Sling.currentPath.indexOf("/*")>=0)?true:false;
+    for (var i = 0; i < scripts.length; i++) {
+        var scriptSrc = scripts[i].src
+        if (scriptSrc.match(Sling.PATH_OF_THIS_FILE+"$")) {
+            Sling.baseurl = scriptSrc.substring(0,scriptSrc.length - Sling.PATH_OF_THIS_FILE.length);
+            Sling.currentPath = Sling._getPath();
+            Sling.isNew  = (Sling.currentPath.indexOf("/*")>=0)?true:false;
+    
+            break;
+        }
+    }
 
 // end sling code scope 
 })();
