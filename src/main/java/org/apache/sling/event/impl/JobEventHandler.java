@@ -1393,18 +1393,11 @@ public class JobEventHandler
                 this.logger.error("Unable to access repository to check job node.", re);
                 errorOccured = false;
             }
+            final String jobId = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
             if ( eventNode != null ) {
-                // unlock node
-                try {
-                    this.backgroundSession.getWorkspace().getLockManager().unlock(eventNode.getPath());
-                } catch (RepositoryException e) {
-                    // if unlock fails, we silently ignore this
-                    this.ignoreException(e);
-                }
                 // update status in repository
                 try {
                     if ( !reschedule ) {
-                        final String jobId = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
                         if ( jobId == null ) {
                             // remove node from repository if no job id is set
                             eventNode.remove();
@@ -1421,6 +1414,15 @@ public class JobEventHandler
                 } catch (RepositoryException re) {
                     // if an exception occurs, we just log
                     this.logger.error("Exception during finished job update.", re);
+                }
+                if ( reschedule || jobId != null ) {
+                    // unlock node
+                    try {
+                        this.backgroundSession.getWorkspace().getLockManager().unlock(eventNode.getPath());
+                    } catch (RepositoryException e) {
+                        // if unlock fails, we silently ignore this
+                        this.ignoreException(e);
+                    }
                 }
             }
         }
