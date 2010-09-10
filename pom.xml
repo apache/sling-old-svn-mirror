@@ -133,6 +133,7 @@
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
         <module>bundles/extensions/groovy</module>
+        <module>bundles/extensions/explorer</module>
         
         <!-- Installer -->
         <module>installer/osgi/installer</module>
