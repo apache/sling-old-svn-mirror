@@ -59,6 +59,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
         final StartLevel startLevelService = this.creator.getStartLevel();
         try {
             final Bundle b = this.creator.getBundleContext().installBundle(getResource().getURL(), getResource().getInputStream());
+            ctx.log("Installed bundle {} from resource {}", b, getResource());
             // optionally set the start level
             if ( startLevel > 0 ) {
                 if (startLevelService != null) {

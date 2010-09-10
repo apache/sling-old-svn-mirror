@@ -136,7 +136,8 @@ public class PersistentResourceList {
             while ( i.hasNext() ) {
                 final RegisteredResource r = i.next();
                 if ( r.getURL().equals(url) ) {
-                    if ( first && r.getState() == RegisteredResource.State.INSTALLED ) {
+                    if ( first && (r.getState() == RegisteredResource.State.INSTALLED
+                            || r.getState() == RegisteredResource.State.INSTALL)) {
                         logger.debug("Marking for uninstalling: {}", r);
                         r.setState(RegisteredResource.State.UNINSTALL);
                     } else {

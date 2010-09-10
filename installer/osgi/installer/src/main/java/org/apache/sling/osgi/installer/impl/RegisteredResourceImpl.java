@@ -177,10 +177,10 @@ public class RegisteredResourceImpl
 
 	@Override
 	public String toString() {
-	    return getClass().getSimpleName() + " " + this.getURL() +
+	    return "RegisteredResource(url=" + this.getURL() +
 	        ", entity=" + this.getEntityId() +
 	        ", state=" + this.state +
-	        ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber();
+	        ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber() + ")";
 	}
 
 	protected File getDataFile(final BundleContext bundleContext) {
