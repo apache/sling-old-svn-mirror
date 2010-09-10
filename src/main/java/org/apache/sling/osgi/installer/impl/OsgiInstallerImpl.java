@@ -43,6 +43,8 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Worker thread where all OSGi tasks are executed.
@@ -56,6 +58,9 @@ import org.osgi.framework.FrameworkListener;
 public class OsgiInstallerImpl
     extends Thread
     implements BundleListener, FrameworkListener, OsgiInstaller {
+
+    /** The logger */
+    private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
     /** The bundle context. */
     private final BundleContext ctx;
@@ -102,6 +107,14 @@ public class OsgiInstallerImpl
         synchronized (newResources) {
             newResources.notify();
         }
+        logger.debug("Waiting for installer thread to stop");
+        try {
+            this.join();
+        } catch (InterruptedException e) {
+            // we simply ignore this
+        }
+
+        logger.info("Apache Sling OSGi Installer Service stopped.");
     }
 
     /**
@@ -116,6 +129,7 @@ public class OsgiInstallerImpl
         setName(getClass().getSimpleName());
         final File f = ctx.getDataFile("RegisteredResourceList.ser");
         persistentList = new PersistentResourceList(f);
+        logger.info("Apache Sling OSGi Installer Service started.");
     }
 
     @Override
@@ -129,14 +143,14 @@ public class OsgiInstallerImpl
                 // No tasks to execute - wait until new resources are
                 // registered
                 this.cleanupInstallableResources();
-                Logger.logDebug("No tasks to process, going idle");
+                logger.debug("No tasks to process, going idle");
 
                 synchronized (newResources) {
                     try {
                         newResources.wait();
                     } catch (InterruptedException ignore) {}
                 }
-                Logger.logDebug("Notified of new resources, back to work");
+                logger.debug("Notified of new resources, back to work");
                 continue;
             }
 
@@ -180,9 +194,9 @@ public class OsgiInstallerImpl
                 try {
                     final RegisteredResource rr = RegisteredResourceImpl.create(ctx, r, scheme);
                     createdResources.add(rr);
-                    Logger.logDebug("Adding new resource " + rr);
+                    logger.debug("Adding new resource {}", rr);
                 } catch (final IOException ioe) {
-                    Logger.logWarn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+                    logger.warn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 }
             }
         }
@@ -228,7 +242,7 @@ public class OsgiInstallerImpl
                     for(final String id : ids) {
                         final String url = scheme + ':' + id;
                         // Will mark all resources which have r's URL as uninstallable
-                        Logger.logDebug("Adding URL " + url + " to urlsToRemove");
+                        logger.debug("Adding URL {} to urlsToRemove", url);
 
                         urlsToRemove.add(url);
                     }
@@ -255,7 +269,7 @@ public class OsgiInstallerImpl
                 registeredResources = Collections.emptyList();
             }
             synchronized (newResources) {
-                Logger.logDebug("Registered new resource scheme: " + scheme);
+                logger.debug("Registered new resource scheme: {}", scheme);
                 newResourcesSchemes.put(scheme, registeredResources);
                 newResources.notify();
             }
@@ -276,7 +290,7 @@ public class OsgiInstallerImpl
             // check for new resource providers (schemes)
             // if we have new providers we have to sync them with existing resources
             for(final Map.Entry<String, List<RegisteredResource>> entry : this.newResourcesSchemes.entrySet()) {
-                Logger.logDebug("Processing set of new resources with scheme " + entry.getKey());
+                logger.debug("Processing set of new resources with scheme {}", entry.getKey());
 
                 // set all previously found resources that are not available anymore to uninstall
                 // if they have been installed - remove resources with a different state
@@ -287,7 +301,7 @@ public class OsgiInstallerImpl
                     boolean first = true;
                     for(final RegisteredResource r : group) {
                         if ( r.getScheme().equals(entry.getKey()) ) {
-                            Logger.logDebug("Checking " + r);
+                            logger.debug("Checking {}", r);
                             // search if we have a new entry with the same url
                             boolean found = false;
                             final Iterator<RegisteredResource> m = entry.getValue().iterator();
@@ -296,7 +310,7 @@ public class OsgiInstallerImpl
                                 found = testResource.getURL().equals(r.getURL());
                             }
                             if ( !found) {
-                                Logger.logDebug("Resource " + r + " seems to be removed.");
+                                logger.debug("Resource {} seems to be removed.", r);
                                 if ( r.getState() == RegisteredResource.State.INSTALLED && first ) {
                                      r.setState(RegisteredResource.State.UNINSTALL);
                                 } else {
@@ -310,8 +324,8 @@ public class OsgiInstallerImpl
                         this.persistentList.remove(rr);
                     }
                 }
-                Logger.logDebug("Added set of " + entry.getValue().size() + " new resources with scheme "
-                        + entry.getKey() + ": " + entry.getValue());
+                logger.debug("Added set of {} new resources with scheme {} : {}",
+                        new Object[] {entry.getValue().size(), entry.getKey(), entry.getValue()});
                 newResources.addAll(entry.getValue());
             }
 
@@ -356,11 +370,11 @@ public class OsgiInstallerImpl
                                              break;
                         }
                         if ( toActivate != null ) {
-                            Logger.logDebug("Activating " + toActivate);
+                            logger.debug("Activating {}", toActivate);
                             if ( toActivate.getState() == RegisteredResource.State.UNINSTALL && i.hasNext() ) {
                                 final RegisteredResource r = i.next();;
                                 if (r.getState() == RegisteredResource.State.IGNORED || r.getState() == RegisteredResource.State.INSTALLED) {
-                                    Logger.logDebug("Reactivating for next cycle " + r);
+                                    logger.debug("Reactivating for next cycle {}", r);
                                     r.setState(RegisteredResource.State.INSTALL);
                                 }
                             }
@@ -428,17 +442,22 @@ public class OsgiInstallerImpl
         final OsgiInstallerContext ctx = new OsgiInstallerContext() {
 
             public void addTaskToNextCycle(final OsgiInstallerTask t) {
-                Logger.logDebug("adding task to next cycle:" + t);
+                logger.debug("adding task to next cycle: {}", t);
                 synchronized (tasksForNextCycle) {
                     tasksForNextCycle.add(t);
                 }
             }
 
             public void addTaskToCurrentCycle(final OsgiInstallerTask t) {
-                Logger.logDebug("adding task to current cycle:" + t);
+                logger.debug("adding task to current cycle: {}", t);
                 synchronized ( tasks ) {
                     tasks.add(t);
                 }
+            }
+
+            public void log(String message, Object... args) {
+                // TODO Auto-generated method stub
+
             }
         };
         while (this.active && !tasks.isEmpty()) {
@@ -447,7 +466,7 @@ public class OsgiInstallerImpl
                 t = tasks.first();
                 tasks.remove(t);
             }
-            Logger.logInfo("Executing task " + t);
+            logger.debug("Executing task: {}", t);
             t.execute(ctx);
         }
     }
@@ -468,7 +487,7 @@ public class OsgiInstallerImpl
             toRetry = tasksForNextCycle.size();
         }
         if (toRetry > 0) {
-            Logger.logDebug(toRetry + " tasks scheduled for retrying");
+            logger.debug("{} tasks scheduled for retrying", toRetry);
             synchronized (newResources) {
                 retriesScheduled = true;
                 newResources.notify();
@@ -485,7 +504,7 @@ public class OsgiInstallerImpl
         }
         final int t = e.getType();
         if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
-            Logger.logDebug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
+            logger.debug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
             scheduleRetries();
         }
     }

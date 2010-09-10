@@ -21,8 +21,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.io.IOException;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
@@ -32,11 +30,16 @@ import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Task creator for bundles
  */
 public class BundleTaskCreator {
+
+    /** The logger */
+    private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
     public static final String ATTR_START = "sling.osgi.installer.start.bundle";
 
@@ -92,8 +95,8 @@ public class BundleTaskCreator {
         }
         try {
             this.bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
-        } catch (IOException e) {
-            Logger.logWarn(OsgiInstaller.class.getName() + " service failed to save state.", e);
+        } catch (final IOException e) {
+            logger.warn("Service failed to save state.", e);
         }
     }
 
@@ -147,8 +150,7 @@ public class BundleTaskCreator {
 		    if (info != null && this.bundleDigestsStorage.getInstalledVersion(symbolicName) != null) {
 		        result = new BundleRemoveTask(toActivate, this);
 		    } else {
-	            Logger.logInfo("Bundle " + symbolicName
-                            + " was not installed by this module, not removed");
+	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
 	            result = new ChangeStateTask(toActivate, RegisteredResource.State.UNINSTALLED);
 	        }
 
@@ -174,10 +176,10 @@ public class BundleTaskCreator {
                     final String installedVersion = this.bundleDigestsStorage.getInstalledVersion(info.symbolicName);
                     if (info.version.toString().equals(installedVersion)) {
                         doUpdate = true;
-                        Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
+                        logger.info("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was installed by this module, downgrading to " + newVersion);
                     } else {
-                        Logger.logInfo("Bundle " + info.symbolicName + " " + installedVersion
+                        logger.info("Bundle " + info.symbolicName + " " + installedVersion
                                     + " was not installed by this module, not downgraded");
                     }
 			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
@@ -186,14 +188,14 @@ public class BundleTaskCreator {
 			    }
                 if (doUpdate) {
 
-                    Logger.logDebug("Scheduling update of " + toActivate);
+                    logger.debug("Scheduling update of {}", toActivate);
                     if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
                         result = new SystemBundleUpdateTask(toActivate, this);
                     } else {
                         result = new BundleUpdateTask(toActivate, this);
                     }
                 } else {
-                    Logger.logDebug("Nothing to install for " + toActivate + ", same version " + newVersion + " already installed.");
+                    logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
                     result = new ChangeStateTask(toActivate, RegisteredResource.State.IGNORED);
                 }
 			}

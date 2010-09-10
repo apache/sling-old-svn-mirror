@@ -25,11 +25,20 @@ package org.apache.sling.osgi.installer.impl;
  */
 public interface OsgiInstallerContext {
 
-	/** Schedule a task for execution in the current OsgiController cycle */
+	/**
+	 * Schedule a task for execution in the current OsgiController cycle
+	 */
 	void addTaskToCurrentCycle(OsgiInstallerTask t);
 
-	/** Schedule a task for execution in the next OsgiController cycle,
-	 * 	usually to indicate that a task must be retried
+	/**
+	 * Schedule a task for execution in the next OsgiController cycle,
+	 * usually to indicate that a task must be retried
 	 */
 	void addTaskToNextCycle(OsgiInstallerTask t);
+
+	/**
+	 * Make an entry into the audit log - this should be invoked
+	 * by the tasks whenever something has been installed/uninstalled etc.
+	 */
+	void log(String message, Object... args);
 }

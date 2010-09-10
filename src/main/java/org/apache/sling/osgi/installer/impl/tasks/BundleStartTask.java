@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -70,35 +69,37 @@ public class BundleStartTask extends OsgiInstallerTask {
 	    }
 	    // this is just a sanity check which should never be reached
         if (bundleId == 0) {
-            Logger.logDebug("Bundle 0 is the framework bundle, ignoring request to start it");
+            this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");
             return;
         }
 
         // Do not execute this task if waiting for events
         final long eventsCount = OsgiInstallerImpl.getTotalEventsCount();
         if (eventsCount < eventsCountForRetrying) {
-            Logger.logDebug(this + " is not executable at this time, counters=" + eventsCountForRetrying + "/" + eventsCount);
+            this.getLogger().debug("Task is not executable at this time, counters={}/{}",
+                    eventsCountForRetrying, eventsCount);
             ctx.addTaskToNextCycle(this);
             return;
         }
 
         final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
 		if (b == null) {
-		    Logger.logInfo("Cannot start bundle, id not found: " + bundleId);
+		    this.getLogger().info("Cannot start bundle, id not found: {}", bundleId);
 			return;
 		}
 
         if (b.getState() == Bundle.ACTIVE) {
-            Logger.logDebug("Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
+            this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
             return;
         }
         // Try to start bundle, and if that doesn't work we'll need to retry
         try {
             b.start();
-            Logger.logInfo("Bundle started (retry count=" + retryCount + ", bundle ID=" + bundleId + ") " + b.getSymbolicName());
+            this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
+                    new Object[] {retryCount, bundleId, b.getSymbolicName()});
         } catch(BundleException e) {
-            Logger.logInfo("Could not start bundle (retry count=" + retryCount + ", " + e
-                        + "), will retry: " + bundleId + "/" + b.getSymbolicName());
+            this.getLogger().info("Could not start bundle (retry count={}, bundle ID={}) : {}. Reason: {}. Will retry.",
+                    new Object[] {retryCount, bundleId, b.getSymbolicName(), e});
 
             // Do the first retry immediately (in case "something" happenened right now
             // that warrants a retry), but for the next ones wait for at least one bundle

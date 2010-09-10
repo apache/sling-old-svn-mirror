@@ -18,6 +18,9 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Base class for tasks that can be executed by the {@link OsgiInstallerImpl}
@@ -25,6 +28,8 @@ package org.apache.sling.osgi.installer.impl;
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
     private final RegisteredResource resource;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public OsgiInstallerTask(final RegisteredResource r) {
         this.resource = r;
@@ -35,6 +40,10 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
      */
     public RegisteredResource getResource() {
         return this.resource;
+    }
+
+    public Logger getLogger() {
+        return this.logger;
     }
 
     public abstract void execute(OsgiInstallerContext ctx);

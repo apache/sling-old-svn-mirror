@@ -29,13 +29,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.impl.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Store the digests and version numbers of installed bundles
  * in a file, to keep track of what we installed.
  */
 class PersistentBundleInfo {
+
+    /** The logger */
+    private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
     private final Properties digests = new Properties();
     private final File dataFile;
@@ -47,16 +51,18 @@ class PersistentBundleInfo {
      */
     PersistentBundleInfo(final File dataFile) {
         this.dataFile = dataFile;
-        InputStream is = null;
-        try {
-            is = new FileInputStream(dataFile);
-            digests.load(is);
-            Logger.logInfo("Digests restored from data file " + dataFile.getName());
-        } catch(IOException ioe) {
-            Logger.logInfo("No digests retrieved, cannot read properties file " + dataFile.getName());
-        } finally {
-            if (is != null) {
-                try {is.close(); } catch (final IOException ignore) {}
+        if ( this.dataFile.exists() ) {
+            InputStream is = null;
+            try {
+                is = new FileInputStream(dataFile);
+                digests.load(is);
+                logger.debug("Digests restored from data file {}", dataFile.getName());
+            } catch(IOException ioe) {
+                logger.warn("No digests retrieved, cannot read properties file {}", dataFile.getName());
+            } finally {
+                if (is != null) {
+                    try {is.close(); } catch (final IOException ignore) {}
+                }
             }
         }
     }
@@ -88,7 +94,7 @@ class PersistentBundleInfo {
                 try {os.close(); } catch (final IOException ignore) {}
             }
         }
-        Logger.logInfo("Stored digests of " + digests.size() + " bundles in data file " + dataFile.getName());
+        logger.debug("Stored digests of {} bundles in data file {}", digests.size(), dataFile.getName());
     }
 
     /**

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.osgi.framework.Bundle;
@@ -53,7 +52,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-    	    Logger.logDebug("FrameworkEvent.PACKAGES_REFRESHED");
+    	    this.getLogger().debug("FrameworkEvent.PACKAGES_REFRESHED");
         	packageRefreshEventsCount++;
         }
     }
@@ -87,7 +86,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     		if(b.getState() == Bundle.ACTIVE) {
     			final OsgiInstallerTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
-    			Logger.logDebug("Added " + t + " to restart bundle if needed after refreshing packages");
+    			this.getLogger().debug("Added {} to restart bundle if needed after refreshing packages", t);
     		}
     	}
 
@@ -98,16 +97,14 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
             this.getPackageAdmin().refreshPackages(null);
             while(true) {
                 if(System.currentTimeMillis() > timeout) {
-                    Logger.logWarn("No FrameworkEvent.PACKAGES_REFRESHED event received within "
-        	    				+ MAX_REFRESH_PACKAGES_WAIT_SECONDS
-        	    				+ " seconds after refresh");
+                    this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
+        	    				+ " seconds after refresh", MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                     break;
                 }
                 if(packageRefreshEventsCount >= targetEventCount) {
                     final long delta = System.currentTimeMillis() - start;
-                    Logger.logDebug("FrameworkEvent.PACKAGES_REFRESHED received "
-        	    				+ delta
-        	    				+ " msec after refreshPackages call");
+                    this.getLogger().debug("FrameworkEvent.PACKAGES_REFRESHED received {}"
+        	    				+ " msec after refreshPackages call", delta);
                     break;
                 }
                 try {

@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.io.InputStream;
 
-import org.apache.sling.osgi.installer.impl.Logger;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -53,7 +52,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
-            Logger.logDebug("Bundle to update (" + symbolicName + ") not found");
+            this.getLogger().debug("Bundle to update ({}) not found", symbolicName);
             this.getResource().setState(RegisteredResource.State.IGNORED);
             return;
         }
@@ -71,7 +70,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	snapshot = this.creator.isSnapshot(newVersion);
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
-    	    Logger.logDebug("Same version is already installed, and not a snapshot, ignoring update:" + getResource());
+    	    this.getLogger().debug("Same version is already installed, and not a snapshot, ignoring update: {}", getResource());
     		return;
     	}
 
@@ -82,7 +81,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             if (snapshot) {
                 final String oldDigest = this.creator.getBundleDigestStorage().getDigest(symbolicName);
                 if (getResource().getDigest().equals(oldDigest)) {
-                    Logger.logDebug("Snapshot digest did not change, ignoring update:" + getResource());
+                    this.getLogger().debug("Snapshot digest did not change, ignoring update: {}", getResource());
                     return;
                 }
             }
@@ -107,11 +106,11 @@ public class BundleUpdateTask extends OsgiInstallerTask {
                 ctx.addTaskToNextCycle(this);
                 return;
             }
-            Logger.logWarn("Removing failing tasks - unable to retry: " + this, e);
+            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
             return;
     	}
         ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
-        Logger.logDebug("Bundle updated: " + b.getBundleId() + "/" + b.getSymbolicName());
+        this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
         return;
     }
 
