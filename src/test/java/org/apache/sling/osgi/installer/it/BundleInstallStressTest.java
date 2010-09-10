@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
 
 /** Repeatedly install/remove/reinstall semi-random sets
@@ -133,12 +132,9 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
 
     @Test
     public void testSemiRandomInstall() throws Exception {
-    	if(cycleCount < 1) {
+    	if (cycleCount < 1) {
     		fail("Cycle count (" + cycleCount + ") should be >= 1");
     	}
-
-    	// TODO TODO TODO - for now only one cycle works
-    	cycleCount = 1;
 
     	final int initialBundleCount = bundleContext.getBundles().length;
     	log(LogService.LOG_INFO,"Initial bundle count=" + initialBundleCount);
@@ -158,11 +154,18 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	// And run a number of cycles where randomly selected bundles are removed and reinstalled
     	final List<File> currentInstallation = new ArrayList<File>(testBundles);
     	for(int i=0; i < cycleCount; i++) {
-    		final long start = System.currentTimeMillis();
-    		log(LogService.LOG_DEBUG, "Test cycle " + i + ", semi-randomly selecting a subset of our test bundles");
+            final long start = System.currentTimeMillis();
+            log(LogService.LOG_INFO, "Test cycle " + i + ", semi-randomly selecting a subset of our test bundles");
+
+            for(final File f : currentInstallation) {
+    	        log(LogService.LOG_DEBUG, "Installed bundle: " + f);
+    	    }
 
     		final List<File> toInstall = selectRandomBundles();
         	log(LogService.LOG_INFO,"Re-registering " + toInstall.size() + " randomly selected resources (other test bundles should be uninstalled)");
+            for(final File f : toInstall) {
+                log(LogService.LOG_DEBUG, "Re-Registering bundle: " + f);
+            }
         	int updates = 0;
         	int installs = 0;
         	for(final File f : toInstall ) {
@@ -181,6 +184,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
                     installedEvents[m] = new BundleEvent(null, null, org.osgi.framework.BundleEvent.INSTALLED);
                 }
             }
+            log(LogService.LOG_DEBUG, "Cycle results in " + removes + " removed bundles, " + updates + " updated bundles, " + installs + " installed bundles");
 
             listener = this.startObservingBundleEvents();
     		install(toInstall);
@@ -251,11 +255,5 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	}
 
     	return result;
-    }
-
-    private void logInstalledBundles() {
-		for(Bundle b : bundleContext.getBundles()) {
-			log(LogService.LOG_INFO, "Installed bundle: " + b.getSymbolicName());
-		}
     }
 }

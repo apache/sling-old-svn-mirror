@@ -294,8 +294,8 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected InstallableResource[] getInstallableResource(File testBundle, String digest, int priority) throws IOException {
         final String url = testBundle.getAbsolutePath();
-        if(digest == null) {
-            digest = testBundle.getAbsolutePath() + testBundle.lastModified();
+        if (digest == null) {
+            digest = String.valueOf(testBundle.lastModified());
         }
         final InstallableResource result = new MockInstallableResource(url, new FileInputStream(testBundle), digest, null, priority);
         return new InstallableResource[] {result};
@@ -444,6 +444,12 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
     }
 
+    public void logInstalledBundles() {
+        for(Bundle b : bundleContext.getBundles()) {
+            log(LogService.LOG_DEBUG, "Installed bundle: " + b.getSymbolicName());
+        }
+    }
+
     private final class BundleEventListener implements SynchronousBundleListener {
 
         private final List<BundleEvent> events = new ArrayList<BundleEvent>();
@@ -493,6 +499,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                     Thread.sleep(100);
                 } catch (InterruptedException ignore) {}
             }
+            logInstalledBundles();
             final StringBuilder sb = new StringBuilder();
             sb.append(msg);
             sb.append(" : Expected events=[\n");
