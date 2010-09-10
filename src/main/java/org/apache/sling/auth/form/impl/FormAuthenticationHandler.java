@@ -35,7 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -844,8 +843,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     String getUserId(final String authData) {
         if (authData != null) {
-            String[] parts = StringUtils.split(authData, "@");
-            if (parts != null && parts.length == 3) {
+            String[] parts = TokenStore.split(authData);
+            if (parts != null) {
                 return parts[2];
             }
         }
@@ -864,7 +863,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         if (authData == null) {
             updateCookie = true;
         } else {
-            String[] parts = StringUtils.split(authData, "@");
+            String[] parts = TokenStore.split(authData);
             if (parts != null && parts.length == 3) {
                 long cookieTime = Long.parseLong(parts[1].substring(1));
                 if (System.currentTimeMillis() + (sessionTimeout / 2) > cookieTime) {

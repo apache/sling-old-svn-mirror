@@ -178,6 +178,24 @@ class TokenStore {
     }
 
     /**
+     * Splits the authentication data into the three parts packed together while
+     * encoding the cookie.
+     *
+     * @param authData The authentication data to split in three parts
+     * @return A string array with three elements being the three parts of the
+     *         cookie value or <code>null</code> if the input is
+     *         <code>null</code> or if the string does not contain (at least)
+     *         three '@' separated parts.
+     */
+    static String[] split(final String authData) {
+        String[] parts = StringUtils.split(authData, "@", 3);
+        if (parts != null && parts.length == 3) {
+            return parts;
+        }
+        return null;
+    }
+
+    /**
      * Returns <code>true</code> if the <code>value</code> is a valid secure
      * token as follows:
      * <ul>
@@ -192,8 +210,8 @@ class TokenStore {
      * Otherwise the method returns <code>false</code>.
      */
     boolean isValid(String value) {
-        String[] parts = StringUtils.split(value, "@");
-        if (parts != null && parts.length == 3) {
+        String[] parts = split(value);
+        if (parts != null) {
 
             // single digit token number
             int tokenNumber = parts[1].charAt(0) - '0';

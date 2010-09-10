@@ -92,7 +92,7 @@ public class FormAuthenticationHandlerTest extends TestCase {
         assertEquals(null, handler.getUserId("field0"));
         assertEquals(null, handler.getUserId("field0@field1"));
         assertEquals("field3", handler.getUserId("field0@field1@field3"));
-        assertEquals(null, handler.getUserId("field0@field1@field3@field4"));
+        assertEquals("field3@field4", handler.getUserId("field0@field1@field3@field4"));
     }
 
     /**
