@@ -190,7 +190,7 @@ public class JcrInstaller implements EventListener {
                 }
 
                 log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
-                installer.registerResources(URL_SCHEME, resources);
+                installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
             } catch (final RepositoryException re) {
                 log.error("Repository exception during startup - deactivating installer!", re);
                 active = false;

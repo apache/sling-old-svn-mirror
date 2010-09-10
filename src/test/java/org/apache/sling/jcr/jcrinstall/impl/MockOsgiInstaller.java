@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.impl;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -67,14 +66,16 @@ class MockOsgiInstaller implements OsgiInstaller {
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, java.util.Collection)
+     * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.osgi.installer.InstallableResource[])
      */
-    public void registerResources(String urlScheme, Collection<InstallableResource> data) {
+    public void registerResources(String urlScheme, final InstallableResource[] data) {
         // Sort the data to allow comparing the recorded calls reliably
         final List<InstallableResource> sorted = new LinkedList<InstallableResource>();
-        sorted.addAll(data);
+        for(final InstallableResource r : data) {
+            sorted.add(r);
+        }
         Collections.sort(sorted, new InstallableResourceComparator());
-        for(InstallableResource r : data) {
+        for(InstallableResource r : sorted) {
         	urls.add(urlScheme + ':' + r.getId());
             recordCall("register", urlScheme, r);
         }
