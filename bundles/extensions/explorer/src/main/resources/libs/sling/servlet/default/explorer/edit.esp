@@ -236,7 +236,7 @@
             %>   
 <div >
   <h3>add new sub-node</h3>
-  <form action="<%=path%>/*" method="post">
+  <form action="<%=request.getContextPath()%><%=path%>/*" method="post">
   <div class="property_element">
   <table class="propoerty_table">
   <thead class="smallLabel">
@@ -267,7 +267,7 @@
     <% } %>
     </td>
     <td>
-    <input name=":redirect" type="hidden" value="<%=path%>/*.explorer.html">
+    <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%=path%>/*.explorer.html">
     <input type="submit" class="button" value="new sub-node">
     </td>
   </tr>
