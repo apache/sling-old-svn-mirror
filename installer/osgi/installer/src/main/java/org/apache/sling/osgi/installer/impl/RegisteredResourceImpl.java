@@ -60,8 +60,8 @@ public class RegisteredResourceImpl
 
     private static final long serialVersionUID = 4L;
 
-    /** The resource id. */
-    private final String id;
+    /** The resource url. */
+    private final String url;
     /** The installer scheme. */
 	private final String urlScheme;
 	/** The digest for the resource. */
@@ -136,7 +136,7 @@ public class RegisteredResourceImpl
 	        final String digest,
 	        final int priority,
 	        final String scheme) throws IOException {
-        this.id = id;
+        this.url = scheme + ':' + id;
         this.urlScheme = scheme;
 		this.resourceType = type;
 		this.priority = priority;
@@ -151,7 +151,7 @@ public class RegisteredResourceImpl
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
                 if (name == null) {
                     // not a bundle
-                    throw new IOException("Bundle resource does not contain a bundle " + this.urlScheme + ":" + this.id);
+                    throw new IOException("Bundle resource does not contain a bundle " + this.url);
                 }
                 this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
                 entity = ENTITY_BUNDLE_PREFIX + name;
@@ -209,7 +209,7 @@ public class RegisteredResourceImpl
 	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getURL()
 	 */
 	public String getURL() {
-		return this.getScheme() + ':' + this.getId();
+		return this.url;
 	}
 
 	/**
@@ -270,13 +270,6 @@ public class RegisteredResourceImpl
             result.put(key, d.get(key));
 	    }
 	    return result;
-	}
-
-	/**
-	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getId()
-	 */
-	public String getId() {
-	    return id;
 	}
 
     /**
