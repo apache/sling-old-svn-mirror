@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -298,11 +297,11 @@ public class OsgiInstallerImpl
                 // set all previously found resources that are not available anymore to uninstall
                 // if they have been installed - remove resources with a different state
                 for(final String entityId : this.persistentList.getEntityIds()) {
-                    final Collection<RegisteredResource> group = this.persistentList.getResources(entityId);
+                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
 
                     final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
                     boolean first = true;
-                    for(final RegisteredResource r : group) {
+                    for(final RegisteredResource r : group.getResources()) {
                         if ( r.getScheme().equals(entry.getKey()) ) {
                             logger.debug("Checking {}", r);
                             // search if we have a new entry with the same url
@@ -352,7 +351,7 @@ public class OsgiInstallerImpl
             if ( changed ) {
                 printResources("Merged");
                 for(final String entityId : this.persistentList.getEntityIds()) {
-                    final Collection<RegisteredResource> group = this.persistentList.getResources(entityId);
+                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
                     if ( !group.isEmpty() ) {
 
                         // The first resource in each group defines what should be done within this group.
@@ -364,7 +363,7 @@ public class OsgiInstallerImpl
                         // IGNORED   : Nothing to do
                         // UNINSTALLED : This can't happen - but we do nothing in this case anyway
 
-                        final Iterator<RegisteredResource> i = group.iterator();
+                        final Iterator<RegisteredResource> i = group.getResources().iterator();
                         final RegisteredResource first = i.next();
 
                         RegisteredResource toActivate = null;
@@ -405,7 +404,7 @@ public class OsgiInstallerImpl
             sb.append(id);
             sb.append(" : [");
             boolean first = true;
-            for(final RegisteredResource rr : this.persistentList.getResources(id)) {
+            for(final RegisteredResource rr : this.persistentList.getEntityResourceList(id).getResources()) {
                 if ( !first) {
                     sb.append(", ");
                 }
@@ -432,11 +431,11 @@ public class OsgiInstallerImpl
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
         for(final String entityId : this.persistentList.getEntityIds()) {
-            final Collection<RegisteredResource> group = this.persistentList.getResources(entityId);
+            final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
             if ( !group.isEmpty() ) {
 
                 // Check the first resource in each group
-                final Iterator<RegisteredResource> i = group.iterator();
+                final Iterator<RegisteredResource> i = group.getResources().iterator();
                 final RegisteredResource first = i.next();
 
                 RegisteredResource toActivate = null;

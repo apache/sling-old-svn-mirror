@@ -26,8 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.junit.Test;
 import org.osgi.framework.Constants;
@@ -42,7 +40,8 @@ public class PersistentResourceListTest {
     public void testFileNotFound() throws IOException {
         File f = new File("NONEXISTENT");
         PersistentResourceList p = new PersistentResourceList(f);
-        assertNotNull(p.getData());
+        // check if data is available - we call a method which would result in an NPE otherwise!
+        p.getEntityIds();
     }
 
     @Test
@@ -56,15 +55,17 @@ public class PersistentResourceListTest {
             oos.close();
         }
         PersistentResourceList p = new PersistentResourceList(f);
-        assertNotNull(p.getData());
-        assertEquals("Constructor must fail gracefully with invalid data file", 0, p.getData().size());
+        // check if data is available - we call a method which would result in an NPE otherwise!
+        p.getEntityIds();
+        assertEquals("Constructor must fail gracefully with invalid data file", 0, p.getEntityIds().size());
     }
 
     @Test
     public void testTestData() throws IOException {
         File f = new File("NONEXISTENT");
         PersistentResourceList p = new PersistentResourceList(f);
-        assertNotNull(p.getData());
+        // check if data is available - we call a method which would result in an NPE otherwise!
+        p.getEntityIds();
         addTestData(p);
         assertTestData(p);
     }
@@ -87,31 +88,30 @@ public class PersistentResourceListTest {
     private void addTestData(PersistentResourceList p) {
         for(int i = 0; i < TEST_SCALE; i++) {
             final String symbolicName = FAKE + i;
-            TreeSet<RegisteredResource> s = new TreeSet<RegisteredResource>();
             for(int j= TEST_SCALE - 2; j >= 1; j--) {
-                s.add(new MockBundleResource(symbolicName, getFakeVersion(i, j)));
+                p.addOrUpdate(new MockBundleResource(symbolicName, getFakeVersion(i, j)));
             }
-            p.getData().put(symbolicName, s);
         }
     }
 
     private void assertTestData(PersistentResourceList p) {
         for(int i = 0; i < TEST_SCALE; i++) {
             final String symbolicName = FAKE + i;
-            SortedSet<RegisteredResource> s = p.getData().get(symbolicName);
+
+            final EntityResourceList s = p.getEntityResourceList("bundle:" + symbolicName);
             assertNotNull(symbolicName + " must be found", s);
-            Iterator<RegisteredResource> it = s.iterator();
+
+            final Iterator<RegisteredResource> it = s.getResources().iterator();
             for(int j= TEST_SCALE - 2; j >= 1; j--) {
                 RegisteredResource r = it.next();
-                assertNotNull("RegisteredResource " + j + " must be found");
+                assertNotNull("RegisteredResource " + j + " must be found", r);
                 String sn = (String)r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
                 assertEquals("RegisteredResource " + j + " symbolic name must match", symbolicName, sn);
                 Version v = new Version((String)r.getAttributes().get(Constants.BUNDLE_VERSION));
                 assertEquals("RegisteredResource " + j + " version must match", getFakeVersion(i, j), v.toString());
             }
-            s.add(new MockBundleResource(symbolicName, "2." + i));
-            s.add(new MockBundleResource(symbolicName, "3." + i));
-            p.getData().put(symbolicName, s);
+            p.addOrUpdate(new MockBundleResource(symbolicName, "2." + i));
+            p.addOrUpdate(new MockBundleResource(symbolicName, "3." + i));
         }
     }
 

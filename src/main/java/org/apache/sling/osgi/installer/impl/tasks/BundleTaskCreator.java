@@ -147,7 +147,9 @@ public class BundleTaskCreator {
 		// Uninstall
 		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
 		    // Remove corresponding bundle if present and if we installed it
-		    if (info != null && this.bundleDigestsStorage.getInstalledVersion(symbolicName) != null) {
+		    if (info != null
+		        && this.bundleDigestsStorage.getInstalledVersion(symbolicName) != null
+		        && this.bundleDigestsStorage.getDigest(symbolicName).equals(toActivate.getDigest())) {
 		        result = new BundleRemoveTask(toActivate, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);

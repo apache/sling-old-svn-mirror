@@ -127,21 +127,21 @@ public class MockBundleResource implements RegisteredResource {
 	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getId()
 	 */
 	public String getId() {
-		return null;
+		return this.attributes.get(Constants.BUNDLE_SYMBOLICNAME) + "-" + this.attributes.get(Constants.BUNDLE_VERSION);
 	}
 
 	/**
 	 * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getURL()
 	 */
 	public String getURL() {
-		return null;
+		return this.getScheme() + ":" + this.getId();
 	}
 
     /**
      * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getScheme()
      */
     public String getScheme() {
-        return null;
+        return "test";
     }
 
     /**
