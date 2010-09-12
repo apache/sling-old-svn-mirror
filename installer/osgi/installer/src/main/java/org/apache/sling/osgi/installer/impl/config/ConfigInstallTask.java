@@ -18,32 +18,18 @@
  */
 package org.apache.sling.osgi.installer.impl.config;
 
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** Install/remove task for configurations */
+/**
+ * Task to install a configuration
+ */
 public class ConfigInstallTask extends AbstractConfigTask {
 
     private static final String CONFIG_INSTALL_ORDER = "20-";
-
-    static final String ALIAS_KEY = "_alias_factory_pid";
-    static final String CONFIG_PATH_KEY = "_jcr_config_path";
-    public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
-
-    /** Configuration properties to ignore when comparing configs */
-    public static final Set<String> ignoredProperties = new HashSet<String>();
-    static {
-    	ignoredProperties.add("service.pid");
-    	ignoredProperties.add(CONFIG_PATH_KEY);
-    }
 
     public ConfigInstallTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
@@ -59,20 +45,8 @@ public class ConfigInstallTask extends AbstractConfigTask {
     public void execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
-            ctx.addTaskToNextCycle(this);
             this.getLogger().debug("ConfigurationAdmin not available, task will be retried later: {}", this);
             return;
-        }
-
-        // Convert data to a configuration Dictionary
-        final Dictionary<String, Object> dict = getResource().getDictionary();
-
-        // Add pseudo-properties
-        dict.put(CONFIG_PATH_KEY, getResource().getURL());
-
-        // Factory?
-        if (pid.getFactoryPid() != null) {
-            dict.put(ALIAS_KEY, pid.getFactoryPid());
         }
 
         // Get or create configuration, but do not
@@ -95,7 +69,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 if (config.getBundleLocation() != null) {
                     config.setBundleLocation(null);
                 }
-                config.update(dict);
+                config.update(getResource().getDictionary());
                 ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
                 this.getResource().setState(RegisteredResource.State.INSTALLED);
                 this.getLogger().debug("Configuration " + config.getPid()
@@ -106,37 +80,6 @@ public class ConfigInstallTask extends AbstractConfigTask {
             }
         } catch (Exception e) {
             this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
-            ctx.addTaskToNextCycle(this);
         }
-    }
-
-    private Set<String> collectKeys(final Dictionary<String, Object>a) {
-        final Set<String> keys = new HashSet<String>();
-        final Enumeration<String> aI = a.keys();
-        while (aI.hasMoreElements() ) {
-            final String key = aI.nextElement();
-            if ( !ignoredProperties.contains(key) ) {
-                keys.add(key);
-            }
-        }
-        return keys;
-    }
-
-    /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */
-    boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) {
-    	boolean result = false;
-    	if (a != null && b != null) {
-    	    final Set<String> keysA = collectKeys(a);
-            final Set<String> keysB = collectKeys(b);
-            if ( keysA.size() == keysB.size() && keysA.containsAll(keysB) ) {
-                for(final String key : keysA ) {
-                    if ( !a.get(key).equals(b.get(key)) ) {
-                        return result;
-                    }
-                }
-                result = true;
-            }
-    	}
-    	return result;
     }
 }

@@ -18,8 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import java.io.InputStream;
-
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -57,7 +55,6 @@ public class BundleUpdateTask extends OsgiInstallerTask {
             return;
         }
 
-        this.getResource().setState(RegisteredResource.State.INSTALLED);
         final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
 
         // check for system bundle update
@@ -71,6 +68,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
     	    this.getLogger().debug("Same version is already installed, and not a snapshot, ignoring update: {}", getResource());
+            this.getResource().setState(RegisteredResource.State.INSTALLED);
     		return;
     	}
 
@@ -82,37 +80,34 @@ public class BundleUpdateTask extends OsgiInstallerTask {
                 final String oldDigest = this.creator.getBundleDigestStorage().getDigest(symbolicName);
                 if (getResource().getDigest().equals(oldDigest)) {
                     this.getLogger().debug("Snapshot digest did not change, ignoring update: {}", getResource());
+                    this.getResource().setState(RegisteredResource.State.INSTALLED);
                     return;
                 }
             }
 
-            if (b.getState() == Bundle.ACTIVE) {
-                // bundle was active before the update - restart it once updated, but
-                // in sequence, not right now
-                ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
-            }
+            // If the bundle is active before the update - restart it once updated, but
+            // in sequence, not right now
+            final boolean reactivate = (b.getState() == Bundle.ACTIVE);
             b.stop();
-            final InputStream is = getResource().getInputStream();
-            if(is == null) {
-            	canRetry = false;
-                throw new IllegalStateException(
-                        "RegisteredResource provides null InputStream, cannot update bundle: "
-                        + getResource());
-            }
-            b.update(is);
+
+            b.update(getResource().getInputStream());
             ctx.log("Updated bundle {} from resource {}", b, getResource());
             this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
-    	} catch (Exception e) {
-            if ( canRetry ) {
-                ctx.addTaskToNextCycle(this);
-                return;
+
+            if (reactivate) {
+                this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
+                ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
+            } else {
+                this.getResource().setState(RegisteredResource.State.INSTALLED);
             }
-            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-            return;
+            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
+            this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
+    	} catch (Exception e) {
+            if ( !canRetry ) {
+                this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+                this.getResource().setState(RegisteredResource.State.IGNORED);
+            }
     	}
-        ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
-        this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
-        return;
     }
 
     @Override

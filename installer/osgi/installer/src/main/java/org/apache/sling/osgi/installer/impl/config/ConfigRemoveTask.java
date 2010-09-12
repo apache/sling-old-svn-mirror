@@ -29,10 +29,6 @@ public class ConfigRemoveTask extends AbstractConfigTask {
 
     private static final String CONFIG_REMOVE_ORDER = "10-";
 
-    static final String ALIAS_KEY = "_alias_factory_pid";
-    static final String CONFIG_PATH_KEY = "_jcr_config_path";
-    public static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
-
     public ConfigRemoveTask(final RegisteredResource r,
             final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
@@ -46,10 +42,10 @@ public class ConfigRemoveTask extends AbstractConfigTask {
     /**
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
+    @SuppressWarnings("unchecked")
     public void execute(final OsgiInstallerContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
-            ctx.addTaskToNextCycle(this);
             this.getLogger().debug("ConfigurationAdmin not available, task will be retried later: {}", this);
             return;
         }
@@ -60,14 +56,21 @@ public class ConfigRemoveTask extends AbstractConfigTask {
                 this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", pid, getResource());
                 this.getResource().setState(RegisteredResource.State.IGNORED);
             } else {
-                this.getLogger().debug("Deleting config {} ({})", pid, getResource());
-                cfg.delete();
-                ctx.log("Deleted configuration {} from resource {}", pid, getResource());
-                this.getResource().setState(RegisteredResource.State.UNINSTALLED);
+                if ( cfg.getProperties().get(ConfigurationPid.CONFIG_PATH_KEY) == null ) {
+                    this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
+                    this.getResource().setState(RegisteredResource.State.IGNORED);
+                } else if ( !isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
+                    this.getLogger().debug("Configuration has changed after is has been installed. Not removing!");
+                    this.getResource().setState(RegisteredResource.State.IGNORED);
+                } else {
+                    this.getLogger().debug("Deleting config {} ({})", pid, getResource());
+                    cfg.delete();
+                    ctx.log("Deleted configuration {} from resource {}", pid, getResource());
+                    this.getResource().setState(RegisteredResource.State.UNINSTALLED);
+                }
             }
         } catch (Exception e) {
             this.getLogger().debug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
-            ctx.addTaskToNextCycle(this);
         }
     }
 }

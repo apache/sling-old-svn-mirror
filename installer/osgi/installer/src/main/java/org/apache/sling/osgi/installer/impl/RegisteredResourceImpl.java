@@ -160,10 +160,18 @@ public class RegisteredResourceImpl
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
-            final ConfigurationPid pid = new ConfigurationPid(scheme + ':' + id);
+            final ConfigurationPid pid = new ConfigurationPid(id);
             entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
             attributes.put(CONFIG_PID_ATTRIBUTE, pid);
             this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(dict));
+            // Add pseudo-properties
+            this.dictionary.put(ConfigurationPid.CONFIG_PATH_KEY, this.getURL());
+
+            // Factory?
+            if (pid.getFactoryPid() != null) {
+                this.dictionary.put(ConfigurationPid.ALIAS_KEY, pid.getFactoryPid());
+            }
+
 		} else {
 		    throw new IOException("Unknown type " + resourceType);
 		}
@@ -461,7 +469,7 @@ public class RegisteredResourceImpl
     /**
      * Compute the extension
      */
-    private static String getExtension(String url) {
+    public static String getExtension(String url) {
         final int pos = url.lastIndexOf('.');
         return (pos < 0 ? "" : url.substring(pos+1));
     }
@@ -473,13 +481,20 @@ public class RegisteredResourceImpl
         if (extension.equals("jar")) {
             return InstallableResource.TYPE_BUNDLE;
         }
-        if ( extension.equals("cfg")
-             || extension.equals("config")
-             || extension.equals("xml")
-             || extension.equals("properties")) {
+        if ( isConfigExtension(extension) ) {
             return InstallableResource.TYPE_CONFIG;
         }
         return extension;
+    }
+
+    public static boolean isConfigExtension(String extension) {
+        if ( extension.equals("cfg")
+                || extension.equals("config")
+                || extension.equals("xml")
+                || extension.equals("properties")) {
+            return true;
+        }
+        return false;
     }
 
     /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */

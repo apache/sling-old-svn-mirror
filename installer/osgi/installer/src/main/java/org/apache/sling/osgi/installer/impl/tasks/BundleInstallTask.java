@@ -78,7 +78,6 @@ public class BundleInstallTask extends OsgiInstallerTask {
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
             this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
-            ctx.addTaskToNextCycle(this);
         }
     }
 

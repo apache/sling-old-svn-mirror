@@ -19,6 +19,10 @@
 package org.apache.sling.osgi.installer.impl.config;
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -29,6 +33,13 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for configuration-related tasks */
 abstract class AbstractConfigTask extends OsgiInstallerTask {
+
+    /** Configuration properties to ignore when comparing configs */
+    protected static final Set<String> ignoredProperties = new HashSet<String>();
+    static {
+        ignoredProperties.add("service.pid");
+        ignoredProperties.add(ConfigurationPid.CONFIG_PATH_KEY);
+    }
 
     protected final ConfigurationPid pid;
 
@@ -59,7 +70,7 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
             result = ca.getConfiguration(cp.getConfigPid(), null);
         } else {
             Configuration configs[] = ca.listConfigurations(
-                "(|(" + ConfigInstallTask.ALIAS_KEY
+                "(|(" + ConfigurationPid.ALIAS_KEY
                 + "=" + cp.getFactoryPid() + ")(.alias_factory_pid=" + cp.getFactoryPid()
                 + "))");
 
@@ -72,6 +83,36 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
             }
         }
 
+        return result;
+    }
+
+    private Set<String> collectKeys(final Dictionary<String, Object>a) {
+        final Set<String> keys = new HashSet<String>();
+        final Enumeration<String> aI = a.keys();
+        while (aI.hasMoreElements() ) {
+            final String key = aI.nextElement();
+            if ( !ignoredProperties.contains(key) ) {
+                keys.add(key);
+            }
+        }
+        return keys;
+    }
+
+    /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */
+    protected boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) {
+        boolean result = false;
+        if (a != null && b != null) {
+            final Set<String> keysA = collectKeys(a);
+            final Set<String> keysB = collectKeys(b);
+            if ( keysA.size() == keysB.size() && keysA.containsAll(keysB) ) {
+                for(final String key : keysA ) {
+                    if ( !a.get(key).equals(b.get(key)) ) {
+                        return result;
+                    }
+                }
+                result = true;
+            }
+        }
         return result;
     }
 }
