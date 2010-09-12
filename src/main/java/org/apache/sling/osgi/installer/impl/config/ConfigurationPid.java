@@ -43,7 +43,7 @@ public class ConfigurationPid implements Serializable {
             pid = pid.substring(slashPos + 1);
         }
         // remove extension
-        if ( RegisteredResourceImpl.    isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
+        if ( RegisteredResourceImpl.isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
             final int lastDot = pid.lastIndexOf('.');
             pid = pid.substring(0, lastDot);
         }

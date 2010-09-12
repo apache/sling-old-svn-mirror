@@ -54,10 +54,12 @@ public class ConfigTaskCreator {
      * Create a task to install or uninstall a configuration.
 	 */
 	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
+	    // if there is no config admin, just return
+	//    if ( this.configAdminServiceTracker.getService() == null ) {
+    //        return null;
+	//    }
 	    final OsgiInstallerTask result;
 		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
-		    // None of our resources are installable, remove corresponding config
-		    // (task simply does nothing if config does not exist)
 		    result = new ConfigRemoveTask(toActivate, this.configAdminServiceTracker);
 		} else {
 	        result = new ConfigInstallTask(toActivate, this.configAdminServiceTracker);

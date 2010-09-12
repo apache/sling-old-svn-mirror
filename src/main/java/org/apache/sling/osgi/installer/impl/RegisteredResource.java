@@ -44,12 +44,14 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
     /** Attribute key: configuration pid */
     String CONFIG_PID_ATTRIBUTE = "config.pid";
 
+    String getScheme();
+
     /**
-     * Return this data's id. It is opaque for the {@link OsgiInstaller}
+     * Return this data's url. It is opaque for the {@link OsgiInstaller}
      * but should uniquely identify the resource within the namespace of
      * the used installation mechanism.
      */
-    String getId();
+    String getURL();
 
     /**
      * Return the type of this resource.
@@ -89,9 +91,6 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      */
     int getPriority();
     void cleanup();
-	String getURL();
-
-	String getScheme();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
 	Map<String, Object> getAttributes();

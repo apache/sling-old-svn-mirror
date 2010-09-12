@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -67,7 +68,15 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
         Configuration result = null;
 
         if (cp.getFactoryPid() == null) {
-            result = ca.getConfiguration(cp.getConfigPid(), null);
+            if ( createIfNeeded ) {
+                result = ca.getConfiguration(cp.getConfigPid(), null);
+            } else {
+                String filter = "(" + Constants.SERVICE_PID + "=" + cp.getConfigPid() + ")";
+                Configuration[] configs = ca.listConfigurations( filter );
+                if ( configs != null && configs.length > 0 ) {
+                    result = configs[0];
+                }
+            }
         } else {
             Configuration configs[] = ca.listConfigurations(
                 "(|(" + ConfigurationPid.ALIAS_KEY
@@ -75,7 +84,7 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
                 + "))");
 
             if (configs == null || configs.length == 0) {
-                if(createIfNeeded) {
+                if (createIfNeeded) {
                     result = ca.createFactoryConfiguration(cp.getConfigPid(), null);
                 }
             } else {
