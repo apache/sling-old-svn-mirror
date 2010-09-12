@@ -63,7 +63,6 @@ public class BundleRemoveTask extends OsgiInstallerTask {
             ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         } catch (final BundleException be) {
             this.getLogger().debug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
-            ctx.addTaskToNextCycle(this);
         }
     }
 

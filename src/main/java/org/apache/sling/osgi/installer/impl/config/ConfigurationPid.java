@@ -20,35 +20,33 @@ package org.apache.sling.osgi.installer.impl.config;
 
 import java.io.Serializable;
 
+import org.apache.sling.osgi.installer.impl.RegisteredResourceImpl;
+
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar
- *      o.a.s.foo.bar-a.cfg -> pid = o.a.s.foo.bar, factory pid = a 
+ *      o.a.s.foo.bar-a.cfg -> pid = o.a.s.foo.bar, factory pid = a
  */
 public class ConfigurationPid implements Serializable {
+
+    public static final String ALIAS_KEY = "_alias_factory_pid";
+    public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
+
     private static final long serialVersionUID = 1L;
     private final String configPid;
     private final String factoryPid;
 
-    public ConfigurationPid(String path) {
-        // cut off path
-        String pid = path;
-        final int lastSlash = path.lastIndexOf('/');
-        if(lastSlash >= 0) {
-            pid = path.substring(lastSlash + 1);
+    public ConfigurationPid(String pid) {
+        // remove path
+        final int slashPos = pid.lastIndexOf('/');
+        if ( slashPos != -1 ) {
+            pid = pid.substring(slashPos + 1);
         }
-        
-        // cut off extension if it's one of our config extensions
-        for(String ext : ConfigInstallTask.CONFIG_EXTENSIONS) {
-            if(pid.endsWith(ext)) {
-                final int lastDot = pid.lastIndexOf('.');
-                if(lastDot >= 0) {
-                    pid = pid.substring(0, lastDot);
-                }
-                break;
-            }
+        // remove extension
+        if ( RegisteredResourceImpl.    isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
+            final int lastDot = pid.lastIndexOf('.');
+            pid = pid.substring(0, lastDot);
         }
-
         // split pid and factory pid alias
         int n = pid.indexOf('-');
         if (n > 0) {
@@ -59,7 +57,7 @@ public class ConfigurationPid implements Serializable {
             configPid = pid;
         }
     }
-    
+
     @Override
     public String toString() {
         return "Configuration (configPid=" + configPid + ", factoryPid=" + factoryPid + ")";
@@ -72,7 +70,7 @@ public class ConfigurationPid implements Serializable {
     public String getFactoryPid() {
         return factoryPid;
     }
-    
+
     public String getCompositePid() {
         return (factoryPid == null ? "" : factoryPid + ".") + configPid;
     }
