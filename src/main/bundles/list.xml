@@ -250,7 +250,7 @@
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.eventadmin</artifactId>
-            <version>1.2.2</version>
+            <version>1.2.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
