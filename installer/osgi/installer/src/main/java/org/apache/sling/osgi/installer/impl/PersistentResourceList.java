@@ -24,14 +24,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,19 +47,19 @@ public class PersistentResourceList {
      * The value is a set containing all registered resources for the
      * same entity. Usually this is just one resource per entity.
      */
-    private final Map<String, SortedSet<RegisteredResource>> data;
+    private final Map<String, EntityResourceList> data;
     private final File dataFile;
 
     @SuppressWarnings("unchecked")
     public PersistentResourceList(final File dataFile) {
         this.dataFile = dataFile;
 
-        Map<String, SortedSet<RegisteredResource>> restoredData = null;
+        Map<String, EntityResourceList> restoredData = null;
         if ( dataFile.exists() ) {
             ObjectInputStream ois = null;
             try {
                 ois = new ObjectInputStream(new FileInputStream(dataFile));
-                restoredData = (Map<String, SortedSet<RegisteredResource>>)ois.readObject();
+                restoredData = (Map<String, EntityResourceList>)ois.readObject();
                 logger.debug("Restored rsource list: {}", restoredData);
             } catch (final Exception e) {
                 logger.warn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
@@ -77,12 +73,7 @@ public class PersistentResourceList {
                 }
             }
         }
-        data = restoredData != null ? restoredData : new HashMap<String, SortedSet<RegisteredResource>>();
-    }
-
-    /** This method is just for testing. */
-    Map<String, SortedSet<RegisteredResource>>  getData() {
-        return data;
+        data = restoredData != null ? restoredData : new HashMap<String, EntityResourceList>();
     }
 
     public void save() {
@@ -104,85 +95,39 @@ public class PersistentResourceList {
     }
 
     public void addOrUpdate(final RegisteredResource r) {
-        logger.debug("Adding: {}", r);
-        SortedSet<RegisteredResource> t = this.data.get(r.getEntityId());
+        EntityResourceList t = this.data.get(r.getEntityId());
         if (t == null) {
-            t = new TreeSet<RegisteredResource>();
+            t = new EntityResourceList();
             this.data.put(r.getEntityId(), t);
         }
 
-        // If an object with same sort key is already present, replace with the
-        // new one which might have different attributes
-        boolean first = true;
-        for(final RegisteredResource rr : t) {
-            if ( rr.getURL().equals(r.getURL()) ) {
-                logger.debug("Cleanup obsolete resource: {}", rr);
-                rr.cleanup();
-                t.remove(rr);
-                if ( first && rr.equals(r) ) {
-                    r.setState(rr.getState());
-                }
-                break;
-            }
-            first = false;
-        }
-        t.add(r);
+        t.addOrUpdate(r);
     }
 
     public void remove(final String url) {
-        for(final SortedSet<RegisteredResource> group : this.data.values()) {
-            final Iterator<RegisteredResource> i = group.iterator();
-            boolean first = true;
-            while ( i.hasNext() ) {
-                final RegisteredResource r = i.next();
-                if ( r.getURL().equals(url) ) {
-                    if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                            || r.getState() == RegisteredResource.State.INSTALL)) {
-                        logger.debug("Marking for uninstalling: {}", r);
-                        r.setState(RegisteredResource.State.UNINSTALL);
-                    } else {
-                        logger.debug("Removing unused: {}", r);
-                        i.remove();
-                        r.cleanup();
-                    }
-                }
-                first = false;
-            }
+        for(final EntityResourceList group : this.data.values()) {
+            group.remove(url);
         }
     }
 
     public void remove(final RegisteredResource r) {
-        final SortedSet<RegisteredResource> group = this.data.get(r.getEntityId());
+        final EntityResourceList group = this.data.get(r.getEntityId());
         if ( group != null ) {
-            logger.debug("Removing unused: {}", r);
             group.remove(r);
-            r.cleanup();
         }
     }
 
-    public Collection<RegisteredResource> getResources(final String entityId) {
+    public EntityResourceList getEntityResourceList(final String entityId) {
         return this.data.get(entityId);
     }
 
     public boolean compact() {
         boolean changed = false;
-        final Iterator<Map.Entry<String, SortedSet<RegisteredResource>>> i = this.data.entrySet().iterator();
+        final Iterator<Map.Entry<String, EntityResourceList>> i = this.data.entrySet().iterator();
         while ( i.hasNext() ) {
-            final Map.Entry<String, SortedSet<RegisteredResource>> entry = i.next();
+            final Map.Entry<String, EntityResourceList> entry = i.next();
 
-            final List<RegisteredResource> toDelete = new ArrayList<RegisteredResource>();
-            for(final RegisteredResource r : entry.getValue()) {
-                if ( r.getState() == RegisteredResource.State.UNINSTALLED ) {
-                    toDelete.add(r);
-                }
-            }
-            for(final RegisteredResource r : toDelete) {
-                changed = true;
-                entry.getValue().remove(r);
-                r.cleanup();
-                logger.debug("Removing from list, uninstalled: {}", r);
-            }
-
+            changed |= entry.getValue().compact();
             if ( entry.getValue().isEmpty() ) {
                 changed = true;
                 i.remove();
