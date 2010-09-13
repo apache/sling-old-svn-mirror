@@ -23,8 +23,6 @@ import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 import org.osgi.service.startlevel.StartLevel;
 
 /** Install a bundle supplied as a RegisteredResource.
@@ -69,8 +67,6 @@ public class BundleInstallTask extends OsgiInstallerTask {
                             startLevel, b);
                 }
             }
-            final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
-            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
 
             // mark this resource as installed and to be started
             this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");

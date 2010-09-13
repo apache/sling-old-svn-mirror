@@ -27,7 +27,6 @@ import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 
 /**
  * Update the system bundle from a RegisteredResource.
@@ -51,7 +50,6 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
         if (b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }
-        final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
 
         InputStream is = null;
         try {
@@ -61,7 +59,6 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
                         "RegisteredResource provides null InputStream, cannot update bundle: "
                         + getResource());
             }
-            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
             // delayed system bundle update
             final InputStream backgroundIS = is;
             is = null;
