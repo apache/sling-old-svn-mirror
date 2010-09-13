@@ -234,6 +234,17 @@ class HttpBasicAuthenticationHandler extends
 
             response.resetBuffer();
 
+            /*
+             * TODO: Check whether we have to redirect
+             * If this is a GET request not targeted at the registration path
+             * for which this handler is selected we have to redirect to the
+             * registration path using either the provided resource attribute
+             * or parameter or the current URL as the "resource" parameter
+             * for the redirect and also setting the "sling:authRequestLogin"
+             * parameter to "BASIC" to get the 401 response for the registration
+             * path and redirect back to actual path afterwards.
+             */
+
             // just set the status because this may be called as part of an
             // error handler in which case sendError would result in an error
             // handler loop and thus be ignored.

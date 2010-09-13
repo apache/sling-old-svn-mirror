@@ -52,9 +52,9 @@ public abstract class AbstractAuthenticationHandler extends
             final HttpServletRequest request, final String name,
             final String defaultValue) {
 
-        Object resObj = request.getAttribute(name);
-        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
-            return (String) resObj;
+        final String resourceAttr = getAttributeString(request, name);
+        if (resourceAttr != null) {
+            return resourceAttr;
         }
 
         final String resource = request.getParameter(name);
@@ -82,5 +82,60 @@ public abstract class AbstractAuthenticationHandler extends
             String defaultLoginResource) {
         return getAttributeOrParameter(request, Authenticator.LOGIN_RESOURCE,
             defaultLoginResource);
+    }
+
+    /**
+     * Ensures and returns the {@link Authenticator#LOGIN_RESOURCE} request
+     * attribute is set to a non-null, non-empty string. If the attribute is not
+     * currently set, this method sets it as follows:
+     * <ol>
+     * <li>If the {@link Authenticator#LOGIN_RESOURCE} request parameter is set
+     * to a non-empty string, that parameter is set</li>
+     * <li>Otherwise if the <code>defaultValue</code> is a non-empty string the
+     * default value is used</li>
+     * <li>Otherwise the attribute is set to "/"</li>
+     * </ol>
+     *
+     * @param request The request to check for the resource attribute
+     * @param defaultValue The default value to use if the attribute is not set
+     *            and the request parameter is not set. This parameter is
+     *            ignored if it is <code>null</code> or an empty string.
+     * @return returns the value of resource request attribute
+     */
+    public static String setLoginResourceAttribute(
+            final HttpServletRequest request, final String defaultValue) {
+        String resourceAttr = getAttributeString(request,
+            Authenticator.LOGIN_RESOURCE);
+        if (resourceAttr == null) {
+            final String resourcePar = request.getParameter(Authenticator.LOGIN_RESOURCE);
+            if (resourcePar != null && resourcePar.length() > 0) {
+                resourceAttr = resourcePar;
+            } else if (defaultValue != null && defaultValue.length() > 0) {
+                resourceAttr = defaultValue;
+            } else {
+                resourceAttr = "/";
+            }
+            request.setAttribute(Authenticator.LOGIN_RESOURCE, resourceAttr);
+        }
+        return resourceAttr;
+    }
+
+    /**
+     * Returns the name request attribute if it is a non-empty string value.
+     *
+     * @param request The request from which to retrieve the attribute
+     * @param name The name of the attribute to return
+     * @return The named request attribute or <code>null</code> if the attribute
+     *         is not set or is not a non-empty string value.
+     */
+    private static String getAttributeString(final HttpServletRequest request,
+            final String name) {
+        Object resObj = request.getAttribute(name);
+        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
+            return (String) resObj;
+        }
+
+        // not set or not a non-empty string
+        return null;
     }
 }
