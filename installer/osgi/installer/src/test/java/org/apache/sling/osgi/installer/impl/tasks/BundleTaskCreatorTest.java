@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.MockBundleResource;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -42,7 +43,9 @@ public class BundleTaskCreatorTest {
 	    }
 		final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
         for(final RegisteredResource r : sortedResources) {
-  		    tasks.add(btc.createTask(r));
+            final EntityResourceList erl = new EntityResourceList();
+            erl.addOrUpdate(r);
+  		    tasks.add(btc.createTask(erl));
         }
 		return tasks;
 	}

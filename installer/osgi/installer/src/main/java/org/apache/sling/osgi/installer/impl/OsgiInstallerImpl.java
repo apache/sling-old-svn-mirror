@@ -138,6 +138,7 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
+            this.mergeNewResources();
             final boolean tasksToDo = this.hasOpenTasks();
             final SortedSet<OsgiInstallerTask> tasks = this.computeTasks();
 
@@ -347,45 +348,8 @@ public class OsgiInstallerImpl
             }
             urlsToRemove.clear();
 
-            // if we have changes we have to process the resources per entity to update states
             if ( changed ) {
                 printResources("Merged");
-                for(final String entityId : this.persistentList.getEntityIds()) {
-                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-                    if ( !group.isEmpty() ) {
-
-                        // The first resource in each group defines what should be done within this group.
-                        // This is based on the state of the first resource:
-                        // INSTALL : Install this resource and ignore all others in the group
-                        // UNINSTALL : Uninstall this resource and set the next resource in the group to INSTALL
-                        //             if it has either state IGNORE or INSTALLED
-                        // INSTALLED : Nothing to do
-                        // IGNORED   : Nothing to do
-                        // UNINSTALLED : This can't happen - but we do nothing in this case anyway
-
-                        final Iterator<RegisteredResource> i = group.getResources().iterator();
-                        final RegisteredResource first = i.next();
-
-                        RegisteredResource toActivate = null;
-                        switch ( first.getState() ) {
-                            case UNINSTALL : toActivate = first;
-                                             break;
-                            case INSTALL   : toActivate = first;
-                                             break;
-                        }
-                        if ( toActivate != null ) {
-                            logger.debug("Activating {}", toActivate);
-                            if ( toActivate.getState() == RegisteredResource.State.UNINSTALL && i.hasNext() ) {
-                                final RegisteredResource r = i.next();;
-                                if (r.getState() == RegisteredResource.State.IGNORED || r.getState() == RegisteredResource.State.INSTALLED) {
-                                    logger.debug("Reactivating for next cycle {}", r);
-                                    r.setState(RegisteredResource.State.INSTALL);
-                                }
-                            }
-                        }
-                    }
-                }
-                printResources("Prepared");
                 // persist list
                 this.persistentList.save();
             }
@@ -396,13 +360,8 @@ public class OsgiInstallerImpl
         // check if there is something to do
         for(final String entityId : this.persistentList.getEntityIds()) {
             final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-            if ( !group.isEmpty() ) {
-                final RegisteredResource first = group.getFirst();
-
-                if ( first != null &&
-                     (first.getState() == RegisteredResource.State.UNINSTALL || first.getState() == RegisteredResource.State.INSTALL) ) {
-                    return true;
-                }
+            if ( group.getActiveResource() != null ) {
+                return true;
             }
         }
         return false;
@@ -448,12 +407,9 @@ public class OsgiInstallerImpl
         // Walk the list of entities, and create appropriate OSGi tasks for each group
         for(final String entityId : this.persistentList.getEntityIds()) {
             final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-            if ( !group.isEmpty() ) {
-
-                // Check the first resource in each group
-                final Iterator<RegisteredResource> i = group.getResources().iterator();
-                final RegisteredResource first = i.next();
-
+            // Check the first resource in each group
+            final RegisteredResource first = group.getActiveResource();
+            if ( first != null ) {
                 RegisteredResource toActivate = null;
                 switch ( first.getState() ) {
                     case UNINSTALL : toActivate = first;
@@ -465,9 +421,9 @@ public class OsgiInstallerImpl
                     final String rt = toActivate.getType();
                     final OsgiInstallerTask task;
                     if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
-                        task = bundleTaskCreator.createTask(toActivate);
+                        task = bundleTaskCreator.createTask(group);
                     } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
-                        task = configTaskCreator.createTask(toActivate);
+                        task = configTaskCreator.createTask(group);
                     } else {
                         task = null;
                     }

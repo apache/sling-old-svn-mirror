@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.config;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.BundleContext;
@@ -57,13 +58,13 @@ public class ConfigTaskCreator {
 	/**
      * Create a task to install or uninstall a configuration.
 	 */
-	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
+	public OsgiInstallerTask createTask(final EntityResourceList toActivate) {
 	    // if there is no config admin, just return
 	    if ( this.configAdminServiceTracker.getService() == null ) {
             return null;
 	    }
 	    final OsgiInstallerTask result;
-		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
+		if (toActivate.getActiveResource().getState() == RegisteredResource.State.UNINSTALL) {
 		    result = new ConfigRemoveTask(toActivate, this.configAdminServiceTracker);
 		} else {
 	        result = new ConfigInstallTask(toActivate, this.configAdminServiceTracker);

@@ -21,9 +21,9 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
-import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -37,7 +37,7 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
 
     private final BundleTaskCreator creator;
 
-    public SystemBundleUpdateTask(final RegisteredResource r,
+    public SystemBundleUpdateTask(final EntityResourceList r,
             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
