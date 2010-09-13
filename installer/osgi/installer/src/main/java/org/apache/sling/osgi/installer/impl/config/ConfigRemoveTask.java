@@ -36,7 +36,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
 
     @Override
     public String getSortKey() {
-        return CONFIG_REMOVE_ORDER + pid.getCompositePid();
+        return CONFIG_REMOVE_ORDER + getCompositePid();
     }
 
     /**
@@ -51,21 +51,21 @@ public class ConfigRemoveTask extends AbstractConfigTask {
         }
 
         try {
-            final Configuration cfg = getConfiguration(ca, pid, false);
+            final Configuration cfg = getConfiguration(ca, false);
             if (cfg == null) {
-                this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", pid, getResource());
+                this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
                 this.getResource().setState(RegisteredResource.State.IGNORED);
             } else {
-                if ( cfg.getProperties().get(ConfigurationPid.CONFIG_PATH_KEY) == null ) {
+                if ( cfg.getProperties().get(ConfigTaskCreator.CONFIG_PATH_KEY) == null ) {
                     this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
                     this.getResource().setState(RegisteredResource.State.IGNORED);
                 } else if ( !isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
                     this.getLogger().debug("Configuration has changed after is has been installed. Not removing!");
                     this.getResource().setState(RegisteredResource.State.IGNORED);
                 } else {
-                    this.getLogger().debug("Deleting config {} ({})", pid, getResource());
+                    this.getLogger().debug("Deleting config {} ({})", getCompositePid(), getResource());
                     cfg.delete();
-                    ctx.log("Deleted configuration {} from resource {}", pid, getResource());
+                    ctx.log("Deleted configuration {} from resource {}", getCompositePid(), getResource());
                     this.getResource().setState(RegisteredResource.State.UNINSTALLED);
                 }
             }

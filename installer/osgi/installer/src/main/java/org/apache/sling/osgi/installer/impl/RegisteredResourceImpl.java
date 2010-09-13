@@ -44,10 +44,11 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.impl.config.ConfigurationPid;
+import org.apache.sling.osgi.installer.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Implementation of the registered resource
@@ -160,16 +161,39 @@ public class RegisteredResourceImpl
             }
 		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
-            final ConfigurationPid pid = new ConfigurationPid(id);
-            entity = ENTITY_CONFIG_PREFIX + pid.getCompositePid();
-            attributes.put(CONFIG_PID_ATTRIBUTE, pid);
             this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(dict));
+            // remove path
+            String pid = id;
+            final int slashPos = pid.lastIndexOf('/');
+            if ( slashPos != -1 ) {
+                pid = pid.substring(slashPos + 1);
+            }
+            // remove extension
+            if ( RegisteredResourceImpl.isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
+                final int lastDot = pid.lastIndexOf('.');
+                pid = pid.substring(0, lastDot);
+            }
+            // split pid and factory pid alias
+            final String factoryPid;
+            final String configPid;
+            int n = pid.indexOf('-');
+            if (n > 0) {
+                configPid = pid.substring(n + 1);
+                factoryPid = pid.substring(0, n);
+            } else {
+                factoryPid = null;
+                configPid = pid;
+            }
+            entity = ENTITY_CONFIG_PREFIX + (factoryPid == null ? "" : factoryPid + ".") + configPid;
+
+            attributes.put(Constants.SERVICE_PID, configPid);
             // Add pseudo-properties
-            this.dictionary.put(ConfigurationPid.CONFIG_PATH_KEY, this.getURL());
+            this.dictionary.put(ConfigTaskCreator.CONFIG_PATH_KEY, this.getURL());
 
             // Factory?
-            if (pid.getFactoryPid() != null) {
-                this.dictionary.put(ConfigurationPid.ALIAS_KEY, pid.getFactoryPid());
+            if (factoryPid != null) {
+                attributes.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
+                this.dictionary.put(ConfigTaskCreator.ALIAS_KEY, configPid);
             }
 
 		} else {

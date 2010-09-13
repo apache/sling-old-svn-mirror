@@ -29,6 +29,10 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class ConfigTaskCreator {
 
+    public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
+    public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
+
+
     /** Interface of the config admin */
     private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
 

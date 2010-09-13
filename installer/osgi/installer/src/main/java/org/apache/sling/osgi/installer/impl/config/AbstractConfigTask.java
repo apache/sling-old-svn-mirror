@@ -39,10 +39,11 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     protected static final Set<String> ignoredProperties = new HashSet<String>();
     static {
         ignoredProperties.add("service.pid");
-        ignoredProperties.add(ConfigurationPid.CONFIG_PATH_KEY);
+        ignoredProperties.add(ConfigTaskCreator.CONFIG_PATH_KEY);
     }
 
-    protected final ConfigurationPid pid;
+    protected final String configPid;
+    protected final String factoryPid;
 
     /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
@@ -50,7 +51,8 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     AbstractConfigTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
         super(r);
         this.configAdminServiceTracker = configAdminServiceTracker;
-        this.pid = (ConfigurationPid)r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE);
+        this.configPid = (String)r.getAttributes().get(Constants.SERVICE_PID);
+        this.factoryPid = (String)r.getAttributes().get(ConfigurationAdmin.SERVICE_FACTORYPID);
     }
 
     /**
@@ -60,18 +62,20 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
         return (ConfigurationAdmin)this.configAdminServiceTracker.getService();
     }
 
+    protected String getCompositePid() {
+        return (factoryPid == null ? "" : factoryPid + ".") + configPid;
+    }
 
     protected Configuration getConfiguration(final ConfigurationAdmin ca,
-                                             final ConfigurationPid cp,
                                              final boolean createIfNeeded)
     throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
-        if (cp.getFactoryPid() == null) {
+        if (this.factoryPid == null) {
             if ( createIfNeeded ) {
-                result = ca.getConfiguration(cp.getConfigPid(), null);
+                result = ca.getConfiguration(this.configPid, null);
             } else {
-                String filter = "(" + Constants.SERVICE_PID + "=" + cp.getConfigPid() + ")";
+                String filter = "(" + Constants.SERVICE_PID + "=" + this.configPid + ")";
                 Configuration[] configs = ca.listConfigurations( filter );
                 if ( configs != null && configs.length > 0 ) {
                     result = configs[0];
@@ -79,13 +83,13 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
             }
         } else {
             Configuration configs[] = ca.listConfigurations(
-                "(|(" + ConfigurationPid.ALIAS_KEY
-                + "=" + cp.getFactoryPid() + ")(.alias_factory_pid=" + cp.getFactoryPid()
+                "(|(" + ConfigurationAdmin.SERVICE_FACTORYPID
+                + "=" + this.factoryPid + ")(" + ConfigTaskCreator.ALIAS_KEY + "=" + configPid
                 + "))");
 
             if (configs == null || configs.length == 0) {
                 if (createIfNeeded) {
-                    result = ca.createFactoryConfiguration(cp.getConfigPid(), null);
+                    result = ca.createFactoryConfiguration(this.factoryPid, null);
                 }
             } else {
                 result = configs[0];
