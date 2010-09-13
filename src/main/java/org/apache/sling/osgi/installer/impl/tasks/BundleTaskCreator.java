@@ -131,7 +131,7 @@ public class BundleTaskCreator {
 		        result = new BundleRemoveTask(resourceList, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
-	            result = new ChangeStateTask(resourceList, RegisteredResource.State.UNINSTALLED);
+	            result = new ChangeStateTask(resourceList, RegisteredResource.State.IGNORED);
 	        }
 
 		// Install

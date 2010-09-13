@@ -50,7 +50,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             // nothing to do, so just stop
-            this.setFinishedState(RegisteredResource.State.UNINSTALLED);
+            this.setFinishedState(RegisteredResource.State.IGNORED);
             return;
         }
         final int state = b.getState();

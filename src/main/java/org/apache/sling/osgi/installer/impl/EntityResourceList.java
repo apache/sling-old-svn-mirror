@@ -64,7 +64,7 @@ public class EntityResourceList implements Serializable {
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
      */
-    public void setFinishState(final RegisteredResource.State state) {
+    public void setFinishState(RegisteredResource.State state) {
         final RegisteredResource toActivate = getActiveResource();
         if ( toActivate != null
              && toActivate.getState() == RegisteredResource.State.UNINSTALL
@@ -85,6 +85,8 @@ public class EntityResourceList implements Serializable {
                 if ( second.getState() == RegisteredResource.State.INSTALL ) {
                     second.setState(RegisteredResource.State.IGNORED);
                 }
+                // and now set resource to uninstalled
+                state = RegisteredResource.State.UNINSTALLED;
             }
         }
         toActivate.setState(state);
