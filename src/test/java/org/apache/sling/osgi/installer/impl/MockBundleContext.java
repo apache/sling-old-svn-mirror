@@ -56,14 +56,14 @@ public class MockBundleContext implements BundleContext {
 
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public ServiceRegistration registerService(String clazz, Object service,
             Dictionary properties) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public ServiceRegistration registerService(String[] clazzes,
             Object service, Dictionary properties) {
         // TODO Auto-generated method stub
