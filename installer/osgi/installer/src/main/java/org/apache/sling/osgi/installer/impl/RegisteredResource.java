@@ -98,8 +98,6 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      */
     String getEntityId();
 
-    long getSerialNumber();
-
     State getState();
 
     void setState(final State s);

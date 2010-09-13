@@ -498,6 +498,7 @@ public class OsgiInstallerImpl
             logger.debug("Executing task: {}", t);
             t.execute(ctx);
         }
+        persistentList.save();
     }
 
     /**

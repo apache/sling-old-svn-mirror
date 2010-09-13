@@ -160,16 +160,7 @@ public class BundleTaskCreatorTest {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
             c.addBundleInfo(SN, "1.0", Bundle.ACTIVE);
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected one task, bundle was not installed by us", 1, s.size());
-            assertTrue("Expected a ChangeStateTask", s.first() instanceof ChangeStateTask);
-        }
-
-        {
-            final MockBundleTaskCreator c = new MockBundleTaskCreator();
-            c.getBundleDigestStorage().putInfo(SN, r[0].getDigest(), version);
-            c.addBundleInfo(SN, "1.0", Bundle.ACTIVE);
-            final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected one task, as we installed that bundle", 1, s.size());
+            assertEquals("Expected one task, remove bundle", 1, s.size());
             assertTrue("Expected a BundleRemoveTask", s.first() instanceof BundleRemoveTask);
         }
     }
@@ -189,21 +180,12 @@ public class BundleTaskCreatorTest {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
             c.addBundleInfo(SN, "1.1", Bundle.ACTIVE);
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected one tasks, bundle was not installed by us",1, s.size());
-            assertTrue("Expected a ChangeStateTask", s.first() instanceof ChangeStateTask);
-        }
-
-        {
-            final MockBundleTaskCreator c = new MockBundleTaskCreator();
-            c.addBundleInfo(SN, "1.1", Bundle.ACTIVE);
-            c.getBundleDigestStorage().putInfo(SN, r[1].getDigest(), "1.1");
-            final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
-            assertEquals("Expected two tasks, as we installed that bundle", 2, s.size());
+            assertEquals("Expected one tasks, bundle was not installed by us", 2, s.size());
             final Iterator<OsgiInstallerTask> i = s.iterator();
             final OsgiInstallerTask first = i.next();
-            assertTrue("Expected a ChangeStateTask:" + first , first instanceof ChangeStateTask);
             final OsgiInstallerTask second = i.next();
-            assertTrue("Expected a BundleRemoveTask: " + second, second instanceof BundleRemoveTask);
+            assertTrue("Expected a ChangeStateTask", first instanceof ChangeStateTask);
+            assertTrue("Expected a BundleRemoveTask", second instanceof BundleRemoveTask);
         }
     }
 
@@ -220,17 +202,16 @@ public class BundleTaskCreatorTest {
        {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
             c.addBundleInfo(SN, "1.1.0", Bundle.ACTIVE);
-            c.getBundleDigestStorage().putInfo(SN, r[1].getDigest(), "1.1.0");
 
             final SortedSet<OsgiInstallerTask> s = getTasks(r, c);
             assertEquals("Expected two tasks", 2, s.size());
             final Iterator<OsgiInstallerTask> i = s.iterator();
             final OsgiInstallerTask first = i.next();
-            assertTrue("Expected a BundleRemoveTask:" + first , first instanceof BundleRemoveTask);
+            assertTrue("Expected a ChangeStateTask:" + first , first instanceof ChangeStateTask);
             final OsgiInstallerTask second = i.next();
-            assertTrue("Expected a BundleUpdateTask", second instanceof BundleUpdateTask);
-            final BundleUpdateTask t = (BundleUpdateTask)second;
-            assertEquals("Update should be to V1.0", r[0], t.getResource());
+            assertTrue("Expected a BundleRemoveTask", second instanceof BundleRemoveTask);
+            final BundleRemoveTask t = (BundleRemoveTask)second;
+            assertEquals("Remove should be to V1.1", r[1], t.getResource());
         }
     }
 }

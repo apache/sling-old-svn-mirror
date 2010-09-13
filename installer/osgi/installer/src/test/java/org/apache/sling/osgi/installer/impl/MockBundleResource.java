@@ -35,8 +35,6 @@ public class MockBundleResource implements RegisteredResource {
 	private State state = State.INSTALL;
 	private final String digest;
 	private final int priority;
-	private final long serialNumber;
-	private static long serialNumberCounter = System.currentTimeMillis();
 
     public MockBundleResource(String symbolicName, String version) {
         this(symbolicName, version, InstallableResource.DEFAULT_PRIORITY);
@@ -47,7 +45,6 @@ public class MockBundleResource implements RegisteredResource {
 		attributes.put(Constants.BUNDLE_VERSION, version);
 		digest = symbolicName + "." + version;
 		this.priority = priority;
-		serialNumber = getNextSerialNumber();
 	}
 
     public MockBundleResource(String symbolicName, String version, int priority, String digest) {
@@ -55,13 +52,6 @@ public class MockBundleResource implements RegisteredResource {
         attributes.put(Constants.BUNDLE_VERSION, version);
         this.digest = digest;
         this.priority = priority;
-        serialNumber = getNextSerialNumber();
-    }
-
-    private static long getNextSerialNumber() {
-        synchronized (MockBundleResource.class) {
-            return serialNumberCounter++;
-        }
     }
 
 	@Override
@@ -142,13 +132,6 @@ public class MockBundleResource implements RegisteredResource {
      */
     public int getPriority() {
         return priority;
-    }
-
-    /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getSerialNumber()
-     */
-    public long getSerialNumber() {
-        return serialNumber;
     }
 
     /**

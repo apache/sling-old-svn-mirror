@@ -57,10 +57,6 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
         final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
 
-        // check for system bundle update
-        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
-        }
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
     	final Version currentVersion = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
@@ -73,18 +69,6 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	}
 
     	try {
-            // If snapshot and ready to update, cancel if digest didn't change - as the list
-            // of RegisteredResources is not saved, this might not have been detected earlier,
-            // if the snapshot was installed and the installer was later restarted
-            if (snapshot) {
-                final String oldDigest = this.creator.getBundleDigestStorage().getDigest(symbolicName);
-                if (getResource().getDigest().equals(oldDigest)) {
-                    this.getLogger().debug("Snapshot digest did not change, ignoring update: {}", getResource());
-                    this.getResource().setState(RegisteredResource.State.INSTALLED);
-                    return;
-                }
-            }
-
             // If the bundle is active before the update - restart it once updated, but
             // in sequence, not right now
             final boolean reactivate = (b.getState() == Bundle.ACTIVE);
@@ -92,7 +76,6 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
             b.update(getResource().getInputStream());
             ctx.log("Updated bundle {} from resource {}", b, getResource());
-            this.creator.getBundleDigestStorage().putInfo(b.getSymbolicName(), getResource().getDigest(), newVersion.toString());
 
             if (reactivate) {
                 this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");

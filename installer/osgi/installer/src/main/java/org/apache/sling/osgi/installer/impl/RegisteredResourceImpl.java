@@ -59,7 +59,7 @@ public class RegisteredResourceImpl
     private static final String ENTITY_BUNDLE_PREFIX = "bundle:";
     private static final String ENTITY_CONFIG_PREFIX = "config:";
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     /** The resource url. */
     private final String url;
@@ -75,8 +75,9 @@ public class RegisteredResourceImpl
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 	private final File dataFile;
 	private final int priority;
-    private final long serialNumber;
-    private static long serialNumberCounter = System.currentTimeMillis();
+
+	/** Serial number to create unique file names in the data storage. */
+	private static long serialNumberCounter = System.currentTimeMillis();
 
     private final String resourceType;
 
@@ -142,7 +143,6 @@ public class RegisteredResourceImpl
 		this.resourceType = type;
 		this.priority = priority;
         this.dictionary = copy(dict);
-		this.serialNumber = getNextSerialNumber();
 
 		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
             try {
@@ -212,11 +212,11 @@ public class RegisteredResourceImpl
 	    return "RegisteredResource(url=" + this.getURL() +
 	        ", entity=" + this.getEntityId() +
 	        ", state=" + this.state +
-	        ", digest=" + this.getDigest() + ", serialNumber=" + this.getSerialNumber() + ")";
+	        ", digest=" + this.getDigest() + ")";
 	}
 
 	protected File getDataFile(final BundleContext bundleContext) {
-		final String filename = getClass().getSimpleName() + "." + serialNumber;
+		final String filename = getType() + "-resource-" + getNextSerialNumber() + ".ser";
 		return bundleContext.getDataFile(filename);
 	}
 
@@ -261,13 +261,8 @@ public class RegisteredResourceImpl
 	}
 
     /**
-     * @see org.apache.sling.osgi.installer.impl.RegisteredResource#getSerialNumber()
+     * Copy data to local storage.
      */
-    public long getSerialNumber() {
-        return this.serialNumber;
-    }
-
-    /** Copy data to local storage */
 	private void copyToLocalStorage(final InputStream data) throws IOException {
 		final OutputStream os = new BufferedOutputStream(new FileOutputStream(this.dataFile));
 		try {
@@ -282,7 +277,9 @@ public class RegisteredResourceImpl
 		}
 	}
 
-	/** Copy given Dictionary */
+	/**
+	 * Copy given Dictionary
+	 */
 	private Dictionary<String, Object> copy(final Dictionary<String, Object> d) {
 	    if ( d == null ) {
 	        return null;
@@ -473,11 +470,6 @@ public class RegisteredResourceImpl
 
         if (result == 0 && isSnapshot) {
             result = a.getDigest().compareTo(b.getDigest());
-            // For snapshots, compare serial numbers so that snapshots registered
-            // later get priority
-            if ( result != 0 ) {
-                result = Long.valueOf(b.getSerialNumber()).compareTo(a.getSerialNumber());
-            }
         }
 
         return result;

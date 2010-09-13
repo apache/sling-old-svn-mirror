@@ -18,9 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
-import java.io.IOException;
-import java.util.TreeSet;
-
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
@@ -49,9 +46,6 @@ public class BundleTaskCreator {
     /** Interface of the start level */
     private static String START_LEVEL_NAME = StartLevel.class.getName();
 
-    /** The filename for the digest storage. */
-    private static final String FILE_DIGEST_STORAGE = "bundle-digests.properties";
-
     private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
     /** Tracker for the package admin. */
@@ -59,9 +53,6 @@ public class BundleTaskCreator {
 
     /** Tracker for the start level service. */
     private final ServiceTracker startLevelTracker;
-
-    /** The storage for the bundle info. */
-    private final PersistentBundleInfo bundleDigestsStorage;
 
     /** The bundle context. */
     private final BundleContext bundleContext;
@@ -76,7 +67,6 @@ public class BundleTaskCreator {
         this.packageAdminTracker.open();
         this.startLevelTracker = new ServiceTracker(bc, START_LEVEL_NAME, null);
         this.startLevelTracker.open();
-        this.bundleDigestsStorage = new PersistentBundleInfo(bc.getDataFile(FILE_DIGEST_STORAGE));
     }
 
     /**
@@ -85,19 +75,6 @@ public class BundleTaskCreator {
     public void deactivate() {
         this.packageAdminTracker.close();
         this.startLevelTracker.close();
-        final TreeSet<String> installedBundlesSymbolicNames = new TreeSet<String>();
-        // do we really want to iterate here? Over all bundles? TODO
-        for(Bundle b : bundleContext.getBundles()) {
-            final String name = b.getSymbolicName();
-            if ( name != null ) {
-                installedBundlesSymbolicNames.add(b.getSymbolicName());
-            }
-        }
-        try {
-            this.bundleDigestsStorage.purgeAndSave(installedBundlesSymbolicNames);
-        } catch (final IOException e) {
-            logger.warn("Service failed to save state.", e);
-        }
     }
 
     public BundleContext getBundleContext() {
@@ -148,8 +125,7 @@ public class BundleTaskCreator {
 		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
 		    // Remove corresponding bundle if present and if we installed it
 		    if (info != null
-		        && this.bundleDigestsStorage.getInstalledVersion(symbolicName) != null
-		        && this.bundleDigestsStorage.getDigest(symbolicName).equals(toActivate.getDigest())) {
+		        && info.version.equals(new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION))) ) {
 		        result = new BundleRemoveTask(toActivate, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
@@ -158,7 +134,7 @@ public class BundleTaskCreator {
 
 		// Install
 		} else {
-		    // check if we should start the bundle
+		    // check if we should start the bundle as we installed it in the previous run
 		    if (info == null) {
 			    // bundle is not installed yet: install
 			    result = new BundleInstallTask(toActivate, this);
@@ -173,17 +149,8 @@ public class BundleTaskCreator {
                     // installed version is lower -> update
                     doUpdate = true;
                 } else if (compare > 0) {
-	                // installed version is higher -> downgrade only if
-                    // we installed that version
-                    final String installedVersion = this.bundleDigestsStorage.getInstalledVersion(info.symbolicName);
-                    if (info.version.toString().equals(installedVersion)) {
-                        doUpdate = true;
-                        logger.info("Bundle " + info.symbolicName + " " + installedVersion
-                                    + " was installed by this module, downgrading to " + newVersion);
-                    } else {
-                        logger.info("Bundle " + info.symbolicName + " " + installedVersion
-                                    + " was not installed by this module, not downgraded");
-                    }
+                    logger.debug("Bundle " + info.symbolicName + " " + newVersion
+                                + " is not installed, bundle with higher version is already installed.");
 			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
 			        // installed, same version but SNAPSHOT
 			        doUpdate = true;
@@ -213,12 +180,6 @@ public class BundleTaskCreator {
 		return new BundleInfo(b);
 	}
 
-    /**
-     * Get the digest storage.
-     */
-    public PersistentBundleInfo getBundleDigestStorage() {
-        return this.bundleDigestsStorage;
-    }
     /**
      * Finds the bundle with given symbolic name in our bundle context.
      */
