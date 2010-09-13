@@ -260,7 +260,7 @@
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.7-SNAPSHOT</version>
+            <version>1.2.8</version>
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
