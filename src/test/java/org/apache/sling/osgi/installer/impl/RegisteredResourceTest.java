@@ -72,7 +72,7 @@ public class RegisteredResourceTest {
             final Dictionary<String, Object> d = r.getDictionary();
             assertNotNull("CONFIG resource provides a Dictionary", d);
             assertEquals("CONFIG resource dictionary has three properties", 3, d.size());
-            assertNotNull("CONFIG resource has a pid attribute", r.getAttributes().get(RegisteredResource.CONFIG_PID_ATTRIBUTE));
+            assertNotNull("CONFIG resource has a pid attribute", r.getAttributes().get(Constants.SERVICE_PID));
         }
     }
 

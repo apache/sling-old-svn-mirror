@@ -41,9 +41,6 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
         IGNORED
     }
 
-    /** Attribute key: configuration pid */
-    String CONFIG_PID_ATTRIBUTE = "config.pid";
-
     String getScheme();
 
     /**

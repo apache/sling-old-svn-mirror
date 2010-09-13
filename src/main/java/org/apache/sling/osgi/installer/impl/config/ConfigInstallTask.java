@@ -37,7 +37,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     @Override
     public String getSortKey() {
-        return CONFIG_INSTALL_ORDER + pid.getCompositePid();
+        return CONFIG_INSTALL_ORDER + getCompositePid();
     }
 
     @SuppressWarnings("unchecked")
@@ -53,10 +53,10 @@ public class ConfigInstallTask extends AbstractConfigTask {
         // update if the new one has the same values.
         boolean created = false;
         try {
-            Configuration config = getConfiguration(ca, pid, false);
+            Configuration config = getConfiguration(ca, false);
             if (config == null) {
                 created = true;
-                config = getConfiguration(ca, pid, true);
+                config = getConfiguration(ca, true);
             } else {
     			if (isSameData(config.getProperties(), getResource().getDictionary())) {
     			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
