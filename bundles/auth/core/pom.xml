@@ -68,7 +68,7 @@
                         </Bundle-DocURL>
                         <Export-Package>
                             org.apache.sling.auth.core;version=1.0.0,
-                            org.apache.sling.auth.core.spi;version=1.0.0,
+                            org.apache.sling.auth.core.spi;version=1.0.1,
                             org.apache.sling.engine.auth;version=2.0.6
                         </Export-Package>
                         <Import-Package>
