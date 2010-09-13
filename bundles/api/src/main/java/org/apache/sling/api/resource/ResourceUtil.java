@@ -132,6 +132,14 @@ public class ResourceUtil {
         if (path == null || "/".equals(path)) {
             return null;
         }
+        
+        String workspaceName = null;
+        
+        final int wsSepPos = path.indexOf(":/");
+        if (wsSepPos != -1) {
+            workspaceName = path.substring(0, wsSepPos);
+            path = path.substring(wsSepPos + 1);
+        }
 
         // find the last slash, after which to cut off
         int lastSlash = path.lastIndexOf('/');
@@ -140,10 +148,19 @@ public class ResourceUtil {
             return null;
         } else if (lastSlash == 0) {
             // parent is root
-            return "/";
+            if (workspaceName != null) {
+                return workspaceName + ":/";
+            } else {
+                return "/";
+            }
         }
 
-        return path.substring(0, lastSlash);
+        String parentPath = path.substring(0, lastSlash);
+        if (workspaceName != null) {
+            return workspaceName + ":" + parentPath;
+        } else {
+            return parentPath;
+        }
     }
 
     /**

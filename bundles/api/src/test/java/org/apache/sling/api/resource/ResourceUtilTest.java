@@ -151,6 +151,10 @@ public class ResourceUtilTest {
 
         assertNull(ResourceUtil.getParent("b"));
         assertNull(ResourceUtil.getParent("/b/.."));
+        
+        assertEquals("security:/", ResourceUtil.getParent("security:/b"));
+        assertEquals("security:/b", ResourceUtil.getParent("security:/b/c"));
+        assertEquals("security:/b/c", ResourceUtil.getParent("security:/b/c/d"));
     }
 
     @Test public void testGetName() {
