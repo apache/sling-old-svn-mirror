@@ -48,10 +48,12 @@ public class TaskOrderingTest {
 		taskSet = new TreeSet<OsgiInstallerTask>();
 	}
 
-	private static RegisteredResource getRegisteredResource(String url) throws IOException {
-		return RegisteredResourceImpl.create(null,
+	private static EntityResourceList getRegisteredResource(String url) throws IOException {
+	    final EntityResourceList erl = new EntityResourceList();
+	    erl.addOrUpdate(RegisteredResourceImpl.create(null,
 		        new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null),
-		        "test");
+		        "test"));
+	    return erl;
 	}
 
 	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -37,7 +38,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleUpdateTask(final RegisteredResource r,
+    public BundleUpdateTask(final EntityResourceList r,
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -51,7 +52,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             this.getLogger().debug("Bundle to update ({}) not found", symbolicName);
-            this.getResource().setState(RegisteredResource.State.IGNORED);
+            this.setFinishedState(RegisteredResource.State.IGNORED);
             return;
         }
 
@@ -64,7 +65,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
     	    this.getLogger().debug("Same version is already installed, and not a snapshot, ignoring update: {}", getResource());
-            this.getResource().setState(RegisteredResource.State.INSTALLED);
+    	    this.setFinishedState(RegisteredResource.State.INSTALLED);
     		return;
     	}
 
@@ -79,16 +80,16 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
             if (reactivate) {
                 this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
-                ctx.addTaskToCurrentCycle(new BundleStartTask(getResource(), b.getBundleId(), this.creator));
+                ctx.addTaskToCurrentCycle(new BundleStartTask(this.getEntityResourceList(), b.getBundleId(), this.creator));
             } else {
-                this.getResource().setState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(RegisteredResource.State.INSTALLED);
             }
             ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
             this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
     	} catch (Exception e) {
             if ( !canRetry ) {
                 this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-                this.getResource().setState(RegisteredResource.State.IGNORED);
+                this.setFinishedState(RegisteredResource.State.IGNORED);
             }
     	}
     }

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.config;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.service.cm.Configuration;
@@ -31,7 +32,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     private static final String CONFIG_INSTALL_ORDER = "20-";
 
-    public ConfigInstallTask(final RegisteredResource r, final ServiceTracker configAdminServiceTracker) {
+    public ConfigInstallTask(final EntityResourceList r, final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
     }
 
@@ -71,12 +72,12 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 }
                 config.update(getResource().getDictionary());
                 ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
-                this.getResource().setState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(RegisteredResource.State.INSTALLED);
                 this.getLogger().debug("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
                             + " from " + getResource());
             } else {
-                this.getResource().setState(RegisteredResource.State.IGNORED);
+                this.setFinishedState(RegisteredResource.State.IGNORED);
             }
         } catch (Exception e) {
             this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);

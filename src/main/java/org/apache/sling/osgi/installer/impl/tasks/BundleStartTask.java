@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 
 import java.text.DecimalFormat;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerImpl;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
@@ -43,7 +44,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	private final BundleTaskCreator creator;
 
-	public BundleStartTask(final RegisteredResource r, final long bundleId, final BundleTaskCreator btc) {
+	public BundleStartTask(final EntityResourceList r, final long bundleId, final BundleTaskCreator btc) {
 	    super(r);
 		this.bundleId = bundleId;
 		this.creator = btc;
@@ -68,7 +69,7 @@ public class BundleStartTask extends OsgiInstallerTask {
         if (bundleId == 0) {
             this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");
             if ( this.getResource() != null ) {
-                this.getResource().setState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(RegisteredResource.State.INSTALLED);
             }
             return;
         }
@@ -93,7 +94,7 @@ public class BundleStartTask extends OsgiInstallerTask {
         if (b.getState() == Bundle.ACTIVE) {
             this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
             if ( this.getResource() != null ) {
-                this.getResource().setState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(RegisteredResource.State.INSTALLED);
             }
             return;
         }
@@ -101,7 +102,7 @@ public class BundleStartTask extends OsgiInstallerTask {
         try {
             b.start();
             if ( this.getResource() != null ) {
-                this.getResource().setState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(RegisteredResource.State.INSTALLED);
             }
             this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
                     new Object[] {retryCount, bundleId, b.getSymbolicName()});

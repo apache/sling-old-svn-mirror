@@ -45,8 +45,49 @@ public class EntityResourceList implements Serializable {
         return resources.isEmpty();
     }
 
-    public RegisteredResource getFirst() {
-        return resources.first();
+    /**
+     * Return the first resource if it either needs to be installed or uninstalled.
+     */
+    public RegisteredResource getActiveResource() {
+        if ( !resources.isEmpty() ) {
+            final RegisteredResource r = resources.first();
+            if ( r.getState() == RegisteredResource.State.INSTALL
+              || r.getState() == RegisteredResource.State.UNINSTALL ) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Set the finish state for the resource.
+     * If this resource has been uninstalled, check the next in the list if it needs to
+     * be reactivated.
+     */
+    public void setFinishState(final RegisteredResource.State state) {
+        final RegisteredResource toActivate = getActiveResource();
+        if ( toActivate != null
+             && toActivate.getState() == RegisteredResource.State.UNINSTALL
+             && this.resources.size() > 1 ) {
+
+            // to get the second item in the set we have to use an iterator!
+            final Iterator<RegisteredResource> i = this.resources.iterator();
+            i.next(); // skip first
+            final RegisteredResource second = i.next();
+            if ( state == RegisteredResource.State.UNINSTALLED ) {
+                // first resource got uninstalled, go back to second
+                if (second.getState() == RegisteredResource.State.IGNORED || second.getState() == RegisteredResource.State.INSTALLED) {
+                    LOGGER.debug("Reactivating for next cycle: {}", second);
+                    second.setState(RegisteredResource.State.INSTALL);
+                }
+            } else {
+                // don't install as the first did not get uninstalled
+                if ( second.getState() == RegisteredResource.State.INSTALL ) {
+                    second.setState(RegisteredResource.State.IGNORED);
+                }
+            }
+        }
+        toActivate.setState(state);
     }
 
     public Collection<RegisteredResource> getResources() {

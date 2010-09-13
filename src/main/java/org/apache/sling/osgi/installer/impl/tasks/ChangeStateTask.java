@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerContext;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
@@ -31,8 +32,8 @@ public class ChangeStateTask extends OsgiInstallerTask {
 
     private final RegisteredResource.State state;
 
-    public ChangeStateTask(final RegisteredResource r,
-                          final RegisteredResource.State s) {
+    public ChangeStateTask(final EntityResourceList r,
+                           final RegisteredResource.State s) {
         super(r);
         this.state = s;
     }
@@ -41,7 +42,7 @@ public class ChangeStateTask extends OsgiInstallerTask {
      * @see org.apache.sling.osgi.installer.impl.OsgiInstallerTask#execute(org.apache.sling.osgi.installer.impl.OsgiInstallerContext)
      */
     public void execute(final OsgiInstallerContext ctx) {
-        this.getResource().setState(this.state);
+        this.setFinishedState(this.state);
     }
 
     @Override

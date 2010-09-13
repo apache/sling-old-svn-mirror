@@ -18,6 +18,7 @@
  */
 package org.apache.sling.osgi.installer.impl.tasks;
 
+import org.apache.sling.osgi.installer.impl.EntityResourceList;
 import org.apache.sling.osgi.installer.impl.OsgiInstallerTask;
 import org.apache.sling.osgi.installer.impl.RegisteredResource;
 import org.osgi.framework.Bundle;
@@ -115,7 +116,8 @@ public class BundleTaskCreator {
 	/**
      * Create a bundle task - install, update or remove
 	 */
-	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
+	public OsgiInstallerTask createTask(final EntityResourceList resourceList) {
+	    final RegisteredResource toActivate = resourceList.getActiveResource();
 	    final OsgiInstallerTask result;
 
         final String symbolicName = (String)toActivate.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
@@ -126,10 +128,10 @@ public class BundleTaskCreator {
 		    // Remove corresponding bundle if present and if we installed it
 		    if (info != null
 		        && info.version.equals(new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION))) ) {
-		        result = new BundleRemoveTask(toActivate, this);
+		        result = new BundleRemoveTask(resourceList, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
-	            result = new ChangeStateTask(toActivate, RegisteredResource.State.UNINSTALLED);
+	            result = new ChangeStateTask(resourceList, RegisteredResource.State.UNINSTALLED);
 	        }
 
 		// Install
@@ -137,9 +139,9 @@ public class BundleTaskCreator {
 		    // check if we should start the bundle as we installed it in the previous run
 		    if (info == null) {
 			    // bundle is not installed yet: install
-			    result = new BundleInstallTask(toActivate, this);
+			    result = new BundleInstallTask(resourceList, this);
 		    } else if ( toActivate.getAttributes().get(ATTR_START) != null ) {
-	            result = new BundleStartTask(toActivate, info.id, this);
+	            result = new BundleStartTask(resourceList, info.id, this);
 			} else {
 	            boolean doUpdate = false;
 
@@ -159,13 +161,13 @@ public class BundleTaskCreator {
 
                     logger.debug("Scheduling update of {}", toActivate);
                     if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-                        result = new SystemBundleUpdateTask(toActivate, this);
+                        result = new SystemBundleUpdateTask(resourceList, this);
                     } else {
-                        result = new BundleUpdateTask(toActivate, this);
+                        result = new BundleUpdateTask(resourceList, this);
                     }
                 } else {
                     logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
-                    result = new ChangeStateTask(toActivate, RegisteredResource.State.IGNORED);
+                    result = new ChangeStateTask(resourceList, RegisteredResource.State.IGNORED);
                 }
 			}
 		}
