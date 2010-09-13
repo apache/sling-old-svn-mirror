@@ -27,7 +27,15 @@ if (nodes.hasNext()) {
     while (nodes.hasNext()) {
       var child = nodes.next();
 	var name = Packages.org.apache.sling.api.resource.ResourceUtil.getName(child);
-	var path = child.path.substr(1);
+	
+	var path = child.path;
+	
+	var wsSepPos = path.indexOf(":/", 0);
+    if (wsSepPos != -1) {
+        path = path.substring(wsSepPos + 1);
+    }
+	
+	path = path.substr(1);
 	// WARNING: have a look at explorer.js - duplicate code!
 	var id = path.replace(/\//g, "_");
 	id = id.replace(/^_/, ""); // remove trailing _

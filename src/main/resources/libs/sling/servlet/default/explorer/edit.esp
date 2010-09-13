@@ -21,6 +21,12 @@
  
 <%
     var path = resource.path;
+    
+    var wsSepPos = path.indexOf(":/", 0);
+    if (wsSepPos != -1) {
+        path = path.substring(wsSepPos + 1);
+    }
+    
     var readonly = false; 
 	var dateFormatter = new Packages.java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss");				
 
@@ -48,7 +54,7 @@
 	<div class="clear"></div>
 </div>
   
-<p><a href="<%= request.getContextPath() %><%= path %>.explorer.html"><%=path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
+<p><a href="<%= request.getContextPath() %><%= path %>.explorer.html"><%=resource.path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
     <%
     try {
         if ( session ) { // currentNode && 
