@@ -330,26 +330,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             if (authData != null) {
                 if (tokenStore.isValid(authData)) {
                     info = createAuthInfo(authData);
-                } else if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                    // signal to AJAX the request is forbidden
-                    try {
-                        response.sendError(
-                            HttpServletResponse.SC_REQUEST_TIMEOUT,
-                            "Session Timeout, please login");
-                        response.flushBuffer();
-                    } catch (IOException ioe) {
-                        // TODO: log !!
-                    }
-                    return AuthenticationInfo.DOING_AUTH;
                 } else {
                     if (this.loginAfterExpire) {
-                        // signal the requestCredentials method a previous login
-                        // failure
+                      // signal the requestCredentials method a previous login failure
                         request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
                         info = AuthenticationInfo.FAIL_AUTH;
                     }
-                    // clear the cookie, its invalid and we should get rid of it
-                    // so that the invalid cookie
+                    // clear the cookie, its invalid and we should get rid of it so that the invalid cookie
                     // isn't present on the authN operation.
                     authStorage.clear(request, response);
                 }
@@ -904,15 +891,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * {@link CookieAuthData} in an HTTP Cookie.
      */
     private static class CookieStorage implements AuthenticationStorage {
-
-        /**
-         * The Set-Cookie header used to manage the login cookie.
-         *
-         * @see CookieStorage#setCookie(HttpServletRequest, HttpServletResponse,
-         *      String, String, int, String)
-         */
-        private static final String HEADER_SET_COOKIE = "Set-Cookie";
-
         private final String cookieName;
         private final String domainCookieName;
         private final String defaultCookieDomain;
@@ -934,11 +912,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
                         // reverse the base64 encoding
                         try {
-                            String result = new String(
-                                Base64.decodeBase64(value), "UTF-8");
-                            if (result.length() > 0) {
-                                return result;
-                            }
+                            return new String(Base64.decodeBase64(value),
+                                "UTF-8");
                         } catch (UnsupportedEncodingException e1) {
                             throw new RuntimeException(e1);
                         }
@@ -1008,37 +983,14 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                     ? "/"
                     : ctxPath;
 
-            /*
-             * The Servlet Spec 2.5 does not allow us to set the commonly used
-             * HttpOnly attribute on cookies (Servlet API 3.0 does) so we create
-             * the Set-Cookie header manually. See
-             * http://www.owasp.org/index.php/HttpOnly for information on what
-             * the HttpOnly attribute is used for.
-             */
-
-            final StringBuilder header = new StringBuilder();
-
-            // default setup with name, value, cookie path and HttpOnly
-            header.append(name).append('=').append(value);
-            header.append(";Path=").append(cookiePath);
-            header.append(";HttpOnly"); // don't allow JS access
-
-            // set the cookie domain if so configured
+            Cookie cookie = new Cookie(name, value);
             if (domain != null) {
-                header.append(";Domain=").append(domain);
+                cookie.setDomain(domain);
             }
-
-            // Only set the Max-Age attribute to remove the cookie
-            if (age == 0) {
-                header.append(";Max-Age=").append(age);
-            }
-
-            // ensure the cookie is secured if this is an https request
-            if (request.isSecure()) {
-                header.append(";Secure");
-            }
-
-            response.addHeader(HEADER_SET_COOKIE, header.toString());
+            cookie.setMaxAge(age);
+            cookie.setPath(cookiePath);
+            cookie.setSecure(request.isSecure());
+            response.addCookie(cookie);
         }
     }
 
