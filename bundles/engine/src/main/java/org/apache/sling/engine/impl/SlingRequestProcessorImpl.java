@@ -193,11 +193,17 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
         } catch (UnavailableException ue) {
 
+            // exception is thrown before the SlingHttpServletRequest/Response
+            // is properly set up due to missing dependencies. In this case
+            // we must not use the Sling error handling infrastructure but
+            // just return a 503 status response handled by the servlet
+            // container environment
+
             final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
             final String errorMessage = ue.getMessage()
                 + " service missing, cannot service requests";
             log.error("{} , sending status {}", errorMessage, status);
-            handleError(status, errorMessage, request, response);
+            servletResponse.sendError(status, errorMessage);
 
         } catch (Throwable t) {
 
