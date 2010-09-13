@@ -138,10 +138,10 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
-            this.mergeNewResources();
+            final boolean tasksToDo = this.hasOpenTasks();
             final SortedSet<OsgiInstallerTask> tasks = this.computeTasks();
 
-            if (tasks.isEmpty() && !retriesScheduled) {
+            if (tasks.isEmpty() && !tasksToDo && !retriesScheduled) {
                 // No tasks to execute - wait until new resources are
                 // registered
                 this.cleanupInstallableResources();
@@ -390,6 +390,22 @@ public class OsgiInstallerImpl
                 this.persistentList.save();
             }
         }
+    }
+
+    private boolean hasOpenTasks() {
+        // check if there is something to do
+        for(final String entityId : this.persistentList.getEntityIds()) {
+            final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+            if ( !group.isEmpty() ) {
+                final RegisteredResource first = group.getFirst();
+
+                if ( first != null &&
+                     (first.getState() == RegisteredResource.State.UNINSTALL || first.getState() == RegisteredResource.State.INSTALL) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void printResources(String hint) {

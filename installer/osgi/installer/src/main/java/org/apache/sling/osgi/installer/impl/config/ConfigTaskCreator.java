@@ -59,9 +59,9 @@ public class ConfigTaskCreator {
 	 */
 	public OsgiInstallerTask createTask(final RegisteredResource toActivate) {
 	    // if there is no config admin, just return
-	//    if ( this.configAdminServiceTracker.getService() == null ) {
-    //        return null;
-	//    }
+	    if ( this.configAdminServiceTracker.getService() == null ) {
+            return null;
+	    }
 	    final OsgiInstallerTask result;
 		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
 		    result = new ConfigRemoveTask(toActivate, this.configAdminServiceTracker);
