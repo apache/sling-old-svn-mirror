@@ -379,9 +379,8 @@ public class SlingAuthenticator implements Authenticator,
             } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
 
                 log.debug("handleSecurity: Credentials present but not valid, request authentication again");
-                request.setAttribute(LOGIN_RESOURCE,
-                    AbstractAuthenticationHandler.getLoginResource(request,
-                        request.getRequestURI()));
+                AbstractAuthenticationHandler.setLoginResourceAttribute(
+                    request, request.getRequestURI());
                 doLogin(request, response);
                 return false;
 
@@ -1042,12 +1041,21 @@ public class SlingAuthenticator implements Authenticator,
      */
     private String getHandlerSelectionPath(HttpServletRequest request) {
         final Object loginPathO = request.getAttribute(Authenticator.LOGIN_RESOURCE);
-        String path = (loginPathO instanceof String)
-                ? (String) loginPathO
-                : request.getPathInfo();
+        String path;
+        if (loginPathO instanceof String) {
+            path = (String) loginPathO;
+            final String ctxPath = request.getContextPath();
+            if (ctxPath !=  null && path.startsWith(ctxPath)) {
+                path = path.substring(ctxPath.length());
+            }
+        } else {
+            path = request.getPathInfo();
+        }
+
         if (path == null || path.length() == 0) {
             path = "/";
         }
+
         return path;
     }
 
@@ -1071,18 +1079,14 @@ public class SlingAuthenticator implements Authenticator,
             return;
         }
 
-        // check resource attribute/parameter
-        String target = (String) request.getAttribute(LOGIN_RESOURCE);
-        if (target == null || target.length() == 0) {
-            target = request.getParameter(LOGIN_RESOURCE);
-            if (target == null || target.length() == 0) {
-                target = "/";
-            }
-        }
+        // find the redirect target from the resource attribute or parameter
+        // falling back to the reuest context path (or /) if not set
+        final String target = AbstractAuthenticationHandler.setLoginResourceAttribute(
+            request, request.getContextPath());
 
         // redirect to there
         try {
-            response.sendRedirect(request.getContextPath() + target);
+            response.sendRedirect(target);
         } catch (IOException e) {
             log.error("Failed to redirect to the page: " + target, e);
         }
