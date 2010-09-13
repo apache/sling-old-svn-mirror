@@ -96,54 +96,42 @@ public class SelectorAuthenticationHandler extends
 
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        String resource = getLoginResource(request, null);
-        if (resource == null) {
-            resource = request.getContextPath() + request.getPathInfo();
-            request.setAttribute(Authenticator.LOGIN_RESOURCE, resource);
-        }
 
         // prepare the login form redirection target
         final StringBuilder targetBuilder = new StringBuilder();
         targetBuilder.append(request.getContextPath());
         targetBuilder.append(loginForm);
 
-        // append originally requested resource (for redirect after login)
-        char parSep = '?';
-
-        if (resource != null) {
-            targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
-            targetBuilder.append("=").append(
-                URLEncoder.encode(resource, "UTF-8"));
-            parSep = '&';
-        }
+        targetBuilder.append('?').append(Authenticator.LOGIN_RESOURCE);
+        targetBuilder.append("=").append(
+            URLEncoder.encode(
+                setLoginResourceAttribute(request, request.getRequestURI()),
+                "UTF-8"));
 
         // append indication of previous login failure
         if (request.getAttribute(PAR_J_REASON) != null) {
             final Object jReason = request.getAttribute(PAR_J_REASON);
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("rawtypes")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append(parSep).append(PAR_J_REASON);
+            targetBuilder.append('&').append(PAR_J_REASON);
             targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
-            parSep = '&';
         } else if (request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON) != null) {
             final Object jReason = request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON);
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("rawtypes")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append(parSep).append(PAR_J_REASON);
+            targetBuilder.append('&').append(PAR_J_REASON);
             targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
-            parSep = '&';
         }
 
         // append selected authentication type of previous request
         if (request.getParameter(PAR_SELECTED_AUTH_TYPE) != null) {
-            targetBuilder.append(parSep).append(PAR_SELECTED_AUTH_TYPE);
+            targetBuilder.append('&').append(PAR_SELECTED_AUTH_TYPE);
             targetBuilder.append("=").append(
                 request.getParameter(PAR_SELECTED_AUTH_TYPE));
-            parSep = '&';
         }
 
         // finally redirect to the login form
