@@ -233,47 +233,47 @@
     if (session) {
         try {       
           session.checkPermission(path, "add_node");
-            %>   
+    %>
 <div >
   <h3>add new sub-node</h3>
-  <form action="<%=request.getContextPath()%><%=path%>/*" method="post">
-  <div class="property_element">
-  <table class="propoerty_table">
-  <thead class="smallLabel">
-  <tr>
-  <td>Name hint</td>
-  <td>sling:resourceType</td>
-  <td colspan="2">jcr:primaryType</td>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td>
-    <input name=":nameHint" type="text" class="text">
-    </td><td>
-    <input name="sling:resourceType" type="text" class="text">
-    </td>
-    <td>
-    <% 
-       var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
-       if ( primaryNodeTypes.hasNext() ) { %>
-	    <select name="jcr:primaryType" id="jcr:primaryType">
-	    	<% while (primaryNodeTypes.hasNext()) {
-	    		var primaryNodeType = primaryNodeTypes.nextNodeType();
-	    		%>
-	    		<option><%=primaryNodeType.getName()%></option>
-	    	<% } %>
-	    </select>
-    <% } %>
-    </td>
-    <td>
-    <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%=path%>/*.explorer.html">
-    <input type="submit" class="button" value="new sub-node">
-    </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
+  <form id="new_sub_node_form" method="post">
+	  <div class="property_element">
+		  <table class="propoerty_table">
+			  <thead class="smallLabel">
+				  <tr>
+					  <td>Name hint</td>
+					  <td>sling:resourceType</td>
+					  <td colspan="2">jcr:primaryType</td>
+				  </tr>
+			  </thead>
+			  <tbody>
+				  <tr>
+					<td>
+					<input name=":nameHint" type="text" class="text">
+					</td><td>
+					<input name="sling:resourceType" id="new_node_sling_resource_type" type="text" class="text">
+					</td>
+					<td>
+					<% 
+					   var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
+					   if ( primaryNodeTypes.hasNext() ) { %>
+						<select name="jcr:primaryType" id="jcr:primaryType">
+							<% while (primaryNodeTypes.hasNext()) {
+								var primaryNodeType = primaryNodeTypes.nextNodeType();
+								%>
+								<option><%=primaryNodeType.getName()%></option>
+							<% } %>
+						</select>
+					<% } %>
+					</td>
+					<td>
+
+					<input type="submit" class="button" value="new sub-node" onclick="add_new_subnode(); return false;">
+					</td>
+				  </tr>
+			  </tbody>
+		  </table>
+	  </div>
   </form>
 </div>
 
@@ -334,6 +334,36 @@
 		decorate_datepicker();
 	});
 	
+	function add_new_subnode()
+	{
+		$.ajax({
+			url: '<%=path%>/*',
+			type: 'POST',
+			data: $("form[id='new_sub_node_form']" ).serialize(),
+			success: function( data, textStatus, xmlHttpRequest ) 
+					{
+						var subnode_location = xmlHttpRequest.getResponseHeader('Location');
+						if ( subnode_location )
+						{
+							load_branch( 
+								'<%=path%>', 
+								function() { skip_to( subnode_location, $("#new_node_sling_resource_type").val() );},
+								true
+							);
+						}
+						else
+						{
+							show_error( xmlHttpRequest.responseText );
+						}
+					},
+			error: function( xmlHttpRequest, textStatus, errorThrown ) 
+					{
+						show_error( xmlHttpRequest.responseText );
+					}
+		});
+		return false;
+	};
+	
 	function create_edit_field_for_type(field_name, field_type)
 	{
 		var prop_val_input = '';
@@ -370,25 +400,39 @@
 	// submit property
 	function update_property( id )
 	{
-		$.post('<%= path %>', 
-			$("form[id='properties_form_"+id+"']" ).serialize(), 
-			function( data ) {
-				// todo: animate "Saved"
-				reload_properties();
-		} );
+		$.ajax({
+			url: '<%= path %>',
+			type: 'POST',
+			data: $("form[id='properties_form_"+id+"']" ).serialize(),
+			success: function( data, textStatus, xmlHttpRequest ) 
+					{
+						reload_properties();
+					},
+			error: function( xmlHttpRequest, textStatus, errorThrown ) 
+					{
+						show_error( xmlHttpRequest.responseText );
+					}
+		});
 	}
 	
 	function delete_property( id )
 	{
 		var params = {};
 		params[id + "@Delete"] = "delete";
-		$.post('<%= path %>',
-			params, 
-			function( data ) {
-				// todo: success? if yes...
-				$("[id=property_element_" + id+"]").remove();
-				// todo: animate "Deleted"
-		} );
+		$.ajax({
+			url: '<%= path %>',
+			type: 'POST',
+			data: params,
+			success: function( data, textStatus, xmlHttpRequest ) 
+					{
+						$("[id=property_element_" + id+"]").remove();
+						// todo: animate "Deleted"
+					},
+			error: function( xmlHttpRequest, textStatus, errorThrown ) 
+					{
+						show_error( xmlHttpRequest.responseText );
+					}
+		});
 	}
 			
 	function decorate_datepicker() {
@@ -397,6 +441,7 @@
 		buttonImageOnly: true,
 		buttonImage: '/libs/sling/explorer/img/calendar.gif',
 		buttonText: 'Calendar',
+		// dateFormat: 'yy-mm-dd hh:ii',
 		dateFormat: 'dd.mm.yy hh:ii:00',
 		changeYear: true,
 		changeMonth: true,
@@ -428,7 +473,8 @@
 
 <% function create_input_for_type( id, type, val, editable, omitName ) { 
 	switch ( type ) { 
-		case Packages.javax.jcr.PropertyType.DATE : %>
+		case Packages.javax.jcr.PropertyType.DATE : 			
+			%>
 			<input  class="prop_value text datepicker<% if(!editable) { %> protected<%}%>" <% if (!omitName) { %> name="<%= id %>" <% } %> id="<%= id %>" value="<%= dateFormatter.format( val.getDate().getTime() ) %>" />
 		<%
 		break; 

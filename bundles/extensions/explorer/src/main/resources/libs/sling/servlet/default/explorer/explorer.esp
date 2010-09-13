@@ -54,6 +54,10 @@ catch (ex) {  }
 %>
 
 <body>
+	<div id="error_dialog" title="Error output" style="display:none;">
+		<p>Some text that you want to display to the user.</p>
+	</div>
+
 	<div id="login-dialog" style="display:none;">		
 		<form accept-charset="UTF-8" enctype="multipart/form-data" action="#" method="post" id="login-form">      		
 			<fieldset>
@@ -168,6 +172,14 @@ Session user ID: <span id="sessionuserid"></span>
 		<script type="text/javascript">
 		// <![CDATA[
 			$( function() {
+				jQuery("#error_dialog").dialog({      
+					bgiframe: true, 
+					autoOpen: false, 
+					height: 400,
+					width: 400,
+					modal: true
+				});
+
 				// window resizing -> adjust sidebar and content height
 				$(window).resize( function() {
 					adjust_height();

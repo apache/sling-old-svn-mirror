@@ -38,8 +38,7 @@ init_load = function(path, resourceType) {
 
 	// load root node
 
-	$.get("/.explorer.item.html", function(data) {
-	//$.get(path+".explorer.item.html", function(data) {
+	$.get("/.explorer.item.html", function( data, textStatus, XMLHttpRequest ) {
 		$('#expl_sidebar').append(data);
 	});
 
@@ -77,42 +76,25 @@ explorer_toggle = function( path, resourceType ) {
   }
 }
 
-/** NOT IN USE: cached toggling - subtree is cached **/
-explorer_toggle2 = function( path, resourceType ) {
-	var id = path_2_id( path ); // replacing / with _
-	var is_open = $('p#' + id + '>a').hasClass('open');
-
-	load_props("/" + path, resourceType);
-
-	var subtree = $('ul', $('p#' + id).parent());
-	if ( is_open ) {
-		if ( subtree.length != 0 ) // should always resolve to true...
-		{
-			subtree.hide();
-		}
-		$('p#' + id + ">a").removeClass('open'); // closed
-		$('p#' + id).parent().removeClass('branch'); // remove css class
-	} else {
-		if (subtree.length === 0) {
-			load_branch(path);
-		} else {
-			$('p#' + id).parent().addClass('branch'); // add css class
-			$('p#' + id + ">a").addClass('open'); // opened
-			subtree.show();
-		}
-	}
-}
-
 /** load branch/subtree **/
-load_branch = function( path, callback ) {
+load_branch = function( path, callback, reload ) {
 	if (path != '') {
 		var id = path_2_id( path );
 		$('p#' + id + ">a").removeAttr('href'); // remove onclick
 
 		// fetch children
-		$.get("/" + path + ".explorer.item.html", function(data) {
-			if (data.length > 0) {
+		var uri = path + ".explorer.item.html";
+		if (uri[0] != '/')
+		{
+			uri = '/' + uri;
+		};
+		$.get( uri, function( data, textStatus, XMLHttpRequest ) {
+			if ( data.length > 0 ) {
 				$('p#' + id).parent().addClass('branch'); // add css class
+				if ( reload )
+				{
+					$('ul', $('p#' + id).parent()).remove();
+				}
 				$('p#' + id).after(data); // add data
 				$('p#' + id + ">a").attr('href', "#"); // reactivate onclick
 				$('p#' + id + ">a").addClass('open'); // open
@@ -138,20 +120,22 @@ load_props = function( path, resourceType ) {
 		$('p', $('#expl_sidebar')).removeClass('selected'); // deselect all
 		$('p[id="' + id + '"]').addClass('selected'); // select the current node
 	}
-	$.get(path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':','_') + '.') ) + "html", function(data) {
-		if ( data.length > 0 ) {
-			$('#expl_content').html( data );
-			currentPath = path;
-			currentResourceType = resourceType;
-		}
+	$.get(path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':','_') + '.') ) + "html", 
+		function( data, textStatus, XMLHttpRequest ) {
+			if ( data.length > 0 ) {
+				$('#expl_content').html( data );
+				currentPath = path;
+				currentResourceType = resourceType;
+			}
 	});
+	// window.location.replace( path );
 }
 
 reload_properties = function() {
 	load_props(currentPath, currentResourceType);
 }
 
-add_prop = function(node) {
+add_prop = function( node ) {
 	var name = $('#expl_add_prop_name').attr('value');
 	var type = $('#expl_add_prop_type').val();
 	if ( $('#expl_add_prop_multi').is(':checked') )
@@ -163,22 +147,37 @@ add_prop = function(node) {
 	var params = {};
 	params[name + '@TypeHint'] = type;
 	params[name] = value;
-	$.post(node, params, function(data) {
-		reload_properties();
-		// window.location = node + '.explorer.html';
+	$.ajax({
+		url: node,
+		type: 'POST',
+		data: params,
+		success: function( data, textStatus, xmlHttpRequest ) {
+			reload_properties();
+		},
+		error: function( xmlHttpRequest, textStatus, errorThrown ) {
+			show_error( xmlHttpRequest.responseText );
+		}
 	});
 }
 
-search = function(language, expression, page) {
+search = function( language, expression, page ) {
 	// search and load search results
-	$.get("/.explorer.search.html", { "language" : language, "expression" : expression, "page" : page }, function(data) {
-		$('#sql_search_result').html(data);
-		adjust_height();
+	$.ajax({
+		url: "/.explorer.search.html",
+		type: 'GET',
+		data: { "language" : language, "expression" : expression, "page" : page },
+		success: function( data, textStatus, xmlHttpRequest ) {
+			$('#sql_search_result').html( data );
+			adjust_height();
+		},
+		error: function( xmlHttpRequest, textStatus, errorThrown ) {
+			show_error( xmlHttpRequest.responseText );
+		}
 	});
 }
 
-skip_to = function(path, resourceType) {
-	expand_tree(path, function() { load_props(path, resourceType); } );
+skip_to = function( path, resourceType ) {
+	expand_tree( path, function() { load_props(path, resourceType); } );
 }
 
 expand_tree = function( path, callback ) {
@@ -232,4 +231,9 @@ update_credentials = function() {
 	  document.getElementById("menu_login").style.display="block";
 	  document.getElementById("menu_logout").style.display="none";
 	}
+}
+
+show_error = function(msg) {
+	$('#error_dialog').html( msg );
+	$('#error_dialog').dialog('open');
 }
