@@ -891,6 +891,15 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * {@link CookieAuthData} in an HTTP Cookie.
      */
     private static class CookieStorage implements AuthenticationStorage {
+
+        /**
+         * The Set-Cookie header used to manage the login cookie.
+         *
+         * @see CookieStorage#setCookie(HttpServletRequest, HttpServletResponse,
+         *      String, String, int, String)
+         */
+        private static final String HEADER_SET_COOKIE = "Set-Cookie";
+
         private final String cookieName;
         private final String domainCookieName;
         private final String defaultCookieDomain;
@@ -907,15 +916,15 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 for (Cookie cookie : cookies) {
                     if (this.cookieName.equals(cookie.getName())) {
                         // found the cookie, so try to extract the credentials
-                        // from it
+                        // from it and reverse the base64 encoding
                         String value = cookie.getValue();
-
-                        // reverse the base64 encoding
-                        try {
-                            return new String(Base64.decodeBase64(value),
-                                "UTF-8");
-                        } catch (UnsupportedEncodingException e1) {
-                            throw new RuntimeException(e1);
+                        if (value.length() > 0) {
+                            try {
+                                return new String(Base64.decodeBase64(value),
+                                    "UTF-8");
+                            } catch (UnsupportedEncodingException e1) {
+                                throw new RuntimeException(e1);
+                            }
                         }
                     }
                 }
@@ -983,14 +992,37 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                     ? "/"
                     : ctxPath;
 
-            Cookie cookie = new Cookie(name, value);
+            /*
+             * The Servlet Spec 2.5 does not allow us to set the commonly used
+             * HttpOnly attribute on cookies (Servlet API 3.0 does) so we create
+             * the Set-Cookie header manually. See
+             * http://www.owasp.org/index.php/HttpOnly for information on what
+             * the HttpOnly attribute is used for.
+             */
+
+            final StringBuilder header = new StringBuilder();
+
+            // default setup with name, value, cookie path and HttpOnly
+            header.append(name).append('=').append(value);
+            header.append(";Path=").append(cookiePath);
+            header.append(";HttpOnly"); // don't allow JS access
+
+            // set the cookie domain if so configured
             if (domain != null) {
-                cookie.setDomain(domain);
+                header.append(";Domain=").append(domain);
             }
-            cookie.setMaxAge(age);
-            cookie.setPath(cookiePath);
-            cookie.setSecure(request.isSecure());
-            response.addCookie(cookie);
+
+            // Only set the Max-Age attribute to remove the cookie
+            if (age == 0) {
+                header.append(";Max-Age=").append(age);
+            }
+
+            // ensure the cookie is secured if this is an https request
+            if (request.isSecure()) {
+                header.append(";Secure");
+            }
+
+            response.addHeader(HEADER_SET_COOKIE, header.toString());
         }
     }
 
