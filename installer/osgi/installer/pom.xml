@@ -82,26 +82,29 @@
 			</plugin>
 			<plugin>
 				<!-- Create dummy test bundles -->
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
+				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
 						<id>testbundle-1.0</id>
 						<phase>compile</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<configuration>
-							<classifier>testbundle-1.0</classifier>
-							<archive>
-								<manifestEntries>
-									<Manifest-Version>2</Manifest-Version>
-									<Bundle-Name>OSGi installer test bundle</Bundle-Name>
-									<Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
-									<Bundle-Version>1.0.4</Bundle-Version>
-								</manifestEntries>
-							</archive>
-						</configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks name="Create a test bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testbundle-1.0.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi installer test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testbundle"/>
+                                        <attribute name="Bundle-Version" value="1.0.4"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
+                        </configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -125,7 +128,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.4</version>
+            <version>1.2.8</version>
             <scope>provided</scope>
         </dependency>
       <!-- Basic dependencies for Unit Tests -->
