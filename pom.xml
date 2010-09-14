@@ -133,224 +133,249 @@
                     Create several simple test bundles with different version
                     numbers, to test install/upgrade operations. 
                  -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>testbundle-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>testbundle-1.0</classifier>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
-                                    <Bundle-Version>1.0</Bundle-Version>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create testbundle 1.0">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testbundle-1.0.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testbundle"/>
+                                        <attribute name="Bundle-Version" value="1.0"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>testbundle-1.1</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>testbundle-1.1</classifier>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
-                                    <Bundle-Version>1.1</Bundle-Version>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create testbundle 1.1">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testbundle-1.1.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testbundle"/>
+                                        <attribute name="Bundle-Version" value="1.1"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>testbundle-1.2</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>testbundle-1.2</classifier>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-testbundle</Bundle-SymbolicName>
-                                    <Bundle-Version>1.2</Bundle-Version>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create testbundle 1.2">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testbundle-1.2.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testbundle"/>
+                                        <attribute name="Bundle-Version" value="1.2"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>testA-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>testA-1.0</classifier>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-testA</Bundle-SymbolicName>
-                                    <Bundle-Version>1.0</Bundle-Version>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create testA bundle 1.0">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testA-1.0.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testA"/>
+                                        <attribute name="Bundle-Version" value="1.0"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>testB-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>testB-1.0</classifier>
-                            <includes>
-                                <include>**/a/**</include>
-                                <include>META-INF/**</include>
-                            </includes>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-testB</Bundle-SymbolicName>
-                                    <Bundle-Version>1.0</Bundle-Version>
-                                    <Export-Package>org.apache.sling.osgi.installer.it.a;version="1.0"</Export-Package>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create testB bundle 1.0">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-testB-1.0.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="**/a/**"/>
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-testB"/>
+                                        <attribute name="Export-Package" value='org.apache.sling.osgi.installer.it.a;version="1.0"'/>
+                                        <attribute name="Bundle-Version" value="1.0"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>needsB-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>needsB</classifier>
-                            <includes>
-                                <include>**/b/**</include>
-                                <include>META-INF/**</include>
-                            </includes>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-needsB</Bundle-SymbolicName>
-                                    <Bundle-Version>1.0</Bundle-Version>
-                                    <Import-Package>org.apache.sling.osgi.installer.it.a;version="1.0"</Import-Package>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create needsB bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-needsB.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="**/b/**"/>
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-needsB"/>
+                                        <attribute name="Bundle-Version" value="1.0"/>
+                                        <attribute name="Import-Package" value='org.apache.sling.osgi.installer.it.a;version="1.0"'/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>snapshota-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>snap</classifier>
-                            <includes>
-                                <include>**/b/**</include>
-                                <include>META-INF/**</include>
-                            </includes>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
-                                    <!-- 
-                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
-                                        In real bundles, bnd and similar tools to the conversion.
-                                     -->
-                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
-                                    <SNAPSHOT>A</SNAPSHOT>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create snap bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-snap.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="**/b/**"/>
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-snapshot-test"/>
+                                          <!-- 
+                                              Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                              In real bundles, bnd and similar tools to the conversion.
+                                           -->
+                                        <attribute name="Bundle-Version" value="1.0.0.SNAPSHOT"/>
+                                        <attribute name="SNAPSHOT" value="A"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>snapshotb-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>snapb</classifier>
-                            <includes>
-                                <include>**/b/**</include>
-                                <include>META-INF/**</include>
-                            </includes>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
-                                    <!-- 
-                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
-                                        In real bundles, bnd and similar tools to the conversion.
-                                     -->
-                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
-                                    <SNAPSHOT>B</SNAPSHOT>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create snapb bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-snapb.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="**/b/**"/>
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-snapshot-test"/>
+                                          <!-- 
+                                              Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                              In real bundles, bnd and similar tools to the conversion.
+                                           -->
+                                        <attribute name="Bundle-Version" value="1.0.0.SNAPSHOT"/>
+                                        <attribute name="SNAPSHOT" value="B"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>snapshotc-1.0</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>snapc</classifier>
-                            <includes>
-                                <include>**/b/**</include>
-                                <include>META-INF/**</include>
-                            </includes>
-                            <archive>
-                                <manifestEntries>
-                                    <Manifest-Version>2</Manifest-Version>
-                                    <Bundle-Name>OSGi controller test bundle</Bundle-Name>
-                                    <Bundle-SymbolicName>osgi-installer-snapshot-test</Bundle-SymbolicName>
-                                    <!-- 
-                                        Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
-                                        In real bundles, bnd and similar tools to the conversion.
-                                     -->
-                                    <Bundle-Version>1.0.0.SNAPSHOT</Bundle-Version>
-                                    <SNAPSHOT>C</SNAPSHOT>
-                                </manifestEntries>
-                            </archive>
+                            <tasks name="Create snapc bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-snapc.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="**/b/**"/>
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-snapshot-test"/>
+                                          <!-- 
+                                              Need to use OSGi-compliant version, so .SNAPSHOT not -SNAPSHOT.
+                                              In real bundles, bnd and similar tools to the conversion.
+                                           -->
+                                        <attribute name="Bundle-Version" value="1.0.0.SNAPSHOT"/>
+                                        <attribute name="SNAPSHOT" value="C"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
                     <execution>
                         <id>missing-headers</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <classifier>notabundle</classifier>
+                            <tasks name="Create snapc bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-notabundle.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**"/>
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2"/>
+                                    </manifest>
+                                </jar>
+                            </tasks>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
                     <execution>
+                        <id>create-test-bundles</id>
                         <phase>test-compile</phase>
                         <configuration>
                             <tasks>
