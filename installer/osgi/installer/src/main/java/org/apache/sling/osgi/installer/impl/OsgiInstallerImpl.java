@@ -143,31 +143,34 @@ public class OsgiInstallerImpl
             final SortedSet<OsgiInstallerTask> tasks = this.computeTasks();
 
             if (tasks.isEmpty() && !tasksToDo && !retriesScheduled) {
-                // No tasks to execute - wait until new resources are
-                // registered
                 this.cleanupInstallableResources();
-                logger.debug("No tasks to process, going idle");
 
                 synchronized (newResources) {
-                    try {
-                        newResources.wait();
-                    } catch (InterruptedException ignore) {}
+                    // before we go to sleep, check if new resources arrived in the meantime
+                    if ( !this.hasNewResources()) {
+                        // No tasks to execute - wait until new resources are
+                        // registered
+                        logger.debug("No tasks to process, going idle");
+                        try {
+                            newResources.wait();
+                        } catch (InterruptedException ignore) {}
+                        logger.debug("Notified of new resources, back to work");
+                    }
                 }
-                logger.debug("Notified of new resources, back to work");
-                continue;
+            } else {
+
+                retriesScheduled = false;
+                // execute tasks
+                this.executeTasks(tasks);
+                // clean up and save
+                this.cleanupInstallableResources();
+
+                // Some integration tests depend on this delay, make sure to
+                // rerun/adapt them if changing this value
+                try {
+                    Thread.sleep(250);
+                } catch (final InterruptedException ignore) {}
             }
-
-            retriesScheduled = false;
-            // execute tasks
-            this.executeTasks(tasks);
-            // clean up and save
-            this.cleanupInstallableResources();
-
-            // Some integration tests depend on this delay, make sure to
-            // rerun/adapt them if changing this value
-            try {
-                Thread.sleep(250);
-            } catch (final InterruptedException ignore) {}
         }
     }
 
@@ -283,73 +286,82 @@ public class OsgiInstallerImpl
     }
 
     /**
+     * Checks if new resources are available.
+     * This method should only be invoked from within a synchronized (newResources) block!
+     */
+    private boolean hasNewResources() {
+        return !this.newResources.isEmpty() || !this.newResourcesSchemes.isEmpty() || !this.urlsToRemove.isEmpty();
+    }
+
+    /**
      * This is the heart of the installer - it processes new resources and merges them
      * with existing resources.
      * The second part consists of detecting the resources to be processsed.
      */
     private void mergeNewResources() {
         synchronized (newResources) {
-            final boolean changed = !this.newResources.isEmpty() || !this.newResourcesSchemes.isEmpty() || !this.urlsToRemove.isEmpty();
-            // check for new resource providers (schemes)
-            // if we have new providers we have to sync them with existing resources
-            for(final Map.Entry<String, List<RegisteredResource>> entry : this.newResourcesSchemes.entrySet()) {
-                logger.debug("Processing set of new resources with scheme {}", entry.getKey());
-
-                // set all previously found resources that are not available anymore to uninstall
-                // if they have been installed - remove resources with a different state
-                for(final String entityId : this.persistentList.getEntityIds()) {
-                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-
-                    final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
-                    boolean first = true;
-                    for(final RegisteredResource r : group.getResources()) {
-                        if ( r.getScheme().equals(entry.getKey()) ) {
-                            logger.debug("Checking {}", r);
-                            // search if we have a new entry with the same url
-                            boolean found = false;
-                            final Iterator<RegisteredResource> m = entry.getValue().iterator();
-                            while ( !found && m.hasNext() ) {
-                                final RegisteredResource testResource = m.next();
-                                found = testResource.getURL().equals(r.getURL());
-                            }
-                            if ( !found) {
-                                logger.debug("Resource {} seems to be removed.", r);
-                                if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                                           ||  r.getState() == RegisteredResource.State.INSTALL)
-                                           ||  r.getState() == RegisteredResource.State.IGNORED) {
-                                     r.setState(RegisteredResource.State.UNINSTALL);
-                                } else {
-                                    toRemove.add(r);
-                                }
-                            }
-                        }
-                        first = false;
-                    }
-                    for(final RegisteredResource rr : toRemove) {
-                        this.persistentList.remove(rr);
-                    }
-                }
-                logger.debug("Added set of {} new resources with scheme {} : {}",
-                        new Object[] {entry.getValue().size(), entry.getKey(), entry.getValue()});
-                newResources.addAll(entry.getValue());
-            }
-
-            newResourcesSchemes.clear();
-
-            for(RegisteredResource r : newResources) {
-                this.persistentList.addOrUpdate(r);
-            }
-            newResources.clear();
-
-            // Mark resources for removal according to urlsToRemove
-            if (!urlsToRemove.isEmpty()) {
-                for(final String url : urlsToRemove ) {
-                    this.persistentList.remove(url);
-                }
-            }
-            urlsToRemove.clear();
+            final boolean changed = this.hasNewResources();
 
             if ( changed ) {
+                // check for new resource providers (schemes)
+                // if we have new providers we have to sync them with existing resources
+                for(final Map.Entry<String, List<RegisteredResource>> entry : this.newResourcesSchemes.entrySet()) {
+                    logger.debug("Processing set of new resources with scheme {}", entry.getKey());
+
+                    // set all previously found resources that are not available anymore to uninstall
+                    // if they have been installed - remove resources with a different state
+                    for(final String entityId : this.persistentList.getEntityIds()) {
+                        final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+
+                        final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
+                        boolean first = true;
+                        for(final RegisteredResource r : group.getResources()) {
+                            if ( r.getScheme().equals(entry.getKey()) ) {
+                                logger.debug("Checking {}", r);
+                                // search if we have a new entry with the same url
+                                boolean found = false;
+                                final Iterator<RegisteredResource> m = entry.getValue().iterator();
+                                while ( !found && m.hasNext() ) {
+                                    final RegisteredResource testResource = m.next();
+                                    found = testResource.getURL().equals(r.getURL());
+                                }
+                                if ( !found) {
+                                    logger.debug("Resource {} seems to be removed.", r);
+                                    if ( first && (r.getState() == RegisteredResource.State.INSTALLED
+                                               ||  r.getState() == RegisteredResource.State.INSTALL)
+                                               ||  r.getState() == RegisteredResource.State.IGNORED) {
+                                         r.setState(RegisteredResource.State.UNINSTALL);
+                                    } else {
+                                        toRemove.add(r);
+                                    }
+                                }
+                            }
+                            first = false;
+                        }
+                        for(final RegisteredResource rr : toRemove) {
+                            this.persistentList.remove(rr);
+                        }
+                    }
+                    logger.debug("Added set of {} new resources with scheme {} : {}",
+                            new Object[] {entry.getValue().size(), entry.getKey(), entry.getValue()});
+                    newResources.addAll(entry.getValue());
+                }
+
+                newResourcesSchemes.clear();
+
+                for(RegisteredResource r : newResources) {
+                    this.persistentList.addOrUpdate(r);
+                }
+                newResources.clear();
+
+                // Mark resources for removal according to urlsToRemove
+                if (!urlsToRemove.isEmpty()) {
+                    for(final String url : urlsToRemove ) {
+                        this.persistentList.remove(url);
+                    }
+                }
+                urlsToRemove.clear();
+
                 printResources("Merged");
                 // persist list
                 this.persistentList.save();
