@@ -315,7 +315,8 @@ public class OsgiInstallerImpl
                             if ( !found) {
                                 logger.debug("Resource {} seems to be removed.", r);
                                 if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                                           ||  r.getState() == RegisteredResource.State.INSTALL)) {
+                                           ||  r.getState() == RegisteredResource.State.INSTALL)
+                                           ||  r.getState() == RegisteredResource.State.IGNORED) {
                                      r.setState(RegisteredResource.State.UNINSTALL);
                                 } else {
                                     toRemove.add(r);
