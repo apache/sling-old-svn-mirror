@@ -205,6 +205,7 @@ public class OsgiInstallerImpl
                         logger.debug("Adding new resource {}", rr);
                     } else {
                         logger.debug("Ignoring unsupported resource type {} of resource {}", rt, rr);
+                        rr.cleanup();
                     }
                 } catch (final IOException ioe) {
                     logger.warn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
