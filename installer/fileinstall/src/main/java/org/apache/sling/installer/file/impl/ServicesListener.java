@@ -31,6 +31,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ServicesListener</code> listens for the required services
@@ -38,6 +40,9 @@ import org.osgi.framework.ServiceReference;
  * services.
  */
 public class ServicesListener {
+
+    /** The logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The name of the installer service. */
     private static final String INSTALLER_SERVICE_NAME = OsgiInstaller.class.getName();
@@ -57,13 +62,13 @@ public class ServicesListener {
     private boolean running = false;
 
     public ServicesListener(final BundleContext bundleContext,
-            final List<ScanConfiguration> configs)
-    throws InvalidSyntaxException{
+            final List<ScanConfiguration> configs) {
         if ( configs != null ) {
             scanConfigurations.addAll(configs);
         }
         this.bundleContext = bundleContext;
         this.installerListener = new Listener(INSTALLER_SERVICE_NAME);
+        this.installerListener.start();
     }
 
     public synchronized void notifyChange() {
@@ -72,8 +77,10 @@ public class ServicesListener {
             final OsgiInstaller installer = (OsgiInstaller)this.installerListener.getService();
 
             if ( installer != null&& !running ) {
+                logger.debug("Starting scanner");
                 this.startScanner(installer);
             } else if ( running && installer == null ) {
+                logger.debug("Stopping scanner");
                 this.stopScanner();
             }
         }
@@ -90,6 +97,7 @@ public class ServicesListener {
     private void startScanner(final OsgiInstaller installer) {
         if ( !running ) {
             for(final ScanConfiguration config : this.scanConfigurations) {
+                logger.debug("Starting monitor for {}", config.directory);
                 this.monitors.add(new FileMonitor(new File(config.directory),
                         config.scanInterval, new Installer(installer, hash(config.directory))));
             }
@@ -114,11 +122,19 @@ public class ServicesListener {
         private ServiceReference reference;
         private Object service;
 
-        public Listener(final String serviceName) throws InvalidSyntaxException {
+        public Listener(final String serviceName) {
             this.serviceName = serviceName;
-            bundleContext.addServiceListener(this, "("
-                    + Constants.OBJECTCLASS + "=" + serviceName + ")");
-            this.getService();
+        }
+
+        public void start() {
+            this.retainService();
+            try {
+                bundleContext.addServiceListener(this, "("
+                        + Constants.OBJECTCLASS + "=" + serviceName + ")");
+            } catch (final InvalidSyntaxException ise) {
+                // this should really never happen
+                throw new RuntimeException("Unexpected exception occured.", ise);
+            }
         }
 
         public void deactivate() {
