@@ -24,7 +24,6 @@ import java.util.StringTokenizer;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * The <code>Activator</code>
@@ -40,7 +39,7 @@ public class Activator implements BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(final BundleContext context) throws InvalidSyntaxException {
+    public void start(final BundleContext context) {
         // read initial scan configurations
         final List<ScanConfiguration> configs = new ArrayList<ScanConfiguration>();
         final Object dir = this.getProp(context, KEY_DIR);

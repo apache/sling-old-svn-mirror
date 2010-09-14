@@ -62,8 +62,11 @@ public class FileMonitor extends TimerTask {
     private void collect(final File file, final List<File> files) {
         if ( file.exists() ) {
             if ( file.isDirectory() ) {
-                for(final File child : file.listFiles() ) {
-                    collect(child, files);
+                final File[] children = file.listFiles();
+                if ( children != null ) {
+                    for(final File child : children ) {
+                        collect(child, files);
+                    }
                 }
             } else {
                 files.add(file);
