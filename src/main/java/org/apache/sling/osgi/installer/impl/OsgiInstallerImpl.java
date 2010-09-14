@@ -199,8 +199,13 @@ public class OsgiInstallerImpl
             for(final InstallableResource r : resources ) {
                 try {
                     final RegisteredResource rr = RegisteredResourceImpl.create(ctx, r, scheme);
-                    createdResources.add(rr);
-                    logger.debug("Adding new resource {}", rr);
+                    final String rt = rr.getType();
+                    if ( InstallableResource.TYPE_BUNDLE.equals(rt) || InstallableResource.TYPE_CONFIG.equals(rt) ) {
+                        createdResources.add(rr);
+                        logger.debug("Adding new resource {}", rr);
+                    } else {
+                        logger.debug("Ignoring unsupported resource type {} of resource {}", rt, rr);
+                    }
                 } catch (final IOException ioe) {
                     logger.warn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
                 }
