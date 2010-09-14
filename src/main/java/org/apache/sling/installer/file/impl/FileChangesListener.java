@@ -25,9 +25,5 @@ public interface FileChangesListener {
 
     void initialSet(List<File> files);
 
-    void removed(File file);
-
-    void added(File file);
-
-    void changed(File file);
+    void updated(List<File> added, List<File> changed, List<File> removed);
 }
