@@ -29,18 +29,21 @@ import java.util.List;
 
 import org.apache.sling.osgi.installer.InstallableResource;
 import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The <code>Installer</code> is the service calling the
  * OSGi installer
  *
- * TODO - We should collect all changes from a scan and send
- * them to the installer in a batch
  */
 public class Installer implements FileChangesListener {
 
+    /** The scheme we use to register our resources. */
     private static final String SCHEME_PREFIX = "fileinstall";
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The OSGi installer service. */
     private final OsgiInstaller installer;
@@ -55,37 +58,65 @@ public class Installer implements FileChangesListener {
     }
 
     /**
-     * @see org.apache.sling.installer.file.impl.FileChangesListener#added(java.io.File)
-     */
-    public void added(final File file) {
-        LoggerFactory.getLogger(this.getClass()).info("Added file {}", file);
-        final InstallableResource resource = this.createResource(file);
-        this.installer.updateResources(this.scheme, new InstallableResource[] {resource}, null);
-    }
-
-    /**
-     * @see org.apache.sling.installer.file.impl.FileChangesListener#changed(java.io.File)
-     */
-    public void changed(final File file) {
-        LoggerFactory.getLogger(this.getClass()).info("Changed file {}", file);
-        final InstallableResource resource = this.createResource(file);
-        this.installer.updateResources(this.scheme, new InstallableResource[] {resource}, null);
-    }
-
-    /**
      * @see org.apache.sling.installer.file.impl.FileChangesListener#initialSet(java.util.List)
      */
     public void initialSet(final List<File> files) {
-        LoggerFactory.getLogger(this.getClass()).info("Initial set for {}", this.scheme);
+        logger.debug("Initial set for {}", this.scheme);
         final List<InstallableResource> resources = new ArrayList<InstallableResource>();
         for(final File f : files) {
-            LoggerFactory.getLogger(this.getClass()).info("File {}", f);
+            logger.debug("Initial file {}", f);
             final InstallableResource resource = this.createResource(f);
             if ( resource != null ) {
                 resources.add(resource);
             }
         }
         this.installer.registerResources(this.scheme, resources.toArray(new InstallableResource[resources.size()]));
+    }
+
+    /**
+     * @see org.apache.sling.installer.file.impl.FileChangesListener#updated(java.util.List, java.util.List, java.util.List)
+     */
+    public void updated(List<File> added, List<File> changed, List<File> removed) {
+        final List<InstallableResource> updated;
+        if ( (added != null && added.size() > 0) || (changed != null && changed.size() > 0) ) {
+            updated = new ArrayList<InstallableResource>();
+            if ( added != null ) {
+                for(final File f : added) {
+                    logger.debug("Added file {}", f);
+                    final InstallableResource resource = this.createResource(f);
+                    if ( resource != null ) {
+                        updated.add(resource);
+                    }
+                }
+            }
+            if ( changed != null ) {
+                for(final File f : changed) {
+                    logger.debug("Changed file {}", f);
+                    final InstallableResource resource = this.createResource(f);
+                    if ( resource != null ) {
+                        updated.add(resource);
+                    }
+                }
+            }
+        } else {
+            updated = null;
+        }
+        final String[] removedUrls;
+        if ( removed != null && removed.size() > 0 ) {
+            removedUrls = new String[removed.size()];
+            int index = 0;
+            for(final File f : removed) {
+                removedUrls[index] = f.getAbsolutePath();
+                logger.debug("Removed file {}", removedUrls[index]);
+                index++;
+            }
+        } else {
+            removedUrls = null;
+        }
+        if ( updated != null || removedUrls != null ) {
+            this.installer.updateResources(this.scheme,
+                    updated == null ? null : updated.toArray(new InstallableResource[updated.size()]), removedUrls);
+        }
     }
 
     private InstallableResource createResource(final File file) {
@@ -109,15 +140,8 @@ public class Installer implements FileChangesListener {
             return new InstallableResource(file.getAbsolutePath(), is, dict, digest,
                 null, null);
         } catch (IOException io) {
-            // ignore this for now (TODO)
+            logger.error("Unable to read file " + file, io);
         }
         return null;
-    }
-    /**
-     * @see org.apache.sling.installer.file.impl.FileChangesListener#removed(java.io.File)
-     */
-    public void removed(final File file) {
-        LoggerFactory.getLogger(this.getClass()).info("Removed file {}", file);
-        this.installer.updateResources(this.scheme, null, new String[] {file.getAbsolutePath()});
     }
 }

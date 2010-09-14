@@ -81,6 +81,12 @@ public class FileMonitor extends TimerTask {
         }
     }
 
+    private final static class Collector {
+        public final List<File> added = new ArrayList<File>();
+        public final List<File> removed = new ArrayList<File>();
+        public final List<File> changed = new ArrayList<File>();
+    }
+
     /**
      * Stop periodically executing this task. If the task is currently executing it
      * will never be run again after the current execution, otherwise it will simply
@@ -124,7 +130,9 @@ public class FileMonitor extends TimerTask {
         }
         synchronized ( this ) {
             try {
-                this.check(this.root);
+                final Collector c = new Collector();
+                this.check(this.root, c);
+                this.listener.updated(c.added, c.changed, c.removed);
             } catch (Exception e) {
                 // ignore this
             }
@@ -140,7 +148,7 @@ public class FileMonitor extends TimerTask {
      * @param monitorable The monitorable to check
      * @param localEA The event admin
      */
-    private void check(final Monitorable monitorable) {
+    private void check(final Monitorable monitorable, final Collector collector) {
         logger.debug("Checking {}", monitorable.file);
         // if the file is non existing, check if it has been readded
         if ( monitorable.status instanceof NonExistingStatus ) {
@@ -150,7 +158,7 @@ public class FileMonitor extends TimerTask {
                 final List<File> files = new ArrayList<File>();
                 collect(monitorable.file, files);
                 for(final File file : files ) {
-                    this.listener.added(file);
+                    collector.added.add(file);
                 }
             }
         } else {
@@ -160,7 +168,7 @@ public class FileMonitor extends TimerTask {
                 final List<File> files = new ArrayList<File>();
                 collectDeleted(monitorable, files);
                 for(final File file : files ) {
-                    this.listener.removed(file);
+                    collector.removed.add(file);
                 }
                 monitorable.status = NonExistingStatus.SINGLETON;
             } else {
@@ -171,7 +179,7 @@ public class FileMonitor extends TimerTask {
                     fs.lastModified = monitorable.file.lastModified();
                     // changed
                     if ( monitorable.file.isFile() ) {
-                        this.listener.changed(monitorable.file);
+                        collector.changed.add(monitorable.file);
                     }
                     changed = true;
                 }
@@ -179,7 +187,7 @@ public class FileMonitor extends TimerTask {
                     // directory
                     final DirStatus ds = (DirStatus)fs;
                     for(int i=0; i<ds.children.length; i++) {
-                        check(ds.children[i]);
+                        check(ds.children[i], collector);
                     }
                     // if the dir changed we have to update
                     if ( changed ) {
@@ -198,7 +206,7 @@ public class FileMonitor extends TimerTask {
                                 if (children[i] == null) {
                                     children[i] = new Monitorable(files[i]);
                                     children[i].status = NonExistingStatus.SINGLETON;
-                                    check(children[i]);
+                                    check(children[i], collector);
                                 }
                             }
                             ds.children = children;
