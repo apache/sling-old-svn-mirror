@@ -53,7 +53,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
     /**
      * Get the title of the configuration status page.
-     * 
+     *
      * @return the title
      */
     public String getTitle() {
@@ -62,7 +62,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
 
     /**
      * Output a list of namespace prefixes and URIs from the NamespaceRegistry.
-     * 
+     *
      * @param pw a PrintWriter
      */
     public void printConfiguration(PrintWriter pw) {
@@ -87,7 +87,7 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
                 e.printStackTrace(pw);
             }
         } else {
-            pw.println("SlingRepsoitory is not available.");
+            pw.println("SlingRepository is not available.");
         }
 
     }
