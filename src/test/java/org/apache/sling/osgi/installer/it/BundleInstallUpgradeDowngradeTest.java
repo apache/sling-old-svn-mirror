@@ -171,4 +171,38 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             assertBundle("After reinstalling", symbolicName, "1.1", Bundle.ACTIVE);
         }
     }
+
+    /**
+     * This test first installs the test bundle in version 1.0 and then removes this version while
+     * at the same time adding version 1.1 of the bundle.
+     * This test should ensure that this results in a bundle update and not in a bundle remove/install!
+     */
+    @Test
+    public void testUpdateAndRemove() throws Exception {
+        final String symbolicName = "osgi-installer-testbundle";
+        assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
+
+        // install version 1.0
+        {
+            final Object listener = this.startObservingBundleEvents();
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")), null);
+            this.waitForBundleEvents(symbolicName + " should be installed with version 1.0", listener,
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.STARTED));
+            assertBundle("After installing", symbolicName, "1.0", Bundle.ACTIVE);
+        }
+        // install version 1.1 and remove 1.0 in one go
+        {
+            final Object listener = this.startObservingBundleEvents();
+            installer.updateResources(URL_SCHEME,
+                    getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")),
+                    getNonInstallableResourceUrl(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")));
+            this.waitForBundleEvents(symbolicName + " should be updated", listener,
+                    new BundleEvent(symbolicName, null, org.osgi.framework.BundleEvent.UPDATED),
+                    new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.STARTED));
+            assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
+        }
+
+    }
 }
