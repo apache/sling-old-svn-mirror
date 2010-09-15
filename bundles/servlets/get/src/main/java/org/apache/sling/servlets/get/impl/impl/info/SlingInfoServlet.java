@@ -43,6 +43,14 @@ import org.osgi.service.component.ComponentContext;
  * @scr.property name="sling.servlet.paths" value="/system/sling/info"
  */
 public class SlingInfoServlet extends SlingSafeMethodsServlet {
+    
+    /**
+     * 
+     */
+    private static final String CACHE_CONTROL_HEADER = "Cache-Control";
+
+    private static final String CACHE_CONTROL_HEADER_VALUE = 
+        "private, no-store, no-cache, max-age=0, must-revalidate";
 
     private Map<String, SlingInfoProvider> infoProviders = new HashMap<String, SlingInfoProvider>();
 
@@ -67,6 +75,7 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
                 "Unknown Info Request");
 
         } else {
+            response.setHeader(CACHE_CONTROL_HEADER, CACHE_CONTROL_HEADER_VALUE);
 
             String extension = request.getRequestPathInfo().getExtension();
             if ("json".equals(extension)) {
