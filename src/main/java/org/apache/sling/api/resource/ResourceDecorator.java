@@ -19,9 +19,9 @@ package org.apache.sling.api.resource;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * Optional services to decorate {@link Resource}s returned by
+ * Optional service to decorate {@link Resource}s returned by
  * the {@link ResourceResolver}.
- * Use cases for a decorator are
+ * Typical use cases for a decorator are
  * - overwrite resource type/resource super type (for example
  *   based on the resource path)
  * - add metadata
@@ -33,25 +33,25 @@ public interface ResourceDecorator {
     /**
      * Decorate a resource.
      * If the service decorates the resource it should return
-     * the new resource. IF the servie does not want to decorate
+     * the new resource. If the service does not want to decorate
      * the resource, it should return the original resource.
      * Returning <code>null</code> is considered the same as
      * returning the original resource.
      * @param resource The resource to decorate
-     * @return The decorated resource or the original resource.
+     * @return The decorated resource, the original resource or null.
      */
     Resource decorate(Resource resource);
 
     /**
      * Decorate a resource.
      * If the service decorates the resource it should return
-     * the new resource. IF the servie does not want to decorate
+     * the new resource. If the service does not want to decorate
      * the resource, it should return the original resource.
      * Returning <code>null</code> is considered the same as
      * returning the original resource.
      * @param resource The resource to decorate
      * @param request The current request.
-     * @return The decorated resource or the original resource.
+     * @return The decorated resource, the original resource or null.
      */
     Resource decorate(Resource resource, HttpServletRequest request);
 }
