@@ -69,7 +69,7 @@ public class StarResource extends SyntheticResource {
      * to dynamically resolve the resource super type of this star resource.
      */
     public String getResourceSuperType() {
-        if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
+        if (UNSET_RESOURCE_SUPER_TYPE.equals(resourceSuperType)) {
             resourceSuperType = ResourceUtil.getResourceSuperType(this.getResourceResolver(),
                     this.getResourceType());
         }
