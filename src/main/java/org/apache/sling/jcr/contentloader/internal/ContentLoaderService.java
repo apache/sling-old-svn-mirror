@@ -289,6 +289,8 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
         } catch (Throwable t) {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
+        } finally {
+            this.ungetSession(session);
         }
     }
 
