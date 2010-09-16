@@ -56,9 +56,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class RegisteredResourceImpl
     implements RegisteredResource, Serializable {
 
-    private static final String ENTITY_BUNDLE_PREFIX = "bundle:";
-    private static final String ENTITY_CONFIG_PREFIX = "config:";
-
     private static final long serialVersionUID = 5L;
 
     /** The resource url. */
@@ -155,7 +152,7 @@ public class RegisteredResourceImpl
                     throw new IOException("Bundle resource does not contain a bundle " + this.url);
                 }
                 this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
-                entity = ENTITY_BUNDLE_PREFIX + name;
+                entity = resourceType + ':' + name;
             } finally {
                 is.close();
             }
@@ -184,7 +181,7 @@ public class RegisteredResourceImpl
                 factoryPid = null;
                 configPid = pid;
             }
-            entity = ENTITY_CONFIG_PREFIX + (factoryPid == null ? "" : factoryPid + ".") + configPid;
+            entity = resourceType + ':' + (factoryPid == null ? "" : factoryPid + ".") + configPid;
 
             attributes.put(Constants.SERVICE_PID, configPid);
             // Add pseudo-properties
