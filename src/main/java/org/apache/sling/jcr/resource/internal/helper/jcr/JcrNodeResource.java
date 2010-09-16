@@ -93,7 +93,7 @@ class JcrNodeResource extends JcrItemResource {
     }
 
     public String getResourceSuperType() {
-        if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
+        if ( UNSET_RESOURCE_SUPER_TYPE.equals(resourceSuperType) ) {
             try {
                 if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
                     resourceSuperType = node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
@@ -101,7 +101,7 @@ class JcrNodeResource extends JcrItemResource {
             } catch (RepositoryException re) {
                 // we ignore this
             }
-            if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
+            if ( UNSET_RESOURCE_SUPER_TYPE.equals(resourceSuperType) ) {
                 resourceSuperType = null;
             }
         }
