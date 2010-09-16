@@ -404,7 +404,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.osgi.installer</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>          
         <dependency>
