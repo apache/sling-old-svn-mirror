@@ -93,7 +93,8 @@ class JcrNodeResource extends JcrItemResource {
     }
 
     public String getResourceSuperType() {
-        if ( UNSET_RESOURCE_SUPER_TYPE.equals(resourceSuperType) ) {
+        // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
+        if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
             try {
                 if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
                     resourceSuperType = node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
@@ -101,7 +102,7 @@ class JcrNodeResource extends JcrItemResource {
             } catch (RepositoryException re) {
                 // we ignore this
             }
-            if ( UNSET_RESOURCE_SUPER_TYPE.equals(resourceSuperType) ) {
+            if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
                 resourceSuperType = null;
             }
         }
