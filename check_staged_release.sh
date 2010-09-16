@@ -45,12 +45,15 @@ do
  if [ "$?" = "0" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
  if [ ! -f "$f.asc" ]; then CHKSUM="----"; fi
  echo "gpg:  ${CHKSUM}"
- if [ "`cat $f.md5 2>/dev/null`" = "`openssl md5 < $f 2>/dev/null`" ]; then CHKSUM="GOOD (`cat $f.md5`)"; else CHKSUM="BAD!!!!!!!!"; fi
- if [ ! -f "$f.md5" ]; then CHKSUM="----"; fi
- echo "md5:  ${CHKSUM}"
- if [ "`cat $f.sha1 2>/dev/null`" = "`openssl sha1 < $f 2>/dev/null`" ]; then CHKSUM="GOOD (`cat $f.sha1`)"; else CHKSUM="BAD!!!!!!!!"; fi
- if [ ! -f "$f.sha1" ]; then CHKSUM="----"; fi
- echo "sha1: ${CHKSUM}"
+
+ for tp in md5 sha1
+ do
+   A="`cat $f.$tp 2>/dev/null`"
+   B="`openssl $tp < $f 2>/dev/null`"
+   if [ "$A" = "$B" ]; then CHKSUM="GOOD (`cat $f.$tp`)"; else CHKSUM="BAD!! : $A not equal to $B"; fi
+   echo "$tp : ${CHKSUM}"
+ done
+
 done
 
 if [ -z "${CHKSUM}" ]; then echo "WARNING: no files found!"; fi
