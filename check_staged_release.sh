@@ -49,7 +49,7 @@ do
  for tp in md5 sha1
  do
    A="`cat $f.$tp 2>/dev/null`"
-   B="`openssl $tp < $f 2>/dev/null`"
+   B="`openssl $tp < $f 2>/dev/null | sed 's/.*= *//' `"
    if [ "$A" = "$B" ]; then CHKSUM="GOOD (`cat $f.$tp`)"; else CHKSUM="BAD!! : $A not equal to $B"; fi
    echo "$tp : ${CHKSUM}"
  done
