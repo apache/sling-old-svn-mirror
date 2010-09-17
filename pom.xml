@@ -146,7 +146,7 @@
                 </executions>
             </plugin>
 
-            <!-- warn for SLING-443 -->
+            <!-- warn for SLING-443/SLING-1782 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -156,10 +156,11 @@
                         <configuration>
                             <tasks>
                                 <echo>
-********************** WARNING (SLING-443) **********************************
+**************** WARNING (SLING-443/SLING-1782) ******************************
 On most platforms, you'll get OutOfMemoryErrors when building unless you set
-MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=128M", see SLING-443.
-*****************************************************************************
+on 32bit platforms: MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=256M", see SLING-443
+on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
+******************************************************************************
                                 </echo>
                             </tasks>
                         </configuration>
