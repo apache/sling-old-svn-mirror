@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.osgi.installer.it</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling OSGi Installer Integration Tests</name>
