@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationFormServlet;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.form.FormReason;
 import org.apache.sling.auth.openid.OpenIDConstants;
 import org.apache.sling.auth.openid.OpenIDFailure;
@@ -87,12 +88,12 @@ public class SelectorFormServlet extends AbstractAuthenticationFormServlet {
 
         // 1. Check whether there is a reason from the Form Based Authentication
         // Handler
-        Object formResObj = request.getAttribute(SelectorAuthenticationHandler.PAR_J_REASON);
+        Object formResObj = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
         if (formResObj instanceof Enum<?>) {
             return formResObj.toString();
         }
 
-        final String jReason = request.getParameter(SelectorAuthenticationHandler.PAR_J_REASON);
+        final String jReason = request.getParameter(AuthenticationHandler.FAILURE_REASON);
         if (jReason != null) {
             try {
                 return FormReason.valueOf(jReason).toString();
