@@ -18,6 +18,8 @@
  */
 package org.apache.sling.auth.openid;
 
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
+
 /**
  * The <code>OpenIDConstants</code> class defines useful constants for
  * implementors of login forms for OpenID authentication.
@@ -56,7 +58,7 @@ public final class OpenIDConstants {
      * &lt;/div>
      * </pre>
      */
-    public static final String OPENID_FAILURE_REASON = "j_reason";
+    public static final String OPENID_FAILURE_REASON = AuthenticationHandler.FAILURE_REASON;
 
     /**
      * The name of the request parameter set by the

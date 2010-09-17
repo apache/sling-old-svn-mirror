@@ -34,7 +34,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
-import org.apache.sling.auth.openid.OpenIDConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,15 +57,6 @@ import org.slf4j.LoggerFactory;
 @Service
 public class SelectorAuthenticationHandler extends
         AbstractAuthenticationHandler {
-
-    /**
-     * The name of the request parameter indicating to the login form why the
-     * form is being rendered. If this parameter is not set the form is called
-     * for the first time and the implied reason is that the authenticator just
-     * requests credentials. Otherwise the parameter is set to a
-     * {@link FormReason} value.
-     */
-    static final String PAR_J_REASON = "j_reason";
 
     /**
      * Request parameter indicating which authentication type was selected by
@@ -109,21 +99,13 @@ public class SelectorAuthenticationHandler extends
                 "UTF-8"));
 
         // append indication of previous login failure
-        if (request.getAttribute(PAR_J_REASON) != null) {
-            final Object jReason = request.getAttribute(PAR_J_REASON);
+        if (request.getAttribute(FAILURE_REASON) != null) {
+            final Object jReason = request.getAttribute(FAILURE_REASON);
             @SuppressWarnings("rawtypes")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append('&').append(PAR_J_REASON);
-            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
-        } else if (request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON) != null) {
-            final Object jReason = request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON);
-            @SuppressWarnings("rawtypes")
-            final String reason = (jReason instanceof Enum)
-                    ? ((Enum) jReason).name()
-                    : jReason.toString();
-            targetBuilder.append('&').append(PAR_J_REASON);
+            targetBuilder.append('&').append(FAILURE_REASON);
             targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
         }
 
