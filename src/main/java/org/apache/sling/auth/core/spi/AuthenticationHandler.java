@@ -81,6 +81,16 @@ public interface AuthenticationHandler {
     static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
 
     /**
+     * Name of the request attribute which may be set by the
+     * {@link #extractCredentials(HttpServletRequest, HttpServletResponse)}
+     * method if {@link AuthenticationInfo#FAIL_AUTH} is returned.
+     * <p>
+     * This result may be used by authentication handlers to inform the user
+     * of any failures.
+     */
+    static final String FAILURE_REASON = "j_reason";
+
+    /**
      * Extracts credential data from the request if at all contained.
      * <p>
      * The method returns any of the following values :
@@ -104,7 +114,11 @@ public interface AuthenticationHandler {
      * <td>the handler failed extracting the credentials from the request for
      * any reason. An example of this result is that credentials are present in
      * the request but they could not be validated and thus not be used for
-     * request processing.
+     * request processing. When returning this value, the authentication handler
+     * may also set the {@link #FAILURE_REASON} request attribute to inform
+     * interested parties (including its own
+     * {@link #requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * method for the reasons of failure to extract the credentials.
      * </tr>
      * <tr>
      * <td><code>AuthenticationInfo</code> object

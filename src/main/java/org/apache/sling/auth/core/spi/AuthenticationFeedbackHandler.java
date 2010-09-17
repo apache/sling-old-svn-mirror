@@ -40,6 +40,12 @@ public interface AuthenticationFeedbackHandler {
      * authentication handler whose
      * {@link AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)
      * requestCredentials} method will be called.
+     * <p>
+     * Implementations may also wish to set the
+     * {@link AuthenticationHandler#FAILURE_REASON} request attribute to inform
+     * interested parties (including its any
+     * {@link AuthenticationHandler#requestCredentials(HttpServletRequest, HttpServletResponse)}
+     * method about the reasons of failure to to authenticate.
      *
      * @param request The current request
      * @param response The current response
