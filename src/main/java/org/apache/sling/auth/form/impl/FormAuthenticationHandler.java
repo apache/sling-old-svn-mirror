@@ -241,15 +241,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final String PAR_J_VALIDATE = "j_validate";
 
     /**
-     * The name of the request parameter indicating to the login form why the
-     * form is being rendered. If this parameter is not set the form is called
-     * for the first time and the implied reason is that the authenticator just
-     * requests credentials. Otherwise the parameter is set to a
-     * {@link FormReason} value.
-     */
-    static final String PAR_J_REASON = "j_reason";
-
-    /**
      * Key in the AuthenticationInfo map which contains the domain on which the
      * auth cookie should be set.
      */
@@ -333,7 +324,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 } else {
                     if (this.loginAfterExpire) {
                       // signal the requestCredentials method a previous login failure
-                        request.setAttribute(PAR_J_REASON, FormReason.TIMEOUT);
+                        request.setAttribute(FAILURE_REASON, FormReason.TIMEOUT);
                         info = AuthenticationInfo.FAIL_AUTH;
                     }
                     // clear the cookie, its invalid and we should get rid of it so that the invalid cookie
@@ -421,13 +412,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         // append indication of previous login failure
-        if (request.getAttribute(PAR_J_REASON) != null) {
-            final Object jReason = request.getAttribute(PAR_J_REASON);
+        if (request.getAttribute(FAILURE_REASON) != null) {
+            final Object jReason = request.getAttribute(FAILURE_REASON);
             @SuppressWarnings("unchecked")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append(parSep).append(PAR_J_REASON);
+            targetBuilder.append(parSep).append(FAILURE_REASON);
             targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
         }
 
@@ -470,7 +461,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         authStorage.clear(request, response);
 
         // signal the requestCredentials method a previous login failure
-        request.setAttribute(PAR_J_REASON, FormReason.INVALID_CREDENTIALS);
+        request.setAttribute(FAILURE_REASON, FormReason.INVALID_CREDENTIALS);
     }
 
     /**
@@ -1003,23 +994,23 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             final StringBuilder header = new StringBuilder();
 
             // default setup with name, value, cookie path and HttpOnly
-            header.append(name).append('=').append(value);
-            header.append(";Path=").append(cookiePath);
-            header.append(";HttpOnly"); // don't allow JS access
+            header.append(name).append("=\"").append(value).append('"');
+            header.append("; Path=\"").append(cookiePath).append('"');
+            header.append("; HttpOnly"); // don't allow JS access
 
             // set the cookie domain if so configured
             if (domain != null) {
-                header.append(";Domain=").append(domain);
+                header.append("; Domain=\"").append(domain).append('"');
             }
 
             // Only set the Max-Age attribute to remove the cookie
-            if (age == 0) {
-                header.append(";Max-Age=").append(age);
+            if (age >= 0) {
+                header.append("; Max-Age=\"").append(age).append('"');
             }
 
             // ensure the cookie is secured if this is an https request
             if (request.isSecure()) {
-                header.append(";Secure");
+                header.append("; Secure");
             }
 
             response.addHeader(HEADER_SET_COOKIE, header.toString());

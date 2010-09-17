@@ -26,6 +26,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationFormServlet;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.form.FormReason;
 
 /**
@@ -65,12 +66,12 @@ public class AuthenticationFormServlet extends AbstractAuthenticationFormServlet
      */
     protected String getReason(final HttpServletRequest request) {
         // return the resource attribute if set to a non-empty string
-        Object resObj = request.getAttribute(FormAuthenticationHandler.PAR_J_REASON);
+        Object resObj = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
         if (resObj instanceof FormReason) {
             return ((FormReason) resObj).toString();
         }
 
-        final String reason = request.getParameter(FormAuthenticationHandler.PAR_J_REASON);
+        final String reason = request.getParameter(AuthenticationHandler.FAILURE_REASON);
         if (reason != null) {
             try {
                 return FormReason.valueOf(reason).toString();
