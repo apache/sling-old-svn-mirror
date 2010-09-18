@@ -994,18 +994,18 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             final StringBuilder header = new StringBuilder();
 
             // default setup with name, value, cookie path and HttpOnly
-            header.append(name).append("=\"").append(value).append('"');
-            header.append("; Path=\"").append(cookiePath).append('"');
+            header.append(name).append("=").append(value);
+            header.append("; Path=").append(cookiePath);
             header.append("; HttpOnly"); // don't allow JS access
 
             // set the cookie domain if so configured
             if (domain != null) {
-                header.append("; Domain=\"").append(domain).append('"');
+                header.append("; Domain=").append(domain);
             }
 
             // Only set the Max-Age attribute to remove the cookie
             if (age >= 0) {
-                header.append("; Max-Age=\"").append(age).append('"');
+                header.append("; Max-Age=").append(age);
             }
 
             // ensure the cookie is secured if this is an https request
