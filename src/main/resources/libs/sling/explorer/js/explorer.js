@@ -29,51 +29,74 @@
        return $.getJSONRaw(Sling.baseurl + url, parameters, callback)
     };
     $.post = function(url, parameters, callback) {
-       return $.postRaw(Sling.baseurl + url, parameters, callback)
+      var params = { "_charset_":"utf-8" };
+      $.extend(params, parameters);
+      return $.postRaw(Sling.baseurl + url, parameters, callback)
     };
 })(jQuery);
 
 /** load the initial tree on editor startup */
-init_load = function(path, resourceType) {
-
+init_load = function(path) {
+    load_branch(path, function() { load_props(path); } );
+    // load properties    
+    return;
 	// load root node
-
 	$.get("/.explorer.item.html", function( data, textStatus, XMLHttpRequest ) {
-		$('#expl_sidebar').append(data);
+		$('#_').append( data );
 	});
+    
+    $.ajax({
+		url: path,
+		type: 'GET',
+		// data: params,
+		success: function( data, textStatus, xmlHttpRequest ) {
+				// load others
+            var paths = path.split("/");
+            paths.splice(0, 1); // remove first slash
+            var rPath = "";
+            for (p in paths) {
+                rPath += paths[p];
+                load_branch(rPath);
+                rPath += "/";
+            }
 
-	// load others
-	var paths = path.split("/");
-	paths.splice(0, 1); // remove first slash
-	var rPath = "";
-	for (p in paths) {
-		rPath += paths[p];
-		load_branch(rPath);
-		rPath += "/";
-	}
-
-	// load properties
-	load_props(path, resourceType);
+            // load properties
+            load_props( path );
+		},
+		error: function( xmlHttpRequest, textStatus, errorThrown ) {
+			show_error( xmlHttpRequest.responseText );
+		}
+	});
 }
 
 /** toggle a node in the menu */
-explorer_toggle = function( path, resourceType ) {
-  var id = path_2_id( path ); // replacing / with _
-  var is_open = $('p#'+id+'>a').hasClass('open');
-  
-  load_props("/" + path);
-  
-  if (is_open){
-    //remove children
-    $('p#'+id).parent().find('ul').each(function(){
-      $(this).empty();
-      this.parentNode.removeChild( this )
-    });
-    $('p#'+id+">a").removeClass('open');  // closed
-    $('p#'+id).parent().removeClass('branch'); // remove css class    
-  } else {
-    load_branch(path);
-  }
+explorer_toggle = function( path ) {
+    var id = path_2_id( path );
+    var already_selected = (id == $('#expl_content').data("currently_selected_node"));
+    var is_open = $('p#'+id+'>a').hasClass('open');
+
+    if (!already_selected && is_open)
+    {
+        // just load properties
+        load_props( path );
+    }
+    else
+    {
+        // toggle
+          
+        if (is_open) {
+            // remove children
+            $('p#'+id).parent().find('ul').each(function(){
+                $(this).empty();
+                this.parentNode.removeChild( this )
+            });
+            $('p#'+id+">a").removeClass('open');  // closed
+            $('p#'+id).parent().removeClass('branch'); // remove css class    
+            load_props( path );
+        } else {
+            load_branch(path, function(){ load_props( path ); });
+        }
+    }
 }
 
 /** load branch/subtree **/
@@ -82,57 +105,58 @@ load_branch = function( path, callback, reload ) {
 		var id = path_2_id( path );
 		$('p#' + id + ">a").removeAttr('href'); // remove onclick
 
-		// fetch children
 		var uri = path + ".explorer.item.html";
 		if (uri[0] != '/')
 		{
 			uri = '/' + uri;
 		};
-		$.get( uri, function( data, textStatus, XMLHttpRequest ) {
-			if ( data.length > 0 ) {
-				$('p#' + id).parent().addClass('branch'); // add css class
-				if ( reload )
-				{
-					$('ul', $('p#' + id).parent()).remove();
-				}
-				$('p#' + id).after(data); // add data
-				$('p#' + id + ">a").attr('href', "#"); // reactivate onclick
-				$('p#' + id + ">a").addClass('open'); // open
-				$('p#' + id).addClass('loaded');
-				if ( callback ) { callback() };
-			}
-		});
+        // fetch children
+        $.ajax({
+            url: uri,
+            type: 'GET',
+            success: function( data, textStatus, xmlHttpRequest ) {
+                if ( data.length > 0 ) {
+                    $('p#' + id).parent().addClass('branch'); // add css class
+                    if ( reload )
+                    {
+                        $('ul', $('p#' + id).parent()).remove();
+                    }
+                    $('p#' + id).after(data); // add data
+                    $('p#' + id + ">a").attr('href', "#"); // reactivate onclick
+                    $('p#' + id + ">a").addClass('open'); // open
+                    $('p#' + id).addClass('loaded');
+                    if ( callback ) { callback() };
+                }
+            },
+            error: function( xmlHttpRequest, textStatus, errorThrown ) {
+                show_error( xmlHttpRequest.responseText );
+            }
+        });
 	}
 }
 
 var currentPath = null;
-var currentResourceType = null;
-load_props = function( path, resourceType ) {
-	// check whether currently selected node is on 'path'
-	//var currently_selected_node = $('#expl_content').data( "currently_selected_node" );
-	//if (currently_selected_node && path == currently_selected_node) return;
-	
-	$('#expl_content').data("currently_selected_node", path);
-	
-	var id = path_2_id( path );
-	if ($('p#' + id))
+load_props = function( path ) {
+    var id = path_2_id( path );
+    $('#expl_content').data("currently_selected_node", id);
+	if ( $('p#' + id) )
 	{
 		$('p', $('#expl_sidebar')).removeClass('selected'); // deselect all
 		$('p[id="' + id + '"]').addClass('selected'); // select the current node
 	}
-	$.get(path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':','_') + '.') ) + "html", 
+    
+    $.get( ((path[0]!='/') ? '/' : '') + path + ".explorer.node.html", 
 		function( data, textStatus, XMLHttpRequest ) {
 			if ( data.length > 0 ) {
 				$('#expl_content').html( data );
 				currentPath = path;
-				currentResourceType = resourceType;
 			}
 	});
 	// window.location.replace( path );
 }
 
 reload_properties = function() {
-	load_props(currentPath, currentResourceType);
+	load_props(currentPath);
 }
 
 add_prop = function( node ) {
@@ -176,8 +200,8 @@ search = function( language, expression, page ) {
 	});
 }
 
-skip_to = function( path, resourceType ) {
-	expand_tree( path, function() { load_props(path, resourceType); } );
+skip_to = function( path ) {
+	expand_tree( path, function() { load_props(path); } );
 }
 
 expand_tree = function( path, callback ) {
@@ -201,10 +225,13 @@ expand_tree = function( path, callback ) {
 	callback();
 }
 
-path_2_id = function(path) {
+path_2_id = function( path ) {
 	// WARNING: have a look at item.esp - duplicate code!
 	var id = path.replace(/\//g, "_"); // replacing / with _
-	id = id.replace(/^_/, ""); // remove trailing _
+    if (path.length > 1)
+    {
+        id = id.replace(/^_/, ""); // remove trailing _
+    }
 	id = id.replace(/\./g, '_');// due to the css selectors
 	id = id.replace(/:/g, '_');// due to the css selectors
 	id = id.replace(/\[/g, '_');// due to the css selectors
@@ -214,22 +241,23 @@ path_2_id = function(path) {
 
 update_credentials = function() {
 	var info = Sling.getSessionInfo();
+    // alert(info.authType);    
 	if ( info )
 	{
-		document.getElementById("username").innerHTML = info.userID;
-		document.getElementById("workspace").innerHTML = info.workspace;
-		document.getElementById("menu_username").innerHTML = info.userID;
+		$("#username").html(info.userID);
+		$("#workspace").html(info.workspace);
+		$("#menu_username").html(info.userID);
 	}
-	if ( info && info.authType ) { 	
-	  document.getElementById("login").style.display="none";
-	  document.getElementById("logout").style.display="block";
-	  document.getElementById("menu_login").style.display="none";
-	  document.getElementById("menu_logout").style.display="block";
-	} else {	
-	  document.getElementById("login").style.display="block";
-	  document.getElementById("logout").style.display="none";
-	  document.getElementById("menu_login").style.display="block";
-	  document.getElementById("menu_logout").style.display="none";
+	if ( info && (info.authType == 'FORM') ) { 	
+	  $("#login").hide();
+	  $("#logout").show();
+	  $("#menu_login").hide();
+	  $("#menu_logout").show();
+	} else {
+	  $("#login").show();
+	  $("#logout").hide();
+	  $("#menu_login").show();
+	  $("#menu_logout").hide();
 	}
 }
 

@@ -314,7 +314,7 @@ input, select, textarea
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 13px;
-	color: #545D66;
+	color: #32373C;
 	background-color: #FFFFFF;
 	padding: 2px 4px;
 	line-height: 16px;
@@ -325,7 +325,7 @@ input, select, textarea
 input:focus, select:focus, textarea:focus
 {
 	border: 1px solid #527EA3;
-	background-color: #BDD2E5;
+	background-color: #e6f2fd;
 }
 
 input[type=hidden], input.hidden
@@ -593,7 +593,7 @@ button#show_query_dialog.query_open
 	border: 1px solid #527EA3;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	width: 340px;
+	width: 30%;
 	float: left;
 	display: inline;
 	padding-bottom: 20px;
@@ -603,7 +603,10 @@ button#show_query_dialog.query_open
 
 #expl_content
 {
-	margin: 0 0 0 354px;
+	margin: 0 0 0 10px;
+	float: left;
+	display: inline;
+	width: 65%;
 	border: 1px solid #527EA3;
 	-moz-border-radius: 5px;
 	border-radius: 5px;

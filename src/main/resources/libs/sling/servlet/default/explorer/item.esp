@@ -38,7 +38,10 @@ if (nodes.hasNext()) {
 	path = path.substr(1);
 	// WARNING: have a look at explorer.js - duplicate code!
 	var id = path.replace(/\//g, "_");
-	id = id.replace(/^_/, ""); // remove trailing _
+	if ( path.length > 1 )
+    {
+        id = id.replace(/^_/, ""); // remove trailing _
+    }
 	id = id.replace(/\./g, '_');// due to the css selectors
 	id = id.replace(/:/g, '_');// due to the css selectors
 	id = id.replace(/\[/g, '_');// due to the css selectors
