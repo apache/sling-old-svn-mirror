@@ -17,9 +17,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
---%>
- 
+--%> 
 <%
+    response.setContentType("text/html; charset=UTF-8");
+    
     var path = resource.path;
     
     var wsSepPos = path.indexOf(":/", 0);
@@ -43,37 +44,6 @@
 		canModifyProperties = privilegesInfo.canModifyProperties( currentNode );
 		isJcrNode = true;
 	} catch (e) {}
-%>
-	<div id="expl_content_header">
-	<h2><%= Packages.org.apache.sling.api.resource.ResourceUtil.getName( resource ) %></h2>
-	<form class="deleteNote" action="<%=path%>" method="post">
-	  <input name=":operation" type="hidden" value="delete">
-	  <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html">
-	  <input type="submit" class="button" value="delete this node">
-	</form>
-	<div class="clear"></div>
-</div>
-  
-<p><a href="<%= request.getContextPath() %><%= path %>.explorer.html"><%=resource.path%></a> <%if(isJcrNode){%>(JCR identifier: <%= currentNode.getIdentifier() %>) <%}%> </p>
-    <%
-    try {
-        if ( session ) { // currentNode && 
-            session.checkPermission(path, "remove");
-            %>
-
-
-
-
-            <%
-        }
-    } catch ( e ) {
-        // don't care
-    }
-    %>
-
-
-  <%
-  
     var properties = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
     if (!properties) {
         readonly = true;
@@ -198,7 +168,7 @@
     if (!readonly && canModifyProperties ) {
     %>
 		<div class="blubb">
-		  <h4>add property</h4>
+		  <h3>add property</h3>
 		  <div class="property_element">
 		  <table class="propoerty_table">
 		  <thead class="smallLabel">
@@ -235,58 +205,6 @@
 		</div>
 
     <%
-    }
-    if (session) {
-        try {       
-          session.checkPermission(path, "add_node");
-    %>
-<div >
-  <h3>add new sub-node</h3>
-  <form id="new_sub_node_form" method="post">
-	  <div class="property_element">
-		  <table class="propoerty_table">
-			  <thead class="smallLabel">
-				  <tr>
-					  <td>Name hint</td>
-					  <td>sling:resourceType</td>
-					  <td colspan="2">jcr:primaryType</td>
-				  </tr>
-			  </thead>
-			  <tbody>
-				  <tr>
-					<td>
-					<input name=":nameHint" type="text" class="text">
-					</td><td>
-					<input name="sling:resourceType" id="new_node_sling_resource_type" type="text" class="text">
-					</td>
-					<td>
-					<% 
-					   var primaryNodeTypes = session.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
-					   if ( primaryNodeTypes.hasNext() ) { %>
-						<select name="jcr:primaryType" id="jcr:primaryType">
-							<% while (primaryNodeTypes.hasNext()) {
-								var primaryNodeType = primaryNodeTypes.nextNodeType();
-								%>
-								<option><%=primaryNodeType.getName()%></option>
-							<% } %>
-						</select>
-					<% } %>
-					</td>
-					<td>
-
-					<input type="submit" class="button" value="new sub-node" onclick="add_new_subnode(); return false;">
-					</td>
-				  </tr>
-			  </tbody>
-		  </table>
-	  </div>
-  </form>
-</div>
-
-            <%
-        } catch (e) {
-            // don't care
-        }
     }
     %>
 
@@ -340,20 +258,20 @@
 		decorate_datepicker();
 	});
 	
-	function add_new_subnode()
+	function add_new_child_node()
 	{
 		$.ajax({
 			url: '<%=path%>/*',
 			type: 'POST',
-			data: $("form[id='new_sub_node_form']" ).serialize(),
+			data: $("form[id='new_child_node_form']" ).serialize(),
 			success: function( data, textStatus, xmlHttpRequest ) 
 					{
-						var subnode_location = xmlHttpRequest.getResponseHeader('Location');
-						if ( subnode_location )
+						var child_node_location = xmlHttpRequest.getResponseHeader('Location');
+						if ( child_node_location )
 						{
 							load_branch( 
 								'<%=path%>', 
-								function() { skip_to( subnode_location, $("#new_node_sling_resource_type").val() );},
+								function() { skip_to( child_node_location, $("#new_node_sling_resource_type").val() );},
 								true
 							);
 						}
@@ -494,15 +412,8 @@
 		case Packages.javax.jcr.PropertyType.PATH :
 			try {
 				var refNode = val.getNode();
-				var resourceType = '';
-				/*
-				var node = refNode.adaptTo(Packages.javax.jcr.Node);
-				if ( node && node.hasProperty( 'sling:resourceType' ) ) {
-					resourceType = node.getProperty('sling:resourceType');
-				}
-				*/
 		%>
-			-> <a href="#" onclick="skip_to('<%= refNode.getPath() %>', '<%= resourceType %>')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a>
+			-> <a href="#" onclick="skip_to('<%= refNode.getPath() %>')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a>
 			<input class="prop_value text <% if(!editable) { %> protected <%}%>" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>" />
 		<% 
 			} catch ( ex ) {}

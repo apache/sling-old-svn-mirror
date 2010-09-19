@@ -26,32 +26,15 @@
 <title>Sling || JCR Explorer</title>
 
 	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/explorer.css" type="text/css"/>
-	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.3/themes/base/jquery-ui.css" type="text/css" media="all" />
-	<link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" type="text/css" media="all" />
-	
-	<script type="text/javascript" src="<%= request.getContextPath() %>/system/sling.js"></script>
-	
-	<!-- <script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/jquery-1.4.2.min.js"></script> -->
-	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-	
+	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/jquery-ui.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/ui.theme.css" type="text/css" media="all" /> 
+
+	<script type="text/javascript" src="<%= request.getContextPath() %>/system/sling.js"></script>	
+	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/jquery-1.4.2.min.js"></script>	
 	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/ui.datetimebox.js"></script>
-
 	<script type="text/javascript" src="<%= request.getContextPath() %>/libs/sling/explorer/js/explorer.js"></script> 
-	
 </head>
-
-<% 
-var resourceType = '';
-
-try
-{
-if ( currentNode && currentNode.hasProperty( 'sling:resourceType' ) ) {
-	resourceType = currentNode.getProperty('sling:resourceType');
-}
-}
-catch (ex) {  }
-%>
 
 <body>
 	<div id="error_dialog" title="Error output" style="display:none;">
@@ -88,8 +71,8 @@ catch (ex) {  }
 
 	<div id="expl_container">
           <div id="expl_logo">
-            <a href="http://incubator.apache.org/sling">
-	            <img width="51" height="30" src="http://incubator.apache.org/sling/site/media.data/logo.png" alt="Apache Sling"/>
+            <a href="http://sling.apache.org">
+	            <img width="51" height="30" src="http://sling.apache.org/site/media.data/logo.png" alt="Apache Sling"/>
             </a><!-- <span id="height"></span> -->
           </div>
 	
@@ -142,13 +125,19 @@ catch (ex) {  }
 	<div id="expl_content_container">
 	
 		<div id="expl_sidebar">
+            <ul>
+                <li>
+                    <p id="_" class="selected">
+                        <a href="#" onclick="explorer_toggle('/', '')" >/</a>
+                    </p>
+                </li>
+            </ul>
 		</div>
 
 		<div id="expl_content">
 			content
-		</div>		
-		<div class="clear"></div>
-	
+        </div>
+        <div class="clear"></div>
 	</div>
 
 		<div id="expl_footer">
@@ -200,21 +189,28 @@ Session user ID: <span id="sessionuserid"></span>
 				
 				$('button#do_login').click( function(e) {
 					var userId = $("input#j_username").val();
-					// ajax login
-					$.post('/j_security_check', 
-						$("#login-form").serialize(),
-						function(data) {
-							if ( userId == Sling.getSessionInfo().userID )
-							{
+                    $.ajax({
+                        url: '/j_security_check',
+                        type: 'POST',
+                        data: $("#login-form").serialize(),
+                        success: function( data, textStatus, xmlHttpRequest ) {
+                            // show_error(data);
+                            var sessionInfo = Sling.getSessionInfo();
+                            if ( userId == sessionInfo.userID )
+							{                            
 								$("#login-dialog").slideToggle("slow", adjust_height );
 								update_credentials();
-								load_props( currentPath, currentResourceType );
+								load_props( currentPath );
 							}
 							else
 							{
-								// failed to login!
+								show_error( data );
 							}
-					});
+                        },
+                        error: function( xmlHttpRequest, textStatus, errorThrown ) {
+                            show_error( xmlHttpRequest.responseText );
+                        }
+                    });
 					return false;
 				});
 				
@@ -222,12 +218,12 @@ Session user ID: <span id="sessionuserid"></span>
 					// ajax logout
 					$.get( '/system/sling/logout.html', function(data) { 
 						update_credentials();
-						load_props( currentPath, currentResourceType );
+						load_props( currentPath );
 					} );
 				});
 				
 				update_credentials();
-				init_load('<%= resource.path %>', '<%= resourceType %>');
+				init_load( '<%= resource.path %>' );
 				adjust_height();
 			});
 			
