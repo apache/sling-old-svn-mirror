@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 import javax.jcr.Node;
 
+import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
 import org.osgi.service.component.ComponentContext;
 
 /** Test that added/updated/removed resources are

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 import java.util.Collection;
 
@@ -24,6 +24,8 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
+import org.apache.sling.installer.provider.jcr.impl.WatchedFolder;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /** Verify that the JcrInstaller finds all folders that must

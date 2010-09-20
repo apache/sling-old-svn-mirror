@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 
 /** Test that changes in folders to watch are correctly detected,

@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/fileinstall</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/fileinstall</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/installer/fileinstall/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/providers/file</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/providers/file</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/file/</url>
     </scm>
 
     <build>

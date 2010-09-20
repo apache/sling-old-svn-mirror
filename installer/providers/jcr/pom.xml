@@ -27,7 +27,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
+    <artifactId>org.apache.sling.installer.provider.jcr</artifactId>
     <version>3.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/jcr/jcrinstall</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/jcr/jcrinstall</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/installer/jcr/jcrinstall/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/jcr/</url>
     </scm>
 
     <build>
@@ -60,7 +60,7 @@
                         <Import-Package>
                             javax.jcr.*;version=1.0,*
                         </Import-Package>
-                        <Private-Package>org.apache.sling.jcr.jcrinstall.impl.*</Private-Package>
+                        <Private-Package>org.apache.sling.installer.provider.jcr.impl.*</Private-Package>
                         <Sling-Nodetypes>SLING-INF/nodetypes/osgiconfig.cnd</Sling-Nodetypes>
                         <Sling-Namespaces>sling=http://sling.apache.org/jcr/sling/1.0</Sling-Namespaces>
                         <Embed-Dependency>*;artifactId=org.apache.sling.commons.osgi</Embed-Dependency>
