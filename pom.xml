@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.install.fileinstall</artifactId>
+    <artifactId>org.apache.sling.installer.provider.file</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -52,10 +52,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.installer.file.impl.Activator
+                            org.apache.sling.installer.provider.file.impl.Activator
                         </Bundle-Activator>
                         <Private-Package>
-                            org.apache.sling.installer.file.impl.*
+                            org.apache.sling.installer.provider.file.impl.*
                         </Private-Package>
                     </instructions>
                 </configuration>

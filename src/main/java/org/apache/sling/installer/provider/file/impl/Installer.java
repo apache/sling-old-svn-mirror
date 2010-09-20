@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.file.impl;
+package org.apache.sling.installer.provider.file.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +58,7 @@ public class Installer implements FileChangesListener {
     }
 
     /**
-     * @see org.apache.sling.installer.file.impl.FileChangesListener#initialSet(java.util.List)
+     * @see org.apache.sling.installer.provider.file.impl.FileChangesListener#initialSet(java.util.List)
      */
     public void initialSet(final List<File> files) {
         logger.debug("Initial set for {}", this.scheme);
@@ -74,7 +74,7 @@ public class Installer implements FileChangesListener {
     }
 
     /**
-     * @see org.apache.sling.installer.file.impl.FileChangesListener#updated(java.util.List, java.util.List, java.util.List)
+     * @see org.apache.sling.installer.provider.file.impl.FileChangesListener#updated(java.util.List, java.util.List, java.util.List)
      */
     public void updated(List<File> added, List<File> changed, List<File> removed) {
         final List<InstallableResource> updated;
