@@ -25,8 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.OsgiInstaller;
 
 
 class MockOsgiInstaller implements OsgiInstaller {
@@ -45,7 +45,7 @@ class MockOsgiInstaller implements OsgiInstaller {
     private final Set<String> urls = new HashSet<String>();
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.osgi.installer.InstallableResource[], java.lang.String[])
+     * @see org.apache.sling.installer.api.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[], java.lang.String[])
      */
     public void updateResources(final String scheme,
             final InstallableResource[] resources, final String[] ids) {
@@ -66,7 +66,7 @@ class MockOsgiInstaller implements OsgiInstaller {
     }
 
     /**
-     * @see org.apache.sling.osgi.installer.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.osgi.installer.InstallableResource[])
+     * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
     public void registerResources(String urlScheme, final InstallableResource[] data) {
         // Sort the data to allow comparing the recorded calls reliably

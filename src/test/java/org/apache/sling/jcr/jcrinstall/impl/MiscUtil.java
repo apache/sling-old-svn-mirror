@@ -24,8 +24,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.osgi.framework.BundleContext;

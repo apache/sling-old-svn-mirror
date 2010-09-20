@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

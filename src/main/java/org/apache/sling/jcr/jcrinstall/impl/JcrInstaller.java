@@ -32,9 +32,9 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;

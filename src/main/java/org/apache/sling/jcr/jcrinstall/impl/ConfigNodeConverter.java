@@ -36,7 +36,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
