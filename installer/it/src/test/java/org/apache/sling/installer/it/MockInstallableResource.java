@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.it;
+package org.apache.sling.installer.it;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

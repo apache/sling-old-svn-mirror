@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.installer.it.b;
+package org.apache.sling.installer.it.b;
 
-import org.apache.sling.osgi.installer.it.a.ClassA;
+import org.apache.sling.installer.it.a.ClassA;
 
 /** Dummy class used in test bundles */
 public class ClassB {
-	ClassA a = new ClassA(); 
+	ClassA a = new ClassA();
 }

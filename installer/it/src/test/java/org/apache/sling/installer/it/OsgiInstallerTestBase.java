@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.installer.it;
+package org.apache.sling.installer.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -66,7 +66,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 	protected OsgiInstaller installer;
 
 	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
-    public static final String BUNDLE_BASE_NAME = "org.apache.sling.osgi.installer.it-" + POM_VERSION;
+    public static final String BUNDLE_BASE_NAME = "org.apache.sling.installer.it-" + POM_VERSION;
 
     @Inject
     protected BundleContext bundleContext;
@@ -109,7 +109,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
      * Restart the installer.
      */
     protected void restartInstaller() throws BundleException {
-        final String symbolicName = "org.apache.sling.osgi.installer";
+        final String symbolicName = "org.apache.sling.installer.core";
         final Bundle b = findBundle(symbolicName);
         if (b == null) {
             fail("Bundle " + symbolicName + " not found");
@@ -122,7 +122,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected void generateBundleEvent() throws Exception {
         // install a bundle manually to generate a bundle event
-        final File f = getTestBundle("org.apache.sling.osgi.installer.it-" + POM_VERSION + "-testbundle-1.0.jar");
+        final File f = getTestBundle("org.apache.sling.installer.it-" + POM_VERSION + "-testbundle-1.0.jar");
         final InputStream is = new FileInputStream(f);
         Bundle b = null;
         try {
@@ -383,7 +383,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
-        	        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION)
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION)
         		)
         );
     }
