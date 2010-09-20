@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Dictionary;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 
 public class MockInstallableResource extends InstallableResource {
 

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

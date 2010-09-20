@@ -36,8 +36,8 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 
-import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;

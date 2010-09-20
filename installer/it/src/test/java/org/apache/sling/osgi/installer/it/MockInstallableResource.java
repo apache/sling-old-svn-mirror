@@ -29,7 +29,7 @@ import java.util.Enumeration;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 
 public class MockInstallableResource extends InstallableResource {
 

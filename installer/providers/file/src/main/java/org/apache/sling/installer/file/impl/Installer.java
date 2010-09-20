@@ -27,8 +27,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
-import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

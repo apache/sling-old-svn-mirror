@@ -35,7 +35,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

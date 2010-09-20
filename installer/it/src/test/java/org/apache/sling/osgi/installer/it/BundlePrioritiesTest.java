@@ -19,7 +19,7 @@ package org.apache.sling.osgi.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
