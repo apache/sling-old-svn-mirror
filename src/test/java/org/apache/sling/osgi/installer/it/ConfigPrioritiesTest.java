@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.osgi.installer.InstallableResource;
+import org.apache.sling.installer.api.InstallableResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
