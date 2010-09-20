@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.sling.installer.provider.jcr.impl.FolderNameFilterTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

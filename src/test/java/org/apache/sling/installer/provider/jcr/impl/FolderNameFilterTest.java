@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.sling.installer.provider.jcr.impl.FolderNameFilter;
+import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
 import org.junit.Test;
 
 public class FolderNameFilterTest {

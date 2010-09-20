@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -25,6 +25,9 @@ import java.util.Hashtable;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
+import org.apache.sling.installer.provider.jcr.impl.RescanTimer;
+import org.apache.sling.installer.provider.jcr.impl.WatchedFolder;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.impl;
+package org.apache.sling.installer.provider.jcr.impl;
 
 /** Used to wait at least SCAN_DELAY_MSEC before rescanning
  *  things after receiving a JCR Event. This avoids useless
