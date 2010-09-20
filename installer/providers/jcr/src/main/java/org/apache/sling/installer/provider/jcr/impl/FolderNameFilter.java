@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.sling.installer.provider.jcr.impl.FolderNameFilterTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *  matches the expression, followed by optional suffixes based
  *  on the current RunMode.
  *
- *  See {@link FolderNameFilterTest} for details.
+ *  See {@link org.apache.sling.installer.provider.jcr.impl.FolderNameFilterTest} for details.
  */
 class FolderNameFilter {
     private final Pattern pattern;
