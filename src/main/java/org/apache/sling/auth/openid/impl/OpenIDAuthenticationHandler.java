@@ -19,9 +19,12 @@
 package org.apache.sling.auth.openid.impl;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -320,7 +323,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
 
                     if (relyingParty.verifyAuth(user, request, response)) {
                         // authenticated
-                        response.sendRedirect(request.getRequestURI());
+                        response.sendRedirect(getDecodedReturnToResource(request));
                         return AuthenticationInfo.DOING_AUTH;
                     }
 
@@ -347,7 +350,8 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
                 final String trustRoot = (realm == null) ? url : realm;
 
                 // append the resource URL to the returnTo address
-                final String returnTo = url + getLoginResource(request, "/");
+                final String returnTo = url
+                    + getEncodedReturnToResource(request);
 
                 if (relyingParty.associateAndAuthenticate(user, request,
                     response, trustRoot, trustRoot, returnTo)) {
@@ -400,48 +404,30 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
         final RelyingParty relyingParty = getRelyingParty(request);
         relyingParty.invalidate(request, response);
 
-        // prepare the login form redirection target
-        final StringBuilder targetBuilder = new StringBuilder();
-        targetBuilder.append(request.getContextPath());
-        targetBuilder.append(loginForm);
-
-        // append originally requested resource (for redirect after login)
-        char parSep = '?';
-        final String resource = getLoginResource(request, null);
-        if (resource != null) {
-            targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
-            targetBuilder.append("=").append(
-                URLEncoder.encode(resource, "UTF-8"));
-            parSep = '&';
-        }
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Authenticator.LOGIN_RESOURCE,
+            getLoginResource(request, null));
 
         // append indication of previous login failure
-        if (request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON) != null) {
-            final Object jReason = request.getAttribute(OpenIDConstants.OPENID_FAILURE_REASON);
-            @SuppressWarnings("unchecked")
+        if (request.getAttribute(FAILURE_REASON) != null) {
+            final Object jReason = request.getAttribute(FAILURE_REASON);
+            @SuppressWarnings("rawtypes")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append(parSep).append(
-                OpenIDConstants.OPENID_FAILURE_REASON);
-            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
-            parSep = '&';
+            params.put(FAILURE_REASON, reason);
         }
 
         final Object paramIdentifier = request.getAttribute(OpenIDConstants.OPENID_IDENTITY);
         if (paramIdentifier instanceof String) {
-            targetBuilder.append(parSep).append(
-                OpenIDConstants.OPENID_IDENTITY);
-            targetBuilder.append("=").append(
-                URLEncoder.encode((String) paramIdentifier, "UTF-8"));
+            params.put(OpenIDConstants.OPENID_IDENTITY,
+                (String) paramIdentifier);
         }
 
-        // finally redirect to the login form
-        final String target = targetBuilder.toString();
         try {
-            response.sendRedirect(target);
+            sendRedirect(request, response, loginForm, params);
         } catch (IOException e) {
-            log.error("Failed to redirect to the page: " + target, e);
+            log.error("Failed to redirect to the login form " + loginForm, e);
         }
 
         return true;
@@ -804,5 +790,72 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
             return url.toString();
         }
         return externalUrlPrefix;
+    }
+
+    /**
+     * Returns the resource to use as the OpenID returnTo path. This resource is
+     * either set as a the resource request attribute or parameter or is derived
+     * from the current request (URI plus query string). Next the resource is
+     * URL encoded and prefixed with the request context path to ensure it is
+     * properly transmitted accross the OpenID redirection series.
+     *
+     * @param request The request providing the returnTo URL information
+     * @return The properly encoded returnTo URL path.
+     * @throws InternalError If the platform does not support UTF-8 encoding,
+     *             which is considered a major problem..
+     */
+    private String getEncodedReturnToResource(final HttpServletRequest request) {
+        // find the return to parameter with optional request parameters
+        String resource = getLoginResource(request, null);
+        if (resource == null) {
+            resource = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                resource += "?" + request.getQueryString();
+            }
+        }
+
+        String prefix = request.getContextPath();
+        if (prefix.length() == 0) {
+            prefix = "/";
+        }
+
+        try {
+            return prefix + URLEncoder.encode(resource, "UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            throw new InternalError("Unexpected UnsupportedEncodingException for UTF-8");
+        }
+    }
+
+    /**
+     * Returns the decoded target URL to which the client is to be redirected.
+     * This is the path from the returnTo parameter sent on the initial OpenID
+     * redirect which has been encoded with
+     * {@link #getEncodedReturnToResource(HttpServletRequest)}. Thus this method
+     * must do the reverse operations, namely cutting of the request context
+     * path prefix and URL decoding the remaing part of the request URL.
+     *
+     * @param request The request providing the request URL and context path
+     * @return the decoded path to which the client is be redirected after
+     *         successful OpenID authentication
+     * @throws InternalError If the platform does not support UTF-8 encoding,
+     *             which is considered a major problem..
+     */
+    private String getDecodedReturnToResource(final HttpServletRequest request) {
+        String resource = request.getRequestURI();
+
+        String prefix = request.getContextPath();
+        if (prefix.length() == 0) {
+            prefix = "/";
+        }
+
+        if (resource.startsWith(prefix)) {
+            resource = resource.substring(prefix.length());
+        }
+
+        try {
+            return URLDecoder.decode(resource, "UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            throw new InternalError("Unexpected UnsupportedEncodingException for UTF-8");
+        }
     }
 }
