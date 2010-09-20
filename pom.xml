@@ -27,7 +27,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.osgi.installer</artifactId>
+    <artifactId>org.apache.sling.installer.core</artifactId>
     <version>3.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -52,12 +52,12 @@
 				<configuration>
 					<instructions>
 						<Bundle-Activator>
-							org.apache.sling.osgi.installer.impl.Activator
+							org.apache.sling.installer.core.impl.Activator
                         </Bundle-Activator>
 						<Export-Package>
-							org.apache.sling.osgi.installer;version=3.0.0
+							org.apache.sling.installer.api;version=3.0.0
                         </Export-Package>
-						<Private-Package>org.apache.sling.osgi.installer.impl.*</Private-Package>
+						<Private-Package>org.apache.sling.installer.core.impl.*</Private-Package>
                         <Embed-Dependency>
                             org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
                         </Embed-Dependency>
