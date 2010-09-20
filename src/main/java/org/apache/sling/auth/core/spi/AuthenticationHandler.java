@@ -85,8 +85,11 @@ public interface AuthenticationHandler {
      * {@link #extractCredentials(HttpServletRequest, HttpServletResponse)}
      * method if {@link AuthenticationInfo#FAIL_AUTH} is returned.
      * <p>
-     * This result may be used by authentication handlers to inform the user
-     * of any failures.
+     * This result may be used by authentication handlers to inform the user of
+     * any failures.
+     *
+     * @see #extractCredentials(HttpServletRequest, HttpServletResponse)
+     * @since 1.0.2 (Bundle version 1.0.4)
      */
     static final String FAILURE_REASON = "j_reason";
 
