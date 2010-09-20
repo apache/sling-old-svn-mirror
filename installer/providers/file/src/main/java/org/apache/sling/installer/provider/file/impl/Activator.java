@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.file.impl;
+package org.apache.sling.installer.provider.file.impl;
 
 import java.util.ArrayList;
 import java.util.List;
