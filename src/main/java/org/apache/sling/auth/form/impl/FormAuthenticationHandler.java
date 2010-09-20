@@ -21,10 +21,11 @@ package org.apache.sling.auth.form.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
+import java.util.HashMap;
+
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
@@ -396,38 +397,23 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             }
         }
 
-        // prepare the login form redirection target
-        final StringBuilder targetBuilder = new StringBuilder();
-        targetBuilder.append(request.getContextPath());
-        targetBuilder.append(loginForm);
-
-        // append originally requested resource (for redirect after login)
-        char parSep = '?';
-
-        if (resource != null) {
-            targetBuilder.append(parSep).append(Authenticator.LOGIN_RESOURCE);
-            targetBuilder.append("=").append(
-                URLEncoder.encode(resource, "UTF-8"));
-            parSep = '&';
-        }
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Authenticator.LOGIN_RESOURCE, resource);
 
         // append indication of previous login failure
         if (request.getAttribute(FAILURE_REASON) != null) {
             final Object jReason = request.getAttribute(FAILURE_REASON);
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings("rawtypes")
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append(parSep).append(FAILURE_REASON);
-            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
+            params.put(FAILURE_REASON, reason);
         }
 
-        // finally redirect to the login form
-        final String target = targetBuilder.toString();
         try {
-            response.sendRedirect(target);
+            sendRedirect(request, response, loginForm, params);
         } catch (IOException e) {
-            log.error("Failed to redirect to the page: " + target, e);
+            log.error("Failed to redirect to the login form " + loginForm, e);
         }
 
         return true;
