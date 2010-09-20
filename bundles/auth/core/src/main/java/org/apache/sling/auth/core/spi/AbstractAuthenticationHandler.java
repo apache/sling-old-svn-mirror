@@ -18,7 +18,17 @@
  */
 package org.apache.sling.auth.core.spi;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.sling.api.auth.Authenticator;
 
 /**
@@ -101,6 +111,7 @@ public abstract class AbstractAuthenticationHandler extends
      *            and the request parameter is not set. This parameter is
      *            ignored if it is <code>null</code> or an empty string.
      * @return returns the value of resource request attribute
+     * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static String setLoginResourceAttribute(
             final HttpServletRequest request, final String defaultValue) {
@@ -118,6 +129,88 @@ public abstract class AbstractAuthenticationHandler extends
             request.setAttribute(Authenticator.LOGIN_RESOURCE, resourceAttr);
         }
         return resourceAttr;
+    }
+
+    /**
+     * Redirects to the given target path appending any parameters provided in
+     * the parameter map.
+     * <p>
+     * This method implements the following functionality:
+     * <ul>
+     * <li>The target path is prefixed with the request's context path to ensure
+     * proper redirection into the same web application. Therefore the
+     * <code>target</code> path parameter must not be prefixed with the context
+     * path.</li>
+     * <li>If the <code>params</code> map does not contain a (non-
+     * <code>null</code>) value for the {@link Authenticator#LOGIN_RESOURCE
+     * resource} entry, such an entry is generated from the request URI and the
+     * (optional) query string of the given <code>request</code>.</li>
+     * <li>The parameters from the <code>params</code> map or at least a single
+     * {@link Authenticator#LOGIN_RESOURCE resource} parameter are added to the
+     * target path for the redirect. Each parameter value is encoded using the
+     * <code>java.net.URLEncoder</code> with UTF-8 encoding to make it safe for
+     * requests</li>
+     * </ul>
+     *
+     * @param request The request object used to get the current request URI and
+     *            request query string if the <code>params</code> map does not
+     *            have the {@link Authenticator#LOGIN_RESOURCE resource}
+     *            parameter set.
+     * @param response The response used to send the redirect to the client.
+     * @param target The target path to redirect the client to. This parameter
+     *            must not be prefixed with the request's context path because
+     *            this will be added by this method.
+     * @param params The map of parameters to be added to the target path. This
+     *            may be <code>null</code>.
+     * @throws IOException If an error occurrs sending the redirect request
+     * @throws IllegalStateException If the response was committed or if a
+     *             partial URL is given and cannot be converted into a valid URL
+     * @throws InternalError If the UTF-8 character encoding is not supported by
+     *             the platform. This should not be caught, because it is a real
+     *             problem if the encoding required by the specification is
+     *             missing.
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    public static void sendRedirect(final HttpServletRequest request,
+            final HttpServletResponse response, final String target,
+            Map<String, String> params) throws IOException {
+        StringBuilder b = new StringBuilder();
+        b.append(request.getContextPath());
+        b.append(target);
+
+        if (params == null) {
+            params = new HashMap<String, String>();
+        }
+
+        // ensure the login resource is provided with the redirect
+        if (params.get(Authenticator.LOGIN_RESOURCE) == null) {
+            String resource = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                resource += "?" + request.getQueryString();
+            }
+            params.put(Authenticator.LOGIN_RESOURCE, resource);
+        }
+
+        b.append('?');
+        Iterator<Entry<String, String>> ei = params.entrySet().iterator();
+        while (ei.hasNext()) {
+            Entry<String, String> entry = ei.next();
+            if (entry.getKey() != null && entry.getValue() != null) {
+                try {
+                    b.append(entry.getKey()).append('=').append(
+                        URLEncoder.encode(entry.getValue(), "UTF-8"));
+                } catch (UnsupportedEncodingException uee) {
+                    throw new InternalError(
+                        "Unexpected UnsupportedEncodingException for UTF-8");
+                }
+
+                if (ei.hasNext()) {
+                    b.append('&');
+                }
+            }
+        }
+
+        response.sendRedirect(b.toString());
     }
 
     /**
