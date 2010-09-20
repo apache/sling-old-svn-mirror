@@ -77,6 +77,9 @@ public abstract class AbstractRepositoryEventHandlerTest {
     }
 
     @org.junit.AfterClass public static void shutdownRepository() throws Exception {
+        if ( session != null ) {
+            session.logout();
+        }
         RepositoryTestUtil.stopRepository();
     }
 
