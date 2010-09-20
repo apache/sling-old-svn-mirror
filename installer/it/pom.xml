@@ -30,8 +30,8 @@
     <version>3.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling OSGi Installer Integration Tests</name>
-    <description>Integration tests of the Sling OSGi installer bundle</description>
+    <name>Apache Sling Installer Integration Tests</name>
+    <description>Integration tests of the Sling installer bundle</description>
 
     <properties>
         <pax.exam.log.level>INFO</pax.exam.log.level>

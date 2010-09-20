@@ -31,7 +31,7 @@
     <version>3.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling OSGi Installer</name>
+    <name>Apache Sling Installer</name>
     <description> 
         Provides services to install OSGi bundles and configurations
         by supplying input streams and dictionaries.
