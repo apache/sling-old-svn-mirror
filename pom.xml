@@ -136,10 +136,10 @@
         <module>bundles/extensions/explorer</module>
         
         <!-- Installer -->
-        <module>installer/osgi/installer</module>
-        <module>installer/osgi/it</module>
-        <module>installer/fileinstall</module>
-        <module>installer/jcr/jcrinstall</module>
+        <module>installer/core</module>
+        <module>installer/providers/file</module>
+        <module>installer/providers/jcr</module>
+        <module>installer/it</module>
         
         <!-- Launchpad -->
         <module>launchpad/base</module>
