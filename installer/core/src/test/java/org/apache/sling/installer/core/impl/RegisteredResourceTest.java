@@ -34,8 +34,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -46,7 +44,7 @@ public class RegisteredResourceTest {
 
     static File getTestBundle(String name) {
         return new File(System.getProperty("osgi.installer.base.dir"),
-                "org.apache.sling.osgi.installer-" + System.getProperty("osgi.installer.pom.version") + "-" + name);
+                "org.apache.sling.installer.core-" + System.getProperty("osgi.installer.pom.version") + "-" + name);
     }
 
     @org.junit.Test public void testResourceType() throws Exception {
