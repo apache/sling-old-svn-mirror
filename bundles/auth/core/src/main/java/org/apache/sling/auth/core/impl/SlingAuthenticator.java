@@ -850,24 +850,24 @@ public class SlingAuthenticator implements Authenticator,
     private void doLogin(HttpServletRequest request,
             HttpServletResponse response) {
 
-        try {
-
-            login(request, response);
-
-        } catch (IllegalStateException ise) {
-
-            log.error("doLogin: Cannot login: Response already committed");
-
-        } catch (NoAuthenticationHandlerException nahe) {
-
-            log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
-
             try {
+
+                login(request, response);
+
+            } catch (IllegalStateException ise) {
+
+                log.error("doLogin: Cannot login: Response already committed");
+
+            } catch (NoAuthenticationHandlerException nahe) {
+
+                log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
+
+        try {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                     "Cannot login");
-            } catch (IOException ioe) {
-                log.error("doLogin: Failed sending 403 status", ioe);
-            }
+        } catch (IOException ioe) {
+            log.error("doLogin: Failed sending 403 status", ioe);
+        }
 
         }
     }
@@ -1081,8 +1081,11 @@ public class SlingAuthenticator implements Authenticator,
 
         // find the redirect target from the resource attribute or parameter
         // falling back to the reuest context path (or /) if not set
-        final String target = AbstractAuthenticationHandler.setLoginResourceAttribute(
-            request, request.getContextPath());
+        String target = AbstractAuthenticationHandler.getLoginResource(request,
+            request.getContextPath());
+        if (target.length() == 0) {
+            target = "/";
+        }
 
         // redirect to there
         try {
