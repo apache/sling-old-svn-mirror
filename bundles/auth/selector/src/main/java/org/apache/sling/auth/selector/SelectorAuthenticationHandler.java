@@ -19,7 +19,7 @@
 package org.apache.sling.auth.selector;
 
 import java.io.IOException;
-import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -85,18 +85,11 @@ public class SelectorAuthenticationHandler extends
     }
 
     public boolean requestCredentials(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+            HttpServletResponse response) {
 
-        // prepare the login form redirection target
-        final StringBuilder targetBuilder = new StringBuilder();
-        targetBuilder.append(request.getContextPath());
-        targetBuilder.append(loginForm);
-
-        targetBuilder.append('?').append(Authenticator.LOGIN_RESOURCE);
-        targetBuilder.append("=").append(
-            URLEncoder.encode(
-                setLoginResourceAttribute(request, request.getRequestURI()),
-                "UTF-8"));
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Authenticator.LOGIN_RESOURCE,
+            getLoginResource(request, null));
 
         // append indication of previous login failure
         if (request.getAttribute(FAILURE_REASON) != null) {
@@ -105,23 +98,18 @@ public class SelectorAuthenticationHandler extends
             final String reason = (jReason instanceof Enum)
                     ? ((Enum) jReason).name()
                     : jReason.toString();
-            targetBuilder.append('&').append(FAILURE_REASON);
-            targetBuilder.append("=").append(URLEncoder.encode(reason, "UTF-8"));
+            params.put(FAILURE_REASON, reason);
         }
 
         // append selected authentication type of previous request
         if (request.getParameter(PAR_SELECTED_AUTH_TYPE) != null) {
-            targetBuilder.append('&').append(PAR_SELECTED_AUTH_TYPE);
-            targetBuilder.append("=").append(
-                request.getParameter(PAR_SELECTED_AUTH_TYPE));
+            params.put(PAR_SELECTED_AUTH_TYPE, request.getParameter(PAR_SELECTED_AUTH_TYPE));
         }
 
-        // finally redirect to the login form
-        final String target = targetBuilder.toString();
         try {
-            response.sendRedirect(target);
+           sendRedirect(request, response, loginForm, params);
         } catch (IOException e) {
-            log.error("Failed to redirect to the page: " + target, e);
+            log.error("Failed to redirect to the login form " + loginForm, e);
         }
 
         return true;
