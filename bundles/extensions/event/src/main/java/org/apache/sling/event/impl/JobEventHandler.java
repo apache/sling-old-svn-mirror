@@ -228,7 +228,7 @@ public class JobEventHandler
 
     /**
      * Activate this component.
-     * @param context
+     * @param context The component context.
      */
     protected void activate(final ComponentContext context) {
         @SuppressWarnings("unchecked")
@@ -581,7 +581,7 @@ public class JobEventHandler
         // for another application node
         final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
         if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
-            && appId != null && !this.applicationId.equals(appId) ) {
+            && !this.applicationId.equals(appId) ) {
             if ( logger.isDebugEnabled() ) {
                  logger.debug("Discarding job {} : local job for a different application node.", EventUtil.toString(info.event));
             }
@@ -1247,26 +1247,45 @@ public class JobEventHandler
         return eventCreated;
     }
 
+    /**
+     * Try to load a job from an event node in the repository.
+     * @param eventNode       The node to read the event from
+     * @param unloadedJobSet  The set of unloaded jobs - if loading fails, the node path is added here
+     * @return <code>true</code> If the job can be loaded.
+     */
     private boolean tryToLoadJob(final Node eventNode, final Set<String> unloadedJobSet) {
         try {
+            // first check: node should be unlocked (= not processed by any other cluster node)
+            //              job should not be finished
             if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
                 final String nodePath = eventNode.getPath();
-                try {
-                    final Event event = this.readEvent(eventNode);
-                    final EventInfo info = new EventInfo();
-                    info.event = event;
-                    info.nodePath = nodePath;
-                    this.queueJob(info);
-                } catch (ClassNotFoundException cnfe) {
-                    // store path for lazy loading
-                    synchronized ( unloadedJobSet ) {
-                        unloadedJobSet.add(nodePath);
+                boolean isNonLocal = false;
+                // second check: is this a job that should only run on the instance that it was created on?
+                if ( eventNode.hasProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) &&
+                     !eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(this.applicationId)) {
+                    isNonLocal = true;
+                    if ( logger.isDebugEnabled() ) {
+                         logger.debug("Discarding job at {} : local job for a different application node.", nodePath);
                     }
-                    this.ignoreException(cnfe);
-                } catch (RepositoryException re) {
-                    this.logger.error("Unable to load stored job from " + nodePath, re);
                 }
-                return true;
+                if ( !isNonLocal ) {
+                    try {
+                        final Event event = this.readEvent(eventNode);
+                        final EventInfo info = new EventInfo();
+                        info.event = event;
+                        info.nodePath = nodePath;
+                        this.queueJob(info);
+                    } catch (ClassNotFoundException cnfe) {
+                        // store path for lazy loading
+                        synchronized ( unloadedJobSet ) {
+                            unloadedJobSet.add(nodePath);
+                        }
+                        this.ignoreException(cnfe);
+                    } catch (RepositoryException re) {
+                        this.logger.error("Unable to load stored job from " + nodePath, re);
+                    }
+                    return true;
+                }
             }
         } catch (RepositoryException re) {
             this.logger.error("Unable to load stored job from " + eventNode, re);
