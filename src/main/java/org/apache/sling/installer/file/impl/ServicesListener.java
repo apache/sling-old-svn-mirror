@@ -24,7 +24,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
