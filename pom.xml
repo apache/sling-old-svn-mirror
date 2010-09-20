@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/osgi/installer</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/installer/osgi/installer</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/installer/core</url>
     </scm>
 
 	<build>
