@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.installer.it;
+package org.apache.sling.installer.it;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -28,14 +28,14 @@ import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
 /** Utility that waits for no OSGi events to happen in a given amount
- *  of time. 
+ *  of time.
  */
 class EventsDetector implements FrameworkListener, BundleListener, ConfigurationListener, ServiceListener {
 
     private long lastEvent;
     private final ServiceRegistration configReg;
     private final BundleContext ctx;
-    
+
     EventsDetector(BundleContext ctx) {
         this.ctx = ctx;
         ctx.addBundleListener(this);
@@ -43,14 +43,14 @@ class EventsDetector implements FrameworkListener, BundleListener, Configuration
         ctx.addServiceListener(this);
         configReg = ctx.registerService(ConfigurationListener.class.getName(), this, null);
     }
-    
+
     void close() {
         configReg.unregister();
         ctx.removeServiceListener(this);
         ctx.removeFrameworkListener(this);
         ctx.removeBundleListener(this);
     }
-    
+
     void waitForNoEvents(long timeWithoutEventsMsec, long timeoutMsec) throws InterruptedException {
         final long endTime = System.currentTimeMillis() + timeoutMsec;
         final long exitTime = lastEvent + timeWithoutEventsMsec;
@@ -62,11 +62,11 @@ class EventsDetector implements FrameworkListener, BundleListener, Configuration
         }
         throw new IllegalStateException("Did not get " + timeWithoutEventsMsec + " msec without events after waiting " + timeoutMsec);
     }
-    
+
     private void recordLastEvent() {
         lastEvent = System.currentTimeMillis();
     }
-    
+
     public void frameworkEvent(FrameworkEvent arg0) {
         recordLastEvent();
     }

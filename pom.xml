@@ -26,7 +26,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.osgi.installer.it</artifactId>
+    <artifactId>org.apache.sling.installer.it</artifactId>
     <version>3.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -240,7 +240,7 @@
                                         <attribute name="Manifest-Version" value="2"/>
                                         <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
                                         <attribute name="Bundle-SymbolicName" value="osgi-installer-testB"/>
-                                        <attribute name="Export-Package" value='org.apache.sling.osgi.installer.it.a;version="1.0"'/>
+                                        <attribute name="Export-Package" value='org.apache.sling.installer.it.a;version="1.0"'/>
                                         <attribute name="Bundle-Version" value="1.0"/>
                                     </manifest>
                                 </jar>
@@ -265,7 +265,7 @@
                                         <attribute name="Bundle-Name" value="OSGi controller test bundle"/>
                                         <attribute name="Bundle-SymbolicName" value="osgi-installer-needsB"/>
                                         <attribute name="Bundle-Version" value="1.0"/>
-                                        <attribute name="Import-Package" value='org.apache.sling.osgi.installer.it.a;version="1.0"'/>
+                                        <attribute name="Import-Package" value='org.apache.sling.installer.it.a;version="1.0"'/>
                                     </manifest>
                                 </jar>
                             </tasks>

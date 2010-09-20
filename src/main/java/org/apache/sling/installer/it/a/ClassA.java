@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.installer.it.a;
+package org.apache.sling.installer.it.a;
 
 /** Dummy class used in test bundles */
 public class ClassA {

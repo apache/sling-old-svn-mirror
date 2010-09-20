@@ -1,4 +1,4 @@
-package org.apache.sling.osgi.installer.it;
+package org.apache.sling.installer.it;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

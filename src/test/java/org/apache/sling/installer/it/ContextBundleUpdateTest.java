@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.installer.it;
+package org.apache.sling.installer.it;
 
 import static org.junit.Assert.assertNull;
 
