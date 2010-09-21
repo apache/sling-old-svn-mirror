@@ -26,8 +26,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.service.component.ComponentContext;
 
 
@@ -73,6 +73,7 @@ public class EventingThreadPool implements ThreadPool {
         config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUE_SIZE), DEFAULT_QUEUE_SIZE));
         config.setShutdownGraceful(true);
         config.setPriority(ThreadPriority.valueOf(OsgiUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
+        config.setDaemon(true);
         this.threadPool = threadPoolManager.create(config);
     }
 
