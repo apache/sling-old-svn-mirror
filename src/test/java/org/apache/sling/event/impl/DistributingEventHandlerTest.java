@@ -45,8 +45,12 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
     protected Mockery context;
 
     public DistributingEventHandlerTest() {
-        this.handler = new DistributingEventHandler();
         this.context = new JUnit4Mockery();
+    }
+
+    @Override
+    protected AbstractRepositoryEventHandler createHandler() {
+        return new DistributingEventHandler();
     }
 
     @Override

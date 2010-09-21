@@ -184,11 +184,13 @@ public class DistributingEventHandler
                     try {
                         session = this.createSession();
                         final Node eventNode = (Node)session.getItem(info.nodePath);
-                        final EventAdmin localEA = this.eventAdmin;
-                        if ( localEA != null ) {
-                            localEA.postEvent(this.readEvent(eventNode));
-                        } else {
-                            this.logger.error("Unable to post event as no event admin is available.");
+                        if ( eventNode.isNodeType(this.getEventNodeType()) ) {
+                            final EventAdmin localEA = this.eventAdmin;
+                            if ( localEA != null ) {
+                                localEA.postEvent(this.readEvent(eventNode));
+                            } else {
+                                this.logger.error("Unable to post event as no event admin is available.");
+                            }
                         }
                     } catch (Exception ex) {
                         this.logger.error("Exception during reading the event from the repository.", ex);
@@ -249,6 +251,6 @@ public class DistributingEventHandler
     protected void startWriterSession() throws RepositoryException {
         super.startWriterSession();
         this.writerSession.getWorkspace().getObservationManager()
-            .addEventListener(this, javax.jcr.observation.Event.NODE_ADDED, this.repositoryPath, true, null, new String[] {this.getEventNodeType()}, true);
+            .addEventListener(this, javax.jcr.observation.Event.NODE_ADDED, this.repositoryPath, true, null, null, true);
     }
 }
