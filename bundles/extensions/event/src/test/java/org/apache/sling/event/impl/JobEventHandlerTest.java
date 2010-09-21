@@ -34,11 +34,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.job.JobStatusNotifier;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.runner.RunWith;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(JMock.class)
@@ -47,9 +49,7 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     protected Mockery context;
 
     public JobEventHandlerTest() {
-        this.handler = new JobEventHandler();
         this.context = new JUnit4Mockery();
-        ((JobEventHandler)this.handler).scheduler = new SimpleScheduler();
     }
 
     @Override
@@ -58,9 +58,17 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     }
 
     @Override
+    protected AbstractRepositoryEventHandler createHandler() {
+        final JobEventHandler h = new JobEventHandler();
+        h.scheduler = new SimpleScheduler();
+        return h;
+    }
+
+    @Override
     protected Dictionary<String, Object> getComponentConfig() {
         final Dictionary<String, Object> config =  super.getComponentConfig();
         config.put("cleanup.period", 1); // set clean up to 1 minute
+        config.put("load.delay", 1); // load delay to 1 sec
         return config;
     }
 
@@ -97,6 +105,29 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         }
         if ( parallel != null ) {
             props.put(EventUtil.PROPERTY_JOB_PARALLEL, parallel);
+        }
+        return getJobEvent(queueName, id, parallel, false);
+    }
+
+    /**
+     * Helper method to create a job event.
+     */
+    private Event getJobEvent(String queueName, String id, String parallel, boolean runlocal) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(EventUtil.PROPERTY_JOB_TOPIC, "sling/test");
+        if ( id != null ) {
+            props.put(EventUtil.PROPERTY_JOB_ID, id);
+        }
+        props.put(EventUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
+        props.put(EventUtil.PROPERTY_JOB_RETRIES, 2);
+        if ( queueName != null ) {
+            props.put(EventUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
+        }
+        if ( parallel != null ) {
+            props.put(EventUtil.PROPERTY_JOB_PARALLEL, parallel);
+        }
+        if ( runlocal ) {
+            props.put(EventUtil.PROPERTY_JOB_RUN_LOCAL, "true");
         }
         return new Event(EventUtil.TOPIC_JOB, props);
     }
@@ -437,5 +468,108 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertTrue(handler.getWriterRootNode().hasNode("6"));
         assertTrue(handler.getWriterRootNode().hasNode("7"));
         assertTrue(handler.getWriterRootNode().hasNode("8"));
+    }
+
+    @org.junit.Test public void testLoad() throws Exception {
+        final List<Integer> retryCountList = new ArrayList<Integer>();
+        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final Barrier cb = new Barrier(2);
+        final EventAdmin ea = new SimpleEventAdmin(new String[] {"sling/test"},
+                new EventHandler[] {
+                    new EventHandler() {
+                        int retryCount;
+                        public void handleEvent(Event event) {
+                            retryCountList.add(retryCount);
+                            EventUtil.acknowledgeJob(event);
+                            if ( retryCount == 0 ) {
+                                EventUtil.rescheduleJob(event);
+                            } else {
+                                EventUtil.finishedJob(event);
+                            }
+                            retryCount++;
+                            cb.block();
+                        }
+                    }
+                });
+        jeh.eventAdmin = ea;
+        jeh.handleEvent(getJobEvent(null, null, null));
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
+        this.deactivate();
+        assertEquals("Unexpected number of retries", 1, retryCountList.size());
+        Thread.sleep(3000);
+        assertEquals("Unexpected number of retries", 1, retryCountList.size());
+        this.activate(ea);
+        // the job is retried after loading, so we wait again
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
+        assertFalse("Unexpected event received in the given time.", cb.block(5));
+        assertEquals("Unexpected number of retries", 2, retryCountList.size());
+    }
+
+    @org.junit.Test public void testRunLocal() throws Exception {
+        final List<Integer> retryCountList = new ArrayList<Integer>();
+        final List<String> sessionPath = new ArrayList<String>();
+        JobEventHandler jeh = (JobEventHandler)this.handler;
+        final Barrier cb = new Barrier(2);
+        final EventAdmin ea = new SimpleEventAdmin(new String[] {"sling/test"},
+                new EventHandler[] {
+                    new EventHandler() {
+                        int retryCount;
+                        public void handleEvent(Event event) {
+                            retryCountList.add(retryCount);
+                            EventUtil.acknowledgeJob(event);
+                            if ( retryCount == 0 || retryCount == 1) {
+                                // get the job node from the context
+                                final JobStatusNotifier.NotifierContext ctx = (JobStatusNotifier.NotifierContext) event.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
+                                sessionPath.add(ctx.eventNodePath);
+                                EventUtil.rescheduleJob(event);
+                            } else {
+                                EventUtil.finishedJob(event);
+                            }
+                            retryCount++;
+                            cb.block();
+                        }
+                    }
+                });
+        jeh.eventAdmin = ea;
+        // first test: local event and we change the application id
+        jeh.handleEvent(getJobEvent(null, null, null, true));
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
+        this.deactivate();
+        assertEquals("Unexpected number of retries", 1, retryCountList.size());
+        Thread.sleep(3000);
+        assertEquals("Unexpected number of retries", 1, retryCountList.size());
+        assertEquals("Unexpected number of paths", 1, sessionPath.size());
+        // change app id
+        final String nodePath = sessionPath.get(0);
+        session.getNode(nodePath).setProperty(EventHelper.NODE_PROPERTY_APPLICATION, "unknown");
+        session.save();
+
+        this.activate(ea);
+        jeh = (JobEventHandler)this.handler;
+        // the job is not retried after loading, so we wait again
+        assertFalse("Unexpected event received in the given time.", cb.block(5));
+        cb.reset();
+        assertEquals("Unexpected number of retries", 1, retryCountList.size());
+
+        // second test: local event and we don't change the application id
+        jeh.handleEvent(getJobEvent(null, null, null, true));
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
+        this.deactivate();
+        assertEquals("Unexpected number of retries", 2, retryCountList.size());
+        Thread.sleep(3000);
+        assertEquals("Unexpected number of retries", 2, retryCountList.size());
+        assertEquals("Unexpected number of paths", 2, sessionPath.size());
+
+        this.activate(ea);
+        // the job is retried after loading, so we wait again
+        assertTrue("No event received in the given time.", cb.block(5));
+        cb.reset();
+        assertFalse("Unexpected event received in the given time.", cb.block(5));
+        cb.reset();
+        assertEquals("Unexpected number of retries", 3, retryCountList.size());
     }
 }

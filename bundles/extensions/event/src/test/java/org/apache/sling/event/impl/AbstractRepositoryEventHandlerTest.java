@@ -48,7 +48,7 @@ import org.osgi.service.event.EventAdmin;
 @RunWith(JMock.class)
 public abstract class AbstractRepositoryEventHandlerTest {
 
-    protected AbstractRepositoryEventHandler handler;
+    protected volatile AbstractRepositoryEventHandler handler;
 
     protected static final String REPO_PATH = "/test/events";
     protected static final String SLING_ID = "4711";
@@ -56,6 +56,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
     protected static Session session;
 
     protected abstract Mockery getMockery();
+
+    protected abstract AbstractRepositoryEventHandler createHandler();
 
     protected Dictionary<String, Object> getComponentConfig() {
         final Dictionary<String, Object> config = new Hashtable<String, Object>();
@@ -79,11 +81,20 @@ public abstract class AbstractRepositoryEventHandlerTest {
     @org.junit.AfterClass public static void shutdownRepository() throws Exception {
         if ( session != null ) {
             session.logout();
+            session = null;
         }
         RepositoryTestUtil.stopRepository();
     }
 
     @org.junit.Before public void setup() throws Exception {
+        // activate
+        this.activate(null);
+    }
+
+    int activateCount = 1;
+
+    protected void activate(final EventAdmin ea) {
+        this.handler = this.createHandler();
         this.handler.repository = RepositoryTestUtil.getSlingRepository();
         this.handler.classLoaderManager = new DynamicClassLoaderManager() {
 
@@ -92,12 +103,16 @@ public abstract class AbstractRepositoryEventHandlerTest {
             }
         };
         // the event admin
-        final EventAdmin eventAdmin = this.getMockery().mock(EventAdmin.class);
-        this.handler.eventAdmin = eventAdmin;
-        this.getMockery().checking(new Expectations() {{
-            allowing(eventAdmin).postEvent(with(any(Event.class)));
-            allowing(eventAdmin).sendEvent(with(any(Event.class)));
-        }});
+        if ( ea != null ) {
+            this.handler.eventAdmin = ea;
+        } else {
+            final EventAdmin eventAdmin = this.getMockery().mock(EventAdmin.class, "eventAdmin" + activateCount);
+            this.handler.eventAdmin = eventAdmin;
+            this.getMockery().checking(new Expectations() {{
+                allowing(eventAdmin).postEvent(with(any(Event.class)));
+                allowing(eventAdmin).sendEvent(with(any(Event.class)));
+            }});
+        }
 
         // sling settings service
         this.handler.settingsService = new SlingSettingsService() {
@@ -122,13 +137,13 @@ public abstract class AbstractRepositoryEventHandlerTest {
         this.handler.threadPool = new ThreadPoolImpl();
 
         // lets set up the bundle context
-        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "beforeBundleContext");
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "beforeBundleContext" + activateCount);
 
         // lets set up the component configuration
         final Dictionary<String, Object> componentConfig = this.getComponentConfig();
 
         // lets set up the compnent context
-        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "beforeComponentContext");
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "beforeComponentContext" + activateCount);
         this.getMockery().checking(new Expectations() {{
             allowing(componentContext).getBundleContext();
             will(returnValue(bundleContext));
@@ -137,23 +152,35 @@ public abstract class AbstractRepositoryEventHandlerTest {
         }});
 
         this.handler.activate(componentContext);
+
         // the session is initialized in the background, so let's sleep some seconds
-        Thread.sleep(2 * 1000);
+        try {
+            Thread.sleep(2 * 1000);
+        } catch (InterruptedException e) {
+            // ignore
+        }
     }
 
-    @org.junit.After public void shutdown() throws Exception {
+    protected void deactivate() {
         // lets set up the bundle context with the sling id
-        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "afterBundleContext");
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "afterBundleContext" + activateCount);
 
-        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "afterComponentContext");
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class, "afterComponentContext" + activateCount);
         this.getMockery().checking(new Expectations() {{
             allowing(componentContext).getBundleContext();
             will(returnValue(bundleContext));
         }});
         this.handler.deactivate(componentContext);
+        this.handler = null;
+        activateCount++;
+    }
+
+    @org.junit.After public void shutdown() throws Exception {
+        final String path = this.handler.repositoryPath;
+        this.deactivate();
         try {
             // delete all child nodes to get a clean repository again
-            final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
+            final Node rootNode = (Node) session.getItem(path);
             final NodeIterator iter = rootNode.getNodes();
             while ( iter.hasNext() ) {
                 final Node child = iter.nextNode();

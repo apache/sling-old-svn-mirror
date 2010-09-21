@@ -581,7 +581,7 @@ public class JobEventHandler
         // for another application node
         final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
         if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
-            && !this.applicationId.equals(appId) ) {
+            && appId != null && !this.applicationId.equals(appId) ) {
             if ( logger.isDebugEnabled() ) {
                  logger.debug("Discarding job {} : local job for a different application node.", EventUtil.toString(info.event));
             }
@@ -653,6 +653,19 @@ public class JobEventHandler
         }
     }
 
+    @Override
+    protected void startWriterSession() throws RepositoryException {
+        super.startWriterSession();
+        this.writerSession.getWorkspace().getObservationManager()
+        .addEventListener(this,
+                          javax.jcr.observation.Event.NODE_ADDED,
+                          this.repositoryPath,
+                          true,
+                          null,
+                          null,
+                          true);
+    }
+
     /**
      * This method runs in the background and processes the local queue.
      */
@@ -660,13 +673,13 @@ public class JobEventHandler
         // create the background session and register a listener
         this.backgroundSession = this.createSession();
         this.backgroundSession.getWorkspace().getObservationManager()
-                .addEventListener(this,
-                                  javax.jcr.observation.Event.PROPERTY_REMOVED,
-                                  this.repositoryPath,
-                                  true,
-                                  null,
-                                  new String[] {this.getEventNodeType()},
-                                  true);
+        .addEventListener(this,
+                          javax.jcr.observation.Event.PROPERTY_REMOVED|javax.jcr.observation.Event.NODE_REMOVED,
+                          this.repositoryPath,
+                          true,
+                          null,
+                          null,
+                          true);
         if ( this.running ) {
             logger.info("Apache Sling Job Event Handler started on instance {}", this.applicationId);
             logger.debug("Job Handler Configuration: (sleepTime={} secs, maxJobRetries={}," +
@@ -1137,28 +1150,47 @@ public class JobEventHandler
         try {
             while ( iter.hasNext() ) {
                 final javax.jcr.observation.Event event = iter.nextEvent();
-                if ( event.getType() == javax.jcr.observation.Event.PROPERTY_REMOVED) {
-                    try {
-                        final String propPath = event.getPath();
-                        int pos = propPath.lastIndexOf('/');
-                        final String nodePath = propPath.substring(0, pos);
-                        final String propertyName = propPath.substring(pos+1);
+
+                try {
+                    final String path = event.getPath();
+                    String loadNodePath = null;
+
+                    if ( event.getType() == javax.jcr.observation.Event.NODE_ADDED) {
+                        loadNodePath = path;
+                    } else  if ( event.getType() == javax.jcr.observation.Event.PROPERTY_REMOVED) {
+                        final int pos = path.lastIndexOf('/');
+                        final String propertyName = path.substring(pos+1);
 
                         // we are only interested in unlocks
                         if ( "jcr:lockOwner".equals(propertyName) ) {
-                            if ( s == null ) {
-                                s = this.createSession();
-                            }
-                            // we do a sanity check if the node exists first
-                            if ( s.itemExists(nodePath) ) {
-                                final Node eventNode = (Node) s.getItem(nodePath);
+                            loadNodePath = path.substring(0, pos);
+                        }
+                    } else if ( event.getType() == javax.jcr.observation.Event.NODE_REMOVED) {
+                        synchronized (unloadedJobs) {
+                            this.unloadedJobs.remove(path);
+                        }
+                    }
+                    if ( loadNodePath != null ) {
+                        if ( s == null ) {
+                            s = this.createSession();
+                        }
+                        // we do a sanity check if the node exists first
+                        if ( s.itemExists(loadNodePath) ) {
+                            final Node eventNode = (Node) s.getItem(loadNodePath);
+                            if ( eventNode.isNodeType(EventHelper.JOB_NODE_TYPE) ) {
+                                if ( event.getType() == javax.jcr.observation.Event.NODE_ADDED ) {
+                                    logger.debug("New job has been added by someone else. Trying to load from {}", loadNodePath);
+                                } else {
+                                    logger.debug("Job execution failed by someone else. Trying to load from {}", loadNodePath);
+                                }
                                 tryToLoadJob(eventNode, this.unloadedJobs);
                             }
                         }
-                    } catch (RepositoryException re) {
-                        this.logger.error("Exception during jcr event processing.", re);
                     }
+                } catch (RepositoryException re) {
+                    this.logger.error("Exception during jcr event processing.", re);
                 }
+
             }
         } finally {
             if ( s != null ) {
@@ -1255,9 +1287,8 @@ public class JobEventHandler
      */
     private boolean tryToLoadJob(final Node eventNode, final Set<String> unloadedJobSet) {
         try {
-            // first check: node should be unlocked (= not processed by any other cluster node)
-            //              job should not be finished
-            if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
+            // first check: job should not be finished
+            if ( !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
                 final String nodePath = eventNode.getPath();
                 boolean isNonLocal = false;
                 // second check: is this a job that should only run on the instance that it was created on?
