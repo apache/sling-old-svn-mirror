@@ -709,8 +709,11 @@ public class SlingAuthenticator implements Authenticator,
                     authInfo);
             }
 
-            // now find a way to get credentials
-            handleLoginFailure(request, response, authInfo.getUser(), re);
+            // now find a way to get credentials unless the feedback handler
+            // has committed a response to the client already
+            if (!response.isCommitted()) {
+                handleLoginFailure(request, response, authInfo.getUser(), re);
+            }
 
         }
 
