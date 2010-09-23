@@ -44,7 +44,7 @@
     </scm>
 
     <properties>
-        <!-- HTTP port to use when running mvn jetty:run -->
+        <!-- HTTP port to use when running mvn launchpad:run -->
         <run.http.port>8888</run.http.port>
 
         <!-- Timeout when checking for Sling readyness before starting tests -->
@@ -153,37 +153,6 @@
                     </defaultBundleList>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <!--
-                            These settings are used when running the integration against a different
-                            instance of Sling. See README.txt for more information.
-                        -->
-                        <property>
-                            <name>launchpad.http.server.url</name>
-                            <value>
-                                http://${test.host}:${http.port}/${http.base.path}
-                            </value>
-                        </property>
-                        <property>
-                            <name>launchpad.webdav.server.url</name>
-                            <value>
-                                http://${test.host}:${http.port}/${webdav.workspace.path}
-                            </value>
-                        </property>
-                        <property>
-                            <name>HttpTestBase.readyTimeoutSeconds</name>
-                            <value>
-                                ${HttpTestBase.readyTimeoutSeconds}
-                             </value>
-                         </property>
-                    </systemProperties>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -239,10 +208,7 @@
                                     <systemProperties>
                                         <!--
                                             WARNING: make sure these URLs are consistent with the
-                                            cargo-maven2-plugin settings: AFAIK Maven does not
-                                            expand variables in the <value> element.
-                                            And WARNING: these properties are duplicated somewhere in this
-                                            POM with slightly different values...there must be a better way.
+                                            maven-launchpad-plugin settings below.
                                         -->
                                         <property>
                                             <name>
@@ -302,8 +268,6 @@
             <!--
                 By default, do not run the integration tests in the test phase, as they have
                 no Sling instance to talk to.
-                See README.txt for how to run the integration tests against a running instance
-                of Sling.
             -->
             <id>disableIntegrationTestsInTestPhase</id>
             <activation>
