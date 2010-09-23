@@ -96,6 +96,21 @@ public class JspScriptingTest extends JspTestBase {
             }
         }
     }
+    
+    public void testEnum() throws Exception {
+        String toDelete = null;
+        try {
+            toDelete = uploadTestScript(unstructuredNode.scriptPath, "enum-test.jsp", "txt.jsp");
+            final String content = getContent(unstructuredNode.nodeUrl + ".txt", CONTENT_TYPE_PLAIN);
+            for(String expected : new String[] { "FOO=FOO", "BAR=BAR"}) {
+                assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));
+            }
+        } finally {
+            if(toDelete != null) {
+                testClient.delete(toDelete);
+            }
+        }
+    }
 
     private void checkContent(TestNode tn) throws Exception {
         final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
