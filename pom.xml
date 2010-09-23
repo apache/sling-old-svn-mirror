@@ -54,6 +54,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>
+                          org.apache.sling.launchpad.testservices.exported.*
+                        </Export-Package>
                         <Private-Package>
                             org.apache.sling.launchpad.testservices.*
                         </Private-Package>
