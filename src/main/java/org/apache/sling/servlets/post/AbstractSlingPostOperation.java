@@ -69,9 +69,9 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                     HtmlResponse response,
                     SlingPostProcessor[] processors) {
         Session session = request.getResourceResolver().adaptTo(Session.class);
-        
+
         VersioningConfiguration versionableConfiguration = getVersioningConfiguration(request);
-        
+
         try {
             // calculate the paths
             String path = getItemPath(request);
@@ -398,24 +398,26 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         }
     }
 
-    protected Node findVersionableAncestor(Node node) throws RepositoryException {
-        if (isVersionable(node)) {
-            return node;
-        } else {
-            try {
+    protected Node findVersionableAncestor(Node node)
+            throws RepositoryException {
+        try {
+            while (!isVersionable(node)) {
                 node = node.getParent();
-                return findVersionableAncestor(node);
-            } catch (ItemNotFoundException e) {
-                // top-level
-                return null;
             }
+            return node;
+        } catch (AccessDeniedException ade) {
+            // not allowed to access parent, assume no versionable ancestor
+        } catch (ItemNotFoundException e) {
+            // current node is root but not versionable, assume no vers. anc.
         }
+
+        return null;
     }
 
     protected boolean isVersionable(Node node) throws RepositoryException {
         return node.isNodeType("mix:versionable");
     }
-    
+
     protected void checkoutIfNecessary(Node node, List<Modification> changes,
             VersioningConfiguration versioningConfiguration) throws RepositoryException {
         if (versioningConfiguration.isAutoCheckout()) {
