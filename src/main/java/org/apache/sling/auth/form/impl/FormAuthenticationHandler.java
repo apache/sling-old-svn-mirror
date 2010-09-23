@@ -252,6 +252,18 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     private static final long MINUTES = 60L * 1000L;
 
+    /**
+     * The name of the request header set by
+     * {@link #authenticationFailed(HttpServletRequest, HttpServletResponse, AuthenticationInfo)}
+     * if instead of requesting credentials from the client a 403/FORBIDDEN response is sent.
+     * <p>
+     * This header may be inspected by clients for a reason why the request
+     * failed.
+     *
+     * @see #authenticationFailed(HttpServletRequest, HttpServletResponse, AuthenticationInfo)
+     */
+    private static final String X_REASON = "X-Reason";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -323,14 +335,20 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 if (tokenStore.isValid(authData)) {
                     info = createAuthInfo(authData);
                 } else {
+                    // clear the cookie, its invalid and we should get rid of it
+                    // so that the invalid cookie isn't present on the authN
+                    // operation.
+                    authStorage.clear(request, response);
                     if (this.loginAfterExpire) {
-                      // signal the requestCredentials method a previous login failure
+                        // signal the requestCredentials method a previous login
+                        // failure
                         request.setAttribute(FAILURE_REASON, FormReason.TIMEOUT);
                         info = AuthenticationInfo.FAIL_AUTH;
+                    } else if (isValidateRequest(request)) {
+                        // send 403 response and terminate the request
+                        sendInvalid(response, FormReason.TIMEOUT);
+                        info = AuthenticationInfo.DOING_AUTH;
                     }
-                    // clear the cookie, its invalid and we should get rid of it so that the invalid cookie
-                    // isn't present on the authN operation.
-                    authStorage.clear(request, response);
                 }
             }
         }
@@ -356,19 +374,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         if (ignoreRequestCredentials(request)) {
             // consider this handler is not used
             return false;
-        }
-
-        // 1. check whether we short cut for a failed log in with validation
-        if (isValidateRequest(request)) {
-            try {
-                response.setStatus(403);
-                response.flushBuffer();
-            } catch (IOException ioe) {
-                log.error("Failed to send 403/FORBIDDEN response", ioe);
-            }
-
-            // consider credentials requested
-            return true;
         }
 
         final String resource = setLoginResourceAttribute(request,
@@ -446,8 +451,17 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         // clear authentication data from Cookie or Http Session
         authStorage.clear(request, response);
 
-        // signal the requestCredentials method a previous login failure
-        request.setAttribute(FAILURE_REASON, FormReason.INVALID_CREDENTIALS);
+        if (isValidateRequest(request)) {
+
+            // just validated the credentials to be invalid
+            sendInvalid(response, FormReason.INVALID_CREDENTIALS);
+
+        } else {
+
+            // signal the requestCredentials method a previous login failure
+            request.setAttribute(FAILURE_REASON, FormReason.INVALID_CREDENTIALS);
+
+        }
     }
 
     /**
@@ -477,12 +491,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         final boolean result;
         if (isValidateRequest(request)) {
 
-            try {
-                response.setStatus(200);
-                response.flushBuffer();
-            } catch (IOException ioe) {
-                log.error("Failed to send 200/OK response", ioe);
-            }
+            sendValid(response);
 
             // terminate request, all done
             result = true;
@@ -555,6 +564,39 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      */
     private boolean isValidateRequest(final HttpServletRequest request) {
         return "true".equalsIgnoreCase(request.getParameter(PAR_J_VALIDATE));
+    }
+
+    /**
+     * Sends a 200/OK response to a credential validation request.
+     *
+     * @param response The response object
+     */
+    private void sendValid(final HttpServletResponse response) {
+        try {
+            response.setStatus(200);
+            response.flushBuffer();
+        } catch (IOException ioe) {
+            log.error("Failed to send 200/OK response", ioe);
+        }
+    }
+
+    /**
+     * Sends a 403/FORBIDDEN response to a credential validation request
+     * providing the given reason as the value of the {@link #X_REASON} header.
+     *
+     * @param response The response object
+     * @param reason The reason to set on the header; not expected to be
+     *            <code>null</code>
+     */
+    private void sendInvalid(final HttpServletResponse response,
+            final FormReason reason) {
+        try {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setHeader(X_REASON, reason.toString());
+            response.flushBuffer();
+        } catch (IOException ioe) {
+            log.error("Failed to send 403/Forbidden response", ioe);
+        }
     }
 
     /**
