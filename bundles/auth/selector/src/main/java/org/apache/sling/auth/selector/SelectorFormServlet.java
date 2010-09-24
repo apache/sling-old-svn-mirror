@@ -38,7 +38,7 @@ import org.apache.sling.auth.openid.OpenIDFailure;
  * Form Based or OpenID Authentication.
  */
 @Component(metatype = false)
-@Properties( {
+@Properties({
     @Property(name = "service.vendor", value = "The Apache Software Foundation"),
     @Property(name = "service.description", value = "Default Login Form for the Authenticator Selector") })
 @Service(value = Servlet.class)
@@ -55,9 +55,10 @@ public class SelectorFormServlet extends AbstractAuthenticationFormServlet {
      * This constant is used to provide the service registration property
      * indicating to pass requests to this servlet unauthenticated.
      */
-    @Property(name = "sling.auth.requirements")
+    @Property(name = "sling.auth.requirements", propertyPrivate = true)
     @SuppressWarnings("unused")
-    private static final String AUTH_REQUIREMENT = "-" + SERVLET_PATH;
+    private static final String[] AUTH_REQUIREMENT = { "-" + SERVLET_PATH,
+        "-/sling.css", "-/sling-logo.png", "-/signup.html" };
 
     @Override
     protected String getForm(final HttpServletRequest request)
