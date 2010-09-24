@@ -41,6 +41,31 @@ public abstract class AbstractAuthenticationHandler extends
         DefaultAuthenticationFeedbackHandler implements AuthenticationHandler {
 
     /**
+     * The name of the request parameter indicating that the submitted username
+     * and password should just be checked and a status code be set for success
+     * (200/OK) or failure (403/FORBIDDEN).
+     *
+     * @see #isValidateRequest(HttpServletRequest)
+     * @see #sendValid(HttpServletResponse)
+     * @see #sendInvalid(HttpServletResponse, Object)
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    private static final String PAR_J_VALIDATE = "j_validate";
+
+    /**
+     * The name of the request header set by the
+     * {@link #sendInvalid(HttpServletResponse, Object)} method if the provided
+     * credentials cannot be used for login.
+     * <p>
+     * This header may be inspected by clients for a reason why the request
+     * failed.
+     *
+     * @see #sendInvalid(HttpServletResponse, Object)
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    private static final String X_REASON = "X-Reason";
+
+    /**
      * Returns the value of the named request attribute or parameter as a string
      * as follows:
      * <ol>
@@ -230,5 +255,63 @@ public abstract class AbstractAuthenticationHandler extends
 
         // not set or not a non-empty string
         return null;
+    }
+
+    /**
+     * Returns <code>true</code> if the the client just asks for validation of
+     * submitted username/password credentials.
+     * <p>
+     * This implementation returns <code>true</code> if the request parameter
+     * {@link #PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
+     * the request parameter is not set or to any value other than
+     * <code>true</code> this method returns <code>false</code>.
+     *
+     * @param request The request to provide the parameter to check
+     * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
+     *         to <code>true</code>.
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    public static boolean isValidateRequest(final HttpServletRequest request) {
+        return "true".equalsIgnoreCase(request.getParameter(PAR_J_VALIDATE));
+    }
+
+    /**
+     * Sends a 200/OK response to a credential validation request.
+     *
+     * @param response The response object
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    public static void sendValid(final HttpServletResponse response) {
+        try {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.flushBuffer();
+        } catch (IOException ioe) {
+            // TODO: log.error("Failed to send 200/OK response", ioe);
+        }
+    }
+
+    /**
+     * Sends a 403/FORBIDDEN response to a credential validation request
+     * providing the given reason as the value of the {@link #X_REASON} header.
+     *
+     * @param response The response object
+     * @param reason The reason to set on the header; not expected to be
+     *            <code>null</code>
+     * @since 1.0.2 (Bundle version 1.0.4)
+     */
+    public static void sendInvalid(final HttpServletRequest request,
+            final HttpServletResponse response) {
+        try {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+            Object reason = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
+            if (reason != null) {
+                response.setHeader(X_REASON, reason.toString());
+            }
+
+            response.flushBuffer();
+        } catch (IOException ioe) {
+            // TODO: log.error("Failed to send 403/Forbidden response", ioe);
+        }
     }
 }

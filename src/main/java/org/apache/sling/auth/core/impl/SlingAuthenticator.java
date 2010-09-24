@@ -405,7 +405,7 @@ public class SlingAuthenticator implements Authenticator,
             if (authInfo != null) {
                 handleLoginFailure(request, response, authInfo.getUser(), e);
             } else {
-                handleLoginFailure(request, response, "<null>", e);
+            handleLoginFailure(request, response, "<null>", e);
             }
             return false;
         }
@@ -695,9 +695,17 @@ public class SlingAuthenticator implements Authenticator,
 
             }
 
+            // client requested validation, which succeeds, thus send
+            // success response and close the resolver
+            if (AbstractAuthenticationHandler.isValidateRequest(request)) {
+                AbstractAuthenticationHandler.sendValid(response);
+                resolver.close();
+                return false;
+            }
+
             // no redirect desired, so continue processing by first setting
             // the request attributes and then returning true
-            setAttributes(resolver, authInfo.getAuthType(),  request);
+            setAttributes(resolver, authInfo.getAuthType(), request);
             return true;
 
         } catch (LoginException re) {
@@ -845,34 +853,95 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     /**
-     * Calls the {@link #login(HttpServletRequest, HttpServletResponse)} method
-     * catching declared exceptions of that method and cleanly handling and
-     * logging them. Particularly if no authentication handler is available to
-     * request credentials a 403/FORBIDDEN response is sent back to the client.
+     * Tries to request credentials from the client. The following mechanisms
+     * are implemented by this method:
+     * <ul>
+     * <li>If the request is a credentials validation request (see
+     * {@link AbstractAuthenticationHandler#isValidateRequest(HttpServletRequest)}
+     * ) a 403/FORBIDDEN response is sent back.</li>
+     * <li>If the request is not considered a
+     * {@link #isBrowserRequest(HttpServletRequest) browser request} and the
+     * HTTP Basic Authentication Handler is at least enabled for preemptive
+     * credentials processing, a 401/UNAUTHORIZED response is sent back. This
+     * helps implementing HTTP Basic authentication with WebDAV clients. If HTTP
+     * Basic Authentication is completely switched of a 403/FORBIDDEN response
+     * is sent back instead.</li>
+     * <li>If the request is considered an
+     * {@link #isAjaxRequest(HttpServletRequest) Ajax request} a 403/FORBIDDIN
+     * response is simply sent back because we assume an Ajax requestor cannot
+     * properly handle any request for credentials graciously.</li>
+     * <li>Otherwise the {@link #login(HttpServletRequest, HttpServletResponse)}
+     * method is called to try to find and call an authentication handler to
+     * request credentials from the client. If none is available or willing to
+     * request credentials, a 403/FORBIDDEN response is also sent back to the
+     * client.</li>
+     * </ul>
+     * <p>
+     * If a 403/FORBIDDEN response is sent back the {@link #X_REASON} header is
+     * set to a either the value of the
+     * {@link AuthenticationHandler#FAILURE_REASON} request attribute or to some
+     * generic description describing the reason. To actually send the response
+     * the
+     * {@link AbstractAuthenticationHandler#sendInvalid(HttpServletRequest, HttpServletResponse)}
+     * method is called.
+     * <p>
+     * This method is called in three situations:
+     * <ul>
+     * <li>If the request contains no credentials but anonymous login is not
+     * allowed</li>
+     * <li>If the request contains credentials but getting the Resource Resolver
+     * using the provided credentials fails</li>
+     * <li>If the selected authentication handler indicated any presented
+     * credentials are not valid</li>
+     * </ul>
+     *
+     * @param request The current request
+     * @param response The response to send the credentials request (or access
+     *            denial to)
+     * @see AbstractAuthenticationHandler#isValidateRequest(HttpServletRequest)
+     * @see #isBrowserRequest(HttpServletRequest)
+     * @see #isAjaxRequest(HttpServletRequest)
+     * @see AbstractAuthenticationHandler#sendInvalid(HttpServletRequest,
+     *      HttpServletResponse)
      */
     private void doLogin(HttpServletRequest request,
             HttpServletResponse response) {
 
+        if (!AbstractAuthenticationHandler.isValidateRequest(request)) {
             try {
 
                 login(request, response);
+                return;
 
             } catch (IllegalStateException ise) {
 
                 log.error("doLogin: Cannot login: Response already committed");
+                return;
 
             } catch (NoAuthenticationHandlerException nahe) {
 
+                /*
+                 * Don't set the failureReason for missing authentication
+                 * handlers to not disclose this setup information.
+                 */
+
                 log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
 
-        try {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Cannot login");
-        } catch (IOException ioe) {
-            log.error("doLogin: Failed sending 403 status", ioe);
+            }
         }
 
+        // if we are here, we cannot redirect to the login form because it is
+        // an XHR request or because there is no authentication handler willing
+        // request credentials from the client or because it is a failed
+        // credential validation
+
+        // ensure a failure reason
+        if (request.getAttribute(AuthenticationHandler.FAILURE_REASON) == null) {
+            request.setAttribute(AuthenticationHandler.FAILURE_REASON,
+                "Mandatory authentication is not possible");
         }
+
+        AbstractAuthenticationHandler.sendInvalid(request, response);
     }
 
     /**
