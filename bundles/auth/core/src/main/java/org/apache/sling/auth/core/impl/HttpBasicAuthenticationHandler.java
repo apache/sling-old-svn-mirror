@@ -224,7 +224,7 @@ class HttpBasicAuthenticationHandler extends
      * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
      *         been sent.
      */
-    private boolean sendUnauthorized(HttpServletResponse response) {
+    boolean sendUnauthorized(HttpServletResponse response) {
 
         if (response.isCommitted()) {
 

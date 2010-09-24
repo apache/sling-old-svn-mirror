@@ -235,13 +235,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     private static final String PAR_J_PASSWORD = "j_password";
 
     /**
-     * The name of the form submission parameter indicating that the submitted
-     * username and password should just be checked and a status code be set for
-     * success (200/OK) or failure (403/FORBIDDEN).
-     */
-    private static final String PAR_J_VALIDATE = "j_validate";
-
-    /**
      * Key in the AuthenticationInfo map which contains the domain on which the
      * auth cookie should be set.
      */
@@ -251,18 +244,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * The factor to convert minute numbers into milliseconds used internally
      */
     private static final long MINUTES = 60L * 1000L;
-
-    /**
-     * The name of the request header set by
-     * {@link #authenticationFailed(HttpServletRequest, HttpServletResponse, AuthenticationInfo)}
-     * if instead of requesting credentials from the client a 403/FORBIDDEN response is sent.
-     * <p>
-     * This header may be inspected by clients for a reason why the request
-     * failed.
-     *
-     * @see #authenticationFailed(HttpServletRequest, HttpServletResponse, AuthenticationInfo)
-     */
-    private static final String X_REASON = "X-Reason";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -339,15 +320,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                     // so that the invalid cookie isn't present on the authN
                     // operation.
                     authStorage.clear(request, response);
-                    if (this.loginAfterExpire) {
+                    if (this.loginAfterExpire || isValidateRequest(request)) {
                         // signal the requestCredentials method a previous login
                         // failure
                         request.setAttribute(FAILURE_REASON, FormReason.TIMEOUT);
                         info = AuthenticationInfo.FAIL_AUTH;
-                    } else if (isValidateRequest(request)) {
-                        // send 403 response and terminate the request
-                        sendInvalid(response, FormReason.TIMEOUT);
-                        info = AuthenticationInfo.DOING_AUTH;
                     }
                 }
             }
@@ -451,17 +428,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         // clear authentication data from Cookie or Http Session
         authStorage.clear(request, response);
 
-        if (isValidateRequest(request)) {
-
-            // just validated the credentials to be invalid
-            sendInvalid(response, FormReason.INVALID_CREDENTIALS);
-
-        } else {
-
-            // signal the requestCredentials method a previous login failure
-            request.setAttribute(FAILURE_REASON, FormReason.INVALID_CREDENTIALS);
-
-        }
+        // signal the reason for login failure
+        request.setAttribute(FAILURE_REASON, FormReason.INVALID_CREDENTIALS);
     }
 
     /**
@@ -489,14 +457,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         refreshAuthData(request, response, authInfo);
 
         final boolean result;
-        if (isValidateRequest(request)) {
-
-            sendValid(response);
-
-            // terminate request, all done
-            result = true;
-
-        } else if (DefaultAuthenticationFeedbackHandler.handleRedirect(
+        if (DefaultAuthenticationFeedbackHandler.handleRedirect(
             request, response)) {
 
             // terminate request, all done in the default handler
@@ -547,56 +508,6 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
         return requestLogin != null
             && !HttpServletRequest.FORM_AUTH.equals(requestLogin);
-    }
-
-    /**
-     * Returns <code>true</code> if the the client just asks for validation of
-     * submitted username/password credentials.
-     * <p>
-     * This implementation returns <code>true</code> if the request parameter
-     * {@link #PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
-     * the request parameter is not set or to any value other than
-     * <code>true</code> this method returns <code>false</code>.
-     *
-     * @param request The request to provide the parameter to check
-     * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
-     *         to <code>true</code>.
-     */
-    private boolean isValidateRequest(final HttpServletRequest request) {
-        return "true".equalsIgnoreCase(request.getParameter(PAR_J_VALIDATE));
-    }
-
-    /**
-     * Sends a 200/OK response to a credential validation request.
-     *
-     * @param response The response object
-     */
-    private void sendValid(final HttpServletResponse response) {
-        try {
-            response.setStatus(200);
-            response.flushBuffer();
-        } catch (IOException ioe) {
-            log.error("Failed to send 200/OK response", ioe);
-        }
-    }
-
-    /**
-     * Sends a 403/FORBIDDEN response to a credential validation request
-     * providing the given reason as the value of the {@link #X_REASON} header.
-     *
-     * @param response The response object
-     * @param reason The reason to set on the header; not expected to be
-     *            <code>null</code>
-     */
-    private void sendInvalid(final HttpServletResponse response,
-            final FormReason reason) {
-        try {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setHeader(X_REASON, reason.toString());
-            response.flushBuffer();
-        } catch (IOException ioe) {
-            log.error("Failed to send 403/Forbidden response", ioe);
-        }
     }
 
     /**
@@ -666,8 +577,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 // make sure, that the request is redirected after successful
                 // authentication, otherwise the request may be processed
                 // as a POST request to the j_security_check page (unless
-                // the j_validate parameter is set)
-                setLoginResourceAttribute(request, request.getContextPath());
+                // the j_validate parameter is set); but only if this is not
+                // a validation request
+                if (!isValidateRequest(request)) {
+                    setLoginResourceAttribute(request, request.getContextPath());
+                }
             }
         }
 
