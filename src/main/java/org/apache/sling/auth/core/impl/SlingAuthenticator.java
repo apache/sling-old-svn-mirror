@@ -161,6 +161,34 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
 
+    /**
+     * Request header commonly set by Ajax Frameworks to indicate the request is
+     * posted as an Ajax request. The value set is expected to be
+     * {@link #XML_HTTP_REQUEST}.
+     * <p>
+     * This header is known to be set by JQuery, ExtJS and Prototype. Other
+     * client-side JavaScript framework most probably also set it.
+     *
+     * @see #isAjaxRequest(HttpServletRequest)
+     */
+    private static final String X_REQUESTED_WITH = "X-Requested-With";
+
+    /**
+     * The expected value of the {@link #X_REQUESTED_WITH} request header to
+     * identify a request as an Ajax request.
+     *
+     * @see #isAjaxRequest(HttpServletRequest)
+     */
+    private static final String XML_HTTP_REQUEST = "XMLHttpRequest";
+
+    /**
+     * The name of the <code>Accept</code> header which must not exists to
+     * consider a request an initial WebDAV request.
+     *
+     * @see #isBrowserRequest(HttpServletRequest)
+     */
+    private static final String HEADER_ACCEPT = "Accept";
+
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
@@ -908,24 +936,42 @@ public class SlingAuthenticator implements Authenticator,
             HttpServletResponse response) {
 
         if (!AbstractAuthenticationHandler.isValidateRequest(request)) {
-            try {
+            if (isBrowserRequest(request)) {
 
-                login(request, response);
-                return;
+                if (!isAjaxRequest(request)) {
+                    try {
 
-            } catch (IllegalStateException ise) {
+                        login(request, response);
+                        return;
 
-                log.error("doLogin: Cannot login: Response already committed");
-                return;
+                    } catch (IllegalStateException ise) {
 
-            } catch (NoAuthenticationHandlerException nahe) {
+                        log.error("doLogin: Cannot login: Response already committed");
+                        return;
 
-                /*
-                 * Don't set the failureReason for missing authentication
-                 * handlers to not disclose this setup information.
-                 */
+                    } catch (NoAuthenticationHandlerException nahe) {
 
-                log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
+                        /*
+                         * Don't set the failureReason for missing
+                         * authentication handlers to not disclose this setup
+                         * information.
+                         */
+
+                        log.error("doLogin: Cannot login: No AuthenticationHandler available to handle the request");
+
+                    }
+                }
+
+            } else {
+
+                // Presumably this is WebDAV. If HTTP Basic is fully enabled or
+                // enabled for preemptive credential support, we just request
+                // HTTP Basic credentials. Otherwise (HTTP Basic is fully
+                // switched off, 403 is sent back)
+                if (httpBasicHandler != null) {
+                    httpBasicHandler.sendUnauthorized(response);
+                    return;
+                }
 
             }
         }
@@ -945,10 +991,37 @@ public class SlingAuthenticator implements Authenticator,
     }
 
     /**
+     * Determine if this request comes from a web browser which accepts
+     * anything.
+     *
+     * @param request The current request
+     * @return <code>true</code> if the request can be considered a browser
+     *         request.
+     */
+    private boolean isBrowserRequest(final HttpServletRequest request) {
+        return request.getHeader(HEADER_ACCEPT) != null;
+    }
+
+    /**
+     * Returns <code>true</code> if the request is to be considered an AJAX
+     * request placed using the <code>XMLHttpRequest</code> browser host object.
+     * Currently a request is considered an AJAX request if the client sends the
+     * <i>X-Requested-With</i> request header set to <code>XMLHttpRequest</code>
+     * .
+     *
+     * @param request The current request
+     * @return <code>true</code> if the request can be considered an AJAX
+     *         request.
+     */
+    private boolean isAjaxRequest(final HttpServletRequest request) {
+        return XML_HTTP_REQUEST.equals(request.getHeader(X_REQUESTED_WITH));
+    }
+
+    /**
      * Sets the request attributes required by the OSGi HttpContext interface
      * specification for the <code>handleSecurity</code> method. In addition the
-     * {@link SlingAuthenticator#REQUEST_ATTRIBUTE_RESOLVER} request attribute is
-     * set to the ResourceResolver.
+     * {@link SlingAuthenticator#REQUEST_ATTRIBUTE_RESOLVER} request attribute
+     * is set to the ResourceResolver.
      */
     private void setAttributes(final ResourceResolver resolver, final String authType,
             final HttpServletRequest request) {
