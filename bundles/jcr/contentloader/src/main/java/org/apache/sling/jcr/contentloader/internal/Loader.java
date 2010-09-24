@@ -587,7 +587,7 @@ public class Loader extends BaseImportLoader {
         this.contentCreator.init(configuration, defaultImportProviders, createdNodes, null);
         this.contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
-        final long lastModified = conn.getLastModified();
+        final long lastModified = Math.min(conn.getLastModified(), configuration.getLastModified());
         final String type = conn.getContentType();
         final InputStream data = conn.getInputStream();
         this.contentCreator.createFileAndResourceNode(path, data, type, lastModified);

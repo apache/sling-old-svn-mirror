@@ -698,10 +698,19 @@ public class DefaultContentCreator implements ContentCreator {
         // if node already exists but should be overwritten, delete it
         if (parentNode.hasNode(name)) {
             this.parentNodeStack.push(parentNode.getNode(name));
-            this.parentNodeStack.push(parentNode.getNode(name).getNode("jcr:content"));
-            if (!this.configuration.isOverwrite()) {
+            Node contentNode = parentNode.getNode(name).getNode("jcr:content");
+            this.parentNodeStack.push(contentNode);
+            long nodeLastModified = 0L;
+            if ( contentNode.hasProperty("jcr:lastModified") ) {
+                nodeLastModified = contentNode.getProperty("jcr:lastModified").getDate().getTimeInMillis();
+            }
+            if (!this.configuration.isOverwrite() && nodeLastModified >= lastModified ) {
                 return;
             }
+            log.info(
+                    "Updating {} lastModified:{} New Content LastModified:{}",
+                    new Object[] { parentNode.getNode(name).getPath(),
+                            new Date(nodeLastModified), new Date(lastModified) });
         } else {
             this.createNode(name, "nt:file", null);
             this.createNode("jcr:content", "nt:resource", null);
