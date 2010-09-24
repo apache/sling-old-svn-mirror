@@ -102,14 +102,21 @@ public class PathEntry extends ImportOptions {
     /** Workspace to import into. */
     private final String workspace;
 
+    private long lastModified;
+
     public static Iterator<PathEntry> getContentPaths(final Bundle bundle) {
         final List<PathEntry> entries = new ArrayList<PathEntry>();
-
+        String bundleLastModifiedStamp = (String) bundle.getHeaders().get("Bnd-LastModified");
+        long bundleLastModified = bundle.getLastModified(); // time last modified inside the container
+        if ( bundleLastModifiedStamp != null ) {
+            bundleLastModified = Math.min(bundleLastModified, Long.parseLong(bundleLastModifiedStamp));
+        }
         final String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root != null) {
             final ManifestHeader header = ManifestHeader.parse(root);
             for (final ManifestHeader.Entry entry : header.getEntries()) {
-                entries.add(new PathEntry(entry));
+                
+                entries.add(new PathEntry(entry, bundleLastModified ));
             }
         }
 
@@ -119,8 +126,9 @@ public class PathEntry extends ImportOptions {
         return entries.iterator();
     }
 
-    public PathEntry(ManifestHeader.Entry entry) {
+    public PathEntry(ManifestHeader.Entry entry, long bundleLastModified) {
         this.path = entry.getValue();
+        this.lastModified = bundleLastModified;
 
         // check for directives
 
@@ -182,7 +190,11 @@ public class PathEntry extends ImportOptions {
             this.workspace = null;
         }
     }
-
+    
+    public long getLastModified() {
+        return lastModified;
+    }
+    
     public String getPath() {
         return this.path;
     }
