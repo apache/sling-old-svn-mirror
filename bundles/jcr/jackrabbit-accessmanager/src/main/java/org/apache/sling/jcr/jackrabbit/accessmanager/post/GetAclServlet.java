@@ -95,7 +95,7 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
  * @scr.property name="sling.servlet.methods" value="GET"
  * @scr.property name="sling.servlet.selectors" value="acl"
- * @scr.property name="sling.servlet.extensions " value="json"
+ * @scr.property name="sling.servlet.extensions" value="json"
  */
 public class GetAclServlet extends AbstractGetAclServlet {
 	private static final long serialVersionUID = 3391376559396223185L;
