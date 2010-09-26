@@ -245,24 +245,25 @@ public class ScriptSelectionTest extends HelperTestBase {
         assertScript("UNKNOWN", null, "html", SET_A, "/apps/foo/bar/UNKNOWN.esp");
     }
 
-    public void testHtmlPostSelectorsAreIgnored() {
+    public void testHtmlPostMethodSelectors() {
         final String [] scripts = {
+                "/apps/foo/bar/print",
                 "/apps/foo/bar/print/POST.esp"
         };
-        assertScript("POST", "print.a4", "html", scripts, null);
+        assertScript("POST", "print.a4", "html", scripts, "/apps/foo/bar/print/POST.esp");
     }
 
-    public void testHtmlPostExtensionIsIgnored() {
+    public void testHtmlPostMethodExtension() {
         final String [] scripts = {
-                "/apps/foo/bar/POST.html.esp"
+                "/apps/foo/bar/html.POST.esp"
         };
-        assertScript("POST", "print.a4", "html", scripts, null);
+        assertScript("POST", "print.a4", "html", scripts, "/apps/foo/bar/html.POST.esp");
     }
 
-    public void testHtmlPostCannotIncludeResourceType() {
+    public void testHtmlPostMethodResourceType() {
         final String [] scripts = {
                 "/apps/foo/bar/bar.POST.esp"
         };
-        assertScript("POST", "print.a4", "html", scripts, null);
+        assertScript("POST", "print.a4", "html", scripts, "/apps/foo/bar/bar.POST.esp");
     }
 }
