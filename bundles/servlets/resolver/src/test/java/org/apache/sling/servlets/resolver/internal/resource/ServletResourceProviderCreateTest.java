@@ -160,4 +160,74 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertTrue(checkerSet.isEmpty());
     }
 
+    public void testCreateSelectorsExtensions() {
+        MockServiceReference msr = new MockServiceReference(null);
+
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES,
+            RES_TYPE);
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS,
+            new String[] { HttpConstants.METHOD_GET });
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_SELECTORS,
+            new String[] { "ext" });
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
+            new String[] { "json" });
+
+        ServletResourceProvider srp = factory.create(msr);
+        assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
+
+        String[] paths = srp.getServletPaths();
+        assertNotNull(paths);
+        assertEquals(1, paths.length);
+
+        Set<String> checkerSet = new HashSet<String>();
+        checkerSet.add(ROOT + RES_TYPE_PATH + "/ext.json."
+            + HttpConstants.METHOD_GET
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
+
+        for (String path : paths) {
+            assertTrue(path + " not expected", checkerSet.remove(path));
+        }
+
+        assertTrue(checkerSet.isEmpty());
+    }
+    public void testCreateMethodsExtensions() {
+        MockServiceReference msr = new MockServiceReference(null);
+
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES,
+            RES_TYPE);
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS,
+            new String[] { HttpConstants.METHOD_GET, HttpConstants.METHOD_POST });
+        msr.setProperty(ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
+            new String[] { "json", "html" });
+
+        ServletResourceProvider srp = factory.create(msr);
+        assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
+
+        String[] paths = srp.getServletPaths();
+        assertNotNull(paths);
+        assertEquals(4, paths.length);
+
+        Set<String> checkerSet = new HashSet<String>();
+        checkerSet.add(ROOT + RES_TYPE_PATH + "/json."
+            + HttpConstants.METHOD_GET
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
+        checkerSet.add(ROOT + RES_TYPE_PATH + "/html."
+            + HttpConstants.METHOD_GET
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
+        checkerSet.add(ROOT + RES_TYPE_PATH + "/json."
+            + HttpConstants.METHOD_POST
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
+        checkerSet.add(ROOT + RES_TYPE_PATH + "/html."
+            + HttpConstants.METHOD_POST
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
+
+        for (String path : paths) {
+            assertTrue(path + " not expected", checkerSet.remove(path));
+        }
+
+        assertTrue(checkerSet.isEmpty());
+    }
+
 }

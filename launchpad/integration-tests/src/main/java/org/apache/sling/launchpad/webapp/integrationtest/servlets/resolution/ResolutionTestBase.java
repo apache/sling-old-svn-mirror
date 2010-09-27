@@ -31,20 +31,21 @@ class ResolutionTestBase extends HttpTestBase {
   public static final String TEST_SERVLET_MARKER = "created by org.apache.sling.launchpad.testservices.servlets";
   public static final String TEST_RESOURCE_TYPE = "LAUNCHPAD_TEST_ResourceType";
   public static final String TEST_PATH = "/servlet-resolution-tests/" + System.currentTimeMillis();
-  public static final String NONEXISTING_RESOURCE_URL = HTTP_BASE_URL + TEST_PATH + "/NonExistingResource"; 
-   
+  public static final String NONEXISTING_RESOURCE_URL = HTTP_BASE_URL + TEST_PATH + "/NonExistingResource";
+
   public static final String EXT_SERVLET_SUFFIX = "testservices.servlets.ExtensionServlet";
   public static final String SEL_SERVLET_SUFFIX = "testservices.servlets.SelectorServlet";
   public static final String WAR_SEL_SERVLET_SUFFIX = "testservices.war.servlets.SelectorServlet";
   public static final String PREFIX_0_SERVLET_SUFFIX = "testservices.servlets.PrefixServletZero";
   public static final String PREFIX_M1_SERVLET_SUFFIX = "testservices.servlets.PrefixServletMinusOne";
   public static final String PUT_SERVLET_SUFFIX = "testservices.servlets.PutMethodServlet";
+  public static final String HTML_DEFAULT_SERVLET_SUFFIX = "testservices.servlets.HtmlDefaultServlet";
   public static final String REQUEST_URI_OPTING_SERVLET_SUFFIX = "testservices.servlets.RequestUriOptingServlet";
   public static final String PATHS_SERVLET_SUFFIX = "testservices.servlets.PathsServlet";
-  
+
   protected TestNode testNodeNORT;
   protected TestNode testNodeRT;
-  
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -63,7 +64,7 @@ class ResolutionTestBase extends HttpTestBase {
 
   /** Asserts that the given content is in Properties format and
    *  contains a property named CLASS_PROP that ends with
-   *  expected suffix  
+   *  expected suffix
    */
   protected void assertServlet(String content, String expectedSuffix) throws IOException {
     final Properties props = new Properties();
@@ -80,7 +81,7 @@ class ResolutionTestBase extends HttpTestBase {
         CLASS_PROP + " property value (" + clazz + ") ends with " + expectedSuffix,
         clazz.endsWith(expectedSuffix));
   }
-  
+
   /** Assert that content does not contain TEST_SERVLET_MARKER
    */
   protected void assertNotTestServlet(String content) {
