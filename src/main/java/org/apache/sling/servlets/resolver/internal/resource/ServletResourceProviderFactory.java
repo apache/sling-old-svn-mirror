@@ -279,17 +279,25 @@ public class ServletResourceProviderFactory {
                 }
 
                 boolean pathAdded = false;
-
-                // create paths with extensions
                 if (extensions != null) {
-                    for (String ext : extensions) {
-                        pathSet.add(selPath + ext + SERVLET_PATH_EXTENSION);
-                        pathAdded = true;
+                    if (methods != null) {
+                        // both methods and extensions declared
+                        for (String ext : extensions) {
+                            for (String method : methods) {
+                                pathSet.add(selPath + ext + "." + method
+                                    + SERVLET_PATH_EXTENSION);
+                                pathAdded = true;
+                            }
+                        }
+                    } else {
+                        // only extensions declared
+                        for (String ext : extensions) {
+                            pathSet.add(selPath + ext + SERVLET_PATH_EXTENSION);
+                            pathAdded = true;
+                        }
                     }
-                }
-
-                // create paths with method names
-                if (methods != null) {
+                } else if (methods != null) {
+                    // only methods declared
                     for (String method : methods) {
                         pathSet.add(selPath + method + SERVLET_PATH_EXTENSION);
                         pathAdded = true;
