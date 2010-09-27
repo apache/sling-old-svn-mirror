@@ -183,12 +183,12 @@
         <bundle>
             <groupId>org.apache.aries.jmx</groupId>
             <artifactId>org.apache.aries.jmx.api</artifactId>
-            <version>0.1-incubating</version>
+            <version>0.2-incubating</version>
         </bundle>
         <bundle>
             <groupId>org.apache.aries.jmx</groupId>
             <artifactId>org.apache.aries.jmx.core</artifactId>
-            <version>0.1-incubating</version>
+            <version>0.2-incubating</version>
         </bundle>
     </startLevel>
     <startLevel level="1">
