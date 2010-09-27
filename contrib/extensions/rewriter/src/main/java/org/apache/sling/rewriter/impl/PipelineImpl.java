@@ -172,18 +172,21 @@ public class PipelineImpl implements Processor {
     }
 
     /**
-     * @see org.apache.sling.rewriter.Processor#finished()
+     * @see org.apache.sling.rewriter.Processor#finished(boolean)
      */
-    public void finished() throws IOException {
+    public void finished(final boolean errorOccured) throws IOException {
         IOException ioe = null;
-        try {
-            this.generator.finished();
-        } catch (SAXException se) {
-            if ( se.getCause() != null && se.getCause() instanceof IOException ) {
-                ioe = (IOException)se.getCause();
-            } else {
-                ioe = new IOException("Pipeline exception: " + se.getMessage());
-                ioe.initCause(se);
+        // if an error occured, we only clean up
+        if ( !errorOccured ) {
+            try {
+                this.generator.finished();
+            } catch (SAXException se) {
+                if ( se.getCause() != null && se.getCause() instanceof IOException ) {
+                    ioe = (IOException)se.getCause();
+                } else {
+                    ioe = new IOException("Pipeline exception: " + se.getMessage());
+                    ioe.initCause(se);
+                }
             }
         }
         // now dispose component

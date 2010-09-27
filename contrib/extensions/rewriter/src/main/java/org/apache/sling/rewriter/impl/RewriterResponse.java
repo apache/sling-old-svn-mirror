@@ -127,9 +127,9 @@ class RewriterResponse
      * Inform this response that the request processing is finished.
      * @throws IOException
      */
-    public void finished() throws IOException {
+    public void finished(final boolean errorOccured) throws IOException {
         if ( this.processor != null ) {
-            this.processor.finished();
+            this.processor.finished(errorOccured);
             this.processor = null;
         }
     }
