@@ -41,10 +41,10 @@ public class ProcessorWrapper implements Processor {
     }
 
     /**
-     * @see org.apache.sling.rewriter.Processor#finished()
+     * @see org.apache.sling.rewriter.Processor#finished(boolean)
      */
-    public void finished() throws IOException {
-        delegatee.finished();
+    public void finished(final boolean errorOccured) throws IOException {
+        delegatee.finished(errorOccured);
     }
 
     /**

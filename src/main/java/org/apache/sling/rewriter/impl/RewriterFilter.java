@@ -79,10 +79,12 @@ public class RewriterFilter implements Filter {
 
         final RewriterResponse rewriterResponse =
                 new RewriterResponse(slingRequest, slingResponse, this.pipelineManager);
+        boolean errorOccured = true;
         try {
             chain.doFilter(request, rewriterResponse);
+            errorOccured = false;
         } finally {
-            rewriterResponse.finished();
+            rewriterResponse.finished(errorOccured);
         }
 	}
 }
