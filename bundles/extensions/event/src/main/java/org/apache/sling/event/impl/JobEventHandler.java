@@ -52,7 +52,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -1072,7 +1071,7 @@ public class JobEventHandler
      * @return The real job event.
      */
     private Event getJobEvent(Event e, String nodePath) {
-        final String eventTopic = ResourceUtil.normalize((String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
+        final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         final Dictionary<String, Object> properties = new EventPropertiesMap(e);
         // put properties for finished job callback
         properties.put(JobStatusNotifier.CONTEXT_PROPERTY_NAME,
