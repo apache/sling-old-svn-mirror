@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.core.impl;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -58,7 +60,7 @@ public class PersistentResourceList {
         if ( dataFile.exists() ) {
             ObjectInputStream ois = null;
             try {
-                ois = new ObjectInputStream(new FileInputStream(dataFile));
+                ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
                 restoredData = (Map<String, EntityResourceList>)ois.readObject();
                 logger.debug("Restored rsource list: {}", restoredData);
             } catch (final Exception e) {
@@ -78,7 +80,7 @@ public class PersistentResourceList {
 
     public void save() {
         try {
-            final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFile));
+            final ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(dataFile)));
             try {
                 oos.writeObject(data);
                 logger.debug("Persisted resource list.");
