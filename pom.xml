@@ -68,7 +68,8 @@
                             slingevent=http://sling.apache.org/jcr/event/1.0
                         </Sling-Namespaces>
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*"
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/OsgiUtil.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -115,7 +116,6 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
-        <!-- We use version 2.0 for testing! -->
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
@@ -136,7 +136,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.0.6</version>
             <scope>provided</scope>
         </dependency>
@@ -165,6 +165,12 @@
             <scope>provided</scope>
         </dependency>
       <!-- Testing -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.resource</artifactId>
+            <version>2.0.6</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

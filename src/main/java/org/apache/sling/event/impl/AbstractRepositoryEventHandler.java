@@ -20,6 +20,7 @@ package org.apache.sling.event.impl;
 
 import java.util.Calendar;
 import java.util.Dictionary;
+import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,7 +38,6 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -210,10 +210,9 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void startWriterSession() throws RepositoryException {
         this.writerSession = this.createSession();
-        this.writeRootNode = JcrResourceUtil.createPath(this.repositoryPath,
-                EventHelper.NODETYPE_FOLDER,
-                EventHelper.NODETYPE_ORDERED_FOLDER,
-                this.writerSession, true);
+        this.writeRootNode = this.createPath(this.writerSession.getRootNode(),
+                this.repositoryPath.substring(1),
+                EventHelper.NODETYPE_ORDERED_FOLDER);
     }
 
     /**
@@ -266,10 +265,9 @@ public abstract class AbstractRepositoryEventHandler
             final int sepPos = nodeType.indexOf(':');
             nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
         }
-        final Node eventNode = JcrResourceUtil.createPath(rootNode,
+        final Node eventNode = this.createPath(rootNode,
                 nodeName,
-                EventHelper.NODETYPE_FOLDER,
-                nodeType, false);
+                nodeType);
 
         eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, e.getTopic());
@@ -348,6 +346,53 @@ public abstract class AbstractRepositoryEventHandler
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path.
+     * In case it has to create the Node all non-existent intermediate path-elements
+     * will be create with the given intermediate node type and the returned node
+     * will be created with the given nodeType
+     *
+     * @param parentNode starting node
+     * @param relativePath to create
+     * @param intermediateNodeType to use for creation of intermediate nodes (or null)
+     * @param nodeType to use for creation of the final node (or null)
+     * @param autoSave Should save be called when a new node is created?
+     * @return the Node at path
+     * @throws RepositoryException in case of exception accessing the Repository
+     */
+    private Node createPath(Node   parentNode,
+                            String relativePath,
+                            String nodeType)
+    throws RepositoryException {
+        if (!parentNode.hasNode(relativePath)) {
+            Node node = parentNode;
+            int pos = relativePath.lastIndexOf('/');
+            if ( pos != -1 ) {
+                final StringTokenizer st = new StringTokenizer(relativePath.substring(0, pos), "/");
+                while ( st.hasMoreTokens() ) {
+                    final String token = st.nextToken();
+                    if ( !node.hasNode(token) ) {
+                        try {
+                            node.addNode(token, EventHelper.NODETYPE_FOLDER);
+                            node.getSession().save();
+                        } catch (RepositoryException re) {
+                            // we ignore this as this folder might be created from a different task
+                            node.refresh(false);
+                        }
+                    }
+                    node = node.getNode(token);
+                }
+                relativePath = relativePath.substring(pos + 1);
+            }
+            if ( !node.hasNode(relativePath) ) {
+                node.addNode(relativePath, nodeType);
+                node.getSession().save();
+            }
+            return node.getNode(relativePath);
+        }
+        return parentNode.getNode(relativePath);
     }
 
     public static final class EventInfo {
