@@ -110,7 +110,7 @@ load_branch = function( path, callback, reload ) {
 		{
 			uri = '/' + uri;
 		};
-        // fetch children
+        // fetch children/subnodes
         $.ajax({
             url: uri,
             type: 'GET',
@@ -236,6 +236,7 @@ path_2_id = function( path ) {
 	id = id.replace(/:/g, '_');// due to the css selectors
 	id = id.replace(/\[/g, '_');// due to the css selectors
 	id = id.replace(/\]/g, '_');// due to the css selectors
+    id = id.replace(/\+/g, '_');// due to the css selectors
 	return id;
 }
 
