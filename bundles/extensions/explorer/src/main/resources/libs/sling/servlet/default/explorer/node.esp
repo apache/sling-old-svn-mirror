@@ -52,7 +52,7 @@
       if ( session ) {
           session.checkPermission(path, "remove");
           %>
-            <form class="deleteNote" action="%3C%=path%%3E" method="post">
+            <form class="deleteNote" action="<%= path %>" method="post">
                 <input name=":operation" type="hidden" value="delete"> 
                 <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html"> 
                 <input type="submit" class="button" value="delete this node">
