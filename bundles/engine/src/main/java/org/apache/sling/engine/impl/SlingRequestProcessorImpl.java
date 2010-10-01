@@ -205,6 +205,11 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             log.error("{} , sending status {}", errorMessage, status);
             servletResponse.sendError(status, errorMessage);
 
+        } catch (IOException ioe) {
+
+            // forward IOException up the call chain to properly handle it
+            throw ioe;
+
         } catch (Throwable t) {
 
             // if we have request data and a non-null active servlet name
