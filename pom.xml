@@ -41,6 +41,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/servlets/post</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12314180</site.jira.version.id>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
