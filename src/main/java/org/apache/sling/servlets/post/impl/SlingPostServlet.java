@@ -134,13 +134,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * @scr.property valueRef="DEFAULT_AUTO_CHECKIN" type="Boolean"
      */
     private static final String PROP_AUTO_CHECKIN = "servlet.post.autoCheckin";
-    
+
     private static final boolean DEFAULT_CHECKIN_ON_CREATE = false;
-    
-    private static final boolean DEFAULT_AUTO_CHECKOUT = true;
-    
+
+    private static final boolean DEFAULT_AUTO_CHECKOUT = false;
+
     private static final boolean DEFAULT_AUTO_CHECKIN = true;
-    
+
     private static final String PARAM_CHECKIN_ON_CREATE = ":checkinNewVersionableNodes";
 
     private static final String PARAM_AUTO_CHECKOUT = ":autoCheckout";
@@ -177,12 +177,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private ImportOperation importOperation;
 
     /**
-     * The content importer reference. 
+     * The content importer reference.
      */
 	private ContentImporter contentImporter;
 
     private VersioningConfiguration baseVersioningConfiguration;
-    
+
     @Override
     public void init() {
         // default operation: create/modify
@@ -201,7 +201,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         postOperations.put(SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation());
         postOperations.put(SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation());
 
-        importOperation = new ImportOperation(defaultNodeNameGenerator, 
+        importOperation = new ImportOperation(defaultNodeNameGenerator,
             contentImporter);
         importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
         postOperations.put(SlingPostConstants.OPERATION_IMPORT,
@@ -218,7 +218,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     protected void doPost(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
         VersioningConfiguration localVersioningConfig = createRequestVersioningConfiguration(request);
-        
+
         request.setAttribute(VersioningConfiguration.class.getName(), localVersioningConfig);
 
         // prepare the response
@@ -413,7 +413,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             }
             this.delayedNodeNameGenerators.clear();
         }
-        
+
         this.baseVersioningConfiguration = createBaseVersioningConfiguration(props);
     }
 
@@ -550,7 +550,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         	this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
         }
     }
-    
+
     protected void bindContentImporter(ContentImporter importer) {
         this.contentImporter = importer;
         if (importOperation != null) {
@@ -564,7 +564,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             importOperation.setContentImporter(null);
         }
     }
-    
+
     private VersioningConfiguration createBaseVersioningConfiguration(Dictionary<?, ?> props) {
         VersioningConfiguration cfg = new VersioningConfiguration();
         cfg.setCheckinOnNewVersionableNode(OsgiUtil.toBoolean(
@@ -578,7 +578,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private VersioningConfiguration createRequestVersioningConfiguration(SlingHttpServletRequest request) {
         VersioningConfiguration cfg = baseVersioningConfiguration.clone();
-        
+
         String paramValue = request.getParameter(PARAM_CHECKIN_ON_CREATE);
         if (paramValue != null) {
             cfg.setCheckinOnNewVersionableNode(Boolean.parseBoolean(paramValue));
