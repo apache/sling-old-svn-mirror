@@ -223,6 +223,8 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             if (ranges == FULL) {
 
                 // return full resource
+                setContentLength(response,
+                    resource.getResourceMetadata().getContentLength());
                 byte[] buf = new byte[IO_BUFFER_SIZE];
                 int rd;
                 while ((rd = stream.read(buf)) >= 0) {
@@ -341,8 +343,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         if (encoding != null) {
             response.setCharacterEncoding(encoding);
         }
-
-        setContentLength(response, meta.getContentLength());
     }
 
     /**
