@@ -213,6 +213,7 @@ public abstract class AbstractRepositoryEventHandler
         this.writeRootNode = this.createPath(this.writerSession.getRootNode(),
                 this.repositoryPath.substring(1),
                 EventHelper.NODETYPE_ORDERED_FOLDER);
+        this.writerSession.save();
     }
 
     /**
@@ -388,7 +389,6 @@ public abstract class AbstractRepositoryEventHandler
             }
             if ( !node.hasNode(relativePath) ) {
                 node.addNode(relativePath, nodeType);
-                node.getSession().save();
             }
             return node.getNode(relativePath);
         }
