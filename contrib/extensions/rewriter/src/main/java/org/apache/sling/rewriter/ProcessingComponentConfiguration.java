@@ -24,6 +24,9 @@ import org.apache.sling.api.resource.ValueMap;
  */
 public interface ProcessingComponentConfiguration {
 
+    /** Configuration for an optional component, only transformers support this option. */
+    String CONFIGURATION_COMPONENT_OPTIONAL = "component-optional";
+
     /**
      * The name/type of the component.
      * @return A unique name for this component.
