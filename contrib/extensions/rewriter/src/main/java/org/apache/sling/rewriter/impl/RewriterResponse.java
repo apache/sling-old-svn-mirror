@@ -141,11 +141,7 @@ class RewriterResponse
      */
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if ( type == ContentHandler.class ) {
-            try {
-                this.processor = this.getProcessor();
-            } catch (IOException e) {
-                throw new SlingException("Unable to setup pipeline: " + e.getMessage(), e);
-            }
+            this.processor = this.getProcessor();
             if ( this.processor != null ) {
                 @SuppressWarnings("unchecked")
                 final AdapterType object = (AdapterType)this.processor.getContentHandler();
@@ -158,19 +154,27 @@ class RewriterResponse
     /**
      * Search the first matching processor
      */
-    private Processor getProcessor() throws IOException {
-        this.request.getRequestProgressTracker().log("Searching processor");
+    private Processor getProcessor() {
         final ProcessingContext processorContext = new ServletProcessingContext(this.request, this, this.getSlingResponse(), this.contentType);
         Processor found = null;
         final List<ProcessorConfiguration> processorConfigs = this.processorManager.getProcessorConfigurations();
         final Iterator<ProcessorConfiguration> i = processorConfigs.iterator();
         while ( found == null && i.hasNext() ) {
             final ProcessorConfiguration config = i.next();
-            this.request.getRequestProgressTracker().log("Checking processor {0}", config);
             if ( config.match(processorContext) ) {
-                this.request.getRequestProgressTracker().log("Settimg up processor {0}", config);
-                found = this.processorManager.getProcessor(config, processorContext);
-                this.request.getRequestProgressTracker().log("Found processor for post processing {0}", config);
+                try {
+                    found = this.processorManager.getProcessor(config, processorContext);
+                    this.request.getRequestProgressTracker().log("Found processor for post processing {0}", config);
+                } catch (final SlingException se) {
+                    // if an exception occurs during setup of the pipeline and we are currently
+                    // already processing an error, we ignore this!
+                    if ( processorContext.getRequest().getAttribute("javax.servlet.error.status_code") != null ) {
+                        this.request.getRequestProgressTracker().log("Ignoring found processor for post processing {0}" +
+                                " as an error occured ({1}) during setup while processing another error.", config, se);
+                    } else {
+                        throw se;
+                    }
+                }
             }
         }
         return found;

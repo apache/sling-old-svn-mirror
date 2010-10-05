@@ -30,6 +30,7 @@ public interface Processor {
      * Initialize this component.
      * @param context The invocation context.
      * @param config The configuration for this component.
+     * @throws IOException If an error occurs
      */
     void init(ProcessingContext context,
               ProcessorConfiguration config)
