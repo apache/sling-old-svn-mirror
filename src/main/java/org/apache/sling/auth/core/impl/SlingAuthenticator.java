@@ -136,7 +136,7 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String HTTP_AUTH_PREEMPTIVE = "preemptive";
 
-    @Property(value = HTTP_AUTH_DISABLED, options = {
+    @Property(value = HTTP_AUTH_PREEMPTIVE, options = {
         @PropertyOption(name = HTTP_AUTH_ENABLED, value = "Enabled"),
         @PropertyOption(name = HTTP_AUTH_PREEMPTIVE, value = "Enabled (Preemptive)"),
         @PropertyOption(name = HTTP_AUTH_DISABLED, value = "Disabled") })
