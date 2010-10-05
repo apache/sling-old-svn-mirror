@@ -82,15 +82,15 @@ public class PipelineImpl implements Processor {
         final Transformer[][] rewriters = this.factoryCache.getGlobalTransformers(processingContext);
 
         final ProcessingComponentConfiguration generatorConfig = config.getGeneratorConfiguration();
-        this.generator = this.getPipelineComponent(Generator.class, generatorConfig.getType());
+        this.generator = this.getPipelineComponent(Generator.class, generatorConfig.getType(), false);
         LOGGER.debug("Using generator type {}: {}.", generatorConfig.getType(), generator);
         generator.init(processingContext, generatorConfig);
 
         final int transformerCount = (transformerConfigs == null ? 0 : transformerConfigs.length) + rewriters[0].length + rewriters[1].length;
+        int index = 0;
         if ( transformerCount > 0 ) {
             // add all pre rewriter transformers
             transformers = new Transformer[transformerCount];
-            int index = 0;
             for(int i=0; i< rewriters[0].length; i++) {
                 transformers[index] = rewriters[0][i];
                 LOGGER.debug("Using pre transformer: {}.", transformers[index]);
@@ -99,10 +99,15 @@ public class PipelineImpl implements Processor {
             }
             if ( transformerConfigs != null ) {
                 for(int i=0; i< transformerConfigs.length;i++) {
-                    transformers[index] = this.getPipelineComponent(Transformer.class, transformerConfigs[i].getType());
-                    LOGGER.debug("Using transformer type {}: {}.", transformerConfigs[i].getType(), transformers[index]);
-                    transformers[index].init(processingContext, transformerConfigs[i]);
-                    index++;
+                    transformers[index] = this.getPipelineComponent(Transformer.class, transformerConfigs[i].getType(),
+                            transformerConfigs[i].getConfiguration().get(ProcessingComponentConfiguration.CONFIGURATION_COMPONENT_OPTIONAL, false));
+                    if ( transformers[index] != null ) {
+                        LOGGER.debug("Using transformer type {}: {}.", transformerConfigs[i].getType(), transformers[index]);
+                        transformers[index].init(processingContext, transformerConfigs[i]);
+                        index++;
+                    } else {
+                        LOGGER.debug("Skipping missing optional transformer of type {}", transformerConfigs[i].getType());
+                    }
                 }
             }
             for(int i=0; i< rewriters[1].length; i++) {
@@ -116,13 +121,13 @@ public class PipelineImpl implements Processor {
         }
 
         final ProcessingComponentConfiguration serializerConfig = config.getSerializerConfiguration();
-        this.serializer = this.getPipelineComponent(Serializer.class, serializerConfig.getType());
+        this.serializer = this.getPipelineComponent(Serializer.class, serializerConfig.getType(), false);
         LOGGER.debug("Using serializer type {}: {}.", serializerConfig.getType(), serializer);
         serializer.init(processingContext, serializerConfig);
 
         ContentHandler pipelineComponent = serializer;
         // now chain pipeline
-        for(int i=transformers.length; i>0; i--) {
+        for(int i=index; i>0; i--) {
             transformers[i-1].setContentHandler(pipelineComponent);
             pipelineComponent = transformers[i-1];
         }
@@ -136,8 +141,9 @@ public class PipelineImpl implements Processor {
      * Lookup a pipeline component.
      */
     @SuppressWarnings("unchecked")
-    private <ComponentType> ComponentType getPipelineComponent(Class<ComponentType> typeClass,
-                                                               String type)
+    private <ComponentType> ComponentType getPipelineComponent(final Class<ComponentType> typeClass,
+                                                               final String type,
+                                                               final boolean optional)
     throws IOException {
         final ComponentType component;
         if ( typeClass == Generator.class ) {
@@ -150,7 +156,7 @@ public class PipelineImpl implements Processor {
             component = null;
         }
 
-        if ( component == null ) {
+        if ( component == null && !optional ) {
             throw new IOException("Unable to get component of class '" + typeClass + "' with type '" + type + "'.");
         }
 
@@ -195,7 +201,9 @@ public class PipelineImpl implements Processor {
         }
         if ( this.transformers != null ) {
             for(final Transformer transformer : this.transformers ) {
-                transformer.dispose();
+                if ( transformer != null ) {
+                    transformer.dispose();
+                }
             }
         }
         if ( this.serializer != null ) {
