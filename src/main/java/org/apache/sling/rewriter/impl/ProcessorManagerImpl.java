@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -429,8 +430,7 @@ public class ProcessorManagerImpl
      * @see org.apache.sling.rewriter.ProcessorManager#getProcessor(org.apache.sling.rewriter.ProcessorConfiguration, org.apache.sling.rewriter.ProcessingContext)
      */
     public Processor getProcessor(ProcessorConfiguration configuration,
-                                  ProcessingContext      context)
-    throws IOException {
+                                  ProcessingContext      context) {
         if ( configuration == null ) {
             throw new IllegalArgumentException("Processor configuration is missing.");
         }
@@ -443,14 +443,18 @@ public class ProcessorManagerImpl
         } else {
             isPipeline = configuration instanceof PipelineConfiguration;
         }
-        if ( isPipeline ) {
-            final PipelineImpl pipeline = new PipelineImpl(this.factoryCache);
-            pipeline.init(context, configuration);
-            return pipeline;
+        try {
+            if ( isPipeline ) {
+                final PipelineImpl pipeline = new PipelineImpl(this.factoryCache);
+                pipeline.init(context, configuration);
+                return pipeline;
+            }
+            final Processor processor = new ProcessorWrapper(configuration, this.factoryCache);
+            processor.init(context, configuration);
+            return processor;
+        } catch (final IOException ioe) {
+            throw new SlingException("Unable to setup processor: " + ioe.getMessage(), ioe);
         }
-        final Processor processor = new ProcessorWrapper(configuration, this.factoryCache);
-        processor.init(context, configuration);
-        return processor;
     }
 
     /**

@@ -16,7 +16,6 @@
  */
 package org.apache.sling.rewriter;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -32,8 +31,8 @@ public interface ProcessorManager {
 
     /**
      * Return a pipeline for a pipeline configuration.
+     * @throws org.apache.sling.api.SlingException If an error occurs during setup
      */
     Processor getProcessor(ProcessorConfiguration configuration,
-                           ProcessingContext       context)
-    throws IOException;
+                           ProcessingContext       context);
 }
