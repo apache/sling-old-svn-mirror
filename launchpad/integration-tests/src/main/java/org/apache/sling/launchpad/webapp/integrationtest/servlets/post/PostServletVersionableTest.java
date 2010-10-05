@@ -17,7 +17,6 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,9 +31,6 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 /** Test node creation via the PostServlet and versionable nodes */
 public class PostServletVersionableTest extends HttpTestBase {
 
-    // the URL to configure the POST servlet with
-    private static final String CFG_URL = HTTP_BASE_URL + "/system/console/configMgr/org.apache.sling.servlets.post.impl.SlingPostServlet";
-
     public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
     private Map<String,String> params;
@@ -46,26 +42,6 @@ public class PostServletVersionableTest extends HttpTestBase {
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         params = new HashMap<String,String>();
         params.put("jcr:mixinTypes", "mix:versionable");
-
-        // enable autoCheckout for the tests
-        ArrayList<NameValuePair> config = new ArrayList<NameValuePair>();
-        config.add(new NameValuePair("apply", "true"));
-        config.add(new NameValuePair("propertylist",
-            "servlet.post.autoCheckout"));
-        config.add(new NameValuePair("servlet.post.autoCheckout", "true"));
-        assertPostStatus(CFG_URL, 302, config, null);
-        Thread.sleep(500); // give async config update some time
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        // remove configuration after test
-        ArrayList<NameValuePair> config = new ArrayList<NameValuePair>();
-        config.add(new NameValuePair("apply", "true"));
-        config.add(new NameValuePair("delete", "true"));
-        assertPostStatus(CFG_URL, 200, config, null);
-
-        super.tearDown();
     }
 
    public void testPostPathIsUnique() throws IOException {
@@ -203,6 +179,7 @@ public class PostServletVersionableTest extends HttpTestBase {
                 content.contains("jcr:isCheckedOut: false"));
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("name", "value");
         testClient.createNode(location, params);
 
@@ -228,6 +205,7 @@ public class PostServletVersionableTest extends HttpTestBase {
                 content.contains("jcr:isCheckedOut: false"));
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("name", "value");
         params.put(":autoCheckin", "false");
         testClient.createNode(location, params);
@@ -357,6 +335,7 @@ public class PostServletVersionableTest extends HttpTestBase {
                 content.contains("testprop: testvalue"));
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("child@Delete", "");
         testClient.createNode(location, params);
 
@@ -392,6 +371,7 @@ public class PostServletVersionableTest extends HttpTestBase {
                 content.contains("testprop: testvalue"));
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE);
         testClient.createNode(location+"/child", params);
 
@@ -421,6 +401,7 @@ public class PostServletVersionableTest extends HttpTestBase {
                 content.contains("testprop: testvalue"));
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("testprop@Delete", "");
         testClient.createNode(location, params);
 
@@ -469,6 +450,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // create dest with text set from src/text
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("jcr:mixinTypes", "mix:versionable");
         params.put(":checkinNewVersionableNodes", "true");
         params.put("text@MoveFrom", testPath + "/src/text");
@@ -507,6 +489,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         assertJavascript("false", oldContent, "out.println(data['jcr:isCheckedOut'])");
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text@MoveFrom", testPath + "/src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", params);
 
@@ -543,6 +526,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // copy text from src/text
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text@CopyFrom", testPath + "/src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", params);
 
@@ -563,6 +547,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", params);
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
 
@@ -573,6 +558,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // create dest with child from src
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("jcr:mixinTypes", "mix:versionable");
         params.put(":checkinNewVersionableNodes", "true");
         params.put("src@MoveFrom", testPath + "/src/child");
@@ -596,6 +582,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", params);
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
 
@@ -615,6 +602,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // move src child
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("src@MoveFrom", testPath + "/src/child");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", params);
 
@@ -636,6 +624,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", params);
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
 
@@ -654,6 +643,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // copy text from src/text
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("src@CopyFrom", testPath + "/src/child");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", params);
 
@@ -674,6 +664,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", params);
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
 
@@ -693,6 +684,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // move src child
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
         params.put(":dest", testPath + "/dest/src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
@@ -715,6 +707,7 @@ public class PostServletVersionableTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", params);
 
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
 
@@ -733,6 +726,7 @@ public class PostServletVersionableTest extends HttpTestBase {
 
         // copy child from src
         params.clear();
+        params.put(":autoCheckout", "true");
         params.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
         params.put(":dest", testPath + "/dest/src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src/child", params);
