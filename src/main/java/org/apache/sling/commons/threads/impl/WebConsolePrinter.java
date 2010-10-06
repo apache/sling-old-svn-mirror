@@ -45,6 +45,7 @@ public class WebConsolePrinter implements ConfigurationPrinter {
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Thread Pool Configuration Printer");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put("felix.webconsole.label", "slingthreadpools");
 
         plugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
                                                propertiesPrinter, props);
