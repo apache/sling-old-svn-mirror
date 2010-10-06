@@ -154,10 +154,15 @@ public class DefaultThreadPoolManager
      * @see org.apache.sling.commons.threads.ThreadPoolManager#create(org.apache.sling.commons.threads.ThreadPoolConfig)
      */
     public ThreadPool create(ThreadPoolConfig config) {
+        return this.create(config, null);
+    }
+
+    public ThreadPool create(ThreadPoolConfig config, String label) {
         if ( config == null ) {
             throw new IllegalArgumentException("Config must not be null.");
         }
-        final String name = "ThreadPool-" + UUID.randomUUID().toString();
+        final String name = "ThreadPool-" + UUID.randomUUID().toString() +
+             (label == null ? "" : " (" + label + ")");
         final Entry entry = new Entry(null, config, name);
         synchronized ( this.pools ) {
             this.pools.put(name, entry);

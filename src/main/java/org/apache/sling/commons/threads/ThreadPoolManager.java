@@ -47,6 +47,18 @@ public interface ThreadPoolManager {
     ThreadPool create(ThreadPoolConfig config);
 
     /**
+     * Create a new thread pool with this configuration.
+     * A thread pool must be released when not used anymore with the
+     * {@link #release(ThreadPool)} method.
+     * @param config The thread pool configuration.
+     * @param label  An optional label for the thread pool. The label
+     *               will be appended to the name of the pool.
+     * @return A new thread pool.
+     * @since 3.1
+     */
+    ThreadPool create(ThreadPoolConfig config, String label);
+
+    /**
      * Release the thread pool again.
      */
     void release(ThreadPool pool);
