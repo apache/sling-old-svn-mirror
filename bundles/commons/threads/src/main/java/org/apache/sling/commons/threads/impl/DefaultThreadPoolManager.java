@@ -24,9 +24,9 @@ import java.util.UUID;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPoolPolicy;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
@@ -140,6 +140,9 @@ public class DefaultThreadPoolManager
                 final Entry entry = this.pools.get(pool.getName());
                 if ( entry != null ) {
                     entry.decUsage();
+                    if ( !entry.isUsed() ) {
+                        this.pools.remove(pool.getName());
+                    }
                 }
             }
         }
