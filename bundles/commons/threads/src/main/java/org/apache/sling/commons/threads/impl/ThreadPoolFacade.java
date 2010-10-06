@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.threads.impl;
 
+import java.util.concurrent.ThreadPoolExecutor;
+
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 
@@ -80,5 +82,9 @@ public final class ThreadPoolFacade implements ThreadPool {
         final DefaultThreadPool oldPool = this.delegatee;
         this.delegatee = pool;
         oldPool.shutdown();
+    }
+
+    public ThreadPoolExecutor getExecutor() {
+        return this.delegatee.getExecutor();
     }
 }

@@ -21,8 +21,10 @@ package org.apache.sling.commons.threads.impl;
 import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -80,6 +82,7 @@ public class WebConsolePrinter implements ConfigurationPrinter {
         final DefaultThreadPoolManager.Entry[] configs = this.mgr.getConfigurations();
         if ( configs.length > 0 ) {
             for(final DefaultThreadPoolManager.Entry entry : configs ) {
+                final ThreadPoolConfig config = entry.getConfig();
                 pw.print("Pool ");
                 pw.println(entry.getName());
                 if ( entry.getPid() != null ) {
@@ -89,23 +92,40 @@ public class WebConsolePrinter implements ConfigurationPrinter {
                 pw.print("- used : ");
                 pw.println(entry.isUsed());
                 pw.print("- min pool size : ");
-                pw.println(entry.getConfig().getMinPoolSize());
+                pw.println(config.getMinPoolSize());
                 pw.print("- max pool size : ");
-                pw.println(entry.getConfig().getMaxPoolSize());
+                pw.println(config.getMaxPoolSize());
                 pw.print("- queue size : ");
-                pw.println(entry.getConfig().getQueueSize());
+                pw.println(config.getQueueSize());
                 pw.print("- keep alive time : ");
-                pw.println(entry.getConfig().getKeepAliveTime());
+                pw.println(config.getKeepAliveTime());
                 pw.print("- block policy : ");
-                pw.println(entry.getConfig().getBlockPolicy());
+                pw.println(config.getBlockPolicy());
                 pw.print("- priority : ");
-                pw.println(entry.getConfig().getPriority());
+                pw.println(config.getPriority());
                 pw.print("- shutdown graceful : ");
-                pw.println(entry.getConfig().isShutdownGraceful());
+                pw.println(config.isShutdownGraceful());
                 pw.print("- shutdown wait time : ");
-                pw.println(entry.getConfig().getShutdownWaitTimeMs());
+                pw.println(config.getShutdownWaitTimeMs());
                 pw.print("- daemon : ");
-                pw.println(entry.getConfig().isDaemon());
+                pw.println(config.isDaemon());
+                final ThreadPoolExecutor tpe = entry.getExecutor();
+                if ( tpe != null ) {
+                    pw.print("- active count : ");
+                    pw.println(tpe.getActiveCount());
+                    pw.print("- completed task count : ");
+                    pw.println(tpe.getCompletedTaskCount());
+                    pw.print("- core pool size : ");
+                    pw.println(tpe.getCorePoolSize());
+                    pw.print("- largest pool size : ");
+                    pw.println(tpe.getLargestPoolSize());
+                    pw.print("- maximum pool size : ");
+                    pw.println(tpe.getMaximumPoolSize());
+                    pw.print("- pool size : ");
+                    pw.println(tpe.getPoolSize());
+                    pw.print("- task count : ");
+                    pw.println(tpe.getTaskCount());
+                }
                 pw.println();
             }
         } else {

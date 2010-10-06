@@ -199,4 +199,8 @@ public class DefaultThreadPool
         }
         this.logger.info("Thread pool [{}] is shut down.", this.name);
     }
+
+    public ThreadPoolExecutor getExecutor() {
+        return this.executor;
+    }
 }

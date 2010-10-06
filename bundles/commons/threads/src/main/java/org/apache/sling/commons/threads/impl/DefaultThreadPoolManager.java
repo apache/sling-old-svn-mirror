@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -325,6 +326,13 @@ public class DefaultThreadPoolManager
 
         public ThreadPoolConfig getConfig() {
             return this.config;
+        }
+
+        public ThreadPoolExecutor getExecutor() {
+            if ( this.pool != null ) {
+                return this.pool.getExecutor();
+            }
+            return null;
         }
     }
 }
