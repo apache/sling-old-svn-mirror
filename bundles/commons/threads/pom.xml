@@ -58,7 +58,7 @@
                             org.apache.sling.commons.threads.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.commons.threads;version=3.0.0
+                            org.apache.sling.commons.threads;version=3.1.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.threads.impl
