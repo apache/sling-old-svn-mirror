@@ -22,10 +22,9 @@ import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
-import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
+import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -35,7 +34,7 @@ import org.osgi.framework.ServiceRegistration;
  * prints out the currently configured filter chains.
  *
  */
-public class WebConsoleConfigPrinter implements ConfigurationPrinter {
+public class WebConsoleConfigPrinter {
 
     private final ServletFilterManager filterManager;
 
@@ -57,8 +56,11 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Servlet Filter Configuration Printer");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        serviceProps.put("felix.webconsole.label", "slingfilter");
+        serviceProps.put("felix.webconsole.title", "Sling Servlet Filter");
+        serviceProps.put("felix.webconsole.configprinter.modes", "always");
 
-        reg.filterPlugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+        reg.filterPlugin = bundleContext.registerService(WebConsoleConfigPrinter.class.getName(),
                 filterPrinter,
                 serviceProps);
         return reg;
@@ -72,14 +74,6 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
                 registration.filterPlugin = null;
             }
         }
-    }
-
-    /**
-     * Return the title for the configuration printer
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Servlet Filter";
     }
 
     /**

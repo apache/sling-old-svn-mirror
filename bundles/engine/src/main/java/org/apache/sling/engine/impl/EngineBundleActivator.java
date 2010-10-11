@@ -33,21 +33,13 @@ public class EngineBundleActivator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(BundleContext context) throws Exception {
-        try {
-            RequestHistoryConsolePlugin.initPlugin(context);
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+        RequestHistoryConsolePlugin.initPlugin(context);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
-        try {
-            RequestHistoryConsolePlugin.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+        RequestHistoryConsolePlugin.destroyPlugin();
     }
 }
