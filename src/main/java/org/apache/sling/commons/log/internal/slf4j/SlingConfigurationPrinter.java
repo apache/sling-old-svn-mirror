@@ -30,8 +30,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.webconsole.AttachmentProvider;
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -40,8 +38,7 @@ import org.osgi.framework.ServiceRegistration;
  * Web Console plugin to display the currently configured log
  * files.
  */
-public class SlingConfigurationPrinter
-    implements ConfigurationPrinter, AttachmentProvider {
+public class SlingConfigurationPrinter {
 
     /** The registration. */
     private static ServiceRegistration registration;
@@ -49,9 +46,12 @@ public class SlingConfigurationPrinter
     public static void registerPrinter(BundleContext ctx) {
         if (registration == null) {
             Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put("felix.webconsole.label", "slinglogs");
+            props.put("felix.webconsole.title", "Log Files");
+            props.put("felix.webconsole.configprinter.modes", "always");
 
             SlingConfigurationPrinter printer = new SlingConfigurationPrinter();
-            registration = ctx.registerService(ConfigurationPrinter.class.getName(),
+            registration = ctx.registerService(SlingConfigurationPrinter.class.getName(),
                     printer, props);
         }
     }
@@ -61,13 +61,6 @@ public class SlingConfigurationPrinter
             registration.unregister();
             registration = null;
         }
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Log Files";
     }
 
     /**
@@ -110,7 +103,7 @@ public class SlingConfigurationPrinter
      */
     public URL[] getAttachments(String mode) {
         // we only provide urls for mode zip
-        if ( ConfigurationPrinter.MODE_ZIP.equals(mode) ) {
+        if ( "zip".equals(mode) ) {
             final List<URL> urls = new ArrayList<URL>();
             final LogConfigManager logConfigManager = LogConfigManager.getInstance();
             Iterator<SlingLoggerWriter> writers = logConfigManager.getSlingLoggerWriters();
