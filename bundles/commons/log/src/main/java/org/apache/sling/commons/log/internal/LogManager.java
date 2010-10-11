@@ -124,12 +124,8 @@ public class LogManager {
             SlingLogPanel.registerPanel(context);
         } catch (Throwable ignore) {
         }
-        // setup the web console configuration printer. This may fail loading
-        // the class if the web console API is not wired
-        try {
-            SlingConfigurationPrinter.registerPrinter(context);
-        } catch (Throwable ignore) {
-        }
+        // setup the web console configuration printer.
+        SlingConfigurationPrinter.registerPrinter(context);
     }
 
     void shutdown() {
@@ -141,10 +137,7 @@ public class LogManager {
         } catch (Throwable ignore) {
         }
         // tear down the web console configuration printer (if created at all).
-        try {
-            SlingConfigurationPrinter.unregisterPrinter();
-        } catch (Throwable ignore) {
-        }
+        SlingConfigurationPrinter.unregisterPrinter();
 
         if (loggingConfigurable != null) {
             loggingConfigurable.unregister();
