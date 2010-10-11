@@ -16,7 +16,9 @@
  */
 package org.apache.sling.scripting.core.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -75,7 +77,7 @@ public class ScriptEngineManagerFactoryTest {
             one(bundleCtx).getBundles();
             will(returnValue(new Bundle[0]));
 
-            allowing(bundleCtx).registerService(with(equal("org.apache.felix.webconsole.ConfigurationPrinter")), with(any(Object.class)), with(any(Dictionary.class)));
+            allowing(bundleCtx).registerService(with(equal("org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin")), with(any(Object.class)), with(any(Dictionary.class)));
             will(returnValue(new MockServiceRegistration()));
 
 

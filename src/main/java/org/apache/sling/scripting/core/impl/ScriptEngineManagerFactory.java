@@ -198,21 +198,13 @@ public class ScriptEngineManagerFactory implements BundleListener {
             }
         }
 
-        try {
-            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(context.getBundleContext(), this);
-        } catch (Throwable t) {
-            // so what ?
-        }
+        org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(context.getBundleContext(), this);
 
         refreshScriptEngineManager();
     }
 
     protected void deactivate(ComponentContext context) {
-        try {
-            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.destroyPlugin();
-        } catch (Throwable t) {
-            // so what ?
-        }
+        org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.destroyPlugin();
 
         context.getBundleContext().removeBundleListener(this);
 
