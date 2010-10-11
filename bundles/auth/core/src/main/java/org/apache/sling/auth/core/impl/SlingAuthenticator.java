@@ -859,6 +859,10 @@ public class SlingAuthenticator implements Authenticator,
                 reason.getMessage());
             log.debug("handleLoginFailure", reason);
 
+            // preset a reason for the login failure (if not done already)
+            ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+                "User name and password do not match");
+
             doLogin(request, response);
 
         } else {
@@ -938,7 +942,7 @@ public class SlingAuthenticator implements Authenticator,
         if (!AbstractAuthenticationHandler.isValidateRequest(request)) {
             if (isBrowserRequest(request)) {
 
-                if (!isAjaxRequest(request)) {
+                if (!isAjaxRequest(request) && !isLoginLoop(request)) {
                     try {
 
                         login(request, response);
@@ -982,10 +986,8 @@ public class SlingAuthenticator implements Authenticator,
         // credential validation
 
         // ensure a failure reason
-        if (request.getAttribute(AuthenticationHandler.FAILURE_REASON) == null) {
-            request.setAttribute(AuthenticationHandler.FAILURE_REASON,
-                "Mandatory authentication is not possible");
-        }
+        ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+            "Authentication Failed");
 
         AbstractAuthenticationHandler.sendInvalid(request, response);
     }
@@ -1015,6 +1017,45 @@ public class SlingAuthenticator implements Authenticator,
      */
     private boolean isAjaxRequest(final HttpServletRequest request) {
         return XML_HTTP_REQUEST.equals(request.getHeader(X_REQUESTED_WITH));
+    }
+
+    /**
+     * Returns <code>true</code> if the current request was referred to by the
+     * same URL as the current request has. This is assumed to be caused by a
+     * loop in requesting credentials from the client. Such a loop will probably
+     * never cause the request for credentials to succeed, so it must be broken.
+     *
+     * @param request The request to check
+     * @return <code>true</code> if the request is considered to be a loop;
+     *         <code>false</code> otherwise
+     */
+    private boolean isLoginLoop(final HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        if (referer != null) {
+            StringBuffer sb = request.getRequestURL();
+            if (request.getQueryString() != null) {
+                sb.append('?').append(request.getQueryString());
+            }
+            return referer.equals(sb.toString());
+        }
+
+        // no referer means no loop
+        return false;
+    }
+
+    /**
+     * Sets the name request attribute to the given value unless the request
+     * attribute is already set a non-<code>null</code> value.
+     *
+     * @param request The request on which to set the attribute
+     * @param attribute The name of the attribute to check/set
+     * @param value The value to set the attribute to if it is not already set
+     */
+    private void ensureAttribute(final HttpServletRequest request,
+            final String attribute, final Object value) {
+        if (request.getAttribute(attribute) == null) {
+            request.setAttribute(attribute, value);
+        }
     }
 
     /**
