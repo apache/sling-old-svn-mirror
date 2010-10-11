@@ -59,6 +59,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            javax.servlet;javax.servlet.http;resolution:=optional,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.event;version=2.4.0,
                             org.apache.sling.event.jobs;version=1.0.0

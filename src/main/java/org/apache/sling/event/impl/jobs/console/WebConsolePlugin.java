@@ -50,7 +50,8 @@ import org.apache.sling.event.jobs.Statistics;
 @Service(value=javax.servlet.Servlet.class)
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
-    @Property(name="felix.webconsole.title", value="Sling Eventing", propertyPrivate=true)
+    @Property(name="felix.webconsole.title", value="Sling Eventing", propertyPrivate=true),
+    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"})
 })
 public class WebConsolePlugin extends HttpServlet {
 
@@ -201,12 +202,33 @@ public class WebConsolePlugin extends HttpServlet {
         pw.println("<br/>");
     }
 
-    /** TODO */
+    /**
+     * Format an array.
+     */
     private String formatArray(final String[] array) {
         if ( array == null || array.length == 0 ) {
             return "";
         }
-        return escape(Arrays.toString(array));
+        final StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(final String s : array ) {
+            if ( !first ) {
+                sb.append('\n');
+            }
+            first = false;
+            sb.append(s);
+        }
+        return escape(sb.toString());
+    }
+
+    /**
+     * Format an array.
+     */
+    private String formatArrayAsText(final String[] array) {
+        if ( array == null || array.length == 0 ) {
+            return "";
+        }
+        return Arrays.toString(array);
     }
 
     /** TODO */
@@ -241,5 +263,93 @@ public class WebConsolePlugin extends HttpServlet {
                 "<input type='hidden' name='queue' value='%s'/>" +
                 "<button class='ui-state-default ui-corner-all' onclick='javascript:document.forms[\"%s\"].submit();'>" +
                 "%s</button></form>", hiddenValue, hiddenValue, q.getName(), hiddenValue, buttonLabel);
+    }
+
+    /** Configuration printer for the web console. */
+    public void printConfiguration(final PrintWriter pw, final String mode) {
+        if ( !"zip".equals(mode) && !"txt".equals(mode) ) {
+            return;
+        }
+        pw.println("Apache Sling Eventing");
+        pw.println("---------------------");
+
+        Statistics s = this.jobManager.getStatistics();
+        pw.println("Overall Statistics");
+        pw.printf("Start Time : %s%n", formatDate(s.getStartTime()));
+        pw.printf("Last Activated : %s%n", formatDate(s.getLastActivatedJobTime()));
+        pw.printf("Last Finished : %s%n", formatDate(s.getLastFinishedJobTime()));
+        pw.printf("Queued Jobs : %s%n", s.getNumberOfQueuedJobs());
+        pw.printf("Active Jobs : %s%n", s.getNumberOfActiveJobs());
+        pw.printf("Jobs : %s%n", s.getNumberOfJobs());
+        pw.printf("Finished Jobs : %s%n", s.getNumberOfFinishedJobs());
+        pw.printf("Failed Jobs : %s%n", s.getNumberOfFailedJobs());
+        pw.printf("Cancelled Jobs : %s%n", s.getNumberOfCancelledJobs());
+        pw.printf("Processed Jobs : %s%n", s.getNumberOfProcessedJobs());
+        pw.printf("Average Processing Time : %s%n", formatTime(s.getAverageProcessingTime()));
+        pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
+
+        boolean isEmpty = true;
+        for(final Queue q : this.jobManager.getQueues()) {
+            isEmpty = false;
+            pw.printf("Active JobQueue: %s %s%n", q.getName(),
+                    q.isSuspended() ? "(SUSPENDED)" : "");
+
+            s = q.getStatistics();
+            final QueueConfiguration c = q.getConfiguration();
+            pw.println("Statistics");
+            pw.printf("Start Time : %s%n", formatDate(s.getStartTime()));
+            pw.printf("Last Activated : %s%n", formatDate(s.getLastActivatedJobTime()));
+            pw.printf("Last Finished : %s%n", formatDate(s.getLastFinishedJobTime()));
+            pw.printf("Queued Jobs : %s%n", s.getNumberOfQueuedJobs());
+            pw.printf("Active Jobs : %s%n", s.getNumberOfActiveJobs());
+            pw.printf("Jobs : %s%n", s.getNumberOfJobs());
+            pw.printf("Finished Jobs : %s%n", s.getNumberOfFinishedJobs());
+            pw.printf("Failed Jobs : %s%n", s.getNumberOfFailedJobs());
+            pw.printf("Cancelled Jobs : %s%n", s.getNumberOfCancelledJobs());
+            pw.printf("Processed Jobs : %s%n", s.getNumberOfProcessedJobs());
+            pw.printf("Average Processing Time : %s%n", formatTime(s.getAverageProcessingTime()));
+            pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
+            pw.printf("Status Info : %s%n", q.getStatusInfo());
+            pw.println("Configuration");
+            pw.printf("Type : %s%n", c.getType());
+            pw.printf("Topics : %s%n", formatArrayAsText(c.getTopics()));
+            pw.printf("Max Parallel : %s%n", c.getMaxParallel());
+            pw.printf("Max Retries : %s%n", c.getMaxRetries());
+            pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
+            pw.printf("Priority : %s%n", c.getPriority());
+            pw.printf("Run Local : %s%n", c.isLocalQueue());
+            pw.printf("App Ids : %s%n", formatArrayAsText(c.getApplicationIds()));
+            pw.println();
+        }
+        if ( isEmpty ) {
+            pw.println("No active queues.");
+            pw.println();
+        }
+
+        pw.println("Apache Sling Eventing - Job Queue Configurations");
+        pw.println("------------------------------------------------");
+        this.printQueueConfiguration(pw, ((DefaultJobManager)this.jobManager).getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        for(final InternalQueueConfiguration c : configs ) {
+            this.printQueueConfiguration(pw, c);
+        }
+
+    }
+
+    private void printQueueConfiguration(final PrintWriter pw, final InternalQueueConfiguration c) {
+        pw.printf("Job Queue Configuration: %s%n",
+                c.getName());
+        pw.printf("Valid : %s%n", c.isValid());
+        pw.printf("Type : %s%n", c.getType());
+        pw.printf("Topics : %s%n", formatArrayAsText(c.getTopics()));
+        pw.printf("Max Parallel : %s%n", c.getMaxParallel());
+        pw.printf("Max Retries : %s%n", c.getMaxRetries());
+        pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
+        pw.printf("Priority : %s ms%n", c.getPriority());
+        pw.printf("Run Local : %s ms%n", c.isLocalQueue());
+        pw.printf("App Ids : %s ms%n", formatArrayAsText(c.getApplicationIds()));
+        pw.printf("Ranking : %s ms%n", c.getRanking());
+
+        pw.println();
     }
 }

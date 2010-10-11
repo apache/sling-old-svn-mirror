@@ -96,19 +96,6 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
      * Helper method to create a job event.
      */
     private Event getJobEvent(String queueName, String id, String parallel) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(JobUtil.PROPERTY_JOB_TOPIC, "sling/test");
-        if ( id != null ) {
-            props.put(JobUtil.PROPERTY_JOB_NAME, id);
-        }
-        props.put(JobUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
-        props.put(JobUtil.PROPERTY_JOB_RETRIES, 2);
-        if ( queueName != null ) {
-            props.put(JobUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
-        }
-        if ( parallel != null ) {
-            props.put(JobUtil.PROPERTY_JOB_PARALLEL, parallel);
-        }
         return getJobEvent(queueName, id, parallel, false);
     }
 
