@@ -63,9 +63,6 @@
                         <Private-Package>
                             org.apache.sling.commons.threads.impl
                         </Private-Package>
-                        <Import-Package>
-                            org.apache.felix.webconsole;resolution:=optional, *
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -96,12 +93,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -23,7 +23,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -34,7 +33,7 @@ import org.osgi.framework.ServiceRegistration;
  * prints out the thread pools.
  *
  */
-public class WebConsolePrinter implements ConfigurationPrinter {
+public class WebConsolePrinter {
 
     private static ServiceRegistration plugin;
 
@@ -46,8 +45,10 @@ public class WebConsolePrinter implements ConfigurationPrinter {
             "Apache Sling Thread Pool Configuration Printer");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put("felix.webconsole.label", "slingthreadpools");
+        props.put("felix.webconsole.title", "Sling Thread Pools");
+        props.put("felix.webconsole.configprinter.modes", "always");
 
-        plugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+        plugin = bundleContext.registerService(WebConsolePrinter.class.getName(),
                                                propertiesPrinter, props);
     }
 
@@ -64,13 +65,6 @@ public class WebConsolePrinter implements ConfigurationPrinter {
 
     public WebConsolePrinter(final DefaultThreadPoolManager dtpm) {
         this.mgr = dtpm;
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Sling Thread Pools";
     }
 
     /**

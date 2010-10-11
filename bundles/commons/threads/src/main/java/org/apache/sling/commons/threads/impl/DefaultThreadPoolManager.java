@@ -189,7 +189,7 @@ public class DefaultThreadPoolManager
     /**
      * @see org.osgi.service.cm.ManagedServiceFactory#updated(java.lang.String, java.util.Dictionary)
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void updated(String pid, Dictionary properties)
     throws ConfigurationException {
         final String name = (String) properties.get(ModifiableThreadPoolConfig.PROPERTY_NAME);
