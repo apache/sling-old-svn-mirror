@@ -54,22 +54,15 @@ public class Activator implements BundleActivator {
         this.service = new DefaultThreadPoolManager(this.bundleContext, props);
         this.serviceReg = this.bundleContext.registerService(new String[] {ThreadPoolManager.class.getName(),
                 ManagedServiceFactory.class.getName()}, service, props);
-        try {
-            WebConsolePrinter.initPlugin(this.bundleContext, this.service);
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+
+        WebConsolePrinter.initPlugin(this.bundleContext, this.service);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) {
-        try {
-            WebConsolePrinter.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+        WebConsolePrinter.destroyPlugin();
         if ( this.serviceReg != null ) {
             this.serviceReg.unregister();
             this.serviceReg = null;
