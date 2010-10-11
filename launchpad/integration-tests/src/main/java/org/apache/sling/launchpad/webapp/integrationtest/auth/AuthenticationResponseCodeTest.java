@@ -29,6 +29,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
@@ -80,13 +81,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         headers.add(new Header("Cookie", "sling.formauth=garbage"));
 
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, headers, null);
-
-        // expected the X-Reason header
-        final Header reason = post.getResponseHeader("X-Reason");
-        assertNotNull(reason);
-
-        // expect the response to be the same as the reason (SLING-1831)
-        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
+        assertXReason(post);
     }
 
     public void testValidatingIncorrectHttpBasicCredentials() throws Exception {
@@ -99,22 +94,26 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("j_validate", "true"));
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, null);
-
-        // expected the X-Reason header
-        Header reason = post.getResponseHeader("X-Reason");
-        assertNotNull(reason);
-
-        // expect the response to be the same as the reason (SLING-1831)
-        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
+        assertXReason(post);
 
         HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "?j_validate=true", HttpServletResponse.SC_FORBIDDEN);
+        assertXReason(get);
+    }
 
-        // expected the X-Reason header
-        reason = post.getResponseHeader("X-Reason");
-        assertNotNull(reason);
+    public void testPreventLoopIncorrectHttpBasicCredentials() throws Exception {
 
-        // expect the response to be the same as the reason (SLING-1831)
-        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
+        // assume http and webdav are on the same host + port
+        URL url = new URL(HTTP_BASE_URL);
+        Credentials defaultcreds = new UsernamePasswordCredentials("garbage", "garbage");
+        httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
+
+        final String requestUrl = HTTP_BASE_URL + "/junk?param1=1";
+        HttpMethod get = new GetMethod(requestUrl);
+        get.setRequestHeader("Referer", requestUrl);
+        get.setRequestHeader("Accept", "text/*"); // simulate a browser request
+        int status = httpClient.executeMethod(get);
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, status);
+        assertXReason(get);
     }
 
     public void testXRequestedWithIncorrectCredentials() throws Exception {
@@ -196,4 +195,12 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         return post;
     }
 
+    private void assertXReason(final HttpMethod method) throws IOException {
+        // expected the X-Reason header
+        final Header reason = method.getResponseHeader("X-Reason");
+        assertNotNull(reason);
+
+        // expect the response to be the same as the reason (SLING-1831)
+        assertEquals(reason.getValue(), method.getResponseBodyAsString().trim());
+    }
 }
