@@ -307,6 +307,9 @@ public abstract class AbstractAuthenticationHandler extends
             Object reason = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
             if (reason != null) {
                 response.setHeader(X_REASON, reason.toString());
+                response.setContentType("text/plain");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().println(reason);
             }
 
             response.flushBuffer();
