@@ -1,0 +1,188 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.event.impl.jobs.queues;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.apache.sling.event.impl.EnvironmentComponent;
+import org.apache.sling.event.impl.jobs.JobEvent;
+import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
+import org.apache.sling.event.jobs.JobUtil;
+
+/**
+ * An ordered job queue is processing the queue FIFO in a serialized
+ * way. If a job fails it is rescheduled and the reschedule is processed
+ * next - this basically means that failing jobs block the queue
+ * until they are finished!
+ */
+public final class OrderedJobQueue extends AbstractJobQueue {
+
+    /** The job event for rescheduling. */
+    private JobEvent jobEvent;
+
+    /** Marker indicating that this queue is currently sleeping. */
+    private volatile boolean isSleeping = false;
+
+    /** The sleeping thread. */
+    private volatile Thread sleepingThread;
+
+    /** The queue. */
+    private final BlockingQueue<JobEvent> queue = new LinkedBlockingQueue<JobEvent>();
+
+    public OrderedJobQueue(final String name,
+                           final InternalQueueConfiguration config,
+                           final EnvironmentComponent env) {
+        super(name, config, env);
+    }
+
+    @Override
+    public String getStatusInfo() {
+        return super.getStatusInfo() + ", isSleeping=" + this.isSleeping;
+    }
+
+    @Override
+    protected JobEvent start(final JobEvent processInfo) {
+        JobEvent rescheduleInfo = null;
+
+        // if we are ordered we simply wait for the finish
+        if ( this.executeJob(processInfo) ) {
+            rescheduleInfo = this.waitForFinish();
+        }
+        return rescheduleInfo;
+    }
+
+    private void setSleeping(boolean flag) {
+        this.isSleeping = flag;
+        if ( !flag ) {
+            this.sleepingThread = null;
+        }
+    }
+
+    private void setSleeping(Thread sleepingThread) {
+        this.sleepingThread = sleepingThread;
+        this.setSleeping(true);
+    }
+
+    @Override
+    public void resume() {
+        if ( this.isSleeping ) {
+            final Thread thread = this.sleepingThread;
+            if ( thread != null ) {
+                thread.interrupt();
+            }
+        }
+        super.resume();
+    }
+
+    /**
+     * Wait for the job to be finished.
+     * This is called if the queue is ordered.
+     */
+    private JobEvent waitForFinish() {
+        synchronized ( this ) {
+            this.isWaiting = true;
+            this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
+            while ( this.isWaiting ) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    this.ignoreException(e);
+                }
+            }
+            this.logger.debug("Job queue {} is continuing.", this.queueName);
+            final JobEvent object = this.jobEvent;
+            this.jobEvent = null;
+            return object;
+        }
+    }
+
+    @Override
+    protected void put(final JobEvent event) {
+        try {
+            this.queue.put(event);
+        } catch (final InterruptedException e) {
+            // this should never happen
+            this.ignoreException(e);
+        }
+    }
+
+    @Override
+    protected JobEvent take() {
+        try {
+            return this.queue.take();
+        } catch (final InterruptedException e) {
+            // this should never happen
+            this.ignoreException(e);
+        }
+        return null;
+    }
+
+    @Override
+    protected boolean isEmpty() {
+        return this.queue.isEmpty();
+    }
+
+    @Override
+    protected void notifyFinished(final JobEvent rescheduleInfo) {
+        this.jobEvent = rescheduleInfo;
+        this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
+        this.isWaiting = false;
+        synchronized ( this ) {
+            this.notify();
+        }
+    }
+
+    @Override
+    protected JobEvent reschedule(final JobEvent info) {
+        // we just sleep for the delay time - if none, we continue and retry
+        // this job again
+        long delay = this.configuration.getRetryDelayInMs();
+        if ( info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
+            delay = (Long)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY);
+        }
+        if ( delay > 0 ) {
+            setSleeping(Thread.currentThread());
+            try {
+                this.logger.debug("Job queue {} is sleeping for {}ms.", this.queueName, delay);
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                this.ignoreException(e);
+            } finally {
+                setSleeping(false);
+            }
+        }
+        return info;
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Queue#clear()
+     */
+    public void clear() {
+        this.queue.clear();
+        super.clear();
+    }
+
+    @Override
+    public void removeAll() {
+        this.jobEvent = null;
+        super.removeAll();
+    }
+}
+
