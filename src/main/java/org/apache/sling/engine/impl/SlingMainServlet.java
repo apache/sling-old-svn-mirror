@@ -309,12 +309,8 @@ public class SlingMainServlet extends GenericServlet {
         // initialize requestListenerManager
         requestListenerManager = new RequestListenerManager( bundleContext, slingServletContext );
 
-        // try to setup configuration printer
-        try {
-            this.printerRegistration = WebConsoleConfigPrinter.register(bundleContext, filterManager);
-        } catch (Throwable t) {
-            log.debug("Unable to register web console configuration printer.", t);
-        }
+        // Setup configuration printer
+        this.printerRegistration = WebConsoleConfigPrinter.register(bundleContext, filterManager);
 
         // provide the SlingRequestProcessor service
         Hashtable<String, String> srpProps = new Hashtable<String, String>();

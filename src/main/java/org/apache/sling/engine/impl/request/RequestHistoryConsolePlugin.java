@@ -27,11 +27,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -51,6 +50,8 @@ public class RequestHistoryConsolePlugin {
 
     private static Plugin instance;
 
+    private static ServiceRegistration serviceRegistration;
+
     public static final int STORED_REQUESTS_COUNT = 20;
 
     private RequestHistoryConsolePlugin() {
@@ -65,7 +66,16 @@ public class RequestHistoryConsolePlugin {
     public static void initPlugin(BundleContext context) {
         if (instance == null) {
             Plugin tmp = new Plugin();
-            tmp.activate(context);
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Constants.SERVICE_DESCRIPTION,
+                "Web Console Plugin to display information about recent Sling requests");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            props.put(Constants.SERVICE_PID, tmp.getClass().getName());
+            props.put("felix.webconsole.label", LABEL);
+            props.put("felix.webconsole.title", "Recent requests");
+
+            serviceRegistration = context.registerService(
+                    "javax.servlet.Servlet", tmp, props);
             instance = tmp;
         }
     }
@@ -73,21 +83,22 @@ public class RequestHistoryConsolePlugin {
     public static void destroyPlugin() {
         if (instance != null) {
             try {
-                instance.deactivate();
+                if (serviceRegistration != null) {
+                    serviceRegistration.unregister();
+                    serviceRegistration = null;
+                }
             } finally {
                 instance = null;
             }
         }
     }
 
-    public static final class Plugin extends AbstractWebConsolePlugin {
+    public static final class Plugin extends HttpServlet {
 
         private final SlingHttpServletRequest[] requests = new SlingHttpServletRequest[STORED_REQUESTS_COUNT];
 
         /** Need to store methods separately, apparently requests clear this data when done processing */
         private final String [] methods = new String[STORED_REQUESTS_COUNT];
-
-        private ServiceRegistration serviceRegistration;
 
         private int lastRequestIndex = -1;
 
@@ -106,38 +117,6 @@ public class RequestHistoryConsolePlugin {
                 requests[i] = null;
             }
             lastRequestIndex = -1;
-        }
-
-        public void activate(BundleContext context) {
-            super.activate(context);
-
-            Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(Constants.SERVICE_DESCRIPTION,
-                "Web Console Plugin to display information about recent Sling requests");
-            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-            props.put(Constants.SERVICE_PID, getClass().getName());
-            props.put(WebConsoleConstants.PLUGIN_LABEL, LABEL);
-
-            serviceRegistration = context.registerService(
-                WebConsoleConstants.SERVICE_NAME, this, props);
-        }
-
-        public void deactivate() {
-            if (serviceRegistration != null) {
-                serviceRegistration.unregister();
-                serviceRegistration = null;
-            }
-            super.deactivate();
-        }
-
-        @Override
-        public String getLabel() {
-            return LABEL;
-        }
-
-        @Override
-        public String getTitle() {
-            return "Recent requests";
         }
 
         private int getArrayIndex(int displayIndex) {
@@ -190,13 +169,12 @@ public class RequestHistoryConsolePlugin {
         }
 
         @Override
-        protected void renderContent(HttpServletRequest req, HttpServletResponse res)
-          throws ServletException, IOException {
-
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws ServletException, IOException {
             // If so requested, clear our data
             if(req.getParameter(CLEAR) != null) {
                 clear();
-                res.sendRedirect(LABEL);
+                resp.sendRedirect(LABEL);
                 return;
             }
 
@@ -221,7 +199,7 @@ public class RequestHistoryConsolePlugin {
                 // ignore
             }
 
-            final PrintWriter pw = res.getWriter();
+            final PrintWriter pw = resp.getWriter();
 
             pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
