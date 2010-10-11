@@ -30,8 +30,6 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.ModeAwareConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -43,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * prints out the Sling properties from Launchpad if available.
  *
  */
-public class SlingPropertiesPrinter implements ModeAwareConfigurationPrinter {
+public class SlingPropertiesPrinter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlingPropertiesPrinter.class);
 
@@ -66,14 +64,17 @@ public class SlingPropertiesPrinter implements ModeAwareConfigurationPrinter {
             }
             if ( props != null ) {
                 final SlingPropertiesPrinter propertiesPrinter = new SlingPropertiesPrinter(props);
-                final Dictionary<String, String> serviceProps2 = new Hashtable<String, String>();
-                serviceProps2.put(Constants.SERVICE_DESCRIPTION,
+                final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
+                serviceProps.put(Constants.SERVICE_DESCRIPTION,
                     "Apache Sling Sling Properties Configuration Printer");
-                serviceProps2.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                serviceProps.put("felix.webconsole.label", "slingprops");
+                serviceProps.put("felix.webconsole.title", "Sling Properties");
+                serviceProps.put("felix.webconsole.configprinter.modes", "always");
 
-                propertiesPlugin = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+                propertiesPlugin = bundleContext.registerService(SlingPropertiesPrinter.class.getName(),
                         propertiesPrinter,
-                        serviceProps2);
+                        serviceProps);
             }
         }
     }
@@ -91,13 +92,6 @@ public class SlingPropertiesPrinter implements ModeAwareConfigurationPrinter {
 
     public SlingPropertiesPrinter(final Properties props) {
         this.props = props;
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Sling Properties";
     }
 
     /**
@@ -124,7 +118,7 @@ public class SlingPropertiesPrinter implements ModeAwareConfigurationPrinter {
      * @see org.apache.felix.webconsole.ModeAwareConfigurationPrinter#printConfiguration(java.io.PrintWriter, java.lang.String)
      */
     public void printConfiguration(PrintWriter printWriter, String mode) {
-        if ( mode != ConfigurationPrinter.MODE_ZIP ) {
+        if ( ! "zip".equals(mode) ) {
             this.printConfiguration(printWriter);
         } else {
             // write into byte array first
