@@ -28,13 +28,11 @@ import java.util.List;
 
 import javax.jcr.Session;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.ConfigurationPrinter;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
@@ -45,7 +43,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 public class JcrResourceResolverWebConsolePlugin extends
-        AbstractWebConsolePlugin implements ConfigurationPrinter {
+        HttpServlet {
 
     private static final long serialVersionUID = 0;
 
@@ -63,44 +61,30 @@ public class JcrResourceResolverWebConsolePlugin extends
             JcrResourceResolverFactoryImpl resolverFactory) {
         this.resolverFactory = resolverFactory;
 
-        activate(context);
-
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "JCRResourceResolver Web Console Plugin");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
-        props.put(WebConsoleConstants.PLUGIN_LABEL, getLabel());
+        props.put("felix.webconsole.label", "jcrresolver");
+        props.put("felix.webconsole.title", "JCR ResourceResolver");
+        props.put("felix.webconsole.configprinter.modes", "always");
 
         service = context.registerService(new String[] {
-            WebConsoleConstants.SERVICE_NAME, ConfigurationPrinter.SERVICE },
+                "javax.servlet.Servlet" },
             this, props);
     }
 
     void dispose() {
         if (service != null) {
             service.unregister();
-            deactivate();
             service = null;
         }
     }
 
-    // ---------- AbstractWebConsolePlugin
-
     @Override
-    public String getLabel() {
-        return "jcrresolver";
-    }
-
-    @Override
-    public String getTitle() {
-        return "JCR ResourceResolver";
-    }
-
-    @Override
-    protected void renderContent(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
+    throws ServletException, IOException {
         String test = (String) request.getAttribute(ATTR_TEST);
         if (test == null) test = "";
         String result = (String) request.getAttribute(ATTR_RESULT);
