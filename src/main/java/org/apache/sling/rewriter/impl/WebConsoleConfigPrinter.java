@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -32,7 +31,7 @@ import org.osgi.framework.ServiceRegistration;
  * prints out the currently configured processors/pipelines.
  *
  */
-public class WebConsoleConfigPrinter implements ConfigurationPrinter {
+public class WebConsoleConfigPrinter {
 
     final ProcessorManagerImpl manager;
 
@@ -49,8 +48,11 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Rewriter Configuration Printer");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        serviceProps.put("felix.webconsole.label", "slingrewriter");
+        serviceProps.put("felix.webconsole.title", "Sling Rewriter");
+        serviceProps.put("felix.webconsole.configprinter.modes", "always");
 
-        REG = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+        REG = bundleContext.registerService(WebConsoleConfigPrinter.class.getName(),
                 printer,
                 serviceProps);
     }
@@ -60,14 +62,6 @@ public class WebConsoleConfigPrinter implements ConfigurationPrinter {
             REG.unregister();
             REG = null;
         }
-    }
-
-    /**
-     * Return the title for the configuration printer
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Rewriter";
     }
 
     /**
