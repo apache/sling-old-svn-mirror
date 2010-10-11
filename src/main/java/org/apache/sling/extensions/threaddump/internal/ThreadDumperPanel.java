@@ -20,20 +20,9 @@ package org.apache.sling.extensions.threaddump.internal;
 
 import java.io.PrintWriter;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
-
-public class ThreadDumperPanel implements ConfigurationPrinter {
-
-    private static final String TITLE = "Threads";
+public class ThreadDumperPanel {
 
     private BaseThreadDumper baseThreadDumper = new BaseThreadDumper();
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return TITLE;
-    }
 
     // ---------- ConfigurationPrinter
 

@@ -61,8 +61,7 @@
                             org.osgi.framework,
                             org.slf4j.*,
                             javax.servlet.*;
-                            org.apache.felix.shell;
-                            org.apache.felix.webconsole;resolution:=optional
+                            org.apache.felix.shell;resolution:=optional
                         </Import-Package>
                         <Private-Package>
                             org.apache.sling.extensions.threaddump.*
@@ -88,11 +87,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>
             <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
