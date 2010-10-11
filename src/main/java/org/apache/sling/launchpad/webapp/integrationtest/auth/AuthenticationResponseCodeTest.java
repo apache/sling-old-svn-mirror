@@ -80,8 +80,13 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         headers.add(new Header("Cookie", "sling.formauth=garbage"));
 
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, headers, null);
-        assertNotNull(post.getResponseHeader("X-Reason"));
-        assertTrue(post.getResponseBodyAsString().length() == 0);
+
+        // expected the X-Reason header
+        final Header reason = post.getResponseHeader("X-Reason");
+        assertNotNull(reason);
+
+        // expect the response to be the same as the reason (SLING-1831)
+        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
     }
 
     public void testValidatingIncorrectHttpBasicCredentials() throws Exception {
@@ -94,12 +99,22 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("j_validate", "true"));
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, null);
-        assertTrue(post.getResponseBodyAsString().length() == 0);
-        assertNotNull(post.getResponseHeader("X-Reason"));
+
+        // expected the X-Reason header
+        Header reason = post.getResponseHeader("X-Reason");
+        assertNotNull(reason);
+
+        // expect the response to be the same as the reason (SLING-1831)
+        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
 
         HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "?j_validate=true", HttpServletResponse.SC_FORBIDDEN);
-        assertTrue(get.getResponseBodyAsString().length() == 0);
-        assertNotNull(get.getResponseHeader("X-Reason"));
+
+        // expected the X-Reason header
+        reason = post.getResponseHeader("X-Reason");
+        assertNotNull(reason);
+
+        // expect the response to be the same as the reason (SLING-1831)
+        assertEquals(reason.getValue(), post.getResponseBodyAsString().trim());
     }
 
     public void testXRequestedWithIncorrectCredentials() throws Exception {
