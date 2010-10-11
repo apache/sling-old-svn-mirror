@@ -74,9 +74,7 @@
                             org.apache.sling.settings.impl.Activator
                         </Bundle-Activator>
                         <Import-Package>
-                            javax.servlet.*;
                             org.apache.felix.shell;
-                            org.apache.felix.webconsole;
                             resolution:=optional, *
                         </Import-Package>
                     </instructions>
@@ -98,16 +96,6 @@
             <artifactId>org.apache.felix.shell</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

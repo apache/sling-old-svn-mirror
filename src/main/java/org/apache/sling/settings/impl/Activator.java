@@ -84,16 +84,8 @@ public class Activator implements BundleActivator, BundleListener {
         serviceRegistration = this.bundleContext.registerService(new String[] {
                                                SlingSettingsService.class.getName()},
                                                this.settingsService, props);
-        try {
-            SlingPropertiesPrinter.initPlugin(this.bundleContext);
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
-        try {
-            SlingSettingsPrinter.initPlugin(this.bundleContext, this.settingsService);
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+        SlingPropertiesPrinter.initPlugin(this.bundleContext);
+        SlingSettingsPrinter.initPlugin(this.bundleContext, this.settingsService);
         try {
             RunModeCommand.initPlugin(this.bundleContext, this.settingsService.getRunModes());
         } catch (Throwable ignore) {
@@ -112,16 +104,9 @@ public class Activator implements BundleActivator, BundleListener {
         } catch (Throwable ignore) {
             // we just ignore this
         }
-        try {
-            SlingSettingsPrinter.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
-        try {
-            SlingPropertiesPrinter.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+        SlingSettingsPrinter.destroyPlugin();
+        SlingPropertiesPrinter.destroyPlugin();
+
         if ( serviceRegistration != null ) {
             serviceRegistration.unregister();
             serviceRegistration = null;

@@ -24,7 +24,6 @@ import java.util.Hashtable;
 import java.util.Set;
 
 import org.apache.felix.shell.Command;
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -45,7 +44,7 @@ public class RunModeCommand implements Command {
             "Apache Sling Sling Run Mode Shell Command");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        pluginReg = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+        pluginReg = bundleContext.registerService(Command.class.getName(),
                 command,
                 props);
     }

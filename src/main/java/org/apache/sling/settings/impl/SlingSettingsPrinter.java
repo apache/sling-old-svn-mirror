@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -33,7 +32,7 @@ import org.osgi.framework.ServiceRegistration;
  * prints out the sling settings.
  *
  */
-public class SlingSettingsPrinter implements ConfigurationPrinter {
+public class SlingSettingsPrinter {
 
     private static ServiceRegistration pluginReg;
 
@@ -45,8 +44,11 @@ public class SlingSettingsPrinter implements ConfigurationPrinter {
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Sling Settings Configuration Printer");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put("felix.webconsole.label", "slingsettings");
+        props.put("felix.webconsole.title", "Sling Settings");
+        props.put("felix.webconsole.configprinter.modes", "always");
 
-        pluginReg = bundleContext.registerService(ConfigurationPrinter.class.getName(),
+        pluginReg = bundleContext.registerService(SlingSettingsPrinter.class.getName(),
                 printer,
                 props);
     }
@@ -64,13 +66,6 @@ public class SlingSettingsPrinter implements ConfigurationPrinter {
 
     public SlingSettingsPrinter(final SlingSettingsService settings) {
         this.settings = settings;
-    }
-
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
-     */
-    public String getTitle() {
-        return "Sling Settings";
     }
 
     /**
