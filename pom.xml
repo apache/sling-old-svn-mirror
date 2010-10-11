@@ -141,13 +141,6 @@
             <artifactId>servlet-api</artifactId>
         </dependency>
         
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
