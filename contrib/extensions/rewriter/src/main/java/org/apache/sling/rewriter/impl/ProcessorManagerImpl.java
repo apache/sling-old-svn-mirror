@@ -117,11 +117,8 @@ public class ProcessorManagerImpl
                   .registerService(EventHandler.class.getName(), this, props);
 
         this.factoryCache.start();
-        try {
-            WebConsoleConfigPrinter.register(this.bundleContext, this);
-        } catch (Exception ignore) {
-            // ignore
-        }
+
+        WebConsoleConfigPrinter.register(this.bundleContext, this);
     }
 
     /**
@@ -139,11 +136,9 @@ public class ProcessorManagerImpl
             this.resourceResolver.close();
             this.resourceResolver = null;
         }
-        try {
-            WebConsoleConfigPrinter.unregister();
-        } catch (Exception ignore) {
-            // ignore
-        }
+
+        WebConsoleConfigPrinter.unregister();
+
         this.bundleContext = null;
     }
 
