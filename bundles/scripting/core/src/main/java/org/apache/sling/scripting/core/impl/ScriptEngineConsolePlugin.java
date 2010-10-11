@@ -27,12 +27,11 @@ import java.util.List;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
+public class ScriptEngineConsolePlugin {
 
     // --------- setup and shutdown
 
@@ -124,8 +123,12 @@ public class ScriptEngineConsolePlugin implements ConfigurationPrinter {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
 
+        props.put("felix.webconsole.label", "slingscripting");
+        props.put("felix.webconsole.title", "Script Engines");
+        props.put("felix.webconsole.configprinter.modes", "always");
+
         serviceRegistration = context.registerService(
-            ConfigurationPrinter.class.getName(), this, props);
+            this.getClass().getName(), this, props);
     }
 
     public void deactivate() {

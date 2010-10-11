@@ -60,9 +60,6 @@
                             org.apache.sling.scripting.core.impl,
                             org.apache.sling.scripting.core.impl.helper
                         </Private-Package>
-                        <DynamicImport-Package>
-                            org.apache.felix.webconsole
-                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -104,12 +101,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.api</artifactId>
             <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>2.0.6</version>
             <scope>provided</scope>
         </dependency>
 
