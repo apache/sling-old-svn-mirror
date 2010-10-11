@@ -51,7 +51,7 @@ import org.apache.sling.event.jobs.Statistics;
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
     @Property(name="felix.webconsole.title", value="Sling Eventing", propertyPrivate=true),
-    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"})
+    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"}, propertyPrivate=true)
 })
 public class WebConsolePlugin extends HttpServlet {
 
