@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event;
 
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -304,7 +305,18 @@ public abstract class EventUtil {
                 }
                 buffer.append(names[i]);
                 buffer.append('=');
-                buffer.append(e.getProperty(names[i]));
+                final Object value = e.getProperty(names[i]);
+                // the toString() method of Calendar is very verbose
+                // therefore we do a toString for these objects based
+                // on a date
+                if ( value instanceof Calendar ) {
+                    buffer.append(value.getClass().getName());
+                    buffer.append('(');
+                    buffer.append(((Calendar)value).getTime());
+                    buffer.append(')');
+                } else {
+                    buffer.append(value);
+                }
             }
         }
         buffer.append("]");

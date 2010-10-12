@@ -20,6 +20,8 @@ package org.apache.sling.event.impl.jobs.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -203,7 +205,7 @@ public class WebConsolePlugin extends HttpServlet {
     }
 
     /**
-     * Format an array.
+     * Format an array for html rendering.
      */
     private String formatArray(final String[] array) {
         if ( array == null || array.length == 0 ) {
@@ -231,16 +233,23 @@ public class WebConsolePlugin extends HttpServlet {
         return Arrays.toString(array);
     }
 
-    /** TODO */
-    private String formatDate(final long time) {
+    /** Default date format used. */
+    private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS yyyy-MMM-dd");
+
+    /**
+     * Format a date
+     */
+    private synchronized String formatDate(final long time) {
         if ( time == -1 ) {
             return "-";
         }
         final Date d = new Date(time);
-        return d.toString();
+        return dateFormat.format(d);
     }
 
-    /** TODO */
+    /**
+     * Format time (= duration)
+     */
     private String formatTime(final long time) {
         if ( time == 0 ) {
             return "-";
