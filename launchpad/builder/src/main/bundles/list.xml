@@ -45,7 +45,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.threads</artifactId>
-            <version>3.0.3-SNAPSHOT</version>
+            <version>3.1.1-SNAPSHOT</version>
         </bundle>
 
         <bundle>
@@ -56,7 +56,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.settings</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
