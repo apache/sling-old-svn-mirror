@@ -64,7 +64,7 @@
                             org.apache.cocoon.components.serializers.util;resolution:=optional,*
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.rewriter
+                            org.apache.sling.rewriter;version=1.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.rewriter.impl,
