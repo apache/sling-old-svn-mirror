@@ -45,20 +45,20 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
         try {
             register(bundleContext,
                 new String[] { "org.apache.felix.shell.Command" },
-                new ThreadDumpCommand(), null);
+                new ThreadDumpCommand());
         } catch (Throwable t) {
             // shell service might not be available, don't care
         }
 
         // install Web Console configuration printer
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("felix.webconsole.label", "slingthreads");
-        props.put("felix.webconsole.title", "Threads");
-        props.put("felix.webconsole.configprinter.modes", "always");
+        try {
+            ThreadDumperPanel tdp = new ThreadDumperPanel();
 
-        register(bundleContext, new String[] {
-                ThreadDumperPanel.class.getName() },
-                new ThreadDumperPanel(), props);
+            register(bundleContext, new String[] {
+                "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp);
+        } catch (Throwable t) {
+            // web console might not be available, don't care
+        }
     }
 
     public void stop(BundleContext bundleContext) {
@@ -66,12 +66,9 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
     }
 
     private void register(BundleContext context, String[] serviceNames,
-            Object service,
-            Dictionary<String, Object> properties) {
+            Object service) {
 
-        if ( properties == null ) {
-            properties = new Hashtable<String, Object>();
-        }
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // default settings
         properties.put(Constants.SERVICE_DESCRIPTION, "Thread Dumper ("
