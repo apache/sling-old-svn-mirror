@@ -284,6 +284,19 @@ public abstract class AbstractAuthenticationHandler extends
     public static void sendValid(final HttpServletResponse response) {
         try {
             response.setStatus(HttpServletResponse.SC_OK);
+
+            // expressely tell we have no content but set content type
+            // to prevent firefox from trying to parse the response
+            // (SLING-1841)
+            response.setContentType("text/plain");
+            response.setContentLength(0);
+
+            // prevent the client from aggressively caching the response
+            // (SLING-1841)
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Cache-Control", "no-cache");
+            response.addHeader("Cache-Control", "no-store");
+
             response.flushBuffer();
         } catch (IOException ioe) {
             // TODO: log.error("Failed to send 200/OK response", ioe);
