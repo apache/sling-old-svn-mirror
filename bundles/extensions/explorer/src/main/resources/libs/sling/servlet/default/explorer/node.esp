@@ -51,15 +51,21 @@
       try {
       if ( session ) {
           session.checkPermission(path, "remove");
+          if (path != '/')
+          {
           %>
             <form class="deleteNote" action="<%= path %>" method="post">
                 <input name=":operation" type="hidden" value="delete"> 
                 <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html"> 
                 <input type="submit" class="button" value="delete this node">
             </form>
-            <div class="clear"></div>
-        </div>      
+        </div>
 <%
+	  }
+	  %>
+	  <div class="clear"></div>
+
+	  <%
           }
       } catch ( e ) {
           // don't care
