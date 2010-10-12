@@ -112,8 +112,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         get.setRequestHeader("Referer", requestUrl);
         get.setRequestHeader("Accept", "text/*"); // simulate a browser request
         int status = httpClient.executeMethod(get);
-        assertEquals(HttpServletResponse.SC_FORBIDDEN, status);
-        assertXReason(get);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, status);
     }
 
     public void testXRequestedWithIncorrectCredentials() throws Exception {
