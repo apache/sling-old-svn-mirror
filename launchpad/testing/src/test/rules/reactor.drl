@@ -29,7 +29,6 @@ function boolean inCurrentBuild(MavenSession session, String artifactId) {
         }
     }
     return false;
-#    return session.getExecutionProperties().containsKey("sling.bundle.version."+artifactId);
 }
 
 function String getBuildVersion(MavenSession session, String artifactId) {
