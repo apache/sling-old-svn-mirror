@@ -30,6 +30,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -39,6 +40,14 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderError;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
+import org.drools.io.ResourceFactory;
+import org.drools.runtime.StatefulKnowledgeSession;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
@@ -140,6 +149,18 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      * @component
      */
     private ArtifactResolver resolver;
+
+    /**
+     * @parameter
+     */
+    private File[] rewriteRuleFiles;
+
+    /**
+     * @parameter expression="${session}
+     * @required
+     * @readonly
+     */
+    protected MavenSession mavenSession;
 
     public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
@@ -252,8 +273,9 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         } else {
             bundleList = new BundleList();
             if (includeDefaultBundles) {
-                Artifact defBndListArtifact = getArtifact(defaultBundleList.getGroupId(), defaultBundleList.getArtifactId(),
-                        defaultBundleList.getVersion(), defaultBundleList.getType(), defaultBundleList.getClassifier());
+                Artifact defBndListArtifact = getArtifact(defaultBundleList.getGroupId(),
+                        defaultBundleList.getArtifactId(), defaultBundleList.getVersion(), defaultBundleList.getType(),
+                        defaultBundleList.getClassifier());
                 getLog().info("Using bundle list file from " + defBndListArtifact.getFile().getAbsolutePath());
                 bundleList = readBundleList(defBndListArtifact.getFile());
             }
@@ -273,6 +295,43 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
             }
         }
         initBundleList(bundleList);
+
+        rewriteBundleList(bundleList);
+    }
+
+    private void rewriteBundleList(BundleList bundleList) throws MojoExecutionException {
+        if (rewriteRuleFiles != null) {
+            KnowledgeBase knowledgeBase = createKnowledgeBase(rewriteRuleFiles);
+            StatefulKnowledgeSession session = knowledgeBase.newStatefulKnowledgeSession();
+            try {
+                session.setGlobal("mavenSession", mavenSession);
+                session.setGlobal("mavenProject", project);
+                session.insert(bundleList);
+                session.fireAllRules();
+            } finally {
+                session.dispose();
+            }
+        }
+    }
+
+    private KnowledgeBase createKnowledgeBase(File[] files) throws MojoExecutionException {
+        KnowledgeBuilder builder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+        builder.add(ResourceFactory.newClassPathResource("drools-globals.drl", getClass()), ResourceType.DRL);
+        for (File file : files) {
+            getLog().info("Parsing rule file " + file.getAbsolutePath());
+            builder.add(ResourceFactory.newFileResource(file), ResourceType.DRL);
+        }
+        if (builder.hasErrors()) {
+            getLog().error("Rule errors:");
+            for (KnowledgeBuilderError error : builder.getErrors()) {
+                getLog().error(error.toString());
+            }
+            throw new MojoExecutionException("Unable to create rules. See log for details.");
+        }
+
+        KnowledgeBase base = KnowledgeBaseFactory.newKnowledgeBase();
+        base.addKnowledgePackages(builder.getKnowledgePackages());
+        return base;
     }
 
     private BundleList readBundleList(File file) throws IOException, XmlPullParserException {
