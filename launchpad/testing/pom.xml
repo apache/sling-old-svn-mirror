@@ -331,6 +331,24 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>test-reactor-sling-bundles</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-launchpad-plugin</artifactId>
+                        <configuration>
+                            <rewriteRuleFiles>
+                                <rewriteRuleFile>
+                                    ${basedir}/src/test/rules/reactor.drl
+                                </rewriteRuleFile>
+                            </rewriteRuleFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>

@@ -110,13 +110,6 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
      */
     private MavenFileFilter mavenFileFilter;
 
-    /**
-     * @parameter expression="${session}"
-     * @required
-     * @readonly
-     */
-    private MavenSession mavenSession;
-
     private ResourceProvider resourceProvider = new ResourceProvider() {
 
         @Override
