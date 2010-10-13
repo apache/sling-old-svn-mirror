@@ -191,20 +191,18 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         loaderThread.setDaemon(true);
         loaderThread.start();
 
-        // open background session for observation
+        // open background session for all job related tasks (lock, unlock etc.)
         // create the background session and register a listener
         this.backgroundSession = this.environment.createAdminSession();
-        this.backgroundSession.getWorkspace().getObservationManager()
-             .addEventListener(this,
-                          javax.jcr.observation.Event.PROPERTY_REMOVED
-                          |javax.jcr.observation.Event.PROPERTY_ADDED
-                          |javax.jcr.observation.Event.NODE_REMOVED
-                          |javax.jcr.observation.Event.NODE_ADDED,
-                          this.repositoryPath,
-                          true,
-                          null,
-                          null,
-                          true);
+        this.backgroundSession.getWorkspace().getObservationManager().addEventListener(this,
+                javax.jcr.observation.Event.PROPERTY_REMOVED
+                |javax.jcr.observation.Event.PROPERTY_ADDED
+                |javax.jcr.observation.Event.NODE_REMOVED,
+                this.repositoryPath,
+                true,
+                null,
+                null,
+                true);
     }
 
     /**
@@ -262,7 +260,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         final String propertyName = path.substring(pos+1);
 
                         // we are only interested in unlocks
-                        if ( "jcr:lockOwner".equals(propertyName) ) {
+                        if ( JCRHelper.NODE_PROPERTY_LOCK_OWNER.equals(propertyName) ) {
                             loadNodePath = path.substring(0, pos);
                         }
                     } else if ( event.getType() == javax.jcr.observation.Event.PROPERTY_ADDED ) {
@@ -270,7 +268,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         final String propertyName = path.substring(pos+1);
 
                         // we are only interested in locks
-                        if ( "jcr:lockOwner".equals(propertyName) ) {
+                        if ( JCRHelper.NODE_PROPERTY_LOCK_OWNER.equals(propertyName) ) {
                             ((DefaultJobManager)this.jobManager).notifyActiveJob(path.substring(this.repositoryPath.length() + 1));
                         }
 
@@ -559,6 +557,14 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
 
         try {
             writerSession = this.environment.createAdminSession();
+            // we only listen for all node added events not coming from this session(!)
+            writerSession.getWorkspace().getObservationManager().addEventListener(this,
+                         javax.jcr.observation.Event.NODE_ADDED,
+                         this.repositoryPath,
+                         true,
+                         null,
+                         null,
+                         true);
             rootNode = this.createPath(writerSession.getRootNode(),
                     this.repositoryPath.substring(1),
                     JCRHelper.NODETYPE_ORDERED_FOLDER);
@@ -576,6 +582,12 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             running = false;
         } finally {
             if ( writerSession != null ) {
+                try {
+                    writerSession.getWorkspace().getObservationManager().removeEventListener(this);
+                } catch (RepositoryException e) {
+                    // we just ignore it
+                    this.logger.warn("Unable to remove event listener.", e);
+                }
                 writerSession.logout();
             }
         }
@@ -602,12 +614,14 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 final String jobTopic = (String)event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
                 final String nodePath = Utility.getUniquePath(jobTopic, jobId);
 
+                Node readAndProcess = null;
+
                 // if the job has no job id, we can just write the job to the repo and don't
                 // need locking
                 if ( jobId == null ) {
                     try {
-                        this.writeEvent(rootNode, event, nodePath);
-                    } catch (RepositoryException re ) {
+                        readAndProcess = this.writeEvent(rootNode, event, nodePath);
+                    } catch (final RepositoryException re ) {
                         // something went wrong, so let's log it
                         this.logger.error("Exception during writing new job '" + EventUtil.toString(event) + "' to repository at " + nodePath, re);
                     }
@@ -621,16 +635,20 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         if ( foundNode == null ) {
                             // We now write the event into the repository
                             try {
-                                this.writeEvent(rootNode, event, nodePath);
+                                readAndProcess = this.writeEvent(rootNode, event, nodePath);
                             } catch (ItemExistsException iee) {
                                 // someone else did already write this node in the meantime
                                 // nothing to do for us
                             }
                         }
-                    } catch (RepositoryException re ) {
+                    } catch (final RepositoryException re ) {
                         // something went wrong, so let's log it
                         this.logger.error("Exception during writing new job '" + EventUtil.toString(event) + "' to repository at " + nodePath, re);
                     }
+                }
+
+                if ( readAndProcess != null ) {
+                    tryToLoadJob(readAndProcess, this.unloadedJobs);
                 }
             }
         }
@@ -650,7 +668,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
      * @param suggestedName A suggested name/path for the node.
      * @throws RepositoryException
      */
-    private void writeEvent(final Node rootNode, final Event e, final String path)
+    private Node writeEvent(final Node rootNode, final Event e, final String path)
     throws RepositoryException {
         // create new node with name of topic
         final Node eventNode = this.createPath(rootNode,
@@ -669,6 +687,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             eventNode.setProperty(JCRHelper.NODE_PROPERTY_JOBID, jobId);
         }
         rootNode.getSession().save();
+        return eventNode;
     }
 
     /**
@@ -882,6 +901,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                             // lock failed which means that the node is locked by someone else, so we don't have to requeue
                             return false;
                         }
+                        ((DefaultJobManager)this.jobManager).notifyActiveJob(info.uniqueId);
                         return true;
                     }
                 }
@@ -916,6 +936,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         synchronized ( this.backgroundLock ) {
             try {
                 if ( this.backgroundSession.itemExists(path) ) {
+                    ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
                     final Node eventNode = (Node)this.backgroundSession.getItem(path);
                     if ( jobId == null ) {
                         // simply remove the node
@@ -964,6 +985,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         }
                         eventNode.remove();
                         this.backgroundSession.save();
+                        ((DefaultJobManager)this.jobManager).notifyRemoveJob(jobId);
                     }
                 } catch (RepositoryException e) {
                     this.logger.error("Error during cancelling job at " + path, e);

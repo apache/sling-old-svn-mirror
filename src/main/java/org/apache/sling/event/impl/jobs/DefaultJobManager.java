@@ -592,9 +592,6 @@ public class DefaultJobManager
         boolean result = true;
         if ( job != null ) {
             result = job.remove();
-            if ( result ) {
-                this.notifyRemoveJob(jobId);
-            }
         }
         return result;
     }

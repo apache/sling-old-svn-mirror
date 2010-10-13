@@ -74,6 +74,8 @@ public abstract class JCRHelper {
     /** The nodetype for newly created folders */
     public static final String NODETYPE_ORDERED_FOLDER = "sling:OrderedFolder";
 
+    /** The property for locks. */
+    public static final String NODE_PROPERTY_LOCK_OWNER = "jcr:lockOwner";
 
     /** List of ignored properties to write to the repository. */
     private static final String[] IGNORE_PROPERTIES = new String[] {

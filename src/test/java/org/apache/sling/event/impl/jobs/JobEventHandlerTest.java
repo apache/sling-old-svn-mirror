@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
@@ -43,6 +44,7 @@ import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
 import org.apache.sling.event.impl.jobs.jcr.PersistenceHandler;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.JobManager.QueryType;
+import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.jmock.Mockery;
@@ -589,5 +591,44 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
         assertFalse("Unexpected event received in the given time.", cb.block(5));
         cb.reset();
         assertEquals("Unexpected number of retries", 3, retryCountList.size());
+    }
+
+    @org.junit.Test public void testManyJobs() throws Exception {
+        final PersistenceHandler jeh = this.handler;
+        final AtomicInteger count = new AtomicInteger(0);
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test",
+                JobUtil.TOPIC_JOB_FINISHED},
+                new EventHandler[] {
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            JobUtil.processJob(event, new JobProcessor() {
+
+                                public boolean process(Event job) {
+                                    try {
+                                        Thread.sleep(200);
+                                    } catch (InterruptedException ie) {}
+                                    return true;
+                                }
+                            });
+                        }
+                    },
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            count.incrementAndGet();
+                        }
+                    }}));
+        // we start "some" jobs
+        final int COUNT = 300;
+        for(int i = 0; i < COUNT; i++ ) {
+            final String queueName = "queue" + (i % 20);
+            jeh.handleEvent(getJobEvent(queueName, null, "2"));
+        }
+        while ( count.get() < COUNT ) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {}
+        }
+        assertEquals("Finished count", COUNT, count.get());
+        assertEquals("Finished count", COUNT, this.jobManager.getStatistics().getNumberOfFinishedJobs());
     }
 }
