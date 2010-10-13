@@ -219,7 +219,7 @@ public class StatisticsImpl implements Statistics {
     }
 
     public synchronized StatisticsImpl copy() {
-        final StatisticsImpl other = new StatisticsImpl();
+        final StatisticsImpl other = new StatisticsImpl(this.startTime);
         other.queuedJobs = this.queuedJobs;
         other.lastActivated = this.lastActivated;
         other.lastFinished = this.lastFinished;
