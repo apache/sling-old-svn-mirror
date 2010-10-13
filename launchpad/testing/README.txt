@@ -33,3 +33,11 @@ This module runs number of integration tests provided by the sibling
 integration-tests module.
 
 To run individual tests, see the README.txt in that module.
+
+Using Reactor Builds
+----------------
+This project includes a Maven profile which with rewrite the bundle list to
+use the latest version of all Sling projects which were built in the same reactor
+build. To use this profile, execute the following command from the root project:
+
+    mvn -P test-reactor-sling-bundles clean install
