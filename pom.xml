@@ -153,4 +153,17 @@
             <version>5.1.1</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
