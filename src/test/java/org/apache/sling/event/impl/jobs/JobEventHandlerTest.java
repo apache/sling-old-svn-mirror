@@ -606,7 +606,9 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
                                 public boolean process(Event job) {
                                     try {
                                         Thread.sleep(200);
-                                    } catch (InterruptedException ie) {}
+                                    } catch (InterruptedException ie) {
+                                        // ignore
+                                    }
                                     return true;
                                 }
                             });
@@ -626,7 +628,9 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
         while ( count.get() < COUNT ) {
             try {
                 Thread.sleep(500);
-            } catch (InterruptedException ie) {}
+            } catch (InterruptedException ie) {
+                // ignore
+            }
         }
         assertEquals("Finished count", COUNT, count.get());
         assertEquals("Finished count", COUNT, this.jobManager.getStatistics().getNumberOfFinishedJobs());

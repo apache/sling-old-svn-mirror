@@ -92,6 +92,7 @@ import org.slf4j.LoggerFactory;
             intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL)
 })
 public class DefaultJobManager
+    extends StatisticsImpl
     implements Runnable, JobManager {
 
     /** Default logger. */
@@ -115,11 +116,8 @@ public class DefaultJobManager
     /** Main configuration. */
     private InternalQueueConfiguration mainConfiguration;
 
-    /** Base statistics. */
-    private final StatisticsImpl baseStatistics = new StatisticsImpl();
-
     /** Current statistics. */
-    private StatisticsImpl currentStatistics;
+    private final StatisticsImpl baseStatistics = new StatisticsImpl();
 
     /** Last update for current statistics. */
     private long lastUpdatedStatistics;
@@ -310,13 +308,13 @@ public class DefaultJobManager
      */
     public synchronized Statistics getStatistics() {
         final long now = System.currentTimeMillis();
-        if ( this.currentStatistics == null || this.lastUpdatedStatistics + 1500 < now ) {
-            this.currentStatistics = this.baseStatistics.copy();
+        if ( this.lastUpdatedStatistics + 1500 < now ) {
+            this.copyFrom(this.baseStatistics);
             for(final AbstractJobQueue jq : this.queues.values() ) {
-                this.currentStatistics.add(jq);
+                this.add(jq);
             }
         }
-        return this.currentStatistics;
+        return this;
     }
 
     /**
@@ -618,5 +616,17 @@ public class DefaultJobManager
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * @see org.apache.sling.event.impl.jobs.StatisticsImpl#reset()
+     * Reset this statistics and all queues.
+     */
+    public synchronized void reset() {
+        this.baseStatistics.reset();
+        for(final AbstractJobQueue jq : this.queues.values() ) {
+            jq.reset();
+        }
+        this.lastUpdatedStatistics = 0;
     }
 }

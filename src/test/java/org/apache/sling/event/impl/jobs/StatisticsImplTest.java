@@ -190,7 +190,8 @@ public class StatisticsImplTest {
         this.testFailAndCancel();
 
         long now = System.currentTimeMillis();
-        final StatisticsImpl copy = this.stat.copy();
+        final StatisticsImpl copy = new StatisticsImpl();
+        copy.copyFrom(this.stat);
         assertTrue(copy.getStartTime() >= now);
         assertEquals(400, copy.getAverageProcessingTime());
         assertEquals(200, copy.getAverageWaitingTime());

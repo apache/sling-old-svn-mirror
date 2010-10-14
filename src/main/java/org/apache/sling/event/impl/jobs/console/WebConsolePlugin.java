@@ -73,8 +73,10 @@ public class WebConsolePlugin extends HttpServlet {
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
+    private static final String PAR_QUEUE = "queue";
+
     private Queue getQueue(final HttpServletRequest req) throws ServletException {
-        final String name = req.getParameter("queue");
+        final String name = req.getParameter(PAR_QUEUE);
         if ( name != null ) {
             for(final Queue q : this.jobManager.getQueues()) {
                 if ( name.equals(q.getName()) ) {
@@ -98,6 +100,13 @@ public class WebConsolePlugin extends HttpServlet {
         } else if ( "clear".equals(cmd) ) {
             final Queue q = this.getQueue(req);
             q.clear();
+        } else if ( "reset".equals(cmd) ) {
+            if ( req.getParameter(PAR_QUEUE) == null || req.getParameter(PAR_QUEUE).length() == 0 ) {
+                this.jobManager.getStatistics().reset();
+            } else {
+                final Queue q = this.getQueue(req);
+                q.getStatistics().reset();
+            }
         } else if ( "dropall".equals(cmd) ) {
             final Queue q = this.getQueue(req);
             q.removeAll();
@@ -113,10 +122,13 @@ public class WebConsolePlugin extends HttpServlet {
         final PrintWriter pw = res.getWriter();
 
         pw.println("<p class='statline ui-state-highlight'>Apache Sling Eventing</p>");
+        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
+        pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Eventing: Overall Statistics</span>");
+        this.printForm(pw, null, "Reset Stats", "reset");
+        pw.println("</div>");
 
         pw.println("<table class='nicetable'><tbody>");
         Statistics s = this.jobManager.getStatistics();
-        pw.println("<tr><th colspan='2'>Overall Statistics</th></tr>");
         pw.printf("<tr><td>Start Time</td><td>%s</td></tr>", formatDate(s.getStartTime()));
         pw.printf("<tr><td>Last Activated</td><td>%s</td></tr>", formatDate(s.getLastActivatedJobTime()));
         pw.printf("<tr><td>Last Finished</td><td>%s</td></tr>", formatDate(s.getLastFinishedJobTime()));
@@ -138,12 +150,13 @@ public class WebConsolePlugin extends HttpServlet {
             pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
             pw.printf("<span style='float: left; margin-left: 1em'>Active JobQueue: %s %s</span>", escape(q.getName()),
                     q.isSuspended() ? "(SUSPENDED)" : "");
+            this.printForm(pw, q, "Reset Stats", "reset");
             if ( q.isSuspended() ) {
                 this.printForm(pw, q, "Resume", "resume");
             } else {
                 this.printForm(pw, q, "Suspend", "suspend");
             }
-            this.printForm(pw, q, "Clear", "clear");
+            this.printForm(pw, q, "Clear Queue", "clear");
             this.printForm(pw, q, "Drop All", "dropall");
             pw.println("</div>");
             pw.println("<table class='nicetable'><tbody>");
@@ -163,7 +176,7 @@ public class WebConsolePlugin extends HttpServlet {
             pw.printf("<tr><td>Processed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfProcessedJobs());
             pw.printf("<tr><td>Average Processing Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageProcessingTime()));
             pw.printf("<tr><td>Average Waiting Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageWaitingTime()));
-            pw.printf("<tr><td>Status Info</td><td>%s</td></tr>", escape(q.getStatusInfo()));
+            pw.printf("<tr><td>Status Info</td><td colspan='3'>%s</td></tr>", escape(q.getStatusInfo()));
             pw.println("</tbody></table>");
             pw.println("<br/>");
         }
@@ -271,7 +284,7 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("<form method='POST' name='%s'><input type='hidden' name='action' value='%s'/>"+
                 "<input type='hidden' name='queue' value='%s'/>" +
                 "<button class='ui-state-default ui-corner-all' onclick='javascript:document.forms[\"%s\"].submit();'>" +
-                "%s</button></form>", hiddenValue, hiddenValue, q.getName(), hiddenValue, buttonLabel);
+                "%s</button></form>", hiddenValue, hiddenValue, (q != null ? q.getName() : ""), hiddenValue, buttonLabel);
     }
 
     /** Configuration printer for the web console. */

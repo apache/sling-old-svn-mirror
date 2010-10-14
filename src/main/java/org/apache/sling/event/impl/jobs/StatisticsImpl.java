@@ -25,7 +25,7 @@ import org.apache.sling.event.jobs.Statistics;
  */
 public class StatisticsImpl implements Statistics {
 
-    private final long startTime;
+    private volatile long startTime;
 
     private volatile long activeJobs;
 
@@ -64,7 +64,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getStartTime()
      */
-    public long getStartTime() {
+    public synchronized long getStartTime() {
         return startTime;
     }
 
@@ -177,7 +177,7 @@ public class StatisticsImpl implements Statistics {
     }
 
     /**
-     * Clear
+     * Clear all queued
      */
     public synchronized void clearQueued() {
         this.queuedJobs = 0;
@@ -196,16 +196,18 @@ public class StatisticsImpl implements Statistics {
         this.lastActivated = System.currentTimeMillis();
     }
 
+    /**
+     * Add another statistics information.
+     */
     public synchronized void add(final StatisticsImpl other) {
         synchronized ( other ) {
-            this.queuedJobs += other.queuedJobs;
-
             if ( other.lastActivated > this.lastActivated ) {
                 this.lastActivated = other.lastActivated;
             }
             if ( other.lastFinished > this.lastFinished ) {
                 this.lastFinished = other.lastFinished;
             }
+            this.queuedJobs += other.queuedJobs;
             this.waitingTime += other.waitingTime;
             this.waitingCount += other.waitingCount;
             this.averageWaitingTime = this.waitingTime / this.waitingCount;
@@ -215,23 +217,44 @@ public class StatisticsImpl implements Statistics {
             this.finishedJobs += other.finishedJobs;
             this.failedJobs += other.failedJobs;
             this.cancelledJobs += other.cancelledJobs;
+            this.activeJobs += other.activeJobs;
         }
     }
 
-    public synchronized StatisticsImpl copy() {
-        final StatisticsImpl other = new StatisticsImpl(this.startTime);
-        other.queuedJobs = this.queuedJobs;
-        other.lastActivated = this.lastActivated;
-        other.lastFinished = this.lastFinished;
-        other.averageWaitingTime = this.averageWaitingTime;
-        other.averageProcessingTime = this.averageProcessingTime;
-        other.waitingTime = this.waitingTime;
-        other.processingTime = this.processingTime;
-        other.waitingCount = this.waitingCount;
-        other.processingCount = this.processingCount;
-        other.finishedJobs = this.finishedJobs;
-        other.failedJobs = this.failedJobs;
-        other.cancelledJobs = this.cancelledJobs;
-        return other;
+    /**
+     * Create a new statistics object with exactly the same values.
+     */
+    public synchronized void copyFrom(final StatisticsImpl other) {
+        this.queuedJobs = other.queuedJobs;
+        this.lastActivated = other.lastActivated;
+        this.lastFinished = other.lastFinished;
+        this.averageWaitingTime = other.averageWaitingTime;
+        this.averageProcessingTime = other.averageProcessingTime;
+        this.waitingTime = other.waitingTime;
+        this.processingTime = other.processingTime;
+        this.waitingCount = other.waitingCount;
+        this.processingCount = other.processingCount;
+        this.finishedJobs = other.finishedJobs;
+        this.failedJobs = other.failedJobs;
+        this.cancelledJobs = other.cancelledJobs;
+        this.activeJobs = other.activeJobs;
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Statistics#reset()
+     */
+    public synchronized void reset() {
+        this.startTime = System.currentTimeMillis();
+        this.lastActivated = -1;
+        this.lastFinished = -1;
+        this.averageWaitingTime = 0;
+        this.averageProcessingTime = 0;
+        this.waitingTime = 0;
+        this.processingTime = 0;
+        this.waitingCount = 0;
+        this.processingCount = 0;
+        this.finishedJobs = 0;
+        this.failedJobs = 0;
+        this.cancelledJobs = 0;
     }
 }

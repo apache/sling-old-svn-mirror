@@ -87,4 +87,11 @@ public interface Statistics {
      * The average processing time of a job - this only counts finished jobs.
      */
     long getAverageProcessingTime();
+
+    /**
+     * Clear all collected statistics and set the starting time to the current time.
+     * Note that not all fields are cleared, last waiting time or number of active and queued
+     * jobs is not cleared as these are currently used.
+     */
+    void reset();
 }
