@@ -165,7 +165,7 @@ public class WebConsolePlugin extends HttpServlet {
             s = q.getStatistics();
             final QueueConfiguration c = q.getConfiguration();
             pw.println("<tr><th colspan='2'>Statistics</th><th colspan='2'>Configuration</th></tr>");
-            pw.printf("<tr><td>Start Time</td><td>%s</td><td>Type</td><td>%s</td></tr>", formatDate(s.getStartTime()), c.getType());
+            pw.printf("<tr><td>Start Time</td><td>%s</td><td>Type</td><td>%s</td></tr>", formatDate(s.getStartTime()), formatType(c.getType()));
             pw.printf("<tr><td>Last Activated</td><td>%s</td><td>Topics</td><td>%s</td></tr>", formatDate(s.getLastActivatedJobTime()), formatArray(c.getTopics()));
             pw.printf("<tr><td>Last Finished</td><td>%s</td><td>Max Parallel</td><td>%s</td></tr>", formatDate(s.getLastFinishedJobTime()), c.getMaxParallel());
             pw.printf("<tr><td>Queued Jobs</td><td>%s</td><td>Max Retries</td><td>%s</td></tr>", s.getNumberOfQueuedJobs(), c.getMaxRetries());
@@ -220,7 +220,7 @@ public class WebConsolePlugin extends HttpServlet {
         pw.println("<table class='nicetable'><tbody>");
         pw.println("<tr><th colspan='2'>Configuration</th></tr>");
         pw.printf("<tr><td>Valid</td><td>%s</td></tr>", c.isValid());
-        pw.printf("<tr><td>Type</td><td>%s</td></tr>", c.getType());
+        pw.printf("<tr><td>Type</td><td>%s</td></tr>", formatType(c.getType()));
         pw.printf("<tr><td>Topics</td><td>%s</td></tr>", formatArray(c.getTopics()));
         pw.printf("<tr><td>Max Parallel</td><td>%s</td></tr>", c.getMaxParallel());
         pw.printf("<tr><td>Max Retries</td><td>%s</td></tr>", c.getMaxRetries());
@@ -263,6 +263,15 @@ public class WebConsolePlugin extends HttpServlet {
         return Arrays.toString(array);
     }
 
+    private String formatType(final QueueConfiguration.Type type) {
+        switch ( type ) {
+            case IGNORE : return "Ignore";
+            case ORDERED : return "Ordered";
+            case TOPIC_ROUND_ROBIN : return "Topic Round Robin";
+            case UNORDERED : return "Parallel";
+        }
+        return type.toString();
+    }
     /** Default date format used. */
     private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS yyyy-MMM-dd");
 
@@ -350,7 +359,7 @@ public class WebConsolePlugin extends HttpServlet {
             pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
             pw.printf("Status Info : %s%n", q.getStatusInfo());
             pw.println("Configuration");
-            pw.printf("Type : %s%n", c.getType());
+            pw.printf("Type : %s%n", formatType(c.getType()));
             pw.printf("Topics : %s%n", formatArrayAsText(c.getTopics()));
             pw.printf("Max Parallel : %s%n", c.getMaxParallel());
             pw.printf("Max Retries : %s%n", c.getMaxRetries());
@@ -392,7 +401,7 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("Job Queue Configuration: %s%n",
                 c.getName());
         pw.printf("Valid : %s%n", c.isValid());
-        pw.printf("Type : %s%n", c.getType());
+        pw.printf("Type : %s%n", formatType(c.getType()));
         pw.printf("Topics : %s%n", formatArrayAsText(c.getTopics()));
         pw.printf("Max Parallel : %s%n", c.getMaxParallel());
         pw.printf("Max Retries : %s%n", c.getMaxRetries());
