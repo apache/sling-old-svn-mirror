@@ -225,10 +225,10 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("<tr><td>Max Parallel</td><td>%s</td></tr>", c.getMaxParallel());
         pw.printf("<tr><td>Max Retries</td><td>%s</td></tr>", c.getMaxRetries());
         pw.printf("<tr><td>Retry Delay</td><td>%s ms</td></tr>", c.getRetryDelayInMs());
-        pw.printf("<tr><td>Priority</td><td>%s ms</td></tr>", c.getPriority());
-        pw.printf("<tr><td>Run Local</td><td>%s ms</td></tr>", c.isLocalQueue());
-        pw.printf("<tr><td>App Ids</td><td>%s ms</td></tr>", formatArray(c.getApplicationIds()));
-        pw.printf("<tr><td>Ranking</td><td>%s ms</td></tr>", c.getRanking());
+        pw.printf("<tr><td>Priority</td><td>%s</td></tr>", c.getPriority());
+        pw.printf("<tr><td>Run Local</td><td>%s</td></tr>", c.isLocalQueue());
+        pw.printf("<tr><td>App Ids</td><td>%s</td></tr>", formatArray(c.getApplicationIds()));
+        pw.printf("<tr><td>Ranking</td><td>%s</td></tr>", c.getRanking());
 
         pw.println("</tbody></table>");
         pw.println("<br/>");
@@ -406,10 +406,10 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("Max Parallel : %s%n", c.getMaxParallel());
         pw.printf("Max Retries : %s%n", c.getMaxRetries());
         pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
-        pw.printf("Priority : %s ms%n", c.getPriority());
-        pw.printf("Run Local : %s ms%n", c.isLocalQueue());
-        pw.printf("App Ids : %s ms%n", formatArrayAsText(c.getApplicationIds()));
-        pw.printf("Ranking : %s ms%n", c.getRanking());
+        pw.printf("Priority : %s%n", c.getPriority());
+        pw.printf("Run Local : %s%n", c.isLocalQueue());
+        pw.printf("App Ids : %s%n", formatArrayAsText(c.getApplicationIds()));
+        pw.printf("Ranking : %s%n", c.getRanking());
 
         pw.println();
     }

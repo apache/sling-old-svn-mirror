@@ -250,7 +250,7 @@ public class InternalQueueConfiguration
         if ( name == null || name.length() == 0 ) {
             return false;
         }
-        if ( retries < 0 ) {
+        if ( retries < -1 ) {
             return false;
         }
         if ( type == Type.UNORDERED || type == Type.TOPIC_ROUND_ROBIN ) {
