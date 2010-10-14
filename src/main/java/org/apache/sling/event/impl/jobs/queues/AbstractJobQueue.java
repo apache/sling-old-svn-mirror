@@ -229,8 +229,9 @@ public abstract class AbstractJobQueue
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Received ack for job {}", EventUtil.toString(job));
             }
-            this.addActive(ack.started - ack.queued);
-            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_STARTED, job);
+            final long queueTime = ack.started - ack.queued;
+            this.addActive(queueTime);
+            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_STARTED, job, queueTime);
             synchronized ( this.processsingJobsLists ) {
                 this.processsingJobsLists.put(location, ack);
             }
@@ -267,20 +268,21 @@ public abstract class AbstractJobQueue
                 }
                 this.failedJob();
                 jobEvent.queued = System.currentTimeMillis();
-                Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_FAILED, jobEvent.event);
+                Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_FAILED, jobEvent.event, null);
             } else {
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", EventUtil.toString(jobEvent.event));
                 }
                 this.cancelledJob();
-                Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.event);
+                Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.event, null);
             }
         } else {
             if ( this.logger.isDebugEnabled() ) {
                 this.logger.debug("Finished job {}", EventUtil.toString(jobEvent.event));
             }
-            this.finishedJob(System.currentTimeMillis() - jobEvent.started);
-            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_FINISHED, jobEvent.event);
+            final long processingTime = System.currentTimeMillis() - jobEvent.started;
+            this.finishedJob(processingTime);
+            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_FINISHED, jobEvent.event, processingTime);
         }
 
         return reschedule;

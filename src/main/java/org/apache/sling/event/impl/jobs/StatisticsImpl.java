@@ -117,10 +117,16 @@ public class StatisticsImpl implements Statistics {
         return finishedJobs;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.Statistics#getNumberOfCancelledJobs()
+     */
     public synchronized long getNumberOfCancelledJobs() {
         return cancelledJobs;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.Statistics#getNumberOfFailedJobs()
+     */
     public synchronized long getNumberOfFailedJobs() {
         return failedJobs;
     }
@@ -141,22 +147,29 @@ public class StatisticsImpl implements Statistics {
 
     /**
      * Add a finished job
+     * @param jobTime The processing time for this job.
      */
-    public synchronized void finishedJob(final long time) {
+    public synchronized void finishedJob(final long jobTime) {
         this.lastFinished = System.currentTimeMillis();
-        this.processingTime += time;
+        this.processingTime += jobTime;
         this.processingCount++;
         this.averageProcessingTime = this.processingTime / this.processingCount;
         this.finishedJobs++;
         this.activeJobs--;
     }
 
+    /**
+     * Add a failed job.
+     */
     public synchronized void failedJob() {
         this.failedJobs++;
         this.activeJobs--;
         this.queuedJobs++;
     }
 
+    /**
+     * Add a cancelled job.
+     */
     public synchronized void cancelledJob() {
         this.cancelledJobs++;
         this.activeJobs--;
@@ -185,13 +198,13 @@ public class StatisticsImpl implements Statistics {
 
     /**
      * Add a job from the queue to status active
-     * @param time The time the job stayed in the queue.
+     * @param queueTime The time the job stayed in the queue.
      */
-    public synchronized void addActive(final long time) {
+    public synchronized void addActive(final long queueTime) {
         this.queuedJobs--;
         this.activeJobs++;
         this.waitingCount++;
-        this.waitingTime += time;
+        this.waitingTime += queueTime;
         this.averageWaitingTime = this.waitingTime / this.waitingCount;
         this.lastActivated = System.currentTimeMillis();
     }

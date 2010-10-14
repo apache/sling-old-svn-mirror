@@ -42,6 +42,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
+import org.apache.sling.event.jobs.TopicStatistics;
 
 /**
  * This is a webconsole plugin displaying the active queues, some statistics
@@ -182,6 +183,22 @@ public class WebConsolePlugin extends HttpServlet {
         }
         if ( isEmpty ) {
             pw.println("<p>No active queues.</p>");
+            pw.println("<br/>");
+        }
+
+        for(final TopicStatistics ts : this.jobManager.getTopicStatistics()) {
+            pw.println("<table class='nicetable'><tbody>");
+            pw.printf("<tr><th colspan='2'>Topic Statistics: %s</th></tr>", escape(ts.getTopic()));
+
+            pw.printf("<tr><td>Last Activated</td><td>%s</td></tr>", formatDate(ts.getLastActivatedJobTime()));
+            pw.printf("<tr><td>Last Finished</td><td>%s</td></tr>", formatDate(ts.getLastFinishedJobTime()));
+            pw.printf("<tr><td>Finished Jobs</td><td>%s</td></tr>", ts.getNumberOfFinishedJobs());
+            pw.printf("<tr><td>Failed Jobs</td><td>%s</td></tr>", ts.getNumberOfFailedJobs());
+            pw.printf("<tr><td>Cancelled Jobs</td><td>%s</td></tr>", ts.getNumberOfCancelledJobs());
+            pw.printf("<tr><td>Processed Jobs</td><td>%s</td></tr>", ts.getNumberOfProcessedJobs());
+            pw.printf("<tr><td>Average Processing Time</td><td>%s</td></tr>", formatTime(ts.getAverageProcessingTime()));
+            pw.printf("<tr><td>Average Waiting Time</td><td>%s</td></tr>", formatTime(ts.getAverageWaitingTime()));
+            pw.println("</tbody></table>");
             pw.println("<br/>");
         }
 
@@ -345,6 +362,19 @@ public class WebConsolePlugin extends HttpServlet {
         }
         if ( isEmpty ) {
             pw.println("No active queues.");
+            pw.println();
+        }
+
+        for(final TopicStatistics ts : this.jobManager.getTopicStatistics()) {
+            pw.printf("Topic Statistics - %s%n", ts.getTopic());
+            pw.printf("Last Activated : %s%n", formatDate(ts.getLastActivatedJobTime()));
+            pw.printf("Last Finished : %s%n", formatDate(ts.getLastFinishedJobTime()));
+            pw.printf("Finished Jobs : %s%n", ts.getNumberOfFinishedJobs());
+            pw.printf("Failed Jobs : %s%n", ts.getNumberOfFailedJobs());
+            pw.printf("Cancelled Jobs : %s%n", ts.getNumberOfCancelledJobs());
+            pw.printf("Processed Jobs : %s%n", ts.getNumberOfProcessedJobs());
+            pw.printf("Average Processing Time : %s%n", formatTime(ts.getAverageProcessingTime()));
+            pw.printf("Average Waiting Time : %s%n", formatTime(ts.getAverageWaitingTime()));
             pw.println();
         }
 

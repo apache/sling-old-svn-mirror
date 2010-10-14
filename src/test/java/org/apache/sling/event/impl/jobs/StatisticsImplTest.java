@@ -202,7 +202,7 @@ public class StatisticsImplTest {
         assertEquals(0, copy.getNumberOfJobs());
         assertEquals(5, copy.getNumberOfProcessedJobs());
         assertEquals(0, copy.getNumberOfQueuedJobs());
-        assertTrue(copy.getLastActivatedJobTime() >= now);
+        assertTrue(copy.getLastActivatedJobTime() <= now);
         assertTrue(copy.getLastFinishedJobTime() <= now);
 
         now = System.currentTimeMillis();

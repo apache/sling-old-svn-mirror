@@ -36,6 +36,11 @@ public interface JobManager {
     Statistics getStatistics();
 
     /**
+     * Return statistics information about job topics.
+     */
+    Iterable<TopicStatistics> getTopicStatistics();
+
+    /**
      * Return a queue with a specific name (if running)
      * @param name The queue name
      * @return The queue or <code>null</code>

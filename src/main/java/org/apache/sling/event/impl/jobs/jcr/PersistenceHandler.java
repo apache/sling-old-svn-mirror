@@ -979,7 +979,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         // try to load job to send notification
                         try {
                             final Event job = this.forceReadEvent(eventNode);
-                            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_CANCELLED, job);
+                            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_CANCELLED, job, null);
                         } catch (RepositoryException ignore) {
                             this.ignoreException(ignore);
                         }

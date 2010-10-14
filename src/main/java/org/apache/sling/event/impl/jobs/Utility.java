@@ -150,16 +150,23 @@ public class Utility {
         return sb.toString();
     }
 
+    /** Event property containing the time for job start and job finished events. */
+    public static final String PROPERTY_TIME = "time";
+
     /**
      * Helper method for sending the notification events.
      */
     public static void sendNotification(final EnvironmentComponent environment,
             final String topic,
-            final Event job) {
+            final Event job,
+            final Long time) {
         final EventAdmin localEA = environment.getEventAdmin();
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobUtil.PROPERTY_NOTIFICATION_JOB, job);
         props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
+        if ( time != null ) {
+            props.put(PROPERTY_TIME, time);
+        }
         localEA.postEvent(new Event(topic, props));
     }
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -55,7 +56,9 @@ import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
+import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +75,8 @@ import org.slf4j.LoggerFactory;
         metatype=true,immediate=true)
 @Services({
     @Service(value=Runnable.class),
-    @Service(value=JobManager.class)
+    @Service(value=JobManager.class),
+    @Service(value=EventHandler.class)
 })
 @Properties({
     @Property(name="scheduler.period", longValue=300,
@@ -89,11 +93,13 @@ import org.slf4j.LoggerFactory;
     @Property(name=ConfigurationConstants.PROP_RETRY_DELAY,
             longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
-            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL)
+            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL),
+    @Property(name="event.topics",propertyPrivate=true,
+            value={"org/apache/sling/event/notification/job/*"})
 })
 public class DefaultJobManager
     extends StatisticsImpl
-    implements Runnable, JobManager {
+    implements Runnable, JobManager, EventHandler {
 
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -127,6 +133,9 @@ public class DefaultJobManager
 
     /** All existing events by topic. */
     private final Map<String, List<JobEvent>> allEventsByTopic = new HashMap<String, List<JobEvent>>();
+
+    /** Statistics per topic. */
+    private final ConcurrentMap<String, TopicStatistics> topicStatistics = new ConcurrentHashMap<String, TopicStatistics>();
 
     /**
      * Activate this component.
@@ -627,6 +636,42 @@ public class DefaultJobManager
         for(final AbstractJobQueue jq : this.queues.values() ) {
             jq.reset();
         }
+        this.topicStatistics.clear();
         this.lastUpdatedStatistics = 0;
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#getTopicStatistics()
+     */
+    public Iterable<TopicStatistics> getTopicStatistics() {
+        return topicStatistics.values();
+    }
+
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
+    public void handleEvent(final Event event) {
+        final Event job = (Event)event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
+        if ( job != null ) {
+            final String topic = (String)job.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+            if ( topic != null ) { // this is just a sanity check
+                TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
+                if ( ts == null ) {
+                    this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
+                    ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
+                }
+                if ( event.getTopic().equals(JobUtil.TOPIC_JOB_CANCELLED) ) {
+                    ts.addCancelled();
+                } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_FAILED) ) {
+                    ts.addFailed();
+                } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_FINISHED) ) {
+                    final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
+                    ts.addFinished(time == null ? -1 : time);
+                } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_STARTED) ) {
+                    final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
+                    ts.addActivated(time == null ? -1 : time);
+                }
+            }
+        }
     }
 }

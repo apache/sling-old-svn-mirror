@@ -140,7 +140,7 @@ public abstract class JobUtil {
      */
     public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
 
-    /** Property containing the job event. */
+    /** Property containing the job event. The value is of type org.osgi.service.event.Event. */
     public static final String PROPERTY_NOTIFICATION_JOB = "event.notification.job";
 
     /**
