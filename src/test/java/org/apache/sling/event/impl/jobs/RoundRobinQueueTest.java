@@ -50,6 +50,8 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
 
     private static final String QUEUE_NAME = "roundrobintest";
     private static final String TOPIC = "sling/test";
+    private static int MAX_PAR = 5;
+    private static int NUM_JOBS = 300;
 
     protected Mockery context;
 
@@ -77,7 +79,7 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
         queueProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC + "/*");
         queueProps.put(ConfigurationConstants.PROP_NAME, QUEUE_NAME);
         queueProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.TOPIC_ROUND_ROBIN);
-        queueProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, 5);
+        queueProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
 
         final InternalQueueConfiguration mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
         return new QueueConfigurationManager() {
@@ -92,10 +94,20 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
     /**
      * Helper method to create a job event.
      */
-    private Event getJobEvent(final String subTopic) {
+    private Event getJobEvent(final String subTopic, final String id) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobUtil.PROPERTY_JOB_TOPIC, TOPIC + '/' + subTopic);
+        if ( id != null ) {
+            props.put(JobUtil.PROPERTY_JOB_NAME, id);
+        }
         return new Event(JobUtil.TOPIC_JOB, props);
+    }
+
+    /**
+     * Helper method to create a job event.
+     */
+    private Event getJobEvent(final String subTopic) {
+        return this.getJobEvent(subTopic, null);
     }
 
     @org.junit.Test public void testRoundRobinQueue() throws Exception {
@@ -125,6 +137,7 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
         q.suspend();
         // set new event admin
         final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger parallelCount = new AtomicInteger(0);
         setEventAdmin(new SimpleEventAdmin(new String[] {TOPIC + '*',
                 JobUtil.TOPIC_JOB_FINISHED},
                 new EventHandler[] {
@@ -133,11 +146,15 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
                             JobUtil.processJob(event, new JobProcessor() {
 
                                 public boolean process(Event job) {
+                                    if ( parallelCount.incrementAndGet() > MAX_PAR ) {
+                                        return false;
+                                    }
                                     try {
                                         Thread.sleep(30);
                                     } catch (InterruptedException ie) {
                                         // ignore
                                     }
+                                    parallelCount.decrementAndGet();
                                     return true;
                                 }
                             });
@@ -148,24 +165,33 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
                             count.incrementAndGet();
                         }
                     }}));
-        // we start "some" jobs
-        final int COUNT = 300;
-        for(int i = 0; i < COUNT; i++ ) {
+        // we start "some" jobs:
+        // first jobs without id
+        for(int i = 0; i < NUM_JOBS; i++ ) {
             final String subTopic = "sub" + (i % 10);
             jeh.handleEvent(getJobEvent(subTopic));
         }
+        // second jobs with id
+        for(int i = 0; i < NUM_JOBS; i++ ) {
+            final String subTopic = "sub" + (i % 10);
+            jeh.handleEvent(getJobEvent(subTopic, "id" + i));
+        }
         // start the queue
         q.resume();
-        while ( count.get() < COUNT ) {
+        while ( count.get() < 2 * NUM_JOBS ) {
+            assertEquals("Failed count", 0, q.getStatistics().getNumberOfFailedJobs());
+            assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ie) {
                 // ignore
             }
         }
-        assertEquals("Finished count", COUNT, count.get());
+        assertEquals("Finished count", 2 * NUM_JOBS, count.get());
         // we started one event before the test, so add one
-        assertEquals("Finished count", COUNT + 1, this.jobManager.getStatistics().getNumberOfFinishedJobs());
-        assertEquals("Finished count", COUNT + 1, q.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Finished count", 2 * NUM_JOBS + 1, this.jobManager.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Finished count", 2 * NUM_JOBS + 1, q.getStatistics().getNumberOfFinishedJobs());
+        assertEquals("Failed count", 0, q.getStatistics().getNumberOfFailedJobs());
+        assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
     }
 }

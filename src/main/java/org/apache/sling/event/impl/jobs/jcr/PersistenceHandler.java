@@ -887,6 +887,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     public boolean lock(final JobEvent info) {
         final String path = this.getNodePath(info.uniqueId);
         synchronized ( this.backgroundLock ) {
+            if ( !this.running ) {
+                return false;
+            }
             try {
                 // check if the node still exists
                 if ( this.backgroundSession.itemExists(path)
@@ -918,6 +921,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     public void unlock(final JobEvent info) {
         final String path = this.getNodePath(info.uniqueId);
         synchronized ( this.backgroundLock ) {
+            if ( !this.running ) {
+                return;
+            }
             try {
                 this.backgroundSession.getWorkspace().getLockManager().unlock(path);
             } catch (RepositoryException re) {
@@ -934,6 +940,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         final String jobId = (String)info.event.getProperty(JobUtil.PROPERTY_JOB_NAME);
         final String path = this.getNodePath(info.uniqueId);
         synchronized ( this.backgroundLock ) {
+            if ( !this.running ) {
+                return;
+            }
             try {
                 if ( this.backgroundSession.itemExists(path) ) {
                     ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
