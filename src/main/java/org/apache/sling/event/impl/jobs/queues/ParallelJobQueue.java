@@ -18,6 +18,9 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -74,6 +77,13 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     public void clear() {
         this.queue.clear();
         super.clear();
+    }
+
+    @Override
+    protected Collection<JobEvent> removeAllJobs() {
+        final List<JobEvent> events = new ArrayList<JobEvent>(this.queue);
+        this.queue.clear();
+        return events;
     }
 }
 

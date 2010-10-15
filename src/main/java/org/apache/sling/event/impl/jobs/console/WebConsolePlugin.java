@@ -177,7 +177,7 @@ public class WebConsolePlugin extends HttpServlet {
             pw.printf("<tr><td>Processed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfProcessedJobs());
             pw.printf("<tr><td>Average Processing Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageProcessingTime()));
             pw.printf("<tr><td>Average Waiting Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageWaitingTime()));
-            pw.printf("<tr><td>Status Info</td><td colspan='3'>%s</td></tr>", escape(q.getStatusInfo()));
+            pw.printf("<tr><td>Status Info</td><td colspan='3'>%s</td></tr>", escape(q.getStateInfo()));
             pw.println("</tbody></table>");
             pw.println("<br/>");
         }
@@ -357,7 +357,7 @@ public class WebConsolePlugin extends HttpServlet {
             pw.printf("Processed Jobs : %s%n", s.getNumberOfProcessedJobs());
             pw.printf("Average Processing Time : %s%n", formatTime(s.getAverageProcessingTime()));
             pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
-            pw.printf("Status Info : %s%n", q.getStatusInfo());
+            pw.printf("Status Info : %s%n", q.getStateInfo());
             pw.println("Configuration");
             pw.printf("Type : %s%n", formatType(c.getType()));
             pw.printf("Topics : %s%n", formatArrayAsText(c.getTopics()));

@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,8 +60,8 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    public String getStatusInfo() {
-        return super.getStatusInfo() + ", eventCount=" + this.eventCount + ", isWaitingForNext=" + this.isWaitingForNext;
+    public String getStateInfo() {
+        return super.getStateInfo() + ", eventCount=" + this.eventCount + ", isWaitingForNext=" + this.isWaitingForNext;
     }
 
     @Override
@@ -142,6 +143,20 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
             this.topicMap.clear();
         }
         super.clear();
+    }
+
+    @Override
+    protected Collection<JobEvent> removeAllJobs() {
+        final List<JobEvent> events = new ArrayList<JobEvent>();
+        synchronized ( this.topicMap ) {
+            for(final List<JobEvent> l : this.topicMap.values() ) {
+                events.addAll(l);
+            }
+            this.eventCount = 0;
+            this.topics.clear();
+            this.topicMap.clear();
+        }
+        return events;
     }
 }
 

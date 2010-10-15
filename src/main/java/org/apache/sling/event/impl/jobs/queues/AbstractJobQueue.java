@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,7 +106,10 @@ public abstract class AbstractJobQueue
         this.environment = environment;
     }
 
-    public String getStatusInfo() {
+    /**
+     * @see org.apache.sling.event.jobs.Queue#getStateInfo()
+     */
+    public String getStateInfo() {
         return "isWaiting=" + this.isWaiting + ", markedForCleanUp=" + this.markedForCleanUp + ", suspendedSince=" + this.suspendedSince.longValue();
     }
 
@@ -504,16 +508,6 @@ public abstract class AbstractJobQueue
         this.queueName = name;
     }
 
-    protected abstract JobEvent start(final JobEvent event);
-
-    protected abstract void put(final JobEvent event);
-
-    protected abstract JobEvent take();
-
-    protected abstract boolean isEmpty();
-
-    protected abstract void notifyFinished(final JobEvent rescheduleInfo);
-
     /**
      * Reschedule a job.
      */
@@ -556,16 +550,27 @@ public abstract class AbstractJobQueue
     /**
      * @see org.apache.sling.event.jobs.Queue#removeAll()
      */
-    public void removeAll() {
+    public synchronized void removeAll() {
+        // we suspend the queue
         final boolean wasSuspended = this.isSuspended();
         this.suspend();
-        while ( !this.isEmpty() ) {
-            final JobEvent event = this.take();
-            if ( event != null ) {
-                event.remove();
-            }
-        }
+        // we copy all events and remove them in the background
+        final Collection<JobEvent> events = this.removeAllJobs();
         this.clearQueued();
+        final Thread t = new Thread(new Runnable() {
+
+                /**
+                 * @see java.lang.Runnable#run()
+                 */
+                public void run() {
+                    for(final JobEvent job : events) {
+                        job.remove();
+                    }
+                }
+            }, "Queue RemoveAll Thread for " + this.queueName);
+        t.setDaemon(true);
+        t.start();
+        // start queue again
         if ( !wasSuspended ) {
             this.resume();
         }
@@ -577,5 +582,37 @@ public abstract class AbstractJobQueue
     public void clear() {
         this.clearQueued();
     }
+
+    /**
+     * @see org.apache.sling.event.jobs.Queue#getState(java.lang.String)
+     */
+    public Object getState(final String key) {
+        // not supported for now
+        return null;
+    }
+
+    /**
+     * Put another job into the queue.
+     */
+    protected abstract void put(final JobEvent event);
+
+    /**
+     * Get another job from the queue.
+     */
+    protected abstract JobEvent take();
+
+    /**
+     * Is the queue empty?
+     */
+    protected abstract boolean isEmpty();
+
+    /**
+     * Remove all events from the queue and return them.
+     */
+    protected abstract Collection<JobEvent> removeAllJobs();
+
+    protected abstract JobEvent start(final JobEvent event);
+
+    protected abstract void notifyFinished(final JobEvent rescheduleInfo);
 }
 

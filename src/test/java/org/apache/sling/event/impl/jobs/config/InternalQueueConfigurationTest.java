@@ -77,7 +77,7 @@ public class InternalQueueConfigurationTest {
         assertFalse(c.match(getJobEvent("t/x")));
     }
 
-    @org.junit.Test public void testTopicMatchersStart() {
+    @org.junit.Test public void testTopicMatchersStar() {
         final Map<String, Object> p = new HashMap<String, Object>();
         p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a*"});
         p.put(ConfigurationConstants.PROP_NAME, "test");
@@ -110,6 +110,51 @@ public class InternalQueueConfigurationTest {
     @org.junit.Test public void testTopicMatcherAndReplacement() {
         final Map<String, Object> p = new HashMap<String, Object>();
         p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a."});
+        p.put(ConfigurationConstants.PROP_NAME, "test-queue-{0}");
+
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        assertTrue(c.isValid());
+        final JobEvent b = getJobEvent("a/b");
+        assertTrue(c.match(b));
+        assertEquals("test-queue-b", b.queueName);
+        final JobEvent d = getJobEvent("a/d");
+        assertTrue(c.match(d));
+        assertEquals("test-queue-d", d.queueName);
+    }
+
+    @org.junit.Test public void testTopicMatchersDotAndSlash() {
+        final Map<String, Object> p = new HashMap<String, Object>();
+        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/."});
+        p.put(ConfigurationConstants.PROP_NAME, "test");
+
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        assertTrue(c.isValid());
+        assertTrue(c.match(getJobEvent("a/b")));
+        assertTrue(c.match(getJobEvent("a/c")));
+        assertFalse(c.match(getJobEvent("a")));
+        assertFalse(c.match(getJobEvent("a/b/c")));
+        assertFalse(c.match(getJobEvent("t")));
+        assertFalse(c.match(getJobEvent("t/x")));
+    }
+
+    @org.junit.Test public void testTopicMatchersStarAndSlash() {
+        final Map<String, Object> p = new HashMap<String, Object>();
+        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/*"});
+        p.put(ConfigurationConstants.PROP_NAME, "test");
+
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        assertTrue(c.isValid());
+        assertTrue(c.match(getJobEvent("a/b")));
+        assertTrue(c.match(getJobEvent("a/c")));
+        assertFalse(c.match(getJobEvent("a")));
+        assertTrue(c.match(getJobEvent("a/b/c")));
+        assertFalse(c.match(getJobEvent("t")));
+        assertFalse(c.match(getJobEvent("t/x")));
+    }
+
+    @org.junit.Test public void testTopicMatcherAndReplacementAndSlash() {
+        final Map<String, Object> p = new HashMap<String, Object>();
+        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/."});
         p.put(ConfigurationConstants.PROP_NAME, "test-queue-{0}");
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);

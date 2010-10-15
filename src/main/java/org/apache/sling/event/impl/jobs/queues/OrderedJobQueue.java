@@ -18,6 +18,9 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -38,7 +41,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     private JobEvent jobEvent;
 
     /** Marker indicating that this queue is currently sleeping. */
-    private volatile boolean isSleeping = false;
+    private volatile long isSleepingUntil = -1;
 
     /** The sleeping thread. */
     private volatile Thread sleepingThread;
@@ -53,8 +56,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    public String getStatusInfo() {
-        return super.getStatusInfo() + ", isSleeping=" + this.isSleeping;
+    public String getStateInfo() {
+        return super.getStateInfo() + ", isSleepingUntil=" + this.isSleepingUntil;
     }
 
     @Override
@@ -68,21 +71,19 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         return rescheduleInfo;
     }
 
-    private void setSleeping(boolean flag) {
-        this.isSleeping = flag;
-        if ( !flag ) {
-            this.sleepingThread = null;
-        }
+    private void setNotSleeping() {
+        this.isSleepingUntil = -1;
+        this.sleepingThread = null;
     }
 
-    private void setSleeping(Thread sleepingThread) {
+    private void setSleeping(final Thread sleepingThread, final long delay) {
         this.sleepingThread = sleepingThread;
-        this.setSleeping(true);
+        this.isSleepingUntil = System.currentTimeMillis() + delay;
     }
 
     @Override
     public void resume() {
-        if ( this.isSleeping ) {
+        if ( this.isSleepingUntil == -1 ) {
             final Thread thread = this.sleepingThread;
             if ( thread != null ) {
                 thread.interrupt();
@@ -158,14 +159,14 @@ public final class OrderedJobQueue extends AbstractJobQueue {
             delay = (Long)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY);
         }
         if ( delay > 0 ) {
-            setSleeping(Thread.currentThread());
+            this.setSleeping(Thread.currentThread(), delay);
             try {
                 this.logger.debug("Job queue {} is sleeping for {}ms.", this.queueName, delay);
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
                 this.ignoreException(e);
             } finally {
-                setSleeping(false);
+                this.setNotSleeping();
             }
         }
         return info;
@@ -180,9 +181,24 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    public void removeAll() {
+    public synchronized void removeAll() {
         this.jobEvent = null;
         super.removeAll();
+    }
+
+    @Override
+    protected Collection<JobEvent> removeAllJobs() {
+        final List<JobEvent> events = new ArrayList<JobEvent>(this.queue);
+        this.queue.clear();
+        return events;
+    }
+
+    @Override
+    public Object getState(final String key) {
+        if ( "isSleepingUntil".equals(key) ) {
+            return this.isSleepingUntil;
+        }
+        return super.getState(key);
     }
 }
 

@@ -45,8 +45,8 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    public String getStatusInfo() {
-        return super.getStatusInfo() + ", jobCount=" + this.jobCount;
+    public String getStateInfo() {
+        return super.getStateInfo() + ", jobCount=" + this.jobCount;
     }
 
     @Override

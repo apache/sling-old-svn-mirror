@@ -128,22 +128,26 @@ public class Utility {
             // we create an md from the job id - we use the first 6 bytes to
             // create sub directories
             final String md5 = md5(jobId);
-            sb.append(md5.substring(0, 2));
+            sb.append(md5.charAt(0));
+            sb.append(md5.charAt(1));
+            sb.append(md5.charAt(2));
             sb.append('/');
-            sb.append(md5.substring(2, 4));
-            sb.append('/');
-            sb.append(md5.substring(4, 6));
+            sb.append(md5.charAt(3));
+            sb.append(md5.charAt(4));
+            sb.append(md5.charAt(5));
             sb.append('/');
             sb.append(filter(jobId));
         } else {
             // create a path from the uuid - we use the first 6 bytes to
             // create sub directories
             final String uuid = UUID.randomUUID().toString();
-            sb.append(uuid.substring(0, 2));
+            sb.append(uuid.charAt(0));
+            sb.append(uuid.charAt(1));
+            sb.append(uuid.charAt(2));
             sb.append('/');
-            sb.append(uuid.substring(2, 4));
-            sb.append('/');
-            sb.append(uuid.substring(5, 7));
+            sb.append(uuid.charAt(3));
+            sb.append(uuid.charAt(5));
+            sb.append(uuid.charAt(6));
             sb.append("/Job_");
             sb.append(uuid.substring(8, 17));
         }

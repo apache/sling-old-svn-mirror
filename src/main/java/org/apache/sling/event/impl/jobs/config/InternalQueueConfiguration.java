@@ -158,9 +158,9 @@ public class InternalQueueConfiguration
                 }
                 if ( value != null && value.length() > 0 ) {
                     if ( value.endsWith(".") ) {
-                        newMatchers[i] = new PackageMatcher(value.substring(0, value.length() - 1));
+                        newMatchers[i] = new PackageMatcher(value);
                     } else if ( value.endsWith("*") ) {
-                        newMatchers[i] = new SubPackageMatcher(value.substring(0, value.length() - 1));
+                        newMatchers[i] = new SubPackageMatcher(value);
                     } else {
                         newMatchers[i] = new ClassMatcher(value);
                     }
@@ -404,37 +404,71 @@ public class InternalQueueConfiguration
             ", isValid=" + this.isValid() + "}";
     }
 
+    /**
+     * Internal interface for topic matching
+     */
     private static interface Matcher {
+        /** Check if the topic matches and return the variable part - null if not matching. */
         String match(String topic);
     }
+
+    /** Package matcher - the topic must be in the same package. */
     private static final class PackageMatcher implements Matcher {
+
         private final String packageName;
 
         public PackageMatcher(final String name) {
-            this.packageName = name;
+            // remove last char and maybe a trailing slash
+            int lastPos = name.length() - 1;
+            if ( lastPos > 0 && name.charAt(lastPos - 1) == '/' ) {
+                lastPos--;
+            }
+            this.packageName = name.substring(0, lastPos);
         }
+
+        /**
+         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
+         */
         public String match(final String topic) {
             final int pos = topic.lastIndexOf('/');
             return pos > -1 && topic.substring(0, pos).equals(packageName) ? topic.substring(pos + 1) : null;
         }
     }
+
+    /** Sub package matcher - the topic must be in the same package or a sub package. */
     private static final class SubPackageMatcher implements Matcher {
         private final String packageName;
 
         public SubPackageMatcher(final String name) {
-            this.packageName = name + '/';
+            // remove last char and maybe a trailing slash
+            int lastPos = name.length() - 1;
+            if ( lastPos > 0 && name.charAt(lastPos - 1) == '/' ) {
+                this.packageName = name.substring(0, lastPos);
+            } else {
+                this.packageName = name.substring(0, lastPos) + '/';
+            }
         }
+
+        /**
+         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
+         */
         public String match(final String topic) {
             final int pos = topic.lastIndexOf('/');
             return pos > -1 && topic.substring(0, pos + 1).startsWith(this.packageName) ? topic.substring(this.packageName.length()) : null;
         }
     }
+
+    /** The topic must match exactly. */
     private static final class ClassMatcher implements Matcher {
         private final String className;
 
         public ClassMatcher(final String name) {
             this.className = name;
         }
+
+        /**
+         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
+         */
         public String match(String topic) {
             return this.className.equals(topic) ? "" : null;
         }

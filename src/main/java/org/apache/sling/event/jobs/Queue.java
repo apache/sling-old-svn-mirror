@@ -36,11 +36,6 @@ public interface Queue {
     Statistics getStatistics();
 
     /**
-     * Return some information about the current status of the queue.
-     */
-    String getStatusInfo();
-
-    /**
      * Get the corresponding configuration.
      */
     QueueConfiguration getConfiguration();
@@ -83,4 +78,17 @@ public interface Queue {
      * all outstanding jobs (but no notifications are send).
      */
     void removeAll();
+
+    /**
+     * Return some information about the current state of the queue. This
+     * method is meant to see the internal state of the queue for debugging
+     * or monitoring purposes.
+     */
+    String getStateInfo();
+
+    /**
+     * For monitoring purposes and possible extensions from the different
+     * queue types. This method allows to query state information.
+     */
+    Object getState(final String key);
 }
