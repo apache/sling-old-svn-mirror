@@ -134,7 +134,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The repository path. */
-    protected String repositoryPath;
+    private String repositoryPath;
 
     /** Is the background task still running? */
     private volatile boolean running;
@@ -731,6 +731,8 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         }
         if ( eventProps.get(JobUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
             eventProps.put(JobUtil.PROPERTY_JOB_RETRY_COUNT, Integer.valueOf(eventProps.get(JobUtil.PROPERTY_JOB_RETRY_COUNT).toString()));
+        } else {
+            eventProps.put(JobUtil.PROPERTY_JOB_RETRY_COUNT, new Integer(0));
         }
         // add application id
         eventProps.put(EventUtil.PROPERTY_APPLICATION, eventNode.getProperty(JCRHelper.NODE_PROPERTY_APPLICATION).getString());

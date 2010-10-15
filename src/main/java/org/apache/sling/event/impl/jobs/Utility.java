@@ -31,7 +31,7 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 
-public class Utility {
+public abstract class Utility {
 
     /** Allowed characters for a node name */
     private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
@@ -76,7 +76,7 @@ public class Utility {
     /**
      * used for the md5
      */
-    public static final char[] hexTable = "0123456789abcdef".toCharArray();
+    private static final char[] HEX_TABLE = "0123456789abcdef".toCharArray();
 
     /**
      * Calculate an MD5 hash of the string given using 'utf-8' encoding.
@@ -111,8 +111,8 @@ public class Utility {
         StringBuilder res = new StringBuilder(digest.length * 2);
         for (int i = 0; i < digest.length; i++) {
             byte b = digest[i];
-            res.append(hexTable[(b >> 4) & 15]);
-            res.append(hexTable[b & 15]);
+            res.append(HEX_TABLE[(b >> 4) & 15]);
+            res.append(HEX_TABLE[b & 15]);
         }
         return res.toString();
     }

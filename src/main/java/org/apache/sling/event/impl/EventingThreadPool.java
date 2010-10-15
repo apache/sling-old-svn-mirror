@@ -42,7 +42,7 @@ import org.osgi.service.component.ComponentContext;
 public class EventingThreadPool implements ThreadPool {
 
     @Reference
-    protected ThreadPoolManager threadPoolManager;
+    private ThreadPoolManager threadPoolManager;
 
     /** The real thread pool used. */
     private org.apache.sling.commons.threads.ThreadPool threadPool;

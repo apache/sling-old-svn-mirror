@@ -182,7 +182,7 @@ public abstract class JobUtil {
     public static boolean acknowledgeJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
-            if ( !ctx.notifier.sendAcknowledge(job) ) {
+            if ( !ctx.getJobStatusNotifier().sendAcknowledge(job) ) {
                 // if we don't get an ack, someone else is already processing this job.
                 // we process but do not notify the job event handler.
                 LoggerFactory.getLogger(JobUtil.class).info("Someone else is already processing job {}.", job);
@@ -200,7 +200,7 @@ public abstract class JobUtil {
     public static void finishedJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
-            ctx.notifier.finishedJob(job, false);
+            ctx.getJobStatusNotifier().finishedJob(job, false);
         }
     }
 
@@ -212,7 +212,7 @@ public abstract class JobUtil {
     public static boolean rescheduleJob(final Event job) {
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
-            return ctx.notifier.finishedJob(job, true);
+            return ctx.getJobStatusNotifier().finishedJob(job, true);
         }
         return false;
     }
@@ -227,7 +227,7 @@ public abstract class JobUtil {
         boolean notify = true;
         final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
         if ( ctx != null ) {
-            if ( !ctx.notifier.sendAcknowledge(job) ) {
+            if ( !ctx.getJobStatusNotifier().sendAcknowledge(job) ) {
                 // if we don't get an ack, someone else is already processing this job.
                 // we process but do not notify the job event handler.
                 LoggerFactory.getLogger(JobUtil.class).info("Someone else is already processing job {}.", job);

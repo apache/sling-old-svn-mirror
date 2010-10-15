@@ -143,16 +143,16 @@ public class InternalQueueConfiguration
         } else {
             this.applicationIds = appIds;
         }
-        final String[] topics = OsgiUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
-        if ( topics == null
-             || topics.length == 0
-             || (topics.length == 1 && (topics[0] == null || topics[0].length() == 0))) {
+        final String[] topicsParam = OsgiUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
+        if ( topicsParam == null
+             || topicsParam.length == 0
+             || (topicsParam.length == 1 && (topicsParam[0] == null || topicsParam[0].length() == 0))) {
             matchers = null;
             this.topics = null;
         } else {
-            final Matcher[] newMatchers = new Matcher[topics.length];
-            for(int i=0; i < topics.length; i++) {
-                String value = topics[i];
+            final Matcher[] newMatchers = new Matcher[topicsParam.length];
+            for(int i=0; i < topicsParam.length; i++) {
+                String value = topicsParam[i];
                 if ( value != null ) {
                     value = value.trim();
                 }
@@ -167,7 +167,7 @@ public class InternalQueueConfiguration
                 }
             }
             matchers = newMatchers;
-            this.topics = topics;
+            this.topics = topicsParam;
         }
         this.serviceRanking = OsgiUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
         this.pid = (String)params.get(Constants.SERVICE_PID);
@@ -276,8 +276,7 @@ public class InternalQueueConfiguration
                 if ( m != null ) {
                     final String rep = m.match(topic);
                     if ( rep != null ) {
-                        final String name = this.name.replace("{0}", rep);
-                        event.queueName = name;
+                        event.queueName = this.name.replace("{0}", rep);
                         return true;
                     }
                 }

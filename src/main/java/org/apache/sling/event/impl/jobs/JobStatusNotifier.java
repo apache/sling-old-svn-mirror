@@ -25,10 +25,14 @@ public interface JobStatusNotifier {
     String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
 
     class NotifierContext {
-        public final JobStatusNotifier notifier;
+        private final JobStatusNotifier notifier;
 
-        public NotifierContext(JobStatusNotifier n) {
+        public NotifierContext(final JobStatusNotifier n) {
             this.notifier = n;
+        }
+
+        public JobStatusNotifier getJobStatusNotifier() {
+            return this.notifier;
         }
     }
 
