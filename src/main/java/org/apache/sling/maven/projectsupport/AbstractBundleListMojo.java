@@ -165,6 +165,8 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
             initBundleList();
+        } catch (MojoExecutionException e) {
+            throw e;
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to load dependency information from properties file.", e);
         }
