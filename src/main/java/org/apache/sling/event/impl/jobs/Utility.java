@@ -146,10 +146,10 @@ public class Utility {
             sb.append(uuid.charAt(2));
             sb.append('/');
             sb.append(uuid.charAt(3));
+            sb.append(uuid.charAt(4));
             sb.append(uuid.charAt(5));
-            sb.append(uuid.charAt(6));
             sb.append("/Job_");
-            sb.append(uuid.substring(8, 17));
+            sb.append(uuid.substring(6));
         }
         return sb.toString();
     }
