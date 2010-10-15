@@ -28,16 +28,16 @@
 
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-servlet-archetype</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling Servlet Archetype</name>
     <description>Maven archetype for Sling Servlets</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-servlet-archetype-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-servlet-archetype-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/sling-servlet-archetype-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/servlet</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/servlet</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/maven/archetypes/servlet</url>
     </scm>
 
     <build>
