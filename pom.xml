@@ -25,12 +25,21 @@
         <version>10-SNAPSHOT</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
+
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-servlet-archetype</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
+
     <name>Sling Servlet Archetype</name>
     <description>Maven archetype for Sling Servlets</description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/servlet</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/servlet</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/maven/archetypes/servlet</url>
+    </scm>
+
     <build>
         <extensions>
             <extension>
@@ -47,4 +56,24 @@
             </plugin>
         </plugins>
     </build>
+
+        <reporting>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>2.5.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <!-- No javadocs -->
+                        <excludePackageNames>
+                            org.apache.sling
+                        </excludePackageNames>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </reporting>
 </project>
