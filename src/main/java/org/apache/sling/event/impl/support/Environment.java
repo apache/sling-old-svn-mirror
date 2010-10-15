@@ -16,17 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event;
+package org.apache.sling.event.impl.support;
 
-import org.osgi.service.event.Event;
+import org.apache.sling.commons.threads.ThreadPool;
 
 /**
- * A job processor processes a job in the background.
- * It is used by {@link EventUtil#processJob(Event, JobProcessor)}.
- * @deprecated Use org.apache.sling.event.jobs.JobProcessor
+ * This class provides "global settings"
+ * to all services, like the application id and the thread pool.
+ * @since 3.0
  */
-@Deprecated
-public interface JobProcessor extends org.apache.sling.event.jobs.JobProcessor {
+public class Environment {
 
-    // just for compatibility
+    /** Global application id. */
+    public static String APPLICATION_ID;
+
+    /** Global thread pool. */
+    public static volatile ThreadPool THREAD_POOL;
 }

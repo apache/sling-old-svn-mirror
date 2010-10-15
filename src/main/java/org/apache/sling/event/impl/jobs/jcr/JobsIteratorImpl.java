@@ -16,66 +16,51 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.job;
+package org.apache.sling.event.impl.jobs.jcr;
 
-import java.util.NoSuchElementException;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
+import java.util.Iterator;
 
 import org.apache.sling.event.JobsIterator;
-import org.apache.sling.event.impl.JobEventHandler;
 import org.osgi.service.event.Event;
 
 /**
  * JCR Based Implementation of the jobs iterator
+ * @deprecated
  */
+@Deprecated
 public class JobsIteratorImpl implements JobsIterator {
 
-    private NodeIterator delegatee;
+    private final org.apache.sling.event.jobs.JobsIterator delegatee;
 
-    private Session session;
-
-    private JobEventHandler handler;
-
-    public JobsIteratorImpl(final NodeIterator ni,
-                            final Session session,
-                            final JobEventHandler handler) {
-        this.delegatee = ni;
-        this.session = session;
-        this.handler = handler;
+    public JobsIteratorImpl(final org.apache.sling.event.jobs.JobsIterator i) {
+        this.delegatee = i;
     }
 
     /**
      * @see org.apache.sling.event.JobsIterator#close()
+     * @deprecated
      */
+    @Deprecated
     public void close() {
-        if ( this.session != null ) {
-            this.session.logout();
-            this.session = null;
-            this.delegatee = null;
-            this.handler = null;
-        }
+        // nothing to do
     }
 
     /**
-     * @see org.apache.sling.event.JobsIterator#getPosition()
+     * @see org.apache.sling.event.jobs.JobsIterator#getPosition()
      */
     public long getPosition() {
         return this.delegatee.getPosition();
     }
 
     /**
-     * @see org.apache.sling.event.JobsIterator#getSize()
+     * @see org.apache.sling.event.jobs.JobsIterator#getSize()
      */
     public long getSize() {
         return this.delegatee.getSize();
     }
 
     /**
-     * @see org.apache.sling.event.JobsIterator#skip(long)
+     * @see org.apache.sling.event.jobs.JobsIterator#skip(long)
      */
     public void skip(long skipNum) {
         this.delegatee.skip(skipNum);
@@ -85,31 +70,27 @@ public class JobsIteratorImpl implements JobsIterator {
      * @see java.util.Iterator#hasNext()
      */
     public boolean hasNext() {
-        final boolean result = (this.delegatee == null ? false : this.delegatee.hasNext());
-        if ( !result ) {
-            this.close();
-        }
-        return result;
+        return this.delegatee.hasNext();
     }
 
     /**
      * @see java.util.Iterator#next()
      */
     public Event next() {
-        final Node n = this.delegatee.nextNode();
-        try {
-            return this.handler.forceReadEvent(n);
-        } catch (RepositoryException e) {
-            // if something goes wrong, we shutdown the iterator
-            this.close();
-            throw (NoSuchElementException)new NoSuchElementException("Repository exception during job reading").initCause(e);
-        }
+        return this.delegatee.next();
     }
 
     /**
      * @see java.util.Iterator#remove()
      */
     public void remove() {
-        throw new UnsupportedOperationException("Remove not supported.");
+        this.delegatee.remove();
+    }
+
+    /**
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<Event> iterator() {
+        return this.delegatee.iterator();
     }
 }

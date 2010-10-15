@@ -40,6 +40,7 @@ public class EventPropertiesMap
 
     private static final long serialVersionUID = 835179638502569708L;
 
+    /** The delegatee map. */
     private final Map<String, Object> delegatee;
 
     /**

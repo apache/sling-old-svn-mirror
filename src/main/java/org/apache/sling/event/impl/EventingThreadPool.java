@@ -25,6 +25,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -37,31 +38,29 @@ import org.osgi.service.component.ComponentContext;
 @Component(label="%event.pool.name",
         description="%event.pool.description",
         metatype=true)
-@Service(value=ThreadPool.class)
+@Service(value=EventingThreadPool.class)
 public class EventingThreadPool implements ThreadPool {
 
     @Reference
-    protected ThreadPoolManager threadPoolManager;
+    private ThreadPoolManager threadPoolManager;
 
     /** The real thread pool used. */
     private org.apache.sling.commons.threads.ThreadPool threadPool;
 
     private static final int DEFAULT_MIN_POOL_SIZE = 35; // this is sufficient for all threads + approx 25 job queues
     private static final int DEFAULT_MAX_POOL_SIZE = 50;
-    private static final int DEFAULT_QUEUE_SIZE = -1; // infinite
 
     @Property(intValue=DEFAULT_MIN_POOL_SIZE)
     private static final String PROPERTY_MIN_POOL_SIZE = "minPoolSize";
     @Property(intValue=DEFAULT_MAX_POOL_SIZE)
     private static final String PROPERTY_MAX_POOL_SIZE = "maxPoolSize";
-    @Property(intValue=DEFAULT_QUEUE_SIZE)
-    private static final String PROPERTY_QUEUE_SIZE = "queueSize";
 
     @Property(value="NORM",
             options={@PropertyOption(name="NORM",value="Norm"),
                      @PropertyOption(name="MIN",value="Min"),
                      @PropertyOption(name="MAX",value="Max")})
     private static final String PROPERTY_PRIORITY = "priority";
+
     /**
      * Activate this component.
      * @param context
@@ -70,11 +69,11 @@ public class EventingThreadPool implements ThreadPool {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
         config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MIN_POOL_SIZE), DEFAULT_MIN_POOL_SIZE));
         config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
-        config.setQueueSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_QUEUE_SIZE), DEFAULT_QUEUE_SIZE));
+        config.setQueueSize(-1); // unlimited
         config.setShutdownGraceful(true);
         config.setPriority(ThreadPriority.valueOf(OsgiUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
         config.setDaemon(true);
-        this.threadPool = threadPoolManager.create(config);
+        this.threadPool = threadPoolManager.create(config, "Apache Sling Eventing Thread Pool");
     }
 
     /**
