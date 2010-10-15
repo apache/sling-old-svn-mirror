@@ -62,7 +62,8 @@
                             org.slf4j.*,
                             javax.servlet.*;
                             org.apache.felix.shell;
-                            org.apache.felix.webconsole;resolution:=optional
+                            org.apache.felix.webconsole;resolution:=optional,
+                            *
                         </Import-Package>
                         <Private-Package>
                             org.apache.sling.extensions.threaddump.*
