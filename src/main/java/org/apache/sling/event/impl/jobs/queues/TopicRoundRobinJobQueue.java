@@ -75,6 +75,10 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
 
     @Override
     protected void put(final JobEvent event) {
+        // is this a close?
+        if ( event.event == null ) {
+            return;
+        }
         final String topic = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
         synchronized ( this.topicMap ) {
             List<JobEvent> events = this.topicMap.get(topic);
