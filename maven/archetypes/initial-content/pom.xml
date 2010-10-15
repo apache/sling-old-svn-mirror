@@ -26,11 +26,11 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
     <groupId>org.apache.sling</groupId>
-    <artifactId>sling-resources-archetype</artifactId>
+    <artifactId>sling-initial-content-archetype</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
-    <name>Sling Resources Archetype</name>
-    <description>Maven archetype for Sling Resources</description>
+    <name>Sling Initial Content Archetype</name>
+    <description>Maven archetype for initial content</description>
     <build>
         <extensions>
             <extension>

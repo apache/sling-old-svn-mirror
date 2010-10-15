@@ -72,7 +72,7 @@
         <module>maven/maven-launchpad-plugin</module>
         <module>maven/archetypes/launchpad-standalone</module>
         <module>maven/archetypes/launchpad-webapp</module>
-        <module>maven/archetypes/resources</module>
+        <module>maven/archetypes/initial-content</module>
         <module>maven/archetypes/servlet</module>
 
         <!-- The Sling API -->
