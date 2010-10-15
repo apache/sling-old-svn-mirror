@@ -32,16 +32,13 @@ import javax.jcr.observation.EventListener;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.event.JobStatusProvider;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.settings.SlingSettingsService;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
+import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,15 +61,6 @@ public abstract class AbstractRepositoryEventHandler
     @Property(value=DEFAULT_PROPERTY_REPO_PATH)
     protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
 
-    @Reference
-    protected SlingRepository repository;
-
-    @Reference
-    protected EventAdmin eventAdmin;
-
-    /** Our application id. */
-    protected String applicationId;
-
     /** The repository session to write into the repository. */
     protected Session writerSession;
 
@@ -91,38 +79,26 @@ public abstract class AbstractRepositoryEventHandler
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
-    @Reference(policy=ReferencePolicy.DYNAMIC)
-    protected DynamicClassLoaderManager classLoaderManager;
-
     /**
-     * Our thread pool.
+     * Environment component.
      */
     @Reference
-    protected ThreadPool threadPool;
-
-    /** Sling settings service. */
-    @Reference
-    protected SlingSettingsService settingsService;
+    protected EnvironmentComponent environment;
 
     /** The root node for writing. */
     private Node writeRootNode;
 
-    public static String APPLICATION_ID;
-
     /**
      * Activate this component.
      * @param context
-     * @throws RepositoryException
      */
     protected void activate(final ComponentContext context) {
-        this.applicationId = this.settingsService.getSlingId();
-        APPLICATION_ID = this.applicationId;
         this.repositoryPath = OsgiUtil.toString(context.getProperties().get(
             CONFIG_PROPERTY_REPO_PATH), DEFAULT_PROPERTY_REPO_PATH);
 
         this.running = true;
         // start writer thread
-        this.threadPool.execute(new Runnable() {
+        final Thread writerThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     synchronized ( writeLock ) {
@@ -144,7 +120,8 @@ public abstract class AbstractRepositoryEventHandler
                 }
             }
         });
-        this.threadPool.execute(new Runnable() {
+        writerThread.start();
+        final Thread backgroundThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     runInBackground();
@@ -154,20 +131,12 @@ public abstract class AbstractRepositoryEventHandler
                 }
             }
         });
+        backgroundThread.start();
     }
 
     protected abstract void runInBackground() throws RepositoryException;
 
     protected abstract void processWriteQueue();
-
-    protected ClassLoader getDynamicClassLoader() {
-        final DynamicClassLoaderManager dclm = this.classLoaderManager;
-        if ( dclm != null ) {
-            return dclm.getDynamicClassLoader();
-        }
-        // if we don't have a dynamic classloader, we return our classloader
-        return this.getClass().getClassLoader();
-    }
 
     /**
      * Deactivate this component.
@@ -190,29 +159,15 @@ public abstract class AbstractRepositoryEventHandler
     }
 
     /**
-     * Create a new session.
-     * @return
-     * @throws RepositoryException
-     */
-    protected Session createSession()
-    throws RepositoryException {
-        final SlingRepository repo = this.repository;
-        if ( repo == null ) {
-            throw new RepositoryException("Repository is currently not available.");
-        }
-        return repo.loginAdministrative(null);
-    }
-
-    /**
      * Start the repository session and add this handler as an observer
      * for new events created on other nodes.
      * @throws RepositoryException
      */
     protected void startWriterSession() throws RepositoryException {
-        this.writerSession = this.createSession();
+        this.writerSession = this.environment.createAdminSession();
         this.writeRootNode = this.createPath(this.writerSession.getRootNode(),
                 this.repositoryPath.substring(1),
-                EventHelper.NODETYPE_ORDERED_FOLDER);
+                JCRHelper.NODETYPE_ORDERED_FOLDER);
         this.writerSession.save();
     }
 
@@ -236,7 +191,7 @@ public abstract class AbstractRepositoryEventHandler
      * Return the node type for the event.
      */
     protected String getEventNodeType() {
-        return EventHelper.EVENT_NODE_TYPE;
+        return JCRHelper.EVENT_NODE_TYPE;
     }
 
     /**
@@ -264,17 +219,17 @@ public abstract class AbstractRepositoryEventHandler
         } else {
             final Calendar now = Calendar.getInstance();
             final int sepPos = nodeType.indexOf(':');
-            nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
+            nodeName = nodeType.substring(sepPos+1) + "-" + Environment.APPLICATION_ID + "-" + now.getTime().getTime();
         }
         final Node eventNode = this.createPath(rootNode,
                 nodeName,
                 nodeType);
 
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, e.getTopic());
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_APPLICATION, this.applicationId);
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_TOPIC, e.getTopic());
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_APPLICATION, Environment.APPLICATION_ID);
 
-        EventHelper.writeEventProperties(eventNode, e);
+        JCRHelper.writeEventProperties(eventNode, e);
         this.addNodeProperties(eventNode, e);
         writerSession.save();
 
@@ -289,22 +244,11 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
-        return this.readEvent(eventNode, false);
-    }
+        final String topic = eventNode.getProperty(JCRHelper.NODE_PROPERTY_TOPIC).getString();
+        final ClassLoader cl = this.environment.getDynamicClassLoader();
+        final Dictionary<String, Object> eventProps = JCRHelper.readEventProperties(eventNode, cl, false);
 
-    /**
-     * Read an event from the repository.
-     * @return
-     * @throws RepositoryException
-     * @throws ClassNotFoundException
-     */
-    protected Event readEvent(Node eventNode, final boolean forceLoad)
-    throws RepositoryException, ClassNotFoundException {
-        final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
-        final ClassLoader cl = this.getDynamicClassLoader();
-        final Dictionary<String, Object> eventProps = EventHelper.readEventProperties(eventNode, cl, forceLoad);
-
-        eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
+        eventProps.put(JobUtil.JOB_ID, eventNode.getPath());
         this.addEventProperties(eventNode, eventProps);
         try {
             final Event event = new Event(topic, eventProps);
@@ -376,7 +320,7 @@ public abstract class AbstractRepositoryEventHandler
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
                         try {
-                            node.addNode(token, EventHelper.NODETYPE_FOLDER);
+                            node.addNode(token, JCRHelper.NODETYPE_FOLDER);
                             node.getSession().save();
                         } catch (RepositoryException re) {
                             // we ignore this as this folder might be created from a different task

@@ -16,17 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event;
+package org.apache.sling.event.jobs;
 
 import org.osgi.service.event.Event;
 
 /**
  * A job processor processes a job in the background.
- * It is used by {@link EventUtil#processJob(Event, JobProcessor)}.
- * @deprecated Use org.apache.sling.event.jobs.JobProcessor
+ * It is used by {@link JobUtil#processJob(Event, JobProcessor)}.
+ * @since 3.0
  */
-@Deprecated
-public interface JobProcessor extends org.apache.sling.event.jobs.JobProcessor {
+public interface JobProcessor {
 
-    // just for compatibility
+    /**
+     * Execute the job.
+     * If the job fails with a thrown exception/throwable, the process will not be rescheduled.
+     *
+     * @param job The event containing the job description.
+     * @return True if the job could be finished (either successful or by an error).
+     *         Return false if the job should be rescheduled.
+     */
+    boolean process(Event job);
 }

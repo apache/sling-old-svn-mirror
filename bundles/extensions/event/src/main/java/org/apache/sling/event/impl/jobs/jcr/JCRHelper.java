@@ -16,17 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl;
+package org.apache.sling.event.impl.jobs.jcr;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
@@ -43,15 +40,15 @@ import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil;
-import org.apache.sling.event.JobStatusProvider;
-import org.apache.sling.event.impl.job.JobStatusNotifier;
+import org.apache.sling.event.impl.jobs.JobStatusNotifier;
+import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 
 
 /**
  * Helper class defining some constants and utility methods.
  */
-public abstract class EventHelper {
+public abstract class JCRHelper {
 
     /** The namespace prefix. */
     public static final String EVENT_PREFIX = "slingevent:";
@@ -77,102 +74,21 @@ public abstract class EventHelper {
     /** The nodetype for newly created folders */
     public static final String NODETYPE_ORDERED_FOLDER = "sling:OrderedFolder";
 
-    /** Allowed characters for a node name */
-    private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
-    /** Replacement characters for unallowed characters in a node name */
-    private static final char REPLACEMENT_CHAR = '_';
+    /** The property for locks. */
+    public static final String NODE_PROPERTY_LOCK_OWNER = "jcr:lockOwner";
 
     /** List of ignored properties to write to the repository. */
     private static final String[] IGNORE_PROPERTIES = new String[] {
         EventUtil.PROPERTY_DISTRIBUTE,
         EventUtil.PROPERTY_APPLICATION,
-        JobStatusProvider.PROPERTY_EVENT_ID,
+        JobUtil.JOB_ID,
         JobStatusNotifier.CONTEXT_PROPERTY_NAME
     };
 
     /** List of ignored prefixes to read from the repository. */
     private static final String[] IGNORE_PREFIXES = new String[] {
-        EventHelper.EVENT_PREFIX
+        JCRHelper.EVENT_PREFIX
     };
-
-    /**
-     * Filter the node name for not allowed characters and replace them.
-     * @param nodeName The suggested node name.
-     * @return The filtered node name.
-     */
-    public static String filter(final String nodeName) {
-        final StringBuilder sb  = new StringBuilder();
-        char lastAdded = 0;
-
-        for(int i=0; i < nodeName.length(); i++) {
-            final char c = nodeName.charAt(i);
-            char toAdd = c;
-
-            if (ALLOWED_CHARS.indexOf(c) < 0) {
-                if (lastAdded == REPLACEMENT_CHAR) {
-                    // do not add several _ in a row
-                    continue;
-                }
-                toAdd = REPLACEMENT_CHAR;
-
-            } else if(i == 0 && Character.isDigit(c)) {
-                sb.append(REPLACEMENT_CHAR);
-            }
-
-            sb.append(toAdd);
-            lastAdded = toAdd;
-        }
-
-        if (sb.length()==0) {
-            sb.append(REPLACEMENT_CHAR);
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * used for the md5
-     */
-    public static final char[] hexTable = "0123456789abcdef".toCharArray();
-
-    /**
-     * Calculate an MD5 hash of the string given using 'utf-8' encoding.
-     *
-     * @param data the data to encode
-     * @return a hex encoded string of the md5 digested input
-     */
-    public static String md5(String data) {
-        try {
-            return digest("MD5", data.getBytes("utf-8"));
-        } catch (NoSuchAlgorithmException e) {
-            throw new InternalError("MD5 digest not available???");
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalError("UTF8 digest not available???");
-        }
-    }
-
-    /**
-     * Digest the plain string using the given algorithm.
-     *
-     * @param algorithm The alogrithm for the digest. This algorithm must be
-     *                  supported by the MessageDigest class.
-     * @param data      the data to digest with the given algorithm
-     * @return The digested plain text String represented as Hex digits.
-     * @throws java.security.NoSuchAlgorithmException if the desired algorithm is not supported by
-     *                                  the MessageDigest class.
-     */
-    private static String digest(String algorithm, byte[] data)
-    throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance(algorithm);
-        byte[] digest = md.digest(data);
-        StringBuilder res = new StringBuilder(digest.length * 2);
-        for (int i = 0; i < digest.length; i++) {
-            byte b = digest[i];
-            res.append(hexTable[(b >> 4) & 15]);
-            res.append(hexTable[b & 15]);
-        }
-        return res.toString();
-    }
 
     /**
      * Check if this property should be ignored
@@ -233,7 +149,7 @@ public abstract class EventHelper {
                             }
                         }
                         oos.close();
-                        node.setProperty(EventHelper.NODE_PROPERTY_PROPERTIES,
+                        node.setProperty(JCRHelper.NODE_PROPERTY_PROPERTIES,
                                 node.getSession().getValueFactory().createBinary(new ByteArrayInputStream(baos.toByteArray())));
                     } catch (IOException ioe) {
                         throw new RepositoryException("Unable to serialize event " + EventUtil.toString(event), ioe);
@@ -257,9 +173,9 @@ public abstract class EventHelper {
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // check the properties blob
-        if ( node.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES) ) {
+        if ( node.hasProperty(JCRHelper.NODE_PROPERTY_PROPERTIES) ) {
             try {
-                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(EventHelper.NODE_PROPERTY_PROPERTIES).getBinary().getStream(),
+                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(JCRHelper.NODE_PROPERTY_PROPERTIES).getBinary().getStream(),
                         objectClassLoader);
                 int length = ois.readInt();
                 for(int i=0;i<length;i++) {

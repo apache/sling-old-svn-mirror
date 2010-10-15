@@ -31,7 +31,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import org.apache.sling.event.impl.EventHelper;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -100,17 +100,17 @@ public class EventUtilTest {
             will(returnValue(getValueOfType(PropertyType.DATE, "dateValue")));
         }});
         // boolean
-        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, true).getType());
-        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, false).getType());
-        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, Boolean.TRUE).getType());
-        assertEquals(PropertyType.BOOLEAN, EventHelper.getNodePropertyValue(factory, Boolean.FALSE).getType());
+        assertEquals(PropertyType.BOOLEAN, JCRHelper.getNodePropertyValue(factory, true).getType());
+        assertEquals(PropertyType.BOOLEAN, JCRHelper.getNodePropertyValue(factory, false).getType());
+        assertEquals(PropertyType.BOOLEAN, JCRHelper.getNodePropertyValue(factory, Boolean.TRUE).getType());
+        assertEquals(PropertyType.BOOLEAN, JCRHelper.getNodePropertyValue(factory, Boolean.FALSE).getType());
         // long
-        assertEquals(PropertyType.LONG, EventHelper.getNodePropertyValue(factory, (long)5).getType());
+        assertEquals(PropertyType.LONG, JCRHelper.getNodePropertyValue(factory, (long)5).getType());
         // int = not possible
-        assertEquals(null, EventHelper.getNodePropertyValue(factory, 5));
+        assertEquals(null, JCRHelper.getNodePropertyValue(factory, 5));
         // string
-        assertEquals(PropertyType.STRING, EventHelper.getNodePropertyValue(factory, "something").getType());
+        assertEquals(PropertyType.STRING, JCRHelper.getNodePropertyValue(factory, "something").getType());
         // calendar
-        assertEquals(PropertyType.DATE, EventHelper.getNodePropertyValue(factory, Calendar.getInstance()).getType());
+        assertEquals(PropertyType.DATE, JCRHelper.getNodePropertyValue(factory, Calendar.getInstance()).getType());
     }
 }

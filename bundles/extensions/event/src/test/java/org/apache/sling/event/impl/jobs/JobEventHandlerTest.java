@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl;
+package org.apache.sling.event.impl.jobs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,12 +29,24 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
 
-import org.apache.sling.event.EventUtil;
-import org.apache.sling.event.impl.job.JobStatusNotifier;
+import junitx.util.PrivateAccessor;
+
+import org.apache.sling.event.impl.Barrier;
+import org.apache.sling.event.impl.RepositoryTestUtil;
+import org.apache.sling.event.impl.SimpleEventAdmin;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
+import org.apache.sling.event.impl.jobs.jcr.PersistenceHandler;
+import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.jobs.JobManager.QueryType;
+import org.apache.sling.event.jobs.JobProcessor;
+import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.JobsIterator;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -44,7 +56,7 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(JMock.class)
-public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
+public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
 
     protected Mockery context;
 
@@ -58,15 +70,8 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     }
 
     @Override
-    protected AbstractRepositoryEventHandler createHandler() {
-        final JobEventHandler h = new JobEventHandler();
-        h.scheduler = new SimpleScheduler();
-        return h;
-    }
-
-    @Override
-    protected Dictionary<String, Object> getComponentConfig() {
-        final Dictionary<String, Object> config =  super.getComponentConfig();
+    protected Hashtable<String, Object> getComponentConfig() {
+        final Hashtable<String, Object> config =  super.getComponentConfig();
         config.put("cleanup.period", 1); // set clean up to 1 minute
         config.put("load.delay", 1); // load delay to 1 sec
         return config;
@@ -76,11 +81,11 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      * Simple setup test which checks if the session and the session listener
      * is registered.
      */
-    @org.junit.Test public void testSetup() throws RepositoryException {
-        assertEquals(this.handler.applicationId, SLING_ID);
-        assertEquals(this.handler.repositoryPath, REPO_PATH);
-        assertNotNull(((JobEventHandler)this.handler).backgroundSession);
-        final EventListenerIterator iter = ((JobEventHandler)this.handler).backgroundSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
+    @org.junit.Test public void testSetup() throws Exception {
+        assertEquals(Environment.APPLICATION_ID, SLING_ID);
+        assertEquals(PrivateAccessor.getField(this.handler, "repositoryPath"), REPO_PATH);
+        assertNotNull(PrivateAccessor.getField(this.handler, "backgroundSession"));
+        final EventListenerIterator iter = ((Session)PrivateAccessor.getField(this.handler, "backgroundSession")).getWorkspace().getObservationManager().getRegisteredEventListeners();
         boolean found = false;
         while ( !found && iter.hasNext() ) {
             final javax.jcr.observation.EventListener listener = iter.nextEventListener();
@@ -93,19 +98,6 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      * Helper method to create a job event.
      */
     private Event getJobEvent(String queueName, String id, String parallel) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(EventUtil.PROPERTY_JOB_TOPIC, "sling/test");
-        if ( id != null ) {
-            props.put(EventUtil.PROPERTY_JOB_ID, id);
-        }
-        props.put(EventUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
-        props.put(EventUtil.PROPERTY_JOB_RETRIES, 2);
-        if ( queueName != null ) {
-            props.put(EventUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
-        }
-        if ( parallel != null ) {
-            props.put(EventUtil.PROPERTY_JOB_PARALLEL, parallel);
-        }
         return getJobEvent(queueName, id, parallel, false);
     }
 
@@ -114,22 +106,22 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      */
     private Event getJobEvent(String queueName, String id, String parallel, boolean runlocal) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(EventUtil.PROPERTY_JOB_TOPIC, "sling/test");
+        props.put(JobUtil.PROPERTY_JOB_TOPIC, "sling/test");
         if ( id != null ) {
-            props.put(EventUtil.PROPERTY_JOB_ID, id);
+            props.put(JobUtil.PROPERTY_JOB_NAME, id);
         }
-        props.put(EventUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
-        props.put(EventUtil.PROPERTY_JOB_RETRIES, 2);
+        props.put(JobUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
+        props.put(JobUtil.PROPERTY_JOB_RETRIES, 2);
         if ( queueName != null ) {
-            props.put(EventUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
+            props.put(JobUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
         }
         if ( parallel != null ) {
-            props.put(EventUtil.PROPERTY_JOB_PARALLEL, parallel);
+            props.put(JobUtil.PROPERTY_JOB_PARALLEL, parallel);
         }
         if ( runlocal ) {
-            props.put(EventUtil.PROPERTY_JOB_RUN_LOCAL, "true");
+            props.put(JobUtil.PROPERTY_JOB_RUN_LOCAL, "true");
         }
-        return new Event(EventUtil.TOPIC_JOB, props);
+        return new Event(JobUtil.TOPIC_JOB, props);
     }
 
     /**
@@ -137,43 +129,54 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      * The job is executed once and finished successfully.
      */
     @org.junit.Test public void testSimpleJobExecution() throws Exception {
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
-                            EventUtil.finishedJob(event);
+                            JobUtil.acknowledgeJob(event);
+                            JobUtil.finishedJob(event);
                             cb.block();
                         }
 
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, null, null));
         assertTrue("No event received in the given time.", cb.block(5));
         cb.reset();
         assertFalse("Unexpected event received in the given time.", cb.block(5));
     }
 
+    private long getSize(final JobsIterator i) {
+        long size = i.getSize();
+        if ( size == - 1 ) {
+            size = 0;
+            while ( i.hasNext() ) {
+                i.next();
+                size++;
+            }
+        }
+        return size;
+    }
     /**
      * Test simple job execution with job id.
      * The job is executed once and finished successfully.
      */
     @org.junit.Test public void testSimpleJobWithIdExecution() throws Exception {
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
-                            EventUtil.finishedJob(event);
+                            JobUtil.acknowledgeJob(event);
+                            JobUtil.finishedJob(event);
                             cb.block();
                         }
 
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, "myid", null));
         assertTrue("No event received in the given time.", cb.block(5));
         cb.reset();
@@ -185,37 +188,41 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      * The job execution always fails
      */
     @org.junit.Test public void testCancelJob() throws Exception {
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             cb.block();
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
-                            EventUtil.rescheduleJob(event);
+                            JobUtil.rescheduleJob(event);
                         }
 
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, "myid", null));
         cb.block();
-        assertEquals(1, jeh.getAllJobs("sling/test").size());
+        assertEquals(1, this.getSize(this.jobManager.queryJobs(QueryType.ALL, "sling/test")));
         // job is currently sleeping, therefore cancel fails
-        assertFalse(jeh.removeJob("sling/test", "myid"));
+        final Event e1 = this.jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid"));
+        assertNotNull(e1);
+        assertFalse(this.jobManager.removeJob((String)e1.getProperty(JobUtil.JOB_ID)));
         try {
             Thread.sleep(900);
         } catch (InterruptedException e) {
             // ignore
         }
         // the job is now in the queue again
-        assertTrue(jeh.removeJob("sling/test", "myid"));
-        assertEquals(0, jeh.getAllJobs("sling/test").size());
+        final Event e2 = this.jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid"));
+        assertNotNull(e2);
+        assertTrue(this.jobManager.removeJob((String)e2.getProperty(JobUtil.JOB_ID)));
+        assertEquals(0, this.getSize(this.jobManager.queryJobs(QueryType.ALL, "sling/test")));
     }
 
     /**
@@ -223,31 +230,33 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      * The job execution always fails
      */
     @org.junit.Test public void testForceCancelJob() throws Exception {
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             cb.block();
                             try {
                                 Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
-                            EventUtil.rescheduleJob(event);
+                            JobUtil.rescheduleJob(event);
                         }
 
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, "myid", null));
         cb.block();
-        assertEquals(1, jeh.getAllJobs("sling/test").size());
+        assertEquals(1, this.getSize(this.jobManager.queryJobs(QueryType.ALL, "sling/test")));
         // job is currently sleeping, but force cancel always waits!
-        jeh.forceRemoveJob("sling/test", "myid");
+        final Event e = this.jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid"));
+        assertNotNull(e);
+        this.jobManager.forceRemoveJob((String)e.getProperty(JobUtil.JOB_ID));
         // the job is now removed
-        assertEquals(0, jeh.getAllJobs("sling/test").size());
+        assertEquals(0, this.getSize(this.jobManager.queryJobs(QueryType.ALL, "sling/test")));
     }
 
     /**
@@ -256,27 +265,27 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
      */
     @org.junit.Test public void testStartJobAndReschedule() throws Exception {
         final List<Integer> retryCountList = new ArrayList<Integer>();
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         int retryCount;
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             int retry = 0;
-                            if ( event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
-                                retry = (Integer)event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
+                            if ( event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+                                retry = (Integer)event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT);
                             }
                             if ( retry == retryCount ) {
                                 retryCountList.add(retry);
                             }
                             retryCount++;
-                            EventUtil.rescheduleJob(event);
+                            JobUtil.rescheduleJob(event);
                             cb.block();
                         }
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, null, null));
         assertTrue("No event received in the given time.", cb.block(5));
         cb.reset();
@@ -298,26 +307,26 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
     @org.junit.Test public void testStartJobAndRescheduleInJobQueue() throws Exception {
         final List<Integer> retryCountList = new ArrayList<Integer>();
         final Barrier cb = new Barrier(2);
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test"},
+        final PersistenceHandler jeh = this.handler;
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
                     new EventHandler() {
                         int retryCount;
                         public void handleEvent(Event event) {
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             int retry = 0;
-                            if ( event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
-                                retry = (Integer)event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
+                            if ( event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+                                retry = (Integer)event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT);
                             }
                             if ( retry == retryCount ) {
                                 retryCountList.add(retry);
                             }
                             retryCount++;
-                            EventUtil.rescheduleJob(event);
+                            JobUtil.rescheduleJob(event);
                             cb.block();
                         }
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent("testqueue", null, null));
         assertTrue("No event received in the given time.", cb.block(5));
         cb.reset();
@@ -342,76 +351,76 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         final List<String> failed = Collections.synchronizedList(new ArrayList<String>());
         final List<String> finished = Collections.synchronizedList(new ArrayList<String>());
         final List<String> started = Collections.synchronizedList(new ArrayList<String>());
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
-        jeh.eventAdmin = new SimpleEventAdmin(new String[] {"sling/test",
-                EventUtil.TOPIC_JOB_CANCELLED,
-                EventUtil.TOPIC_JOB_FAILED,
-                EventUtil.TOPIC_JOB_FINISHED,
-                EventUtil.TOPIC_JOB_STARTED},
+        final PersistenceHandler jeh = this.handler;
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test",
+                JobUtil.TOPIC_JOB_CANCELLED,
+                JobUtil.TOPIC_JOB_FAILED,
+                JobUtil.TOPIC_JOB_FINISHED,
+                JobUtil.TOPIC_JOB_STARTED},
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(final Event event) {
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             // events 1 and 4 finish the first time
-                            final String id = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+                            final String id = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
                             if ( "1".equals(id) || "4".equals(id) ) {
-                                EventUtil.finishedJob(event);
+                                JobUtil.finishedJob(event);
                             } else
                             // 5 fails always
                             if ( "5".equals(id) ) {
-                                EventUtil.rescheduleJob(event);
+                                JobUtil.rescheduleJob(event);
                             }
                             int retry = 0;
-                            if ( event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
-                                retry = (Integer)event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
+                            if ( event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+                                retry = (Integer)event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT);
                             }
                             // 2 fails the first time
                             if ( "2".equals(id) ) {
                                 if ( retry == 0 ) {
-                                    EventUtil.rescheduleJob(event);
+                                    JobUtil.rescheduleJob(event);
                                 } else {
-                                    EventUtil.finishedJob(event);
+                                    JobUtil.finishedJob(event);
                                 }
                             }
                             // 3 fails the first and second time
                             if ( "3".equals(id) ) {
                                 if ( retry == 0 || retry == 1 ) {
-                                    EventUtil.rescheduleJob(event);
+                                    JobUtil.rescheduleJob(event);
                                 } else {
-                                    EventUtil.finishedJob(event);
+                                    JobUtil.finishedJob(event);
                                 }
                             }
                         }
                     },
                     new EventHandler() {
                         public void handleEvent(final Event event) {
-                            final Event job = (Event) event.getProperty(EventUtil.PROPERTY_NOTIFICATION_JOB);
-                            final String id = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
+                            final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
+                            final String id = (String)job.getProperty(JobUtil.PROPERTY_JOB_NAME);
                             cancelled.add(id);
                         }
                     },
                     new EventHandler() {
                         public void handleEvent(final Event event) {
-                            final Event job = (Event) event.getProperty(EventUtil.PROPERTY_NOTIFICATION_JOB);
-                            final String id = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
+                            final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
+                            final String id = (String)job.getProperty(JobUtil.PROPERTY_JOB_NAME);
                             failed.add(id);
                         }
                     },
                     new EventHandler() {
                         public void handleEvent(final Event event) {
-                            final Event job = (Event) event.getProperty(EventUtil.PROPERTY_NOTIFICATION_JOB);
-                            final String id = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
+                            final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
+                            final String id = (String)job.getProperty(JobUtil.PROPERTY_JOB_NAME);
                             finished.add(id);
                         }
                     },
                     new EventHandler() {
                         public void handleEvent(final Event event) {
-                            final Event job = (Event) event.getProperty(EventUtil.PROPERTY_NOTIFICATION_JOB);
-                            final String id = (String)job.getProperty(EventUtil.PROPERTY_JOB_ID);
+                            final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
+                            final String id = (String)job.getProperty(JobUtil.PROPERTY_JOB_NAME);
                             started.add(id);
                         }
                     }
-                });
+                }));
         jeh.handleEvent(getJobEvent(null, "1", "true"));
         jeh.handleEvent(getJobEvent(null, "2", "true"));
         jeh.handleEvent(getJobEvent(null, "3", "true"));
@@ -432,47 +441,59 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertEquals("Failed count", 5, failed.size());
     }
 
+    private void writeEvent(final Calendar finished, final String name) throws Exception {
+        final Node eventNode = RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).addNode(name, JCRHelper.JOB_NODE_TYPE);
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_TOPIC, "test");
+        eventNode.setProperty(JobUtil.PROPERTY_JOB_TOPIC, "test");
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_APPLICATION, Environment.APPLICATION_ID);
+        if ( finished != null ) {
+            eventNode.setProperty(JCRHelper.NODE_PROPERTY_FINISHED, finished);
+        }
+    }
+
     @org.junit.Test public void testCleanup() throws Exception {
         final Calendar obsolete = Calendar.getInstance();
         obsolete.add(Calendar.MINUTE, -10);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "1").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "2").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "3").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "4").setProperty(EventHelper.NODE_PROPERTY_FINISHED, obsolete);
+
+        writeEvent(obsolete, "1");
+        writeEvent(obsolete, "2");
+        writeEvent(obsolete, "3");
+        writeEvent(obsolete, "4");
 
         final Calendar future = Calendar.getInstance();
         future.add(Calendar.MINUTE, +10);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "5").setProperty(EventHelper.NODE_PROPERTY_FINISHED, future);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "6").setProperty(EventHelper.NODE_PROPERTY_FINISHED, future);
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "7");
-        handler.writeEvent(new Event("test", (Dictionary<String, Object>)null), "8");
 
-        handler.writerSession.save();
-        assertTrue(handler.getWriterRootNode().hasNode("1"));
-        assertEquals(obsolete, handler.getWriterRootNode().getNode("1").getProperty(EventHelper.NODE_PROPERTY_FINISHED).getDate());
-        assertTrue(handler.getWriterRootNode().hasNode("2"));
-        assertTrue(handler.getWriterRootNode().hasNode("3"));
-        assertTrue(handler.getWriterRootNode().hasNode("4"));
-        assertTrue(handler.getWriterRootNode().hasNode("5"));
-        assertTrue(handler.getWriterRootNode().hasNode("6"));
-        assertTrue(handler.getWriterRootNode().hasNode("7"));
-        assertTrue(handler.getWriterRootNode().hasNode("8"));
+        writeEvent(future, "5");
+        writeEvent(future, "6");
+        writeEvent(null, "7");
+        writeEvent(null, "8");
 
-        ((JobEventHandler)handler).run();
+        RepositoryTestUtil.getAdminSession().save();
+        assertEquals(obsolete, RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).getNode("1").getProperty(JCRHelper.NODE_PROPERTY_FINISHED).getDate());
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("2"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("3"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("4"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("5"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("6"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("7"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("8"));
 
-        assertFalse(handler.getWriterRootNode().hasNode("1"));
-        assertFalse(handler.getWriterRootNode().hasNode("2"));
-        assertFalse(handler.getWriterRootNode().hasNode("3"));
-        assertFalse(handler.getWriterRootNode().hasNode("4"));
-        assertTrue(handler.getWriterRootNode().hasNode("5"));
-        assertTrue(handler.getWriterRootNode().hasNode("6"));
-        assertTrue(handler.getWriterRootNode().hasNode("7"));
-        assertTrue(handler.getWriterRootNode().hasNode("8"));
+        handler.run();
+
+        assertFalse(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("1"));
+        assertFalse(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("2"));
+        assertFalse(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("3"));
+        assertFalse(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("4"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("5"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("6"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("7"));
+        assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("8"));
     }
 
-    @org.junit.Test public void testLoad() throws Exception {
+    @org.junit.Test public void testLoad() throws Throwable {
         final List<Integer> retryCountList = new ArrayList<Integer>();
-        final JobEventHandler jeh = (JobEventHandler)this.handler;
+        final PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
         final EventAdmin ea = new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
@@ -480,18 +501,18 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                         int retryCount;
                         public void handleEvent(Event event) {
                             retryCountList.add(retryCount);
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             if ( retryCount == 0 ) {
-                                EventUtil.rescheduleJob(event);
+                                JobUtil.rescheduleJob(event);
                             } else {
-                                EventUtil.finishedJob(event);
+                                JobUtil.finishedJob(event);
                             }
                             retryCount++;
                             cb.block();
                         }
                     }
                 });
-        jeh.eventAdmin = ea;
+        setEventAdmin(ea);
         jeh.handleEvent(getJobEvent(null, null, null));
         assertTrue("No event received in the given time.", cb.block(5));
         cb.reset();
@@ -507,10 +528,10 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertEquals("Unexpected number of retries", 2, retryCountList.size());
     }
 
-    @org.junit.Test public void testRunLocal() throws Exception {
+    @org.junit.Test public void testRunLocal() throws Throwable {
         final List<Integer> retryCountList = new ArrayList<Integer>();
         final List<String> sessionPath = new ArrayList<String>();
-        JobEventHandler jeh = (JobEventHandler)this.handler;
+        PersistenceHandler jeh = this.handler;
         final Barrier cb = new Barrier(2);
         final EventAdmin ea = new SimpleEventAdmin(new String[] {"sling/test"},
                 new EventHandler[] {
@@ -518,21 +539,20 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
                         int retryCount;
                         public void handleEvent(Event event) {
                             retryCountList.add(retryCount);
-                            EventUtil.acknowledgeJob(event);
+                            JobUtil.acknowledgeJob(event);
                             if ( retryCount == 0 || retryCount == 1) {
                                 // get the job node from the context
-                                final JobStatusNotifier.NotifierContext ctx = (JobStatusNotifier.NotifierContext) event.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-                                sessionPath.add(ctx.eventNodePath);
-                                EventUtil.rescheduleJob(event);
+                                sessionPath.add((String)event.getProperty(JobUtil.JOB_ID));
+                                JobUtil.rescheduleJob(event);
                             } else {
-                                EventUtil.finishedJob(event);
+                                JobUtil.finishedJob(event);
                             }
                             retryCount++;
                             cb.block();
                         }
                     }
                 });
-        jeh.eventAdmin = ea;
+        setEventAdmin(ea);
         // first test: local event and we change the application id
         jeh.handleEvent(getJobEvent(null, null, null, true));
         assertTrue("No event received in the given time.", cb.block(5));
@@ -543,12 +563,12 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertEquals("Unexpected number of retries", 1, retryCountList.size());
         assertEquals("Unexpected number of paths", 1, sessionPath.size());
         // change app id
-        final String nodePath = sessionPath.get(0);
-        session.getNode(nodePath).setProperty(EventHelper.NODE_PROPERTY_APPLICATION, "unknown");
+        final String nodePath = REPO_PATH + '/' + sessionPath.get(0);
+        session.getNode(nodePath).setProperty(JCRHelper.NODE_PROPERTY_APPLICATION, "unknown");
         session.save();
 
         this.activate(ea);
-        jeh = (JobEventHandler)this.handler;
+        jeh = this.handler;
         // the job is not retried after loading, so we wait again
         assertFalse("Unexpected event received in the given time.", cb.block(5));
         cb.reset();
@@ -571,5 +591,48 @@ public class JobEventHandlerTest extends AbstractRepositoryEventHandlerTest {
         assertFalse("Unexpected event received in the given time.", cb.block(5));
         cb.reset();
         assertEquals("Unexpected number of retries", 3, retryCountList.size());
+    }
+
+    @org.junit.Test public void testManyJobs() throws Exception {
+        final PersistenceHandler jeh = this.handler;
+        final AtomicInteger count = new AtomicInteger(0);
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test",
+                JobUtil.TOPIC_JOB_FINISHED},
+                new EventHandler[] {
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            JobUtil.processJob(event, new JobProcessor() {
+
+                                public boolean process(Event job) {
+                                    try {
+                                        Thread.sleep(200);
+                                    } catch (InterruptedException ie) {
+                                        // ignore
+                                    }
+                                    return true;
+                                }
+                            });
+                        }
+                    },
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            count.incrementAndGet();
+                        }
+                    }}));
+        // we start "some" jobs
+        final int COUNT = 300;
+        for(int i = 0; i < COUNT; i++ ) {
+            final String queueName = "queue" + (i % 20);
+            jeh.handleEvent(getJobEvent(queueName, null, "2"));
+        }
+        while ( count.get() < COUNT ) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        assertEquals("Finished count", COUNT, count.get());
+        assertEquals("Finished count", COUNT, this.jobManager.getStatistics().getNumberOfFinishedJobs());
     }
 }

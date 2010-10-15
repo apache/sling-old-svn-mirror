@@ -33,6 +33,8 @@ import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
+import org.apache.sling.event.impl.support.Environment;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -59,7 +61,7 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
     }
 
     @org.junit.Test public void testSetup() throws RepositoryException {
-        assertEquals(this.handler.applicationId, SLING_ID);
+        assertEquals(Environment.APPLICATION_ID, SLING_ID);
         assertEquals(this.handler.repositoryPath, REPO_PATH);
         assertNotNull(this.handler.writerSession);
         final EventListenerIterator iter = this.handler.writerSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
@@ -82,9 +84,9 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         final NodeIterator iter = rootNode.getNodes();
         iter.hasNext();
         final Node eventNode = iter.nextNode();
-        assertEquals(topic, eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString());
-        assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
-        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
+        assertEquals(topic, eventNode.getProperty(JCRHelper.NODE_PROPERTY_TOPIC).getString());
+        assertEquals(Environment.APPLICATION_ID, eventNode.getProperty(JCRHelper.NODE_PROPERTY_APPLICATION).getString());
+        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
         assertTrue(eventNode.hasProperty(ISO9075.encode("a property")));
     }
@@ -100,9 +102,9 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         final NodeIterator iter = rootNode.getNodes();
         iter.hasNext();
         final Node eventNode = iter.nextNode();
-        assertEquals(topic, eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString());
-        assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
-        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
+        assertEquals(topic, eventNode.getProperty(JCRHelper.NODE_PROPERTY_TOPIC).getString());
+        assertEquals(Environment.APPLICATION_ID, eventNode.getProperty(JCRHelper.NODE_PROPERTY_APPLICATION).getString());
+        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
         assertTrue(eventNode.hasProperty(ISO9075.encode("a property")));
     }

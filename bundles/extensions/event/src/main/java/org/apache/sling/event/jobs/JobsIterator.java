@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event;
+package org.apache.sling.event.jobs;
+
+import java.util.Iterator;
 
 import org.osgi.service.event.Event;
 
@@ -24,19 +26,27 @@ import org.osgi.service.event.Event;
  * This <code>Iterator</code> allows to iterate over {@link Event}s.
  * In addition to an iterator it might return the number of elements
  * in the collection and allows to skip several elements.
- * If the iterator is not used to iterate through the whole collection
- * of jobs, the {@link #close()} method must be called in order to
- * free resources!
- * @deprecated
+ * @since 3.0
  */
-@Deprecated
-public interface JobsIterator extends org.apache.sling.event.jobs.JobsIterator {
+public interface JobsIterator extends Iterator<Event>, Iterable<Event> {
 
     /**
-     * Releases this iterators resources immediately instead of waiting for this
-     * to happen when it is automatically closed. After a call to close, this
-     * iterator should not be used anymore.
-     * The iterator is closed automatically when it reaches it's end.
+     * Skip a number of jobs.
+     * @param skipNum the non-negative number of elements to skip
+     * @throws java.util.NoSuchElementException
+     *          if skipped past the last job in the iterator.
      */
-    void close();
+    void skip(long skipNum);
+
+    /**
+     * Returns the total number of jobs. In some cases a precise information
+     * is not available. In these cases -1 is returned.
+     */
+    long getSize();
+
+    /**
+     * Returns the current position within the iterator. The number returned is
+     * the 0-based index of the next job.
+     */
+    long getPosition();
 }

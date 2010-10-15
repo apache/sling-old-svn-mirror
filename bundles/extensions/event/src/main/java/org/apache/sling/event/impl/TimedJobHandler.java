@@ -58,6 +58,10 @@ import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.TimedEventStatusProvider;
+import org.apache.sling.event.impl.jobs.Utility;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
+import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -79,17 +83,17 @@ public class TimedJobHandler
     extends AbstractRepositoryEventHandler
     implements Job, TimedEventStatusProvider {
 
-    protected static final String JOB_TOPIC = "topic";
+    private static final String JOB_TOPIC = "topic";
 
-    protected static final String JOB_CONFIG = "config";
+    private static final String JOB_CONFIG = "config";
 
-    protected static final String JOB_SCHEDULE_INFO = "info";
+    private static final String JOB_SCHEDULE_INFO = "info";
 
     @Reference
-    protected Scheduler scheduler;
+    private Scheduler scheduler;
 
     /** Unloaded events. */
-    protected Set<String>unloadedEvents = new HashSet<String>();
+    private Set<String>unloadedEvents = new HashSet<String>();
 
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
@@ -346,7 +350,7 @@ public class TimedJobHandler
                     if ( "jcr:lockOwner".equals(propertyName) ) {
                         try {
                             if ( s == null ) {
-                                s = this.createSession();
+                                s = this.environment.createAdminSession();
                             }
                             final Node eventNode = (Node) s.getItem(nodePath);
                             if ( !eventNode.isLocked() ) {
@@ -412,7 +416,7 @@ public class TimedJobHandler
                             final Set<String> newUnloadedEvents = new HashSet<String>();
                             newUnloadedEvents.addAll(unloadedEvents);
                             try {
-                                s = createSession();
+                                s = environment.createAdminSession();
                                 for(String path : unloadedEvents ) {
                                     newUnloadedEvents.remove(path);
                                     try {
@@ -455,7 +459,7 @@ public class TimedJobHandler
                     }
 
                 };
-                this.threadPool.execute(t);
+                Environment.THREAD_POOL.execute(t);
             }
         }
     }
@@ -467,7 +471,7 @@ public class TimedJobHandler
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
         @SuppressWarnings("unchecked")
         final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);
-        final EventAdmin ea = this.eventAdmin;
+        final EventAdmin ea = this.environment.getEventAdmin();
         if ( ea != null ) {
             try {
                 ea.postEvent(new Event(topic, properties));
@@ -484,7 +488,7 @@ public class TimedJobHandler
             // we create an own session here
             Session s = null;
             try {
-                s = this.createSession();
+                s = this.environment.createAdminSession();
                 if ( s.itemExists(this.repositoryPath) ) {
                     final Node parentNode = (Node)s.getItem(this.repositoryPath);
                     final String nodeName = info.jobId;
@@ -565,18 +569,18 @@ public class TimedJobHandler
     protected void addNodeProperties(Node eventNode, Event event)
     throws RepositoryException {
         super.addNodeProperties(eventNode, event);
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
+        eventNode.setProperty(JCRHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
         final ScheduleInfo info = new ScheduleInfo(event);
         if ( info.date != null ) {
             final Calendar c = Calendar.getInstance();
             c.setTime(info.date);
-            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_DATE, c);
+            eventNode.setProperty(JCRHelper.NODE_PROPERTY_TE_DATE, c);
         }
         if ( info.expression != null ) {
-            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_EXPRESSION, info.expression);
+            eventNode.setProperty(JCRHelper.NODE_PROPERTY_TE_EXPRESSION, info.expression);
         }
         if ( info.period != null ) {
-            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_PERIOD, info.period.longValue());
+            eventNode.setProperty(JCRHelper.NODE_PROPERTY_TE_PERIOD, info.period.longValue());
         }
     }
 
@@ -584,7 +588,7 @@ public class TimedJobHandler
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
      */
     protected String getEventNodeType() {
-        return EventHelper.TIMED_EVENT_NODE_TYPE;
+        return JCRHelper.TIMED_EVENT_NODE_TYPE;
     }
 
     protected static final class ScheduleInfo implements Serializable {
@@ -624,7 +628,7 @@ public class TimedJobHandler
                 throw new IllegalArgumentException("Timed event does not contain required property " + EventUtil.PROPERTY_TIMED_EVENT_TOPIC);
             }
             String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
-            String jId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+            String jId = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
 
             //this.jobId = getJobId(topic, id, jId);
             this.jobId = getJobId(topic, id, jId);
@@ -646,7 +650,7 @@ public class TimedJobHandler
         }
 
         public static String getJobId(String topic, String timedEventId, String jobId) {
-            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? EventHelper.filter(timedEventId) : "") + '_' + (jobId != null ? EventHelper.filter(jobId) : "");
+            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? Utility.filter(timedEventId) : "") + '_' + (jobId != null ? Utility.filter(jobId) : "");
         }
     }
 
@@ -656,7 +660,7 @@ public class TimedJobHandler
     public Event getScheduledEvent(String topic, String eventId, String jobId) {
         Session s = null;
         try {
-            s = this.createSession();
+            s = this.environment.createAdminSession();
             if ( s.itemExists(this.repositoryPath) ) {
                 final Node parentNode = (Node)s.getItem(this.repositoryPath);
                 final String nodeName = ScheduleInfo.getJobId(topic, eventId, jobId);
@@ -685,7 +689,7 @@ public class TimedJobHandler
         Session s = null;
         final List<Event> jobs = new ArrayList<Event>();
         try {
-            s = this.createSession();
+            s = this.environment.createAdminSession();
             final QueryManager qManager = s.getWorkspace().getQueryManager();
             final String selectorName = "nodetype";
 
@@ -706,10 +710,10 @@ public class TimedJobHandler
                     while ( i.hasNext() ) {
                         final Map.Entry<String, Object> current = i.next();
                         // check prop name first
-                        final String propName = EventHelper.getNodePropertyName(current.getKey());
+                        final String propName = JCRHelper.getNodePropertyName(current.getKey());
                         if ( propName != null ) {
                             // check value
-                            final Value value = EventHelper.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                            final Value value = JCRHelper.getNodePropertyValue(s.getValueFactory(), current.getValue());
                             if ( value != null ) {
                                 final Comparison newComp = qomf.comparison(qomf.propertyValue(selectorName, propName),
                                         QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,

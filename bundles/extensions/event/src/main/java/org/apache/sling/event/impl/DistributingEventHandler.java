@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -64,13 +65,13 @@ public class DistributingEventHandler
     implements Runnable {
 
     /** Default clean up time is 15 minutes. */
-    protected static final int DEFAULT_CLEANUP_PERIOD = 15;
+    private static final int DEFAULT_CLEANUP_PERIOD = 15;
 
     @Property(intValue=DEFAULT_CLEANUP_PERIOD)
-    protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
+    private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** We remove everything which is older than 15min by default. */
-    protected int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
+    private int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
 
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
@@ -96,7 +97,7 @@ public class DistributingEventHandler
         final Query q = qomf.createQuery(
                 qomf.selector(getEventNodeType(), selectorName),
                 qomf.and(qomf.descendantNode(selectorName, this.repositoryPath),
-                         qomf.comparison(qomf.propertyValue(selectorName, EventHelper.NODE_PROPERTY_CREATED),
+                         qomf.comparison(qomf.propertyValue(selectorName, JCRHelper.NODE_PROPERTY_CREATED),
                                        QueryObjectModelFactory.JCR_OPERATOR_LESS_THAN,
                                        qomf.literal(s.getValueFactory().createValue(deleteBefore)))),
                 null,
@@ -116,7 +117,7 @@ public class DistributingEventHandler
             // we create an own session for concurrency issues
             Session s = null;
             try {
-                s = this.createSession();
+                s = this.environment.createAdminSession();
                 final Query q = this.getCleanUpQuery(s);
                 if ( logger.isDebugEnabled() ) {
                     logger.debug("Executing query {}", q.getStatement());
@@ -182,10 +183,10 @@ public class DistributingEventHandler
                 if ( info.nodePath != null) {
                     Session session = null;
                     try {
-                        session = this.createSession();
+                        session = this.environment.createAdminSession();
                         final Node eventNode = (Node)session.getItem(info.nodePath);
                         if ( eventNode.isNodeType(this.getEventNodeType()) ) {
-                            final EventAdmin localEA = this.eventAdmin;
+                            final EventAdmin localEA = this.environment.getEventAdmin();
                             if ( localEA != null ) {
                                 localEA.postEvent(this.readEvent(eventNode));
                             } else {
@@ -241,7 +242,7 @@ public class DistributingEventHandler
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
     throws RepositoryException {
         super.addEventProperties(eventNode, properties);
-        properties.put(EventUtil.PROPERTY_APPLICATION, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
+        properties.put(EventUtil.PROPERTY_APPLICATION, eventNode.getProperty(JCRHelper.NODE_PROPERTY_APPLICATION).getString());
     }
 
 

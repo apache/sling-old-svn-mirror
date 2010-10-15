@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.job;
+package org.apache.sling.event.impl.jobs;
 
 import org.osgi.service.event.Event;
 
@@ -25,23 +25,24 @@ public interface JobStatusNotifier {
     String CONTEXT_PROPERTY_NAME = JobStatusNotifier.class.getName();
 
     class NotifierContext {
-        public final JobStatusNotifier notifier;
-        public final String eventNodePath;
+        private final JobStatusNotifier notifier;
 
-        public NotifierContext(JobStatusNotifier n, String path) {
+        public NotifierContext(final JobStatusNotifier n) {
             this.notifier = n;
-            this.eventNodePath = path;
+        }
+
+        public JobStatusNotifier getJobStatusNotifier() {
+            return this.notifier;
         }
     }
 
     /**
      * Send an acknowledge message that someone is processing the job.
      * @param job The job.
-     * @param eventNodePath The storage node in the repository.
      * @return <code>true</code> if the ack is ok, <code>false</code> otherwise (e.g. if
      *   someone else already send an ack for this job.
      */
-    boolean sendAcknowledge(Event job, String eventNodePath);
+    boolean sendAcknowledge(Event job);
 
     /**
      * Notify that the job is finished.
@@ -50,9 +51,8 @@ public interface JobStatusNotifier {
      * that the job could be rescheduled. If an error occurs or the number of retries is
      * exceeded, <code>false</code> will be returned.
      * @param job The job.
-     * @param eventNodePath The storage node in the repository.
      * @param reschedule Should the event be rescheduled?
      * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
      */
-    boolean finishedJob(Event job, String eventNodePath, boolean reschedule);
+    boolean finishedJob(Event job, boolean reschedule);
 }

@@ -18,15 +18,14 @@
  */
 package org.apache.sling.event;
 
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.apache.sling.event.impl.AbstractRepositoryEventHandler;
-import org.apache.sling.event.impl.JobEventHandler;
-import org.apache.sling.event.impl.job.JobStatusNotifier;
+import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>EventUtil</code> class is an utility class for
@@ -44,10 +43,16 @@ public abstract class EventUtil {
      * Job Handling
      */
 
-    /** The job topic property. */
+    /** The job topic property.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_TOPIC}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
 
-    /** The property for the unique event id. Value is of type String (This is optional). */
+    /** The property for the unique event id. Value is of type String (This is optional).
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_NAME}
+     * */
+    @Deprecated
     public static final String PROPERTY_JOB_ID = "event.job.id";
 
     /** The property to set if a job can be run parallel to any other job.
@@ -58,59 +63,93 @@ public abstract class EventUtil {
      * parallel but never more than the specified number.
      *
      * We might want to use different values in the future for enhanced
-     * parallel job handling. */
+     * parallel job handling.
+     *
+     * This value is only used, if {@link JobUtil#PROPERTY_JOB_QUEUE_NAME} is
+     * specified and the referenced queue is not started yet.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_PARALLEL}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_PARALLEL = "event.job.parallel";
 
-    /** The property to set if a job should only be run on the same app it has been created. */
+    /**
+     * The property to set if a job should only be run on the same app it has been created.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_RUN_LOCAL}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_RUN_LOCAL = "event.job.run.local";
 
-    /** The property to track the retry count for jobs. Value is of type Integer. */
+    /**
+     * The property to track the retry count for jobs. Value is of type Integer.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_RETRY_COUNT}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_RETRY_COUNT = "event.job.retrycount";
 
-    /** The property for setting the maximum number of retries. Value is of type Integer. */
+    /**
+     * The property for setting the maximum number of retries. Value is of type Integer.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_RETRIES}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_RETRIES = "event.job.retries";
 
-    /** The property to set a retry delay. Value is of type Long and specifies milliseconds. */
+    /**
+     * The property to set a retry delay. Value is of type Long and specifies milliseconds.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_RETRY_DELAY}
+     */
+    @Deprecated
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
     /** The property to set to put the jobs into a separate job queue. This property
      * specifies the name of the job queue. If the job queue does not exists yet
      * a new queue is created.
      * If a ordered job queue is used, the jobs are never executed in parallel
-     * from this queue! For non ordered queues the {@link #PROPERTY_JOB_PARALLEL}
+     * from this queue! For non ordered queues the {@link JobUtil#PROPERTY_JOB_PARALLEL}
      * with an integer value higher than 1 can be used to specify the maximum number
      * of parallel jobs for this queue.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_QUEUE_NAME}
      */
+    @Deprecated
     public static final String PROPERTY_JOB_QUEUE_NAME = "event.job.queuename";
 
-    /** If this property is set with any value, the queue processes the jobs in the same
+    /**
+     * If this property is set with any value, the queue processes the jobs in the same
      * order as they have arrived.
      * This property has only an effect if {@link #PROPERTY_JOB_QUEUE_NAME} is specified
-     * and starting with version 2.2 this value is only checked in the first job for this
-     * queue.
+     * and the job queue has not been started yet.
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_QUEUE_ORDERED}
      */
+    @Deprecated
     public static final String PROPERTY_JOB_QUEUE_ORDERED = "event.job.queueordered";
 
-    /** This property allows to override the priority for the thread used to start this job.
-     * The property is evaluated by the {@link #processJob(Event, JobProcessor)} method.
+    /**
+     * This property allows to override the priority for the thread used to start this job.
+     * The property is evaluated by the {@link JobUtil#processJob(Event, org.apache.sling.event.jobs.JobProcessor)} method.
      * If another way of executing the job is used, it is up to the client to ensure
      * the job priority.
      * For possible values see {@link JobPriority}.
      * @since 2.4
+     * @deprecated Use {@link JobUtil#PROPERTY_JOB_PRIORITY}
      */
+    @Deprecated
     public static final String PROPERTY_JOB_PRIORITY = "event.job.priority";
 
     /**
      * The priority for jobs.
      * @since 2.4
+     * @deprecated Use {@link JobUtil.JobPriority}
      */
     public enum JobPriority {
         NORM,
         MIN,
         MAX
-    };
+    }
 
-    /** The topic for jobs. */
+    /**
+     * The topic for jobs.
+     * @deprecated Use {@link JobUtil#TOPIC_JOB}
+     */
+    @Deprecated
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
 
     /**
@@ -143,14 +182,20 @@ public abstract class EventUtil {
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
-     * @since 2.2 */
+     * @since 2.2
+     * @deprecated Use {@link JobUtil#TOPIC_JOB_STARTED}
+     */
+    @Deprecated
     public static final String TOPIC_JOB_STARTED = "org/apache/sling/event/notification/job/START";
 
     /** Asynchronous notification event when a job is finished.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
-     * @since 2.2 */
+     * @since 2.2
+     * @deprecated Use {@link JobUtil#TOPIC_JOB_FINISHED}
+     */
+    @Deprecated
     public static final String TOPIC_JOB_FINISHED = "org/apache/sling/event/notification/job/FINISHED";
 
     /** Asynchronous notification event when a job failed.
@@ -158,7 +203,10 @@ public abstract class EventUtil {
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
-     * @since 2.2 */
+     * @since 2.2
+     * @deprecated Use {@link JobUtil#TOPIC_JOB_FAILED}
+     */
+    @Deprecated
     public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
 
     /** Asynchronous notification event when a job is cancelled.
@@ -166,11 +214,17 @@ public abstract class EventUtil {
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
      * timestamp of the event (as a Long).
-     * @since 2.2 */
+     * @since 2.2
+     * @deprecated Use {@link JobUtil#TOPIC_JOB_CANCELLED}
+     */
+    @Deprecated
     public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
 
     /** Property containing the job event.
-     * @since 2.2 */
+     * @since 2.2
+     * @deprecated Use {@link JobUtil#PROPERTY_NOTIFICATION_JOB}
+     */
+    @Deprecated
     public static final String PROPERTY_NOTIFICATION_JOB = "event.notification.job";
 
     /**
@@ -217,7 +271,7 @@ public abstract class EventUtil {
      */
     public static boolean isLocal(final Event event) {
         final String appId = getApplicationId(event);
-        return appId == null || appId.equals(AbstractRepositoryEventHandler.APPLICATION_ID);
+        return appId == null || appId.equals(Environment.APPLICATION_ID);
     }
 
     /**
@@ -227,150 +281,6 @@ public abstract class EventUtil {
      */
     public static String getApplicationId(final Event event) {
         return (String)event.getProperty(PROPERTY_APPLICATION);
-    }
-
-    /**
-     * Is this a job event?
-     * This method checks if the event contains the {@link #PROPERTY_JOB_TOPIC}
-     * property.
-     * @param event The event to check.
-     * @return <code>true></code> if this is a job event.
-     */
-    public static boolean isJobEvent(final Event event) {
-        return event.getProperty(PROPERTY_JOB_TOPIC) != null;
-    }
-
-    /**
-     * Check if this a job event and return the notifier context.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
-     */
-    private static JobStatusNotifier.NotifierContext getNotifierContext(final Event job) {
-        // check if this is a job event
-        if ( !isJobEvent(job) ) {
-            return null;
-        }
-        final JobStatusNotifier.NotifierContext ctx = (JobStatusNotifier.NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-        if ( ctx == null ) {
-            throw new IllegalArgumentException("JobStatusNotifier context is not available in event properties.");
-        }
-        return ctx;
-    }
-
-    /**
-     * Send an acknowledge.
-     * This signals the job handler that someone is starting to process the job. This method
-     * should be invoked as a first command during job processing.
-     * If this method returns <code>false</code> this means someone else is already
-     * processing this job, and the caller should not process the event anymore.
-     * @return Returns <code>true</code> if the acknowledge could be sent
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
-     * @since 2.3
-     */
-    public static boolean acknowledgeJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-        if ( ctx != null ) {
-            if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
-                // if we don't get an ack, someone else is already processing this job.
-                // we process but do not notify the job event handler.
-                LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Notify a finished job.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
-     */
-    public static void finishedJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-        if ( ctx != null ) {
-            ctx.notifier.finishedJob(job, ctx.eventNodePath, false);
-        }
-    }
-
-    /**
-     * Notify a failed job.
-     * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
-     */
-    public static boolean rescheduleJob(final Event job) {
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-        if ( ctx != null ) {
-            return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
-        }
-        return false;
-    }
-
-    /**
-     * Process a job in the background and notify its success.
-     * This method also sends an acknowledge message to the job event handler.
-     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
-     */
-    public static void processJob(final Event job, final JobProcessor processor) {
-        // first check for a notifier context to send an acknowledge
-        boolean notify = true;
-        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-        if ( ctx != null ) {
-            if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
-                // if we don't get an ack, someone else is already processing this job.
-                // we process but do not notify the job event handler.
-                LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
-                notify = false;
-            }
-        }
-        final JobPriority priority = (JobPriority) job.getProperty(PROPERTY_JOB_PRIORITY);
-        final boolean notifyResult = notify;
-
-        final Runnable task = new Runnable() {
-
-            /**
-             * @see java.lang.Runnable#run()
-             */
-            public void run() {
-                // update priority
-                final int oldPriority = Thread.currentThread().getPriority();
-                if ( priority != null ) {
-                    switch ( priority ) {
-                        case NORM : Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
-                                    break;
-                        case MIN  : Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-                                    break;
-                        case MAX  : Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-                                    break;
-                    }
-                }
-                boolean result = false;
-                try {
-                    result = processor.process(job);
-                } catch (Throwable t) { //NOSONAR
-                    LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
-                    // we don't reschedule if an exception occurs
-                    result = true;
-                } finally {
-                    Thread.currentThread().setPriority(oldPriority);
-                    if ( notifyResult ) {
-                        if ( result ) {
-                            EventUtil.finishedJob(job);
-                        } else {
-                            EventUtil.rescheduleJob(job);
-                        }
-                    }
-                }
-            }
-
-        };
-        // check if the job handler thread pool is available
-        if ( JobEventHandler.JOB_THREAD_POOL != null ) {
-            JobEventHandler.JOB_THREAD_POOL.execute(task);
-        } else {
-            // if we don't have a thread pool, we create the thread directly
-            // (this should never happen for jobs, but is a safe fallback and
-            // allows to call this method for other background processing.
-            new Thread(task).start();
-        }
     }
 
     /**
@@ -395,10 +305,82 @@ public abstract class EventUtil {
                 }
                 buffer.append(names[i]);
                 buffer.append('=');
-                buffer.append(e.getProperty(names[i]));
+                final Object value = e.getProperty(names[i]);
+                // the toString() method of Calendar is very verbose
+                // therefore we do a toString for these objects based
+                // on a date
+                if ( value instanceof Calendar ) {
+                    buffer.append(value.getClass().getName());
+                    buffer.append('(');
+                    buffer.append(((Calendar)value).getTime());
+                    buffer.append(')');
+                } else {
+                    buffer.append(value);
+                }
             }
         }
         buffer.append("]");
         return buffer.toString();
+    }
+
+    /**
+     * Is this a job event?
+     * This method checks if the event contains the {@link #PROPERTY_JOB_TOPIC}
+     * property.
+     * @param event The event to check.
+     * @return <code>true></code> if this is a job event.
+     * @deprecated Use {@link JobUtil#isJobEvent(Event)}
+     */
+    @Deprecated
+    public static boolean isJobEvent(final Event event) {
+        return JobUtil.isJobEvent(event);
+    }
+
+    /**
+     * Send an acknowledge.
+     * This signals the job handler that someone is starting to process the job. This method
+     * should be invoked as a first command during job processing.
+     * If this method returns <code>false</code> this means someone else is already
+     * processing this job, and the caller should not process the event anymore.
+     * @return Returns <code>true</code> if the acknowledge could be sent
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
+     * @since 2.3
+     * @deprecated Use {@link JobUtil#acknowledgeJob(Event)}
+     */
+    @Deprecated
+    public static boolean acknowledgeJob(final Event job) {
+        return JobUtil.acknowledgeJob(job);
+    }
+
+    /**
+     * Notify a finished job.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
+     * @deprecated Use {link {@link JobUtil#finishedJob(Event)}
+     */
+    @Deprecated
+    public static void finishedJob(final Event job) {
+        JobUtil.finishedJob(job);
+    }
+
+    /**
+     * Notify a failed job.
+     * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
+     * @deprecated Use {@link JobUtil#rescheduleJob(Event)}
+     */
+    @Deprecated
+    public static boolean rescheduleJob(final Event job) {
+        return JobUtil.rescheduleJob(job);
+    }
+
+    /**
+     * Process a job in the background and notify its success.
+     * This method also sends an acknowledge message to the job event handler.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
+     * @deprecated Use {@link JobUtil#processJob(Event, org.apache.sling.event.jobs.JobProcessor)}
+     */
+    @Deprecated
+    public static void processJob(final Event job, final JobProcessor processor) {
+        JobUtil.processJob(job, processor);
     }
 }
