@@ -52,8 +52,14 @@ public class SimpleEventAdmin implements EventAdmin {
     public void sendEvent(Event event) {
         if ( topics != null ) {
             for(int i=0; i<topics.length; i++) {
-                if ( topics[i].equals(event.getTopic()) ) {
-                    handler[i].handleEvent(event);
+                if ( topics[i].endsWith("*") ) {
+                    if ( event.getTopic().startsWith(topics[i].substring(0, topics[i].length() - 1)) ) {
+                        handler[i].handleEvent(event);
+                    }
+                } else {
+                    if ( topics[i].equals(event.getTopic()) ) {
+                        handler[i].handleEvent(event);
+                    }
                 }
             }
         }

@@ -43,10 +43,14 @@ public abstract class AbstractJobEventHandlerTest extends AbstractTest {
 
     protected volatile QueueConfigurationManager configManager;
 
+    protected QueueConfigurationManager createQueueConfigManager() {
+        return new QueueConfigurationManager();
+    }
+
     protected void activate(final EventAdmin ea) throws Throwable {
         super.activate(ea);
         this.jobManager = new DefaultJobManager();
-        this.configManager = new QueueConfigurationManager();
+        this.configManager = this.createQueueConfigManager();
         PrivateAccessor.setField(this.jobManager, "configManager", this.configManager);
         PrivateAccessor.setField(this.jobManager, "environment", this.environment);
         PrivateAccessor.setField(this.jobManager, "scheduler", new SimpleScheduler());
