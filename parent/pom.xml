@@ -172,6 +172,30 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             </plugin>
 
             <plugin>
+                <groupId>org.codehaus.groovy.maven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <executions>
+                    <!-- store the project's source dir in a comma-delimited list for the emma report. -->
+                    <execution>
+                        <id>save-bundle-metadata</id>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <source>
+                                if (!session.executionProperties.sourceDirs) {
+                                    session.executionProperties.sourceDirs = "${basedir}/src/main/java"
+                                } else {
+                                    session.executionProperties.sourceDirs += ",${basedir}/src/main/java"
+                                }
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ianal-maven-plugin</artifactId>
                 <executions>
@@ -182,6 +206,24 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <configuration>
                             <!-- Fail the build if any artifacts are missing legal files -->
                             <strict>true</strict>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>emma-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>instrument</goal>
+                        </goals>
+                        <configuration>
+                            <metadataFile>${user.dir}/coverage.em</metadataFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -256,6 +298,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                     <version>2.0.1</version>
                     <inherited>true</inherited>
                     <configuration>
+                        <outputDirectory>${basedir}/target/classes</outputDirectory>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
@@ -265,6 +308,19 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         </instructions>
                     </configuration>
+                    <executions>
+                        <execution>
+                            <id>emma-bundle</id>
+                            <goals>
+                                <goal>bundle</goal>
+                            </goals>
+                            <phase>package</phase>
+                            <configuration>
+                                <classifier>emma</classifier>
+                                <outputDirectory>${basedir}/target/generated-classes/emma/classes</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

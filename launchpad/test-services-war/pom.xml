@@ -60,6 +60,14 @@
                             <goal>manifest</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>emma-bundle</id>
+                        <configuration>
+                            <supportedProjectTypes>
+                                <supportedProjectType>bundle</supportedProjectType>
+                            </supportedProjectTypes>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <instructions>
@@ -90,6 +98,16 @@
                             <directory>target/scr-plugin-generated</directory>
                         </resouce>
                     </webResources>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>emma-maven-plugin</artifactId>
+                <configuration>
+                    <filters>
+                        <filter>-*</filter>
+                    </filters>
                 </configuration>
             </plugin>
         </plugins>
