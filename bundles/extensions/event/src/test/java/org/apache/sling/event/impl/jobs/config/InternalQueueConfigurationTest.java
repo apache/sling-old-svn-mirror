@@ -52,6 +52,9 @@ public class InternalQueueConfigurationTest {
             public void finished() {
                 // dummy
             }
+            public void restart() {
+                // dummy
+            }
         };
     }
     @org.junit.Test public void testMaxParallel() {
