@@ -142,22 +142,31 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
         final String statusMessage = ResponseUtil.escapeXml(statusMessageIn);
 
         // set the status code and content type in the response
-        final PrintWriter pw = response.getWriter();
+        final PrintWriter pw;
         if(!response.isCommitted()) {
-            response.setStatus(statusCode);
-            response.setContentType("text/html; charset=UTF-8");
 
+            response.reset();
+            response.setStatus(statusCode);
+            response.setContentType("text/html");
+            response.setCharacterEncoding("UTF-8");
+
+            pw = response.getWriter();
             pw.println("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
             pw.println("<html>");
             pw.println("<head>");
             pw.println("<title>" + statusCode + " " + statusMessage + "</title>");
             pw.println("</head>");
             pw.println("<body>");
+
         } else {
+
             // Response already committed: don't change status or write HTML prolog, but report
             // the error inline and warn about that
             log.warn("Response already committed, unable to change status, output might not be well formed");
+            pw = response.getWriter();
+
         }
+
         pw.println("<h1>" + statusMessage + " (" + statusCode + ")</h1>");
         pw.print("<p>The requested URL " + ResponseUtil.escapeXml(requestUri)
             + " resulted in an error");
