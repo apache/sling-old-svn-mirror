@@ -223,10 +223,14 @@ public class StatisticsImpl implements Statistics {
             this.queuedJobs += other.queuedJobs;
             this.waitingTime += other.waitingTime;
             this.waitingCount += other.waitingCount;
-            this.averageWaitingTime = this.waitingTime / this.waitingCount;
+            if ( this.waitingCount > 0 ) {
+                this.averageWaitingTime = this.waitingTime / this.waitingCount;
+            }
             this.processingTime += other.processingTime;
             this.processingCount += other.processingCount;
-            this.averageProcessingTime = this.processingTime / this.processingCount;
+            if ( this.processingCount > 0 ) {
+                this.averageProcessingTime = this.processingTime / this.processingCount;
+            }
             this.finishedJobs += other.finishedJobs;
             this.failedJobs += other.failedJobs;
             this.cancelledJobs += other.cancelledJobs;
