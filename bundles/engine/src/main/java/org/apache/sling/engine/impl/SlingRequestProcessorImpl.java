@@ -21,7 +21,12 @@ package org.apache.sling.engine.impl;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.security.AccessControlException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
@@ -41,12 +46,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.AbstractSlingFilterChain;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
-import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
+import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
@@ -303,11 +309,27 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         }
     }
 
+    public ServletResolver getServletResolver() {
+        return servletResolver;
+    }
+
     // ---------- Error Handling with Filters
 
     void handleError(final int status, final String message,
             final SlingHttpServletRequest request,
-            final SlingHttpServletResponse response) throws IOException {
+            SlingHttpServletResponse response) throws IOException {
+
+        // nothing to do but log the error if the response is committed
+        if (response.isCommitted()) {
+            log.error(
+                "handleError: Response already committed; cannot send error {}/{}",
+                new Object[] { status, message });
+            return;
+        }
+
+        // wrap the response ensuring getWriter will fall back to wrapping
+        // the response output stream if reset does not reset this
+        response = new ErrorResponseWrapper(response);
 
         Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
@@ -335,7 +357,20 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     // just rethrow the exception as explained in the class comment
     private void handleError(final Throwable throwable,
             final SlingHttpServletRequest request,
-            final SlingHttpServletResponse response) throws IOException {
+            SlingHttpServletResponse response) throws IOException {
+
+        // nothing to do but log the error if the response is committed
+        if (response.isCommitted()) {
+            log.error(
+                "handleError: Response already committed; cannot send error",
+                throwable);
+            return;
+        }
+
+        // wrap the response ensuring getWriter will fall back to wrapping
+        // the response output stream if reset does not reset this
+        response = new ErrorResponseWrapper(response);
+
         Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
             FilterChain processor = new AbstractSlingFilterChain(filters) {
@@ -359,7 +394,35 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         }
     }
 
-    public ServletResolver getServletResolver() {
-        return servletResolver;
+    private static class ErrorResponseWrapper extends
+            SlingHttpServletResponseWrapper {
+
+        private PrintWriter writer;
+
+        public ErrorResponseWrapper(SlingHttpServletResponse wrappedResponse) {
+            super(wrappedResponse);
+        }
+
+        public PrintWriter getWriter() throws IOException {
+            if (writer == null) {
+                try {
+                    writer = super.getWriter();
+                } catch (IllegalStateException ise) {
+                    // resetting the response did not reset the output channel
+                    // status and we have to create a writer based on the output
+                    // stream using the character encoding already set on the
+                    // response, defaulting to ISO-8859-1
+                    OutputStream out = getOutputStream();
+                    String encoding = getCharacterEncoding();
+                    if (encoding == null) {
+                        encoding = "ISO-8859-1";
+                        setCharacterEncoding(encoding);
+                    }
+                    Writer w = new OutputStreamWriter(out, encoding);
+                    writer = new PrintWriter(w);
+                }
+            }
+            return writer;
+        }
     }
 }
