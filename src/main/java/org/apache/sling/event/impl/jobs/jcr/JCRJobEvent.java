@@ -58,4 +58,9 @@ public class JCRJobEvent extends JobEvent {
     public boolean remove() {
         return this.handler.remove(this.uniqueId);
     }
+
+    @Override
+    public void restart() {
+        this.handler.restart(this);
+    }
 }

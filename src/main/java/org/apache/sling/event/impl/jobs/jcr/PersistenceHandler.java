@@ -918,6 +918,23 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     }
 
     /**
+     * Try to restart the job
+     */
+    public void restart(final JobEvent info) {
+        final String path = this.getNodePath(info.uniqueId);
+        synchronized ( this.backgroundLock ) {
+            if ( this.running ) {
+                try {
+                    final Node eventNode = (Node) this.backgroundSession.getItem(path);
+                    this.tryToLoadJob(eventNode, this.unloadedJobs);
+                } catch (RepositoryException re) {
+                    this.ignoreException(re);
+                }
+            }
+        }
+    }
+
+    /**
      * Unlock the node for the event
      */
     public void unlock(final JobEvent info) {

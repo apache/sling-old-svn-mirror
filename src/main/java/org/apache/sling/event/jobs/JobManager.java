@@ -103,4 +103,11 @@ public interface JobManager {
      * @param jobId The unique identifer as found in the property {@link JobUtil#JOB_ID}.
      */
     void forceRemoveJob(String jobId);
+
+    /**
+     * Restart the job manager.
+     * This method restarts the job manager and all queues - currently processed jobs will be finished.
+     * The job manager should only be restarted if really necessary!
+     */
+    void restart();
 }
