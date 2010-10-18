@@ -165,6 +165,9 @@ public abstract class AbstractJobQueue
             public void finished() {
                 // dummy impl
             }
+            public void restart() {
+                // dummy impl
+            }
             public boolean remove() { return true; }
             public boolean reschedule() { return false; }
             });

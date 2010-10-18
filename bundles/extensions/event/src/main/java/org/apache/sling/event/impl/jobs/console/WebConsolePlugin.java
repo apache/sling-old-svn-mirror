@@ -133,6 +133,8 @@ public class WebConsolePlugin extends HttpServlet {
                     msg = this.getQueueErrorMessage(req, "reset");
                 }
             }
+        } else if ( "restart".equals(cmd) ) {
+            this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
             final Queue q = this.getQueue(req);
             if ( q != null ) {
@@ -159,9 +161,24 @@ public class WebConsolePlugin extends HttpServlet {
         final String msg = req.getParameter("message");
         final PrintWriter pw = res.getWriter();
 
+        pw.println("<form method='POST' name='eventingcmd'>" +
+        		     "<input type='hidden' name='action' value=''/>"+
+                     "<input type='hidden' name='queue' value=''/>" +
+                   "</form>");
+        pw.println("<script type='text/javascript'>");
+        pw.println("function eventingsubmit(action, queue) {" +
+                   " if ( action == 'restart' ) {" +
+                   "   if ( !confirm('Do you really want to restart the eventing?') ) { return; }" +
+                   " }" +
+                   " document.forms['eventingcmd'].action.value = action;" +
+                   " document.forms['eventingcmd'].queue.value = queue;" +
+                   " document.forms['eventingcmd'].submit();" +
+                   "} </script>");
+
         pw.printf("<p class='statline ui-state-highlight'>Apache Sling Eventing%s%n</p>", msg != null ? " : " + msg : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Eventing: Overall Statistics</span>");
+        this.printForm(pw, null, "Restart!", "restart");
         this.printForm(pw, null, "Reset Stats", "reset");
         pw.println("</div>");
 
@@ -343,11 +360,9 @@ public class WebConsolePlugin extends HttpServlet {
     private void printForm(final PrintWriter pw,
             final Queue q,
             final String buttonLabel,
-            final String hiddenValue) {
-        pw.printf("<form method='POST' name='%s'><input type='hidden' name='action' value='%s'/>"+
-                "<input type='hidden' name='queue' value='%s'/>" +
-                "<button class='ui-state-default ui-corner-all' onclick='javascript:document.forms[\"%s\"].submit();'>" +
-                "%s</button></form>", hiddenValue, hiddenValue, (q != null ? q.getName() : ""), hiddenValue, buttonLabel);
+            final String cmd) {
+        pw.printf("<button class='ui-state-default ui-corner-all' onclick='javascript:eventingsubmit(\"%s\", \"%s\");'>" +
+                "%s</button>", cmd, (q != null ? q.getName() : ""), buttonLabel);
     }
 
     /** Configuration printer for the web console. */

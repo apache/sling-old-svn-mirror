@@ -674,4 +674,39 @@ public class DefaultJobManager
             }
         }
     }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#restart()
+     */
+    public void restart() {
+        // let's rename/close all queues first
+        synchronized ( this ) {
+            final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
+            for(final AbstractJobQueue queue : queues ) {
+                // remove the queue with the old name
+                this.queues.remove(queue.getName());
+                // check if we can close or have to rename
+                queue.markForCleanUp();
+                if ( queue.isMarkedForCleanUp() ) {
+                    // close
+                    queue.close();
+                } else {
+                    // notify queue
+                    queue.rename(queue.getName() + "<outdated>");
+                    // readd with new name
+                    this.queues.put(queue.getName(), queue);
+                }
+            }
+        }
+        // reset statistics
+        this.reset();
+        // restart all jobs - we first copy all of them
+        final List<JobEvent> jobs;
+        synchronized ( this.allEvents ) {
+            jobs = new ArrayList<JobEvent>(this.allEvents.values());
+        }
+        for(final JobEvent job : jobs) {
+            job.restart();
+        }
+    }
 }
