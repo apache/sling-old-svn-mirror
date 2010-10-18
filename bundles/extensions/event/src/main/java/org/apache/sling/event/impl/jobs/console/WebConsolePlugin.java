@@ -76,7 +76,7 @@ public class WebConsolePlugin extends HttpServlet {
 
     private static final String PAR_QUEUE = "queue";
 
-    private Queue getQueue(final HttpServletRequest req) throws ServletException {
+    private Queue getQueue(final HttpServletRequest req) {
         final String name = req.getParameter(PAR_QUEUE);
         if ( name != null ) {
             for(final Queue q : this.jobManager.getQueues()) {
@@ -85,44 +85,81 @@ public class WebConsolePlugin extends HttpServlet {
                 }
             }
         }
-        throw new ServletException("Wrong parameters");
+        return null;
+    }
+
+    private String getQueueErrorMessage(final HttpServletRequest req, final String command) {
+        final String name = req.getParameter(PAR_QUEUE);
+        if ( name == null || name.length() == 0 ) {
+            return "Queue parameter missing for opertation " + command;
+        }
+        return "Queue with name '" + name + "' not found for operation " + command;
     }
 
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
     throws ServletException, IOException {
+        String msg = null;
         final String cmd = req.getParameter("action");
         if ( "suspend".equals(cmd) ) {
             final Queue q = this.getQueue(req);
-            q.suspend();
+            if ( q != null ) {
+                q.suspend();
+            } else {
+                msg = this.getQueueErrorMessage(req, "suspend");
+            }
         } else if ( "resume".equals(cmd) ) {
             final Queue q = this.getQueue(req);
-            q.resume();
+            if ( q != null ) {
+                q.resume();
+            } else {
+                msg = this.getQueueErrorMessage(req, "resume");
+            }
         } else if ( "clear".equals(cmd) ) {
             final Queue q = this.getQueue(req);
-            q.clear();
+            if ( q != null ) {
+                q.clear();
+            } else {
+                msg = this.getQueueErrorMessage(req, "clear");
+            }
         } else if ( "reset".equals(cmd) ) {
             if ( req.getParameter(PAR_QUEUE) == null || req.getParameter(PAR_QUEUE).length() == 0 ) {
                 this.jobManager.getStatistics().reset();
             } else {
                 final Queue q = this.getQueue(req);
-                q.getStatistics().reset();
+                if ( q != null ) {
+                    q.getStatistics().reset();
+                } else {
+                    msg = this.getQueueErrorMessage(req, "reset");
+                }
             }
         } else if ( "dropall".equals(cmd) ) {
             final Queue q = this.getQueue(req);
-            q.removeAll();
+            if ( q != null ) {
+                q.removeAll();
+            } else {
+                msg = this.getQueueErrorMessage(req, "drop all");
+            }
         } else {
-            throw new ServletException("Unknown command");
+            msg = "Unknown command";
         }
-        resp.sendRedirect(req.getContextPath() + req.getServletPath() + req.getPathInfo());
+        final String path = req.getContextPath() + req.getServletPath() + req.getPathInfo();
+        final String redirectTo;
+        if ( msg == null ) {
+            redirectTo = path;
+        } else {
+            redirectTo = path + "?message=" + msg;
+        }
+        resp.sendRedirect(redirectTo);
     }
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res)
      throws ServletException, IOException {
+        final String msg = req.getParameter("message");
         final PrintWriter pw = res.getWriter();
 
-        pw.println("<p class='statline ui-state-highlight'>Apache Sling Eventing</p>");
+        pw.printf("<p class='statline ui-state-highlight'>Apache Sling Eventing%s%n</p>", msg != null ? " : " + msg : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Eventing: Overall Statistics</span>");
         this.printForm(pw, null, "Reset Stats", "reset");
