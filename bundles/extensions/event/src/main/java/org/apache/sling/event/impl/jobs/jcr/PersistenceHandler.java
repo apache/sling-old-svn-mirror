@@ -510,10 +510,6 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 Event event = null;
                 try {
                     event = this.readEvent(eventNode, false);
-                    if ( shouldProcess ) {
-                         this.process(event);
-                    }
-
                 } catch (ClassNotFoundException cnfe) {
                     // store path for lazy loading
                     synchronized ( unloadedJobSet ) {
@@ -527,6 +523,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 if ( event == null ) {
                     try {
                         event = this.readEvent(eventNode, true);
+                        shouldProcess = false;
                     } catch (ClassNotFoundException cnfe) {
                         // this can't occur
                     } catch (RepositoryException re) {
@@ -535,9 +532,11 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 }
                 if ( event != null ) {
                     ((DefaultJobManager)this.jobManager).notifyAddJob(new JCRJobEvent(event, this));
+                    if ( shouldProcess ) {
+                        this.process(event);
+                    }
                 }
                 return shouldProcess && event != null;
-
             }
             // if the node is finished, this is usually an unlock event
             ((DefaultJobManager)this.jobManager).notifyRemoveJob(nodePath.substring(this.repositoryPath.length() + 1));
