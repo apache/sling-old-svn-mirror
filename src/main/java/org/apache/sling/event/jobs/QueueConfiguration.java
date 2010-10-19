@@ -27,10 +27,11 @@ public interface QueueConfiguration {
 
     /** The queue type. */
     static enum Type {
-        UNORDERED,
-        ORDERED,
-        TOPIC_ROUND_ROBIN,
-        IGNORE
+        UNORDERED,          // unordered, parallel prpcessing
+        ORDERED,            // ordered, fifo
+        TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic
+        IGNORE,             // ignore job, but do not remove
+        DROP                // drop job without processing!
     }
 
     /**

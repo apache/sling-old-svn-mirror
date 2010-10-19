@@ -975,7 +975,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     }
                     this.backgroundSession.save();
                     // and unlock
-                    if ( jobId != null ) {
+                    if ( jobId != null && eventNode.isLocked() ) {
                         this.backgroundSession.getWorkspace().getLockManager().unlock(path);
                     }
                 }

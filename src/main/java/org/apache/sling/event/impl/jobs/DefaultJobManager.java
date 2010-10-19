@@ -55,6 +55,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.Queue;
+import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
@@ -115,6 +116,9 @@ public class DefaultJobManager
     /** The scheduler service. */
     @Reference
     private Scheduler scheduler;
+
+    /** Lock object for the queues map - we don't want to sync directly on the concurrent map. */
+    private final Object queuesLock = new Object();
 
     /** All active queues. */
     private final Map<String, AbstractJobQueue> queues = new ConcurrentHashMap<String, AbstractJobQueue>();
@@ -195,7 +199,7 @@ public class DefaultJobManager
     public void cleanup() {
         // check for idle queue
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
-        synchronized ( this ) {
+        synchronized ( queuesLock ) {
             final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
             while ( i.hasNext() ) {
                 final Map.Entry<String, AbstractJobQueue> current = i.next();
@@ -229,7 +233,7 @@ public class DefaultJobManager
         if ( config == null ) {
             final String customQueueName = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_QUEUE_NAME);
             if ( customQueueName != null ) {
-                synchronized ( this ) {
+                synchronized ( queuesLock ) {
                     final AbstractJobQueue queue = this.queues.get(customQueueName);
                     if ( queue != null ) {
                         config = queue.getConfiguration();
@@ -249,15 +253,25 @@ public class DefaultJobManager
 
         if ( config.isSkipped(event) ) {
             if ( logger.isDebugEnabled() ) {
-                logger.debug("Ignoring event due to configuration of queue {} : {}", queueName, EventUtil.toString(event.event));
+                logger.debug("Ignoring job due to configuration of queue {} : {}", queueName, EventUtil.toString(event.event));
             }
+            return;
+        }
+
+        // drop?
+        if ( config.getType() == QueueConfiguration.Type.DROP ) {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Dropping job due to configuration of queue {} : {}", queueName, EventUtil.toString(event.event));
+            }
+            Utility.sendNotification(this.environment, JobUtil.TOPIC_JOB_CANCELLED, event.event, null);
+            event.finished();
             return;
         }
 
         // get or create queue
         AbstractJobQueue queue = null;
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
-        synchronized ( this ) {
+        synchronized ( queuesLock ) {
             queue = this.queues.get(queueName);
             // check for reconfiguration, we really do an identity check here(!)
             if ( queue != null && queue.getConfiguration() != config ) {
@@ -280,11 +294,11 @@ public class DefaultJobManager
                 queue = null;
             }
             if ( queue == null ) {
-                if ( config.getType() == InternalQueueConfiguration.Type.ORDERED ) {
+                if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
                     queue = new OrderedJobQueue(queueName, config, this.environment);
-                } else if ( config.getType() == InternalQueueConfiguration.Type.UNORDERED ) {
+                } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
                     queue = new ParallelJobQueue(queueName, config, this.environment, this.scheduler);
-                } else if ( config.getType() == InternalQueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
+                } else if ( config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
                     queue = new TopicRoundRobinJobQueue(queueName, config, this.environment, this.scheduler);
                 }
                 if ( queue == null ) {
@@ -680,7 +694,7 @@ public class DefaultJobManager
      */
     public void restart() {
         // let's rename/close all queues first
-        synchronized ( this ) {
+        synchronized ( queuesLock ) {
             final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
             for(final AbstractJobQueue queue : queues ) {
                 // remove the queue with the old name
