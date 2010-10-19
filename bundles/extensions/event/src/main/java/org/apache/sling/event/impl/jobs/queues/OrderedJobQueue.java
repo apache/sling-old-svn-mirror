@@ -49,6 +49,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     /** The queue. */
     private final BlockingQueue<JobEvent> queue = new LinkedBlockingQueue<JobEvent>();
 
+    private final Object syncLock = new Object();
+
     public OrderedJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final EnvironmentComponent env) {
@@ -97,12 +99,12 @@ public final class OrderedJobQueue extends AbstractJobQueue {
      * This is called if the queue is ordered.
      */
     private JobEvent waitForFinish() {
-        synchronized ( this ) {
+        synchronized ( this.syncLock ) {
             this.isWaiting = true;
             this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
             while ( this.isWaiting ) {
                 try {
-                    this.wait();
+                    this.syncLock.wait();
                 } catch (InterruptedException e) {
                     this.ignoreException(e);
                 }
@@ -145,8 +147,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         this.jobEvent = rescheduleInfo;
         this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
         this.isWaiting = false;
-        synchronized ( this ) {
-            this.notify();
+        synchronized ( this.syncLock ) {
+            this.syncLock.notify();
         }
     }
 

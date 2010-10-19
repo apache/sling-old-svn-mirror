@@ -36,6 +36,8 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
     /** The scheduler for rescheduling. */
     private final Scheduler scheduler;
 
+    private final Object syncLock = new Object();
+
     public AbstractParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final EnvironmentComponent env,
@@ -65,13 +67,13 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
      * This method is called if the queue is not ordered.
      */
     private void acquireSlot() {
-        synchronized ( this ) {
+        synchronized ( this.syncLock ) {
             if ( jobCount >= this.configuration.getMaxParallel() ) {
                 this.isWaiting = true;
                 this.logger.debug("Job queue {} is processing {} jobs - waiting for a free slot.", this.queueName, jobCount);
                 while ( this.isWaiting ) {
                     try {
-                        this.wait();
+                        this.syncLock.wait();
                     } catch (final InterruptedException e) {
                         this.ignoreException(e);
                     }
@@ -86,12 +88,12 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
      * Free a slot when a job processing is finished.
      */
     private void freeSlot() {
-        synchronized ( this ) {
+        synchronized ( this.syncLock ) {
             jobCount--;
             if ( this.isWaiting ) {
                 this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
                 this.isWaiting = false;
-                this.notify();
+                this.syncLock.notify();
             }
         }
     }
