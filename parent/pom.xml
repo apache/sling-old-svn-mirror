@@ -172,30 +172,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.groovy.maven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <executions>
-                    <!-- store the project's source dir in a comma-delimited list for the emma report. -->
-                    <execution>
-                        <id>save-bundle-metadata</id>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <phase>validate</phase>
-                        <configuration>
-                            <source>
-                                if (!session.executionProperties.sourceDirs) {
-                                    session.executionProperties.sourceDirs = "${basedir}/src/main/java"
-                                } else {
-                                    session.executionProperties.sourceDirs += ",${basedir}/src/main/java"
-                                }
-                            </source>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ianal-maven-plugin</artifactId>
                 <executions>
@@ -475,6 +451,36 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <configuration>
                                     <classifier>emma</classifier>
                                     <outputDirectory>${basedir}/target/generated-classes/emma/classes</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>emma-report</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.groovy.maven</groupId>
+                        <artifactId>gmaven-plugin</artifactId>
+                        <executions>
+                            <!-- store the project's source dir in a comma-delimited list for the emma report. -->
+                            <execution>
+                                <id>save-bundle-metadata</id>
+                                <goals>
+                                    <goal>execute</goal>
+                                </goals>
+                                <phase>validate</phase>
+                                <configuration>
+                                    <source>
+                                        if (!session.executionProperties.sourceDirs) {
+                                            session.executionProperties.sourceDirs = "${basedir}/src/main/java"
+                                        } else {
+                                            session.executionProperties.sourceDirs += ",${basedir}/src/main/java"
+                                        }
+                                    </source>
                                 </configuration>
                             </execution>
                         </executions>
