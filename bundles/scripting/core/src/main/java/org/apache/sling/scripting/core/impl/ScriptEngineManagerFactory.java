@@ -247,7 +247,10 @@ public class ScriptEngineManagerFactory implements BundleListener {
     protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         synchronized ( this ) {
             this.engineSpiServices.add(scriptEngineFactory);
-            this.scriptEngineManager = null;
+            if ( this.scriptEngineManager != null ) {
+                this.scriptEngineManager = null;
+                this.refreshScriptEngineManager();
+            }
         }
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
@@ -256,7 +259,10 @@ public class ScriptEngineManagerFactory implements BundleListener {
     protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         synchronized ( this ) {
             if ( this.engineSpiServices.remove(scriptEngineFactory) ) {
-                this.scriptEngineManager = null;
+                if ( this.scriptEngineManager != null ) {
+                    this.scriptEngineManager = null;
+                    this.refreshScriptEngineManager();
+                }
             }
         }
         // send event
