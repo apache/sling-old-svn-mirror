@@ -182,12 +182,14 @@ public class ScriptEngineManagerFactory implements BundleListener {
             synchronized ( this ) {
                 this.engineSpiBundles.add(event.getBundle());
                 this.scriptEngineManager = null;
+                this.refreshScriptEngineManager();
             }
 
         } else if (event.getType() == BundleEvent.STOPPED  ) {
             synchronized ( this ) {
                 if ( this.engineSpiBundles.remove(event.getBundle()) ) {
                     this.scriptEngineManager = null;
+                    this.refreshScriptEngineManager();
                 }
             }
         }
