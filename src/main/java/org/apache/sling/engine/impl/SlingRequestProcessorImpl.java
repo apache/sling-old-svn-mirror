@@ -319,14 +319,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             final SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
 
-        // nothing to do but log the error if the response is committed
-        if (response.isCommitted()) {
-            log.error(
-                "handleError: Response already committed; cannot send error {}/{}",
-                new Object[] { status, message });
-            return;
-        }
-
         // wrap the response ensuring getWriter will fall back to wrapping
         // the response output stream if reset does not reset this
         response = new ErrorResponseWrapper(response);
@@ -358,14 +350,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     private void handleError(final Throwable throwable,
             final SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
-
-        // nothing to do but log the error if the response is committed
-        if (response.isCommitted()) {
-            log.error(
-                "handleError: Response already committed; cannot send error",
-                throwable);
-            return;
-        }
 
         // wrap the response ensuring getWriter will fall back to wrapping
         // the response output stream if reset does not reset this
@@ -423,6 +407,18 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
                 }
             }
             return writer;
+        }
+
+        /**
+         * Flush the writer if the {@link #getWriter()} method was called
+         * to potentially wrap an OuputStream still existing in the response.
+         */
+        @Override
+        public void flushBuffer() throws IOException {
+            if (writer != null) {
+                writer.flush();
+            }
+            super.flushBuffer();
         }
     }
 }
