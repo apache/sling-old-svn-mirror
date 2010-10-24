@@ -275,21 +275,7 @@ public class DefaultJobManager
             queue = this.queues.get(queueName);
             // check for reconfiguration, we really do an identity check here(!)
             if ( queue != null && queue.getConfiguration() != config ) {
-                // remove the queue with the old name
-                this.queues.remove(queueName);
-                // check if we can close or have to rename
-                queue.markForCleanUp();
-                if ( queue.isMarkedForCleanUp() ) {
-                    // close
-                    queue.close();
-                    // copy statistics
-                    this.baseStatistics.add(queue);
-                } else {
-                    // notify queue
-                    queue.rename(queueName + "<outdated>");
-                    // readd with new name
-                    this.queues.put(queue.getName(), queue);
-                }
+                this.outdateQueue(queue);
                 // we use a new queue with the configuration
                 queue = null;
             }
@@ -689,6 +675,24 @@ public class DefaultJobManager
         }
     }
 
+    private void outdateQueue(final AbstractJobQueue queue) {
+        // remove the queue with the old name
+        this.queues.remove(queue.getName());
+        // check if we can close or have to rename
+        queue.markForCleanUp();
+        if ( queue.isMarkedForCleanUp() ) {
+            // close
+            queue.close();
+            // copy statistics
+            this.baseStatistics.add(queue);
+        } else {
+            // notify queue
+            queue.rename(queue.getName() + "<outdated>(" + queue.hashCode() + ")");
+            // readd with new name
+            this.queues.put(queue.getName(), queue);
+        }
+    }
+
     /**
      * @see org.apache.sling.event.jobs.JobManager#restart()
      */
@@ -697,19 +701,7 @@ public class DefaultJobManager
         synchronized ( queuesLock ) {
             final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
             for(final AbstractJobQueue queue : queues ) {
-                // remove the queue with the old name
-                this.queues.remove(queue.getName());
-                // check if we can close or have to rename
-                queue.markForCleanUp();
-                if ( queue.isMarkedForCleanUp() ) {
-                    // close
-                    queue.close();
-                } else {
-                    // notify queue
-                    queue.rename(queue.getName() + "<outdated>");
-                    // readd with new name
-                    this.queues.put(queue.getName(), queue);
-                }
+                this.outdateQueue(queue);
             }
         }
         // reset statistics
