@@ -70,10 +70,6 @@ public abstract class AbstractTest {
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         assertTrue(RepositoryTestUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/event.cnd")));
         assertTrue(RepositoryTestUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/folder.cnd")));
-        if ( session.itemExists(REPO_PATH) ) {
-            session.getItem(REPO_PATH).remove();
-            session.save();
-        }
     }
 
     @org.junit.AfterClass public static void shutdownRepository() throws Exception {
@@ -85,6 +81,11 @@ public abstract class AbstractTest {
     }
 
     @org.junit.Before public void setup() throws Throwable {
+        // remove content from another test
+        if ( session.itemExists(REPO_PATH) ) {
+            session.getItem(REPO_PATH).remove();
+            session.save();
+        }
         // activate
         this.activate(null);
     }
