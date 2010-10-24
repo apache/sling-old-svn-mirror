@@ -107,7 +107,8 @@ public class DropQueueTest extends AbstractJobEventHandlerTest {
 
         // set new event admin
         final AtomicInteger count = new AtomicInteger(0);
-        setEventAdmin(new SimpleEventAdmin(new String[] {TOPIC },
+        final AtomicInteger dropCount = new AtomicInteger(0);
+        setEventAdmin(new SimpleEventAdmin(new String[] {TOPIC , JobUtil.TOPIC_JOB_CANCELLED },
                 new EventHandler[] {
                     new EventHandler() {
                         public void handleEvent(final Event event) {
@@ -119,13 +120,21 @@ public class DropQueueTest extends AbstractJobEventHandlerTest {
                                 }
                             });
                         }
+                    },
+                    new EventHandler() {
+
+                        public void handleEvent(Event event) {
+                            dropCount.incrementAndGet();
+                        }
                     }}));
         // we start "some" jobs:
         for(int i = 0; i < NUM_JOBS; i++ ) {
             jeh.handleEvent(getJobEvent());
         }
-        // we wait a little bit
-        Thread.sleep(400);
+        while ( dropCount.get() < NUM_JOBS ) {
+            // we wait a little bit
+            Thread.sleep(400);
+        }
         // no jobs queued, none processed and no available
         assertEquals(0, this.jobManager.getStatistics().getNumberOfQueuedJobs());
         assertEquals(0, count.get());
@@ -135,7 +144,7 @@ public class DropQueueTest extends AbstractJobEventHandlerTest {
         this.createConfiguration(QueueConfiguration.Type.UNORDERED);
         this.jobManager.restart();
         // we wait a little bit
-        Thread.sleep(400);
+        Thread.sleep(1200);
         // no jobs queued, none processed and no available
         assertEquals(0, this.jobManager.getStatistics().getNumberOfQueuedJobs());
         assertEquals(0, count.get());
