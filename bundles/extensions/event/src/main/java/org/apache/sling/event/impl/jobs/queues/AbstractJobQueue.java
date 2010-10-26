@@ -373,7 +373,13 @@ public abstract class AbstractJobQueue
      * Check if this queue is marked for cleanup
      */
     public boolean isMarkedForCleanUp() {
-        return this.markedForCleanUp && this.canBeMarkedForCleanUp();
+        if ( this.markedForCleanUp ) {
+            if ( this.canBeMarkedForCleanUp() ) {
+                return true;
+            }
+            this.markedForCleanUp = false;
+        }
+        return false;
     }
 
     /**
