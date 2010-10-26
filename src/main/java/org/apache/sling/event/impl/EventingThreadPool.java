@@ -47,13 +47,10 @@ public class EventingThreadPool implements ThreadPool {
     /** The real thread pool used. */
     private org.apache.sling.commons.threads.ThreadPool threadPool;
 
-    private static final int DEFAULT_MIN_POOL_SIZE = 35; // this is sufficient for all threads + approx 25 job queues
-    private static final int DEFAULT_MAX_POOL_SIZE = 50;
+    private static final int DEFAULT_POOL_SIZE = 35;
 
-    @Property(intValue=DEFAULT_MIN_POOL_SIZE)
-    private static final String PROPERTY_MIN_POOL_SIZE = "minPoolSize";
-    @Property(intValue=DEFAULT_MAX_POOL_SIZE)
-    private static final String PROPERTY_MAX_POOL_SIZE = "maxPoolSize";
+    @Property(intValue=DEFAULT_POOL_SIZE)
+    private static final String PROPERTY_POOL_SIZE = "minPoolSize";
 
     @Property(value="NORM",
             options={@PropertyOption(name="NORM",value="Norm"),
@@ -67,8 +64,8 @@ public class EventingThreadPool implements ThreadPool {
      */
     protected void activate(final ComponentContext ctx) {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
-        config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MIN_POOL_SIZE), DEFAULT_MIN_POOL_SIZE));
-        config.setMaxPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_MAX_POOL_SIZE), DEFAULT_MAX_POOL_SIZE));
+        config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE));
+        config.setMaxPoolSize(config.getMinPoolSize());
         config.setQueueSize(-1); // unlimited
         config.setShutdownGraceful(true);
         config.setPriority(ThreadPriority.valueOf(OsgiUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
