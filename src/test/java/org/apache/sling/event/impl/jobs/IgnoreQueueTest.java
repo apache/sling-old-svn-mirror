@@ -102,7 +102,7 @@ public class IgnoreQueueTest extends AbstractJobEventHandlerTest {
         return new Event(JobUtil.TOPIC_JOB, props);
     }
 
-    @org.junit.Test public void testDroppingQueue() throws Exception {
+    @org.junit.Test(timeout=30000) public void testIgnoreQueue() throws Exception {
         final PersistenceHandler jeh = this.handler;
 
         // set new event admin
@@ -124,8 +124,12 @@ public class IgnoreQueueTest extends AbstractJobEventHandlerTest {
         for(int i = 0; i < NUM_JOBS; i++ ) {
             jeh.handleEvent(getJobEvent());
         }
-        // we wait a little bit
-        Thread.sleep(400);
+
+        // we wait until NUM_JOBS have been processed by the JobManager
+        while ( ((ExtendedJobManager)this.jobManager).getAdded() < NUM_JOBS ) {
+            Thread.sleep(400);
+        }
+
         // no jobs queued, none processed but available
         assertEquals(0, this.jobManager.getStatistics().getNumberOfQueuedJobs());
         assertEquals(0, this.jobManager.getStatistics().getNumberOfProcessedJobs());
