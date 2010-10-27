@@ -42,6 +42,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event</url>
     </scm>
 
+    <properties>
+        <site.jira.version.id>12315369</site.jira.version.id>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
