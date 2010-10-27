@@ -76,6 +76,7 @@
                             javax.script.*;
                             org.apache.sling.scripting.api.*;resolution:=optional,
                             org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.apache.sling.commons.osgi;version="$(@)",
                             *
                         </Import-Package>
                         <Export-Package>
