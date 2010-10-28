@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import javax.script.{ScriptContext, ScriptException}
+package org.apache.sling.scripting.scala
 
-package org.apache.sling.scripting.scala {
+import javax.script.{ScriptContext, ScriptException}
 
 object AbstractScriptInfo {
   val SCALA_SCRIPT_CLASS = "scala.script.class"
@@ -51,6 +51,4 @@ abstract class AbstractScriptInfo(protected var defaultScriptClass: String) exte
     }
   }
                  
-}
-
 }

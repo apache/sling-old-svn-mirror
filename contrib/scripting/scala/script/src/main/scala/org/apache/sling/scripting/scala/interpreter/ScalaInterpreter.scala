@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.tools.nsc.{Settings, Global}
+package org.apache.sling.scripting.scala.interpreter
+
 import scala.tools.nsc.interpreter.AbstractFileClassLoader
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{SourceFile, BatchSourceFile}
-import java.net.URLClassLoader
-import java.io.{File, InputStream, OutputStream}
-import org.apache.sling.scripting.scala.Utils.{option}
-
-package org.apache.sling.scripting.scala.interpreter {
+import scala.tools.nsc.{FatalError, Settings, Global}
+import java.io.{InputStream, OutputStream}
+import org.apache.sling.scripting.scala.Utils.option
 
 /**
  * An interpreter for Scala scripts. Interpretation of scripts proceeds in the following steps:
@@ -36,39 +35,17 @@ package org.apache.sling.scripting.scala.interpreter {
  * @param settings  compiler settings
  * @param reporter  reporter for compilation
  * @param classes  additional classes for the classpath
- * @param outDir  ourput directory for the compiler
  */
-class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[AbstractFile],
-                       outDir: AbstractFile) {
-
-  /**
-   * Same as <code>ScalaInterpreter(settings, reporter, classes, null)</code>.
-   * @param settings
-   * @param reporter
-   * @param classes
-   * @return
-   */
-  def this(settings: Settings, reporter: Reporter, classes: Array[AbstractFile]) =
-    this(settings, reporter, classes, null)
+class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[AbstractFile]) {
 
   /**
    * Same as <code>ScalaInterpreter(settings, reporter, null, outDir)</code>.
    * @param settings
    * @param reporter
-   * @param outDir
-   * @return
-   */
-  def this(settings: Settings, reporter: Reporter, outDir: AbstractFile) =
-    this(settings, reporter, null, outDir)
-
-  /**
-   * Same as <code>ScalaInterpreter(settings, reporter, null, null)</code>.
-   * @param settings
-   * @param reporter
    * @return
    */
   def this(settings: Settings, reporter: Reporter) =
-    this(settings, reporter, null, null)
+    this(settings, reporter, Array.empty)
 
   /**
    * The parent class loader used for execution
@@ -78,11 +55,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
   /**
    * The Scala compiler used for compilation
    */
-  protected val compiler: Global = {
-    val c = new ScalaCompiler(settings, reporter, classes)
-    if (outDir != null) c.genJVM.outputDir = outDir
-    c
-  }
+  protected val compiler: Global = new ScalaCompiler(settings, reporter, classes)
 
   /**
    * Generates a wrapper which contains variables declarations and implicit conversions
@@ -296,23 +269,6 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
     interprete(name, source, bindings, option(in), option(out))
 
   /**
-   * Looks up the class file for a compiled script
-   * @param  name  script name
-   * @return  the class file or null if not found
-   */
-  def getClassFile(name: String): AbstractFile = {
-    var file: AbstractFile = compiler.genJVM.outputDir
-    val pathParts = name.split("[./]").toList
-    for (dirPart <- pathParts.init) {
-      file = file.lookupName(dirPart, true)
-      if (file == null) {
-        return null
-      }
-    }
-    file.lookupName(pathParts.last + ".class", false)
-  }
-
-  /**
    * Executes a compiled script
    * @param name  name of the script
    * @param bindings  variable bindings to pass to the script
@@ -324,7 +280,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
   @throws(classOf[InterpreterException])
   def execute(name: String, bindings: Bindings, in: Option[InputStream], out: Option[OutputStream]): Reporter = {
     try {
-      val classLoader = new AbstractFileClassLoader(compiler.genJVM.outputDir, parentClassLoader)
+      val classLoader = new AbstractFileClassLoader(outputDir, parentClassLoader)
       val script = Class.forName(name + "Runner", true, classLoader)
       val initMethod = (script
         .getDeclaredMethods
@@ -368,7 +324,11 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
   def execute(name: String, bindings: Bindings, in: InputStream, out: OutputStream): Reporter =
     execute(name, bindings, option(in), option(out))
 
-}
-
+  def outputDir = try {
+      settings.outputDirs.outputDirFor(null);
+    }
+    catch {
+      case e: FatalError => throw new InterpreterException(e) 
+    }
 
 }

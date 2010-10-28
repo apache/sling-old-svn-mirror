@@ -14,16 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import javax.script.ScriptException;
+package org.apache.sling.scripting.scala 
 
+import javax.script.ScriptException;
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter
 import org.slf4j.LoggerFactory
-
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala {
 
 /**
  * Abstract base implementation of a {@link SettingsProvider}. 
@@ -32,8 +30,7 @@ abstract class AbstractSettingsProvider extends SettingsProvider {
   protected var settings: Settings = new Settings
   protected var reporter: Reporter = createReporter(settings)
   protected var classpathX: Array[AbstractFile] = null
-  protected var outDir: AbstractFile = null
-  
+
   @throws(classOf[ScriptException])
   def setScalaSettings(settings: Settings): Boolean = {
     if (settings == null) {
@@ -79,21 +76,7 @@ abstract class AbstractSettingsProvider extends SettingsProvider {
   @throws(classOf[ScriptException])
   def getClasspathX: Array[AbstractFile] = classpathX
 
-  @throws(classOf[ScriptException])
-  def setOutDir(outDir: AbstractFile): Boolean = {
-    if (this.outDir != outDir) {
-      this.outDir = outDir
-      true
-    }
-    else false
-  }
-  
-  @throws(classOf[ScriptException])
-  def getOutDir: AbstractFile = outDir
-
   protected def createReporter(settings: Settings) = 
     new LogReporter(LoggerFactory.getLogger(classOf[ScalaInterpreter]), settings);
   
-}
-
 }

@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.slf4j.Logger
+package org.apache.sling.scripting.scala
 
+import org.slf4j.Logger
 import scala.tools.nsc.Settings
 import scala.tools.nsc.util.Position
 
-package org.apache.sling.scripting.scala {
-  
 class LogReporter(logger: Logger, settings: Settings) extends BacklogReporter(settings) {
 
   override def display(pos: Position, msg: String, severity: Severity) {
@@ -33,6 +32,4 @@ class LogReporter(logger: Logger, settings: Settings) extends BacklogReporter(se
     }
   }
   
-}
-
 }

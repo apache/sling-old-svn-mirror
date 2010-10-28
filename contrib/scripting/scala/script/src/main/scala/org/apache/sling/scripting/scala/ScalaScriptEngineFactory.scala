@@ -14,19 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala
+
 import java.util.Collections
 import java.util.List
-
 import javax.script.{ScriptException, ScriptEngine, ScriptEngineFactory, ScriptContext}
-
 import org.apache.sling.scripting.scala.interpreter.ScalaInterpreter
 import org.slf4j.LoggerFactory
-
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala {
 
 object ScalaScriptEngineFactory {
   private val log = LoggerFactory.getLogger(classOf[ScalaScriptEngineFactory]);
@@ -35,10 +32,9 @@ object ScalaScriptEngineFactory {
   val SCALA_SETTINGS = "scala.settings"
   val SCALA_REPORTER = "scala.reporter"
   val SCALA_CLASSPATH_X = "scala.classpath.x"
-  val SCALA_CLASS_DIR = "scala.classdir"
 
   val ENGINE_NAME = "Scala Scripting Engine"
-  val LANGUAGE_VERSION = "2.7.7"
+  val LANGUAGE_VERSION = "2.8.0"
   val ENGINE_VERSION = "0.9/scala " + LANGUAGE_VERSION
   val EXTENSIONS = Collections.singletonList("scala")
   val LANGUAGE_NAME = "Scala"
@@ -175,26 +171,16 @@ class ScalaScriptEngineFactory extends ScriptEngineFactory {
       case x => if (x != null) log.warn("Invalid classpathx: {}", x);
     }
     
-    context.getAttribute(SCALA_CLASS_DIR) match {
-      case outDir: AbstractFile => 
-        if (settingsProvider.setOutDir(outDir)) scalaInterpreter = null
-        
-      case x => if (x != null) log.warn("Invalid output directory: {}", x);
-    }
-    
     if (scalaInterpreter == null) {
       log.debug("Creating Scala script engine from settings {}", settingsProvider);
 
         scalaInterpreter = new ScalaInterpreter(
             settingsProvider.getSettings,
             settingsProvider.getReporter,
-            settingsProvider.getClasspathX,
-            settingsProvider.getOutDir);
+            settingsProvider.getClasspathX);
     }
 
     return scalaInterpreter;
   }
   
-}
-
 }

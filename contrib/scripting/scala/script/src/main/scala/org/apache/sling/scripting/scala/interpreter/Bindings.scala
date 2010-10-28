@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.collection._
+package org.apache.sling.scripting.scala.interpreter
 
-package org.apache.sling.scripting.scala.interpreter {
+import scala.collection._
 
 /**
  * Bindings of names to Values
@@ -95,27 +95,28 @@ trait Bindings extends Map[String, AnyRef] {
  * Default implementation of {@link Bindings} backed by a mutable Map
  */
 private class BindingsWrapper(map: mutable.Map[String, AnyRef]) extends Bindings {
-  def size: Int = map.size
-  def get(name: String) = map.get(name)
-  def elements: Iterator[(String, AnyRef)] = map.elements
+  def + [B >: AnyRef] (kv: (String, B)) = map + kv
+  def - (key: String) = map - key
   
-  def putValue(name: String, value: AnyRef) = 
+  override def size = map.size
+  override def get(name: String) = map.get(name)
+  override def iterator: Iterator[(String, AnyRef)] = map.elements
+
+  def putValue(name: String, value: AnyRef) =
     map.put(name, value) match {
       case Some(a) => a
       case None => null
     }
-  
 }
 
 object Bindings {
-  import _root_.scala.collection.jcl.Conversions.convertMap
-  
+  import scala.collection.JavaConversions.asMap
+
   def apply(): Bindings = new BindingsWrapper(new mutable.HashMap)
   def apply(map: mutable.Map[String, AnyRef]): Bindings = new BindingsWrapper(map)
   def apply(map: java.util.Map[String, AnyRef]): Bindings = new BindingsWrapper(map)
 }
 
-}
 
 
 

@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.tools.nsc.io.AbstractFile
+package org.apache.sling.scripting.scala
+
 import java.io.{File, InputStream, OutputStream, IOException, ByteArrayOutputStream, ByteArrayInputStream}
 import javax.jcr.{Session, Node, Property}
 import org.apache.sling.scripting.scala.Utils.{nullOrElse, valueOrElse}
-
-package org.apache.sling.scripting.scala {
+import tools.nsc.io.AbstractFile
 
 /**
  * Implementation of {@link AbstractFile} on top of the {@link javax.jcr.Node}s
@@ -78,12 +78,14 @@ object JcrFS {
      */
     def path: String = node.getPath
 
-    def container: JcrNode = create(node.getParent)
+    def container: JcrNode = JcrFS.create(node.getParent)
 
     /**
      * @returns  null
      */
     def file: File = null
+
+    def absolute = this
 
     /**
      * @returns  the value of the jcr:lastModified property of either the jcr:content node
@@ -96,7 +98,6 @@ object JcrFS {
         if (node.hasProperty("jcr:lastModified")) node.getProperty("jcr:lastModified").getLong
         else 0
       }
-
     override def equals(other: Any): Boolean =
       other match {
         case that: JcrNode => this.path == that.path
@@ -104,6 +105,15 @@ object JcrFS {
       }
 
     override def hashCode: Int = path.hashCode
+
+    def create { unsupported }
+    def delete { unsupported }
+
+    def lookupNameUnchecked(name: String, directory: Boolean) = {
+      val file = lookupName(name, directory)
+      if (file == null) NonExistingFile
+      else file
+    }
   }
 
   case class JcrFolder(node: Node) extends JcrNode(node) {
@@ -128,7 +138,7 @@ object JcrFS {
     /**
      * @returns  the child nodes of this nodes which are either nt:file or nt:folder
      */
-    def elements: Iterator[JcrNode] =
+    def iterator: Iterator[JcrNode] =
       new Iterator[Node] {
         val childs = node.getNodes
         def hasNext = childs.hasNext
@@ -137,7 +147,7 @@ object JcrFS {
       .filter((node: Node) =>
         "nt:file" == node.getPrimaryNodeType.getName ||
         "nt:folder" == node.getPrimaryNodeType.getName)
-      .map((node: Node) => create(node))
+      .map((node: Node) => JcrFS.create(node))
 
     /**
      * Considers only child nodes which are wither nt:file or nt:folder
@@ -147,7 +157,7 @@ object JcrFS {
         val n = node.getNode(name)
         if (directory && "nt:folder" == n.getPrimaryNodeType.getName ||
            !directory && "nt:file" == n.getPrimaryNodeType.getName)
-          create(n)
+          JcrFS.create(n)
         else
           null
       }
@@ -168,7 +178,7 @@ object JcrFS {
         content.setProperty("jcr:data", emptyInputStream)
         content.setProperty("jcr:lastModified", System.currentTimeMillis)
         node.save()
-        create(file)
+        JcrFS.create(file)
       }
     }
 
@@ -181,7 +191,7 @@ object JcrFS {
       valueOrElse(lookupName(name, true)) {
         val dir = node.addNode(name, "nt:folder")
         node.save()
-        create(dir)
+        JcrFS.create(dir)
       }
     }
   }
@@ -245,10 +255,8 @@ object JcrFS {
       else Some(p.getLength.toInt)
     }
 
-    def elements: Iterator[AbstractFile] = Iterator.empty
+    def iterator: Iterator[AbstractFile] = Iterator.empty
     def lookupName(name: String, directory: Boolean): AbstractFile = null
   }
-
-}
 
 }

@@ -14,18 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import java.io.{ByteArrayOutputStream, IOException, BufferedReader, FileReader, File}
-import java.net.URISyntaxException
+package org.apache.sling.scripting.scala.interpreter
 
+import java.io.ByteArrayOutputStream
 import javax.script.ScriptException
-
-import org.apache.sling.scripting.scala.interpreter.{ScalaInterpreter, Bindings}
-
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala.interpreter {
+import org.apache.sling.scripting.scala.BacklogReporter
 
 /**
  * Helper class for evaluating Scala scripts. 
@@ -73,9 +69,8 @@ class InterpreterHelper(val srcDir: AbstractFile, val outDir: AbstractFile) {
   protected def createInterpreter: ScalaInterpreter = {
     val settings = getSettings
     settings.classpath.value = getClasspath
-    new ScalaInterpreter(settings, getReporter(settings), outDir)
+    settings.outputDirs.setSingleOutput(outDir)
+    new ScalaInterpreter(settings, getReporter(settings))
   }
-
-}
 
 }

@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import scala.tools.nsc.Settings
+package org.apache.sling.scripting.scala.interpreter
 
-package org.apache.sling.scripting.scala.interpreter {
+import scala.tools.nsc.Settings
 
 /**
  * Utility to parse Scala compiler settings from a string. This class
@@ -26,12 +26,6 @@ package org.apache.sling.scripting.scala.interpreter {
  */  
 class ScalaSettings(error: String => Unit) extends Settings(error) {
   def this() = this(Console.println)
-  
-  def parse(line: String) = {
-    def error(s: String): Nothing = throw new InterpreterException(s)
-    parseParams(line, error)
-  }
-  
+  def parse(line: String) = parseParams(splitParams(line))
 }
 
-}

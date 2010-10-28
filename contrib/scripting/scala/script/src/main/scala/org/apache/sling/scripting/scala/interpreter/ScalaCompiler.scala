@@ -14,28 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala.interpreter
+
 import scala.tools.nsc.{Settings, Global}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala.interpreter {
+import scala.tools.nsc.util.{ClassPath, MergedClassPath, DirectoryClassPath}
+import tools.nsc.backend.JavaPlatform
 
 /**
- * Extendend Scala compiler which supports a class path with {@link AbstractFile} entries.
+ * Extended Scala compiler which supports a class path with {@link AbstractFile} entries.
  * Note: this implementation does not support MSIL (.NET).
  */
 class ScalaCompiler(settings: Settings, reporter: Reporter, classes: Array[AbstractFile])
   extends Global(settings, reporter) {
 
-  override lazy val classPath0 = new ScalaClasspath(false && onlyPresentation)
-
-  override lazy val classPath = {
-    require(!forMSIL, "MSIL not supported")
-    new classPath0.BuildClasspath(settings.classpath.value, settings.sourcepath.value,
-      settings.outdir.value, settings.bootclasspath.value, settings.extdirs.value,
-      settings.Xcodebase.value, classes)
+  override lazy val classPath: ClassPath[AbstractFile] = {
+    val classPathOrig = platform match {
+      case p: JavaPlatform => p.classPath
+      case _ =>  throw new InterpreterException("Only JVM target supported")
     }
 
-}
+    val classPathNew = classes.map(c => new DirectoryClassPath(c, classPathOrig.context))
+    new MergedClassPath[AbstractFile](classPathOrig :: classPathNew.toList, classPathOrig.context)
+  }
 
+  override def rootLoader: LazyType = new loaders.JavaPackageLoader(classPath)
 }

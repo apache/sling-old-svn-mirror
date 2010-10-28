@@ -58,14 +58,14 @@ class POST(args: POSTArgs) {
   val session = request.getResourceResolver.adaptTo(classOf[Session])
   val path = resource.getPath
   
-  val newPath = {
+  val newPath: List[String] = {
     def validJcrChar(c: Char)  = 
       if ("abcdefghijklmnopqrstuvwxyz0123456789_ ".contains(c)) c
       else '_' 
     
     val nodeName = request("subject").toLowerCase map validJcrChar 
     val parentPath = ResourceUtil.getParent(path)  
-    List(parentPath.split("/"):_*).filter(_ != "") + nodeName.mkString
+    List(parentPath.split("/"):_*).filter(_ != "") ::: List(nodeName.mkString)
   }
   
   val node = 

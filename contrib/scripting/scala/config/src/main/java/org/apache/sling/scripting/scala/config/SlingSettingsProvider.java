@@ -23,6 +23,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.io.AbstractFile;
+import scala.tools.nsc.io.Path;
 import scala.tools.nsc.io.PlainFile;
 
 /**
@@ -83,7 +85,7 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
     private Session session;
 
     @Override
-    public Settings getSettings() {
+    public Settings getSettings() throws ScriptException {
         ScalaSettings settings = new ScalaSettings();
         settings.parse(this.settings);
         Bundle[] bundles = context.getBundleContext().getBundles();
@@ -97,13 +99,14 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
             }
         }
         settings.classpath().v_$eq(bootPath.toString());
+        settings.outputDirs().setSingleOutput(getOutDir());
         return settings;
     }
 
     @Override
     public AbstractFile[] getClasspathX() {
         Bundle[] bundles = context.getBundleContext().getBundles();
-        AbstractFile[] bundleFs = new AbstractFile[bundles.length];
+        List<AbstractFile> bundleFs = new ArrayList<AbstractFile>();
         for (int k = 0; k < bundles.length; k++) {
             URL url = bundles[k].getResource("/");
             if (url == null) {
@@ -113,7 +116,7 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
             if (url != null) {
                 if ("file".equals(url.getProtocol())) {
                     try {
-                        bundleFs[k] = new PlainFile(new File(url.toURI()));
+                        bundleFs.add(new PlainFile(new Path(new File(url.toURI()))));
                     }
                     catch (URISyntaxException e) {
                         throw (IllegalArgumentException) new IllegalArgumentException(
@@ -121,32 +124,14 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
                     }
                 }
                 else {
-                    bundleFs[k] = BundleFS.create(bundles[k]);
+                    bundleFs.add(BundleFS.create(bundles[k]));
                 }
             }
             else {
                 log.warn("Cannot retreive resources from Bundle {}. Skipping.", bundles[k].getSymbolicName());
             }
         }
-        return bundleFs;
-    }
-
-    // todo use ClassLoaderWriter instead of JcrFs
-    @Override
-    public AbstractFile getOutDir() throws ScriptException {
-        try {
-            if (session == null) {
-                session = repository.loginAdministrative(null);
-            }
-            Node node = deepCreateNode(outDir, session, "sling:Folder");
-            if (node == null) {
-                throw new ScriptException("Unable to create node " + outDir);
-            }
-            return JcrFS.create(node);
-        }
-        catch (RepositoryException e) {
-            throw (ScriptException) new ScriptException("Unable to create node " + outDir).initCause(e);
-        }
+        return bundleFs.toArray(new AbstractFile[bundleFs.size()]);
     }
 
     // -----------------------------------------------------< SCR integration >---
@@ -166,6 +151,23 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
     }
 
     // -----------------------------------------------------< private >---
+
+    // todo use ClassLoaderWriter instead of JcrFs
+    private AbstractFile getOutDir() throws ScriptException {
+        try {
+            if (session == null) {
+                session = repository.loginAdministrative(null);
+            }
+            Node node = deepCreateNode(outDir, session, "sling:Folder");
+            if (node == null) {
+                throw new ScriptException("Unable to create node " + outDir);
+            }
+            return JcrFS.create(node);
+        }
+        catch (RepositoryException e) {
+            throw (ScriptException) new ScriptException("Unable to create node " + outDir).initCause(e);
+        }
+    }
 
     private static URL[] getBootUrls(Bundle bundle) {
         ArrayList<URL> urls = new ArrayList<URL>();

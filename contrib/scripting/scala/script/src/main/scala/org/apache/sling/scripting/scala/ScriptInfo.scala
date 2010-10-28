@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import javax.script.{ScriptException, ScriptContext}
+package org.apache.sling.scripting.scala
 
-package org.apache.sling.scripting.scala {
+import javax.script.{ScriptException, ScriptContext}
 
 /**
  * A ScriptInfo instance provides information about Scala scripts.
@@ -33,6 +33,4 @@ trait ScriptInfo {
    */
   @throws(classOf[ScriptException])
   def getScriptClass(script: String, context: ScriptContext): String
-}
-
 }

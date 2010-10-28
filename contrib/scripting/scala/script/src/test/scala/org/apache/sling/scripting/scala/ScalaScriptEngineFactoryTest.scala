@@ -14,14 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import javax.script.{
-  ScriptEngine,
-  ScriptEngineFactory}
+package org.apache.sling.scripting.scala
 
 import junit.framework.TestCase
 import junit.framework.Assert._
-
-package org.apache.sling.scripting.scala {
 
 class ScalaScriptEngineFactoryTest extends TestCase {
 
@@ -47,9 +43,7 @@ class ScalaScriptEngineFactoryTest extends TestCase {
 
   def testScriptEngineFactoryLanguageVersion() {
     val version = (new ScalaScriptEngineFactory).getLanguageVersion()
-    assertEquals("2.7.7", version)
+    assertEquals("2.8.0", version)
   }
   
-}
-
 }

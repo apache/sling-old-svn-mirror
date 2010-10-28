@@ -14,20 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala
+
 import java.io.{BufferedReader, Reader, IOException, OutputStream, InputStream}
 import java.util.concurrent.locks.{ReadWriteLock, ReentrantReadWriteLock}
-
-import javax.script.{AbstractScriptEngine, Bindings, SimpleBindings, ScriptEngineFactory,
-  ScriptException, ScriptContext}
-
+import javax.script.{AbstractScriptEngine, Bindings, SimpleBindings, ScriptEngineFactory, ScriptException, ScriptContext}
 import org.apache.sling.scripting.scala.interpreter.{Bindings => ScalaBindings}
 import org.apache.sling.scripting.scala.Utils.makeIdentifier
-
 import org.slf4j.LoggerFactory
-
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala {
 
 object ScalaScriptEngine {
   private val log = LoggerFactory.getLogger(classOf[ScalaScriptEngine]);
@@ -100,7 +95,7 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
       val bindings = context.getBindings(ScriptContext.ENGINE_SCOPE)
       val scalaBindings = ScalaBindings()
 
-      import _root_.scala.collection.jcl.Conversions._
+      import scala.collection.JavaConversions.asSet
       for (val key <- bindings.keySet) {
         val value = bindings.get(key)
         if (value == null) log.debug("{} has null value. skipping", key)
@@ -109,9 +104,9 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
 
       val scriptClass = scriptInfo.getScriptClass(script, context)
 
-      // xxx: Scripts need to be compiled everytime.
+      // xxx: Scripts need to be compiled every time.
       // The preamble for injecting the bindings into the script
-      // dependes on the actual types of the bindings. So effectively
+      // depends on the actual types of the bindings. So effectively
       // there is a specific script generated for each type of bindings.
       val interpreter = factory.getScalaInterpreter(context)
       var result: Reporter = writeLocked(rwLock) {
@@ -147,8 +142,10 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
         outputStream.flush()
         result
       }
-      if (result.hasErrors) 
+      if (result.hasErrors)
         throw new ScriptException(result.toString)
+      else
+        result
     }
     catch {
       case e: ScriptException => throw e
@@ -178,6 +175,4 @@ class ScalaScriptEngine(factory: ScalaScriptEngineFactory, scriptInfo: ScriptInf
     }
   }    
       
-}
-
 }

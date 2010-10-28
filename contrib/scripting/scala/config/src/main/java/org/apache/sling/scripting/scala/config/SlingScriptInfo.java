@@ -29,7 +29,7 @@ import org.apache.sling.scripting.scala.ScriptInfo;
 
 /**
  * This {@link ScriptInfo} implementation provides the script class name
- * by retreiving it from the <code>ScriptContext</code>.
+ * by retrieving it from the <code>ScriptContext</code>.
  *
  * @scr.component
  * @scr.service

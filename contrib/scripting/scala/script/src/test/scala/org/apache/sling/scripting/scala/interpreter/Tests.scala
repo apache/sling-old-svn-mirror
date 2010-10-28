@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala.interpreter
+
 import junit.framework.Assert.{assertEquals, assertFalse, fail}
-
 import java.io.PrintWriter
-
 import javax.script.ScriptException
-
-package org.apache.sling.scripting.scala.interpreter {
 
 /**
  * Generic test cases. Implementors inject an InterpreterHelper instance.  
@@ -92,7 +90,5 @@ trait Tests {
 
     assertEquals("Hello world: " + time, out.toString)
   }
-
-}
 
 }

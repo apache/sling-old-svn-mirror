@@ -14,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala.interpreter
+
 import java.io.File
-
 import junit.framework.TestCase
-
 import org.apache.sling.scripting.scala.Utils.valueOrElse
-
 import scala.tools.nsc.io.PlainFile
-
-package org.apache.sling.scripting.scala.interpreter {
 
 /**
  * Standard test cases where files are read/written to/from the file system.
@@ -49,7 +46,5 @@ class InterpreterTest extends TestCase with Tests {
     super.tearDown()
     interpreterHelper = null
   }
-
-}
 
 }

@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala
+
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.reporters.AbstractReporter;
 import scala.tools.nsc.util.Position;
 
-package org.apache.sling.scripting.scala {
-  
 object BacklogReporter {
   val DEFAULT_SIZE = 50
 }
@@ -62,21 +62,23 @@ class BacklogReporter(val settings: Settings, size: Int) extends AbstractReporte
         case _ => "ERROR " 
       }
       
-      val source = pos.source match {
-        case Some(s) => s + " "
-        case _ => ""
+      val source = try {
+        pos.source + " "
+      }
+      catch {
+        case _: UnsupportedOperationException => ""
       } 
       
-      val line = pos.line match {
-        case Some(l) => "line " + l + " "
-        case _ => ""
+      val line = try {
+        "line " + pos.line + " "
+      }
+      catch {
+        case _: UnsupportedOperationException => ""
       }
       
       level + source + line + ": " + msg
     }
 
   }
-
-}
 
 }

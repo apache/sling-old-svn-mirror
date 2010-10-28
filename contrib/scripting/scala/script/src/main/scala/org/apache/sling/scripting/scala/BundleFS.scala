@@ -14,16 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala
+
 import java.net.URL
 import java.io.{File, IOException, InputStream}
-
 import org.apache.sling.scripting.scala.Utils.{valueOrElse, nullOrElse}
-
 import org.osgi.framework.Bundle
-
 import scala.tools.nsc.io.AbstractFile
-
-package org.apache.sling.scripting.scala {
 
 /**
  * Implementation of {@link AbstractFile} on top of a {@link org.osgi.framework.Bundle}
@@ -48,6 +45,8 @@ object BundleFS {
        */
       def file: File = null
 
+      def absolute = this
+
       /**
        * @return last modification time or 0 if not known
        */
@@ -71,6 +70,15 @@ object BundleFS {
       @throws(classOf[IOException])
       def output = throw new IOException("not supported: output")
 
+      def create { unsupported }
+      def delete { unsupported }
+
+      def lookupNameUnchecked(name: String, directory: Boolean) = {
+        val file = lookupName(name, directory)
+        if (file == null) NonExistingFile
+        else file
+      }
+      
       private def getPathAndName(url: URL): (String, String) = {
         val u = url.getPath
         var k = u.length
@@ -94,7 +102,7 @@ object BundleFS {
        */
       def isDirectory: Boolean = true
 
-      def elements: Iterator[AbstractFile] = {
+      def iterator: Iterator[AbstractFile] = {
         new Iterator[AbstractFile]() {
           val dirs = bundle.getEntryPaths(fullName)
           
@@ -172,13 +180,11 @@ object BundleFS {
        */
       def isDirectory: Boolean = false
       override def sizeOption: Option[Int] = Some(bundle.getEntry(fullName).openConnection().getContentLength())
-      def elements: Iterator[AbstractFile] = Iterator.empty
+      def iterator: Iterator[AbstractFile] = Iterator.empty
       def lookupName(name: String, directory: Boolean): AbstractFile = null
     }
 
     new DirEntry(bundle.getResource("/"), null)
   }
-
-}
 
 }

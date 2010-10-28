@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import javax.script.ScriptException
+package org.apache.sling.scripting.scala
 
+import javax.script.ScriptException
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-package org.apache.sling.scripting.scala {
 
 /**
  * Provides compiler settings to the {@link ScalaScriptEngineFactory}. 
@@ -28,7 +27,7 @@ package org.apache.sling.scripting.scala {
 trait SettingsProvider {
   
   /**
-   * @return true if the passed value differes from the current value
+   * @return true if the passed value differs from the current value
    */
   @throws(classOf[ScriptException])
   def setScalaSettings(value: Settings): Boolean
@@ -37,7 +36,7 @@ trait SettingsProvider {
   def getSettings: Settings
   
   /**
-   * @return true if the passed value differes from the current value
+   * @return true if the passed value differs from the current value
    */
   @throws(classOf[ScriptException])
   def setReporter(reporter: Reporter): Boolean
@@ -46,22 +45,11 @@ trait SettingsProvider {
   def getReporter: Reporter
   
   /**
-   * @return true if the passed value differes from the current value
+   * @return true if the passed value differs from the current value
    */
   @throws(classOf[ScriptException])
   def setClasspathX(classpath: Array[AbstractFile]): Boolean
   
   @throws(classOf[ScriptException])
   def getClasspathX: Array[AbstractFile]
-  
-  /**
-   * @return true if the passed value differes from the current value
-   */
-  @throws(classOf[ScriptException])
-  def setOutDir(outDir: AbstractFile): Boolean
-  
-  @throws(classOf[ScriptException])
-  def getOutDir: AbstractFile
-}
-
 }

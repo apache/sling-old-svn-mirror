@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.scripting.scala
+
 import java.io.{PrintWriter, InputStreamReader}
 import javax.jcr.{Session, Repository, Node, SimpleCredentials}
 import junit.framework.TestCase
 import junit.framework.Assert.{assertEquals, assertTrue, assertFalse}
 import org.apache.sling.scripting.scala.JcrFS.{JcrNode, JcrFile, JcrFolder}
 import org.apache.jackrabbit.core.{TransientRepository}
-
-package org.apache.sling.scripting.scala {
 
 class JcrFSTest extends TestCase {
   var session: Session = null
@@ -133,11 +133,9 @@ class JcrFSTest extends TestCase {
     assertEquals(11, file.sizeOption.get)
 
     val reader = new InputStreamReader(file.input)
-    val c = new Array[char](32)
+    val c = new Array[Char](32)
     reader.read(c)
     assertEquals("Hello world", new String(c, 0, 11))
   }
-
-}
 
 }
