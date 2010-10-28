@@ -876,6 +876,8 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
 
                     long storedStamp = Long.parseLong(value);
 
+                    logger.log(Logger.LOG_INFO, String.format("Stored timestamp: %s", storedStamp));
+
                     return storedStamp >= selfStamp;
                 }
 
@@ -944,6 +946,8 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             URLClassLoader urlLoader = (URLClassLoader) loader;
             URL[] urls = urlLoader.getURLs();
             if (urls.length > 0) {
+            	URL url = urls[0];
+            	logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", url));
                 selfStamp = urls[0].openConnection().getLastModified();
             }
         }
@@ -956,10 +960,13 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             File[] jarFiles = levelDir.listFiles(BUNDLE_FILE_FILTER);
             for (File bundleJar : jarFiles) {
                 if (bundleJar.lastModified() > selfStamp) {
+                	logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", bundleJar));
                     selfStamp = bundleJar.lastModified();
                 }
             }
         }
+
+        logger.log(Logger.LOG_INFO, String.format("Final self timestamp: %s.", selfStamp));
 
         // return the final stamp (may be -1 if launcher jar cannot be checked
         // and there are no bundle jar files)
