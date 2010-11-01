@@ -130,7 +130,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
 
         form = form.replace("${resource}", getResource(request));
         form = form.replace("${j_reason}", getReason(request));
-        form = form.replace("${requestContextPath}", request.getContextPath());
+        form = form.replace("${requestContextPath}", getContextPath(request));
 
         return form;
     }
@@ -158,6 +158,35 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      *         string if there is no specific reason
      */
     protected abstract String getReason(final HttpServletRequest request);
+
+    /**
+     * Returns the context path for the authentication form request. This path
+     * includes the following parts:
+     * <ol>
+     * <li>The Servlet context path (
+     * <code>HttpServletRequest.getContextPath()</code></li>
+     * <li>The path to the authenticated resource as returned by
+     * {@link #getResource(HttpServletRequest)} (without the optional query
+     * string which may be contained in the resource path)</li>
+     * </ol>
+     *
+     * @param request The request
+     * @return The context path for the form action consisting of the request
+     *         context path and the resource to which the user is to
+     *         authenticate.
+     */
+    protected String getContextPath(final HttpServletRequest request) {
+        StringBuilder b = new StringBuilder();
+        b.append(request.getContextPath());
+        String resource = getResource(request);
+        int query = resource.indexOf('?');
+        if (query > 0) {
+            b.append(resource.substring(0, query));
+        } else {
+            b.append(resource);
+        }
+        return b.toString();
+    }
 
     /**
      * Load the raw unmodified form from the bundle (through the class loader).
