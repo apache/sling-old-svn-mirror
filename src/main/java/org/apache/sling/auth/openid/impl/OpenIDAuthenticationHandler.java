@@ -19,9 +19,6 @@
 package org.apache.sling.auth.openid.impl;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -323,7 +320,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
 
                     if (relyingParty.verifyAuth(user, request, response)) {
                         // authenticated
-                        response.sendRedirect(getDecodedReturnToResource(request));
+                        response.sendRedirect(getReturnToResource(request));
                         return AuthenticationInfo.DOING_AUTH;
                     }
 
@@ -350,8 +347,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
                 final String trustRoot = (realm == null) ? url : realm;
 
                 // append the resource URL to the returnTo address
-                final String returnTo = url
-                    + getEncodedReturnToResource(request);
+                final String returnTo = url + getReturnToPath(request);
 
                 if (relyingParty.associateAndAuthenticate(user, request,
                     response, trustRoot, trustRoot, returnTo)) {
@@ -796,15 +792,13 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
      * Returns the resource to use as the OpenID returnTo path. This resource is
      * either set as a the resource request attribute or parameter or is derived
      * from the current request (URI plus query string). Next the resource is
-     * URL encoded and prefixed with the request context path to ensure it is
-     * properly transmitted accross the OpenID redirection series.
+     * prefixed with the request context path to ensure it is properly
+     * transmitted accross the OpenID redirection series.
      *
      * @param request The request providing the returnTo URL information
-     * @return The properly encoded returnTo URL path.
-     * @throws InternalError If the platform does not support UTF-8 encoding,
-     *             which is considered a major problem..
+     * @return The properly setup returnTo URL path.
      */
-    private String getEncodedReturnToResource(final HttpServletRequest request) {
+    private String getReturnToPath(final HttpServletRequest request) {
         // find the return to parameter with optional request parameters
         String resource = getLoginResource(request, null);
         if (resource == null) {
@@ -814,48 +808,28 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
             }
         }
 
+        // prefix with the context path if not empty
         String prefix = request.getContextPath();
-        if (prefix.length() == 0) {
-            prefix = "/";
-        }
-
-        try {
-            return prefix + URLEncoder.encode(resource, "UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            throw new InternalError("Unexpected UnsupportedEncodingException for UTF-8");
-        }
+        return prefix.length() > 0 ? prefix.concat(resource) : resource;
     }
 
     /**
-     * Returns the decoded target URL to which the client is to be redirected.
-     * This is the path from the returnTo parameter sent on the initial OpenID
+     * Returns the target resource to which the client is to be redirected. This
+     * is the path from the returnTo parameter sent on the initial OpenID
      * redirect which has been encoded with
      * {@link #getEncodedReturnToResource(HttpServletRequest)}. Thus this method
      * must do the reverse operations, namely cutting of the request context
-     * path prefix and URL decoding the remaing part of the request URL.
+     * path prefix.
      *
      * @param request The request providing the request URL and context path
-     * @return the decoded path to which the client is be redirected after
-     *         successful OpenID authentication
-     * @throws InternalError If the platform does not support UTF-8 encoding,
-     *             which is considered a major problem..
+     * @return the path to which the client is be redirected after successful
+     *         OpenID authentication
      */
-    private String getDecodedReturnToResource(final HttpServletRequest request) {
-        String resource = request.getRequestURI();
-
-        String prefix = request.getContextPath();
-        if (prefix.length() == 0) {
-            prefix = "/";
+    private String getReturnToResource(final HttpServletRequest request) {
+        final String resource = request.getRequestURI();
+        if (request.getQueryString() != null) {
+            return resource + "?" + request.getQueryString();
         }
-
-        if (resource.startsWith(prefix)) {
-            resource = resource.substring(prefix.length());
-        }
-
-        try {
-            return URLDecoder.decode(resource, "UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            throw new InternalError("Unexpected UnsupportedEncodingException for UTF-8");
-        }
+        return resource;
     }
 }
