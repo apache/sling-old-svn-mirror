@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>10-SNAPSHOT</version>
+        <version>9</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -65,8 +65,8 @@
                             org.apache.sling.servlets.post;inline="org/apache/sling/servlets/post/impl/helper/JSONResponse*"
                         </Embed-Dependency>
                         <Export-Package>
-                     org.apache.sling.jcr.jackrabbit.accessmanager;version=2.0.6,
-                     org.apache.sling.jcr.jackrabbit.accessmanager.post;version=2.0.6
+                     org.apache.sling.jcr.jackrabbit.accessmanager;version=2.1.0,
+                     org.apache.sling.jcr.jackrabbit.accessmanager.post;version=2.1.0
                         </Export-Package>
                         <Sling-Initial-Content />
                         <Sling-Nodetypes />
