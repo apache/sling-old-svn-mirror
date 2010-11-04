@@ -22,10 +22,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.ValueMap;
@@ -157,6 +161,40 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
             pvm.put("something", pvm);
             fail("Put with non serializable");
         } catch (IllegalArgumentException iae) {}
+    }
+
+    private Set<String> getMixinNodeTypes(final Node node) throws RepositoryException {
+        final Set<String> mixinTypes = new HashSet<String>();
+        for(final NodeType mixinNodeType : node.getMixinNodeTypes() ) {
+            mixinTypes.add(mixinNodeType.getName());
+        }
+        return mixinTypes;
+    }
+
+    public void testMixins() throws Exception {
+        final Node testNode = this.rootNode.addNode("testMixins" + System.currentTimeMillis());
+        testNode.getSession().save();
+        final PersistableValueMap pvm = new JcrModifiablePropertyMap(testNode);
+
+        final String[] types = pvm.get("jcr:mixinTypes", String[].class);
+        final Set<String> exNodeTypes = getMixinNodeTypes(testNode);
+
+        assertEquals(exNodeTypes.size(), (types == null ? 0 : types.length));
+        if ( types != null ) {
+            for(final String name : types) {
+                assertTrue(exNodeTypes.contains(name));
+            }
+            String[] newTypes = new String[types.length + 1];
+            System.arraycopy(types, 0, newTypes, 0, types.length);
+            newTypes[types.length] = "mix:referenceable";
+            pvm.put("jcr:mixinTypes", newTypes);
+        } else {
+            pvm.put("jcr:mixinTypes", "mix:referenceable");
+        }
+        pvm.save();
+
+        final Set<String> newNodeTypes = getMixinNodeTypes(testNode);
+        assertEquals(newNodeTypes.size(), exNodeTypes.size() + 1);
     }
 
     protected JcrPropertyMap createPropertyMap(final Node node) {
