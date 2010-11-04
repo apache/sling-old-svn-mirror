@@ -25,6 +25,8 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.PersistableValueMap;
@@ -142,6 +144,35 @@ public final class JcrModifiablePropertyMap
         this.fullyRead = false;
     }
 
+    /** Property for the mixin node types. */
+    private static final String MIXIN_TYPES = "jcr:mixinTypes";
+
+    /**
+     * Update the mixin node types
+     */
+    private void handleMixinTypes(final Node node, final Value[] mixinTypes) throws RepositoryException {
+        final Set<String> newTypes = new HashSet<String>();
+        if ( mixinTypes != null ) {
+            for(final Value value : mixinTypes ) {
+                newTypes.add(value.getString());
+            }
+        }
+        final Set<String> oldTypes = new HashSet<String>();
+        for(final NodeType mixinType : node.getMixinNodeTypes()) {
+            oldTypes.add(mixinType.getName());
+        }
+        for(final String name : oldTypes) {
+            if ( !newTypes.contains(name) ) {
+                node.removeMixin(name);
+            } else {
+                newTypes.remove(name);
+            }
+        }
+        for(final String name : newTypes) {
+            node.addMixin(name);
+        }
+    }
+
     /**
      * @see org.apache.sling.api.resource.PersistableValueMap#save()
      */
@@ -152,17 +183,31 @@ public final class JcrModifiablePropertyMap
         }
         try {
             final Node node = getNode();
+            // check for mixin types
+            final String mixinTypesKey = ISO9075.decode(MIXIN_TYPES);
+            if ( this.changedProperties.contains(mixinTypesKey) ) {
+                if ( cache.containsKey(mixinTypesKey) ) {
+                    final CacheEntry entry = cache.get(mixinTypesKey);
+                    handleMixinTypes(node, entry.values);
+                } else {
+                    // remove all mixin types!
+                    handleMixinTypes(node, null);
+                }
+            }
+
             for(final String key : this.changedProperties) {
                 final String name = ISO9075.encodePath(key);
-                if ( cache.containsKey(key) ) {
-                    final CacheEntry entry = cache.get(key);
-                    if ( entry.isMulti ) {
-                        node.setProperty(name, entry.values);
+                if ( !MIXIN_TYPES.equals(name) ) {
+                    if ( cache.containsKey(key) ) {
+                        final CacheEntry entry = cache.get(key);
+                        if ( entry.isMulti ) {
+                            node.setProperty(name, entry.values);
+                        } else {
+                            node.setProperty(name, entry.values[0]);
+                        }
                     } else {
-                        node.setProperty(name, entry.values[0]);
+                        node.setProperty(name, (String)null);
                     }
-                } else {
-                    node.setProperty(name, (String)null);
                 }
             }
             node.getSession().save();
