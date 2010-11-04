@@ -20,9 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -37,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.sample.slingshot.Constants;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a samle for observation which adds tags to new resources.
@@ -56,6 +54,11 @@ public class AutomaticTaggingService
 
     private final Random random = new Random(System.currentTimeMillis());
 
+    private final String MIXIN_TYPE_PROPERTY = "jcr:mixinTypes";
+
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
     public void handleEvent(final Event event) {
         final String path = (String)event.getProperty(org.apache.sling.api.SlingConstants.PROPERTY_PATH);
         if ( path != null && path.startsWith(Constants.ALBUMS_ROOT) ) {
@@ -64,36 +67,38 @@ public class AutomaticTaggingService
                 resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                 final Resource r = resolver.getResource(path);
                 if ( r != null && r.isResourceType(Constants.RESOURCETYPE_PHOTO) ) {
-                    // to add the mixin node type, we have to adopt to a node
-                    final Node node = r.adaptTo(Node.class);
-                    if ( node != null && !node.isNodeType("slingshot:Photo")) {
-                        node.addMixin("slingshot:Photo");
-                        node.getSession().save();
-                        final PersistableValueMap pvm = r.adaptTo(PersistableValueMap.class);
-                        if ( pvm != null ) {
-                            final int tagsValue = this.random.nextInt(8);
-                            final List<String> tags = new ArrayList<String>();
-                            if ( (tagsValue & 1) == 1 ) {
-                                tags.add("ApacheCon");
-                            }
-                            if ( (tagsValue & 2) == 2 ) {
-                                tags.add("Vacation");
-                            }
-                            if ( (tagsValue & 4) == 4 ) {
-                                tags.add("Cool");
-                            }
-                            pvm.put("slingshot:tags", tags.toArray(new String[tags.size()]));
-                            try {
-                                pvm.save();
-                            } catch (PersistenceException e) {
-                                // we just ignore this for now
-                            }
+                    final PersistableValueMap pvm = r.adaptTo(PersistableValueMap.class);
+                    if ( pvm != null ) {
+                        String[] types = pvm.get(MIXIN_TYPE_PROPERTY, String[].class);
+                        if ( types == null ) {
+                            pvm.put(MIXIN_TYPE_PROPERTY, "slingshot:Photo");
+                        } else {
+                            String[] newTypes = new String[types.length + 1];
+                            System.arraycopy(types, 0, newTypes, 0, types.length);
+                            newTypes[types.length] = "slingshot:Photo";
+                            pvm.put(MIXIN_TYPE_PROPERTY, newTypes);
+                        }
+
+                        final int tagsValue = this.random.nextInt(8);
+                        final List<String> tags = new ArrayList<String>();
+                        if ( (tagsValue & 1) == 1 ) {
+                            tags.add("ApacheCon");
+                        }
+                        if ( (tagsValue & 2) == 2 ) {
+                            tags.add("Vacation");
+                        }
+                        if ( (tagsValue & 4) == 4 ) {
+                            tags.add("Cool");
+                        }
+                        pvm.put(Constants.PROPERTY_SLINGSHOT_TAGS, tags.toArray(new String[tags.size()]));
+                        try {
+                            pvm.save();
+                        } catch (PersistenceException e) {
+                            LoggerFactory.getLogger(this.getClass()).info("Ups", e);
+                            // we just ignore this for now
                         }
                     }
                 }
-
-            } catch (final RepositoryException e) {
-                // this should never happen, therefore we ignore
             } catch (final LoginException e) {
                 // this should never happen, therefore we ignore
             } finally {
