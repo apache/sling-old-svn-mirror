@@ -86,5 +86,12 @@ public class ResourceTypeConversionDecorator
             return super.getResourceType();
         }
 
+        @Override
+        public boolean isResourceType(final String resourceType) {
+            if ( this.resourceType.equals(resourceType) ) {
+                return true;
+            }
+            return super.isResourceType(resourceType);
+        }
     }
 }

@@ -28,7 +28,7 @@
     final Iterator<Resource> ri = resource.listChildren();
     while ( ri.hasNext()) {
         final Resource current = ri.next();
-        if ( current.isResourceType(Constants.RESOURCETYPE_FOLDER) 
+        if ( current.isResourceType(Constants.RESOURCETYPE_ALBUM) 
              && Constants.includeAsAlbum(current)) {
             %><sling:include resource="<%= current %>" resourceType="slingshot/Album"  replaceSelectors="treeentry"/><%
         }

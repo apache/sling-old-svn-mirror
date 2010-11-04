@@ -28,7 +28,7 @@
      final Iterator<Resource> fi = resource.listChildren();
      while ( fi.hasNext()) {
          final Resource current = fi.next();
-         if ( current.isResourceType(Constants.RESOURCETYPE_FILE) 
+         if ( current.isResourceType(Constants.RESOURCETYPE_PHOTO) 
               && Constants.includeAsMedia(current)) {
              %>
              <sling:include resource="<%= current %>" resourceType="slingshot/Photo" replaceSelectors="main"/>
