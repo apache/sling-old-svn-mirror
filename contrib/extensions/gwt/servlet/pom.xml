@@ -41,7 +41,7 @@
     <properties>
         <!-- The implementation of the Sling GWT Servlet Library is dependent
             on this specific GWT version: 2.0.4. Do not upgrade just like that. -->
-    	<gwt.version>2.0.4</gwt.version>
+    	<gwt.version>2.1.0</gwt.version>
     </properties>
 
     <scm>
@@ -64,7 +64,7 @@
                             com.google.gwt.user.server.rpc.*;version=${gwt.version},
                             com.google.gwt.user.client.rpc.*;version=${gwt.version}
                         </Export-Package>
-                        <Import-Package>!com.google.gwt.*,!javax.imageio.*,!junit.*,!org.w3c.*,!sun.misc,*</Import-Package>
+                        <Import-Package>!com.google.gwt.*,!javax.imageio.*,!junit.*,!org.w3c.*,!sun.misc,!org.json,!javax.validation.*,*</Import-Package>
                         <DynamicImport-Package>
                             javax.imageio.*
                         </DynamicImport-Package>
