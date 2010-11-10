@@ -44,8 +44,11 @@ import org.apache.sling.jcr.api.SlingRepository;
  */
 @Component(label = "%nodetype.printer.name", description = "%nodetype.printer.description", metatype = false)
 @Service(ConfigurationPrinter.class)
-@Properties({ @Property(name = "service.description", value = "JCR Nodetype Configuration Printer"),
-        @Property(name = "service.vendor", value = "The Apache Software Foundation") })
+@Properties({
+    @Property(name = "service.description", value = "JCR Nodetype Configuration Printer"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
+    @Property(name = "felix.webconsole.configprinter.web.unescaped", boolValue = true)
+})
 public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrinter {
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
@@ -82,7 +85,7 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
                     if (nt.isMixin()) {
                         pw.print(" mixin");
                     }
-                    pw.println();
+                    linebreak(pw, mode);
 
                     for (PropertyDefinition prop : nt.getPropertyDefinitions()) {
                         if (prop.getDeclaringNodeType() == nt) {
@@ -113,7 +116,7 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
                             stopBold(pw, mode);
                         }
 
-                        pw.println();
+                        linebreak(pw, mode);
                     }
                     for (NodeDefinition child : nt.getChildNodeDefinitions()) {
                         if (child.getDeclaringNodeType() == nt) {
@@ -146,10 +149,10 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
                             stopBold(pw, mode);
                         }
 
-                        pw.println();
+                        linebreak(pw, mode);
                     }
 
-                    pw.println();
+                    linebreak(pw, mode);
 
                 }
             } catch (RepositoryException e) {
@@ -171,15 +174,23 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
 
     }
 
+    private void linebreak(PrintWriter pw, String mode) {
+        if (ConfigurationPrinter.MODE_WEB.equals(mode)) {
+            pw.println("<br/>");
+        } else {
+            pw.println();
+        }
+    }
+
     private void stopBold(PrintWriter pw, String mode) {
         if (ConfigurationPrinter.MODE_WEB.equals(mode)) {
-         //   pw.print("</b>");
+            pw.print("</b>");
         }
     }
 
     private void startBold(PrintWriter pw, String mode) {
         if (ConfigurationPrinter.MODE_WEB.equals(mode)) {
-          //  pw.print("<b>");
+            pw.print("<b>");
         }
     }
 
