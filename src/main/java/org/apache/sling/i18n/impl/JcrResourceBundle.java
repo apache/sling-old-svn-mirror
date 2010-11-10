@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.query.Query;
 
@@ -36,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JcrResourceBundle extends ResourceBundle {
-    
+
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
     private static final String JCR_PATH = "jcr:path";
@@ -70,7 +72,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private final ResourceResolver resourceResolver;
 
-    private Map<String, Object> resources;
+    private final ConcurrentHashMap<String, Object> resources;
 
     private boolean fullyLoaded;
 
@@ -85,7 +87,7 @@ public class JcrResourceBundle extends ResourceBundle {
         this.locale = locale;
         this.baseName = baseName;
         this.resourceResolver = resourceResolver;
-        this.resources = new HashMap<String, Object>();
+        this.resources = new ConcurrentHashMap<String, Object>();
         this.fullyLoaded = false;
     }
 
@@ -97,6 +99,21 @@ public class JcrResourceBundle extends ResourceBundle {
     @Override
     public Locale getLocale() {
         return locale;
+    }
+
+    /**
+     * Returns a Set of all resource keys provided by this resource bundle only.
+     * <p>
+     * This method is a new Java 1.6 method to implement the
+     * ResourceBundle.keySet() method.
+     *
+     * @return The keys of the resources provided by this resource bundle
+     */
+    protected Set<String> handleKeySet() {
+        // ensure all keys are loaded
+        loadFully();
+
+        return resources.keySet();
     }
 
     @Override
@@ -126,48 +143,53 @@ public class JcrResourceBundle extends ResourceBundle {
     private void loadFully() {
         if (!fullyLoaded) {
 
-            final String fullLoadQuery = getFullLoadQuery();
-            if (log.isDebugEnabled()) {
-                log.debug("Executing full load query {}", fullLoadQuery);
-            }
-            Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
-                fullLoadQuery, Query.XPATH);
+            synchronized (this) {
+                if (!fullyLoaded) {
 
-            String[] path = getSearchPath();
-
-            List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
-            for (int i = 0; i < path.length; i++) {
-                res0.add(new HashMap<String, Object>());
-            }
-            Map<String, Object> rest = new HashMap<String, Object>();
-
-            while (bundles.hasNext()) {
-                Map<String, Object> row = bundles.next();
-                String jcrPath = (String) row.get(JCR_PATH);
-                String key = (String) row.get(PROP_KEY);
-
-                if (key == null) {
-                    key = ResourceUtil.getName(jcrPath);
-                }
-
-                Map<String, Object> dst = rest;
-                for (int i = 0; i < path.length; i++) {
-                    if (jcrPath.startsWith(path[i])) {
-                        dst = res0.get(i);
-                        break;
+                    final String fullLoadQuery = getFullLoadQuery();
+                    if (log.isDebugEnabled()) {
+                        log.debug("Executing full load query {}", fullLoadQuery);
                     }
+                    Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
+                        fullLoadQuery, Query.XPATH);
+
+                    String[] path = getSearchPath();
+
+                    List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
+                    for (int i = 0; i < path.length; i++) {
+                        res0.add(new HashMap<String, Object>());
+                    }
+                    Map<String, Object> rest = new HashMap<String, Object>();
+
+                    while (bundles.hasNext()) {
+                        Map<String, Object> row = bundles.next();
+                        String jcrPath = (String) row.get(JCR_PATH);
+                        String key = (String) row.get(PROP_KEY);
+
+                        if (key == null) {
+                            key = ResourceUtil.getName(jcrPath);
+                        }
+
+                        Map<String, Object> dst = rest;
+                        for (int i = 0; i < path.length; i++) {
+                            if (jcrPath.startsWith(path[i])) {
+                                dst = res0.get(i);
+                                break;
+                            }
+                        }
+
+                        dst.put(key, row.get(PROP_VALUE));
+                    }
+
+                    for (int i = path.length - 1; i >= 0; i--) {
+                        rest.putAll(res0.get(i));
+                    }
+
+                    resources.putAll(rest);
+
+                    fullyLoaded = true;
                 }
-
-                dst.put(key, row.get(PROP_VALUE));
             }
-
-            for (int i = path.length - 1; i >= 0; i--) {
-                rest.putAll(res0.get(i));
-            }
-
-            resources.putAll(rest);
-
-            fullyLoaded = true;
         }
     }
 
@@ -188,7 +210,7 @@ public class JcrResourceBundle extends ResourceBundle {
             while (bundles.hasNext() && currentWeight > 0) {
                 Map<String, Object> resource = bundles.next();
                 String jcrPath = (String) resource.get(JCR_PATH);
-                
+
                 // skip resources without sling:key and non-matching nodename
                 if (resource.get(PROP_KEY) == null) {
                     if (!key.equals(Text.getName(jcrPath))) {
@@ -210,7 +232,7 @@ public class JcrResourceBundle extends ResourceBundle {
                     currentValue = resource;
                 }
             }
-            
+
             if (currentValue != null) {
                 return currentValue.get(PROP_VALUE);
             }
