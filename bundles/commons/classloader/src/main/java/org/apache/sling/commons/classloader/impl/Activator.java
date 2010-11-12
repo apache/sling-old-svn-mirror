@@ -110,7 +110,8 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     public void bundleChanged(BundleEvent event) {
         final boolean reload;
         if ( event.getType() == BundleEvent.RESOLVED ) {
-            reload = this.service.hasUnresolvedPackages(event.getBundle());
+            reload = this.service.isBundleUsed(event.getBundle().getBundleId())
+                || this.service.hasUnresolvedPackages(event.getBundle());
         } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
             reload = this.service.isBundleUsed(event.getBundle().getBundleId());
         } else {
