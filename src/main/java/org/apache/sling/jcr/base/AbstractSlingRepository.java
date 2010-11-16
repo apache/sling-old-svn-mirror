@@ -30,7 +30,6 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.Workspace;
 
-import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
@@ -688,15 +687,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             Credentials sc = getAdministrativeCredentials(this.adminUser);
             tmpSession = this.getRepository().login(sc);
             Workspace defaultWs = tmpSession.getWorkspace();
-            if (defaultWs instanceof JackrabbitWorkspace) {
-                ((JackrabbitWorkspace) defaultWs).createWorkspace(workspace);
-                return true;
-            }
-
-            // not Jackrabbit
-            this.log(LogService.LOG_ERROR,
-                "createWorkspace: Cannot create requested workspace "
-                    + workspace + ": Jackrabbit is required");
+            defaultWs.createWorkspace(workspace);
+            return true;
         } catch (Throwable t) {
             this.log(LogService.LOG_ERROR,
                 "createWorkspace: Cannot create requested workspace "
