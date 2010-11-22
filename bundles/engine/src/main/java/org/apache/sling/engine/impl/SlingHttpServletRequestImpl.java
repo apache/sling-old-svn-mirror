@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.engine.impl.helper.NullResourceBundle;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.RequestData;
-import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
@@ -74,7 +73,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             pathInfo = pathInfo.concat(servletRequest.getPathInfo());
         }
         this.pathInfo = pathInfo;
-        RequestHistoryConsolePlugin.recordRequest(this);
     }
 
     /**

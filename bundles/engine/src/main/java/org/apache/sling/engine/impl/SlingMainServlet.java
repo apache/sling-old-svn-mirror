@@ -54,6 +54,7 @@ import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
 import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.RequestData;
+import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -67,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * The <code>SlingMainServlet</code> TODO
  */
 @SuppressWarnings("serial")
-@Component(immediate = true, label = "%sling.name", description = "%sling.description")
+@Component(immediate = true, metatype = true, label = "%sling.name", description = "%sling.description")
 @Properties( {
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling Servlet")
@@ -91,6 +92,9 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property(boolValue=DEFAULT_ALLOW_TRACE)
     public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
+
+    @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
+    private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
 
     @Reference
     private HttpService httpService;
@@ -312,6 +316,17 @@ public class SlingMainServlet extends GenericServlet {
         // Setup configuration printer
         this.printerRegistration = WebConsoleConfigPrinter.register(bundleContext, filterManager);
 
+        // setup the request info recorder
+        try {
+            int maxRequests = OsgiUtil.toInteger(
+                componentConfig.get(PROP_MAX_RECORD_REQUESTS),
+                RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT);
+            RequestHistoryConsolePlugin.initPlugin(bundleContext, maxRequests);
+        } catch (Throwable t) {
+            log.debug(
+                "Unable to register web console request recorder plugin.", t);
+        }
+
         // provide the SlingRequestProcessor service
         Hashtable<String, String> srpProps = new Hashtable<String, String>();
         srpProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -326,6 +341,14 @@ public class SlingMainServlet extends GenericServlet {
         if (requestProcessorRegistration != null) {
             requestProcessorRegistration.unregister();
             requestProcessorRegistration = null;
+        }
+
+        // unregister request recorder plugin
+        try {
+            RequestHistoryConsolePlugin.destroyPlugin();
+        } catch (Throwable t) {
+            log.debug(
+                "Problem unregistering web console request recorder plugin.", t);
         }
 
         // this reverses the activation setup

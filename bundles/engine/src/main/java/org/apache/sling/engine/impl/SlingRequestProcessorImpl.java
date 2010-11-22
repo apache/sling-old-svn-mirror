@@ -56,6 +56,7 @@ import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
+import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,6 +131,9 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             servletResponse);
         final SlingHttpServletRequest request = requestData.getSlingRequest();
         final SlingHttpServletResponse response = requestData.getSlingResponse();
+
+        // record the request for the web console display
+        RequestHistoryConsolePlugin.recordRequest(request);
 
         // request entry log
         if (requestLogger != null) {
