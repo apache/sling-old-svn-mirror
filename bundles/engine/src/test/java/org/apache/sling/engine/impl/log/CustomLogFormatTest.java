@@ -16,8 +16,6 @@
  */
 package org.apache.sling.engine.impl.log;
 
-import org.apache.sling.engine.impl.log.CustomLogFormat;
-
 import junit.framework.TestCase;
 
 /**
