@@ -21,6 +21,7 @@ package org.apache.sling.event.impl.jobs;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.BitSet;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.UUID;
@@ -34,9 +35,22 @@ import org.osgi.service.event.EventConstants;
 public abstract class Utility {
 
     /** Allowed characters for a node name */
-    private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
+    private static final BitSet ALLOWED_CHARS;
+
     /** Replacement characters for unallowed characters in a node name */
     private static final char REPLACEMENT_CHAR = '_';
+
+    // Prepare the ALLOWED_CHARS bitset with bits indicating the unicode
+    // character index of allowed characters. We deliberately only support
+    // a subset of the actually allowed set of characters for nodes ...
+    static {
+        final String allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+#!?$%&()=";
+        final BitSet allowedSet = new BitSet();
+        for (int i = 0; i < allowed.length(); i++) {
+            allowedSet.set(allowed.charAt(i));
+        }
+        ALLOWED_CHARS = allowedSet;
+    }
 
     /**
      * Filter the node name for not allowed characters and replace them.
@@ -44,14 +58,14 @@ public abstract class Utility {
      * @return The filtered node name.
      */
     public static String filter(final String nodeName) {
-        final StringBuilder sb  = new StringBuilder();
+        final StringBuilder sb  = new StringBuilder(nodeName.length());
         char lastAdded = 0;
 
         for(int i=0; i < nodeName.length(); i++) {
             final char c = nodeName.charAt(i);
             char toAdd = c;
 
-            if (ALLOWED_CHARS.indexOf(c) < 0) {
+            if (!ALLOWED_CHARS.get(c)) {
                 if (lastAdded == REPLACEMENT_CHAR) {
                     // do not add several _ in a row
                     continue;
