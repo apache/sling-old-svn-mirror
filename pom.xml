@@ -72,9 +72,6 @@
                             javax.portlet;resolution:=optional,
                             *
                         </Import-Package>
-                        <Bundle-Activator>
-                            org.apache.sling.engine.impl.EngineBundleActivator
-                        </Bundle-Activator>
                         <Embed-Dependency>
                             commons-fileupload
                         </Embed-Dependency>
