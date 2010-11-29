@@ -67,8 +67,21 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         JobEvent rescheduleInfo = null;
 
         // if we are ordered we simply wait for the finish
-        if ( this.executeJob(processInfo) ) {
-            rescheduleInfo = this.waitForFinish();
+        synchronized ( this.syncLock ) {
+            if ( this.executeJob(processInfo) ) {
+                this.isWaiting = true;
+                this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
+                while ( this.isWaiting ) {
+                    try {
+                        this.syncLock.wait();
+                    } catch (InterruptedException e) {
+                        this.ignoreException(e);
+                    }
+                }
+                this.logger.debug("Job queue {} is continuing.", this.queueName);
+                rescheduleInfo = this.jobEvent;
+                this.jobEvent = null;
+            }
         }
         return rescheduleInfo;
     }
@@ -92,28 +105,6 @@ public final class OrderedJobQueue extends AbstractJobQueue {
             }
         }
         super.resume();
-    }
-
-    /**
-     * Wait for the job to be finished.
-     * This is called if the queue is ordered.
-     */
-    private JobEvent waitForFinish() {
-        synchronized ( this.syncLock ) {
-            this.isWaiting = true;
-            this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
-            while ( this.isWaiting ) {
-                try {
-                    this.syncLock.wait();
-                } catch (InterruptedException e) {
-                    this.ignoreException(e);
-                }
-            }
-            this.logger.debug("Job queue {} is continuing.", this.queueName);
-            final JobEvent object = this.jobEvent;
-            this.jobEvent = null;
-            return object;
-        }
     }
 
     @Override
