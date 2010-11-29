@@ -85,7 +85,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
 
     @Override
     public void resume() {
-        if ( this.isSleepingUntil == -1 ) {
+        if ( this.isSleepingUntil != -1 ) {
             final Thread thread = this.sleepingThread;
             if ( thread != null ) {
                 thread.interrupt();
