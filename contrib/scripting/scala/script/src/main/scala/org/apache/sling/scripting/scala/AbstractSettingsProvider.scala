@@ -29,7 +29,7 @@ import scala.tools.nsc.reporters.Reporter
 abstract class AbstractSettingsProvider extends SettingsProvider {
   protected var settings: Settings = new Settings
   protected var reporter: Reporter = createReporter(settings)
-  protected var classpathX: Array[AbstractFile] = null
+  protected var classpathX: Array[AbstractFile] = Array.empty
 
   @throws(classOf[ScriptException])
   def setScalaSettings(settings: Settings): Boolean = {
