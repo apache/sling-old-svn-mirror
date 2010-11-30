@@ -34,7 +34,7 @@ object ScalaScriptEngineFactory {
   val SCALA_CLASSPATH_X = "scala.classpath.x"
 
   val ENGINE_NAME = "Scala Scripting Engine"
-  val LANGUAGE_VERSION = "2.8.0"
+  val LANGUAGE_VERSION = "2.8.1"
   val ENGINE_VERSION = "0.9/scala " + LANGUAGE_VERSION
   val EXTENSIONS = Collections.singletonList("scala")
   val LANGUAGE_NAME = "Scala"

@@ -43,7 +43,7 @@ class ScalaScriptEngineFactoryTest extends TestCase {
 
   def testScriptEngineFactoryLanguageVersion() {
     val version = (new ScalaScriptEngineFactory).getLanguageVersion()
-    assertEquals("2.8.0", version)
+    assertEquals("2.8.1", version)
   }
   
 }

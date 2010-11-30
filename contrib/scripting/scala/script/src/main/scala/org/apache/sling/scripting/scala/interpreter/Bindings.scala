@@ -110,7 +110,7 @@ private class BindingsWrapper(map: mutable.Map[String, AnyRef]) extends Bindings
 }
 
 object Bindings {
-  import scala.collection.JavaConversions.asMap
+  import scala.collection.JavaConversions._
 
   def apply(): Bindings = new BindingsWrapper(new mutable.HashMap)
   def apply(map: mutable.Map[String, AnyRef]): Bindings = new BindingsWrapper(map)
