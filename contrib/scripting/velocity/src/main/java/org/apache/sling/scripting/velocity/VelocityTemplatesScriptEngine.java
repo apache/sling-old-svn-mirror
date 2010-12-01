@@ -19,6 +19,7 @@ package org.apache.sling.scripting.velocity;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -40,12 +41,13 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
 
     public VelocityTemplatesScriptEngine(ScriptEngineFactory factory) {
         super(factory);
-
+        
         final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
 	        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 	        
 	        velocity = new VelocityEngine();
+	        
             velocity.init();
         } catch (Exception e) {
             throw new RuntimeException("Exception in Velocity.init() "
@@ -91,10 +93,9 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
 	        Writer w = scriptContext.getWriter();
 	        try {
 	            velocity.evaluate(c, w, logTag, script);
-	            w.toString();
 	        } catch (Throwable t) {
 	            throw new ScriptException("Failure running script " + scriptName
-	                + ": " + t);
+	                + ": " + t + ", stack trace: " + t.getStackTrace() );
 	        }
 	    } finally {
 	    	Thread.currentThread().setContextClassLoader(oldClassLoader);
