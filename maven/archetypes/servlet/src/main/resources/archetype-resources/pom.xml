@@ -49,10 +49,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
+                <!-- use version 2.3.2 to have java 1.5 as the default -->
+                <version>2.3.2</version>
             </plugin>
         </plugins>
     </build>
