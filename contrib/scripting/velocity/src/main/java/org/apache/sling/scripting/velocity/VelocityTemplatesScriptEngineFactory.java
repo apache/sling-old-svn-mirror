@@ -45,7 +45,7 @@ public class VelocityTemplatesScriptEngineFactory extends AbstractScriptEngineFa
     }
 
     public String getLanguageVersion() {
-        return "1.4";
+        return "1.7";
     }
-
+    
 }
