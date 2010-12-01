@@ -48,7 +48,14 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
 	        
 	        velocity = new VelocityEngine();
 	        
-            velocity.init();
+	        // include the Sling resource loader for Velocity
+	        Properties props = new Properties();
+	        props.put("sling.resource.loader.description", "Sling Resource Loader for Velocity");
+	        props.put("sling.resource.loader.class", "org.apache.sling.scripting.velocity.SlingResourceLoader");
+	        props.put("sling.resource.loader.cache", "false");
+	        props.put("resource.loader","file,sling");
+	        
+            velocity.init( props );
         } catch (Exception e) {
             throw new RuntimeException("Exception in Velocity.init() "
                 + e.getMessage(), e);
