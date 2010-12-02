@@ -137,8 +137,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     protected void notifyFinished(final JobEvent rescheduleInfo) {
         this.jobEvent = rescheduleInfo;
         this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
-        this.isWaiting = false;
         synchronized ( this.syncLock ) {
+            this.isWaiting = false;
             this.syncLock.notify();
         }
     }
