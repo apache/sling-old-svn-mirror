@@ -387,6 +387,7 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("Processed Jobs : %s%n", s.getNumberOfProcessedJobs());
         pw.printf("Average Processing Time : %s%n", formatTime(s.getAverageProcessingTime()));
         pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
+        pw.println();
 
         boolean isEmpty = true;
         for(final Queue q : this.jobManager.getQueues()) {
