@@ -137,7 +137,9 @@ public class SuspendableOutputStream extends FilterOutputStream implements
             }
 
         } else if (s == State.RUNNING) {
-            if (state == State.SUSPEND_REQUESTED || state == State.SUSPENDED) {
+            if (state == State.QUEUED 
+                    || state == State.SUSPEND_REQUESTED 
+                    || state == State.SUSPENDED) {
                 state = State.RUNNING;
                 notify();
             }

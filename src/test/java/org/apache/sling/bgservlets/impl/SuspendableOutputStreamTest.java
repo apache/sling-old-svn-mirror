@@ -174,4 +174,15 @@ public class SuspendableOutputStreamTest {
         assertEquals("Expecting DONE state (3)", JobStatus.State.DONE, f
                 .getState());
     }
+    
+    @Test
+    public void testCreationToRunningState() {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final SuspendableOutputStream f = new SuspendableOutputStream(bos);
+        assertEquals("Expecting NEW state initially", JobStatus.State.NEW, f.getState());
+        f.requestStateChange(JobStatus.State.QUEUED);
+        assertEquals("Expecting QUEUED state as requests", JobStatus.State.QUEUED, f.getState());
+        f.requestStateChange(JobStatus.State.RUNNING);
+        assertEquals("Expecting RUNNING state as requested", JobStatus.State.RUNNING, f.getState());
+    }
 }
