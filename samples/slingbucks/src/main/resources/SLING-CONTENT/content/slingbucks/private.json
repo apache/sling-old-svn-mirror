@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "confirmed" : {
+      "jcr:title" : "Confirmed orders",
+      "sling:resourceType" : "slingbucks/confirmed"
+    }
+}

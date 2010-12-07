@@ -1,0 +1,74 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "jcr:title" : "Coffee store options",
+    "jcr:description" : "Defines ordering options for our customers",
+    "sling:resourceType" : "slingbucks/options",
+    "fields" : {
+        "coffeetype" : { 
+            "jcr:title" : "Coffee type",
+            "espresso" : {
+                "jcr:title" : "Espresso",
+                "jcr:description" : "The Italian job",
+                "priceOffset" : 2.20
+            },
+            "capuccino" : {
+                "jcr:title" : "Capuccino",
+                "jcr:description" : "The one with cream on top",
+                "priceOffset" : 3.40
+            },
+            "macchiato" : {
+                "jcr:title" : "Macchiato",
+                "jcr:description" : "Espresso, hot milk and cream",
+                "priceOffset" : 4.30
+            }
+        },
+        "size" : { 
+            "jcr:title" : "Size",
+            "small" : {
+                "jcr:title" : "Small",
+                "jcr:description" : "1dl",
+                "priceFactor" : 1
+            },
+            "medium" : {
+                "jcr:title" : "Medium",
+                "jcr:description" : "2dl",
+                "priceFactor" : 1.5
+            },
+            "large" : {
+                "jcr:title" : "Large",
+                "jcr:description" : "5dl",
+                "priceFactor" : 2
+            }
+        },
+        "sugar" : { 
+            "jcr:title" : "Sugar",
+            "none" : {
+                "jcr:title" : "No sugar",
+                "priceFactor" : 1
+            },
+            "white" : {
+                "jcr:title" : "White sugar",
+                "priceFactor" : 1.1
+            },
+            "raw" : {
+                "jcr:title" : "Raw sugar",
+                "priceFactor" : 1.2
+            }
+        },
+        "cup" : { 
+            "jcr:title" : "Cup type",
+            "plastic" : {
+                "jcr:title" : "Standard plastic",
+                "priceFactor" : 1
+            },
+            "rosewood" : {
+                "jcr:title" : "Rosewood",
+                "priceFactor" : 5
+            },
+            "china" : {
+                "jcr:title" : "Industrial china",
+                "priceFactor" : 1.5
+            }
+        }
+    }
+}

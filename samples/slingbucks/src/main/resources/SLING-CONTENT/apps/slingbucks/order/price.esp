@@ -1,0 +1,80 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+%>
+ 
+<%
+// Get the fields node, where prices are defined
+var fields = resource.getResourceResolver().resolve("/content/slingbucks/readonly/options/fields");
+
+var FIELDS_PATH = "/content/slingbucks/readonly/options/fields";
+var OPT_PREFIX_REGEXP = /^opt_/;
+
+function getPriceProperty(fieldName, value, propertyName) {
+  if(fieldName.match(OPT_PREFIX_REGEXP)) {
+    fieldName = fieldName.replace(OPT_PREFIX_REGEXP,"");
+  } else {
+    return null;
+  }
+  
+  // Path of price property P is like
+  // FIELDS_PATH + coffeetype/capuccino/priceOffset
+  // Get that resource and get our property under it
+  var path = FIELDS_PATH + "/" + fieldName + "/" + value;
+  var fieldResource = resource.getResourceResolver().resolve(path);
+  if(fieldResource) {
+    var props = fieldResource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+    if(props) {
+      var value = props.get(propertyName);
+      if(value) {
+        return value;
+      }
+    }
+  }
+  return null;
+}
+
+// Enumerate the properties of the current order node,
+// find the price in our fields definition, and
+// accumulate if found
+var price = 0;
+
+// First using priceOffset, to compute the base price
+for(i in currentNode) {
+  var prop = currentNode[i];
+  var offset = getPriceProperty(i, prop, "priceOffset");
+  if(offset) {
+    price += offset;
+  }
+}
+
+// Then using priceFactor and multiply
+for(i in currentNode) {
+  var prop = currentNode[i];
+  var factor = getPriceProperty(i, prop, "priceFactor");
+  if(factor) {
+    price *= factor;
+  }
+}
+
+// And round price
+price = Math.round(price * 10) / 10;
+ 
+%>
+<%= price %>

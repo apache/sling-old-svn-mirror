@@ -1,0 +1,80 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+%>
+ 
+<%
+var confirmed = currentNode["orderConfirmed"];
+var pageTitle = "Please review and confirm your order";
+if(confirmed) {
+  pageTitle = "Your order is confirmed";
+}
+%>
+<html>
+<head>
+<title><%= pageTitle %></title>
+<% load("../common/head.esp"); %>
+<link rel="slingbucks/order/price" href="<%= resource.path %>.price.html"/>
+</head>
+<body>
+<h1><%= pageTitle %></h1>
+
+<form method="POST" onSubmit="return clearLastModified()">
+
+<div id="orderHead">
+  <div class="field" id="customerName">
+    <div class="fieldName">Your name</div>
+    <div class="fieldValue"><%= currentNode.customerName %></div> 
+  </div>   
+  
+  <div class="field" id="price">
+    <div class="fieldName">Price of your order</div>
+    <div class="fieldValue"><% sling.include(resource.path, "replaceSelectors=price"); %></div>
+  </div>
+</div>
+
+<% if(confirmed) { %>
+  <div id="orderBody">
+    Your order number is <b><%= currentNode.name %></b>
+    <br/>
+    Please pick it up at the
+    counter when called.  
+  </div>
+<% } else { %>
+  <div id="orderBody">
+    <% sling.include("/content/slingbucks/readonly/options"); %>
+  </div>  
+  <div class="submit">
+    <input type="submit" value="Recalculate"/>
+    <span class="spacer"/>
+    <input type="submit" name="orderConfirmed" value="Confirm this order"/>
+  </div>
+<% } %>
+
+<input type="hidden" name=":redirect" value="*.html"/>
+  
+</form>
+
+<script src="/system/sling.js"></script>
+<script>
+Sling.wizard();
+</script>
+
+</body>
+</html>
