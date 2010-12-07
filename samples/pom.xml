@@ -66,5 +66,6 @@
           <module>webloader/service</module>
           <module>webloader/ui</module>
           <module>custom-login-form</module>
+          <module>slingbucks</module>
     </modules>
 </project>
