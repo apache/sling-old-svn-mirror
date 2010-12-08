@@ -19,51 +19,59 @@
  */
 --%>
 <%
-var nodes = request.resourceResolver.listChildren( resource );
-if (nodes.hasNext()) {
-    %>
-    <ul>
-    <%
-    while (nodes.hasNext()) {
-      var child = nodes.next();
-	var name = Packages.org.apache.sling.api.resource.ResourceUtil.getName(child);
-	
-	var path = child.path;
-	
-	var wsSepPos = path.indexOf(":/", 0);
-    if (wsSepPos != -1) {
-        path = path.substring(wsSepPos + 1);
-    }
-	
-	path = path.substr(1);
-	// WARNING: have a look at explorer.js - duplicate code!
-	var id = path.replace(/\//g, "_");
-	if ( path.length > 1 )
-    {
-        id = id.replace(/^_/, ""); // remove trailing _
-    }
-	id = id.replace(/\./g, '_');// due to the css selectors
-	id = id.replace(/:/g, '_');// due to the css selectors
-	id = id.replace(/\[/g, '_');// due to the css selectors
-	id = id.replace(/\]/g, '_');// due to the css selectors
-    id = id.replace(/\+/g, '_');// due to the css selectors
-	%>
-	<li>
-        <p id="<%= id %>">
-			<%
-				var resourceType = '';
-				var node = child.adaptTo(Packages.javax.jcr.Node);
-				if ( node && node.hasProperty( 'sling:resourceType' ) ) {
-					resourceType = node.getProperty('sling:resourceType');
-				}
+if ( resource )
+{
+	var nodes = request.resourceResolver.listChildren( resource );
+	if ( nodes && nodes.hasNext() ) 
+	{
+		%>
+		<ul>
+		<%
+		while (nodes.hasNext()) {
+			var child = nodes.next();
+			var name = Packages.org.apache.sling.api.resource.ResourceUtil.getName(child);		
+			var path = child.path;
+
+			var wsSepPos = path.indexOf(":/", 0);
+			if (wsSepPos != -1) {
+				path = path.substring(wsSepPos + 1);
+			}
+
+			path = path.substr(1);
+			// WARNING: have a look at explorer.js - duplicate code!
+			var id = path.replace(/\//g, "_");
+			if ( path.length > 1 )
+			{
+				id = id.replace(/^_/, ""); // remove trailing _
+			}
+			id = id.replace(/\./g, '_');// due to the css selectors
+			id = id.replace(/\,/g, '_');// due to the css selectors
+			id = id.replace(/:/g, '_');// due to the css selectors
+			id = id.replace(/\[/g, '_');// due to the css selectors
+			id = id.replace(/\]/g, '_');// due to the css selectors
+			id = id.replace(/\+/g, '_');// due to the css selectors
+			id = id.replace(/\-/g, '_');// due to the css selectors
+			id = id.replace(/\(/g, '_');// due to the css selectors
+			id = id.replace(/\)/g, '_');// due to the css selectors
+			id = id.replace(/\s/g, '_');// due to the css selectors
 			%>
-            <a href="#" onclick="explorer_toggle('<%= path %>', '<%= resourceType %>')" ><%= name %></a>
-        </p>
-      </li>
+			<li>
+				<p id="<%= id %>">
+					<%
+						var resourceType = '';
+						var node = child.adaptTo(Packages.javax.jcr.Node);
+						if ( node && node.hasProperty( 'sling:resourceType' ) ) {
+							resourceType = node.getProperty('sling:resourceType');
+						}
+					%>
+					<a href="#" onclick="explorer_toggle('<%= path %>', '<%= resourceType %>')" ><%= name %></a>
+				</p>
+			  </li>
+			<%
+		} // while
+	%>
+	</ul>
 	<%
-	} // while
-%>
-</ul>
-<%
-} // if (nodes.hasNext())
+	} // if (nodes.hasNext())
+} // if (resource)
 %>

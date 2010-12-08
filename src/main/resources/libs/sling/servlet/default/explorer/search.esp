@@ -23,10 +23,11 @@
 --%>
 <%
 var entriesPerPage = 10;
+var maxEntries = 100;
 var session = request.resourceResolver.adaptTo(Packages.javax.jcr.Session);
 if ( session )
 {
-	var expression = request.getParameter("expression");
+	var expression = unescape(request.getParameter("expression"));
 	var language = request.getParameter("language");
 	var page = parseInt(request.getParameter("page") || 1);
 	var queryManager = session.getWorkspace().getQueryManager();
@@ -38,17 +39,6 @@ if ( session )
 	var knownNumberOfHits = false;
 	if ( !countExpression.toLowerCase().match(/order\s*by/) )
 	{	
-		/* this switch does not seem to work...
-		switch ( language ) {
-			case 'JCR-SQL2' :			
-				countExpression += ' order by [jcr:score] desc';
-				break;
-			case 'xpath' :
-				countExpression += ' order by @jcr:score descending';
-				break;
-			default:
-		}; // switch
-		*/
 		if ( language == 'JCR-SQL2' ) { 
 			countExpression += ' order by [jcr:score] desc'; 
 		}
@@ -56,93 +46,125 @@ if ( session )
 			countExpression += ' order by @jcr:score descending';
 		}
 	}
-	var overallEntryCount = 'unknown';
-	var durationInMs = 'unknown';
+	var overallEntryCount = 'unknown ';
+	var durationInMs = 'unknown ';
+	var results = null;
+	var start = new Date();
 	if ( countExpression.toLowerCase().match(/order\s*by/) )
 	{
 		var countQuery = queryManager.createQuery( countExpression , language );
-		var start = new Date();
-		var results = countQuery.execute();
-		var end = new Date();
-		var durationInMs = end.getTime() - start.getTime();
+		results = countQuery.execute();
 		overallEntryCount = results.getRows().getSize();
-		knownNumberOfHits = true;
+		knownNumberOfHits = (overallEntryCount != -1);
+		overallEntryCount = knownNumberOfHits ? overallEntryCount.toString() : 'unknown';
 	}
-	%>
-	<h4>Hits: <%= overallEntryCount %> (took <%= durationInMs %>ms)</h4>
-	<%
+	else
+	{
+		var query = queryManager.createQuery( expression , language );
+		results = query.execute();
+	}
+
+	/* WE DON'T REPERFORM THE QUERY ANYMORE!
+	var query = queryManager.createQuery( expression, language );
+	if ( overallEntryCount != 'unknown')
+	{
+		query.setOffset( (page - 1) * entriesPerPage );
+		query.setLimit( entriesPerPage );
+	}
+	else
+	{
+		query.setLimit( maxEntries );
+	}
+	results = query.execute();
+	*/
 	
-	var query = queryManager.createQuery( expression, language ); 
-	query.setOffset( (page - 1) * entriesPerPage );
-	query.setLimit(entriesPerPage);
-	var results = query.execute();
-	var ri = results.getRows(); // RowIterator
 	var count = 0;
-	while ( ri.hasNext() ) {
-	    var row = ri.nextRow(); // row
-	    var score = row.getScore(); // double
-	    /*
-	    var values = row.getValues();
-	    var excerpt = '';
-	    for (idx in values)
-	    {
-	    	excerpt += (values[idx]).getString();
-	    } 
-	    */
-		var resourceType = '';
-		var node = row.getNode();
-		if ( node && node.hasProperty( 'sling:resourceType' ) ) {
-			resourceType = node.getProperty('sling:resourceType');
-		}
+	var ri = results.getRows(); // RowIterator
+	try
+	{
+		ri.skip((page - 1) * entriesPerPage);
+		var end = new Date();
+		durationInMs = end.getTime() - start.getTime();
+	%>
+	<h4>Hits: <%= overallEntryCount %> (took <%= durationInMs %>ms)</h4>	
+	<%		
+		while ( ri.hasNext() && count < entriesPerPage ) {
+			var row = ri.nextRow(); // row
+			var score = row.getScore(); // double
+			var resourceType = '';
+			var node = row.getNode();
+			if ( node && node.hasProperty( 'sling:resourceType' ) ) {
+				resourceType = node.getProperty('sling:resourceType');
+			}
 %>
 <li>
 <a href="#" onclick="skip_to('<%= row.getPath() %>', '<%= resourceType %>')"><%= row.getPath() %></a> (score: <%= score %>)
 </li>
 <%	    
-		count++;
-	} // while
+			count++;
+		} // while		
+	}
+	catch( noSuchElementException )
+	{
+	}
+
 	var moreToCome = (count == entriesPerPage);
+	var lastPage = 0;
 	if ( knownNumberOfHits )
 	{
-		var lastPage = Math.round(overallEntryCount / entriesPerPage) + (((overallEntryCount % 10) < 5 && (overallEntryCount % 10) > 0)  ? 1 : 0);
+		lastPage = Math.round(overallEntryCount / entriesPerPage) + (((overallEntryCount % 10) < 5 && (overallEntryCount % 10) > 0)  ? 1 : 0);
 		moreToCome = ((lastPage > 0) && lastPage != page);
 	}
 
 %>
 </ul>
 <div id="page_navigation">
-<% if (page > 1) { %>
+<% 
+	if (page > 1) { 
+%>
 	<a href="#" class="button" id="first_page" title="first page">|&lt;</a> 
 	<a href="#" class="button" id="previous_page" title="previous page">
 	<%= ((page - 2) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) %>
 	</a> 
 <script>
 $('#previous_page').click( function(e) {
-	search('<%= language %>', '<%= expression %>', <%= page - 1 %> );
+	search('<%= language %>', '<%= escape(expression) %>', <%= page - 1 %> );
 });
 $('#first_page').click( function(e) {
-	search('<%= language %>', '<%= expression %>', 1 );
+	search('<%= language %>', '<%= escape(expression) %>', 1 );
 });
 </script>	
-<% } %>
+<% 
+	} // if (page > 1)
+%>
+
 <%= ((page - 1) * entriesPerPage) + 1 %>..<%= ((page - 1) * entriesPerPage) + count %>
-<% if ( moreToCome ) { %>
+<% 
+	if ( moreToCome ) 
+	{		
+%>
 <a href="#" class="button" id="next_page" title="next page">
 <%= (page * entriesPerPage) + 1 %>..<%= ((page + 1) * entriesPerPage) %>
 </a>
-<% if (lastPage) { %>
+<% 
+		if (lastPage > 0) { 
+%>
 <a href="#" class="button" id="last_page">&gt;|</a>
-<% } %>
+<% 
+		} 
+%>
 </div>
 <script>
-$('#next_page').click( function(e) {
-	search('<%= language %>', '<%= expression %>', <%= page + 1 %> );
-});
-$('#last_page').click( function(e) {
-	search('<%= language %>', '<%= expression %>', <%= lastPage %> );
-});
-</script>
+	$('#next_page').click( function(e) {
+		search('<%= language %>', '<%= escape(expression) %>', <%= page + 1 %> );
+	});
+<% if (lastPage > 0) { %>	
+	$('#last_page').click( function(e) {
+		search('<%= language %>', '<%= escape(expression) %>', <%= lastPage %> );
+	});
 <% } %>
-<%
+</script>
+<% 
+	} // if (moreToCome)
 } // if	
 %>

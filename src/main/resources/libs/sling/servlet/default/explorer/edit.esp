@@ -84,7 +84,7 @@
 				<fieldset>
 					<label for="<%= mixinTypesId %>"><%= mixinTypesId %></label>
 					<%	
-					create_multivalueinput_for_type( mixinTypesId, "Name", mixinTypes, false );
+					create_multivalueinput_for_type( mixinTypesId, Packages.javax.jcr.PropertyType.NAME, mixinTypes, false );
 					%>
 					<% if (canModifyProperties) { %>
 						<select id="<%= mixinTypesId %>_new_entry" >
@@ -102,12 +102,17 @@
 			</form>
 		</div>
 	<%  
-	}	
-    var propKeys = properties.keySet().toArray();
-	if ( (propKeys.length > 0) || canModifyProperties ) { %>
+	}
+	// sort properties
+	var propKeys = Packages.java.util.Arrays.asList( properties.keySet().toArray() );
+	Packages.java.util.Collections.sort( propKeys );
+	propKeys = propKeys.toArray();
+	if ( (propKeys.length > 0) || canModifyProperties ) 
+	{ 
+%>
 		<h3>properties</h3>
-	<%
-		for (var idx in propKeys) {
+<%
+		for ( var idx in propKeys ) {
 			var id = propKeys[idx];
 			var isProperty = false;
 			var isMultivalueProperty = false;
@@ -128,21 +133,30 @@
 			<div id="property_element_<%= id %>" class="<% if ( isMultivalueProperty ) {%> multivalued <% } %> property_element">
 			<form id="properties_form_<%= id %>" action="<%=path%>" method="post">
 				<fieldset>
-					<label for="<%= id %>"><%= id %> [ <%= type %> <% if ( isMultivalueProperty ) {%>MULTIVALUE<% } %>] </label>
-					<% if ( isMultivalueProperty ) 
-					{  
-						create_multivalueinput_for_type( id, type, val, true );
-					} else { 
-						if ( isProperty )
-						{
-							create_input_for_type( id, val.getType(), val, ( canModifyProperties && !val.getDefinition().isProtected() ), false  );
+					<label for="<%= id %>"><%= id %> 
+					<% if (isProperty) { %>
+					[ <%= type %> <% if ( isMultivalueProperty ) {%>MULTIVALUE<% } %>]
+					<% } else { %>
+					[not a property!]
+					<% } %>
+					</label>
+					<% 
+					if ( isProperty )
+					{
+						if ( isMultivalueProperty ) 
+						{					
+							create_multivalueinput_for_type( id, val.type, val, true );
+						} else { 
+							if ( isProperty )
+							{
+								create_input_for_type( id, val.getType(), val, ( canModifyProperties && !val.getDefinition().isProtected() ), false  );
+							}
 						}
-						else {
-						%>
-							<input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" /> [not a property!]
-						<%
-						}
-					} 
+					}	
+					else {					
+						// used to output: <input class="prop_value text" id="<%= id %>" name="<%= id %>" value="<%= val %>" />					
+					}
+					 
 			%>
 				<input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%=path%>.explorer.html">
 				</fieldset>
@@ -404,7 +418,7 @@
 		break; 
 		case Packages.javax.jcr.PropertyType.BOOLEAN : %>
 			<input type="hidden" name="<%= id %>" id="<%= id %>_cb" value="<%= val %>" >
-			<input type="checkbox" class="checkbox" id="<%= id %>" <% if(!editable) { %> class="protected" <%}%> <% if ( val.getBoolean() ) { %>checked<% } %> onchange="$('[id=<%= id %>_cb]').val( this.checked ? 'true' : 'false' );">
+			<input type="checkbox" class="checkbox" id="<%= id %>" <% if ( val.getBoolean() ) { %>checked<% } %> onchange="$('[id=<%= id %>_cb]').val( this.checked ? 'true' : 'false' );" <% if(!editable) { %> class="protected" disabled<%}%>>
 		<% 
 			break;
 		case Packages.javax.jcr.PropertyType.REFERENCE :
@@ -430,19 +444,42 @@
 	} // switch 
 } %>
     
-<% function create_multivalueinput_for_type( id, type, multivalue_property, include_add_field ) {
+<%
+function create_multivalueinput_for_type( id, type, multivalue_property, include_add_field ) {
+	var typeStr = Packages.javax.jcr.PropertyType.nameFromValue( type );
 %>
-	<input type="hidden" name="<%= id %>@TypeHint" value="<%= type %>[]" /> 
+	<input type="hidden" name="<%= id %>@TypeHint" value="<%= typeStr %>[]" /> 
 	<ul id="<%= id %>_entries">
 	<% 
 	if ( multivalue_property ) {
+		var editable = canModifyProperties && !multivalue_property.getDefinition().isProtected()
 		for ( var idx in multivalue_property.getValues() )
 		{ 
 			var entry = multivalue_property.getValues()[idx];	%>
 			<li>
 				<input type="hidden" name="<%= id %>" value="<%= entry.getString() %>" />
+				<%
+				switch (type)
+				{
+					case Packages.javax.jcr.PropertyType.REFERENCE :
+					case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
+					case Packages.javax.jcr.PropertyType.PATH :
+						try {
+							var refNode = session.getNodeByIdentifier(entry.getQValue().getString());
+							%>
+				-&gt; <a href="#" onclick="skip_to('<%= refNode.getPath() %>');"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a> 
+ 
+							<% 
+						} catch ( ex ) {
+						}
+						break;
+					default:
+				%>
 				<%= entry.getString() %> 
-				<% if ( canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { %>
+				<% 
+				} // switch
+				%>
+				<% if ( editable ) { %>
 					<a href="#" class="button" onclick="$(this).parent().remove();update_property('<%= id %>');">delete</a>
 				<% } %>
 			</li>
@@ -453,7 +490,7 @@
 	</ul>
 	<div class="addMultivalueproperty">
 		<% if ( include_add_field && canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { 
-			create_input_for_type( id+"_new_entry", type, '', true, true );
+			create_input_for_type( id+"_new_entry", typeStr, '', true, true );
 			%>
 			<a href="#" onclick="add_property_entry('<%= id %>')" class="button">add</a>
 			<div class="clear"></div>

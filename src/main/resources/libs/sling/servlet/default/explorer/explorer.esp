@@ -23,7 +23,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 
-<title>Sling || JCR Explorer</title>
+<title>Sling || JCR Explorer 1.0.0</title>
 
 	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/explorer.css" type="text/css"/>
 	<link rel="stylesheet" href="<%= request.getContextPath() %>/libs/sling/explorer/css/jquery-ui.css" type="text/css" media="all" />
@@ -109,8 +109,8 @@
 						<input type="text" class="text" name="search_expression" id="search_expression" ></input>
 						<br class="clear" />
 					</p>
-					<p>
-						<input class="button" type="submit" value="Execute!" onclick="search($('#query_language').val(), $('#search_expression').val(), 1 ); return false;" /> 
+					<p>						
+						<input class="button" type="submit" id="searchButton" value="Execute!" onclick="search($('#query_language').val(), $('#search_expression').val(), 1 ); return false;" /> 
 						<br class="clear" />
 					</p>					
 				</form>
