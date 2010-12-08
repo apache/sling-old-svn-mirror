@@ -110,19 +110,16 @@ public class QueueConfigurationManager {
      */
     public InternalQueueConfiguration getQueueConfiguration(final JobEvent event) {
         final InternalQueueConfiguration[] configurations = this.getConfigurations();
-        // check for queue name first
         final String queueName = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_QUEUE_NAME);
         for(final InternalQueueConfiguration config : configurations) {
             if ( config.isValid() ) {
-                if ( queueName != null ) {
-                    if ( queueName.equals(config.getName()) ) {
-                        event.queueName = queueName;
-                        return config;
-                    }
-                } else {
-                    if ( config.match(event) ) {
-                        return config;
-                    }
+                // check for queue name first
+                if ( queueName != null && queueName.equals(config.getName()) ) {
+                    event.queueName = queueName;
+                    return config;
+                }
+                if ( config.match(event) ) {
+                    return config;
                 }
             }
         }
