@@ -18,6 +18,8 @@
  */
 package org.apache.sling.event.jobs;
 
+import java.util.Calendar;
+
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.impl.jobs.JobStatusNotifier;
 import org.apache.sling.event.impl.support.Environment;
@@ -88,6 +90,12 @@ public abstract class JobUtil {
      * For possible values see {@link JobPriority}.
      */
     public static final String PROPERTY_JOB_PRIORITY = "event.job.priority";
+
+    /**
+     * This property is set by the eventing and contains a calendar object
+     * specifying the date and time when this job has been created.
+     */
+    public static final String PROPERTY_JOB_CREATED = "slingevent:created";
 
     /**
      * The priority for jobs.
@@ -290,6 +298,15 @@ public abstract class JobUtil {
             // allows to call this method for other background processing.
             new Thread(task).start();
         }
+    }
+
+    /**
+     * Get the created calendar object.
+     * @param job The job event
+     * @return The created info or <code>null</code> if this is not a job event.
+     */
+    public static Calendar getJobCreated(final Event job) {
+        return (Calendar) job.getProperty(PROPERTY_JOB_CREATED);
     }
 
     private JobUtil() {
