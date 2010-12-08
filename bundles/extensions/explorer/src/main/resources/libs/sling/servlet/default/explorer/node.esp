@@ -185,7 +185,7 @@
         function add_new_child_node()
         {
                 $.ajax({
-                        url: '<%=path%>/*',
+                        url: '<%=(path == '/') ? '' : path%>/*',
                         type: 'POST',
                         data: $("form[id='new_child_node_form']" ).serialize(),
                         success: function( data, textStatus, xmlHttpRequest ) 
@@ -269,44 +269,74 @@
     }
 </script>
 <% 
-    function create_input_for_type( id, type, val, editable, omitName ) { 
-            switch ( type ) { 
-                    case Packages.javax.jcr.PropertyType.DATE :                     
-                            %>
+function create_input_for_type( id, type, val, editable, omitName ) { 
+	switch ( type ) { 
+		case Packages.javax.jcr.PropertyType.DATE :                     
+%>
     <form>
       <input class="prop_value text datepicker&lt;% if(!editable) { %&gt; protected&lt;%}%&gt;" <% if (!omitName) { %> name="<%= id %>" <% } %> id="<%= id %>" value="<%= dateFormatter.format( val.getDate().getTime() ) %>"> <%
                       break; 
-                      case Packages.javax.jcr.PropertyType.BOOLEAN : %> <input type="hidden" name="<%= id %>" id="<%= id %>_cb" value="<%= val %>"> <input type="checkbox" id="<%= id %>" <% if(!editable) { %> class="protected" <%}%> <% if ( val.getBoolean() ) { %> checked <% } %> onchange="$('[id=&lt;%= id %&gt;_cb]').val( this.checked ? 'true' : 'false' );"> <% 
-                              break;
-                      case Packages.javax.jcr.PropertyType.REFERENCE :
-                      case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
-                      case Packages.javax.jcr.PropertyType.PATH :
-                              try {
-                                      var refNode = val.getNode();
-                      %> -&gt; <a href="#" onclick="skip_to('&lt;%= refNode.getPath() %&gt;')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a> <input class="prop_value text &lt;% if(!editable) { %&gt; protected &lt;%}%&gt;" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>"> <% 
-                              } catch ( ex ) {}
-                              break;
-                      case Packages.javax.jcr.PropertyType.BINARY :
-                      %> <a class="saveAs" href="%3C%=%20path%20%%3E" target="_blank">Download content (use "Save as...")</a> <%
-                              break;
-                      default: %> <input class="prop_value text &lt;% if(!editable) { %&gt; protected &lt;%}%&gt;" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>"> <% 
-                              break; 
-              } // switch 
-      } %> <% function create_multivalueinput_for_type( id, type, multivalue_property, include_add_field ) {
-      %> <input type="hidden" name="<%= id %>@TypeHint" value="<%= type %>[]">
-    </form>
+		case Packages.javax.jcr.PropertyType.BOOLEAN : 
+%> <input type="hidden" name="<%= id %>" id="<%= id %>_cb" value="<%= val %>"> <input type="checkbox" id="<%= id %>" <% if(!editable) { %> class="protected" <%}%> <% if ( val.getBoolean() ) { %> checked <% } %> onchange="$('[id=&lt;%= id %&gt;_cb]').val( this.checked ? 'true' : 'false' );"> 
+<% 
+			break;
+		case Packages.javax.jcr.PropertyType.REFERENCE :
+		case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
+		case Packages.javax.jcr.PropertyType.PATH :
+			try {
+				var refNode = val.getNode();
+%> -&gt; <a href="#" onclick="skip_to('&lt;%= refNode.getPath() %&gt;')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a> <input class="prop_value text &lt;% if(!editable) { %&gt; protected &lt;%}%&gt;" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>"> <% 
+			} catch ( ex ) {}
+			break;
+		case Packages.javax.jcr.PropertyType.BINARY :
+%> <a class="saveAs" href="%3C%=%20path%20%%3E" target="_blank">Download content (use "Save as...")</a> <%
+			break;
+		default: %> <input class="prop_value text &lt;% if(!editable) { %&gt; protected &lt;%}%&gt;" id="<%= id %>" <% if (!omitName) { %> name="<%= id %>" <% } %> value="<%= val %>"> <% 
+				  break; 
+	} // switch 
+}
+	  
+function create_multivalueinput_for_type( id, type, multivalue_property, include_add_field ) {
+%> 
+	<input type="hidden" name="<%= id %>@TypeHint" value="<%= type %>[]">
+	</form>
     <ul id="<%= id %>_entries">
-      <% 
-              if ( multivalue_property ) {
-                      for ( var idx in multivalue_property.getValues() )
-                      { 
-                              var entry = multivalue_property.getValues()[idx];       %>
-      <li>
-        <input type="hidden" name="<%= id %>" value="<%= entry.getString() %>"> <%= entry.getString() %> <% if ( canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { %> <a href="#" class="button" onclick="$(this).parent().remove();update_property('&lt;%= id %&gt;');">delete</a> <% } %>
-      </li><% 
-                      } // for
-              } // if
-              %>
+<% 
+	if ( multivalue_property )
+	{
+		var editable = canModifyProperties && !multivalue_property.getDefinition().isProtected()
+		for ( var idx in multivalue_property.getValues() )
+		{ 
+			var entry = multivalue_property.getValues()[idx];
+%>
+<li><input type="hidden" name="<%= id %>" value="<%= entry.getString() %>">
+<%			
+			switch (type)
+			{
+				case Packages.javax.jcr.PropertyType.REFERENCE :
+				case Packages.javax.jcr.PropertyType.WEAKREFERENCE :
+				case Packages.javax.jcr.PropertyType.PATH :
+					try {
+						var refNode = entry.getNode();
+%> -&gt; <a href="#" onclick="skip_to('&lt;%= refNode.getPath() %&gt;')"><%= refNode.getPath() %> (<%= refNode.getIdentifier() %>)</a> <input class="prop_value text &lt;% if(!editable) { %&gt; protected &lt;%}%&gt;" id="<%= id %>" <% if (!include_add_field) { %> name="<%= id %>" <% } %> value="<%= entry %>"> <% 
+					} catch ( ex ) {}
+					break;
+				default:
+%>
+					<%= entry.getString() %> 
+<% 
+			} // switch
+			if ( editable ) 
+			{ 
+%>
+<a href="#" class="button" onclick="$(this).parent().remove();update_property('&lt;%= id %&gt;');">delete</a> 
+<% 			
+			} // if 
+%></li>
+<% 
+		} // for
+	} // if ( multivalue_property ) 
+%>
     </ul>
     <div class="addMultivalueproperty">
       <% if ( include_add_field && canModifyProperties && !multivalue_property.getDefinition().isProtected() ) { 

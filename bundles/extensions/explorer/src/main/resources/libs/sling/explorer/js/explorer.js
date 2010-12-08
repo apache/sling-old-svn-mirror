@@ -19,6 +19,9 @@
  
 /** replace the default get and post jQuery utility functions */
 (function($) {
+	$.ajaxSetup({
+	   timeout: 5 * 60 * 1000 // in ms, 5 minutes
+	});
     $.getRaw = $.get;
     $.getJSONRaw = $.getJSON;
     $.postRaw = $.post;
@@ -50,21 +53,28 @@ init_load = function(path) {
 		type: 'GET',
 		// data: params,
 		success: function( data, textStatus, xmlHttpRequest ) {
+			try
+			{
 				// load others
-            var paths = path.split("/");
-            paths.splice(0, 1); // remove first slash
-            var rPath = "";
-            for (p in paths) {
-                rPath += paths[p];
-                load_branch(rPath);
-                rPath += "/";
-            }
+				var paths = path.split("/");
+				paths.splice(0, 1); // remove first slash
+				var rPath = "";
+				for (p in paths) {
+					rPath += paths[p];
+					load_branch(rPath);
+					rPath += "/";
+				}
 
-            // load properties
-            load_props( path );
+				// load properties
+				load_props( path );
+			}
+			catch(e)
+			{
+				show_error( e );
+			}
 		},
 		error: function( xmlHttpRequest, textStatus, errorThrown ) {
-			show_error( xmlHttpRequest.responseText );
+			show_error( "(" + textStatus + ")" + xmlHttpRequest.responseText );
 		}
 	});
 }
@@ -82,10 +92,9 @@ explorer_toggle = function( path ) {
     }
     else
     {
-        // toggle
-          
+        // toggle          
         if (is_open) {
-            // remove children
+            // close, i.e. remove children
             $('p#'+id).parent().find('ul').each(function(){
                 $(this).empty();
                 this.parentNode.removeChild( this )
@@ -94,14 +103,24 @@ explorer_toggle = function( path ) {
             $('p#'+id).parent().removeClass('branch'); // remove css class    
             load_props( path );
         } else {
+			// just reload properties
             load_branch(path, function(){ load_props( path ); });
         }
     }
 }
 
+var loadingbranch = false;
+var lastloaded = null;
+
 /** load branch/subtree **/
 load_branch = function( path, callback, reload ) {
-	if (path != '') {
+	if ( loadingbranch ) {
+		alert("busy...");
+		return;
+	}
+	if ( path != '' ) 
+	{
+		loadingbranch = true;
 		var id = path_2_id( path );
 		$('p#' + id + ">a").removeAttr('href'); // remove onclick
 
@@ -115,27 +134,47 @@ load_branch = function( path, callback, reload ) {
             url: uri,
             type: 'GET',
             success: function( data, textStatus, xmlHttpRequest ) {
-                if ( data.length > 0 ) {
-                    $('p#' + id).parent().addClass('branch'); // add css class
-                    if ( reload )
-                    {
-                        $('ul', $('p#' + id).parent()).remove();
-                    }
-                    $('p#' + id).after(data); // add data
-                    $('p#' + id + ">a").attr('href', "#"); // reactivate onclick
-                    $('p#' + id + ">a").addClass('open'); // open
-                    $('p#' + id).addClass('loaded');
-                    if ( callback ) { callback() };
-                }
+				try
+				{
+					if ( data.length > 0 ) {
+						$('p#' + id).parent().addClass('branch'); // add css class
+						if ( reload )
+						{
+							$('ul', $('p#' + id).parent()).remove();
+						}
+						$('p#' + id).after( data ); // add data
+						$('p#' + id + ">a").attr('href', "#"); // reactivate onclick
+						$('p#' + id + ">a").addClass('open'); // open
+						$('p#' + id).addClass('loaded');
+						lastloaded	= path;
+						if ( callback ) {
+							loadingbranch = false;
+							callback() 
+						};
+					}
+				}
+				catch(e)
+				{
+					show_error( e + data );
+				}
+
             },
             error: function( xmlHttpRequest, textStatus, errorThrown ) {
-                show_error( xmlHttpRequest.responseText );
-            }
+                show_error( "(" + textStatus + ")" + xmlHttpRequest.responseText );
+            },
+			complete: function( xmlHttpRequest, textStatus) {
+				loadingbranch = false;
+				if ( textStatus.equals("timeout") )
+				{
+					show_error("Timeout!");
+				}
+			}
         });
 	}
 }
 
 var currentPath = null;
+
 load_props = function( path ) {
     var id = path_2_id( path );
     $('#expl_content').data("currently_selected_node", id);
@@ -176,26 +215,54 @@ add_prop = function( node ) {
 		type: 'POST',
 		data: params,
 		success: function( data, textStatus, xmlHttpRequest ) {
-			reload_properties();
+			try
+			{
+				reload_properties();
+			}
+			catch(e)
+			{
+				show_error( e );
+			}
+
 		},
 		error: function( xmlHttpRequest, textStatus, errorThrown ) {
-			show_error( xmlHttpRequest.responseText );
+			show_error( "(" + textStatus + ")" + xmlHttpRequest.responseText );
 		}
 	});
 }
 
 search = function( language, expression, page ) {
+	if ( page != null )
+	{
+		// $('#sql_search_result').html( "" );
+		// adjust_height();
+	}
+	$('#searchButton').attr("value", "Please Wait...");
+	$('#searchButton').attr('disabled', true);
 	// search and load search results
 	$.ajax({
 		url: "/.explorer.search.html",
 		type: 'GET',
 		data: { "language" : language, "expression" : expression, "page" : page },
 		success: function( data, textStatus, xmlHttpRequest ) {
-			$('#sql_search_result').html( data );
-			adjust_height();
+			try
+			{
+				$('#sql_search_result').html( data );
+				adjust_height();
+			}
+			catch(e)
+			{
+				show_error( e );
+			}
+
 		},
 		error: function( xmlHttpRequest, textStatus, errorThrown ) {
-			show_error( xmlHttpRequest.responseText );
+			
+			show_error( "(" + textStatus + ")" + xmlHttpRequest.responseText );
+		},
+		complete: function( xmlHttpRequest, textStatus) {
+			$('#searchButton').attr("value", "Execute!");
+			$('#searchButton').removeAttr('disabled');
 		}
 	});
 }
@@ -216,8 +283,15 @@ expand_tree = function( path, callback ) {
 			var id = path_2_id( partialPath ); // replacing / with _
 			if (($('p#' + id).length === 0) || !$('p#' + id).hasClass('loaded'))
 			{
-				// asynchronous recursion: expand_tree is re-called after ajax call has finished
-				load_branch( partialPath, function() { expand_tree( path, callback ); } );
+				if ( partialPath == lastloaded )
+				{
+					show_error("failed to expand path " + partialPath);
+				}
+				else
+				{
+					// asynchronous recursion: expand_tree is re-called after ajax call has finished
+					load_branch( partialPath, function() { expand_tree( path, callback ); } );
+				}
 				return;
 			}
 		}
@@ -233,10 +307,15 @@ path_2_id = function( path ) {
         id = id.replace(/^_/, ""); // remove trailing _
     }
 	id = id.replace(/\./g, '_');// due to the css selectors
+	id = id.replace(/\,/g, '_');// due to the css selectors
 	id = id.replace(/:/g, '_');// due to the css selectors
 	id = id.replace(/\[/g, '_');// due to the css selectors
 	id = id.replace(/\]/g, '_');// due to the css selectors
     id = id.replace(/\+/g, '_');// due to the css selectors
+	id = id.replace(/\-/g, '_');// due to the css selectors
+	id = id.replace(/\(/g, '_');// due to the css selectors
+	id = id.replace(/\)/g, '_');// due to the css selectors
+	id = id.replace(/\s/g, '_');// due to the css selectors
 	return id;
 }
 
