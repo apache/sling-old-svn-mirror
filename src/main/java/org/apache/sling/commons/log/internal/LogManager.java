@@ -19,15 +19,13 @@ package org.apache.sling.commons.log.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.commons.log.internal.config.ConfigurationServiceFactory;
 import org.apache.sling.commons.log.internal.slf4j.LogConfigManager;
 import org.apache.sling.commons.log.internal.slf4j.SlingConfigurationPrinter;
 import org.apache.sling.commons.log.internal.slf4j.SlingLogPanel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
-import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,17 +74,12 @@ public class LogManager {
 
     private ServiceRegistration configConfigurer;
 
-    LogManager(final BundleContext context) throws ConfigurationException {
+    LogManager(final BundleContext context) {
 
         // set the root folder for relative log file names
         logConfigManager = LogConfigManager.getInstance();
         logConfigManager.setRoot(context.getProperty("sling.home"));
-
-        // Global configuration handler and update this configuration
-        // immediately
-        ManagedService globalConfigurator = new GlobalConfigurator(
-            logConfigManager, getBundleConfiguration(context));
-        globalConfigurator.updated(null);
+        logConfigManager.setDefaultConfiguration(getBundleConfiguration(context));
 
         // get our own logger
         log = LoggerFactory.getLogger(LogServiceFactory.class);
@@ -101,22 +94,28 @@ public class LogManager {
         props.put(Constants.SERVICE_DESCRIPTION,
             "LogManager Configuration Admin support");
         loggingConfigurable = context.registerService(
-            ManagedService.class.getName(), globalConfigurator, props);
+            "org.osgi.service.cm.ManagedService",
+            new ConfigurationServiceFactory(logConfigManager,
+                "org.apache.sling.commons.log.internal.config.GlobalConfigurator"),
+            props);
 
         // register for log writer configuration
-        ManagedServiceFactory msf = new LogWriterManagedServiceFactory(
-            logConfigManager);
+        ConfigurationServiceFactory msf = new ConfigurationServiceFactory(
+            logConfigManager,
+            "org.apache.sling.commons.log.internal.config.LogWriterManagedServiceFactory");
         props.put(Constants.SERVICE_PID, FACTORY_PID_WRITERS);
-        props.put(Constants.SERVICE_DESCRIPTION, msf.getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "LogWriter configurator");
         writerConfigurer = context.registerService(
-            ManagedServiceFactory.class.getName(), msf, props);
+            "org.osgi.service.cm.ManagedServiceFactory", msf, props);
 
         // register for log configuration
-        msf = new LoggerManagedServiceFactory(logConfigManager);
+        msf = new ConfigurationServiceFactory(
+            logConfigManager,
+            "org.apache.sling.commons.log.internal.config.LoggerManagedServiceFactory");
         props.put(Constants.SERVICE_PID, FACTORY_PID_CONFIGS);
-        props.put(Constants.SERVICE_DESCRIPTION, msf.getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "Logger configurator");
         configConfigurer = context.registerService(
-            ManagedServiceFactory.class.getName(), msf, props);
+            "org.osgi.service.cm.ManagedServiceFactory", msf, props);
 
         // setup the web console plugin panel. This may fail loading
         // the panel class if the Servlet API is not wired
@@ -179,97 +178,5 @@ public class LogManager {
         }
 
         return config;
-    }
-
-    private static class GlobalConfigurator implements ManagedService {
-
-        private final LogConfigManager logConfigManager;
-
-        private final Dictionary<String, String> defaultConfiguration;
-
-        GlobalConfigurator(LogConfigManager logConfigManager,
-                Dictionary<String, String> defaultConfiguration) {
-            this.logConfigManager = logConfigManager;
-            this.defaultConfiguration = defaultConfiguration;
-        }
-
-        @SuppressWarnings("unchecked")
-        public void updated(Dictionary properties)
-                throws ConfigurationException { // unchecked
-
-            // fallback to start default settings when the config is deleted
-            if (properties == null) {
-                properties = defaultConfiguration;
-            }
-
-            // set the logger name to a special value to indicate the global
-            // (ROOT) logger setting (SLING-529)
-            properties.put(LOG_LOGGERS, LogConfigManager.ROOT);
-
-            // update the default log writer and logger configuration
-            logConfigManager.updateLogWriter(PID, properties);
-            logConfigManager.updateLoggerConfiguration(PID, properties);
-        }
-
-    }
-
-    private static class LogWriterManagedServiceFactory implements
-            ManagedServiceFactory {
-
-        private final LogConfigManager logConfigManager;
-
-        LogWriterManagedServiceFactory(LogConfigManager logConfigManager) {
-            this.logConfigManager = logConfigManager;
-        }
-
-        public String getName() {
-            return "LogWriter configurator";
-        }
-
-        @SuppressWarnings("unchecked")
-        public void updated(String pid, Dictionary configuration)
-                throws ConfigurationException {
-            logConfigManager.updateLogWriter(pid, configuration);
-        }
-
-        public void deleted(String pid) {
-            try {
-                logConfigManager.updateLogWriter(pid, null);
-            } catch (ConfigurationException ce) {
-                // not expected
-                LogConfigManager.internalFailure(
-                    "Unexpected Configuration Problem", ce);
-            }
-        }
-    }
-
-    private static class LoggerManagedServiceFactory implements
-            ManagedServiceFactory {
-
-        private final LogConfigManager logConfigManager;
-
-        LoggerManagedServiceFactory(LogConfigManager logConfigManager) {
-            this.logConfigManager = logConfigManager;
-        }
-
-        public String getName() {
-            return "Logger configurator";
-        }
-
-        @SuppressWarnings("unchecked")
-        public void updated(String pid, Dictionary configuration)
-                throws ConfigurationException {
-            logConfigManager.updateLoggerConfiguration(pid, configuration);
-        }
-
-        public void deleted(String pid) {
-            try {
-                logConfigManager.updateLoggerConfiguration(pid, null);
-            } catch (ConfigurationException ce) {
-                // not expected
-                LogConfigManager.internalFailure(
-                    "Unexpected Configuration Problem", ce);
-            }
-        }
     }
 }
