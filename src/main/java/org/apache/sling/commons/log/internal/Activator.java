@@ -33,11 +33,16 @@ import org.osgi.service.log.LogService;
  */
 public class Activator implements BundleActivator {
 
+    private static final String VENDOR = "The Apache Software Foundation";
+
     private LogManager logManager;
 
     private LogSupport logSupport;
 
-    public void start(BundleContext context) throws Exception {
+    /**
+     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+     */
+    public void start(final BundleContext context) throws Exception {
         logManager = new LogManager(context);
 
         logSupport = new LogSupport();
@@ -50,7 +55,7 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_PID, lsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling LogService implementation");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
         context.registerService(LogService.class.getName(), lsf, props);
 
         LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
@@ -58,12 +63,18 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling LogReaderService implementation");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
         context.registerService(LogReaderService.class.getName(), lrsf, props);
     }
 
-    public void stop(BundleContext context) throws Exception {
+    /**
+     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+     */
+    public void stop(final BundleContext context) throws Exception {
         if (logSupport != null) {
+            context.removeBundleListener(logSupport);
+            context.removeFrameworkListener(logSupport);
+            context.removeServiceListener(logSupport);
             logSupport.shutdown();
             logSupport = null;
         }
