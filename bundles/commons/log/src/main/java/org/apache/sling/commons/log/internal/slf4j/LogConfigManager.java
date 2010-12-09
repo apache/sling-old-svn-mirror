@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.log.internal.LogManager;
-import org.osgi.service.cm.ConfigurationException;
+import org.apache.sling.commons.log.internal.config.ConfigurationException;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 
@@ -70,6 +70,9 @@ public class LogConfigManager implements ILoggerFactory {
 
     // the root folder to make relative writer paths absolute
     private File rootDir;
+
+    // global default configuration (from BundleContext properties)
+    private Dictionary<String, String> defaultConfiguration;
 
     /**
      * Returns the single instance of this log configuration instance.
@@ -127,6 +130,21 @@ public class LogConfigManager implements ILoggerFactory {
      */
     public void setRoot(String root) {
         rootDir = new File((root == null) ? "" : root).getAbsoluteFile();
+    }
+
+    /**
+     * Sets and applies the default configuration used by the
+     * {@link #updateGlobalConfiguration(Dictionary)} method if no configuration
+     * is supplied.
+     */
+    public void setDefaultConfiguration(
+            Dictionary<String, String> defaultConfiguration) {
+        this.defaultConfiguration = defaultConfiguration;
+        try {
+            updateGlobalConfiguration(defaultConfiguration);
+        } catch (ConfigurationException ce) {
+            internalFailure(ce.getMessage(), ce);
+        }
     }
 
     /**
@@ -207,6 +225,23 @@ public class LogConfigManager implements ILoggerFactory {
     }
 
     // ---------- Configuration support
+
+    public void updateGlobalConfiguration(
+            Dictionary<String, String> configuration)
+            throws ConfigurationException {
+        // fallback to start default settings when the config is deleted
+        if (configuration == null) {
+            configuration = defaultConfiguration;
+        }
+
+        // set the logger name to a special value to indicate the global
+        // (ROOT) logger setting (SLING-529)
+        configuration.put(LogManager.LOG_LOGGERS, LogConfigManager.ROOT);
+
+        // update the default log writer and logger configuration
+        updateLogWriter(LogManager.PID, configuration);
+        updateLoggerConfiguration(LogManager.PID, configuration);
+    }
 
     /**
      * Updates or removes the log writer configuration identified by the
