@@ -44,7 +44,9 @@ import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -416,8 +418,9 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         }
 
         @Override
-        protected void doLog(ServiceReference sr, int level, String msg,
-                Throwable throwable) {
+        protected void doLog(
+                Bundle bundle, ServiceReference sr, int level,
+                String msg, Throwable throwable) {
 
             // unwind throwable if it is a BundleException
             if ((throwable instanceof BundleException)
@@ -426,6 +429,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             }
 
             String s = (sr == null) ? null : "SvcRef " + sr;
+            s = (s == null) ? null : s + " Bundle '" + bundle.getBundleId() + "'";
             s = (s == null) ? msg : s + " " + msg;
             s = (throwable == null) ? s : s + " (" + throwable + ")";
 
@@ -476,11 +480,13 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
                 path = "/" + path;
             }
 
+            @SuppressWarnings("rawtypes")
             Set resources = servletContext.getResourcePaths(path); // unchecked
             if (resources == null || resources.isEmpty()) {
                 resources = servletContext.getResourcePaths(WEB_INF + path); // unchecked
             }
 
+            @SuppressWarnings("rawtypes")
             Iterator resourceIterator;
             if ( resources == null || resources.isEmpty() ) {
                 // fall back to the class path
