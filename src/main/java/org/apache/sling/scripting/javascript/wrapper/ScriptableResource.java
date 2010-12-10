@@ -215,7 +215,7 @@ public class ScriptableResource extends ScriptableObject implements
                 if (loader == null) {
                     loader = thisObj.getClass().getClassLoader();
                 }
-                adapter = Class.forName(className, true, loader);
+                adapter = loader.loadClass(className);
             } catch (Exception e) {
                 // TODO: log exception
             }
