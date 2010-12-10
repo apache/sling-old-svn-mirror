@@ -145,7 +145,7 @@ public class Service {
             if (currentFile != null && currentFile.hasNext()) {
                 String name = currentFile.next();
                 try {
-                    Class<?> clazz = Class.forName(name, true, loader);
+                    Class<?> clazz = loader.loadClass(name);
                     return (ProviderType) clazz.newInstance();
                 } catch (Throwable t) {
                     //
