@@ -377,7 +377,7 @@ public abstract class JCRHelper {
         @Override
         protected Class<?> resolveClass(java.io.ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
             if ( this.classloader != null ) {
-                return Class.forName(classDesc.getName(), true, this.classloader);
+                return this.classloader.loadClass(classDesc.getName());
             }
             return super.resolveClass(classDesc);
         }
