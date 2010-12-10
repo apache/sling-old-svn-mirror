@@ -30,13 +30,13 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -588,8 +588,7 @@ public class Sling implements BundleActivator {
                     String className = key.substring(prefix.length()
                         + "class.".length());
                     try {
-                        Class.forName(className, true,
-                            this.getClass().getClassLoader());
+                        this.getClass().getClassLoader().loadClass(className);
                     } catch (Throwable t) {
                         // don't really care, but class checking failed, so we
                         // do not add
