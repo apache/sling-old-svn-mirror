@@ -267,7 +267,7 @@ public class JspCompilationContext {
     protected Compiler createCompiler(String className) {
         Compiler compiler = null;
         try {
-            compiler = (Compiler) Class.forName(className).newInstance();
+            compiler = (Compiler) this.getClass().getClassLoader().loadClass(className).newInstance();
         } catch (InstantiationException e) {
             log.warn(Localizer.getMessage("jsp.error.compiler"), e);
         } catch (IllegalAccessException e) {

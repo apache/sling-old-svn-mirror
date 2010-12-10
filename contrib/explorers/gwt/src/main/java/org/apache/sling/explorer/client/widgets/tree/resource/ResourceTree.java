@@ -93,7 +93,7 @@ public class ResourceTree extends Tree {
 		root = new TreeItem(constants.rootItemDescription());
 //		try {
 //
-//            SessionInfo info = (SessionInfo)   Class.forName("org.apache.sling.explorer.client.sling.SessionInfo").newInstance();
+//            SessionInfo info = (SessionInfo)   this.getClass().getClassLoader().loadClass("org.apache.sling.explorer.client.sling.SessionInfo").newInstance();
 //
 //            root = new TreeItem(info.getUser());
 //        }
