@@ -281,7 +281,7 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
   def execute(name: String, bindings: Bindings, in: Option[InputStream], out: Option[OutputStream]): Reporter = {
     try {
       val classLoader = new AbstractFileClassLoader(outputDir, parentClassLoader)
-      val script = Class.forName(name + "Runner", true, classLoader)
+      val script = classLoader.loadClass(name + "Runner")
       val initMethod = (script
         .getDeclaredMethods
         .toList

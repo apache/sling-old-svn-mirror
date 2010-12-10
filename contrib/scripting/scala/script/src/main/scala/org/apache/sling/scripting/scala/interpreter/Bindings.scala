@@ -70,7 +70,7 @@ trait Bindings extends Map[String, AnyRef] {
 
     def accessible(clazz: Class[_]) = {
       try {
-        Class.forName(clazz.getName)
+	    getClass.getClassLoader.loadClass(clazz.getName)
         (clazz.getModifiers & 1) == 1
       } 
       catch { case _ => false }
