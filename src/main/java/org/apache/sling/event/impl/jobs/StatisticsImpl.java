@@ -273,7 +273,5 @@ public class StatisticsImpl implements Statistics {
         this.finishedJobs = 0;
         this.failedJobs = 0;
         this.cancelledJobs = 0;
-        this.activeJobs = 0;
-        this.queuedJobs = 0;
     }
 }
