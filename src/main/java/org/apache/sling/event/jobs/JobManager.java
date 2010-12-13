@@ -110,4 +110,10 @@ public interface JobManager {
      * The job manager should only be restarted if really necessary!
      */
     void restart();
+
+    /**
+     * Is job processing enabled?
+     * It is possible to completly turn off job processing.
+     */
+    boolean isJobProcessingEnabled();
 }

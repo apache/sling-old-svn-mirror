@@ -175,7 +175,9 @@ public class WebConsolePlugin extends HttpServlet {
                    " document.forms['eventingcmd'].submit();" +
                    "} </script>");
 
-        pw.printf("<p class='statline ui-state-highlight'>Apache Sling Eventing%s%n</p>", msg != null ? " : " + msg : "");
+        pw.printf("<p class='statline ui-state-highlight'>Apache Sling Eventing%s%s%n</p>",
+                this.jobManager.isJobProcessingEnabled() ? "" : " (JOB PROCESSING IS DISABLED!)",
+                msg != null ? " : " + msg : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Eventing: Overall Statistics</span>");
         this.printForm(pw, null, "Restart!", "restart");
@@ -373,6 +375,10 @@ public class WebConsolePlugin extends HttpServlet {
         pw.println("Apache Sling Eventing");
         pw.println("---------------------");
 
+        if (!jobManager.isJobProcessingEnabled()) {
+            pw.println("JOB PROCESSING IS DISABLED!");
+            pw.println();
+        }
         Statistics s = this.jobManager.getStatistics();
         pw.println("Overall Statistics");
         pw.printf("Start Time : %s%n", formatDate(s.getStartTime()));
