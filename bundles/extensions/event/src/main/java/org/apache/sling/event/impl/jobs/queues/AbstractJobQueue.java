@@ -178,9 +178,9 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Periodically cleanup.
+     * Periodically check for started jobs without an ack.
      */
-    public void cleanUp() {
+    public void checkForUnprocessedJobs() {
         if ( this.running ) {
             // check for jobs that were started but never got an aknowledge
             final long tooOld = System.currentTimeMillis() - DEFAULT_WAIT_FOR_ACK_IN_MS;
