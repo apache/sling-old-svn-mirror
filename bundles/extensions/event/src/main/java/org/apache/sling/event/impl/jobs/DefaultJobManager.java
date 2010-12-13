@@ -141,6 +141,13 @@ public class DefaultJobManager
     /** Statistics per topic. */
     private final ConcurrentMap<String, TopicStatistics> topicStatistics = new ConcurrentHashMap<String, TopicStatistics>();
 
+    private static final boolean DEFAULT_ENABLED = true;
+
+    @Property(boolValue=DEFAULT_ENABLED)
+    private static final String PROP_ENABLED = "jobmanager.enabled";
+
+    private boolean enabled = DEFAULT_ENABLED;
+
     /**
      * Activate this component.
      * @param props Configuration properties
@@ -174,6 +181,14 @@ public class DefaultJobManager
             queueProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, 2);
         }
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
+
+        final boolean oldEnabled = this.enabled;
+        this.enabled = OsgiUtil.toBoolean(props.get(PROP_ENABLED), DEFAULT_ENABLED);
+
+        // if we have been disabled before and now get enabled, restart to get processing going
+        if ( this.enabled != oldEnabled && this.enabled ) {
+            this.restart();
+        }
     }
 
     /**
@@ -226,6 +241,13 @@ public class DefaultJobManager
      * @param event The job event
      */
     public void process(final JobEvent event) {
+        // are we disabled?
+        if ( !this.enabled ) {
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Job manager is disabled. Ignoring job {}", EventUtil.toString(event.event));
+            }
+            return;
+        }
         // get the queue configuration
         InternalQueueConfiguration config = configManager.getQueueConfiguration(event);
 
@@ -714,5 +736,12 @@ public class DefaultJobManager
         for(final JobEvent job : jobs) {
             job.restart();
         }
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#isJobProcessingEnabled()
+     */
+    public boolean isJobProcessingEnabled() {
+        return this.enabled;
     }
 }
