@@ -924,8 +924,10 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         synchronized ( this.backgroundLock ) {
             if ( this.running ) {
                 try {
-                    final Node eventNode = (Node) this.backgroundSession.getItem(path);
-                    this.tryToLoadJob(eventNode, this.unloadedJobs);
+                    if ( this.backgroundSession.itemExists(path) ) {
+                        final Node eventNode = (Node) this.backgroundSession.getItem(path);
+                        this.tryToLoadJob(eventNode, this.unloadedJobs);
+                    }
                 } catch (RepositoryException re) {
                     this.ignoreException(re);
                 }

@@ -65,8 +65,8 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    protected boolean canBeMarkedForCleanUp() {
-        boolean result = super.canBeMarkedForCleanUp();
+    protected boolean canBeMarkedForRemoval() {
+        boolean result = super.canBeMarkedForRemoval();
         if ( result ) {
             result = !this.isWaitingForNext;
         }
