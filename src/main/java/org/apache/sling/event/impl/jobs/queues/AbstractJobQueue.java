@@ -72,8 +72,8 @@ public abstract class AbstractJobQueue
     /** Are we still running? */
     protected volatile boolean running;
 
-    /** Are we marked for cleanup */
-    private volatile boolean markedForCleanUp = false;
+    /** Are we marked for removal */
+    private volatile boolean markedForRemoval = false;
 
     /** Is the queue currently waiting(sleeping) */
     protected volatile boolean isWaiting = false;
@@ -110,7 +110,7 @@ public abstract class AbstractJobQueue
      * @see org.apache.sling.event.jobs.Queue#getStateInfo()
      */
     public String getStateInfo() {
-        return "isWaiting=" + this.isWaiting + ", markedForCleanUp=" + this.markedForCleanUp + ", suspendedSince=" + this.suspendedSince.longValue();
+        return "isWaiting=" + this.isWaiting + ", markedForRemoval=" + this.markedForRemoval + ", suspendedSince=" + this.suspendedSince.longValue();
     }
 
     /**
@@ -180,7 +180,7 @@ public abstract class AbstractJobQueue
     /**
      * Periodically cleanup.
      */
-    public void cleanup() {
+    public void cleanUp() {
         if ( this.running ) {
             // check for jobs that were started but never got an aknowledge
             final long tooOld = System.currentTimeMillis() - DEFAULT_WAIT_FOR_ACK_IN_MS;
@@ -215,8 +215,13 @@ public abstract class AbstractJobQueue
                     process = this.startedJobsLists.remove(info.uniqueId) != null;
                 }
                 if ( process ) {
-                    this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", EventUtil.toString(info.event), info.uniqueId);
-                    this.finishedJob(info.event, true);
+                    this.decQueued();
+                    if ( !info.reschedule() ) {
+                        checkForNotify(null);
+                    } else {
+                        this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", EventUtil.toString(info.event), info.uniqueId);
+                        checkForNotify(info);
+                    }
                 }
             }
         }
@@ -357,27 +362,27 @@ public abstract class AbstractJobQueue
         notifyFinished(reprocessInfo);
     }
 
-    protected boolean canBeMarkedForCleanUp() {
+    protected boolean canBeMarkedForRemoval() {
         return this.isEmpty() && !this.isWaiting;
     }
     /**
-     * Mark this queue for cleanup.
+     * Mark this queue for removal.
      */
-    public void markForCleanUp() {
-        if ( this.canBeMarkedForCleanUp() ) {
-            this.markedForCleanUp = true;
+    public void markForRemoval() {
+        if ( this.canBeMarkedForRemoval() ) {
+            this.markedForRemoval = true;
         }
     }
 
     /**
-     * Check if this queue is marked for cleanup
+     * Check if this queue is marked for removal
      */
-    public boolean isMarkedForCleanUp() {
-        if ( this.markedForCleanUp ) {
-            if ( this.canBeMarkedForCleanUp() ) {
+    public boolean isMarkedForRemoval() {
+        if ( this.markedForRemoval ) {
+            if ( this.canBeMarkedForRemoval() ) {
                 return true;
             }
-            this.markedForCleanUp = false;
+            this.markedForRemoval = false;
         }
         return false;
     }

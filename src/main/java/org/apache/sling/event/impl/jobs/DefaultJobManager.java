@@ -211,15 +211,17 @@ public class DefaultJobManager
      * is idle for two consecutive clean up calls, it is removed.
      * @see java.lang.Runnable#run()
      */
-    public void cleanup() {
+    private void cleanup() {
         // check for idle queue
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
         synchronized ( queuesLock ) {
             final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
             while ( i.hasNext() ) {
                 final Map.Entry<String, AbstractJobQueue> current = i.next();
+                // clean up
                 final AbstractJobQueue jbq = current.getValue();
-                if ( jbq.isMarkedForCleanUp() ) {
+                jbq.cleanUp();
+                if ( jbq.isMarkedForRemoval() ) {
                     // close
                     jbq.close();
                     // copy statistics
@@ -228,7 +230,7 @@ public class DefaultJobManager
                     i.remove();
                 } else {
                     // mark to be removed during next cycle
-                    jbq.markForCleanUp();
+                    jbq.markForRemoval();
                 }
             }
         }
@@ -701,8 +703,8 @@ public class DefaultJobManager
         // remove the queue with the old name
         this.queues.remove(queue.getName());
         // check if we can close or have to rename
-        queue.markForCleanUp();
-        if ( queue.isMarkedForCleanUp() ) {
+        queue.markForRemoval();
+        if ( queue.isMarkedForRemoval() ) {
             // close
             queue.close();
             // copy statistics
