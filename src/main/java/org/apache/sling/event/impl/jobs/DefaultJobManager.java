@@ -80,9 +80,7 @@ import org.slf4j.LoggerFactory;
     @Service(value=EventHandler.class)
 })
 @Properties({
-    @Property(name="scheduler.period", longValue=300,
-            label="%jobscheduler.period.name",
-            description="%jobscheduler.period.description"),
+    @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
     @Property(name=ConfigurationConstants.PROP_PRIORITY,
             value=ConfigurationConstants.DEFAULT_PRIORITY,
@@ -148,6 +146,9 @@ public class DefaultJobManager
 
     private boolean enabled = DEFAULT_ENABLED;
 
+    /** We count the scheduler runs. */
+    private long schedulerRuns;
+
     /**
      * Activate this component.
      * @param props Configuration properties
@@ -212,6 +213,10 @@ public class DefaultJobManager
      * @see java.lang.Runnable#run()
      */
     private void cleanup() {
+        this.schedulerRuns++;
+        // we only do a full clean up on every fifth run
+        final boolean doFullCleanUp = (schedulerRuns % 5 == 0);
+
         // check for idle queue
         // we synchronize to avoid creating a queue which is about to be removed during cleanup
         synchronized ( queuesLock ) {
@@ -220,17 +225,19 @@ public class DefaultJobManager
                 final Map.Entry<String, AbstractJobQueue> current = i.next();
                 // clean up
                 final AbstractJobQueue jbq = current.getValue();
-                jbq.cleanUp();
-                if ( jbq.isMarkedForRemoval() ) {
-                    // close
-                    jbq.close();
-                    // copy statistics
-                    this.baseStatistics.add(jbq);
-                    // remove
-                    i.remove();
-                } else {
-                    // mark to be removed during next cycle
-                    jbq.markForRemoval();
+                jbq.checkForUnprocessedJobs();
+                if ( doFullCleanUp ) {
+                    if ( jbq.isMarkedForRemoval() ) {
+                        // close
+                        jbq.close();
+                        // copy statistics
+                        this.baseStatistics.add(jbq);
+                        // remove
+                        i.remove();
+                    } else {
+                        // mark to be removed during next cycle
+                        jbq.markForRemoval();
+                    }
                 }
             }
         }
