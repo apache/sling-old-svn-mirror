@@ -635,4 +635,84 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
         assertEquals("Finished count", COUNT, count.get());
         assertEquals("Finished count", COUNT, this.jobManager.getStatistics().getNumberOfFinishedJobs());
     }
+
+    /**
+     * Test sending of jobs with and without a processor
+     */
+    @org.junit.Test public void testNoJobProcessor() throws Exception {
+        final PersistenceHandler jeh = this.handler;
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger unprocessedCount = new AtomicInteger(0);
+        setEventAdmin(new SimpleEventAdmin(new String[] {"sling/test",
+                "sling/test2",
+                JobUtil.TOPIC_JOB_FINISHED},
+                new EventHandler[] {
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            JobUtil.processJob(event, new JobProcessor() {
+
+                                public boolean process(Event job) {
+                                    try {
+                                        Thread.sleep(200);
+                                    } catch (InterruptedException ie) {
+                                        // ignore
+                                    }
+                                    return true;
+                                }
+                            });
+                        }
+                    },
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            unprocessedCount.incrementAndGet();
+                        }
+                    },
+                    new EventHandler() {
+                        public void handleEvent(final Event event) {
+                            count.incrementAndGet();
+                        }
+                    }}));
+        // we start 20 jobs, every second job has no processor
+        final long startTime = System.currentTimeMillis();
+        final int COUNT = 20;
+        for(int i = 0; i < COUNT; i++ ) {
+            final String jobTopic = (i % 2 == 0 ? "sling/test" : "sling/test2");
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(JobUtil.PROPERTY_JOB_TOPIC, jobTopic);
+            jeh.handleEvent(new Event(JobUtil.TOPIC_JOB, props));
+        }
+        while ( count.get() < COUNT / 2) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        while ( unprocessedCount.get() < COUNT / 2) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        // clean up waits for one minute, so we should do the same
+        while ( System.currentTimeMillis() - startTime < 61000 ) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        this.jobManager.run();
+        while ( unprocessedCount.get() < COUNT ) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                // ignore
+            }
+        }
+        assertEquals("Finished count", COUNT / 2, count.get());
+        assertEquals("Unprocessed count",COUNT, unprocessedCount.get());
+        assertEquals("Finished count", COUNT / 2, this.jobManager.getStatistics().getNumberOfFinishedJobs());
+    }
 }
