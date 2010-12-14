@@ -1033,8 +1033,12 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             try {
                 if ( this.backgroundSession.itemExists(path) ) {
                     final Node eventNode = (Node)this.backgroundSession.getItem(path);
-                    eventNode.setProperty(JobUtil.PROPERTY_JOB_RETRIES, (Integer)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRIES));
-                    eventNode.setProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT, (Integer)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT));
+                    if ( info.event.getProperty(JobUtil.PROPERTY_JOB_RETRIES) != null ) {
+                        eventNode.setProperty(JobUtil.PROPERTY_JOB_RETRIES, (Integer)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRIES));
+                    }
+                    if ( info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+                        eventNode.setProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT, (Integer)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_COUNT));
+                    }
                     eventNode.setProperty(JCRHelper.NODE_PROPERTY_PROCESSOR, Environment.APPLICATION_ID);
                     this.backgroundSession.save();
 
