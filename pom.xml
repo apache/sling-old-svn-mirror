@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.auth.openid</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
 
     <name>Apache Sling OpenID Authentication</name>
     <description>
@@ -43,9 +43,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/auth/openid</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/auth/openid</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.auth.openid-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.auth.openid-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.auth.openid-1.0.2</url>
     </scm>
 
     <build>
