@@ -59,8 +59,8 @@ import org.slf4j.LoggerFactory;
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="Request Redirect Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"
- * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"  private="true"
+ * @scr.property name="sling.servlet.methods" value="GET" private="true"
  * @scr.property name="sling.servlet.prefix" value="-1" type="Integer"
  *               private="true"
  */
