@@ -49,7 +49,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.json.*;version=${project.version}
+                            org.apache.sling.commons.json.*;version=2.0.4
                         </Export-Package>
                     </instructions>
                 </configuration>
