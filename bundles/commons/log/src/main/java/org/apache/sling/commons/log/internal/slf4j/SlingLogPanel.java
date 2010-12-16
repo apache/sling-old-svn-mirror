@@ -76,14 +76,20 @@ public class SlingLogPanel extends HttpServlet {
         final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
         final String cfgColTitle = (consoleAppRoot == null) ? "PID" : "Configuration";
 
+
+        pw.printf(
+            "<p class='statline'>Log Service Stats: %d categories, %d configuration(s), %d writer(s)</p>%n",
+            logConfigManager.getNumLoggers(),
+            logConfigManager.getNumSlingLoggerConfigs(),
+            logConfigManager.getNumSlingLogWriters());
+
         pw.println("<div class='table'>");
 
-        pw.println("<h1>Logger</h1>");
+        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Logger</div>");
 
-        pw.println("<table class='tablelayout'>");
+        pw.println("<table class='nicetable ui-widget'>");
 
-        pw.println("<thead>");
-        pw.println("</tr>");
+        pw.println("<thead class='ui-widget-header'>");
         pw.println("<tr>");
         pw.println("<th>Log Level</th>");
         pw.println("<th>Log File</th>");
@@ -91,7 +97,7 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("<th>" + cfgColTitle + "</th>");
         pw.println("</tr>");
         pw.println("</thead>");
-        pw.println("<tbody>");
+        pw.println("<tbody class='ui-widget-content'>");
 
         Iterator<SlingLoggerConfig> loggers = logConfigManager.getSlingLoggerConfigs();
         while (loggers.hasNext()) {
@@ -119,18 +125,18 @@ public class SlingLogPanel extends HttpServlet {
 
         pw.println("<div class='table'>");
 
-        pw.println("<h1>Log Writer</h1>");
+        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Log Writer</div>");
 
-        pw.println("<table class='tablelayout'>");
+        pw.println("<table class='nicetable ui-widget'>");
 
-        pw.println("<thead>");
+        pw.println("<thead class='ui-widget-header'>");
         pw.println("<tr>");
         pw.println("<th>Log File</th>");
         pw.println("<th>Rotator</th>");
         pw.println("<th>" + cfgColTitle + "</th>");
         pw.println("</tr>");
         pw.println("</thead>");
-        pw.println("<tbody>");
+        pw.println("<tbody class='ui-widget-content'>");
 
         Iterator<SlingLoggerWriter> writers = logConfigManager.getSlingLoggerWriters();
         while (writers.hasNext()) {
