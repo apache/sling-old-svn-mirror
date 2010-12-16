@@ -236,8 +236,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         }
         if (options.getSourceVersion() != null) {
             props.put("org.eclipse.jdt.core.compiler.source", options.getSourceVersion());
-            //props.put("org.eclipse.jdt.core.compiler.compliance", options.getSourceVersion());
-            //props.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", options.getSourceVersion());
+            props.put("org.eclipse.jdt.core.compiler.compliance", options.getSourceVersion());
         }
         if (options.getTargetVersion() != null) {
             props.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", options.getTargetVersion());
