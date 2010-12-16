@@ -210,6 +210,35 @@ public class LogConfigManager implements ILoggerFactory {
      * an iterator.
      */
     Iterator<SlingLoggerWriter> getSlingLoggerWriters() {
+        return internalGetSlingLoggerWriters().iterator();
+    }
+
+    /**
+     * Returns the number of logger configurations active in the system
+     */
+    int getNumSlingLoggerConfigs() {
+        return configByPid.size();
+    }
+
+    /**
+     * Returns the number of logger writers active in the system
+     */
+    int getNumSlingLogWriters() {
+        return internalGetSlingLoggerWriters().size();
+    }
+
+    /**
+     * Returns the number of currently user logger categories
+     */
+    int getNumLoggers() {
+        return loggersByCategory.size();
+    }
+
+    /**
+     * Internal method returns the collection of explicitly configured and
+     * implicitly defined logger writers.
+     */
+    private Collection<SlingLoggerWriter> internalGetSlingLoggerWriters() {
         // configured writers
         Collection<SlingLoggerWriter> writers = new HashSet<SlingLoggerWriter>(
             writerByPid.values());
@@ -221,7 +250,7 @@ public class LogConfigManager implements ILoggerFactory {
             }
         }
 
-        return writers.iterator();
+        return writers;
     }
 
     // ---------- Configuration support
