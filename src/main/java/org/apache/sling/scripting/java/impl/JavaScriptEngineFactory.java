@@ -58,6 +58,7 @@ import org.osgi.service.event.EventHandler;
  * @scr.service interface="javax.script.ScriptEngineFactory"
  *
  * @scr.property nameRef="PROPERTY_COMPILER_SOURCE_V_M" valueRef="DEFAULT_VM_VERSION"
+ * @scr.property nameRef="PROPERTY_COMPILER_TARGET_V_M" valueRef="DEFAULT_VM_VERSION"
  * @scr.property nameRef="PROPERTY_CLASSDEBUGINFO" value="true" type="Boolean"
  * @scr.property nameRef="PROPERTY_ENCODING" value="UTF-8"
  */
@@ -66,6 +67,8 @@ public class JavaScriptEngineFactory
     implements EventHandler {
 
     public static final String PROPERTY_COMPILER_SOURCE_V_M = "java.compilerSourceVM";
+
+    public static final String PROPERTY_COMPILER_TARGET_V_M = "java.compilerTargetVM";
 
     public static final String PROPERTY_CLASSDEBUGINFO = "java.classdebuginfo";
 
@@ -198,7 +201,7 @@ public class JavaScriptEngineFactory
         } catch (ServletException se) {
             throw new SlingServletException(se);
         } catch (Exception ex) {
-            throw new SlingException(ex) {};
+            throw new SlingException(null, ex);
         } finally {
             request.setAttribute(SlingBindings.class.getName(), oldValue);
             ioProvider.resetRequestResourceResolver();

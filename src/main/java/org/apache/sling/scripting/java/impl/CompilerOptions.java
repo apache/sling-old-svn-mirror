@@ -22,6 +22,8 @@ import org.apache.sling.commons.compiler.Options;
 
 public class CompilerOptions extends Options {
 
+    private static final long serialVersionUID = 6526386931840426139L;
+
     private String encoding;
 
     /**
@@ -36,6 +38,9 @@ public class CompilerOptions extends Options {
 
         final String sourceVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M);
         opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.length() > 0 ? sourceVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+
+        final String targetVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M);
+        opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.length() > 0 ? targetVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
 
         final String encoding = (String) props.get(JavaScriptEngineFactory.PROPERTY_ENCODING);
         opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
