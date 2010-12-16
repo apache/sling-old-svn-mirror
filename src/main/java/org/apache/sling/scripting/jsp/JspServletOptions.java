@@ -334,7 +334,7 @@ public class JspServletOptions implements Options {
 
         this.jspClassLoader = jspClassLoader;
 
-        // JVM version numbers default to 1.4
+        // JVM version numbers default to 1.5
         this.compilerSourceVM = DEFAULT_VM_VERSION;
         this.compilerTargetVM = DEFAULT_VM_VERSION;
 
