@@ -119,6 +119,10 @@
                                     <groupId>org.apache.felix</groupId>
                                     <artifactId>org.apache.felix.webconsole</artifactId>
                                 </bundle>
+                                <bundle>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.installer</artifactId>
+                                </bundle>
                             </bundleExclusions>
                         </configuration>
                     </execution>

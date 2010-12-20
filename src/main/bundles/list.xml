@@ -190,6 +190,18 @@
             <artifactId>org.apache.aries.jmx.core</artifactId>
             <version>0.2-incubating</version>
         </bundle>
+        
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.installer</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </bundle>
+        
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.osgi.installer</artifactId>
+	        <version>3.0.0-SNAPSHOT</version>
+        </bundle>
     </startLevel>
     <startLevel level="1">
         <bundle>
