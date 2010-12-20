@@ -19,7 +19,11 @@ package org.apache.sling.maven.projectsupport;
 import static org.apache.felix.framework.util.FelixConstants.*;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,7 +41,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
@@ -46,10 +50,6 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.osgi.framework.BundleException;
 
-/**
- * Base plugin class for goals which start Sling. 
- * 
- */
 public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMojo implements Notifiable {
 
     /** Default log level setting if no set on command line (value is "INFO"). */
@@ -101,7 +101,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
 
     /**
      * @parameter expression="${resourceProviderRoot}"
-     *           default-value="src/test/resources"
+     *            default-value="src/test/resources"
      */
     private File resourceProviderRoot;
 
@@ -110,22 +110,51 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
      */
     private MavenFileFilter mavenFileFilter;
 
-    private ResourceProvider resourceProvider = new ResourceProvider() {
+    /**
+     * @parameter expression="${session}"
+     * @required
+     * @readonly
+     */
+    private MavenSession mavenSession;
 
-        @Override
+    private LaunchpadContentProvider resourceProvider = new LaunchpadContentProvider() {
+
         public Iterator<String> getChildren(String path) {
-            if (path.equals("resources/bundles")) {
+            if (path.equals(BUNDLE_PATH_PREFIX)) {
                 List<String> levels = new ArrayList<String>();
                 for (StartLevel level : getBundleList().getStartLevels()) {
-                    levels.add(String.valueOf(level.getLevel()) + "/");
+                    levels.add(String.valueOf(BUNDLE_PATH_PREFIX + "/" + level.getLevel()) + "/");
                 }
                 return levels.iterator();
             } else if (path.equals("resources/corebundles")) {
                 List<String> empty = Collections.emptyList();
                 return empty.iterator();
-            } else {
+            } else if (path.equals(CONFIG_PATH_PREFIX)) {
+                if (configDirectory.exists() && configDirectory.isDirectory()) {
+                    File[] configFiles = configDirectory.listFiles(new FileFilter() {
+
+                        public boolean accept(File file) {
+                            return file.isFile();
+                        }
+                    });
+
+                    List<String> fileNames = new ArrayList<String>();
+                    for (File cfgFile : configFiles) {
+                        if (cfgFile.isFile()) {
+                            fileNames.add(CONFIG_PATH_PREFIX + "/" + cfgFile.getName());
+                        }
+                    }
+
+                    return fileNames.iterator();
+
+                } else {
+                    List<String> empty = Collections.emptyList();
+                    return empty.iterator();
+                }
+            } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
+                String startLevel = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
                 try {
-                    int i = Integer.parseInt(path);
+                    int i = Integer.parseInt(startLevel);
                     List<String> bundles = new ArrayList<String>();
                     for (StartLevel level : getBundleList().getStartLevels()) {
                         if (level.getLevel() == i) {
@@ -145,15 +174,25 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
                     return bundles.iterator();
 
                 } catch (NumberFormatException e) {
-                    getLog().warn("un-handlable path " + path);
-                    return null;
-
                 }
             }
+
+            getLog().warn("un-handlable path " + path);
+            return null;
         }
 
-        @Override
         public URL getResource(String path) {
+            if (path.startsWith(CONFIG_PATH_PREFIX)) {
+                File configFile = new File(configDirectory, path.substring(CONFIG_PATH_PREFIX.length() + 1));
+                if (configFile.exists()) {
+                    try {
+                        return configFile.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        // ignore this one
+                    }
+                }
+            }
+
             File resourceFile = new File(resourceProviderRoot, path);
             if (resourceFile.exists()) {
                 try {
@@ -167,13 +206,29 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
                 if (fromClasspath != null) {
                     return fromClasspath;
                 }
-                
+
                 try {
                     return new URL(path);
                 } catch (MalformedURLException e) {
                     return null;
                 }
             }
+
+        }
+
+        public InputStream getResourceAsStream(String path) {
+            URL res = this.getResource(path);
+            if (res != null) {
+                try {
+                    return res.openStream();
+                } catch (IOException ioe) {
+                    // ignore this one
+                }
+            }
+
+            // no resource
+            return null;
+
         }
     };
 
@@ -200,9 +255,9 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
         if (updateFile != null) {
             getLog().warn("Maven Launchpad Plugin doesn't support updating the framework bundle.");
         }
-        
+
         getLog().info("Restarting Framework and Sling");
-    
+
         try {
             executeWithArtifacts();
         } catch (MojoExecutionException e) {
@@ -270,8 +325,8 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMo
 
     }
 
-    protected abstract Sling startSling(ResourceProvider resourceProvider, Map<String, String> props, Logger logger)
-            throws BundleException;
+    protected abstract Sling startSling(LaunchpadContentProvider resourceProvider, Map<String, String> props,
+            Logger logger) throws BundleException;
 
     protected void stopSling() {
         if (sling != null) {

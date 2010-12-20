@@ -92,12 +92,13 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 	public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
 		copyBaseArtifact();
 		copyBundles(getBundleList(), getOutputDirectory());
+		copyConfigurationFiles();
 		if (JAR.equals(packaging)) {
 			unpackBaseArtifact();
 		}
 	}
 
-	protected void initArtifactDefinitions(Properties dependencies) {
+    protected void initArtifactDefinitions(Properties dependencies) {
 		if (base == null) {
 			base = new ArtifactDefinition();
 		}
@@ -185,6 +186,15 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 		}
 		unpack(artifact.getFile(), buildOutputDirectory, null, null);
 	}
+
+    private void copyConfigurationFiles() throws MojoExecutionException {
+        try {
+            FileUtils.copyDirectory(configDirectory, new File(getOutputDirectory(), CONFIG_PATH_PREFIX));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to copy configuration files", e);
+        }
+        
+    }
 
     private void unpack(File source, File destination, String includes, String excludes)
             throws MojoExecutionException {
