@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.osgi.framework.BundleContext;
@@ -35,7 +35,7 @@ import org.osgi.framework.BundleException;
 public class SlingBridge extends Sling {
 
     public SlingBridge(Notifiable notifiable, Logger logger,
-            ResourceProvider resourceProvider, Map<String, String> propOverwrite,
+            LaunchpadContentProvider resourceProvider, Map<String, String> propOverwrite,
             ServletContext servletContext)
             throws BundleException {
         super(notifiable, logger, resourceProvider, propOverwrite);

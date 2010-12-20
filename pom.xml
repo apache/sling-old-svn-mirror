@@ -111,6 +111,20 @@
                             </outputDirectory>
                         </configuration>
                     </execution>
+                    <!-- Embed code from launchpad.api -->
+                    <execution>
+                        <id>extract-sling-launchpad-api</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>org.apache.sling.launchpad.api</includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/classes
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
                     <!-- Embed osgi Version class from framework-->
                     <execution>
                         <id>extract-osgi-framework</id>
@@ -149,6 +163,7 @@
                             </archive>
                             <classifier>app</classifier>
                             <includes>
+                                <include>org/apache/sling/launchpad/api/**</include>
                                 <include>org/apache/sling/launchpad/base/shared/**</include>
                                 <include>org/apache/sling/launchpad/app/**</include>
                                 <include>org/apache/sling/commons/osgi/bundleversion/**</include>
@@ -179,6 +194,7 @@
                             <classifier>webapp</classifier>
                             <packagingIncludes>
                                 META-INF/**,
+                                WEB-INF/classesorg/apache/sling/launchpad/api/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/webapp/**,
                                 WEB-INF/classes/org/apache/sling/commons/osgi/bundleversion/**,
@@ -249,6 +265,12 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
             <version>${felix.httpservice.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

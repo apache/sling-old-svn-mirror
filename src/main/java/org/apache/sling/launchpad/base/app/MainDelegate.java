@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
@@ -151,7 +151,7 @@ public class MainDelegate implements Launcher {
         logger.setLogLevel(Logger.LOG_ERROR);
 
         try {
-            ResourceProvider resProvider = new ClassLoaderResourceProvider(
+            LaunchpadContentProvider resProvider = new ClassLoaderResourceProvider(
                 getClass().getClassLoader());
 
             // creating the instance launches the framework and we are done here

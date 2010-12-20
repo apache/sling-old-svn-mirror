@@ -19,6 +19,7 @@ package org.apache.sling.launchpad.base.impl;
 import java.net.URL;
 import java.net.URLConnection;
 
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.osgi.service.url.AbstractURLStreamHandlerService;
 
 /**
@@ -30,19 +31,19 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
 public class ContextProtocolHandler extends AbstractURLStreamHandlerService {
 
     /**
-     * The {@link ResourceProvider} to which requests for content access are
+     * The {@link LaunchpadContentProvider} to which requests for content access are
      * delegated.
      */
-    private final ResourceProvider resourceProvider;
+    private final LaunchpadContentProvider resourceProvider;
 
     /**
      * Creates an instance of this protocol handler setting the servlet context
      * which is queried to access content.
      *
-     * @param resourceProvider The {@link ResourceProvider} to which requests
+     * @param resourceProvider The {@link LaunchpadContentProvider} to which requests
      *            for content access are delegated.
      */
-    public ContextProtocolHandler(ResourceProvider resourceProvider) {
+    public ContextProtocolHandler(LaunchpadContentProvider resourceProvider) {
         this.resourceProvider = resourceProvider;
     }
 

@@ -46,6 +46,7 @@ import javax.management.ObjectName;
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleActivator;
@@ -59,7 +60,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 /**
  * The <code>Sling</code> serves as the starting point for Sling.
  * <ul>
- * <li>The {@link #Sling(Notifiable, Logger, ResourceProvider, Map)} method launches Apache
+ * <li>The {@link #Sling(Notifiable, Logger, LaunchpadContentProvider, Map)} method launches Apache
  * <code>Felix</code> as the OSGi framework implementation we use.
  * </ul>
  * <p>
@@ -174,7 +175,7 @@ public class Sling implements BundleActivator {
      */
     protected final Logger logger;
 
-    private ResourceProvider resourceProvider;
+    private LaunchpadContentProvider resourceProvider;
 
     /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
@@ -198,7 +199,7 @@ public class Sling implements BundleActivator {
      * @throws BundleException if the framework cannot be initialized.
      */
     public Sling(Notifiable notifiable, Logger logger,
-            ResourceProvider resourceProvider, Map<String, String> propOverwrite)
+            LaunchpadContentProvider resourceProvider, Map<String, String> propOverwrite)
             throws BundleException {
 
         this.logger = logger;
@@ -339,6 +340,7 @@ public class Sling implements BundleActivator {
         }
         bundleContext.registerService(MBeanServer.class.getName(),
             platformMBeanServer, mbeanProps);
+        bundleContext.registerService(LaunchpadContentProvider.class.getName(), resourceProvider, null);
 
         // execute optional bundle startup tasks of an extension
         this.doStartBundle();

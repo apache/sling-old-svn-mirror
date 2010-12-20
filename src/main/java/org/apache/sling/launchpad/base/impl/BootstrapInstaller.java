@@ -38,6 +38,7 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.bootstrapcommands.BootstrapCommandFile;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
@@ -140,10 +141,10 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
     private final Logger logger;
 
     /**
-     * The {@link ResourceProvider} used to access the Bundle files to
+     * The {@link LaunchpadContentProvider} used to access the Bundle files to
      * install.
      */
-    private final ResourceProvider resourceProvider;
+    private final LaunchpadContentProvider resourceProvider;
 
     private BundleContext bundleContext;
 
@@ -157,13 +158,13 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      * the update of an installed framework extension bundle.
      * <p>
      * This value is preset by the
-     * {@link #BootstrapInstaller(Logger, ResourceProvider, Map)} constructor to
+     * {@link #BootstrapInstaller(Logger, LaunchpadContentProvider, Map)} constructor to
      * the value set in the <code>org.osgi.framework.startlevel.beginning</code>
      * property of the supplied map.
      */
     private int targetStartLevel;
 
-    BootstrapInstaller(Logger logger, ResourceProvider resourceProvider,
+    BootstrapInstaller(Logger logger, LaunchpadContentProvider resourceProvider,
             Map<String, String> props) {
         this.logger = logger;
         this.resourceProvider = resourceProvider;

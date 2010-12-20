@@ -21,10 +21,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
+
 /**
  * The <code>ContextConnection</code> extends the
  * <code>java.net.URLConnection</code> to provide access to a resource which
- * is available from {@link ResourceProvider} provided to {@link Sling}.
+ * is available from {@link LaunchpadContentProvider} provided to {@link Sling}.
  * <p>
  * This class is implemented by actually connecting to a resource URL which is
  * provided by the resource provider and delegating the relevant method calls.
@@ -34,10 +36,10 @@ import java.net.URLConnection;
 public class ContextConnection extends URLConnection {
 
     /**
-     * The {@link ResourceProvider} to which requests for content access are
+     * The {@link LaunchpadContentProvider} to which requests for content access are
      * delegated.
      */
-    private final ResourceProvider resourceProvider;
+    private final LaunchpadContentProvider resourceProvider;
 
     /**
      * The delegatee <code>URLConnection</code> to which some of the method
@@ -50,10 +52,10 @@ public class ContextConnection extends URLConnection {
      *
      * @param url The original URL whose path part is used to address the
      *            resource from the resource provider.
-     * @param resourceProvider The {@link ResourceProvider} to which requests
+     * @param resourceProvider The {@link LaunchpadContentProvider} to which requests
      *            for content access are delegated.
      */
-    ContextConnection(URL url, ResourceProvider resourceProvider) {
+    ContextConnection(URL url, LaunchpadContentProvider resourceProvider) {
         super(url);
         this.resourceProvider = resourceProvider;
     }

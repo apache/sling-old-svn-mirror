@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launchpad.base.webapp;
 
-import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
+import static org.apache.felix.framework.util.FelixConstants.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -38,8 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.http.proxy.ProxyServlet;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
@@ -198,7 +198,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             Map<String, String> props = loadConfigProperties(slingHome);
 
             Logger logger = new ServletContextLogger(getServletContext());
-            ResourceProvider rp = new ServletContextResourceProvider(
+            LaunchpadContentProvider rp = new ServletContextResourceProvider(
                 getServletContext());
             tmpSling = new SlingBridge(notifiable, logger, rp, props, getServletContext());
 
