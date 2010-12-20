@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -58,13 +59,13 @@ public class DeploymentPackageInstaller implements ServiceListener, FrameworkLis
 
     private final BundleContext bundleContext;
     private final Logger logger;
-    private final ResourceProvider resourceProvider;
+    private final LaunchpadContentProvider resourceProvider;
 
     private DeploymentAdmin deploymentAdmin;
     private ServiceReference deploymentAdminReference;
 
     public DeploymentPackageInstaller(final BundleContext bundleContext,
-            Logger logger, ResourceProvider resourceProvider) {
+            Logger logger, LaunchpadContentProvider resourceProvider) {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
         this.bundleContext = bundleContext;

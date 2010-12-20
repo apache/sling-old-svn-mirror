@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.base.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -29,11 +30,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 
 /**
  * The <code>ClassLoaderResourceProvider</code> TODO
  */
-public class ClassLoaderResourceProvider extends ResourceProvider {
+public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
 
     private final ClassLoader classLoader;
 
@@ -43,7 +45,6 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
                 : this.getClass().getClassLoader();
     }
 
-    @Override
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
@@ -74,9 +75,6 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
         return children.iterator();
     }
 
-    /**
-     * @see org.apache.sling.launchpad.base.impl.ResourceProvider#getResource(java.lang.String)
-     */
     public URL getResource(String path) {
         // ensure path
         if (path == null || path.length() == 0) {
@@ -89,6 +87,21 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
         }
 
         return (this.classLoader != null) ? this.classLoader.getResource(path) : null;
+    }
+
+    public InputStream getResourceAsStream(String path) {
+        URL res = this.getResource(path);
+        if (res != null) {
+            try {
+                return res.openStream();
+            } catch (IOException ioe) {
+                // ignore this one
+            }
+        }
+
+        // no resource
+        return null;
+
     }
 
 }

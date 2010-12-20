@@ -19,7 +19,7 @@ package org.apache.sling.maven.projectsupport;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.osgi.framework.BundleException;
 
@@ -46,7 +46,7 @@ public class StartMojo extends AbstractLaunchpadStartingMojo {
      * {@inheritDoc}
      */
     @Override
-    protected Sling startSling(ResourceProvider resourceProvider, final Map<String, String> props, Logger logger)
+    protected Sling startSling(LaunchpadContentProvider resourceProvider, final Map<String, String> props, Logger logger)
             throws BundleException {
         new ControlListener(this, getLog(), controlHost, controlPort).listen();
 

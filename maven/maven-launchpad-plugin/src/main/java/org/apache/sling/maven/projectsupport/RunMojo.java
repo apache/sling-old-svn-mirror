@@ -19,7 +19,7 @@ package org.apache.sling.maven.projectsupport;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.osgi.framework.BundleException;
 
@@ -65,7 +65,7 @@ public class RunMojo extends AbstractLaunchpadStartingMojo {
     
     private boolean registeredHook = false;
 
-    protected Sling startSling(ResourceProvider resourceProvider, final Map<String, String> props, Logger logger)
+    protected Sling startSling(LaunchpadContentProvider resourceProvider, final Map<String, String> props, Logger logger)
             throws BundleException {
         if (!registeredHook) {
             Runtime.getRuntime().addShutdownHook(shutdown);

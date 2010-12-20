@@ -52,6 +52,12 @@ import org.drools.runtime.StatefulKnowledgeSession;
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
+     * @parameter expression="${configDirectory}"
+     *            default-value="src/main/config"
+     */
+    protected File configDirectory;
+
+    /**
      * JAR Packaging type.
      */
     protected static final String JAR = "jar";
@@ -60,6 +66,10 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      * WAR Packaging type.
      */
     protected static final String WAR = "war";
+
+    protected static final String CONFIG_PATH_PREFIX = "resources/config";
+
+    protected static final String BUNDLE_PATH_PREFIX = "resources/bundles";
 
     protected static boolean shouldCopy(File source, File dest) {
         if (!dest.exists()) {
