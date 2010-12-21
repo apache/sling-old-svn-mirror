@@ -639,7 +639,7 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
     /**
      * Test sending of jobs with and without a processor
      */
-    @org.junit.Test public void testNoJobProcessor() throws Exception {
+    @org.junit.Test(timeout=1000*60*4) public void testNoJobProcessor() throws Exception {
         final PersistenceHandler jeh = this.handler;
         final AtomicInteger count = new AtomicInteger(0);
         final AtomicInteger unprocessedCount = new AtomicInteger(0);
