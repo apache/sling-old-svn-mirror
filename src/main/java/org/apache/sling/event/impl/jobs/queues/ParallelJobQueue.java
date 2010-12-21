@@ -81,8 +81,8 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
 
     @Override
     protected Collection<JobEvent> removeAllJobs() {
-        final List<JobEvent> events = new ArrayList<JobEvent>(this.queue);
-        this.queue.clear();
+        final List<JobEvent> events = new ArrayList<JobEvent>();
+        this.queue.drainTo(events);
         return events;
     }
 }
