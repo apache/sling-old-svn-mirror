@@ -96,14 +96,18 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         this.isSleepingUntil = System.currentTimeMillis() + delay;
     }
 
-    @Override
-    public void resume() {
+    private void wakeUp() {
         if ( this.isSleepingUntil != -1 ) {
             final Thread thread = this.sleepingThread;
             if ( thread != null ) {
                 thread.interrupt();
             }
         }
+    }
+
+    @Override
+    public void resume() {
+        this.wakeUp();
         super.resume();
     }
 
@@ -176,13 +180,14 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     @Override
     public synchronized void removeAll() {
         this.jobEvent = null;
+        this.wakeUp();
         super.removeAll();
     }
 
     @Override
     protected Collection<JobEvent> removeAllJobs() {
-        final List<JobEvent> events = new ArrayList<JobEvent>(this.queue);
-        this.queue.clear();
+        final List<JobEvent> events = new ArrayList<JobEvent>();
+        this.queue.drainTo(events);
         return events;
     }
 
