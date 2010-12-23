@@ -25,3 +25,6 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
     -Dwebdav.workspace.path=foo \
     -Dtest=**/integrationtest/**/*Test.java
 
+Note that, for all tests to pass, the Sling instance under test needs the 
+org.apache.sling.launchpad.test-services bundle.
+
