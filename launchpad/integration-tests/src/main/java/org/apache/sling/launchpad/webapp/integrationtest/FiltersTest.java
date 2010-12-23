@@ -24,8 +24,14 @@ public class FiltersTest extends HttpTestBase {
 
     public void testCounters() throws IOException {
         HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/index.html", HttpServletResponse.SC_OK);
-        assertEquals("Filter-set header has incorrect value.", "1", get.getResponseHeader("FILTER_COUNTER_HTTPSERVICE").getValue());
-        assertEquals("Filter-set header has incorrect value.", "1", get.getResponseHeader("FILTER_COUNTER_SLING").getValue());
-        assertEquals("Filter-set header has incorrect value.", "1", get.getResponseHeader("FILTER_COUNTER_NOPROP").getValue());
+        final String [] headers = {
+            "FILTER_COUNTER_HTTPSERVICE",
+            "FILTER_COUNTER_SLING",
+            "FILTER_COUNTER_NOPROP"
+        };
+        for(String header : headers) {
+            assertNotNull("Expecting header '" + header + "'", get.getResponseHeader(header));
+            assertEquals("Expecting value 1 for header '" + header + "'", "1", get.getResponseHeader(header).getValue());
+        }
     }
 }
