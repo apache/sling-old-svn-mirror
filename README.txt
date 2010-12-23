@@ -26,5 +26,6 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
     -Dtest=**/integrationtest/**/*Test.java
 
 Note that, for all tests to pass, the Sling instance under test needs the 
-org.apache.sling.launchpad.test-services bundle.
-
+org.apache.sling.launchpad.test-services bundle, and the war file of the
+launchpad/test-services-war project which should be copied to the
+sling/startup/0 folder before starting Sling.
