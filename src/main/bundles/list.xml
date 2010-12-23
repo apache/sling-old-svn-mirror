@@ -199,8 +199,8 @@
         
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.osgi.installer</artifactId>
-	        <version>3.0.0-SNAPSHOT</version>
+            <artifactId>org.apache.sling.installer.core</artifactId>
+	    <version>3.0.1-SNAPSHOT</version>
         </bundle>
     </startLevel>
     <startLevel level="1">
