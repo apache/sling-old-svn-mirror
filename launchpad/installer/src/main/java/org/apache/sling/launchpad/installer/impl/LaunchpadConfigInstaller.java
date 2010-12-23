@@ -24,8 +24,8 @@ import java.util.Iterator;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
-import org.apache.sling.osgi.installer.InstallableResource;
-import org.apache.sling.osgi.installer.OsgiInstaller;
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.OsgiInstaller;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +63,6 @@ public class LaunchpadConfigInstaller {
 
         }
 
-        installer.registerResources("launchpad", installables);
+        installer.registerResources("launchpad", (InstallableResource[])installables.toArray());
     }
 }
