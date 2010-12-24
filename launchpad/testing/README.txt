@@ -34,6 +34,9 @@ integration-tests module.
 
 To run individual tests, see the README.txt in that module.
 
+Use mvn launchpad:run to start this test instance, allows you to run
+and debug individual tests against it.
+
 Using Reactor Builds
 ----------------
 This project includes a Maven profile which with rewrite the bundle list to
