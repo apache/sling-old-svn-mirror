@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 @Component
 public class LaunchpadConfigInstaller {
 
-    /**
-     * 
+    /** Resources supplied under this path by 
+     *  LaunchpadContentProvider are considered for installation
      */
     private static final String ROOT_CONFIG_PATH = "resources/config";
 
@@ -47,22 +47,19 @@ public class LaunchpadConfigInstaller {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected void activate(ComponentContext componentContext) {
-        logger.info("Activating launchpad config installer.");
-
+        logger.info("Activating launchpad config installer, resources path={}", ROOT_CONFIG_PATH);
         Collection<InstallableResource> installables = new HashSet<InstallableResource>();
 
         Iterator<String> configPaths = resourceProvider.getChildren(ROOT_CONFIG_PATH);
         while (configPaths.hasNext()) {
             String path = configPaths.next();
-
-            logger.info("Installing config launchpad file: {}", path);
-
+            logger.info("Config launchpad file will be installed: {}", path);
             InputStream stream = resourceProvider.getResourceAsStream(path);
-
             installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_CONFIG, 0));
-
         }
 
-        installer.registerResources("launchpad", (InstallableResource[])installables.toArray());
+        final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
+        installer.registerResources("launchpad", (toInstall));
+        logger.info("{} resources registered with OsgiInstaller", toInstall.length);
     }
 }
