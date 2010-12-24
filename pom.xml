@@ -45,7 +45,7 @@
 
     <properties>
         <!-- HTTP port to use when running mvn launchpad:run -->
-        <run.http.port>8888</run.http.port>
+        <run.http.port>8080</run.http.port>
 
         <!-- Timeout when checking for Sling readyness before starting tests -->
         <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
