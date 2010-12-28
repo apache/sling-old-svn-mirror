@@ -76,7 +76,9 @@ public class JobStateChangeServlet extends SlingAllMethodsServlet {
             return;
         }
         final JobStatus j = jobConsole.getJobStatus(session, request.getResource().getPath());
+        final JobStatus.State oldState = j.getState();
         j.requestStateChange(desiredState);
+        final JobStatus.State newState = j.getState();
         
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -86,7 +88,8 @@ public class JobStateChangeServlet extends SlingAllMethodsServlet {
             w.key("info").value("Requested state change");
             w.key(PARAM_STATE).value(desiredState.toString());
             w.key("path").value(j.getPath());
-            w.key("currentState").value(j.getState());
+            w.key("currentState").value(newState);
+            w.key("stateChanged").value(newState != oldState);
             w.endObject();
         } catch(JSONException je) {
             throw new ServletException("JSONException in doPost", je);

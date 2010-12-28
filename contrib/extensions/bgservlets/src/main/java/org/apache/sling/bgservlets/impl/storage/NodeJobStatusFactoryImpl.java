@@ -86,9 +86,10 @@ public class NodeJobStatusFactoryImpl implements NodeJobStatusFactory {
         public void requestStateChange(State s) {
             final JobStatus j = getActiveJob();
             if(j == null) {
-                throw new JobStorageException("Job is not active, cannot change state, path=" + path);
+                log.debug("Job {} is not active, cannot change state", path);
+            } else {
+                j.requestStateChange(s);
             }
-            j.requestStateChange(s);
         }
         
         private JobStatus getActiveJob() {
