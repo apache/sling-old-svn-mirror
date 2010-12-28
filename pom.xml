@@ -194,7 +194,7 @@
                             <classifier>webapp</classifier>
                             <packagingIncludes>
                                 META-INF/**,
-                                WEB-INF/classesorg/apache/sling/launchpad/api/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/api/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/shared/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/webapp/**,
                                 WEB-INF/classes/org/apache/sling/commons/osgi/bundleversion/**,
