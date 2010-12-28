@@ -40,6 +40,14 @@ public interface JobStatus {
      * immediately, or even be ignored.
      */
     void requestStateChange(State s);
+    
+    /** Indicate which state changes a human user can currently request,
+     *  based on our state. For a human user, the only states that make sense
+     *  to be requested are RUNNING, SUSPENDED and STOPPED, or a subset
+     *  of those based on current state.
+     *  @return empty array if no state change allowed 
+     */
+    State [] getAllowedHumanStateChanges();
 
     /** Path of the Resource that describes this job */
     String getPath();

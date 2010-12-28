@@ -30,6 +30,7 @@ import org.apache.sling.bgservlets.ExecutionEngine;
 import org.apache.sling.bgservlets.JobData;
 import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
+import org.apache.sling.bgservlets.JobStatus.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,15 @@ public class NodeJobStatusFactoryImpl implements NodeJobStatusFactory {
             } else {
                 j.requestStateChange(s);
             }
+        }
+        
+        /** @inheritDoc */
+        public State [] getAllowedHumanStateChanges() {
+            final JobStatus j = getActiveJob();
+            if(j == null) {
+                return new State[] {};
+            }
+            return j.getAllowedHumanStateChanges();
         }
         
         private JobStatus getActiveJob() {
