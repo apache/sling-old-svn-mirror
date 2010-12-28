@@ -154,6 +154,21 @@ public class SuspendableOutputStream extends FilterOutputStream implements
                     + " -> " + s);
         }
     }
+    
+    /** @inheritDoc */
+    public State [] getAllowedHumanStateChanges() {
+        return getAllowedStates(state);
+    }
+    
+    static State [] getAllowedStates(State s) {
+        State [] result = new State[] {};
+        if(s == State.RUNNING) {
+            result = new State[] { State.SUSPENDED, State.STOPPED }; 
+        } else if(s == State.SUSPEND_REQUESTED || s == State.SUSPENDED) {
+            result = new State[] { State.RUNNING, State.STOPPED }; 
+        }
+        return result;
+    }
 
     /**
      * Not implemented

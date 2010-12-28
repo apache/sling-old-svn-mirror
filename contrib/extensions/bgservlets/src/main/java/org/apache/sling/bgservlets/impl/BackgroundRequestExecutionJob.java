@@ -35,6 +35,7 @@ import org.apache.sling.bgservlets.JobProgressInfo;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.JobStorage;
 import org.apache.sling.bgservlets.RuntimeState;
+import org.apache.sling.bgservlets.JobStatus.State;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,16 +113,24 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
         }
     }
 
+    /** @inheritDoc */
     public String getPath() {
         return path;
     }
 
+    /** @inheritDoc */
     public State getState() {
         return stream.getState();
     }
 
+    /** @inheritDoc */
     public void requestStateChange(State s) {
         stream.requestStateChange(s);
+    }
+
+    /** @inheritDoc */
+    public State[] getAllowedHumanStateChanges() {
+        return stream.getAllowedHumanStateChanges();
     }
 
     public String getStreamPath() {
@@ -132,14 +141,17 @@ class BackgroundRequestExecutionJob implements Runnable, JobStatus, RuntimeState
         return creationTime;
     }
 
+    /** @inheritDoc */
     public JobProgressInfo getProgressInfo() {
         return this;
     }
 
+    /** @inheritDoc */
     public String getProgressMessage() {
         return progressMessage;
     }
 
+    /** @inheritDoc */
     public Date getEstimatedCompletionTime() {
         return estimatedCompletionTime;
     }
