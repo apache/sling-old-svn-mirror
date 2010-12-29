@@ -104,7 +104,7 @@
         <module>bundles/jcr/contentloader</module>
         <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
-		<module>bundles/jcr/jackrabbit-accessmanager</module>
+        <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/ocm</module>
         <module>bundles/jcr/resource</module>
         <module>bundles/jcr/webdav</module>
@@ -152,9 +152,9 @@
 
     <profiles>
         <profile>
-	        <!--
-	          Allow the integration tests to be excluded, as they might be slow
-	        -->
+            <!--
+              Allow the integration tests to be excluded, as they might be slow
+            -->
             <id>integrationTests</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -162,8 +162,17 @@
             <modules>
                 <module>launchpad/test-services</module>
                 <module>launchpad/test-services-war</module>
-                <module>launchpad/testing</module>
                 <module>launchpad/integration-tests</module>
+                <module>launchpad/testing</module>
+            </modules>
+        </profile>
+        <profile>
+            <!--
+              Run the integration tests against a war distribution
+            -->
+            <id>warIntegrationTests</id>
+            <modules>
+                <module>launchpad/testing-war</module>
             </modules>
         </profile>
       <!-- Profile for including samples -->
