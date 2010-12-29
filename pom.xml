@@ -172,6 +172,10 @@
             -->
             <id>warIntegrationTests</id>
             <modules>
+                <module>launchpad/test-services</module>
+                <module>launchpad/test-services-war</module>
+                <module>launchpad/integration-tests</module>
+                <module>launchpad/testing</module>
                 <module>launchpad/testing-war</module>
             </modules>
         </profile>
