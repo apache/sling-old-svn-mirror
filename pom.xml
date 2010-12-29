@@ -45,7 +45,7 @@
 
     <properties>
         <!-- HTTP port to use when running mvn jetty:run -->
-        <jetty.http.port>8888</jetty.http.port>
+        <jetty.http.port>8080</jetty.http.port>
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
