@@ -215,8 +215,8 @@ public abstract class AbstractJobQueue
                     process = this.startedJobsLists.remove(info.uniqueId) != null;
                 }
                 if ( process ) {
-                    this.decQueued();
                     if ( !info.reschedule() ) {
+                        this.decQueued();
                         checkForNotify(null);
                     } else {
                         this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", EventUtil.toString(info.event), info.uniqueId);
