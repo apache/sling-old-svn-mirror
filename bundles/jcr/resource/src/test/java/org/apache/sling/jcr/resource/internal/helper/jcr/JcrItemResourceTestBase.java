@@ -82,7 +82,7 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
         } else {
             try {
                 for (byte b : expected) {
-                    assertEquals(b, actual.read());
+                    assertEquals(b, (byte)actual.read());
                 }
             } finally {
                 try {

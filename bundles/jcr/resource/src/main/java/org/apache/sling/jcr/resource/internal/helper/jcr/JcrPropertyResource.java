@@ -18,9 +18,10 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Iterator;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -29,11 +30,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.util.Calendar;
+import java.util.Iterator;
 
 class JcrPropertyResource extends JcrItemResource {
 
@@ -51,10 +50,13 @@ class JcrPropertyResource extends JcrItemResource {
         super(resourceResolver, path);
         this.property = property;
         this.resourceType = getResourceTypeForNode(property.getParent())
-            + "/" + property.getName();
-        if (!property.isMultiple()) {
-            this.getResourceMetadata().setContentLength(property.getLength());
+                + "/" + property.getName();
+        if (PropertyType.BINARY != this.property.getType()) {
+            this.getResourceMetadata().setContentType("text/plain");
+            this.getResourceMetadata().setCharacterEncoding("UTF-8");
         }
+
+        this.setContentLength(property);
     }
 
     public String getResourceType() {
