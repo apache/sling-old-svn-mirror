@@ -18,9 +18,12 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.AbstractResource;
@@ -28,8 +31,15 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class JcrItemResource extends AbstractResource implements Resource {
+
+    /**
+     * default log
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(JcrItemResource.class);
 
     private final ResourceResolver resourceResolver;
 
@@ -77,6 +87,27 @@ abstract class JcrItemResource extends AbstractResource implements Resource {
         }
 
         return result;
+    }
+
+    protected void setContentLength(final Property property) throws RepositoryException {
+        if (property.isMultiple()) {
+            return;
+        }
+
+        try {
+            final long length;
+            if (property.getType() == PropertyType.BINARY ) {
+                // we're interested in the number of bytes, not the
+                // number of characters
+                length = property.getLength();
+            } else {
+                length = property.getString().getBytes("UTF-8").length;
+            }
+            getResourceMetadata().setContentLength(length);
+        } catch (UnsupportedEncodingException uee) {
+            LOGGER.warn("getPropertyContentLength: Cannot determine length of non-binary property {}: {}",
+                    toString(), uee);
+        }
     }
 
     /**

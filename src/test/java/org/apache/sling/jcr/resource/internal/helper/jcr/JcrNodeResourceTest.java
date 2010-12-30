@@ -220,6 +220,28 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertTrue(crossCheck2.isEmpty());
     }
 
+    public void testCorrectUTF8ByteLength() throws Exception {
+        byte[] utf8bytes = "Übersättigung".getBytes("UTF-8");
+        String name = "utf8file";
+        Node file = rootNode.addNode(name, JcrConstants.NT_FILE);
+        Node res = file.addNode(JcrConstants.JCR_CONTENT,
+            JcrConstants.NT_RESOURCE);
+
+        res.setProperty(JcrConstants.JCR_LASTMODIFIED, TEST_MODIFIED);
+        res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);
+        res.setProperty(JcrConstants.JCR_ENCODING, "UTF-8");
+        res.setProperty(JcrConstants.JCR_DATA, new ByteArrayInputStream(utf8bytes));
+
+        getSession().save();
+
+        file = rootNode.getNode(name);
+        JcrNodeResource jnr = new JcrNodeResource(null, file, null);
+
+        assertEquals(utf8bytes, jnr.adaptTo(InputStream.class));
+        assertEquals(utf8bytes.length, jnr.getResourceMetadata().getContentLength());
+    }
+
+
     private void setupResource(Node res) throws RepositoryException {
         res.setProperty(JcrConstants.JCR_LASTMODIFIED, TEST_MODIFIED);
         res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);

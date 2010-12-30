@@ -176,9 +176,7 @@ class JcrNodeResource extends JcrItemResource {
                 // if the node has a jcr:data property, use that property
                 if (content.hasProperty(JCR_DATA)) {
                     data = content.getProperty(JCR_DATA);
-
                 } else {
-
                     // otherwise try to follow default item trail
                     try {
                         Item item = content.getPrimaryItem();
@@ -187,16 +185,15 @@ class JcrNodeResource extends JcrItemResource {
                         }
                         data = ((Property) item);
 
-                        // set the content lenght property as a side effect
+                        // set the content length property as a side effect
                         // for resources which are not nt:file based and whose
                         // data is not in jcr:content/jcr:data this will lazily
                         // set the correct content length
-                        getResourceMetadata().setContentLength(data.getLength());
+                        this.setContentLength(data);
 
                     } catch (ItemNotFoundException infe) {
                         // we don't actually care, but log for completeness
-                        LOGGER.debug("getInputStream: No primary items for "
-                            + toString(), infe);
+                        LOGGER.debug("getInputStream: No primary items for {}", toString(), infe);
                         data = null;
                     }
                 }
