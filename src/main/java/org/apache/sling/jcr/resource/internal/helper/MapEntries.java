@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal.helper;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,10 +27,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -311,10 +313,8 @@ public class MapEntries implements EventListener {
             // what is stored in the sling:vanityPath property
             String[] pVanityPaths = row.get("sling:vanityPath", new String[0]);
             for (String pVanityPath : pVanityPaths) {
-                // check for empty values
-                if ( pVanityPath != null && pVanityPath.trim().length() > 0 ) {
-                    String url = "^" + ANY_SCHEME_HOST + pVanityPath.trim();
-
+                final String url = getVanityPath(pVanityPath);
+                if ( url != null ) {
                     // redirect target is the node providing the sling:vanityPath
                     // property (or its parent if the node is called jcr:content)
                     String redirect = resource.getPath();
@@ -338,6 +338,42 @@ public class MapEntries implements EventListener {
                 }
             }
         }
+    }
+
+    private String getVanityPath(final String pVanityPath) {
+        String result = null;
+        if ( pVanityPath != null ) {
+            String path = pVanityPath.trim();
+            if ( path.length() > 0 ) {
+                // check for url
+                if ( path.indexOf(":/") > - 1 ) {
+                    try {
+                        final URL u = new URL(path);
+                        path = u.getProtocol() + '/' + u.getHost() + '.' + u.getPort() + u.getPath();
+                    } catch (MalformedURLException e) {
+                        log.warn("Ignoring malformed vanity path {}", pVanityPath);
+                        path = null;
+                    }
+                } else {
+                    if ( !path.startsWith("/") ) {
+                        path = "/" + path;
+                    }
+                    path = "^" + ANY_SCHEME_HOST + path;
+                }
+
+                // remove extension
+                if ( path != null ) {
+                    final int lastSlash = path.lastIndexOf('/');
+                    final int firstDot = path.indexOf('.', lastSlash + 1);
+                    if ( firstDot != -1 ) {
+                        path = path.substring(0, firstDot);
+                        log.warn("Removing extension from vanity path {}", pVanityPath);
+                    }
+                    result = path;
+                }
+            }
+        }
+        return result;
     }
 
     private void loadConfiguration(JcrResourceResolverFactoryImpl factory,
