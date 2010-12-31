@@ -21,6 +21,7 @@ package org.apache.sling.installer.core.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
@@ -35,12 +36,26 @@ import org.slf4j.LoggerFactory;
  */
 public class EntityResourceList implements Serializable {
 
-    private static final long serialVersionUID = 6326554136639675505L;
+    private static final long serialVersionUID = -1733426192525500065L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityResourceList.class);
 
-    private final SortedSet<RegisteredResource> resources = new TreeSet<RegisteredResource>();
+    private static final class ResourceComparator implements Comparator<RegisteredResource>, Serializable {
+        private static final long serialVersionUID = 3573107717574356088L;
 
+        public int compare(RegisteredResource o1, RegisteredResource o2) {
+            int result = o1.compareTo(o2);
+            if ( result == 0 ) {
+                result = o1.getURL().compareTo(o2.getURL());
+            }
+            return result;
+        }
+    }
+
+    private final SortedSet<RegisteredResource> resources = new TreeSet<RegisteredResource>(
+            new ResourceComparator());
+
+    /** The resource list is empty if it contains no resources. */
     public boolean isEmpty() {
         return resources.isEmpty();
     }
