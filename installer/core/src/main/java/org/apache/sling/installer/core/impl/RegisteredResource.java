@@ -98,7 +98,27 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      */
     String getEntityId();
 
+    /**
+     * Get the current state of the resource.
+     */
     State getState();
 
+    /**
+     * Set the new state of teh resource.
+     */
     void setState(final State s);
+
+    /**
+     * Get the value of a temporary attribute.
+     * @param key The name of the attribute
+     * @return The value of the attribute or <code>null</code>
+     */
+    Object getTemporaryAttribute(String key);
+
+    /**
+     * Set the value of a temporary attribute.
+     * @param key The name of the attribute
+     * @param value The attribute value or <code>null</code> to remove it.
+     */
+    void setTemporaryAttributee(String key, Object value);
 }

@@ -37,6 +37,9 @@ public class BundleStartTask extends OsgiInstallerTask {
 
     private static final String BUNDLE_START_ORDER = "70-";
 
+    private static final String ATTR_RC = "bst:retryCount";
+    private static final String ATTR_EC = "bst:eventsCount";
+
     private final long bundleId;
 	private final String sortKey;
 	private long eventsCountForRetrying;
@@ -46,9 +49,14 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	public BundleStartTask(final EntityResourceList r, final long bundleId, final BundleTaskCreator btc) {
 	    super(r);
-		this.bundleId = bundleId;
-		this.creator = btc;
-		this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
+        this.bundleId = bundleId;
+        this.creator = btc;
+        this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
+        final RegisteredResource rr = this.getResource();
+	    if ( rr != null && rr.getTemporaryAttribute(ATTR_RC) != null ) {
+	        this.retryCount = (Integer)rr.getTemporaryAttribute(ATTR_RC);
+            this.eventsCountForRetrying = (Long)rr.getTemporaryAttribute(ATTR_EC);
+	    }
 	}
 
 	@Override
@@ -113,14 +121,17 @@ public class BundleStartTask extends OsgiInstallerTask {
             // Do the first retry immediately (in case "something" happenened right now
             // that warrants a retry), but for the next ones wait for at least one bundle
             // event or framework event
-            if (retryCount == 0) {
-                eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount();
+            if (this.retryCount == 0) {
+                this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount();
             } else {
-                eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
+                this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
             }
-            retryCount++;
+            this.retryCount++;
             if ( this.getResource() == null ) {
                 ctx.addTaskToNextCycle(this);
+            } else {
+                this.getResource().setTemporaryAttributee(ATTR_RC, this.retryCount);
+                this.getResource().setTemporaryAttributee(ATTR_EC, this.eventsCountForRetrying);
             }
         }
 	}

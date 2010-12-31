@@ -56,7 +56,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class RegisteredResourceImpl
     implements RegisteredResource, Serializable {
 
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     /** The resource url. */
     private final String url;
@@ -79,6 +79,9 @@ public class RegisteredResourceImpl
     private final String resourceType;
 
     private State state = State.INSTALL;
+
+    /** Temporary attributes. */
+    private transient Map<String, Object> temporaryAttributes;
 
     /**
      * Try to create a registered resource.
@@ -399,7 +402,10 @@ public class RegisteredResourceImpl
         if ( ! (obj instanceof RegisteredResource) ) {
             return false;
         }
-        return compareTo((RegisteredResource)obj) == 0;
+        if ( compareTo((RegisteredResource)obj) != 0 ) {
+            return false;
+        }
+        return this.getURL().equals(((RegisteredResource)obj).getURL());
     }
 
     /**
@@ -605,5 +611,29 @@ public class RegisteredResourceImpl
         }
 
         return ht;
+    }
+
+    /**
+     * @see org.apache.sling.installer.core.impl.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     */
+    public Object getTemporaryAttribute(final String key) {
+        if ( this.temporaryAttributes != null ) {
+            return this.temporaryAttributes.get(key);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.installer.core.impl.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     */
+    public void setTemporaryAttributee(final String key, final Object value) {
+        if ( this.temporaryAttributes == null ) {
+            this.temporaryAttributes = new HashMap<String, Object>();
+        }
+        if ( value == null ) {
+            this.temporaryAttributes.remove(key);
+        } else {
+            this.temporaryAttributes.put(key, value);
+        }
     }
 }
