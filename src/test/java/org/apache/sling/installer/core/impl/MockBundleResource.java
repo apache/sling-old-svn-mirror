@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.osgi.framework.Constants;
 
 /** Mock RegisteredResource that simulates a bundle */
@@ -34,6 +32,7 @@ public class MockBundleResource implements RegisteredResource {
 
     private static final long serialVersionUID = 1L;
     private final Map<String, Object> attributes = new HashMap<String, Object>();
+    private final Map<String, Object> tempAttributes = new HashMap<String, Object>();
 	private State state = State.INSTALL;
 	private final String digest;
 	private final int priority;
@@ -157,4 +156,21 @@ public class MockBundleResource implements RegisteredResource {
         this.state = s;
     }
 
+    /**
+     * @see org.apache.sling.installer.core.impl.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     */
+    public Object getTemporaryAttribute(String key) {
+        return this.tempAttributes.get(key);
+    }
+
+    /**
+     * @see org.apache.sling.installer.core.impl.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     */
+    public void setTemporaryAttributee(String key, Object value) {
+        if ( value == null ) {
+            this.tempAttributes.remove(key);
+        } else {
+            this.tempAttributes.put(key, value);
+        }
+    }
 }
