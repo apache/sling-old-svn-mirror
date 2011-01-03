@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
@@ -36,24 +36,52 @@ import org.slf4j.LoggerFactory;
  */
 public class EntityResourceList implements Serializable {
 
-    private static final long serialVersionUID = -1733426192525500065L;
+    /** Use own serial version ID as we control serialization. */
+    private static final long serialVersionUID = 6L;
 
+    /** Serialization version. */
+    private static final int VERSION = 1;
+
+    /** Logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityResourceList.class);
 
-    private static final class ResourceComparator implements Comparator<RegisteredResource>, Serializable {
-        private static final long serialVersionUID = 3573107717574356088L;
+    /** The set of registered resources for this entity. */
+    private final SortedSet<RegisteredResource> resources = new TreeSet<RegisteredResource>();
 
-        public int compare(RegisteredResource o1, RegisteredResource o2) {
-            int result = o1.compareTo(o2);
-            if ( result == 0 ) {
-                result = o1.getURL().compareTo(o2.getURL());
-            }
-            return result;
+    /**
+     * Serialize the object
+     * - write version id
+     * - serialize each entry in the resources list
+     * @param out Object output stream
+     * @throws IOException
+     */
+    private void writeObject(final java.io.ObjectOutputStream out)
+    throws IOException {
+        out.writeInt(VERSION);
+        out.writeInt(resources.size());
+        for(final RegisteredResource rr : this.resources) {
+            out.writeObject(rr);
         }
     }
 
-    private final SortedSet<RegisteredResource> resources = new TreeSet<RegisteredResource>(
-            new ResourceComparator());
+    /**
+     * Deserialize the object
+     * - read version id
+     * - deserialize each entry in the resources list
+     */
+    private void readObject(final java.io.ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+        final int version = in.readInt();
+        if ( version != VERSION ) {
+            throw new ClassNotFoundException(this.getClass().getName());
+        }
+        Util.setField(this, "resources", new TreeSet<RegisteredResource>());
+        final int size = in.readInt();
+        for(int i=0; i < size; i++) {
+            final RegisteredResource rr = (RegisteredResource)in.readObject();
+            this.resources.add(rr);
+        }
+    }
 
     /** The resource list is empty if it contains no resources. */
     public boolean isEmpty() {
@@ -114,7 +142,7 @@ public class EntityResourceList implements Serializable {
 
     public void addOrUpdate(final RegisteredResource r) {
         LOGGER.debug("Adding new resource: {}", r);
-        // If an object with same sort key is already present, replace with the
+        // If an object with same url is already present, replace with the
         // new one which might have different attributes
         boolean first = true;
         for(final RegisteredResource rr : resources) {
