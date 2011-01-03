@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistentResourceList {
 
+    /** Serialization version. */
+    private static final int VERSION = 1;
+
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
@@ -61,8 +64,13 @@ public class PersistentResourceList {
             ObjectInputStream ois = null;
             try {
                 ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
-                restoredData = (Map<String, EntityResourceList>)ois.readObject();
-                logger.debug("Restored rsource list: {}", restoredData);
+                final int version = ois.readInt();
+                if ( version == VERSION ) {
+                    restoredData = (Map<String, EntityResourceList>)ois.readObject();
+                } else {
+                    logger.warn("Unknown version for persistent resource list: {}", version);
+                }
+                logger.debug("Restored resource list: {}", restoredData);
             } catch (final Exception e) {
                 logger.warn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
             } finally {
@@ -82,6 +90,7 @@ public class PersistentResourceList {
         try {
             final ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(dataFile)));
             try {
+                oos.writeInt(VERSION);
                 oos.writeObject(data);
                 logger.debug("Persisted resource list.");
             } finally {

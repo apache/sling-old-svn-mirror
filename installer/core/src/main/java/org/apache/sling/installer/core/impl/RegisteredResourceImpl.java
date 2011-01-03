@@ -56,32 +56,89 @@ import org.osgi.service.cm.ConfigurationAdmin;
 public class RegisteredResourceImpl
     implements RegisteredResource, Serializable {
 
+    /** Use own serial version ID as we control serialization. */
     private static final long serialVersionUID = 6L;
+
+    /** Serialization version. */
+    private static final int VERSION = 1;
 
     /** The resource url. */
     private final String url;
+
     /** The installer scheme. */
 	private final String urlScheme;
+
 	/** The digest for the resource. */
 	private final String digest;
+
 	/** The entity id. */
 	private final String entity;
+
 	/** The dictionary for configurations. */
 	private final Dictionary<String, Object> dictionary;
+
 	/** Additional attributes. */
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
-	private final File dataFile;
-	private final int priority;
 
-	/** Serial number to create unique file names in the data storage. */
-	private static long serialNumberCounter = System.currentTimeMillis();
+	private final File dataFile;
+
+	private final int priority;
 
     private final String resourceType;
 
+    /** The current state of this resource. */
     private State state = State.INSTALL;
+
+    /** Serial number to create unique file names in the data storage. */
+    private static long serialNumberCounter = System.currentTimeMillis();
 
     /** Temporary attributes. */
     private transient Map<String, Object> temporaryAttributes;
+
+    /**
+     * Serialize the object
+     * - write version id
+     * - serialize each entry in the resources list
+     * @param out Object output stream
+     * @throws IOException
+     */
+    private void writeObject(final java.io.ObjectOutputStream out)
+    throws IOException {
+        out.writeInt(VERSION);
+        out.writeObject(url);
+        out.writeObject(urlScheme);
+        out.writeObject(digest);
+        out.writeObject(entity);
+        out.writeObject(dictionary);
+        out.writeObject(attributes);
+        out.writeObject(dataFile);
+        out.writeObject(resourceType);
+        out.writeInt(priority);
+        out.writeObject(state);
+    }
+
+    /**
+     * Deserialize the object
+     * - read version id
+     * - deserialize each entry in the resources list
+     */
+    private void readObject(final java.io.ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+        final int version = in.readInt();
+        if ( version != VERSION ) {
+            throw new ClassNotFoundException(this.getClass().getName());
+        }
+        Util.setField(this, "url", in.readObject());
+        Util.setField(this, "urlScheme", in.readObject());
+        Util.setField(this, "digest", in.readObject());
+        Util.setField(this, "entity", in.readObject());
+        Util.setField(this, "dictionary", in.readObject());
+        Util.setField(this, "attributes", in.readObject());
+        Util.setField(this, "dataFile", in.readObject());
+        Util.setField(this, "resourceType", in.readObject());
+        Util.setField(this, "priority", in.readInt());
+        this.state = (State) in.readObject();
+    }
 
     /**
      * Try to create a registered resource.
@@ -243,7 +300,7 @@ public class RegisteredResourceImpl
 	    if (this.dataFile != null && this.dataFile.exists() ) {
 	        return new BufferedInputStream(new FileInputStream(this.dataFile));
 	    }
-        return  null;
+        return null;
 	}
 
 	/**
@@ -402,17 +459,14 @@ public class RegisteredResourceImpl
         if ( ! (obj instanceof RegisteredResource) ) {
             return false;
         }
-        if ( compareTo((RegisteredResource)obj) != 0 ) {
-            return false;
-        }
-        return this.getURL().equals(((RegisteredResource)obj).getURL());
+        return compareTo((RegisteredResource)obj) == 0;
     }
 
     /**
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        return this.entity.hashCode();
+        return this.getURL().hashCode();
     }
 
     /**
@@ -444,6 +498,9 @@ public class RegisteredResourceImpl
                     result = a.getDigest().compareTo(b.getDigest());
                 }
             }
+        }
+        if ( result == 0 ) {
+            result = a.getURL().compareTo(b.getURL());
         }
         return result;
     }
