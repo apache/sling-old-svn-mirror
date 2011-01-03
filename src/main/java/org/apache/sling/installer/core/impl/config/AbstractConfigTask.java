@@ -83,7 +83,7 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
             }
         } else {
             Configuration configs[] = ca.listConfigurations(
-                "(|(" + ConfigurationAdmin.SERVICE_FACTORYPID
+                "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID
                 + "=" + this.factoryPid + ")(" + ConfigTaskCreator.ALIAS_KEY + "=" + configPid
                 + "))");
 
