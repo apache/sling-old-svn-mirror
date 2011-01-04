@@ -17,8 +17,6 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -29,7 +27,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 public class PropertyRenderingTest extends RenderingTestBase {
 
     private String slingResourceType;
-    
+
     private String testMultiText1;
     private String testMultiText2;
 
@@ -41,12 +39,12 @@ public class PropertyRenderingTest extends RenderingTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         testMultiText1 = "This is a multivalued test " + System.currentTimeMillis();
         testMultiText2 = "This is another multivalued test " + System.currentTimeMillis();
-        
+
         slingResourceType = getClass().getName();
 
         // create the test node, under a path that's specific to this class to allow collisions
         final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
-        
+
         NameValuePairList list = new NameValuePairList();
         list.add("sling:resourceType", slingResourceType);
         list.add("text", testText);
@@ -78,7 +76,7 @@ public class PropertyRenderingTest extends RenderingTestBase {
     }
 
     public void testTextNoExt() throws IOException {
-        final String data = getContent(displayUrl + "/text", null);
+        final String data = getContent(displayUrl + "/text", CONTENT_TYPE_PLAIN);
         assertEquals(testText, data);
     }
 
@@ -105,7 +103,7 @@ public class PropertyRenderingTest extends RenderingTestBase {
     }
 
     public void testResourceTypeNoExt() throws IOException {
-        final String data = getContent(displayUrl + "/sling:resourceType", null);
+        final String data = getContent(displayUrl + "/sling:resourceType", CONTENT_TYPE_PLAIN);
         assertEquals(slingResourceType, data);
     }
 }
