@@ -27,3 +27,8 @@ of the Sling distribution.
 After installing these bundles the forum application is available at:
 
     http://localhost:8080/content/forum.html?sling:authRequestLogin=true
+
+
+Known issue:
+- SLING-1895: sun.reflect.MethodAccessorImpl not correctly boot delegated
+  https://issues.apache.org/jira/browse/SLING-1895
