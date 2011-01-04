@@ -26,7 +26,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 
 
 public class DictionaryDigestTest {
@@ -38,7 +37,7 @@ public class DictionaryDigestTest {
 	}
 
     private RegisteredResourceImpl create(final InstallableResource is) throws IOException {
-        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test");
+        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test", new FileUtil(new MockBundleContext()));
     }
 
     private String testDigestChanged(Dictionary<String, Object> d,

@@ -91,9 +91,12 @@ public class OsgiInstallerImpl
     private BundleTaskCreator bundleTaskCreator;
     private ConfigTaskCreator configTaskCreator;
 
+    private final FileUtil fileUtil;
+
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
+        this.fileUtil = new FileUtil(ctx);
     }
 
     /**
@@ -129,7 +132,7 @@ public class OsgiInstallerImpl
         this.configTaskCreator = new ConfigTaskCreator(ctx);
         this.bundleTaskCreator = new BundleTaskCreator(ctx);
         setName(getClass().getSimpleName());
-        final File f = ctx.getDataFile("RegisteredResourceList.ser");
+        final File f = this.fileUtil.getDataFile("RegisteredResourceList.ser");
         persistentList = new PersistentResourceList(f);
         logger.info("Apache Sling OSGi Installer Service started.");
     }
@@ -198,7 +201,7 @@ public class OsgiInstallerImpl
             createdResources = new ArrayList<RegisteredResource>();
             for(final InstallableResource r : resources ) {
                 try {
-                    final RegisteredResource rr = RegisteredResourceImpl.create(ctx, r, scheme);
+                    final RegisteredResource rr = RegisteredResourceImpl.create(ctx, r, scheme, this.fileUtil);
                     createdResources.add(rr);
                     logger.debug("Registering new resource: {}", rr);
                 } catch (final IOException ioe) {

@@ -89,9 +89,6 @@ public class RegisteredResourceImpl
     /** The current state of this resource. */
     private State state = State.INSTALL;
 
-    /** Serial number to create unique file names in the data storage. */
-    private static long serialNumberCounter = System.currentTimeMillis();
-
     /** Temporary attributes. */
     private transient Map<String, Object> temporaryAttributes;
 
@@ -145,7 +142,8 @@ public class RegisteredResourceImpl
      */
     public static RegisteredResourceImpl create(final BundleContext ctx,
             final InstallableResource input,
-            final String scheme) throws IOException {
+            final String scheme,
+            final FileUtil fileUtil) throws IOException {
         // installable resource has an id, a priority and either
         // an input stream or a dictionary
         InputStream is = input.getInputStream();
@@ -178,7 +176,8 @@ public class RegisteredResourceImpl
                 resourceType,
                 input.getDigest(),
                 input.getPriority(),
-                scheme);
+                scheme,
+                fileUtil);
     }
 
 	/**
@@ -194,7 +193,8 @@ public class RegisteredResourceImpl
 	        final String type,
 	        final String digest,
 	        final int priority,
-	        final String scheme) throws IOException {
+	        final String scheme,
+	        final FileUtil fileUtil) throws IOException {
         this.url = scheme + ':' + id;
         this.urlScheme = scheme;
 		this.resourceType = type;
@@ -203,7 +203,7 @@ public class RegisteredResourceImpl
 
 		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
             try {
-                this.dataFile = getDataFile(ctx);
+                this.dataFile = fileUtil.createNewDataFile(getType());
                 copyToLocalStorage(is);
                 setAttributesFromManifest();
                 final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
@@ -258,23 +258,12 @@ public class RegisteredResourceImpl
 		}
 	}
 
-    private static long getNextSerialNumber() {
-        synchronized (RegisteredResourceImpl.class) {
-            return serialNumberCounter++;
-        }
-    }
-
 	@Override
 	public String toString() {
 	    return "RegisteredResource(url=" + this.getURL() +
 	        ", entity=" + this.getEntityId() +
 	        ", state=" + this.state +
 	        ", digest=" + this.getDigest() + ")";
-	}
-
-	protected File getDataFile(final BundleContext bundleContext) {
-		final String filename = getType() + "-resource-" + getNextSerialNumber() + ".ser";
-		return bundleContext.getDataFile(filename);
 	}
 
 	/**

@@ -27,9 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.EntityResourceList;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.apache.sling.installer.core.impl.config.ConfigInstallTask;
 import org.apache.sling.installer.core.impl.config.ConfigRemoveTask;
 import org.apache.sling.installer.core.impl.tasks.BundleInstallTask;
@@ -55,7 +52,7 @@ public class TaskOrderingTest {
 	    final EntityResourceList erl = new EntityResourceList();
 	    erl.addOrUpdate(RegisteredResourceImpl.create(null,
 		        new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null),
-		        "test"));
+		        "test", new FileUtil(new MockBundleContext())));
 	    return erl;
 	}
 
