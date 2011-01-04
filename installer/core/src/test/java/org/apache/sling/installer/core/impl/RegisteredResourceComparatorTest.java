@@ -30,8 +30,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
@@ -56,7 +54,7 @@ public class RegisteredResourceComparatorTest {
             data.put("foo", "bar");
         }
         final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
-        return RegisteredResourceImpl.create(null, r, "test");
+        return RegisteredResourceImpl.create(null, r, "test", new FileUtil(new MockBundleContext()));
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {

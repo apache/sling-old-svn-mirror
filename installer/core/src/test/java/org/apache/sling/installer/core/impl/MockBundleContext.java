@@ -98,12 +98,16 @@ public class MockBundleContext implements BundleContext {
     }
 
     public String getProperty(String key) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public File getDataFile(String filename) {
         try {
+            if ( "installer".equals(filename) ) {
+                final File dir = this.getDataFile("test").getParentFile();
+                dir.deleteOnExit();
+                return new File(dir, filename);
+            }
             final File f = File.createTempFile(filename, ".data");
             f.deleteOnExit();
             return f;

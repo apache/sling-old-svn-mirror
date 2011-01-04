@@ -79,16 +79,17 @@ public class RegisteredResourceTest {
 	@org.junit.Test public void testLocalFileCopy() throws Exception {
 	    final File localFile = File.createTempFile("testLocalFileCopy", ".data");
         localFile.deleteOnExit();
-	    final BundleContext bc = new MockBundleContext() {
+	    final BundleContext bc = new MockBundleContext();
+	    final File f = getTestBundle("testbundle-1.0.jar");
+        final InputStream s = new FileInputStream(f);
+		RegisteredResourceImpl.create(bc, new InstallableResource("test:1.jar", s, null, "somedigest", null, null), "test", new FileUtil(bc) {
 
-            public File getDataFile(String filename) {
+            @Override
+            public File createNewDataFile(final String hint) {
                 return localFile;
             }
 
-	    };
-	    final File f = getTestBundle("testbundle-1.0.jar");
-        final InputStream s = new FileInputStream(f);
-		RegisteredResourceImpl.create(bc, new InstallableResource("test:1.jar", s, null, "somedigest", null, null), "test");
+		});
 		assertTrue("Local file exists", localFile.exists());
 
 		assertEquals("Local file length matches our data", f.length(), localFile.length());
@@ -159,6 +160,6 @@ public class RegisteredResourceTest {
     }
 
     private RegisteredResourceImpl create(final InstallableResource is) throws IOException {
-        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test");
+        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test", new FileUtil(new MockBundleContext()));
     }
 }
