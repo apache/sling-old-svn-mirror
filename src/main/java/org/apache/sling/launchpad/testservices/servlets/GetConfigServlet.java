@@ -24,8 +24,6 @@ import java.util.Enumeration;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -34,6 +32,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -45,12 +45,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
     @Property(name="sling.servlet.extensions",value="json")
 })
 public class GetConfigServlet extends SlingSafeMethodsServlet {
-    
+
     @Reference
     private ConfigurationAdmin configAdmin;
-    
+
     @Override
-    protected void doGet(SlingHttpServletRequest request,SlingHttpServletResponse response) 
+    protected void doGet(SlingHttpServletRequest request,SlingHttpServletResponse response)
     throws ServletException,IOException {
 
         // PID comes from request suffix, like /testing/GetConfigServlet.tidy.json/integrationTestsConfig
@@ -61,7 +61,7 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
         if(pid.startsWith("/")) {
             pid = pid.substring(1);
         }
-        
+
         // Get config and properties
         final Configuration cfg = configAdmin.getConfiguration(pid);
         if(cfg == null) {
@@ -94,7 +94,7 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
             w.endObject();
             w.endObject();
         } catch(JSONException je) {
-            throw new IOException("JSONException in doGet", je);
+            throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
     }
 }
