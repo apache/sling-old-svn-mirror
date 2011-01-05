@@ -22,11 +22,12 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.BitSet;
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.UUID;
 
 import org.apache.sling.event.impl.EnvironmentComponent;
+import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -131,14 +132,18 @@ public abstract class Utility {
         return res.toString();
     }
 
+    /** Counter for jobs without an id.  We don't need to sync the access. */
+    private static long JOB_COUNTER = 0;
 
     /**
      * Create a unique node path (folder and name) for the job.
      */
     public static String getUniquePath(final String jobTopic, final String jobId) {
-        final StringBuilder sb = new StringBuilder(jobTopic.replace('/', '.'));
-        sb.append('/');
+        final String convTopic = jobTopic.replace('/', '.');
         if ( jobId != null ) {
+            final StringBuilder sb = new StringBuilder("identified/");
+            sb.append(convTopic);
+            sb.append('/');
             // we create an md from the job id - we use the first 6 bytes to
             // create sub directories
             final String md5 = md5(jobId);
@@ -151,21 +156,34 @@ public abstract class Utility {
             sb.append(md5.charAt(5));
             sb.append('/');
             sb.append(filter(jobId));
-        } else {
-            // create a path from the uuid - we use the first 6 bytes to
-            // create sub directories
-            final String uuid = UUID.randomUUID().toString();
-            sb.append(uuid.charAt(0));
-            sb.append(uuid.charAt(1));
-            sb.append(uuid.charAt(2));
-            sb.append('/');
-            sb.append(uuid.charAt(3));
-            sb.append(uuid.charAt(4));
-            sb.append(uuid.charAt(5));
-            sb.append("/Job_");
-            sb.append(uuid.substring(6));
+            return sb.toString();
         }
+        final Calendar now = Calendar.getInstance();
+        // create a time based path together with the Sling ID
+        final StringBuilder sb = getAnonPath(now);
+        sb.append('/');
+        sb.append(convTopic);
+        sb.append('_');
+        sb.append(JOB_COUNTER);
+        JOB_COUNTER++;
         return sb.toString();
+    }
+
+    public static StringBuilder getAnonPath(final Calendar now) {
+        final StringBuilder sb = new StringBuilder("anon/");
+        // create a time based path together with the Sling ID
+        sb.append(Environment.APPLICATION_ID);
+        sb.append('/');
+        sb.append(now.get(Calendar.YEAR));
+        sb.append('/');
+        sb.append(now.get(Calendar.MONTH) + 1);
+        sb.append('/');
+        sb.append(now.get(Calendar.DAY_OF_MONTH));
+        sb.append('/');
+        sb.append(now.get(Calendar.HOUR_OF_DAY));
+        sb.append('/');
+        sb.append(now.get(Calendar.MINUTE));
+        return sb;
     }
 
     /** Event property containing the time for job start and job finished events. */

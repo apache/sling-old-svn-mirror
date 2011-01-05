@@ -164,6 +164,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     @Reference
     private LockManager lockManager;
 
+    /** Counter for cleanups */
+    private long cleanUpCounter;
+
     /**
      * Activate this component.
      * @param context The component context.
@@ -173,6 +176,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         @SuppressWarnings("unchecked")
         final Dictionary<String, Object> props = context.getProperties();
         this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
+        if ( this.cleanupPeriod < 1 ) {
+            this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
+        }
         this.repositoryPath = OsgiUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
         this.running = true;
 
@@ -343,10 +349,10 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
      */
     public void cleanup() {
         // remove obsolete jobs from the repository
-        if ( this.running && this.cleanupPeriod > 0 ) {
-            this.logger.debug("Cleaning up repository, removing all finished jobs older than {} minutes.", this.cleanupPeriod);
+        if ( this.running ) {
+            this.logger.debug("Cleaning up repository: removing all finished jobs older than {} minutes.", this.cleanupPeriod);
 
-            // we create an own session for concurrency issues
+            // we create an own session to avoid concurrency issues
             Session s = null;
             try {
                 s = this.environment.createAdminSession();
@@ -371,6 +377,157 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 if ( s != null ) {
                     s.logout();
                 }
+            }
+
+            cleanUpCounter++;
+            // we do a full cleanup every 12th run
+            if ( cleanUpCounter % 12 == 0 ) {
+                this.fullEmptyFolderCleanup();
+            } else {
+                this.simpleEmptyFolderCleanup();
+            }
+        }
+    }
+
+    /**
+     * Simple empty folder removes empty folders for the last five minutes.
+     * If folder for minute 59 is removed, we check the hour folder as well.
+     */
+    private void simpleEmptyFolderCleanup() {
+        this.logger.debug("Cleaning up repository: looking for empty folders");
+        // we create an own session to avoid concurrency issues
+        Session s = null;
+        try {
+            s = this.environment.createAdminSession();
+            final Calendar cleanUpDate = Calendar.getInstance();
+            for(int i = 0; i < 5; i++) {
+                cleanUpDate.add(Calendar.MINUTE, -1);
+                final StringBuilder sb = Utility.getAnonPath(cleanUpDate);
+
+                final String path = this.repositoryPath + '/' + sb.toString();
+
+                if ( s.nodeExists(path) ) {
+                    final Node dir = s.getNode(path);
+                    if ( !dir.hasNodes() ) {
+                        dir.remove();
+                        s.save();
+                    }
+                }
+                // check hour folder
+                if ( path.endsWith("59") ) {
+                    final String hourPath = path.substring(0, path.length() - 3);
+                    final Node hourNode = s.getNode(hourPath);
+                    if ( !hourNode.hasNodes() ) {
+                        hourNode.remove();
+                        s.save();
+                    }
+                }
+            }
+
+        } catch (RepositoryException e) {
+            // in the case of an error, we just log this as a warning
+            this.logger.warn("Exception during repository cleanup.", e);
+        } finally {
+            if ( s != null ) {
+                s.logout();
+            }
+        }
+    }
+
+    /**
+     * Full cleanup - this scans all directories!
+     */
+    private void fullEmptyFolderCleanup() {
+        this.logger.debug("Cleaning up repository: removing ALL empty folders");
+        Session s = null;
+        try {
+            s = this.environment.createAdminSession();
+
+            final String startPath = this.repositoryPath + "/anon";
+            final Node startNode = (s.nodeExists(startPath) ? s.getNode(startPath) : null);
+            if ( startNode != null ) {
+                final Calendar now = Calendar.getInstance();
+                // we iterate over the application id nodes
+                final NodeIterator idIter = startNode.getNodes();
+                while ( idIter.hasNext() ) {
+                    final Node idNode = idIter.nextNode();
+                    // now years
+                    final NodeIterator yearIter = idNode.getNodes();
+                    while ( yearIter.hasNext() ) {
+                        final Node yearNode = yearIter.nextNode();
+                        final int year = Integer.valueOf(yearNode.getName());
+                        final boolean oldYear = year < now.get(Calendar.YEAR);
+
+                        // months
+                        final NodeIterator monthIter = yearNode.getNodes();
+                        while ( monthIter.hasNext() ) {
+                            final Node monthNode = monthIter.nextNode();
+                            final int month = Integer.valueOf(monthNode.getName());
+                            final boolean oldMonth = oldYear || month < (now.get(Calendar.MONTH) + 1);
+
+                            // days
+                            final NodeIterator dayIter = monthNode.getNodes();
+                            while ( dayIter.hasNext() ) {
+                                final Node dayNode = dayIter.nextNode();
+                                final int day = Integer.valueOf(dayNode.getName());
+                                final boolean oldDay = oldMonth || day < now.get(Calendar.DAY_OF_MONTH);
+
+                                // hours
+                                final NodeIterator hourIter = dayNode.getNodes();
+                                while ( hourIter.hasNext() ) {
+                                    final Node hourNode = hourIter.nextNode();
+                                    final int hour = Integer.valueOf(hourNode.getName());
+                                    final boolean oldHour = oldDay || hour < now.get(Calendar.HOUR);
+
+                                    // minutes
+                                    final NodeIterator minuteIter = hourNode.getNodes();
+                                    while ( minuteIter.hasNext() ) {
+                                        final Node minuteNode = minuteIter.nextNode();
+                                        final int minute = Integer.valueOf(minuteNode.getName());
+                                        final boolean oldMinute = oldHour || minute < now.get(Calendar.MINUTE);
+
+                                        // check if we can delete the minute
+                                        if ( oldMinute && !minuteNode.hasNodes()) {
+                                            minuteNode.remove();
+                                            s.save();
+                                        }
+                                    }
+
+                                    // check if we can delete the hour
+                                    if ( oldHour && !hourNode.hasNodes()) {
+                                        hourNode.remove();
+                                        s.save();
+                                    }
+                                }
+                                // check if we can delete the day
+                                if ( oldDay && !dayNode.hasNodes()) {
+                                    dayNode.remove();
+                                    s.save();
+                                }
+                            }
+
+                            // check if we can delete the month
+                            if ( oldMonth && !monthNode.hasNodes() ) {
+                                monthNode.remove();
+                                s.save();
+                            }
+                        }
+
+                        // check if we can delete the year
+                        if ( oldYear && !yearNode.hasNodes() ) {
+                            yearNode.remove();
+                            s.save();
+                        }
+                    }
+                }
+            }
+
+        } catch (RepositoryException e) {
+            // in the case of an error, we just log this as a warning
+            this.logger.warn("Exception during repository cleanup.", e);
+        } finally {
+            if ( s != null ) {
+                s.logout();
             }
         }
     }
@@ -1093,7 +1250,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                             node.getSession().save();
                         } catch (RepositoryException re) {
                             // we ignore this as this folder might be created from a different task
-                            node.refresh(false);
+                            node.getSession().refresh(false);
                         }
                     }
                     node = node.getNode(token);
