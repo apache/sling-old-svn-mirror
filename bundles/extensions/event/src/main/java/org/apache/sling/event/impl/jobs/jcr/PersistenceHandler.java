@@ -416,10 +416,12 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 // check hour folder
                 if ( path.endsWith("59") ) {
                     final String hourPath = path.substring(0, path.length() - 3);
-                    final Node hourNode = s.getNode(hourPath);
-                    if ( !hourNode.hasNodes() ) {
-                        hourNode.remove();
-                        s.save();
+                    if ( s.nodeExists(hourPath) ) {
+                        final Node hourNode = s.getNode(hourPath);
+                        if ( !hourNode.hasNodes() ) {
+                            hourNode.remove();
+                            s.save();
+                        }
                     }
                 }
             }
