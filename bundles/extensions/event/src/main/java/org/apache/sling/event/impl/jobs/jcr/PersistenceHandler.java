@@ -81,7 +81,9 @@ import org.slf4j.LoggerFactory;
             value={"org/osgi/framework/BundleEvent/UPDATED",
                    "org/osgi/framework/BundleEvent/STARTED",
                    JobUtil.TOPIC_JOB}),
-     @Property(name="scheduler.period", longValue=300,label="%persscheduler.period.name",description="%persscheduler.period.description"),
+     @Property(name="scheduler.period", longValue=300,
+               label="%persscheduler.period.name",
+               description="%persscheduler.period.description"),
      @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
 })
 public class PersistenceHandler implements EventListener, Runnable, EventHandler {
@@ -96,7 +98,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     /** Default clean up time is 5 minutes. */
     private static final int DEFAULT_CLEANUP_PERIOD = 5;
 
-    @Property(intValue=DEFAULT_CLEANUP_PERIOD,label="%jobcleanup.period.name",description="%jobcleanup.period.description")
+    @Property(intValue=DEFAULT_CLEANUP_PERIOD,
+              label="%jobcleanup.period.name",
+              description="%jobcleanup.period.description")
     private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** Default maximum load jobs. */
@@ -156,6 +160,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
 
     @Reference
     private JobManager jobManager;
+
+    @Reference
+    private LockManager lockManager;
 
     /**
      * Activate this component.
@@ -900,7 +907,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     if ( !eventNode.isLocked() ) {
                         // lock node
                         try {
-                            this.backgroundSession.getWorkspace().getLockManager().lock(path, false, true, Long.MAX_VALUE, "JobEventHandler:" + Environment.APPLICATION_ID);
+                            this.lockManager.lock(this.backgroundSession, path);
                         } catch (RepositoryException re) {
                             // lock failed which means that the node is locked by someone else, so we don't have to requeue
                             return false;
@@ -945,7 +952,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 return;
             }
             try {
-                this.backgroundSession.getWorkspace().getLockManager().unlock(path);
+                this.lockManager.unlock(this.backgroundSession, path);
             } catch (RepositoryException re) {
                 // there is nothing we can do
                 this.ignoreException(re);
@@ -964,8 +971,8 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 return;
             }
             try {
+                ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
                 if ( this.backgroundSession.itemExists(path) ) {
-                    ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
                     final Node eventNode = (Node)this.backgroundSession.getItem(path);
                     if ( jobId == null ) {
                         // simply remove the node
@@ -977,7 +984,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     this.backgroundSession.save();
                     // and unlock
                     if ( jobId != null && eventNode.isLocked() ) {
-                        this.backgroundSession.getWorkspace().getLockManager().unlock(path);
+                        this.lockManager.unlock(this.backgroundSession, path);
                     }
                 }
             } catch (RepositoryException re) {
@@ -1043,7 +1050,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     this.backgroundSession.save();
 
                     // and unlock
-                    this.backgroundSession.getWorkspace().getLockManager().unlock(path);
+                    this.lockManager.unlock(this.backgroundSession, path);
                     return true;
                 }
             } catch (RepositoryException re) {
@@ -1051,6 +1058,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 this.ignoreException(re);
             }
         }
+        ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
         return false;
     }
 
