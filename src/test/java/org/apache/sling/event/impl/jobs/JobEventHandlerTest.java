@@ -470,7 +470,8 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
         writeEvent(null, "8");
 
         RepositoryTestUtil.getAdminSession().save();
-        assertEquals(obsolete, RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).getNode("1").getProperty(JCRHelper.NODE_PROPERTY_FINISHED).getDate());
+        assertEquals(obsolete.getTimeInMillis(),
+                     RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).getNode("1").getProperty(JCRHelper.NODE_PROPERTY_FINISHED).getDate().getTimeInMillis());
         assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("2"));
         assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("3"));
         assertTrue(RepositoryTestUtil.getAdminSession().getNode(REPO_PATH).hasNode("4"));
