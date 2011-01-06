@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -31,7 +31,7 @@ import org.osgi.framework.Constants;
 /**
  * Update the system bundle from a RegisteredResource.
  */
-public class SystemBundleUpdateTask extends OsgiInstallerTask {
+public class SystemBundleUpdateTask extends InstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "99-";
 
@@ -44,7 +44,7 @@ public class SystemBundleUpdateTask extends OsgiInstallerTask {
     }
 
     @Override
-    public void execute(OsgiInstallerContext ctx) {
+    public void execute(InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {

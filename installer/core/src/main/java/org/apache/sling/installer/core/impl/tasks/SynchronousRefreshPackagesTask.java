@@ -18,15 +18,15 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Execute an OSGi "refresh packages" operation, synchronously */
-public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements FrameworkListener {
+public class SynchronousRefreshPackagesTask extends InstallTask implements FrameworkListener {
 
     /** Tracker for the package admin. */
     private final BundleTaskCreator bundleTaskCreator;
@@ -72,9 +72,9 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.OsgiInstallerTask#execute(org.apache.sling.installer.core.impl.OsgiInstallerContext)
+     * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
-    public void execute(OsgiInstallerContext ctx) {
+    public void execute(InstallationContext ctx) {
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
@@ -84,7 +84,7 @@ public class SynchronousRefreshPackagesTask extends OsgiInstallerTask implements
         // this task executes
     	for(Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
     		if(b.getState() == Bundle.ACTIVE) {
-    			final OsgiInstallerTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
+    			final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
     			this.getLogger().debug("Added {} to restart bundle if needed after refreshing packages", t);
     		}

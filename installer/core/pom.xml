@@ -55,7 +55,8 @@
 							org.apache.sling.installer.core.impl.Activator
                         </Bundle-Activator>
 						<Export-Package>
-							org.apache.sling.installer.api;version=3.0.0
+							org.apache.sling.installer.api;version=3.0.0,
+                            org.apache.sling.installer.api.tasks;version=1.0.0
                         </Export-Package>
 						<Private-Package>org.apache.sling.installer.core.impl.*</Private-Package>
                         <Embed-Dependency>

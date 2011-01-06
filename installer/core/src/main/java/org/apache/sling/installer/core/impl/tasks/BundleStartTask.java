@@ -20,11 +20,11 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -33,7 +33,7 @@ import org.osgi.framework.BundleException;
  *  but only after receiving a bundle or framework event,
  *  indicating that it's worth retrying
  */
-public class BundleStartTask extends OsgiInstallerTask {
+public class BundleStartTask extends InstallTask {
 
     private static final String BUNDLE_START_ORDER = "70-";
 
@@ -70,9 +70,9 @@ public class BundleStartTask extends OsgiInstallerTask {
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.OsgiInstallerTask#execute(org.apache.sling.installer.core.impl.OsgiInstallerContext)
+	 * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
 	 */
-	public void execute(final OsgiInstallerContext ctx) {
+	public void execute(final InstallationContext ctx) {
 	    // this is just a sanity check which should never be reached
         if (bundleId == 0) {
             this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");

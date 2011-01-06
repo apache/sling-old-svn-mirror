@@ -30,6 +30,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {

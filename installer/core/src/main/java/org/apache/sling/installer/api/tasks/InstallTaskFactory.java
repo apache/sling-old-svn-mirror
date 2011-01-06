@@ -16,29 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.core.impl;
+package org.apache.sling.installer.api.tasks;
 
+public interface InstallTaskFactory {
 
-/**
- * Context for the installation tasks.
- * Currently it allows to add a task to the current or the next cycle.
- */
-public interface OsgiInstallerContext {
-
-	/**
-	 * Schedule a task for execution in the current OsgiController cycle
-	 */
-	void addTaskToCurrentCycle(OsgiInstallerTask t);
-
-	/**
-	 * Schedule a task for execution in the next OsgiController cycle,
-	 * usually to indicate that a task must be retried
-	 */
-	void addTaskToNextCycle(OsgiInstallerTask t);
-
-	/**
-	 * Make an entry into the audit log - this should be invoked
-	 * by the tasks whenever something has been installed/uninstalled etc.
-	 */
-	void log(String message, Object... args);
+    /**
+     * Creates an {@link InstallTask} for the resource or
+     * <code>null</code> if the factory does not support the resource.
+     */
+    InstallTask createTask(final RegisteredResourceGroup toActivate);
 }

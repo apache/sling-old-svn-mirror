@@ -18,15 +18,15 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 
 /**
  * Simple general task, setting the state of a registered resource.
  */
-public class ChangeStateTask extends OsgiInstallerTask {
+public class ChangeStateTask extends InstallTask {
 
     private static final String ORDER = "00-";
 
@@ -39,9 +39,9 @@ public class ChangeStateTask extends OsgiInstallerTask {
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.OsgiInstallerTask#execute(org.apache.sling.installer.core.impl.OsgiInstallerContext)
+     * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
-    public void execute(final OsgiInstallerContext ctx) {
+    public void execute(final InstallationContext ctx) {
         this.setFinishedState(this.state);
     }
 

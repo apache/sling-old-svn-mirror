@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
 
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.PersistentResourceList;
-import org.apache.sling.installer.core.impl.RegisteredResource;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;

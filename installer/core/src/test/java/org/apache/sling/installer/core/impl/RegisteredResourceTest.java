@@ -34,6 +34,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;

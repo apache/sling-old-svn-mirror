@@ -19,15 +19,15 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
 
 /** Install a bundle supplied as a RegisteredResource.
  *  Creates a BundleStartTask to start the bundle */
-public class BundleInstallTask extends OsgiInstallerTask {
+public class BundleInstallTask extends InstallTask {
 
     private static final String BUNDLE_INSTALL_ORDER = "50-";
 
@@ -40,9 +40,9 @@ public class BundleInstallTask extends OsgiInstallerTask {
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.OsgiInstallerTask#execute(org.apache.sling.installer.core.impl.OsgiInstallerContext)
+     * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
-    public void execute(final OsgiInstallerContext ctx) {
+    public void execute(final InstallationContext ctx) {
         int startLevel = 0;
         final Object providedLevel = (this.getResource().getDictionary() != null
             ? this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);

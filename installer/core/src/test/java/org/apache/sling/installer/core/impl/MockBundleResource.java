@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.osgi.framework.Constants;
 
 /** Mock RegisteredResource that simulates a bundle */
@@ -66,70 +67,70 @@ public class MockBundleResource implements RegisteredResource {
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#cleanup()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#cleanup()
 	 */
 	public void cleanup() {
 	    // nothing to do
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getAttributes()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getAttributes()
 	 */
 	public Map<String, Object> getAttributes() {
 		return attributes;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getDictionary()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDictionary()
 	 */
 	public Dictionary<String, Object> getDictionary() {
 		return null;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getDigest()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDigest()
 	 */
 	public String getDigest() {
 		return digest;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getEntityId()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getEntityId()
 	 */
 	public String getEntityId() {
 		return "bundle:" + this.attributes.get(Constants.BUNDLE_SYMBOLICNAME);
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getInputStream()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getInputStream()
 	 */
 	public InputStream getInputStream() throws IOException {
 		return null;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getType()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getType()
 	 */
 	public String getType() {
 		return InstallableResource.TYPE_BUNDLE;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getURL()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getURL()
 	 */
 	public String getURL() {
 		return this.getScheme() + ":" + this.attributes.get(Constants.BUNDLE_SYMBOLICNAME) + "-" + this.attributes.get(Constants.BUNDLE_VERSION);
 	}
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getScheme()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getScheme()
      */
     public String getScheme() {
         return "test";
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getPriority()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getPriority()
      */
     public int getPriority() {
         return priority;
@@ -143,28 +144,28 @@ public class MockBundleResource implements RegisteredResource {
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getState()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getState()
      */
     public State getState() {
         return state;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#setState(org.apache.sling.installer.core.impl.RegisteredResource.State)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setState(org.apache.sling.installer.api.tasks.RegisteredResource.State)
      */
     public void setState(State s) {
         this.state = s;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(String key) {
         return this.tempAttributes.get(key);
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
      */
     public void setTemporaryAttributee(String key, Object value) {
         if ( value == null ) {
