@@ -41,6 +41,7 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
         IGNORED
     }
 
+    /** Return the scheme from where the artifact is orginated. */
     String getScheme();
 
     /**
@@ -87,7 +88,6 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      * (bundle, config, etc.)
      */
     int getPriority();
-    void cleanup();
 
 	/** Attributes include the bundle symbolic name, bundle version, etc. */
 	Map<String, Object> getAttributes();

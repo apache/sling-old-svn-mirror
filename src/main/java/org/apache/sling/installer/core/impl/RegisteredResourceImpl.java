@@ -267,7 +267,7 @@ public class RegisteredResourceImpl
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#cleanup()
+	 * Clean up used data files.
 	 */
 	public void cleanup() {
 	    if ( this.dataFile != null && this.dataFile.exists() ) {
