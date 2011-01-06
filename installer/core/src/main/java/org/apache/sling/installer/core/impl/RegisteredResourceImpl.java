@@ -159,9 +159,6 @@ public class RegisteredResourceImpl
             // unknown resource type
             throw new IOException("Unknown resource type for resource " + input.getId());
         }
-        if ( !resourceType.equals(InstallableResource.TYPE_CONFIG) && !resourceType.equals(InstallableResource.TYPE_BUNDLE) ) {
-            throw new IOException("Unsupported resource type " + resourceType + " for resource " + input.getId());
-        }
         if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
             dict = readDictionary(is, getExtension(input.getId()));
             if ( dict == null ) {
@@ -255,7 +252,21 @@ public class RegisteredResourceImpl
             }
 
 		} else {
-		    throw new IOException("Unknown type " + resourceType);
+		    // we just copy the input stream
+            try {
+                this.dataFile = fileUtil.createNewDataFile(getType());
+                copyToLocalStorage(is);
+                this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
+                // remove path
+                String pid = id;
+                final int slashPos = pid.lastIndexOf('/');
+                if ( slashPos != -1 ) {
+                    pid = pid.substring(slashPos + 1);
+                }
+                entity = resourceType + ':' + pid;
+            } finally {
+                is.close();
+            }
 		}
 	}
 

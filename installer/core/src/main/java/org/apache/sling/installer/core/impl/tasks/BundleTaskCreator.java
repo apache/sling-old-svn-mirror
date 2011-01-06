@@ -18,7 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
@@ -34,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Task creator for bundles
  */
-public class BundleTaskCreator {
+public class BundleTaskCreator implements InstallTaskFactory {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -115,9 +117,14 @@ public class BundleTaskCreator {
 
 	/**
      * Create a bundle task - install, update or remove
+     *
+	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
 	 */
 	public InstallTask createTask(final RegisteredResourceGroup resourceList) {
 	    final RegisteredResource toActivate = resourceList.getActiveResource();
+	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
+	        return null;
+	    }
 	    final InstallTask result;
 
         final String symbolicName = (String)toActivate.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);

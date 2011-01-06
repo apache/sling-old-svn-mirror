@@ -18,7 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.config;
 
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.BundleContext;
@@ -28,7 +30,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  * Task creator for configurations.
  */
-public class ConfigTaskCreator {
+public class ConfigTaskCreator implements InstallTaskFactory {
 
     public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
     public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
@@ -57,17 +59,23 @@ public class ConfigTaskCreator {
 
 	/**
      * Create a task to install or uninstall a configuration.
+     *
+	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
 	 */
-	public InstallTask createTask(final RegisteredResourceGroup toActivate) {
+	public InstallTask createTask(final RegisteredResourceGroup group) {
+        final RegisteredResource toActivate = group.getActiveResource();
+        if ( !toActivate.getType().equals(InstallableResource.TYPE_CONFIG) ) {
+            return null;
+        }
 	    // if there is no config admin, just return
 	    if ( this.configAdminServiceTracker.getService() == null ) {
             return null;
 	    }
 	    final InstallTask result;
-		if (toActivate.getActiveResource().getState() == RegisteredResource.State.UNINSTALL) {
-		    result = new ConfigRemoveTask(toActivate, this.configAdminServiceTracker);
+		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
+		    result = new ConfigRemoveTask(group, this.configAdminServiceTracker);
 		} else {
-	        result = new ConfigInstallTask(toActivate, this.configAdminServiceTracker);
+	        result = new ConfigInstallTask(group, this.configAdminServiceTracker);
 		}
 		return result;
 	}
