@@ -27,7 +27,12 @@ import scala.tools.nsc.reporters.Reporter
  * Abstract base implementation of a {@link SettingsProvider}. 
  */  
 abstract class AbstractSettingsProvider extends SettingsProvider {
-  protected var settings: Settings = new Settings
+  protected var settings: Settings = {
+    val settings = new Settings
+    settings.usejavacp.value = true
+    settings
+  }
+  
   protected var reporter: Reporter = createReporter(settings)
   protected var classpathX: Array[AbstractFile] = Array.empty
 
