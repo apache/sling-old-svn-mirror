@@ -20,11 +20,11 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -47,7 +47,7 @@ public class BundleStartTask extends OsgiInstallerTask {
 
 	private final BundleTaskCreator creator;
 
-	public BundleStartTask(final EntityResourceList r, final long bundleId, final BundleTaskCreator btc) {
+	public BundleStartTask(final RegisteredResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
 	    super(r);
         this.bundleId = bundleId;
         this.creator = btc;

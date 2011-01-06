@@ -27,20 +27,20 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
 
-    private final EntityResourceList entityResourceList;
+    private final RegisteredResourceGroup resourceGroup;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public OsgiInstallerTask(final EntityResourceList erl) {
-        this.entityResourceList = erl;
+    public OsgiInstallerTask(final RegisteredResourceGroup erl) {
+        this.resourceGroup = erl;
     }
 
     /**
      * Return the corresponding resource - depending on the task this might be null.
      */
     public RegisteredResource getResource() {
-        if ( this.entityResourceList != null ) {
-            return this.entityResourceList.getActiveResource();
+        if ( this.resourceGroup != null ) {
+            return this.resourceGroup.getActiveResource();
         }
         return null;
     }
@@ -48,8 +48,8 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
     /**
      * Return the corresponding resource - depending on the task this might be null.
      */
-    public EntityResourceList getEntityResourceList() {
-        return this.entityResourceList;
+    public RegisteredResourceGroup getResourceGroup() {
+        return this.resourceGroup;
     }
 
     public Logger getLogger() {
@@ -67,7 +67,7 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 	}
 
 	public void setFinishedState(final RegisteredResource.State state) {
-	    this.entityResourceList.setFinishState(state);
+	    this.resourceGroup.setFinishState(state);
 	}
 
     @Override

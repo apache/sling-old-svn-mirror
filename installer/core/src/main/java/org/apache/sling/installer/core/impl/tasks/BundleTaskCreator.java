@@ -18,9 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -116,7 +116,7 @@ public class BundleTaskCreator {
 	/**
      * Create a bundle task - install, update or remove
 	 */
-	public OsgiInstallerTask createTask(final EntityResourceList resourceList) {
+	public OsgiInstallerTask createTask(final RegisteredResourceGroup resourceList) {
 	    final RegisteredResource toActivate = resourceList.getActiveResource();
 	    final OsgiInstallerTask result;
 

@@ -24,8 +24,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -48,7 +48,7 @@ abstract class AbstractConfigTask extends OsgiInstallerTask {
     /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
 
-    AbstractConfigTask(final EntityResourceList r, final ServiceTracker configAdminServiceTracker) {
+    AbstractConfigTask(final RegisteredResourceGroup r, final ServiceTracker configAdminServiceTracker) {
         super(r);
         this.configAdminServiceTracker = configAdminServiceTracker;
         this.configPid = (String)getResource().getAttributes().get(Constants.SERVICE_PID);

@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -38,7 +38,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleUpdateTask(final EntityResourceList r,
+    public BundleUpdateTask(final RegisteredResourceGroup r,
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -80,7 +80,7 @@ public class BundleUpdateTask extends OsgiInstallerTask {
 
             if (reactivate) {
                 this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
-                ctx.addTaskToCurrentCycle(new BundleStartTask(this.getEntityResourceList(), b.getBundleId(), this.creator));
+                ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
             } else {
                 this.setFinishedState(RegisteredResource.State.INSTALLED);
             }

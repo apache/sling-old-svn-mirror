@@ -18,9 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.config;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +32,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     private static final String CONFIG_INSTALL_ORDER = "20-";
 
-    public ConfigInstallTask(final EntityResourceList r, final ServiceTracker configAdminServiceTracker) {
+    public ConfigInstallTask(final RegisteredResourceGroup r, final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
     }
 

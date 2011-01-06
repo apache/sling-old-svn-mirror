@@ -19,9 +19,9 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
 
@@ -33,7 +33,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleInstallTask(final EntityResourceList r,
+    public BundleInstallTask(final RegisteredResourceGroup r,
             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -70,7 +70,7 @@ public class BundleInstallTask extends OsgiInstallerTask {
 
             // mark this resource as installed and to be started
             this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
-            ctx.addTaskToCurrentCycle(new BundleStartTask(getEntityResourceList(), b.getBundleId(), this.creator));
+            ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.creator));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
             this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
