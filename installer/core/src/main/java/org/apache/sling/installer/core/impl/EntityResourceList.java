@@ -136,6 +136,12 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         }
     }
 
+    private void cleanup(final RegisteredResource rr) {
+        if ( rr instanceof RegisteredResourceImpl ) {
+            ((RegisteredResourceImpl)rr).cleanup();
+        }
+    }
+
     public Collection<RegisteredResource> getResources() {
         return resources;
     }
@@ -148,7 +154,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         for(final RegisteredResource rr : resources) {
             if ( rr.getURL().equals(r.getURL()) ) {
                 LOGGER.debug("Cleanup obsolete resource: {}", rr);
-                rr.cleanup();
+                this.cleanup(rr);
                 resources.remove(rr);
                 if ( first && rr.equals(r) ) {
                     r.setState(rr.getState());
@@ -173,7 +179,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
                 } else {
                     LOGGER.debug("Removing unused: {}", r);
                     i.remove();
-                    r.cleanup();
+                    this.cleanup(r);
                 }
             }
             first = false;
@@ -183,7 +189,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
     public void remove(final RegisteredResource r) {
         if ( resources.remove(r) ) {
             LOGGER.debug("Removing unused: {}", r);
-            r.cleanup();
+            this.cleanup(r);
         }
     }
 
@@ -198,7 +204,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         for(final RegisteredResource r : toDelete) {
             changed = true;
             resources.remove(r);
-            r.cleanup();
+            this.cleanup(r);
             LOGGER.debug("Removing uninstalled from list: {}", r);
         }
         return changed;
