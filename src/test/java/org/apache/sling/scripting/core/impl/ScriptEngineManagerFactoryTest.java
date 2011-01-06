@@ -140,6 +140,7 @@ public class ScriptEngineManagerFactoryTest {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(tempFile);
+            fos.write("#I'am a test-comment\n".getBytes());
             fos.write(SCRIPT_ENGINE_FACTORY.getName().getBytes());
         } finally {
             if (fos != null) {

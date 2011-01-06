@@ -142,14 +142,16 @@ public class ScriptEngineManagerFactory implements BundleListener {
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
             String line;
             while ((line = reader.readLine()) != null) {
-                try {
-                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
-                    ScriptEngineFactory spi = clazz.newInstance();
-                    registerFactory(mgr, spi);
-                    extensions.addAll(spi.getExtensions());
-                } catch (Throwable t) {
-                    log.error("Cannot register ScriptEngineFactory " + line, t);
-                }
+            	if (!line.startsWith("#")){
+	                try {
+	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
+	                    ScriptEngineFactory spi = clazz.newInstance();
+	                    registerFactory(mgr, spi);
+	                    extensions.addAll(spi.getExtensions());
+	                } catch (Throwable t) {
+	                    log.error("Cannot register ScriptEngineFactory " + line, t);
+	                }
+            	}
             }
         } catch (IOException ioe) {
             // ignore
