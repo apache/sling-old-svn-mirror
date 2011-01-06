@@ -21,6 +21,9 @@ package org.apache.sling.installer.core.impl;
 import java.util.Hashtable;
 
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.tasks.InstallTaskFactory;
+import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
+import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -38,10 +41,19 @@ public class Activator implements BundleActivator {
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
 
+    private BundleTaskCreator bundleTaskFactory;
+    private ServiceRegistration bundleTaskFactoryReg;
+
+    private ConfigTaskCreator configTaskFactory;
+    private ServiceRegistration configTaskFactoryReg;
+
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
+        // register install task factories
+        this.registerFactories(context);
+
         // register osgi installer service
         final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
@@ -59,7 +71,7 @@ public class Activator implements BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(BundleContext context) {
+    public void stop(final BundleContext context) {
         // stop osgi installer service
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
@@ -70,5 +82,43 @@ public class Activator implements BundleActivator {
             this.osgiControllerServiceReg.unregister();
             this.osgiControllerServiceReg = null;
         }
+        if ( this.bundleTaskFactoryReg != null ) {
+            this.bundleTaskFactoryReg.unregister();
+            this.bundleTaskFactoryReg = null;
+        }
+        if ( this.bundleTaskFactory != null ) {
+            this.bundleTaskFactory.deactivate();
+            this.bundleTaskFactory = null;
+        }
+        if ( this.configTaskFactoryReg != null ) {
+            this.configTaskFactoryReg.unregister();
+            this.configTaskFactoryReg = null;
+        }
+        if ( this.configTaskFactory != null ) {
+            this.configTaskFactory.deactivate();
+            this.configTaskFactory = null;
+        }
+    }
+
+    private void registerFactories(final BundleContext context) {
+        final String [] serviceInterfaces = {
+                InstallTaskFactory.class.getName()
+        };
+
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Bundle Install Task Factory");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
+
+        this.bundleTaskFactory = new BundleTaskCreator(context);
+        this.bundleTaskFactoryReg = context.registerService(serviceInterfaces,
+                bundleTaskFactory, props);
+
+        props = new Hashtable<String, String>();
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Configuration Install Task Factory");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
+
+        this.configTaskFactory = new ConfigTaskCreator(context);
+        this.configTaskFactoryReg = context.registerService(serviceInterfaces,
+                configTaskFactory, props);
     }
 }

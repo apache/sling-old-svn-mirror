@@ -35,16 +35,17 @@ import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.InstallTaskFactory;
+import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
-import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,16 +91,16 @@ public class OsgiInstallerImpl
 
     private volatile boolean retriesScheduled;
 
-
-    private BundleTaskCreator bundleTaskCreator;
-    private ConfigTaskCreator configTaskCreator;
-
     private final FileUtil fileUtil;
+
+    private final ServiceTracker factoryTracker;
 
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         this.fileUtil = new FileUtil(ctx);
+        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(), null);
+        this.factoryTracker.open();
     }
 
     /**
@@ -107,8 +108,7 @@ public class OsgiInstallerImpl
      */
     public void deactivate() {
         this.active = false;
-        this.configTaskCreator.deactivate();
-        this.bundleTaskCreator.deactivate();
+        this.factoryTracker.close();
         ctx.removeBundleListener(this);
         ctx.removeFrameworkListener(this);
         // wake up sleeping thread
@@ -132,8 +132,6 @@ public class OsgiInstallerImpl
         // listen to framework and bundle events
         this.ctx.addFrameworkListener(this);
         this.ctx.addBundleListener(this);
-        this.configTaskCreator = new ConfigTaskCreator(ctx);
-        this.bundleTaskCreator = new BundleTaskCreator(ctx);
         setName(getClass().getSimpleName());
         final File f = this.fileUtil.getDataFile("RegisteredResourceList.ser");
         persistentList = new PersistentResourceList(f);
@@ -423,36 +421,41 @@ public class OsgiInstallerImpl
         }
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
-        for(final String entityId : this.persistentList.getEntityIds()) {
-            final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-            // Check the first resource in each group
-            final RegisteredResource first = group.getActiveResource();
-            if ( first != null ) {
-                RegisteredResource toActivate = null;
-                switch ( first.getState() ) {
-                    case UNINSTALL : toActivate = first;
-                                     break;
-                    case INSTALL   : toActivate = first;
-                                     break;
-                }
+        final Object[] services = this.factoryTracker.getServices();
+        if ( services != null && services.length > 0 ) {
+            for(final String entityId : this.persistentList.getEntityIds()) {
+                final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+                // Check the first resource in each group
+                final RegisteredResource toActivate = group.getActiveResource();
                 if ( toActivate != null ) {
-                    final String rt = toActivate.getType();
-                    final InstallTask task;
-                    if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
-                        task = bundleTaskCreator.createTask(group);
-                    } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
-                        task = configTaskCreator.createTask(group);
-                    } else {
-                        task = null;
-                    }
+                    final InstallTask task = getTask(services, group);
                     if ( task != null ) {
                         tasks.add(task);
                     }
-                }
 
+                }
             }
         }
         return tasks;
+    }
+
+    /**
+     * Get the task for the resource.
+     */
+    private InstallTask getTask(final Object[] services,
+            final RegisteredResourceGroup rrg) {
+        InstallTask result = null;
+
+        for(int i=0; i<services.length; i++) {
+            if ( services[i] instanceof InstallTaskFactory ) {
+                final InstallTaskFactory factory = (InstallTaskFactory)services[i];
+                result = factory.createTask(rrg);
+                if ( result != null ) {
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     /**
