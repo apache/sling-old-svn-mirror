@@ -45,7 +45,9 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,8 +91,6 @@ public class OsgiInstallerImpl
     /** The persistent resource list. */
     private PersistentResourceList persistentList;
 
-    private volatile boolean retriesScheduled;
-
     private final FileUtil fileUtil;
 
     private final ServiceTracker factoryTracker;
@@ -99,7 +99,25 @@ public class OsgiInstallerImpl
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         this.fileUtil = new FileUtil(ctx);
-        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(), null);
+        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(),
+                new ServiceTrackerCustomizer() {
+
+                    public void removedService(ServiceReference reference, Object service) {
+                        ctx.ungetService(reference);
+                    }
+
+                    public void modifiedService(ServiceReference reference, Object service) {
+                        // do nothing
+                    }
+
+                    public Object addingService(ServiceReference reference) {
+                        // new factory has been added, wake up main thread
+                        synchronized (newResources) {
+                            newResources.notify();
+                        }
+                        return ctx.getService(reference);
+                    }
+                });
         this.factoryTracker.open();
     }
 
@@ -143,12 +161,17 @@ public class OsgiInstallerImpl
         this.init();
         while (active) {
             this.mergeNewResources();
-            final boolean tasksToDo = this.hasOpenTasks();
+
+            // execute tasks
             final SortedSet<InstallTask> tasks = this.computeTasks();
+            final boolean tasksCreated = !tasks.isEmpty();
+            this.executeTasks(tasks);
 
-            if (tasks.isEmpty() && !tasksToDo && !retriesScheduled) {
-                this.cleanupInstallableResources();
+            // clean up and save
+            this.cleanupInstallableResources();
 
+            // if we don't have any tasks, we go to sleep
+            if (!tasksCreated) {
                 synchronized (newResources) {
                     // before we go to sleep, check if new resources arrived in the meantime
                     if ( !this.hasNewResources()) {
@@ -162,13 +185,6 @@ public class OsgiInstallerImpl
                     }
                 }
             } else {
-
-                retriesScheduled = false;
-                // execute tasks
-                this.executeTasks(tasks);
-                // clean up and save
-                this.cleanupInstallableResources();
-
                 // Some integration tests depend on this delay, make sure to
                 // rerun/adapt them if changing this value
                 try {
@@ -372,17 +388,6 @@ public class OsgiInstallerImpl
         }
     }
 
-    private boolean hasOpenTasks() {
-        // check if there is something to do
-        for(final String entityId : this.persistentList.getEntityIds()) {
-            final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-            if ( group.getActiveResource() != null ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void printResources(String hint) {
         if ( !logger.isDebugEnabled() ) {
             return;
@@ -462,36 +467,39 @@ public class OsgiInstallerImpl
      * Execute all tasks
      */
     private void executeTasks(final SortedSet<InstallTask> tasks) {
-        final InstallationContext ctx = new InstallationContext() {
+        if ( !tasks.isEmpty() ) {
 
-            public void addTaskToNextCycle(final InstallTask t) {
-                logger.debug("adding task to next cycle: {}", t);
-                synchronized (tasksForNextCycle) {
-                    tasksForNextCycle.add(t);
+            final InstallationContext ctx = new InstallationContext() {
+
+                public void addTaskToNextCycle(final InstallTask t) {
+                    logger.debug("adding task to next cycle: {}", t);
+                    synchronized (tasksForNextCycle) {
+                        tasksForNextCycle.add(t);
+                    }
                 }
-            }
 
-            public void addTaskToCurrentCycle(final InstallTask t) {
-                logger.debug("adding task to current cycle: {}", t);
-                synchronized ( tasks ) {
-                    tasks.add(t);
+                public void addTaskToCurrentCycle(final InstallTask t) {
+                    logger.debug("adding task to current cycle: {}", t);
+                    synchronized ( tasks ) {
+                        tasks.add(t);
+                    }
                 }
-            }
 
-            public void log(String message, Object... args) {
-                auditLogger.info(message, args);
+                public void log(String message, Object... args) {
+                    auditLogger.info(message, args);
+                }
+            };
+            while (this.active && !tasks.isEmpty()) {
+                InstallTask t = null;
+                synchronized (tasks) {
+                    t = tasks.first();
+                    tasks.remove(t);
+                }
+                logger.debug("Executing task: {}", t);
+                t.execute(ctx);
             }
-        };
-        while (this.active && !tasks.isEmpty()) {
-            InstallTask t = null;
-            synchronized (tasks) {
-                t = tasks.first();
-                tasks.remove(t);
-            }
-            logger.debug("Executing task: {}", t);
-            t.execute(ctx);
+            persistentList.save();
         }
-        persistentList.save();
     }
 
     /**
@@ -504,7 +512,7 @@ public class OsgiInstallerImpl
         printResources("Compacted");
     }
 
-    /** If we have any tasks waiting to be retried, schedule their execution */
+    /** If we have any tasks waiting to be retried, schedule their execution
     private void scheduleRetries() {
         final int toRetry;
         synchronized ( tasksForNextCycle ) {
@@ -513,11 +521,11 @@ public class OsgiInstallerImpl
         if (toRetry > 0) {
             logger.debug("{} tasks scheduled for retrying", toRetry);
             synchronized (newResources) {
-                retriesScheduled = true;
                 newResources.notify();
             }
         }
     }
+    */
 
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
@@ -529,7 +537,11 @@ public class OsgiInstallerImpl
         final int t = e.getType();
         if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
             logger.debug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
-            scheduleRetries();
+            // TODO - for now we always reschedule regardless if we have retries
+            // If the config task factory is only registered when config admin is available we can relax this again.
+            synchronized (newResources) {
+                newResources.notify();
+            }
         }
     }
 
