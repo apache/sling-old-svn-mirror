@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -30,7 +30,7 @@ import org.osgi.framework.Version;
  *  a bundleStartTask to restart the bundle if it was
  *   active before the update.
  */
-public class BundleUpdateTask extends OsgiInstallerTask {
+public class BundleUpdateTask extends InstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "40-";
 
@@ -45,9 +45,9 @@ public class BundleUpdateTask extends OsgiInstallerTask {
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.OsgiInstallerTask#execute(org.apache.sling.installer.core.impl.OsgiInstallerContext)
+     * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
-    public void execute(OsgiInstallerContext ctx) {
+    public void execute(InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {

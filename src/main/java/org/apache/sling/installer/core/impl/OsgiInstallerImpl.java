@@ -35,6 +35,9 @@ import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleContext;
@@ -77,7 +80,7 @@ public class OsgiInstallerImpl
     private final Set<String> urlsToRemove = new HashSet<String>();
 
     /** Tasks to be scheduled in the next iteration. */
-    private final SortedSet<OsgiInstallerTask> tasksForNextCycle = new TreeSet<OsgiInstallerTask>();
+    private final SortedSet<InstallTask> tasksForNextCycle = new TreeSet<InstallTask>();
 
     /** Are we still activate? */
     private volatile boolean active = true;
@@ -143,7 +146,7 @@ public class OsgiInstallerImpl
         while (active) {
             this.mergeNewResources();
             final boolean tasksToDo = this.hasOpenTasks();
-            final SortedSet<OsgiInstallerTask> tasks = this.computeTasks();
+            final SortedSet<InstallTask> tasks = this.computeTasks();
 
             if (tasks.isEmpty() && !tasksToDo && !retriesScheduled) {
                 this.cleanupInstallableResources();
@@ -410,8 +413,8 @@ public class OsgiInstallerImpl
     /**
      * Compute OSGi tasks based on our resources, and add to supplied list of tasks.
      */
-    private SortedSet<OsgiInstallerTask> computeTasks() {
-        final SortedSet<OsgiInstallerTask> tasks = new TreeSet<OsgiInstallerTask>();
+    private SortedSet<InstallTask> computeTasks() {
+        final SortedSet<InstallTask> tasks = new TreeSet<InstallTask>();
 
         // Add tasks that were scheduled for next cycle
         synchronized (tasksForNextCycle) {
@@ -434,7 +437,7 @@ public class OsgiInstallerImpl
                 }
                 if ( toActivate != null ) {
                     final String rt = toActivate.getType();
-                    final OsgiInstallerTask task;
+                    final InstallTask task;
                     if ( InstallableResource.TYPE_BUNDLE.equals(rt) ) {
                         task = bundleTaskCreator.createTask(group);
                     } else if ( InstallableResource.TYPE_CONFIG.equals(rt) ) {
@@ -455,17 +458,17 @@ public class OsgiInstallerImpl
     /**
      * Execute all tasks
      */
-    private void executeTasks(final SortedSet<OsgiInstallerTask> tasks) {
-        final OsgiInstallerContext ctx = new OsgiInstallerContext() {
+    private void executeTasks(final SortedSet<InstallTask> tasks) {
+        final InstallationContext ctx = new InstallationContext() {
 
-            public void addTaskToNextCycle(final OsgiInstallerTask t) {
+            public void addTaskToNextCycle(final InstallTask t) {
                 logger.debug("adding task to next cycle: {}", t);
                 synchronized (tasksForNextCycle) {
                     tasksForNextCycle.add(t);
                 }
             }
 
-            public void addTaskToCurrentCycle(final OsgiInstallerTask t) {
+            public void addTaskToCurrentCycle(final InstallTask t) {
                 logger.debug("adding task to current cycle: {}", t);
                 synchronized ( tasks ) {
                     tasks.add(t);
@@ -477,7 +480,7 @@ public class OsgiInstallerImpl
             }
         };
         while (this.active && !tasks.isEmpty()) {
-            OsgiInstallerTask t = null;
+            InstallTask t = null;
             synchronized (tasks) {
                 t = tasks.first();
                 tasks.remove(t);

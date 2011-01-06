@@ -18,9 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.config;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerContext;
-import org.apache.sling.installer.core.impl.RegisteredResource;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -43,7 +43,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public void execute(final OsgiInstallerContext ctx) {
+    public void execute(final InstallationContext ctx) {
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
         if (ca == null) {
             this.getLogger().debug("ConfigurationAdmin not available, task will be retried later: {}", this);

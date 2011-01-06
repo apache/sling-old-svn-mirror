@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.core.impl;
+package org.apache.sling.installer.api.tasks;
 
+import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +26,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Base class for tasks that can be executed by the {@link OsgiInstallerImpl}
  */
-public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask> {
+public abstract class InstallTask implements Comparable<InstallTask> {
 
     private final RegisteredResourceGroup resourceGroup;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public OsgiInstallerTask(final RegisteredResourceGroup erl) {
+    public InstallTask(final RegisteredResourceGroup erl) {
         this.resourceGroup = erl;
     }
 
@@ -56,13 +57,13 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
         return this.logger;
     }
 
-    public abstract void execute(OsgiInstallerContext ctx);
+    public abstract void execute(InstallationContext ctx);
 
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
 
 	/** All comparisons are based on getSortKey() */
-	public final int compareTo(OsgiInstallerTask o) {
+	public final int compareTo(InstallTask o) {
 		return getSortKey().compareTo(o.getSortKey());
 	}
 
@@ -77,8 +78,8 @@ public abstract class OsgiInstallerTask implements Comparable<OsgiInstallerTask>
 
     @Override
 	public final boolean equals(Object o) {
-		if(o instanceof OsgiInstallerTask) {
-			return getSortKey().equals(((OsgiInstallerTask)o).getSortKey());
+		if(o instanceof InstallTask) {
+			return getSortKey().equals(((InstallTask)o).getSortKey());
 		}
 		return false;
 	}

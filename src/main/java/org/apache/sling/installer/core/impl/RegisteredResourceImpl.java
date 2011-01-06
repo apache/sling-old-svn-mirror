@@ -44,6 +44,7 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -276,14 +277,14 @@ public class RegisteredResourceImpl
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getURL()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getURL()
 	 */
 	public String getURL() {
 		return this.url;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getInputStream()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getInputStream()
 	 */
 	public InputStream getInputStream() throws IOException {
 	    if (this.dataFile != null && this.dataFile.exists() ) {
@@ -293,14 +294,14 @@ public class RegisteredResourceImpl
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getDictionary()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDictionary()
 	 */
 	public Dictionary<String, Object> getDictionary() {
 		return dictionary;
 	}
 
 	/**
-	 * @see org.apache.sling.installer.core.impl.RegisteredResource#getDigest()
+	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDigest()
 	 */
 	public String getDigest() {
 		return digest;
@@ -340,21 +341,21 @@ public class RegisteredResourceImpl
 	}
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getType()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getType()
      */
     public String getType() {
         return resourceType;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getEntityId()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getEntityId()
      */
     public String getEntityId() {
         return entity;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getAttributes()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getAttributes()
      */
     public Map<String, Object> getAttributes() {
 		return attributes;
@@ -411,28 +412,28 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getScheme()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getScheme()
      */
     public String getScheme() {
         return urlScheme;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getPriority()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getPriority()
      */
     public int getPriority() {
         return priority;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getState()
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getState()
      */
     public State getState() {
         return this.state;
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#setState(org.apache.sling.installer.core.impl.RegisteredResource.State)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setState(org.apache.sling.installer.api.tasks.RegisteredResource.State)
      */
     public void setState(State s) {
         this.state = s;
@@ -660,7 +661,7 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(final String key) {
         if ( this.temporaryAttributes != null ) {
@@ -670,7 +671,7 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.core.impl.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
      */
     public void setTemporaryAttributee(final String key, final Object value) {
         if ( this.temporaryAttributes == null ) {

@@ -24,8 +24,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerTask;
-import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -33,7 +33,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for configuration-related tasks */
-abstract class AbstractConfigTask extends OsgiInstallerTask {
+abstract class AbstractConfigTask extends InstallTask {
 
     /** Configuration properties to ignore when comparing configs */
     protected static final Set<String> ignoredProperties = new HashSet<String>();

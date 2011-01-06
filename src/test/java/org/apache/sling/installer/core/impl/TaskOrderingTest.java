@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.core.impl.config.ConfigInstallTask;
 import org.apache.sling.installer.core.impl.config.ConfigRemoveTask;
 import org.apache.sling.installer.core.impl.tasks.BundleInstallTask;
@@ -40,12 +41,12 @@ import org.apache.sling.installer.core.impl.tasks.SynchronousRefreshPackagesTask
  */
 public class TaskOrderingTest {
 
-    private Set<OsgiInstallerTask> taskSet;
+    private Set<InstallTask> taskSet;
 
 	@org.junit.Before public void setUp() {
 	    // The data type must be consistent with the "tasks" member
 	    // of the {@link OsgiControllerImpl} class.
-		taskSet = new TreeSet<OsgiInstallerTask>();
+		taskSet = new TreeSet<InstallTask>();
 	}
 
 	private static EntityResourceList getRegisteredResource(String url) throws IOException {
@@ -56,9 +57,9 @@ public class TaskOrderingTest {
 	    return erl;
 	}
 
-	private void assertOrder(int testId, Collection<OsgiInstallerTask> actual, OsgiInstallerTask [] expected) {
+	private void assertOrder(int testId, Collection<InstallTask> actual, InstallTask [] expected) {
 		int index = 0;
-		for(OsgiInstallerTask t : actual) {
+		for(InstallTask t : actual) {
 			if(!t.equals(expected[index])) {
 				fail("Test " + testId + ": at index " + index + ", expected " + expected[index] + " but got " + t);
 			}
@@ -69,7 +70,7 @@ public class TaskOrderingTest {
 	@org.junit.Test
 	public void testBasicOrdering() throws Exception {
 		int testIndex = 1;
-		final OsgiInstallerTask [] tasksInOrder = {
+		final InstallTask [] tasksInOrder = {
 		    new ConfigRemoveTask(getRegisteredResource("test:a"), null),
             new ConfigInstallTask(getRegisteredResource("test:a"), null),
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
@@ -127,7 +128,7 @@ public class TaskOrderingTest {
 	@org.junit.Test
 	public void testMultipleConfigAndBundles() throws Exception {
 		int testIndex = 1;
-		final OsgiInstallerTask [] tasksInOrder = {
+		final InstallTask [] tasksInOrder = {
 			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing"), null),
             new BundleInstallTask(getRegisteredResource("test:someURIb.nothing"), null),
 			new SynchronousRefreshPackagesTask(null),
@@ -152,7 +153,7 @@ public class TaskOrderingTest {
 	@org.junit.Test
 	public void testMultipleRefreshAndStart() throws Exception {
 		int testIndex = 1;
-		final OsgiInstallerTask [] tasksInOrder = {
+		final InstallTask [] tasksInOrder = {
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
 			new SynchronousRefreshPackagesTask(null),
 			new BundleStartTask(null, 0, null),
@@ -186,7 +187,7 @@ public class TaskOrderingTest {
 	@org.junit.Test
 	public void testBundleStartOrder() {
 		int testIndex = 1;
-		final OsgiInstallerTask [] tasksInOrder = {
+		final InstallTask [] tasksInOrder = {
 			new BundleStartTask(null, 0, null),
 			new BundleStartTask(null, 1, null),
 			new BundleStartTask(null, 5, null),

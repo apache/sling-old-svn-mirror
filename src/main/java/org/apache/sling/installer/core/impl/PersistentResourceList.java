@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
