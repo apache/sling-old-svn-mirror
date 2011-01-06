@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * Persistent list of RegisteredResource, used by installer to
  * keep track of all registered resources
  */
-public class EntityResourceList implements Serializable {
+public class EntityResourceList implements Serializable, RegisteredResourceGroup {
 
     /** Use own serial version ID as we control serialization. */
     private static final long serialVersionUID = 6L;

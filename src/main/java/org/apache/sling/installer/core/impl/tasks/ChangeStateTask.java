@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 
 /**
  * Simple general task, setting the state of a registered resource.
@@ -32,7 +32,7 @@ public class ChangeStateTask extends OsgiInstallerTask {
 
     private final RegisteredResource.State state;
 
-    public ChangeStateTask(final EntityResourceList r,
+    public ChangeStateTask(final RegisteredResourceGroup r,
                            final RegisteredResource.State s) {
         super(r);
         this.state = s;

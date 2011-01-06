@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerContext;
 import org.apache.sling.installer.core.impl.OsgiInstallerTask;
 import org.apache.sling.installer.core.impl.RegisteredResource;
+import org.apache.sling.installer.core.impl.RegisteredResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -36,7 +36,7 @@ public class BundleRemoveTask extends OsgiInstallerTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleRemoveTask(final EntityResourceList r,
+    public BundleRemoveTask(final RegisteredResourceGroup r,
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
