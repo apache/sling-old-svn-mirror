@@ -40,6 +40,8 @@ import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceTransformer;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -62,7 +64,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OsgiInstallerImpl
     extends Thread
-    implements BundleListener, FrameworkListener, OsgiInstaller {
+    implements BundleListener, FrameworkListener, OsgiInstaller, ServiceTrackerCustomizer {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -93,32 +95,16 @@ public class OsgiInstallerImpl
 
     private final FileUtil fileUtil;
 
-    private final ServiceTracker factoryTracker;
+    /** A tracker for the factories. */
+    private ServiceTracker factoryTracker;
+
+    /** A tracker for the transformers. */
+    private ServiceTracker transformerTracker;
 
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         this.fileUtil = new FileUtil(ctx);
-        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(),
-                new ServiceTrackerCustomizer() {
-
-                    public void removedService(ServiceReference reference, Object service) {
-                        ctx.ungetService(reference);
-                    }
-
-                    public void modifiedService(ServiceReference reference, Object service) {
-                        // do nothing
-                    }
-
-                    public Object addingService(ServiceReference reference) {
-                        // new factory has been added, wake up main thread
-                        synchronized (newResources) {
-                            newResources.notify();
-                        }
-                        return ctx.getService(reference);
-                    }
-                });
-        this.factoryTracker.open();
     }
 
     /**
@@ -126,34 +112,46 @@ public class OsgiInstallerImpl
      */
     public void deactivate() {
         this.active = false;
+
+        // Stop service trackers.
         this.factoryTracker.close();
+        this.transformerTracker.close();
+
+        // remove as listener
         ctx.removeBundleListener(this);
         ctx.removeFrameworkListener(this);
+
         // wake up sleeping thread
         synchronized (newResources) {
             newResources.notify();
         }
-        logger.debug("Waiting for installer thread to stop");
+        this.logger.debug("Waiting for installer thread to stop");
         try {
             this.join();
         } catch (InterruptedException e) {
             // we simply ignore this
         }
 
-        logger.info("Apache Sling OSGi Installer Service stopped.");
+        this.logger.info("Apache Sling OSGi Installer Service stopped.");
     }
 
     /**
      * Initialize the installer
      */
     private void init() {
+        // start service trackers
+        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(), this);
+        this.factoryTracker.open();
+        this.transformerTracker = new ServiceTracker(ctx, ResourceTransformer.class.getName(), this);
+        this.transformerTracker.open();
+
         // listen to framework and bundle events
         this.ctx.addFrameworkListener(this);
         this.ctx.addBundleListener(this);
         setName(getClass().getSimpleName());
         final File f = this.fileUtil.getDataFile("RegisteredResourceList.ser");
-        persistentList = new PersistentResourceList(f);
-        logger.info("Apache Sling OSGi Installer Service started.");
+        this.persistentList = new PersistentResourceList(f);
+        this.logger.info("Apache Sling OSGi Installer Service started.");
     }
 
     @Override
@@ -161,6 +159,9 @@ public class OsgiInstallerImpl
         this.init();
         while (active) {
             this.mergeNewResources();
+
+            // invoke transformers
+            this.transformResources();
 
             // execute tasks
             final SortedSet<InstallTask> tasks = this.computeTasks();
@@ -512,6 +513,48 @@ public class OsgiInstallerImpl
         printResources("Compacted");
     }
 
+    /**
+     * Invoke the transformers on the resources.
+     */
+    private void transformResources() {
+        // Walk the list of resources and invoke all transformers
+        final Object[] services = this.transformerTracker.getServices();
+        if ( services != null && services.length > 0 ) {
+            boolean changed = false;
+            for(final String entityId : this.persistentList.getEntityIds()) {
+                final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+                // Check the first resource in each group
+                final RegisteredResource toActivate = group.getActiveResource();
+                if ( toActivate != null && toActivate.getState() == RegisteredResource.State.INSTALL ) {
+                    for(int i=0; i<services.length; i++) {
+                        if ( services[i] instanceof ResourceTransformer ) {
+                            final ResourceTransformer transformer = (ResourceTransformer)services[i];
+                            final TransformationResult tr = transformer.transform(toActivate);
+                            if ( tr != null ) {
+                                if ( tr.getResourceType() != null ) {
+                                    this.persistentList.remove(toActivate);
+                                }
+                                if ( ((RegisteredResourceImpl)toActivate).update(tr) ) {
+                                    if ( tr.getResourceType() != null ) {
+                                        this.persistentList.addOrUpdate(toActivate);
+                                    }
+                                } else {
+                                    // ignore this resource from now on
+                                    toActivate.setState(RegisteredResource.State.IGNORED);
+                                }
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if ( changed ) {
+                this.persistentList.save();
+                printResources("Transformed");
+            }
+        }
+    }
+
     /** If we have any tasks waiting to be retried, schedule their execution
     private void scheduleRetries() {
         final int toRetry;
@@ -563,5 +606,30 @@ public class OsgiInstallerImpl
         synchronized (LOCK) {
             eventsCount++;
         }
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     */
+    public void removedService(ServiceReference reference, Object service) {
+        ctx.ungetService(reference);
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     */
+    public void modifiedService(ServiceReference reference, Object service) {
+        // do nothing
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
+     */
+    public Object addingService(ServiceReference reference) {
+        // new factory has been added, wake up main thread
+        synchronized (newResources) {
+            newResources.notify();
+        }
+        return ctx.getService(reference);
     }
 }
