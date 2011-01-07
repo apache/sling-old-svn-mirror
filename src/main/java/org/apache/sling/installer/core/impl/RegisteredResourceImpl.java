@@ -45,6 +45,7 @@ import java.util.jar.Manifest;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -73,7 +74,7 @@ public class RegisteredResourceImpl
 	private final String digest;
 
 	/** The entity id. */
-	private final String entity;
+	private String entity;
 
 	/** The dictionary for configurations. */
 	private final Dictionary<String, Object> dictionary;
@@ -85,7 +86,7 @@ public class RegisteredResourceImpl
 
 	private final int priority;
 
-    private final String resourceType;
+    private String resourceType;
 
     /** The current state of this resource. */
     private State state = State.INSTALL;
@@ -195,79 +196,32 @@ public class RegisteredResourceImpl
 	        final FileUtil fileUtil) throws IOException {
         this.url = scheme + ':' + id;
         this.urlScheme = scheme;
-		this.resourceType = type;
 		this.priority = priority;
         this.dictionary = copy(dict);
 
-		if (resourceType.equals(InstallableResource.TYPE_BUNDLE)) {
+		if (type.equals(InstallableResource.TYPE_BUNDLE)) {
             try {
-                this.dataFile = fileUtil.createNewDataFile(getType());
-                copyToLocalStorage(is);
-                setAttributesFromManifest();
-                final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
-                if (name == null) {
-                    // not a bundle
-                    throw new IOException("Bundle resource does not contain a bundle " + this.url);
-                }
+                this.dataFile = fileUtil.createNewDataFile(type);
+                this.copyToLocalStorage(is);
+                this.setAttributesFromManifest(false);
                 this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
-                entity = resourceType + ':' + name;
             } finally {
                 is.close();
             }
-		} else if ( resourceType.equals(InstallableResource.TYPE_CONFIG)) {
+		} else if ( type.equals(InstallableResource.TYPE_CONFIG)) {
             this.dataFile = null;
             this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(dict));
-            // remove path
-            String pid = id;
-            final int slashPos = pid.lastIndexOf('/');
-            if ( slashPos != -1 ) {
-                pid = pid.substring(slashPos + 1);
-            }
-            // remove extension
-            if ( RegisteredResourceImpl.isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
-                final int lastDot = pid.lastIndexOf('.');
-                pid = pid.substring(0, lastDot);
-            }
-            // split pid and factory pid alias
-            final String factoryPid;
-            final String configPid;
-            int n = pid.indexOf('-');
-            if (n > 0) {
-                configPid = pid.substring(n + 1);
-                factoryPid = pid.substring(0, n);
-            } else {
-                factoryPid = null;
-                configPid = pid;
-            }
-            entity = resourceType + ':' + (factoryPid == null ? "" : factoryPid + ".") + configPid;
-
-            attributes.put(Constants.SERVICE_PID, configPid);
-            // Add pseudo-properties
-            this.dictionary.put(ConfigTaskCreator.CONFIG_PATH_KEY, this.getURL());
-
-            // Factory?
-            if (factoryPid != null) {
-                attributes.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
-                this.dictionary.put(ConfigTaskCreator.ALIAS_KEY, configPid);
-            }
-
 		} else {
 		    // we just copy the input stream
             try {
                 this.dataFile = fileUtil.createNewDataFile(getType());
                 copyToLocalStorage(is);
                 this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
-                // remove path
-                String pid = id;
-                final int slashPos = pid.lastIndexOf('/');
-                if ( slashPos != -1 ) {
-                    pid = pid.substring(slashPos + 1);
-                }
-                entity = resourceType + ':' + pid;
             } finally {
                 is.close();
             }
 		}
+		this.updateResourceType(id, type, false);
 	}
 
 	@Override
@@ -402,24 +356,30 @@ public class RegisteredResourceImpl
         return result;
     }
 
-    private void setAttributesFromManifest() throws IOException {
+    /**
+     * Set the manifest attributes from the data file.
+     * @throws IOException If anything goes wrong
+     */
+    private void setAttributesFromManifest(final boolean ignoreError) throws IOException {
+        attributes.remove(Constants.BUNDLE_SYMBOLICNAME);
+        attributes.remove(Constants.BUNDLE_VERSION);
     	final Manifest m = getManifest(getInputStream());
-    	if(m == null) {
+    	if (m == null) {
+    	    if ( ignoreError) {
+    	        return;
+    	    }
             throw new IOException("Cannot get manifest of bundle resource");
     	}
 
     	final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-        if(sn == null) {
-            throw new IOException("Manifest does not supply " + Constants.BUNDLE_SYMBOLICNAME);
+        if (sn != null) {
+            final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+            if (v == null) {
+                throw new IOException("Manifest does not supply " + Constants.BUNDLE_VERSION);
+            }
+            attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
+            attributes.put(Constants.BUNDLE_VERSION, v.toString());
         }
-
-    	final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-        if(v == null) {
-            throw new IOException("Manifest does not supply " + Constants.BUNDLE_VERSION);
-        }
-
-        attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
-        attributes.put(Constants.BUNDLE_VERSION, v.toString());
     }
 
     /**
@@ -692,6 +652,94 @@ public class RegisteredResourceImpl
             this.temporaryAttributes.remove(key);
         } else {
             this.temporaryAttributes.put(key, value);
+        }
+    }
+
+    /**
+     * Update this resource from the result.
+     * Currently only the input stream and resource type is updated.
+     * @param tr Transformation result
+     */
+    public boolean update(final TransformationResult tr) {
+        final InputStream is = tr.getInputStream();
+        if ( is != null ) {
+            try {
+                this.copyToLocalStorage(is);
+                this.setAttributesFromManifest(true);
+            } catch (final IOException ioe) {
+                // if an error occurs, we can ignore this resource from now on!
+                return false;
+            } finally {
+                try {
+                    is.close();
+                } catch (final IOException ignore) {}
+            }
+        }
+        if ( tr.getResourceType() != null ) {
+            try {
+                updateResourceType(this.getURL(), tr.getResourceType(), true);
+            } catch (final IOException ioe) {
+                // if an error occurs, we can ignore this resource from now on!
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void updateResourceType(final String id, final String type, final boolean ignoreErrors) throws IOException {
+        String lastIdPart = id;
+        final int slashPos = lastIdPart.lastIndexOf('/');
+        if ( slashPos != -1 ) {
+            lastIdPart = lastIdPart.substring(slashPos + 1);
+        }
+
+        if (type.equals(InstallableResource.TYPE_BUNDLE)) {
+            this.setAttributesFromManifest(ignoreErrors);
+            final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
+            if (name == null) {
+                // not a bundle - we assume it to be a jar, this allows
+                // a resource transformer to transform it into a bundle
+                this.resourceType = "jar";
+                entity = resourceType + ':' + lastIdPart;
+            } else {
+                this.resourceType = InstallableResource.TYPE_BUNDLE;
+                entity = resourceType + ':' + name;
+            }
+        } else if ( type.equals(InstallableResource.TYPE_CONFIG)) {
+            this.resourceType = InstallableResource.TYPE_CONFIG;
+            // remove path
+            String pid = lastIdPart;
+            // remove extension
+            if ( RegisteredResourceImpl.isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
+                final int lastDot = pid.lastIndexOf('.');
+                pid = pid.substring(0, lastDot);
+            }
+            // split pid and factory pid alias
+            final String factoryPid;
+            final String configPid;
+            int n = pid.indexOf('-');
+            if (n > 0) {
+                configPid = pid.substring(n + 1);
+                factoryPid = pid.substring(0, n);
+            } else {
+                factoryPid = null;
+                configPid = pid;
+            }
+            this.entity = resourceType + ':' + (factoryPid == null ? "" : factoryPid + ".") + configPid;
+
+            attributes.put(Constants.SERVICE_PID, configPid);
+            // Add pseudo-properties
+            this.dictionary.put(ConfigTaskCreator.CONFIG_PATH_KEY, this.getURL());
+
+            // Factory?
+            if (factoryPid != null) {
+                attributes.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
+                this.dictionary.put(ConfigTaskCreator.ALIAS_KEY, configPid);
+            }
+
+        } else {
+            this.resourceType = type;
+            this.entity = resourceType + ':' + lastIdPart;
         }
     }
 }

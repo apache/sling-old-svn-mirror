@@ -89,7 +89,9 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      */
     int getPriority();
 
-	/** Attributes include the bundle symbolic name, bundle version, etc. */
+	/**
+	 * Attributes include the bundle symbolic name, bundle version, etc.
+	 */
 	Map<String, Object> getAttributes();
 
 	/** Return the identifier of the OSGi "entity" that this resource
