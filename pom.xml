@@ -89,6 +89,11 @@
                         </goals>
                         <configuration>
                             <packaging>jar</packaging>
+                            <jarWebSupport>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.0.5-SNAPSHOT</version>
+                            </jarWebSupport>
                         </configuration>
                     </execution>
                     <execution>
