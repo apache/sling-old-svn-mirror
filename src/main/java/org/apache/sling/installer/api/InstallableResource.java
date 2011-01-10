@@ -35,6 +35,11 @@ import java.util.Dictionary;
  */
 public class InstallableResource {
 
+    /** @since 3.1 */
+    public static final String TYPE_PROPERTIES = "properties";
+    /** @since 3.1 */
+    public static final String TYPE_FILE = "file";
+
     /**
      * The type for a bundle - in this case {@link #getInputStream} must
      * return an input stream to the bundle. {@link #getDictionary()} might
@@ -71,8 +76,11 @@ public class InstallableResource {
      *           type, the id should contain an extension like .jar, .cfg etc.
      * @param is The input stream to the data or
      * @param dict A dictionary with data
-     * @param digest A digest of the data
-     * @param type The resource type if known
+     * @param digest A digest of the data - providers should make sure to set
+     *               a digest. Calculating a digest by the installer can be very
+     *               expensive.
+     * @param type The resource type if known, otherwise {@link #TYPE_PROPERTIES}
+     *             or {@link #TYPE_FILE}
      * @param priority Optional priority - if not specified {@link #DEFAULT_PRIORITY}
      *                 is used
      * @throws IllegalArgumentException if something is wrong

@@ -54,8 +54,13 @@ public class RegisteredResourceComparatorTest {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
+        new FileUtil(new MockBundleContext());
         final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
-        return RegisteredResourceImpl.create(null, r, "test", new FileUtil(new MockBundleContext()));
+        final InternalResource internal = InternalResource.create("test", r);
+        final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
+        rr.update(new DefaultTransformer().transform(rr));
+
+        return rr;
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {

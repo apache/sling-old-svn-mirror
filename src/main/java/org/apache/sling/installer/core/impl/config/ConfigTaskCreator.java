@@ -23,6 +23,7 @@ import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -30,7 +31,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  * Task creator for configurations.
  */
-public class ConfigTaskCreator implements InstallTaskFactory {
+public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
 
     public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
     public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
@@ -40,24 +41,34 @@ public class ConfigTaskCreator implements InstallTaskFactory {
     private static String CONFIG_ADMIN_SERVICE_NAME = ConfigurationAdmin.class.getName();
 
     /** Service tracker for the configuration admin. */
-    private final ServiceTracker configAdminServiceTracker;
+    private ServiceTracker configAdminServiceTracker;
 
     /**
-     * Constructor
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
      */
-    public ConfigTaskCreator(final BundleContext bc) {
+    public void init(final BundleContext bc) {
         this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
         this.configAdminServiceTracker.open();
     }
 
     /**
-     * Deactivate this creator.
+     * @see org.apache.sling.installer.core.impl.InternalService#deactivate()
      */
     public void deactivate() {
-        this.configAdminServiceTracker.close();
+        if ( this.configAdminServiceTracker != null ) {
+            this.configAdminServiceTracker.close();
+            this.configAdminServiceTracker = null;
+        }
     }
 
-	/**
+    /**
+     * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
+     */
+    public String getDescription() {
+        return "Apache Sling Configuration Install Task Factory";
+    }
+
+    /**
      * Create a task to install or uninstall a configuration.
      *
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)

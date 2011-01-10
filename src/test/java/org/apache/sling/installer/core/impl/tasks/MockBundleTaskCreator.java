@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.core.impl.MockBundleContext;
-import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.Version;
 
 /** BundleTaskCreator that simulates the presence and state of bundles */
@@ -32,7 +31,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     private final Map<String, BundleInfo> fakeBundleInfo = new HashMap<String, BundleInfo>();
 
     public MockBundleTaskCreator() throws IOException {
-        super(new MockBundleContext());
+        this.init(new MockBundleContext());
     }
 
     void addBundleInfo(String symbolicName, String version, int state) {

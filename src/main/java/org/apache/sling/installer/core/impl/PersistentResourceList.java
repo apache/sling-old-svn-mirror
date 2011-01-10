@@ -26,12 +26,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class PersistentResourceList {
 
     /** Serialization version. */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -54,24 +58,34 @@ public class PersistentResourceList {
      * same entity. Usually this is just one resource per entity.
      */
     private final Map<String, EntityResourceList> data;
+
+    /** The persistence file. */
     private final File dataFile;
+
+    /** All unknown resources. */
+    private final List<RegisteredResource> unknownResources;
 
     @SuppressWarnings("unchecked")
     public PersistentResourceList(final File dataFile) {
         this.dataFile = dataFile;
 
         Map<String, EntityResourceList> restoredData = null;
+        List<RegisteredResource> unknownList = null;
         if ( dataFile.exists() ) {
             ObjectInputStream ois = null;
             try {
                 ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
                 final int version = ois.readInt();
-                if ( version == VERSION ) {
+                if ( version > 0 && version <= VERSION ) {
                     restoredData = (Map<String, EntityResourceList>)ois.readObject();
+                    if ( version == VERSION ) {
+                        unknownList = (List<RegisteredResource>)ois.readObject();
+                    }
                 } else {
                     logger.warn("Unknown version for persistent resource list: {}", version);
                 }
                 logger.debug("Restored resource list: {}", restoredData);
+                logger.debug("Restored unknown resource list: {}", unknownList);
             } catch (final Exception e) {
                 logger.warn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
             } finally {
@@ -85,6 +99,7 @@ public class PersistentResourceList {
             }
         }
         data = restoredData != null ? restoredData : new HashMap<String, EntityResourceList>();
+        this.unknownResources = unknownList != null ? unknownList : new ArrayList<RegisteredResource>();
     }
 
     public void save() {
@@ -93,6 +108,7 @@ public class PersistentResourceList {
             try {
                 oos.writeInt(VERSION);
                 oos.writeObject(data);
+                oos.writeObject(unknownResources);
                 logger.debug("Persisted resource list.");
             } finally {
                 oos.close();
@@ -106,16 +122,66 @@ public class PersistentResourceList {
         return this.data.keySet();
     }
 
-    public void addOrUpdate(final RegisteredResource r) {
-        EntityResourceList t = this.data.get(r.getEntityId());
-        if (t == null) {
-            t = new EntityResourceList();
-            this.data.put(r.getEntityId(), t);
+    /**
+     * Add or update an installable resource.
+     * @param input The installable resource
+     */
+    public void addOrUpdate(final InternalResource input) {
+        boolean found = false;
+        // first check if there are resources with the same url and digest
+        for(final EntityResourceList group : this.data.values()) {
+            for(final RegisteredResource rr : group.getResources()) {
+                if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {
+                    found = true;
+                    break;
+                }
+            }
+            if ( found ) {
+                break;
+            }
         }
-
-        t.addOrUpdate(r);
+        // if we found the resource we can immediately return
+        if ( found ) {
+            return;
+        }
+        try {
+            final RegisteredResource registeredResource = RegisteredResourceImpl.create(input);
+            this.checkInstallable(registeredResource);
+        } catch (final IOException ioe) {
+            logger.warn("Ignoring resource. Error during processing of " + input.getURL(), ioe);
+        }
     }
 
+    /**
+     * Check if the provided installable resource is already installable (has a
+     * known resource type)
+     */
+    private void checkInstallable(final RegisteredResource input) {
+        if ( !InstallableResource.TYPE_FILE.equals(input.getType())
+             && !InstallableResource.TYPE_PROPERTIES.equals(input.getType()) ) {
+
+            EntityResourceList t = this.data.get(input.getEntityId());
+            if (t == null) {
+                t = new EntityResourceList();
+                this.data.put(input.getEntityId(), t);
+            }
+
+            t.addOrUpdate(input);
+        } else {
+            this.unknownResources.add(input);
+        }
+    }
+
+    /**
+     * Get the list of unknown resources = resources without resource type
+     */
+    public List<RegisteredResource> getUnknownResources() {
+        return this.unknownResources;
+    }
+    /**
+     * Remove a resource by url
+     * @param url The url to remove
+     */
     public void remove(final String url) {
         for(final EntityResourceList group : this.data.values()) {
             group.remove(url);
@@ -146,6 +212,21 @@ public class PersistentResourceList {
             }
         }
         return changed;
+    }
+
+    /**
+     * Transform an unknown resource to a registered one
+     */
+    public void transform(final RegisteredResource resource,
+            final TransformationResult tr) {
+        // remove resource from unknown list
+        this.unknownResources.remove(resource);
+        try {
+            ((RegisteredResourceImpl)resource).update(tr);
+            this.checkInstallable(resource);
+        } catch (final IOException ioe) {
+            logger.warn("Ignoring resource. Error during processing of " + resource, ioe);
+        }
     }
 
 }

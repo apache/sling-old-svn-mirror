@@ -50,10 +50,14 @@ public class TaskOrderingTest {
 	}
 
 	private static EntityResourceList getRegisteredResource(String url) throws IOException {
-	    final EntityResourceList erl = new EntityResourceList();
-	    erl.addOrUpdate(RegisteredResourceImpl.create(null,
-		        new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null),
-		        "test", new FileUtil(new MockBundleContext())));
+        new FileUtil(new MockBundleContext());
+        final InternalResource internal = InternalResource.create("test",
+                new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null));
+        final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
+        rr.update(new DefaultTransformer().transform(rr));
+
+        final EntityResourceList erl = new EntityResourceList();
+	    erl.addOrUpdate(rr);
 	    return erl;
 	}
 

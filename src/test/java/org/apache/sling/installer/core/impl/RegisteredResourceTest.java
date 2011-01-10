@@ -23,7 +23,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,6 +34,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -52,6 +52,7 @@ public class RegisteredResourceTest {
         {
             final InputStream s = new FileInputStream(getTestBundle("testbundle-1.0.jar"));
             final RegisteredResource r = create(new InstallableResource("test:1.jar", s, null, "some digest", null, null));
+
             assertEquals(".jar URL creates a BUNDLE resource",
                     InstallableResource.TYPE_BUNDLE, r.getType());
             final InputStream rs = r.getInputStream();
@@ -83,14 +84,16 @@ public class RegisteredResourceTest {
 	    final BundleContext bc = new MockBundleContext();
 	    final File f = getTestBundle("testbundle-1.0.jar");
         final InputStream s = new FileInputStream(f);
-		RegisteredResourceImpl.create(bc, new InstallableResource("test:1.jar", s, null, "somedigest", null, null), "test", new FileUtil(bc) {
+        FileUtil.SHARED = new FileUtil(bc) {
 
             @Override
             public File createNewDataFile(final String hint) {
                 return localFile;
             }
 
-		});
+        };
+
+		InternalResource.create("test", new InstallableResource("test:1.jar", s, null, "somedigest", null, null));
 		assertTrue("Local file exists", localFile.exists());
 
 		assertEquals("Local file length matches our data", f.length(), localFile.length());
@@ -100,11 +103,8 @@ public class RegisteredResourceTest {
         final String data = "This is some data";
         final InputStream in = new ByteArrayInputStream(data.getBytes());
 
-        try {
-            create(new InstallableResource("test:1.jar", in, null, null, null, null));
-            fail("With jar extension, expected an IOException as digest is null");
-        } catch(IOException asExpected) {
-        }
+        create(new InstallableResource("test:1.jar", in, null, null, null, null));
+        assertNotNull(create(new InstallableResource("test:1.jar", in, null, null, null, null)).getDigest());
     }
 
     @org.junit.Test public void testBundleManifest() throws Exception {
@@ -160,7 +160,14 @@ public class RegisteredResourceTest {
         );
     }
 
-    private RegisteredResourceImpl create(final InstallableResource is) throws IOException {
-        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test", new FileUtil(new MockBundleContext()));
+    private RegisteredResource create(final InstallableResource is) throws IOException {
+        new FileUtil(new MockBundleContext());
+        final InternalResource internal = InternalResource.create("test", is);
+        final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
+        final TransformationResult tr = new DefaultTransformer().transform(rr);
+        if ( tr != null ) {
+            rr.update(tr);
+        }
+        return rr;
     }
 }

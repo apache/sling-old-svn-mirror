@@ -19,38 +19,21 @@
 package org.apache.sling.installer.core.impl;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 
-import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
-import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Implementation of the registered resource
@@ -82,7 +65,7 @@ public class RegisteredResourceImpl
 	/** Additional attributes. */
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
 
-	private final File dataFile;
+	private File dataFile;
 
 	private final int priority;
 
@@ -142,41 +125,17 @@ public class RegisteredResourceImpl
     /**
      * Try to create a registered resource.
      */
-    public static RegisteredResourceImpl create(final BundleContext ctx,
-            final InstallableResource input,
-            final String scheme,
-            final FileUtil fileUtil) throws IOException {
-        // installable resource has an id, a priority and either
-        // an input stream or a dictionary
-        InputStream is = input.getInputStream();
-        Dictionary<String, Object> dict = input.getDictionary();
-        String type = input.getType();
-        if ( is == null ) {
-            // if input stream is null, config through dictionary is expected!
-            type = (type != null ? type : InstallableResource.TYPE_CONFIG);
-        }
-        final String resourceType = (type != null ? type : computeResourceType(getExtension(input.getId())));
-        if ( resourceType == null ) {
-            // unknown resource type
-            throw new IOException("Unknown resource type for resource " + input.getId());
-        }
-        if ( is != null && resourceType.equals(InstallableResource.TYPE_CONFIG ) ) {
-            dict = readDictionary(is, getExtension(input.getId()));
-            if ( dict == null ) {
-                throw new IOException("Unable to read dictionary from input stream: " + input.getId());
-            }
-            is = null;
-        }
-
-        return new RegisteredResourceImpl(ctx,
-                input.getId(),
-                is,
-                dict,
-                resourceType,
+    public static RegisteredResourceImpl create(
+            final InternalResource input)
+    throws IOException {
+        final int schemePos = input.getURL().indexOf(':');
+        return new RegisteredResourceImpl(input.getId(),
+                input.getPrivateCopyOfFile(),
+                input.getPrivateCopyOfDictionary(),
+                input.getType(),
                 input.getDigest(),
                 input.getPriority(),
-                scheme,
-                fileUtil);
+                input.getURL().substring(0, schemePos));
     }
 
 	/**
@@ -185,43 +144,20 @@ public class RegisteredResourceImpl
 	 * we don't have to validate values - this has already been done
 	 * The only exception is the digest!
 	 */
-	private RegisteredResourceImpl(final BundleContext ctx,
-	        final String id,
-	        final InputStream is,
+	private RegisteredResourceImpl(final String id,
+	        final File file,
 	        final Dictionary<String, Object> dict,
 	        final String type,
 	        final String digest,
 	        final int priority,
-	        final String scheme,
-	        final FileUtil fileUtil) throws IOException {
+	        final String scheme) {
         this.url = scheme + ':' + id;
+        this.dataFile = file;
+        this.dictionary = dict;
+        this.resourceType = type;
+        this.digest = digest;
+        this.priority = priority;
         this.urlScheme = scheme;
-		this.priority = priority;
-        this.dictionary = copy(dict);
-
-		if (type.equals(InstallableResource.TYPE_BUNDLE)) {
-            try {
-                this.dataFile = fileUtil.createNewDataFile(type);
-                this.copyToLocalStorage(is);
-                this.setAttributesFromManifest(false);
-                this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
-            } finally {
-                is.close();
-            }
-		} else if ( type.equals(InstallableResource.TYPE_CONFIG)) {
-            this.dataFile = null;
-            this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(dict));
-		} else {
-		    // we just copy the input stream
-            try {
-                this.dataFile = fileUtil.createNewDataFile(getType());
-                copyToLocalStorage(is);
-                this.digest = (digest != null && digest.length() > 0 ? digest : id + ":" + computeDigest(this.dataFile));
-            } finally {
-                is.close();
-            }
-		}
-		this.updateResourceType(id, type, false);
 	}
 
 	@Override
@@ -273,39 +209,6 @@ public class RegisteredResourceImpl
 	}
 
     /**
-     * Copy data to local storage.
-     */
-	private void copyToLocalStorage(final InputStream data) throws IOException {
-		final OutputStream os = new BufferedOutputStream(new FileOutputStream(this.dataFile));
-		try {
-			final byte[] buffer = new byte[16384];
-			int count = 0;
-			while( (count = data.read(buffer, 0, buffer.length)) > 0) {
-				os.write(buffer, 0, count);
-			}
-			os.flush();
-		} finally {
-			os.close();
-		}
-	}
-
-	/**
-	 * Copy given Dictionary
-	 */
-	private Dictionary<String, Object> copy(final Dictionary<String, Object> d) {
-	    if ( d == null ) {
-	        return null;
-	    }
-	    final Dictionary<String, Object> result = new Hashtable<String, Object>();
-	    final Enumeration<String> e = d.keys();
-	    while(e.hasMoreElements()) {
-	        final String key = e.nextElement();
-            result.put(key, d.get(key));
-	    }
-	    return result;
-	}
-
-    /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getType()
      */
     public String getType() {
@@ -325,62 +228,6 @@ public class RegisteredResourceImpl
     public Map<String, Object> getAttributes() {
 		return attributes;
 	}
-
-    /** Read the manifest from supplied input stream, which is closed before return */
-    private Manifest getManifest(InputStream ins) throws IOException {
-        Manifest result = null;
-
-        JarInputStream jis = null;
-        try {
-            jis = new JarInputStream(ins);
-            result= jis.getManifest();
-
-        } finally {
-
-            // close the jar stream or the inputstream, if the jar
-            // stream is set, we don't need to close the input stream
-            // since closing the jar stream closes the input stream
-            if (jis != null) {
-                try {
-                    jis.close();
-                } catch (IOException ignore) {
-                }
-            } else {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Set the manifest attributes from the data file.
-     * @throws IOException If anything goes wrong
-     */
-    private void setAttributesFromManifest(final boolean ignoreError) throws IOException {
-        attributes.remove(Constants.BUNDLE_SYMBOLICNAME);
-        attributes.remove(Constants.BUNDLE_VERSION);
-    	final Manifest m = getManifest(getInputStream());
-    	if (m == null) {
-    	    if ( ignoreError) {
-    	        return;
-    	    }
-            throw new IOException("Cannot get manifest of bundle resource");
-    	}
-
-    	final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-        if (sn != null) {
-            final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-            if (v == null) {
-                throw new IOException("Manifest does not supply " + Constants.BUNDLE_VERSION);
-            }
-            attributes.put(Constants.BUNDLE_SYMBOLICNAME, sn);
-            attributes.put(Constants.BUNDLE_VERSION, v.toString());
-        }
-    }
 
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getScheme()
@@ -419,6 +266,9 @@ public class RegisteredResourceImpl
         }
         if ( ! (obj instanceof RegisteredResource) ) {
             return false;
+        }
+        if ( this.entity == null ) {
+            return this.getURL().equals(((RegisteredResource)obj).getURL());
         }
         return compareTo((RegisteredResource)obj) == 0;
     }
@@ -497,141 +347,6 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * Compute the extension
-     */
-    public static String getExtension(String url) {
-        final int pos = url.lastIndexOf('.');
-        return (pos < 0 ? "" : url.substring(pos+1));
-    }
-
-    /**
-     * Compute the resource type
-     */
-    private static String computeResourceType(String extension) {
-        if (extension.equals("jar")) {
-            return InstallableResource.TYPE_BUNDLE;
-        }
-        if ( isConfigExtension(extension) ) {
-            return InstallableResource.TYPE_CONFIG;
-        }
-        return extension;
-    }
-
-    public static boolean isConfigExtension(String extension) {
-        if ( extension.equals("cfg")
-                || extension.equals("config")
-                || extension.equals("xml")
-                || extension.equals("properties")) {
-            return true;
-        }
-        return false;
-    }
-
-    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
-    private static String digestToString(MessageDigest d) {
-        final BigInteger bigInt = new BigInteger(1, d.digest());
-        return new String(bigInt.toString(16));
-    }
-
-    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
-    private static String computeDigest(Dictionary<String, Object> data) {
-        try {
-            final MessageDigest d = MessageDigest.getInstance("MD5");
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            final ObjectOutputStream oos = new ObjectOutputStream(bos);
-
-            final SortedSet<String> sortedKeys = new TreeSet<String>();
-            if(data != null) {
-                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
-                    final String key = e.nextElement();
-                    sortedKeys.add(key);
-                }
-            }
-            for(String key : sortedKeys) {
-                oos.writeObject(key);
-                oos.writeObject(data.get(key));
-            }
-
-            bos.flush();
-            d.update(bos.toByteArray());
-            return digestToString(d);
-        } catch (Exception ignore) {
-            return data.toString();
-        }
-    }
-
-    /** Digest is needed to detect changes in data */
-    private static String computeDigest(final File data) throws IOException {
-        try {
-            final InputStream is = new FileInputStream(data);
-            try {
-                final MessageDigest d = MessageDigest.getInstance("MD5");
-
-                final byte[] buffer = new byte[8192];
-                int count = 0;
-                while( (count = is.read(buffer, 0, buffer.length)) > 0) {
-                    d.update(buffer, 0, count);
-                }
-                return digestToString(d);
-            } finally {
-                is.close();
-            }
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (Exception ignore) {
-            return data.toString();
-        }
-    }
-
-    /**
-     * Read dictionary from an input stream.
-     * We use the same logic as Apache Felix FileInstall here:
-     * - *.cfg files are treated as property files
-     * - *.config files are handled by the Apache Felix ConfigAdmin file reader
-     * @param is
-     * @param extension
-     * @return
-     * @throws IOException
-     */
-    private static Dictionary<String, Object> readDictionary(
-            final InputStream is, final String extension) {
-        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
-        final InputStream in = new BufferedInputStream(is);
-        try {
-            if ( !extension.equals("config") ) {
-                final Properties p = new Properties();
-                in.mark(1);
-                boolean isXml = in.read() == '<';
-                in.reset();
-                if (isXml) {
-                    p.loadFromXML(in);
-                } else {
-                    p.load(in);
-                }
-                final Enumeration<Object> i = p.keys();
-                while ( i.hasMoreElements() ) {
-                    final Object key = i.nextElement();
-                    ht.put(key.toString(), p.get(key));
-                }
-            } else {
-                @SuppressWarnings("unchecked")
-                final Dictionary<String, Object> config = ConfigurationHandler.read(in);
-                final Enumeration<String> i = config.keys();
-                while ( i.hasMoreElements() ) {
-                    final String key = i.nextElement();
-                    ht.put(key, config.get(key));
-                }
-            }
-        } catch ( IOException ignore ) {
-            return null;
-        } finally {
-            try { in.close(); } catch (IOException ignore) {}
-        }
-
-        return ht;
-    }
-
-    /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(final String key) {
@@ -660,86 +375,37 @@ public class RegisteredResourceImpl
      * Currently only the input stream and resource type is updated.
      * @param tr Transformation result
      */
-    public boolean update(final TransformationResult tr) {
+    public void update(final TransformationResult tr)
+    throws IOException {
         final InputStream is = tr.getInputStream();
+        if ( tr.getResourceType() != null ) {
+            this.resourceType = tr.getResourceType();
+            if ( tr.getId() != null ) {
+                this.entity = this.resourceType + ':' + tr.getId();
+            } else {
+                if ( !InstallableResource.TYPE_FILE.equals(this.getType())
+                      && !InstallableResource.TYPE_PROPERTIES.equals(this.getType()) ) {
+
+                    String lastIdPart = this.getURL();
+                    final int slashPos = lastIdPart.lastIndexOf('/');
+                    if ( slashPos != -1 ) {
+                        lastIdPart = lastIdPart.substring(slashPos + 1);
+                    }
+                    this.entity = this.resourceType + ':' + lastIdPart;
+                }
+            }
+        }
         if ( is != null ) {
             try {
-                this.copyToLocalStorage(is);
-                this.setAttributesFromManifest(true);
-            } catch (final IOException ioe) {
-                // if an error occurs, we can ignore this resource from now on!
-                return false;
+                final File newDataFile = FileUtil.SHARED.createNewDataFile(this.getType());
+                FileUtil.SHARED.copyToLocalStorage(is, newDataFile);
+                this.cleanup();
+                this.dataFile = newDataFile;
             } finally {
                 try {
                     is.close();
                 } catch (final IOException ignore) {}
             }
-        }
-        if ( tr.getResourceType() != null ) {
-            try {
-                updateResourceType(this.getURL(), tr.getResourceType(), true);
-            } catch (final IOException ioe) {
-                // if an error occurs, we can ignore this resource from now on!
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void updateResourceType(final String id, final String type, final boolean ignoreErrors) throws IOException {
-        String lastIdPart = id;
-        final int slashPos = lastIdPart.lastIndexOf('/');
-        if ( slashPos != -1 ) {
-            lastIdPart = lastIdPart.substring(slashPos + 1);
-        }
-
-        if (type.equals(InstallableResource.TYPE_BUNDLE)) {
-            this.setAttributesFromManifest(ignoreErrors);
-            final String name = (String)attributes.get(Constants.BUNDLE_SYMBOLICNAME);
-            if (name == null) {
-                // not a bundle - we assume it to be a jar, this allows
-                // a resource transformer to transform it into a bundle
-                this.resourceType = "jar";
-                entity = resourceType + ':' + lastIdPart;
-            } else {
-                this.resourceType = InstallableResource.TYPE_BUNDLE;
-                entity = resourceType + ':' + name;
-            }
-        } else if ( type.equals(InstallableResource.TYPE_CONFIG)) {
-            this.resourceType = InstallableResource.TYPE_CONFIG;
-            // remove path
-            String pid = lastIdPart;
-            // remove extension
-            if ( RegisteredResourceImpl.isConfigExtension(RegisteredResourceImpl.getExtension(pid))) {
-                final int lastDot = pid.lastIndexOf('.');
-                pid = pid.substring(0, lastDot);
-            }
-            // split pid and factory pid alias
-            final String factoryPid;
-            final String configPid;
-            int n = pid.indexOf('-');
-            if (n > 0) {
-                configPid = pid.substring(n + 1);
-                factoryPid = pid.substring(0, n);
-            } else {
-                factoryPid = null;
-                configPid = pid;
-            }
-            this.entity = resourceType + ':' + (factoryPid == null ? "" : factoryPid + ".") + configPid;
-
-            attributes.put(Constants.SERVICE_PID, configPid);
-            // Add pseudo-properties
-            this.dictionary.put(ConfigTaskCreator.CONFIG_PATH_KEY, this.getURL());
-
-            // Factory?
-            if (factoryPid != null) {
-                attributes.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
-                this.dictionary.put(ConfigTaskCreator.ALIAS_KEY, configPid);
-            }
-
-        } else {
-            this.resourceType = type;
-            this.entity = resourceType + ':' + lastIdPart;
         }
     }
 }

@@ -18,7 +18,12 @@
  */
 package org.apache.sling.installer.core.impl;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.osgi.framework.BundleContext;
 
@@ -40,6 +45,8 @@ public class FileUtil {
     private static final String DEFAULT_DIR = "installer";
 
     private final File directory;
+
+    public static FileUtil SHARED;
 
     /**
      * Create a file util instance and detect the installer directory.
@@ -86,6 +93,7 @@ public class FileUtil {
         }
 
         this.directory = locationFile;
+        SHARED = this;
     }
 
     /**
@@ -116,5 +124,23 @@ public class FileUtil {
     public File createNewDataFile(final String hint) {
         final String filename = hint + "-resource-" + getNextSerialNumber() + ".ser";
         return this.getDataFile(filename);
+    }
+
+    /**
+     * Copy data to local storage.
+     */
+    public void copyToLocalStorage(final InputStream data,
+            final File dataFile) throws IOException {
+        final OutputStream os = new BufferedOutputStream(new FileOutputStream(dataFile));
+        try {
+            final byte[] buffer = new byte[16384];
+            int count = 0;
+            while( (count = data.read(buffer, 0, buffer.length)) > 0) {
+                os.write(buffer, 0, count);
+            }
+            os.flush();
+        } finally {
+            os.close();
+        }
     }
 }
