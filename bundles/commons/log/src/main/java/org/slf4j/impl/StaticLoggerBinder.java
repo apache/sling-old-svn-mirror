@@ -31,7 +31,15 @@ public class StaticLoggerBinder implements LoggerFactoryBinder {
     /**
      * The unique instance of this class.
      */
-    public static final StaticLoggerBinder SINGLETON = new StaticLoggerBinder();
+    private static final StaticLoggerBinder SINGLETON = new StaticLoggerBinder();
+
+    /**
+     * Returns the unique instance of this class (replaces direct property
+     * access as of SLF4J 1.6.0)
+     */
+    public static final StaticLoggerBinder getSingleton() {
+        return SINGLETON;
+    }
 
     /**
      * The ILoggerFactory instance returned by the {@link #getLoggerFactory}

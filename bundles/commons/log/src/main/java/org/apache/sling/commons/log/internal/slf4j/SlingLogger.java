@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.slf4j.Marker;
+import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 import org.slf4j.spi.LocationAwareLogger;
 
@@ -41,6 +42,15 @@ class SlingLogger implements LocationAwareLogger {
 
     // ---------- Actual Loger Entry writing -----------------------------------
 
+    private void log(Marker marker, SlingLoggerLevel level, FormattingTuple msg) {
+        log(marker, null, level, msg.getMessage(), msg.getThrowable());
+    }
+
+    private void log(Marker marker, String fqcn, SlingLoggerLevel level,
+            FormattingTuple msg) {
+        log(marker, fqcn, level, msg.getMessage(), msg.getThrowable());
+    }
+
     private void log(Marker marker, SlingLoggerLevel level, String msg,
             Throwable t) {
         log(marker, null, level, msg, t);
@@ -52,7 +62,8 @@ class SlingLogger implements LocationAwareLogger {
 
         // create the formatted log line; use a local copy because the field
         // may be exchanged while we are trying to use it
-        config.formatMessage(writer.getBuffer(), marker, getName(), level, msg, fqcn);
+        config.formatMessage(writer.getBuffer(), marker, getName(), level, msg,
+            fqcn);
 
         // marker indicating whether a line terminator is to be written after
         // the message: If a throwable is given, the stacktrace generator
@@ -90,15 +101,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void trace(String format, Object arg) {
         if (isTraceEnabled()) {
-            log(null, SlingLoggerLevel.TRACE, MessageFormatter.format(format,
-                arg), null);
+            log(null, SlingLoggerLevel.TRACE,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void trace(String format, Object[] argArray) {
         if (isTraceEnabled()) {
-            log(null, SlingLoggerLevel.TRACE, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(null, SlingLoggerLevel.TRACE,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -110,8 +121,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void trace(String format, Object arg1, Object arg2) {
         if (isTraceEnabled()) {
-            log(null, SlingLoggerLevel.TRACE, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(null, SlingLoggerLevel.TRACE,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -123,15 +134,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void trace(Marker marker, String format, Object arg) {
         if (isTraceEnabled(marker)) {
-            log(marker, SlingLoggerLevel.TRACE, MessageFormatter.format(format,
-                arg), null);
+            log(marker, SlingLoggerLevel.TRACE,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void trace(Marker marker, String format, Object[] argArray) {
         if (isTraceEnabled(marker)) {
-            log(marker, SlingLoggerLevel.TRACE, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(marker, SlingLoggerLevel.TRACE,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -143,8 +154,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void trace(Marker marker, String format, Object arg1, Object arg2) {
         if (isTraceEnabled(marker)) {
-            log(marker, SlingLoggerLevel.TRACE, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(marker, SlingLoggerLevel.TRACE,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -156,15 +167,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void debug(String format, Object arg) {
         if (isDebugEnabled()) {
-            log(null, SlingLoggerLevel.DEBUG, MessageFormatter.format(format,
-                arg), null);
+            log(null, SlingLoggerLevel.DEBUG,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void debug(String format, Object[] argArray) {
         if (isDebugEnabled()) {
-            log(null, SlingLoggerLevel.DEBUG, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(null, SlingLoggerLevel.DEBUG,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -176,8 +187,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void debug(String format, Object arg1, Object arg2) {
         if (isDebugEnabled()) {
-            log(null, SlingLoggerLevel.DEBUG, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(null, SlingLoggerLevel.DEBUG,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -189,15 +200,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void debug(Marker marker, String format, Object arg) {
         if (isDebugEnabled(marker)) {
-            log(marker, SlingLoggerLevel.DEBUG, MessageFormatter.format(format,
-                arg), null);
+            log(marker, SlingLoggerLevel.DEBUG,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void debug(Marker marker, String format, Object[] argArray) {
         if (isDebugEnabled(marker)) {
-            log(marker, SlingLoggerLevel.DEBUG, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(marker, SlingLoggerLevel.DEBUG,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -209,8 +220,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void debug(Marker marker, String format, Object arg1, Object arg2) {
         if (isDebugEnabled(marker)) {
-            log(marker, SlingLoggerLevel.DEBUG, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(marker, SlingLoggerLevel.DEBUG,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -222,15 +233,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void info(String format, Object arg) {
         if (isInfoEnabled()) {
-            log(null, SlingLoggerLevel.INFO, MessageFormatter.format(format,
-                arg), null);
+            log(null, SlingLoggerLevel.INFO,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void info(String format, Object[] argArray) {
         if (isInfoEnabled()) {
-            log(null, SlingLoggerLevel.INFO, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(null, SlingLoggerLevel.INFO,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -242,8 +253,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void info(String format, Object arg1, Object arg2) {
         if (isInfoEnabled()) {
-            log(null, SlingLoggerLevel.INFO, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(null, SlingLoggerLevel.INFO,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -255,15 +266,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void info(Marker marker, String format, Object arg) {
         if (isInfoEnabled(marker)) {
-            log(marker, SlingLoggerLevel.INFO, MessageFormatter.format(format,
-                arg), null);
+            log(marker, SlingLoggerLevel.INFO,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void info(Marker marker, String format, Object[] argArray) {
         if (isInfoEnabled(marker)) {
-            log(marker, SlingLoggerLevel.INFO, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(marker, SlingLoggerLevel.INFO,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -275,8 +286,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void info(Marker marker, String format, Object arg1, Object arg2) {
         if (isInfoEnabled(marker)) {
-            log(marker, SlingLoggerLevel.INFO, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(marker, SlingLoggerLevel.INFO,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -288,15 +299,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void warn(String format, Object arg) {
         if (isWarnEnabled()) {
-            log(null, SlingLoggerLevel.WARN, MessageFormatter.format(format,
-                arg), null);
+            log(null, SlingLoggerLevel.WARN,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void warn(String format, Object[] argArray) {
         if (isWarnEnabled()) {
-            log(null, SlingLoggerLevel.WARN, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(null, SlingLoggerLevel.WARN,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -308,8 +319,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void warn(String format, Object arg1, Object arg2) {
         if (isWarnEnabled()) {
-            log(null, SlingLoggerLevel.WARN, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(null, SlingLoggerLevel.WARN,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -321,15 +332,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void warn(Marker marker, String format, Object arg) {
         if (isWarnEnabled(marker)) {
-            log(marker, SlingLoggerLevel.WARN, MessageFormatter.format(format,
-                arg), null);
+            log(marker, SlingLoggerLevel.WARN,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void warn(Marker marker, String format, Object[] argArray) {
         if (isWarnEnabled(marker)) {
-            log(marker, SlingLoggerLevel.WARN, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(marker, SlingLoggerLevel.WARN,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -341,8 +352,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void warn(Marker marker, String format, Object arg1, Object arg2) {
         if (isWarnEnabled(marker)) {
-            log(marker, SlingLoggerLevel.WARN, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(marker, SlingLoggerLevel.WARN,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -354,15 +365,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void error(String format, Object arg) {
         if (isErrorEnabled()) {
-            log(null, SlingLoggerLevel.ERROR, MessageFormatter.format(format,
-                arg), null);
+            log(null, SlingLoggerLevel.ERROR,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void error(String format, Object[] argArray) {
         if (isErrorEnabled()) {
-            log(null, SlingLoggerLevel.ERROR, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(null, SlingLoggerLevel.ERROR,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -374,8 +385,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void error(String format, Object arg1, Object arg2) {
         if (isErrorEnabled()) {
-            log(null, SlingLoggerLevel.ERROR, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(null, SlingLoggerLevel.ERROR,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -387,15 +398,15 @@ class SlingLogger implements LocationAwareLogger {
 
     public void error(Marker marker, String format, Object arg) {
         if (isErrorEnabled(marker)) {
-            log(marker, SlingLoggerLevel.ERROR, MessageFormatter.format(format,
-                arg), null);
+            log(marker, SlingLoggerLevel.ERROR,
+                MessageFormatter.format(format, arg));
         }
     }
 
     public void error(Marker marker, String format, Object[] argArray) {
         if (isErrorEnabled(marker)) {
-            log(marker, SlingLoggerLevel.ERROR, MessageFormatter.arrayFormat(
-                format, argArray), null);
+            log(marker, SlingLoggerLevel.ERROR,
+                MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
@@ -407,8 +418,8 @@ class SlingLogger implements LocationAwareLogger {
 
     public void error(Marker marker, String format, Object arg1, Object arg2) {
         if (isErrorEnabled(marker)) {
-            log(marker, SlingLoggerLevel.ERROR, MessageFormatter.format(format,
-                arg1, arg2), null);
+            log(marker, SlingLoggerLevel.ERROR,
+                MessageFormatter.format(format, arg1, arg2));
         }
     }
 
@@ -452,11 +463,14 @@ class SlingLogger implements LocationAwareLogger {
         return config.isLevel(SlingLoggerLevel.ERROR);
     }
 
+    //---------- LocationAwareLogger
+
     public void log(Marker marker, String fqcn, int level, String message,
-            Throwable t) {
+            Object[] argArray, Throwable t) {
         SlingLoggerLevel slingLevel = SlingLoggerLevel.fromSlf4jLevel(level);
         if (config.isLevel(slingLevel)) {
-            log(marker, fqcn, slingLevel, message, t);
+            log(marker, fqcn, slingLevel,
+                MessageFormatter.format(message, argArray, t));
         }
     }
 }
