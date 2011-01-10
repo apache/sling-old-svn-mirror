@@ -167,6 +167,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      */
     @Override
     public void destroy() {
+        SlingSessionListener.stopDelegatee();
+
         if (sling != null) {
             sling.destroy();
         }
@@ -200,6 +202,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         // clear the reference to the framework
         sling = null;
+        SlingSessionListener.stopDelegatee();
     }
 
     /**
@@ -220,6 +223,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         synchronized (this) {
             if (startingSling == null) {
                 sling = null;
+                SlingSessionListener.stopDelegatee();
             }
         }
 
@@ -346,6 +350,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
                 slingLauncher.setNotifiable(this);
                 slingLauncher.setSlingHome(slingHome);
             }
+
+            SlingSessionListener.startDelegate(sling.getClass().getClassLoader());
 
             try {
                 log("Starting launcher ...");

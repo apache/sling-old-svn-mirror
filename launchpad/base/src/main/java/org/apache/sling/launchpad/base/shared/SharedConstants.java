@@ -54,6 +54,14 @@ public interface SharedConstants {
     public static final String DEFAULT_SLING_SERVLET = "org.apache.sling.launchpad.base.webapp.SlingServletDelegate";
 
     /**
+     * The fully qualified name of the implementation of the Servlet API
+     * ServletContextListener, HttpSessionListener, and
+     * HttpSessionAttributeListener interfaces to which the respective events
+     * are forwarded.
+     */
+    public static final String DEFAULT_SLING_LISTENER = "org.apache.sling.launchpad.base.webapp.SlingHttpSessionListenerDelegate";
+
+    /**
      * The name of the file providing the Launcher JAR. On the one hand this is
      * the name used to place the JAR file sling.home to use for startup. On the
      * other hand, this is the name of the file in the archive (see
