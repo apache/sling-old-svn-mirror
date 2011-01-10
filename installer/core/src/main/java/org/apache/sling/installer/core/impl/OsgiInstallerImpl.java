@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -76,10 +75,10 @@ public class OsgiInstallerImpl
     private final BundleContext ctx;
 
     /** New clients are joining through this map. */
-    private final Map<String, List<RegisteredResource>> newResourcesSchemes = new HashMap<String, List<RegisteredResource>>();
+    private final Map<String, List<InternalResource>> newResourcesSchemes = new HashMap<String, List<InternalResource>>();
 
     /** New resources added by clients. */
-    private final List<RegisteredResource> newResources = new LinkedList<RegisteredResource>();
+    private final List<InternalResource> newResources = new LinkedList<InternalResource>();
 
     /** Removed resources from clients. */
     private final Set<String> urlsToRemove = new HashSet<String>();
@@ -93,18 +92,22 @@ public class OsgiInstallerImpl
     /** The persistent resource list. */
     private PersistentResourceList persistentList;
 
-    private final FileUtil fileUtil;
-
     /** A tracker for the factories. */
     private ServiceTracker factoryTracker;
 
     /** A tracker for the transformers. */
     private ServiceTracker transformerTracker;
 
+    /** New resources lock. */
+    private final Object resourcesLock = new Object();
+
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
-        this.fileUtil = new FileUtil(ctx);
+        // Initialize file util
+        new FileUtil(ctx);
+        final File f = FileUtil.SHARED.getDataFile("RegisteredResourceList.ser");
+        this.persistentList = new PersistentResourceList(f);
     }
 
     /**
@@ -121,10 +124,11 @@ public class OsgiInstallerImpl
         ctx.removeBundleListener(this);
         ctx.removeFrameworkListener(this);
 
+        // remove file util
+        FileUtil.SHARED = null;
+
         // wake up sleeping thread
-        synchronized (newResources) {
-            newResources.notify();
-        }
+        this.wakeUp();
         this.logger.debug("Waiting for installer thread to stop");
         try {
             this.join();
@@ -149,8 +153,6 @@ public class OsgiInstallerImpl
         this.ctx.addFrameworkListener(this);
         this.ctx.addBundleListener(this);
         setName(getClass().getSimpleName());
-        final File f = this.fileUtil.getDataFile("RegisteredResourceList.ser");
-        this.persistentList = new PersistentResourceList(f);
         this.logger.info("Apache Sling OSGi Installer Service started.");
     }
 
@@ -158,7 +160,8 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
-            this.mergeNewResources();
+            boolean sleep = true;
+            this.mergeNewlyRegisteredResources();
 
             // invoke transformers
             this.transformResources();
@@ -173,19 +176,18 @@ public class OsgiInstallerImpl
 
             // if we don't have any tasks, we go to sleep
             if (!tasksCreated) {
-                synchronized (newResources) {
-                    // before we go to sleep, check if new resources arrived in the meantime
-                    if ( !this.hasNewResources()) {
-                        // No tasks to execute - wait until new resources are
-                        // registered
-                        logger.debug("No tasks to process, going idle");
-                        try {
-                            newResources.wait();
-                        } catch (InterruptedException ignore) {}
-                        logger.debug("Notified of new resources, back to work");
-                    }
+                // No tasks to execute - wait until new resources are
+                // registered
+                logger.debug("No tasks to process, going idle");
+                synchronized ( this.resourcesLock ) {
+                    try {
+                        this.resourcesLock.wait();
+                    } catch (InterruptedException ignore) {}
                 }
-            } else {
+                logger.debug("Notified of new resources, back to work");
+                sleep = false;
+            }
+            if ( sleep ) {
                 // Some integration tests depend on this delay, make sure to
                 // rerun/adapt them if changing this value
                 try {
@@ -209,21 +211,22 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * Create registered resources for all installable resources.
+     * Create new installable resources for all installable resources.
+     * The new versions has a set resource type.
      */
-    private List<RegisteredResource> createResources(final String scheme,
-                                                     final InstallableResource[] resources) {
+    private List<InternalResource> createResources(final String scheme,
+                                                   final InstallableResource[] resources) {
         checkScheme(scheme);
-        List<RegisteredResource> createdResources = null;
+        List<InternalResource> createdResources = null;
         if ( resources != null && resources.length > 0 ) {
-            createdResources = new ArrayList<RegisteredResource>();
+            createdResources = new ArrayList<InternalResource>();
             for(final InstallableResource r : resources ) {
                 try {
-                    final RegisteredResource rr = RegisteredResourceImpl.create(ctx, r, scheme, this.fileUtil);
+                    final InternalResource rr = InternalResource.create(scheme, r);
                     createdResources.add(rr);
                     logger.debug("Registering new resource: {}", rr);
                 } catch (final IOException ioe) {
-                    logger.warn("Cannot create RegisteredResource (resource will be ignored):" + r, ioe);
+                    logger.warn("Cannot create internal resource (resource will be ignored):" + r, ioe);
                 }
             }
         }
@@ -257,49 +260,46 @@ public class OsgiInstallerImpl
                                 final InstallableResource[] resources,
                                 final String[] ids) {
         try {
-            final List<RegisteredResource> updatedResources = this.createResources(scheme, resources);
+            final List<InternalResource> updatedResources = this.createResources(scheme, resources);
 
-            synchronized (newResources) {
-                boolean doNotify = false;
+            boolean doProcess = false;
+            synchronized ( this.resourcesLock ) {
                 if ( updatedResources != null && updatedResources.size() > 0 ) {
-                    newResources.addAll(updatedResources);
-                    doNotify = true;
+                    this.newResources.addAll(updatedResources);
+                    doProcess = true;
                 }
                 if ( ids != null && ids.length > 0 ) {
                     for(final String id : ids) {
                         final String url = scheme + ':' + id;
                         // Will mark all resources which have r's URL as uninstallable
-                        logger.debug("Adding URL {} to urlsToRemove", url);
-
-                        urlsToRemove.add(url);
+                        this.urlsToRemove.add(url);
                     }
-                    doNotify = true;
+                    doProcess = true;
                 }
-                if ( doNotify ) {
-                    newResources.notify();
-                }
+            }
+            if ( doProcess ) {
+                this.wakeUp();
             }
         } finally {
             // we simply close all input streams now
             this.closeInputStreams(resources);
         }
     }
-
     /**
      * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
     public void registerResources(final String scheme, final InstallableResource[] resources) {
         try {
-            List<RegisteredResource> registeredResources = this.createResources(scheme, resources);
+            List<InternalResource> registeredResources = this.createResources(scheme, resources);
             if ( registeredResources == null ) {
-                // make sure we have a list, this makes processing later on easier
-                registeredResources = Collections.emptyList();
+                // create empty list to make processing easier
+                registeredResources = new ArrayList<InternalResource>();
             }
-            synchronized (newResources) {
-                logger.debug("Registered new resource scheme: {}", scheme);
-                newResourcesSchemes.put(scheme, registeredResources);
-                newResources.notify();
+            logger.debug("Registered new resource scheme: {}", scheme);
+            synchronized (this.resourcesLock) {
+                this.newResourcesSchemes.put(scheme, registeredResources);
             }
+            this.wakeUp();
         } finally {
             // we simply close all input streams now
             this.closeInputStreams(resources);
@@ -307,85 +307,88 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * Checks if new resources are available.
-     * This method should only be invoked from within a synchronized (newResources) block!
+     * This is the heart of the installer.
+     * It processes the rendezvous between a resource provider and available resources.
      */
-    private boolean hasNewResources() {
-        return !this.newResources.isEmpty() || !this.newResourcesSchemes.isEmpty() || !this.urlsToRemove.isEmpty();
+    private void mergeNewlyRegisteredResources() {
+        synchronized ( this.resourcesLock ) {
+            for(final Map.Entry<String, List<InternalResource>> entry : this.newResourcesSchemes.entrySet()) {
+                final String scheme = entry.getKey();
+                final List<InternalResource> registeredResources = entry.getValue();
+
+                logger.debug("Processing set of new resources with scheme {}", scheme);
+
+                // set all previously found resources that are not available anymore to uninstall
+                // if they have been installed - remove resources with a different state
+                for(final String entityId : this.persistentList.getEntityIds()) {
+                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+
+                    final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
+                    boolean first = true;
+                    for(final RegisteredResource r : group.getResources()) {
+                        if ( r.getScheme().equals(scheme) ) {
+                            logger.debug("Checking {}", r);
+                            // search if we have a new entry with the same url
+                            boolean found = false;
+                            if ( registeredResources != null ) {
+                                final Iterator<InternalResource> m = registeredResources.iterator();
+                                while ( !found && m.hasNext() ) {
+                                    final InternalResource testResource = m.next();
+                                    found = testResource.getURL().equals(r.getURL());
+                                }
+                            }
+                            if ( !found) {
+                                logger.debug("Resource {} seems to be removed.", r);
+                                if ( first && (r.getState() == RegisteredResource.State.INSTALLED
+                                           ||  r.getState() == RegisteredResource.State.INSTALL) ) {
+                                     r.setState(RegisteredResource.State.UNINSTALL);
+                                } else {
+                                    toRemove.add(r);
+                                }
+                            }
+                        }
+                        first = false;
+                    }
+                    for(final RegisteredResource rr : toRemove) {
+                        this.persistentList.remove(rr);
+                    }
+                }
+                if ( registeredResources != null ) {
+                    this.newResources.addAll(registeredResources);
+                }
+            }
+            this.newResourcesSchemes.clear();
+            this.mergeNewResources();
+            printResources("Merged");
+            // persist list
+            this.persistentList.save();
+        }
     }
 
     /**
-     * This is the heart of the installer - it processes new resources and merges them
-     * with existing resources.
-     * The second part consists of detecting the resources to be processsed.
+     * This is the heart of the installer -
+     * it processes new resources and deleted resources and
+     * merges them with existing resources.
      */
     private void mergeNewResources() {
-        synchronized (newResources) {
-            final boolean changed = this.hasNewResources();
+        // if we have new resources we have to sync them
+        if ( newResources.size() > 0 ) {
+            logger.debug("Added set of {} new resources: {}",
+                    new Object[] {newResources.size(), newResources});
 
-            if ( changed ) {
-                // check for new resource providers (schemes)
-                // if we have new providers we have to sync them with existing resources
-                for(final Map.Entry<String, List<RegisteredResource>> entry : this.newResourcesSchemes.entrySet()) {
-                    logger.debug("Processing set of new resources with scheme {}", entry.getKey());
-
-                    // set all previously found resources that are not available anymore to uninstall
-                    // if they have been installed - remove resources with a different state
-                    for(final String entityId : this.persistentList.getEntityIds()) {
-                        final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-
-                        final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
-                        boolean first = true;
-                        for(final RegisteredResource r : group.getResources()) {
-                            if ( r.getScheme().equals(entry.getKey()) ) {
-                                logger.debug("Checking {}", r);
-                                // search if we have a new entry with the same url
-                                boolean found = false;
-                                final Iterator<RegisteredResource> m = entry.getValue().iterator();
-                                while ( !found && m.hasNext() ) {
-                                    final RegisteredResource testResource = m.next();
-                                    found = testResource.getURL().equals(r.getURL());
-                                }
-                                if ( !found) {
-                                    logger.debug("Resource {} seems to be removed.", r);
-                                    if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                                               ||  r.getState() == RegisteredResource.State.INSTALL) ) {
-                                         r.setState(RegisteredResource.State.UNINSTALL);
-                                    } else {
-                                        toRemove.add(r);
-                                    }
-                                }
-                            }
-                            first = false;
-                        }
-                        for(final RegisteredResource rr : toRemove) {
-                            this.persistentList.remove(rr);
-                        }
-                    }
-                    logger.debug("Added set of {} new resources with scheme {} : {}",
-                            new Object[] {entry.getValue().size(), entry.getKey(), entry.getValue()});
-                    newResources.addAll(entry.getValue());
-                }
-
-                newResourcesSchemes.clear();
-
-                for(RegisteredResource r : newResources) {
-                    this.persistentList.addOrUpdate(r);
-                }
-                newResources.clear();
-
-                // Mark resources for removal according to urlsToRemove
-                if (!urlsToRemove.isEmpty()) {
-                    for(final String url : urlsToRemove ) {
-                        this.persistentList.remove(url);
-                    }
-                }
-                urlsToRemove.clear();
-
-                printResources("Merged");
-                // persist list
-                this.persistentList.save();
+            for(final InternalResource r : newResources) {
+                this.persistentList.addOrUpdate(r);
             }
+            newResources.clear();
+        }
+        // Mark resources for removal according to urlsToRemove
+        if (!urlsToRemove.isEmpty()) {
+            logger.debug("Removing set of {} resources: {}",
+                    new Object[] {urlsToRemove.size(), urlsToRemove});
+            for(final String url : urlsToRemove ) {
+                this.persistentList.remove(url);
+            }
+            urlsToRemove.clear();
         }
     }
 
@@ -517,41 +520,36 @@ public class OsgiInstallerImpl
      * Invoke the transformers on the resources.
      */
     private void transformResources() {
-        // Walk the list of resources and invoke all transformers
+        boolean changed = false;
+
         final Object[] services = this.transformerTracker.getServices();
+
         if ( services != null && services.length > 0 ) {
-            boolean changed = false;
-            for(final String entityId : this.persistentList.getEntityIds()) {
-                final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
-                // Check the first resource in each group
-                final RegisteredResource toActivate = group.getActiveResource();
-                if ( toActivate != null && toActivate.getState() == RegisteredResource.State.INSTALL ) {
-                    for(int i=0; i<services.length; i++) {
-                        if ( services[i] instanceof ResourceTransformer ) {
-                            final ResourceTransformer transformer = (ResourceTransformer)services[i];
-                            final TransformationResult tr = transformer.transform(toActivate);
-                            if ( tr != null ) {
-                                if ( tr.getResourceType() != null ) {
-                                    this.persistentList.remove(toActivate);
-                                }
-                                if ( ((RegisteredResourceImpl)toActivate).update(tr) ) {
-                                    if ( tr.getResourceType() != null ) {
-                                        this.persistentList.addOrUpdate(toActivate);
-                                    }
-                                } else {
-                                    // ignore this resource from now on
-                                    toActivate.setState(RegisteredResource.State.IGNORED);
-                                }
-                                changed = true;
-                            }
+            // Walk the list of unknown resources and invoke all transformers
+            int index = 0;
+            final List<RegisteredResource> unknownList = this.persistentList.getUnknownResources();
+
+            while ( index < unknownList.size() ) {
+                final RegisteredResource resource = unknownList.get(index);
+                for(int i=0; i<services.length; i++) {
+                    if ( services[i] instanceof ResourceTransformer ) {
+                        final ResourceTransformer transformer = (ResourceTransformer)services[i];
+
+                        final TransformationResult tr = transformer.transform(resource);
+                        if ( tr != null ) {
+                            this.persistentList.transform(resource, tr);
+                            changed = true;
+                            index--;
+                            break;
                         }
                     }
                 }
+                index++;
             }
-            if ( changed ) {
-                this.persistentList.save();
-                printResources("Transformed");
-            }
+        }
+        if ( changed ) {
+            this.persistentList.save();
+            printResources("Transformed");
         }
     }
 
@@ -582,9 +580,7 @@ public class OsgiInstallerImpl
             logger.debug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
             // TODO - for now we always reschedule regardless if we have retries
             // If the config task factory is only registered when config admin is available we can relax this again.
-            synchronized (newResources) {
-                newResources.notify();
-            }
+            this.wakeUp();
         }
     }
 
@@ -627,9 +623,13 @@ public class OsgiInstallerImpl
      */
     public Object addingService(ServiceReference reference) {
         // new factory has been added, wake up main thread
-        synchronized (newResources) {
-            newResources.notify();
-        }
+        this.wakeUp();
         return ctx.getService(reference);
+    }
+
+    private void wakeUp() {
+        synchronized (this.resourcesLock) {
+            this.resourcesLock.notify();
+        }
     }
 }

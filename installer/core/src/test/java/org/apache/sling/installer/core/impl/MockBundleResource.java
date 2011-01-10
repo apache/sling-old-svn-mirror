@@ -67,7 +67,7 @@ public class MockBundleResource implements RegisteredResource {
 	}
 
 	/**
-	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#cleanup()
+	 * Clean up
 	 */
 	public void cleanup() {
 	    // nothing to do

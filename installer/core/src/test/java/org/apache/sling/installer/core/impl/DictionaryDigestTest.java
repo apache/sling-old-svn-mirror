@@ -36,8 +36,9 @@ public class DictionaryDigestTest {
 		d.put("array", new String[] { "a", "b"});
 	}
 
-    private RegisteredResourceImpl create(final InstallableResource is) throws IOException {
-        return RegisteredResourceImpl.create(new MockBundleContext(), is, "test", new FileUtil(new MockBundleContext()));
+    private InternalResource create(final InstallableResource is) throws IOException {
+        new FileUtil(new MockBundleContext());
+        return InternalResource.create("test", is);
     }
 
     private String testDigestChanged(Dictionary<String, Object> d,

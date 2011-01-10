@@ -23,6 +23,7 @@ import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Task creator for bundles
  */
-public class BundleTaskCreator implements InstallTaskFactory {
+public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -52,18 +53,18 @@ public class BundleTaskCreator implements InstallTaskFactory {
     private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
     /** Tracker for the package admin. */
-    private final ServiceTracker packageAdminTracker;
+    private ServiceTracker packageAdminTracker;
 
     /** Tracker for the start level service. */
-    private final ServiceTracker startLevelTracker;
+    private ServiceTracker startLevelTracker;
 
     /** The bundle context. */
-    private final BundleContext bundleContext;
+    private BundleContext bundleContext;
 
     /**
-     * Constructor
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
      */
-    public BundleTaskCreator(final BundleContext bc) {
+    public void init(final BundleContext bc) {
         this.bundleContext = bc;
         // create and start tracker
         this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
@@ -73,11 +74,24 @@ public class BundleTaskCreator implements InstallTaskFactory {
     }
 
     /**
-     * Deactivate creator.
+     * @see org.apache.sling.installer.core.impl.InternalService#deactivate()
      */
     public void deactivate() {
-        this.packageAdminTracker.close();
-        this.startLevelTracker.close();
+        if ( this.packageAdminTracker != null ) {
+            this.packageAdminTracker.close();
+            this.packageAdminTracker = null;
+        }
+        if ( this.startLevelTracker != null ) {
+            this.startLevelTracker.close();
+            this.startLevelTracker = null;
+        }
+    }
+
+    /**
+     * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
+     */
+    public String getDescription() {
+        return "Apache Sling Bundle Install Task Factory";
     }
 
     public BundleContext getBundleContext() {

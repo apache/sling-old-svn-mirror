@@ -31,6 +31,9 @@ public class TransformationResult {
     /** A new input stream. */
     private InputStream inputStream;
 
+    /** Unique id. */
+    private String id;
+
     /**
      * Get the new resource type
      * @return New resource type or <code>null</code>.
@@ -48,11 +51,27 @@ public class TransformationResult {
     }
 
     /**
+     * Get the new unique id
+     * @return New unique id or <code>null</code>.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
      * Set a new resource type.
      * @param resourceType The resource type
      */
     public void setResourceType(final String resourceType) {
         this.resourceType = resourceType;
+    }
+
+    /**
+     * Set a new unique id.
+     * @param id The unique id
+     */
+    public void setId(final String id) {
+        this.id = id;
     }
 
     /**
