@@ -115,6 +115,9 @@ public class JspScriptEngineFactory
 
     private ServiceRegistration eventHandlerRegistration;
 
+    /** The handler for the jsp factories. */
+    private JspRuntimeContext.JspFactoryHandler jspFactoryHandler;
+
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
     public static final String[] NAMES = { "jsp", "JSP" };
@@ -161,6 +164,7 @@ public class JspScriptEngineFactory
         }
         final SlingIOProvider io = this.ioProvider;
         io.setRequestResourceResolver(resolver);
+        jspFactoryHandler.incUsage();
         try {
             final JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
             // create a SlingBindings object
@@ -168,6 +172,7 @@ public class JspScriptEngineFactory
             slingBindings.putAll(bindings);
             jsp.service(slingBindings);
         } finally {
+            jspFactoryHandler.decUsage();
             io.resetRequestResourceResolver();
         }
     }
@@ -217,6 +222,8 @@ public class JspScriptEngineFactory
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
+            this.jspFactoryHandler = JspRuntimeContext.initFactoryHandler();
+
             this.tldLocationsCache = new SlingTldLocationsCache(componentContext.getBundleContext());
 
             // prepare some classes
@@ -283,6 +290,8 @@ public class JspScriptEngineFactory
         }
 
         ioProvider = null;
+        this.jspFactoryHandler.destroy();
+        this.jspFactoryHandler = null;
     }
 
     /**
