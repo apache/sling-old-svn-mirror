@@ -33,8 +33,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.jsp.JspApplicationContext;
+import javax.servlet.jsp.JspEngineInfo;
 import javax.servlet.jsp.JspFactory;
+import javax.servlet.jsp.PageContext;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -71,11 +77,86 @@ public final class JspRuntimeContext {
     /** The {@link IOProvider} used to get access to output */
     private IOProvider ioProvider = IOProvider.DEFAULT;
 
+    /** This is a delegate forwarding either to our own factory
+     * or the original one.
+     * Depending on the USE_OWN_FACTORY flag.
+     */
+    public static final class JspFactoryHandler extends JspFactory {
+
+        private final JspFactory original;
+
+        private final JspFactory own;
+
+        public JspFactoryHandler(final JspFactory orig, final JspFactory own) {
+            this.original = (orig instanceof JspFactoryHandler ? ((JspFactoryHandler)orig).original : orig);
+            this.own = own;
+        }
+
+        private JspFactory getFactory() {
+            final Integer useOwnFactory = USE_OWN_FACTORY.get();
+            if ( useOwnFactory == null || useOwnFactory.intValue() == 0 ) {
+                return this.original;
+            }
+            return this.own;
+        }
+
+        @Override
+        public PageContext getPageContext(Servlet paramServlet,
+                ServletRequest paramServletRequest,
+                ServletResponse paramServletResponse, String paramString,
+                boolean paramBoolean1, int paramInt, boolean paramBoolean2) {
+            return this.getFactory().getPageContext(paramServlet, paramServletRequest,
+                    paramServletResponse, paramString, paramBoolean1,
+                    paramInt, paramBoolean2);
+        }
+
+        @Override
+        public void releasePageContext(PageContext paramPageContext) {
+            this.getFactory().releasePageContext(paramPageContext);
+        }
+
+        @Override
+        public JspEngineInfo getEngineInfo() {
+            return this.getFactory().getEngineInfo();
+        }
+
+        @Override
+        public JspApplicationContext getJspApplicationContext(
+                ServletContext paramServletContext) {
+            return this.getFactory().getJspApplicationContext(paramServletContext);
+        }
+
+        /**
+         * Reset the jsp factory.
+         */
+        public void destroy() {
+            final JspFactory current = JspFactory.getDefaultFactory();
+            if ( current == this ) {
+                JspFactory.setDefaultFactory(this.original);
+            }
+        }
+
+        public void incUsage() {
+            final Integer count = JspRuntimeContext.USE_OWN_FACTORY.get();
+            int newCount = 1;
+            if ( count != null ) {
+                newCount = count + 1;
+            }
+            JspRuntimeContext.USE_OWN_FACTORY.set(newCount);
+        }
+
+        public void decUsage() {
+            final Integer count = JspRuntimeContext.USE_OWN_FACTORY.get();
+            JspRuntimeContext.USE_OWN_FACTORY.set(count - 1);
+        }
+    }
+
     /**
      * Preload classes required at runtime by a JSP servlet so that
      * we don't get a defineClassInPackage security exception.
+     * And set jsp factory
      */
-    static {
+    public static JspFactoryHandler initFactoryHandler() {
         JspFactoryImpl factory = new JspFactoryImpl();
         SecurityClassLoad.securityClassLoad(factory.getClass().getClassLoader());
         if( System.getSecurityManager() != null ) {
@@ -98,8 +179,12 @@ public final class JspRuntimeContext {
             }
         }
 
-        JspFactory.setDefaultFactory(factory);
+        final JspFactoryHandler key = new JspFactoryHandler(JspFactory.getDefaultFactory(), factory);
+        JspFactory.setDefaultFactory(key);
+        return key;
     }
+
+    private static final ThreadLocal<Integer> USE_OWN_FACTORY = new ThreadLocal<Integer>();
 
     // ----------------------------------------------------------- Constructors
 
