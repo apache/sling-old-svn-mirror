@@ -40,6 +40,14 @@ public class SlingSessionListener implements HttpSessionAttributeListener,
     private static HttpSessionAttributeListener delegateeSessionAttributeListener;
 
     static void startDelegate(final ClassLoader classLoader) {
+
+        // if the listener has not been configured, do nothing because
+        // there is no servlet context to forward and there are no
+        // events ever sent to this listener
+        if (servletContext == null) {
+            return;
+        }
+
         Object delegatee = null;
         try {
             Class<?> delegateeClass = classLoader.loadClass(SharedConstants.DEFAULT_SLING_LISTENER);
