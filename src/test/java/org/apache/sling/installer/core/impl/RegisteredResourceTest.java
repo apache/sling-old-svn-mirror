@@ -74,8 +74,8 @@ public class RegisteredResourceTest {
             assertNull("CONFIG resource does not provide an InputStream", rs);
             final Dictionary<String, Object> d = r.getDictionary();
             assertNotNull("CONFIG resource provides a Dictionary", d);
-            assertEquals("CONFIG resource dictionary has three properties", 3, d.size());
-            assertNotNull("CONFIG resource has a pid attribute", r.getAttributes().get(Constants.SERVICE_PID));
+            assertEquals("CONFIG resource dictionary has two properties", 2, d.size());
+            assertNotNull("CONFIG resource has a pid attribute", r.getAttribute(Constants.SERVICE_PID));
         }
     }
 
@@ -114,14 +114,14 @@ public class RegisteredResourceTest {
         final File f = getTestBundle("testbundle-1.0.jar");
         final InstallableResource i = new InstallableResource("test:" + f.getAbsolutePath(), new FileInputStream(f), null, f.getName(), null, null);
         final TaskResource r = create(i);
-        assertNotNull("RegisteredResource must have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
+        assertNotNull("RegisteredResource must have bundle symbolic name", r.getAttribute(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
     }
 
     @org.junit.Test public void testConfigEntity() throws Exception {
         final InstallableResource i = new InstallableResource("test:/foo/someconfig", null, new Hashtable<String, Object>(), null, null, null);
         final TaskResource r = create(i);
-        assertNull("RegisteredResource must not have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
+        assertNull("RegisteredResource must not have bundle symbolic name", r.getAttribute(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
     }
 

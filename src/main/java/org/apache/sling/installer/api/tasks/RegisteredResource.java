@@ -22,22 +22,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 
-import org.apache.sling.installer.api.OsgiInstaller;
-
-/** A resource that's been registered in the OSGi controller.
- * 	Data can be either an InputStream or a Dictionary, and we store
- *  it locally to avoid holding up to classes or data from our
- *  clients, in case those disappear while we're installing stuff.
+/**
+ * A resource that's been registered in the OSGi controller.
+ * Data can be either an input stream or a dictionary.
  */
 public interface RegisteredResource {
 
-    /** Return the scheme from where the artifact is orginated. */
+    /**
+     * Return the scheme from where the artifact is orginated.
+     */
     String getScheme();
 
     /**
-     * Return this data's url. It is opaque for the {@link OsgiInstaller}
-     * but should uniquely identify the resource within the namespace of
-     * the used installation mechanism.
+     * Return this data's url. The url is the {@link #getScheme}
+     * followed by a colon, followed by a unique identifier of
+     * the resource within the providers space..
      */
     String getURL();
 
@@ -79,9 +78,10 @@ public interface RegisteredResource {
      */
     int getPriority();
 
-	/** Return the identifier of the OSGi "entity" that this resource
-     *  represents, for example "bundle:SID" where SID is the bundle's
-     *  symbolic ID, or "config:PID" where PID is config's PID.
+	/**
+	 * Return the identifier of the OSGi "entity" that this resource
+     * represents, for example "bundle:SID" where SID is the bundle's
+     * symbolic ID, or "config:PID" where PID is config's PID.
      */
     String getEntityId();
 }

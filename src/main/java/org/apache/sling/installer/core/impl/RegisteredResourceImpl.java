@@ -237,11 +237,22 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.TaskResource#getAttributes()
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getAttribute(java.lang.String)
      */
-    public Map<String, Object> getAttributes() {
-		return attributes;
-	}
+    public Object getAttribute(final String key) {
+        return this.attributes.get(key);
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setAttribute(java.lang.String, java.lang.Object)
+     */
+    public void setAttribute(final String key, final Object value) {
+        if ( value == null ) {
+            this.attributes.remove(key);
+        } else {
+            this.attributes.put(key, value);
+        }
+    }
 
     /**
      * @see org.apache.sling.installer.api.tasks.RegisteredResource#getScheme()
@@ -342,8 +353,8 @@ public class RegisteredResourceImpl
         int result = 0;
 
         // Order by version
-        final Version va = new Version((String)a.getAttributes().get(Constants.BUNDLE_VERSION));
-        final Version vb = new Version((String)b.getAttributes().get(Constants.BUNDLE_VERSION));
+        final Version va = new Version((String)a.getAttribute(Constants.BUNDLE_VERSION));
+        final Version vb = new Version((String)b.getAttribute(Constants.BUNDLE_VERSION));
         isSnapshot = va.toString().contains("SNAPSHOT");
         // higher version has more priority, must come first so invert comparison
         result = vb.compareTo(va);
@@ -371,9 +382,9 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttribute(java.lang.String, java.lang.Object)
      */
-    public void setTemporaryAttributee(final String key, final Object value) {
+    public void setTemporaryAttribute(final String key, final Object value) {
         if ( this.temporaryAttributes == null ) {
             this.temporaryAttributes = new HashMap<String, Object>();
         }

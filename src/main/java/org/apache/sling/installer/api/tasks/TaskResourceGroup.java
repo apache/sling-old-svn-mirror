@@ -23,7 +23,7 @@ package org.apache.sling.installer.api.tasks;
  * This is a group of resources all pointing to the same artifact,
  * but maybe in different versions or locations.
  */
-public interface RegisteredResourceGroup {
+public interface TaskResourceGroup {
 
 
     /**

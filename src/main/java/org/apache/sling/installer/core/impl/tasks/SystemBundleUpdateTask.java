@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -37,7 +37,7 @@ public class SystemBundleUpdateTask extends InstallTask {
 
     private final BundleTaskCreator creator;
 
-    public SystemBundleUpdateTask(final RegisteredResourceGroup r,
+    public SystemBundleUpdateTask(final TaskResourceGroup r,
             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -45,7 +45,7 @@ public class SystemBundleUpdateTask extends InstallTask {
 
     @Override
     public void execute(InstallationContext ctx) {
-        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");

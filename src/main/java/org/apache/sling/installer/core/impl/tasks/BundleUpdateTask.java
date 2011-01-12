@@ -20,8 +20,8 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -38,7 +38,7 @@ public class BundleUpdateTask extends InstallTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleUpdateTask(final RegisteredResourceGroup r,
+    public BundleUpdateTask(final TaskResourceGroup r,
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -48,7 +48,7 @@ public class BundleUpdateTask extends InstallTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(InstallationContext ctx) {
-        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             this.getLogger().debug("Bundle to update ({}) not found", symbolicName);
@@ -56,7 +56,7 @@ public class BundleUpdateTask extends InstallTask {
             return;
         }
 
-        final Version newVersion = new Version((String)getResource().getAttributes().get(Constants.BUNDLE_VERSION));
+        final Version newVersion = new Version((String)getResource().getAttribute(Constants.BUNDLE_VERSION));
 
         // Do not update if same version, unless snapshot
         boolean snapshot = false;
@@ -79,7 +79,7 @@ public class BundleUpdateTask extends InstallTask {
             ctx.log("Updated bundle {} from resource {}", b, getResource());
 
             if (reactivate) {
-                this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
+                this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
                 ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);

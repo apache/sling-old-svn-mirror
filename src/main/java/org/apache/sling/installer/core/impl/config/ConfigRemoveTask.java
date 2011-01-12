@@ -19,7 +19,7 @@
 package org.apache.sling.installer.core.impl.config;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -30,7 +30,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
 
     private static final String CONFIG_REMOVE_ORDER = "10-";
 
-    public ConfigRemoveTask(final RegisteredResourceGroup r,
+    public ConfigRemoveTask(final TaskResourceGroup r,
             final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
     }

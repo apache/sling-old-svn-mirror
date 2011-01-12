@@ -19,9 +19,9 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
 
@@ -33,7 +33,7 @@ public class BundleInstallTask extends InstallTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleInstallTask(final RegisteredResourceGroup r,
+    public BundleInstallTask(final TaskResourceGroup r,
             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -69,7 +69,7 @@ public class BundleInstallTask extends InstallTask {
             }
 
             // mark this resource as installed and to be started
-            this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
+            this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
             ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.creator));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again

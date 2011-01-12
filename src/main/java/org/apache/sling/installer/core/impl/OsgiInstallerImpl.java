@@ -38,7 +38,7 @@ import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TaskResource;
@@ -473,7 +473,7 @@ public class OsgiInstallerImpl
      * Get the task for the resource.
      */
     private InstallTask getTask(final Object[] services,
-            final RegisteredResourceGroup rrg) {
+            final TaskResourceGroup rrg) {
         InstallTask result = null;
 
         for(int i=0; i<services.length; i++) {

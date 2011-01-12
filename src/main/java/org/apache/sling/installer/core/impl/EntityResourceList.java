@@ -28,7 +28,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * Persistent list of RegisteredResource, used by installer to
  * keep track of all registered resources
  */
-public class EntityResourceList implements Serializable, RegisteredResourceGroup {
+public class EntityResourceList implements Serializable, TaskResourceGroup {
 
     /** Use own serial version ID as we control serialization. */
     private static final long serialVersionUID = 6L;
