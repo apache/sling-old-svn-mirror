@@ -221,6 +221,14 @@ public class OsgiInstallerImpl
         }
     }
 
+    public Object getResourcesLock() {
+        return this.resourcesLock;
+    }
+
+    public PersistentResourceList getPersistentResourceList() {
+        return this.persistentList;
+    }
+
     /**
      * Create new installable resources for all installable resources.
      * The new versions has a set resource type.

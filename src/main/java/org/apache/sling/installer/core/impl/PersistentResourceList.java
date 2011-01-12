@@ -200,6 +200,7 @@ public class PersistentResourceList {
     public List<RegisteredResource> getUnknownResources() {
         return this.unknownResources;
     }
+
     /**
      * Remove a resource by url
      * @param url The url to remove
