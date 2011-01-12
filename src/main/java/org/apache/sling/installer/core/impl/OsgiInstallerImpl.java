@@ -105,8 +105,8 @@ public class OsgiInstallerImpl
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         // Initialize file util
-        new FileUtil(ctx);
-        final File f = FileUtil.SHARED.getDataFile("RegisteredResourceList.ser");
+        new FileDataStore(ctx);
+        final File f = FileDataStore.SHARED.getDataFile("RegisteredResourceList.ser");
         this.persistentList = new PersistentResourceList(f);
     }
 
@@ -124,9 +124,6 @@ public class OsgiInstallerImpl
         ctx.removeBundleListener(this);
         ctx.removeFrameworkListener(this);
 
-        // remove file util
-        FileUtil.SHARED = null;
-
         // wake up sleeping thread
         this.wakeUp();
         this.logger.debug("Waiting for installer thread to stop");
@@ -135,6 +132,9 @@ public class OsgiInstallerImpl
         } catch (InterruptedException e) {
             // we simply ignore this
         }
+
+        // remove file util
+        FileDataStore.SHARED = null;
 
         this.logger.info("Apache Sling OSGi Installer Service stopped.");
     }

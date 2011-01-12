@@ -37,7 +37,7 @@ public class DictionaryDigestTest {
 	}
 
     private InternalResource create(final InstallableResource is) throws IOException {
-        new FileUtil(new MockBundleContext());
+        new FileDataStore(new MockBundleContext());
         return InternalResource.create("test", is);
     }
 

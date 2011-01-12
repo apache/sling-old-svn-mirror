@@ -24,13 +24,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.BundleContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for all file handling.
  */
-public class FileUtil {
+public class FileDataStore {
 
     /**
      * The name of the bundle context property defining the location for the
@@ -46,12 +49,16 @@ public class FileUtil {
 
     private final File directory;
 
-    public static FileUtil SHARED;
+    /** Public instance - to avoid passing a reference to this service to each data object. */
+    public static FileDataStore SHARED;
+
+    /** Cache for url to digest mapping. */
+    private final Map<String, String> digestCache = new HashMap<String, String>();
 
     /**
      * Create a file util instance and detect the installer directory.
      */
-    public FileUtil( final BundleContext bundleContext ) {
+    public FileDataStore( final BundleContext bundleContext ) {
         String location = bundleContext.getProperty(CONFIG_DIR);
 
         // no configured location, use the config dir in the bundle persistent
@@ -97,13 +104,6 @@ public class FileUtil {
     }
 
     /**
-     * Return the installer directory.
-     */
-    public File getDirectory() {
-        return this.directory;
-    }
-
-    /**
      * Return a file with the given name in the installer directory.
      * @param fileName The file name
      */
@@ -120,16 +120,46 @@ public class FileUtil {
         }
     }
 
-    /** Create a new unique data file. */
-    public File createNewDataFile(final String hint) {
+    /**
+     * Create a new unique data file.
+     */
+    public File createNewDataFile(final InputStream stream,
+            final String url,
+            final String digest,
+            final String hint)
+    throws IOException {
+        // check if we already have this data
+        if ( digest != null ) {
+            synchronized ( this.digestCache ) {
+                final String storedDigest = this.digestCache.get(url);
+                if ( storedDigest != null && storedDigest.equals(digest) ) {
+                    return null;
+                }
+            }
+        }
         final String filename = hint + "-resource-" + getNextSerialNumber() + ".ser";
-        return this.getDataFile(filename);
+        final File file = this.getDataFile(filename);
+
+        this.copyToLocalStorage(stream, file);
+
+        if ( digest != null ) {
+            synchronized ( this.digestCache ) {
+                this.digestCache.put(url, digest);
+            }
+        }
+        return file;
+    }
+
+    public void updateDigestCache(final String url, final String digest) {
+        synchronized ( this.digestCache ) {
+            this.digestCache.put(url, digest);
+        }
     }
 
     /**
      * Copy data to local storage.
      */
-    public void copyToLocalStorage(final InputStream data,
+    protected void copyToLocalStorage(final InputStream data,
             final File dataFile) throws IOException {
         final OutputStream os = new BufferedOutputStream(new FileOutputStream(dataFile));
         try {
@@ -141,6 +171,26 @@ public class FileUtil {
             os.flush();
         } finally {
             os.close();
+        }
+    }
+
+    public File createNewDataFile(final String hint, final InputStream stream)
+    throws IOException {
+        final String filename = hint + "-resource-" + getNextSerialNumber() + ".ser";
+        final File file = this.getDataFile(filename);
+
+        this.copyToLocalStorage(stream, file);
+
+        return file;
+    }
+
+    public void removeFromDigestCache(final String url, final String digest) {
+        synchronized ( this.digestCache ) {
+            final String storedDigest = this.digestCache.get(url);
+            if ( storedDigest != null && storedDigest.equals(digest) ) {
+                LoggerFactory.getLogger(this.getClass()).warn("Remove {} : {}", url, digest);
+                this.digestCache.remove(url);
+            }
         }
     }
 }

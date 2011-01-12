@@ -77,6 +77,8 @@ public class RegisteredResourceImpl
     /** Temporary attributes. */
     private transient Map<String, Object> temporaryAttributes;
 
+    private boolean cleanedUp = false;
+
     /**
      * Serialize the object
      * - write version id
@@ -169,12 +171,23 @@ public class RegisteredResourceImpl
 	}
 
 	/**
+	 * Remove the data file
+	 */
+	private void removeDataFile() {
+        if ( this.dataFile != null && this.dataFile.exists() ) {
+            dataFile.delete();
+        }
+	}
+
+	/**
 	 * Clean up used data files.
 	 */
 	public void cleanup() {
-	    if ( this.dataFile != null && this.dataFile.exists() ) {
-			dataFile.delete();
-		}
+	    if ( !cleanedUp ) {
+	        cleanedUp = true;
+	        this.removeDataFile();
+	        FileDataStore.SHARED.removeFromDigestCache(this.url, this.digest);
+	    }
 	}
 
 	/**
@@ -397,9 +410,8 @@ public class RegisteredResourceImpl
         }
         if ( is != null ) {
             try {
-                final File newDataFile = FileUtil.SHARED.createNewDataFile(this.getType());
-                FileUtil.SHARED.copyToLocalStorage(is, newDataFile);
-                this.cleanup();
+                final File newDataFile = FileDataStore.SHARED.createNewDataFile(this.getType(), is);
+                this.removeDataFile();
                 this.dataFile = newDataFile;
             } finally {
                 try {

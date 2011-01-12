@@ -135,6 +135,9 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
                 }
             }
             toActivate.setState(state);
+            if ( state == RegisteredResource.State.UNINSTALLED ) {
+                this.cleanup(toActivate);
+            }
         }
     }
 
@@ -195,6 +198,9 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         }
     }
 
+    /**
+     * Compact the resource group by removing uninstalled entries
+     */
     public boolean compact() {
         boolean changed = false;
         final List<RegisteredResource> toDelete = new ArrayList<RegisteredResource>();
