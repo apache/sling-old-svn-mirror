@@ -20,6 +20,8 @@ package org.apache.sling.installer.core.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -85,12 +87,14 @@ public class DefaultTransformer
                 if (sn != null) {
                     final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
                     if (v != null) {
-                        resource.getAttributes().put(Constants.BUNDLE_SYMBOLICNAME, sn);
-                        resource.getAttributes().put(Constants.BUNDLE_VERSION, v.toString());
+                        final Map<String, Object> attr = new HashMap<String, Object>();
+                        attr.put(Constants.BUNDLE_SYMBOLICNAME, sn);
+                        attr.put(Constants.BUNDLE_VERSION, v.toString());
 
                         final TransformationResult tr = new TransformationResult();
                         tr.setId(sn);
                         tr.setResourceType(InstallableResource.TYPE_BUNDLE);
+                        tr.setAttributes(attr);
 
                         return new TransformationResult[] {tr};
                     }
@@ -135,13 +139,15 @@ public class DefaultTransformer
             configPid = pid;
         }
 
-        resource.getAttributes().put(Constants.SERVICE_PID, configPid);
+        final Map<String, Object> attr = new HashMap<String, Object>();
+
+        attr.put(Constants.SERVICE_PID, configPid);
         // Add pseudo-properties
         resource.getDictionary().put(ConfigTaskCreator.CONFIG_PATH_KEY, resource.getURL());
 
         // Factory?
         if (factoryPid != null) {
-            resource.getAttributes().put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
+            attr.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
             resource.getDictionary().put(ConfigTaskCreator.ALIAS_KEY, configPid);
         }
 
@@ -149,6 +155,7 @@ public class DefaultTransformer
         final String id = (factoryPid == null ? "" : factoryPid + ".") + configPid;
         tr.setId(id);
         tr.setResourceType(InstallableResource.TYPE_CONFIG);
+        tr.setAttributes(attr);
 
         return new TransformationResult[] {tr};
     }

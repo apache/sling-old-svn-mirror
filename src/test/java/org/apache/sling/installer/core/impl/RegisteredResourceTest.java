@@ -34,6 +34,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -66,7 +67,7 @@ public class RegisteredResourceTest {
             final Hashtable<String, Object> data = new Hashtable<String, Object>();
             data.put("foo", "bar");
             data.put("other", 2);
-            final RegisteredResource r = create(new InstallableResource("test:1", null, data, null, null, null));
+            final TaskResource r = create(new InstallableResource("test:1", null, data, null, null, null));
             assertEquals("No-extension URL with Dictionary creates a CONFIG resource",
                     InstallableResource.TYPE_CONFIG, r.getType());
             final InputStream rs = r.getInputStream();
@@ -112,14 +113,14 @@ public class RegisteredResourceTest {
     @org.junit.Test public void testBundleManifest() throws Exception {
         final File f = getTestBundle("testbundle-1.0.jar");
         final InstallableResource i = new InstallableResource("test:" + f.getAbsolutePath(), new FileInputStream(f), null, f.getName(), null, null);
-        final RegisteredResource r = create(i);
+        final TaskResource r = create(i);
         assertNotNull("RegisteredResource must have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
     }
 
     @org.junit.Test public void testConfigEntity() throws Exception {
         final InstallableResource i = new InstallableResource("test:/foo/someconfig", null, new Hashtable<String, Object>(), null, null, null);
-        final RegisteredResource r = create(i);
+        final TaskResource r = create(i);
         assertNull("RegisteredResource must not have bundle symbolic name", r.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME));
         assertEquals("RegisteredResource entity ID must match", "config:someconfig", r.getEntityId());
     }
@@ -162,13 +163,13 @@ public class RegisteredResourceTest {
         );
     }
 
-    private RegisteredResource create(final InstallableResource is) throws IOException {
+    private TaskResource create(final InstallableResource is) throws IOException {
         new FileDataStore(new MockBundleContext());
         final InternalResource internal = InternalResource.create("test", is);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
         final TransformationResult[] tr = new DefaultTransformer().transform(rr);
         if ( tr != null ) {
-            rr.update(tr[0]);
+            return rr.clone(tr[0]);
         }
         return rr;
     }

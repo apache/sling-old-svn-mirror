@@ -45,11 +45,11 @@ public class RegisteredResourceComparatorTest {
         }
     }
 
-    private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority) throws IOException {
+    private RegisteredResourceImpl getConfig(String url, Dictionary<String, Object> data, int priority) throws IOException {
         return getConfig(url, data, priority, null);
     }
 
-    private RegisteredResource getConfig(String url, Dictionary<String, Object> data, int priority, String digest) throws IOException {
+    private RegisteredResourceImpl getConfig(String url, Dictionary<String, Object> data, int priority, String digest) throws IOException {
         if(data == null) {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
@@ -58,9 +58,7 @@ public class RegisteredResourceComparatorTest {
         final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
         final InternalResource internal = InternalResource.create("test", r);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
-        rr.update(new DefaultTransformer().transform(rr)[0]);
-
-        return rr;
+        return (RegisteredResourceImpl)rr.clone(new DefaultTransformer().transform(rr)[0]);
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
@@ -125,8 +123,8 @@ public class RegisteredResourceComparatorTest {
 
     @Test
     public void testBundleDigests() {
-        final RegisteredResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
-        final RegisteredResource b = new MockBundleResource("a", "1.2.0", 0, "digestB");
+        final MockBundleResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
+        final MockBundleResource b = new MockBundleResource("a", "1.2.0", 0, "digestB");
         assertEquals("Digests must not be included in bundles comparison", 0, a.compareTo(b));
     }
 
@@ -153,13 +151,13 @@ public class RegisteredResourceComparatorTest {
     public void testConfigDigests() throws IOException {
     	final Dictionary<String, Object> data = new Hashtable<String, Object>();
         data.put("foo", "bar");
-        final RegisteredResource a = getConfig("pid", data, 0);
+        final RegisteredResourceImpl a = getConfig("pid", data, 0);
         data.put("foo", "changed");
-        final RegisteredResource b = getConfig("pid", data, 0);
+        final RegisteredResourceImpl b = getConfig("pid", data, 0);
         assertEquals("Entity urls must be the same", a.getEntityId(), b.getEntityId());
         assertTrue("Digests must be included in configs comparison", a.compareTo(b) != 0);
-        final RegisteredResource a2 = getConfig("pid", data, 0);
-        final RegisteredResource b2 = getConfig("pid", data, 0);
+        final RegisteredResourceImpl a2 = getConfig("pid", data, 0);
+        final RegisteredResourceImpl b2 = getConfig("pid", data, 0);
         assertEquals("Digests must be included in configs comparison", 0, a2.compareTo(b2));
     }
 
@@ -180,13 +178,5 @@ public class RegisteredResourceComparatorTest {
         inOrder[2] = getConfig("pidB", null, 1);
         inOrder[3] = getConfig("pidB", null, 0);
         assertOrder(inOrder);
-    }
-
-    @Test
-    public void testConfigAndBundle() throws IOException {
-    	final RegisteredResource cfg = getConfig("pid", null, InstallableResource.DEFAULT_PRIORITY);
-    	final RegisteredResource b = new MockBundleResource("a", "1.0");
-    	assertEquals("bundle is > config when compared", -1, b.compareTo(cfg));
-    	assertEquals("config is < bundle when compared", 1, cfg.compareTo(b));
     }
 }

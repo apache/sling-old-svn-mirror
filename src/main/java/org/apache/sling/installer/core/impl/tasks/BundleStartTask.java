@@ -20,10 +20,11 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -52,7 +53,7 @@ public class BundleStartTask extends InstallTask {
         this.bundleId = bundleId;
         this.creator = btc;
         this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
-        final RegisteredResource rr = this.getResource();
+        final TaskResource rr = this.getResource();
 	    if ( rr != null && rr.getTemporaryAttribute(ATTR_RC) != null ) {
 	        this.retryCount = (Integer)rr.getTemporaryAttribute(ATTR_RC);
             this.eventsCountForRetrying = (Long)rr.getTemporaryAttribute(ATTR_EC);
@@ -77,7 +78,7 @@ public class BundleStartTask extends InstallTask {
         if (bundleId == 0) {
             this.getLogger().debug("Bundle 0 is the framework bundle, ignoring request to start it");
             if ( this.getResource() != null ) {
-                this.setFinishedState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED);
             }
             return;
         }
@@ -102,7 +103,7 @@ public class BundleStartTask extends InstallTask {
         if (b.getState() == Bundle.ACTIVE) {
             this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
             if ( this.getResource() != null ) {
-                this.setFinishedState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED);
             }
             return;
         }
@@ -110,7 +111,7 @@ public class BundleStartTask extends InstallTask {
         try {
             b.start();
             if ( this.getResource() != null ) {
-                this.setFinishedState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED);
             }
             this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
                     new Object[] {retryCount, bundleId, b.getSymbolicName()});

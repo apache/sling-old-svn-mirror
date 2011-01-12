@@ -29,6 +29,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.BundleContext;
@@ -72,7 +73,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             Collection<String> entities = this.installer.getPersistentResourceList().getEntityIds();
             for (String entityId : entities) {
                 EntityResourceList erl = this.installer.getPersistentResourceList().getEntityResourceList(entityId);
-                RegisteredResource registeredResource = erl.getActiveResource();
+                TaskResource registeredResource = erl.getActiveResource();
                 if (registeredResource != null) {
                     pw.printf("<li>%s: %s, %s, %s%n",
                         registeredResource.getEntityId(),
@@ -80,10 +81,10 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         registeredResource.getScheme(),
                         registeredResource.getState());
                 }
-                Collection<RegisteredResource> resources = erl.getResources();
+                Collection<TaskResource> resources = erl.getResources();
                 if (resources.size() > 0) {
                     pw.println("<ul>");
-                    for (RegisteredResource resource : resources) {
+                    for (TaskResource resource : resources) {
                         pw.printf("<li>%s: %s, %s, %s</li>%n",
                             resource.getEntityId(), resource.getDigest(),
                             resource.getScheme(), resource.getState());
@@ -94,7 +95,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             }
             pw.println("</ul>");
 
-            printUnknownResources(pw, this.installer.getPersistentResourceList().getUnknownResources());
+            printUnknownResources(pw, this.installer.getPersistentResourceList().getUntransformedResources());
         }
     }
 
@@ -112,7 +113,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             Collection<String> entities = this.installer.getPersistentResourceList().getEntityIds();
             for (String entityId : entities) {
                 EntityResourceList erl = this.installer.getPersistentResourceList().getEntityResourceList(entityId);
-                RegisteredResource registeredResource = erl.getActiveResource();
+                TaskResource registeredResource = erl.getActiveResource();
                 if (registeredResource != null) {
                     pw.printf("- %s: %s, %s, %s%n",
                         registeredResource.getEntityId(),
@@ -120,9 +121,9 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         registeredResource.getScheme(),
                         registeredResource.getState());
                 }
-                Collection<RegisteredResource> resources = erl.getResources();
+                Collection<TaskResource> resources = erl.getResources();
                 if (resources.size() > 0) {
-                    for (RegisteredResource resource : resources) {
+                    for (TaskResource resource : resources) {
                         pw.printf("- %s: %s, %s, %s%n",
                             resource.getEntityId(), resource.getDigest(),
                             resource.getScheme(), resource.getState());
@@ -131,25 +132,23 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             }
 
             pw.println();
-            pw.println("Unknown Resources:");
-            for (RegisteredResource registeredResource : this.installer.getPersistentResourceList().getUnknownResources()) {
-                pw.printf("- %s: %s, %s, %s</li>%n",
+            pw.println("Untransformed Resources:");
+            for (RegisteredResource registeredResource : this.installer.getPersistentResourceList().getUntransformedResources()) {
+                pw.printf("- %s: %s, %s%n",
                     registeredResource.getEntityId(),
-                    registeredResource.getDigest(), registeredResource.getScheme(),
-                    registeredResource.getState());
+                    registeredResource.getDigest(), registeredResource.getScheme());
             }
         }
     }
 
     private void printUnknownResources(final PrintWriter pw,
             final List<RegisteredResource> unknown) {
-        pw.println("<h1>Unknown Resources</h1>");
+        pw.println("<h1>Untransformed Resources</h1>");
         pw.println("<ul>");
         for (RegisteredResource registeredResource : unknown) {
-            pw.printf("<li>%s: %s, %s, %s</li>%n",
+            pw.printf("<li>%s: %s, %s</li>%n",
                 registeredResource.getEntityId(),
-                registeredResource.getDigest(), registeredResource.getScheme(),
-                registeredResource.getState());
+                registeredResource.getDigest(), registeredResource.getScheme());
         }
         pw.println("</ul>");
     }

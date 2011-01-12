@@ -19,8 +19,8 @@
 package org.apache.sling.installer.core.impl.config;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -72,12 +72,12 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 }
                 config.update(getResource().getDictionary());
                 ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
-                this.setFinishedState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED);
                 this.getLogger().debug("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
                             + " from " + getResource());
             } else {
-                this.setFinishedState(RegisteredResource.State.IGNORED);
+                this.setFinishedState(ResourceState.IGNORED);
             }
         } catch (Exception e) {
             this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);

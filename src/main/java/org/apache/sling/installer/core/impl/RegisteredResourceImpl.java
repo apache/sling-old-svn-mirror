@@ -29,7 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -39,7 +40,7 @@ import org.osgi.framework.Version;
  * Implementation of the registered resource
  */
 public class RegisteredResourceImpl
-    implements RegisteredResource, Serializable {
+    implements TaskResource, Serializable, Comparable<RegisteredResourceImpl> {
 
     /** Use own serial version ID as we control serialization. */
     private static final long serialVersionUID = 6L;
@@ -72,7 +73,7 @@ public class RegisteredResourceImpl
     private String resourceType;
 
     /** The current state of this resource. */
-    private State state = State.INSTALL;
+    private ResourceState state = ResourceState.INSTALL;
 
     /** Temporary attributes. */
     private transient Map<String, Object> temporaryAttributes;
@@ -98,7 +99,7 @@ public class RegisteredResourceImpl
         out.writeObject(dataFile);
         out.writeObject(resourceType);
         out.writeInt(priority);
-        out.writeObject(state);
+        out.writeObject(state.toString());
     }
 
     /**
@@ -121,7 +122,7 @@ public class RegisteredResourceImpl
         Util.setField(this, "dataFile", in.readObject());
         Util.setField(this, "resourceType", in.readObject());
         Util.setField(this, "priority", in.readInt());
-        this.state = (State) in.readObject();
+        this.state = ResourceState.valueOf((String) in.readObject());
     }
 
     /**
@@ -236,7 +237,7 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getAttributes()
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getAttributes()
      */
     public Map<String, Object> getAttributes() {
 		return attributes;
@@ -257,16 +258,16 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getState()
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getState()
      */
-    public State getState() {
+    public ResourceState getState() {
         return this.state;
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setState(org.apache.sling.installer.api.tasks.RegisteredResource.State)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setState(org.apache.sling.installer.api.tasks.ResourceState)
      */
-    public void setState(State s) {
+    public void setState(ResourceState s) {
         this.state = s;
     }
 
@@ -277,13 +278,13 @@ public class RegisteredResourceImpl
         if ( obj == this ) {
             return true;
         }
-        if ( ! (obj instanceof RegisteredResource) ) {
+        if ( ! (obj instanceof RegisteredResourceImpl) ) {
             return false;
         }
         if ( this.entity == null ) {
-            return this.getURL().equals(((RegisteredResource)obj).getURL());
+            return super.equals(obj);
         }
-        return compareTo((RegisteredResource)obj) == 0;
+        return compareTo((RegisteredResourceImpl)obj) == 0;
     }
 
     /**
@@ -296,7 +297,7 @@ public class RegisteredResourceImpl
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final RegisteredResource b) {
+    public int compareTo(final RegisteredResourceImpl b) {
         return compare(this, b);
     }
 
@@ -306,7 +307,7 @@ public class RegisteredResourceImpl
      * together with an entity identifier for the to be installed resource like
      * the symbolic name of a bundle, the pid for a configuration etc.
      */
-    public static int compare(final RegisteredResource a, final RegisteredResource b) {
+    public static int compare(final TaskResource a, final TaskResource b) {
         // check entity id first
         int result = a.getEntityId().compareTo(b.getEntityId());
         if ( result == 0 ) {
@@ -336,7 +337,7 @@ public class RegisteredResourceImpl
      * - if the version is a snapshot version, the serial number and the digest are used
      *   in addition
      */
-    private static int compareBundles(final RegisteredResource a, final RegisteredResource b) {
+    private static int compareBundles(final TaskResource a, final TaskResource b) {
         boolean isSnapshot = false;
         int result = 0;
 
@@ -360,7 +361,7 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(final String key) {
         if ( this.temporaryAttributes != null ) {
@@ -370,7 +371,7 @@ public class RegisteredResourceImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
      */
     public void setTemporaryAttributee(final String key, final Object value) {
         if ( this.temporaryAttributes == null ) {
@@ -388,7 +389,7 @@ public class RegisteredResourceImpl
      * Currently only the input stream and resource type is updated.
      * @param tr Transformation result
      */
-    public void update(final TransformationResult tr)
+    private void update(final TransformationResult tr)
     throws IOException {
         final InputStream is = tr.getInputStream();
         if ( tr.getResourceType() != null ) {
@@ -419,5 +420,27 @@ public class RegisteredResourceImpl
                 } catch (final IOException ignore) {}
             }
         }
+        if ( tr.getAttributes() != null ) {
+            this.attributes.putAll(tr.getAttributes());
+        }
+    }
+
+    /**
+     * Create a new resource with updated information
+     */
+    public TaskResource clone(TransformationResult transformationResult)
+    throws IOException {
+        final int schemePos = this.url.indexOf(':');
+        final RegisteredResourceImpl rr = new RegisteredResourceImpl(
+                this.url.substring(schemePos + 1),
+                this.dataFile,
+                this.dictionary,
+                this.resourceType,
+                this.digest,
+                this.priority,
+                this.urlScheme);
+        rr.update(transformationResult);
+
+        return rr;
     }
 }

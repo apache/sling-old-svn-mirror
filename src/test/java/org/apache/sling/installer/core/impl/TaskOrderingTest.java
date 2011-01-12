@@ -53,8 +53,8 @@ public class TaskOrderingTest {
         new FileDataStore(new MockBundleContext());
         final InternalResource internal = InternalResource.create("test",
                 new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null));
-        final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
-        rr.update(new DefaultTransformer().transform(rr)[0]);
+        RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
+        rr = (RegisteredResourceImpl)rr.clone(new DefaultTransformer().transform(rr)[0]);
 
         final EntityResourceList erl = new EntityResourceList();
 	    erl.addOrUpdate(rr);

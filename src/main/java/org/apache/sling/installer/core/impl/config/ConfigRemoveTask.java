@@ -19,8 +19,8 @@
 package org.apache.sling.installer.core.impl.config;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -55,19 +55,19 @@ public class ConfigRemoveTask extends AbstractConfigTask {
             final Configuration cfg = getConfiguration(ca, false);
             if (cfg == null) {
                 this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
-                this.setFinishedState(RegisteredResource.State.IGNORED);
+                this.setFinishedState(ResourceState.IGNORED);
             } else {
                 if ( cfg.getProperties().get(ConfigTaskCreator.CONFIG_PATH_KEY) == null ) {
                     this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
-                    this.setFinishedState(RegisteredResource.State.IGNORED);
+                    this.setFinishedState(ResourceState.IGNORED);
                 } else if ( !isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
                     this.getLogger().debug("Configuration has changed after is has been installed. Not removing!");
-                    this.setFinishedState(RegisteredResource.State.IGNORED);
+                    this.setFinishedState(ResourceState.IGNORED);
                 } else {
                     this.getLogger().debug("Deleting config {} ({})", getCompositePid(), getResource());
                     cfg.delete();
                     ctx.log("Deleted configuration {} from resource {}", getCompositePid(), getResource());
-                    this.setFinishedState(RegisteredResource.State.UNINSTALLED);
+                    this.setFinishedState(ResourceState.UNINSTALLED);
                 }
             }
         } catch (Exception e) {

@@ -29,6 +29,8 @@ import java.util.TreeSet;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +50,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityResourceList.class);
 
     /** The set of registered resources for this entity. */
-    private final SortedSet<RegisteredResource> resources = new TreeSet<RegisteredResource>();
+    private final SortedSet<TaskResource> resources = new TreeSet<TaskResource>();
 
     /**
      * Serialize the object
@@ -80,7 +82,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         Util.setField(this, "resources", new TreeSet<RegisteredResource>());
         final int size = in.readInt();
         for(int i=0; i < size; i++) {
-            final RegisteredResource rr = (RegisteredResource)in.readObject();
+            final TaskResource rr = (TaskResource)in.readObject();
             this.resources.add(rr);
         }
     }
@@ -93,11 +95,11 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
     /**
      * Return the first resource if it either needs to be installed or uninstalled.
      */
-    public RegisteredResource getActiveResource() {
+    public TaskResource getActiveResource() {
         if ( !resources.isEmpty() ) {
-            final RegisteredResource r = resources.first();
-            if ( r.getState() == RegisteredResource.State.INSTALL
-              || r.getState() == RegisteredResource.State.UNINSTALL ) {
+            final TaskResource r = resources.first();
+            if ( r.getState() == ResourceState.INSTALL
+              || r.getState() == ResourceState.UNINSTALL ) {
                 return r;
             }
         }
@@ -109,33 +111,33 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
      */
-    public void setFinishState(RegisteredResource.State state) {
-        final RegisteredResource toActivate = getActiveResource();
+    public void setFinishState(ResourceState state) {
+        final TaskResource toActivate = getActiveResource();
         if ( toActivate != null ) {
-            if ( toActivate.getState() == RegisteredResource.State.UNINSTALL
+            if ( toActivate.getState() == ResourceState.UNINSTALL
                  && this.resources.size() > 1 ) {
 
                 // to get the second item in the set we have to use an iterator!
-                final Iterator<RegisteredResource> i = this.resources.iterator();
+                final Iterator<TaskResource> i = this.resources.iterator();
                 i.next(); // skip first
-                final RegisteredResource second = i.next();
-                if ( state == RegisteredResource.State.UNINSTALLED ) {
+                final TaskResource second = i.next();
+                if ( state == ResourceState.UNINSTALLED ) {
                     // first resource got uninstalled, go back to second
-                    if (second.getState() == RegisteredResource.State.IGNORED || second.getState() == RegisteredResource.State.INSTALLED) {
+                    if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {
                         LOGGER.debug("Reactivating for next cycle: {}", second);
-                        second.setState(RegisteredResource.State.INSTALL);
+                        second.setState(ResourceState.INSTALL);
                     }
                 } else {
                     // don't install as the first did not get uninstalled
-                    if ( second.getState() == RegisteredResource.State.INSTALL ) {
-                        second.setState(RegisteredResource.State.IGNORED);
+                    if ( second.getState() == ResourceState.INSTALL ) {
+                        second.setState(ResourceState.IGNORED);
                     }
                     // and now set resource to uninstalled
-                    state = RegisteredResource.State.UNINSTALLED;
+                    state = ResourceState.UNINSTALLED;
                 }
             }
             toActivate.setState(state);
-            if ( state == RegisteredResource.State.UNINSTALLED ) {
+            if ( state == ResourceState.UNINSTALLED ) {
                 this.cleanup(toActivate);
             }
         }
@@ -147,16 +149,16 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         }
     }
 
-    public Collection<RegisteredResource> getResources() {
+    public Collection<TaskResource> getResources() {
         return resources;
     }
 
-    public void addOrUpdate(final RegisteredResource r) {
+    public void addOrUpdate(final TaskResource r) {
         LOGGER.debug("Adding new resource: {}", r);
         // If an object with same url is already present, replace with the
         // new one which might have different attributes
         boolean first = true;
-        for(final RegisteredResource rr : resources) {
+        for(final TaskResource rr : resources) {
             if ( rr.getURL().equals(r.getURL()) ) {
                 LOGGER.debug("Cleanup obsolete resource: {}", rr);
                 this.cleanup(rr);
@@ -172,15 +174,15 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
     }
 
     public void remove(final String url) {
-        final Iterator<RegisteredResource> i = resources.iterator();
+        final Iterator<TaskResource> i = resources.iterator();
         boolean first = true;
         while ( i.hasNext() ) {
-            final RegisteredResource r = i.next();
+            final TaskResource r = i.next();
             if ( r.getURL().equals(url) ) {
-                if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                        || r.getState() == RegisteredResource.State.INSTALL)) {
+                if ( first && (r.getState() == ResourceState.INSTALLED
+                        || r.getState() == ResourceState.INSTALL)) {
                     LOGGER.debug("Marking for uninstalling: {}", r);
-                    r.setState(RegisteredResource.State.UNINSTALL);
+                    r.setState(ResourceState.UNINSTALL);
                 } else {
                     LOGGER.debug("Removing unused: {}", r);
                     i.remove();
@@ -191,7 +193,7 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
         }
     }
 
-    public void remove(final RegisteredResource r) {
+    public void remove(final TaskResource r) {
         if ( resources.remove(r) ) {
             LOGGER.debug("Removing unused: {}", r);
             this.cleanup(r);
@@ -203,9 +205,9 @@ public class EntityResourceList implements Serializable, RegisteredResourceGroup
      */
     public boolean compact() {
         boolean changed = false;
-        final List<RegisteredResource> toDelete = new ArrayList<RegisteredResource>();
-        for(final RegisteredResource r : resources) {
-            if ( r.getState() == RegisteredResource.State.UNINSTALLED ) {
+        final List<TaskResource> toDelete = new ArrayList<TaskResource>();
+        for(final TaskResource r : resources) {
+            if ( r.getState() == ResourceState.UNINSTALLED ) {
                 toDelete.add(r);
             }
         }

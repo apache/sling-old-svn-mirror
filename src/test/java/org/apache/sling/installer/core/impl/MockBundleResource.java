@@ -25,16 +25,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.osgi.framework.Constants;
 
-/** Mock RegisteredResource that simulates a bundle */
-public class MockBundleResource implements RegisteredResource {
+/**
+ * Mock RegisteredResource that simulates a bundle
+ *
+ */
+public class MockBundleResource implements TaskResource, Comparable<MockBundleResource> {
 
     private static final long serialVersionUID = 1L;
     private final Map<String, Object> attributes = new HashMap<String, Object>();
     private final Map<String, Object> tempAttributes = new HashMap<String, Object>();
-	private State state = State.INSTALL;
+	private ResourceState state = ResourceState.INSTALL;
 	private final String digest;
 	private final int priority;
 
@@ -74,7 +78,7 @@ public class MockBundleResource implements RegisteredResource {
 	}
 
 	/**
-	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getAttributes()
+	 * @see org.apache.sling.installer.api.tasks.TaskResource#getAttributes()
 	 */
 	public Map<String, Object> getAttributes() {
 		return attributes;
@@ -139,33 +143,33 @@ public class MockBundleResource implements RegisteredResource {
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(RegisteredResource o) {
+    public int compareTo(MockBundleResource o) {
         return RegisteredResourceImpl.compare(this, o);
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getState()
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getState()
      */
-    public State getState() {
+    public ResourceState getState() {
         return state;
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setState(org.apache.sling.installer.api.tasks.RegisteredResource.State)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setState(org.apache.sling.installer.api.tasks.ResourceState)
      */
-    public void setState(State s) {
+    public void setState(ResourceState s) {
         this.state = s;
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#getTemporaryAttribute(java.lang.String)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(String key) {
         return this.tempAttributes.get(key);
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.RegisteredResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
      */
     public void setTemporaryAttributee(String key, Object value) {
         if ( value == null ) {

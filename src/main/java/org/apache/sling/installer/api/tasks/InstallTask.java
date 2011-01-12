@@ -39,7 +39,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
     /**
      * Return the corresponding resource - depending on the task this might be null.
      */
-    public RegisteredResource getResource() {
+    public TaskResource getResource() {
         if ( this.resourceGroup != null ) {
             return this.resourceGroup.getActiveResource();
         }
@@ -67,7 +67,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 		return getSortKey().compareTo(o.getSortKey());
 	}
 
-	public void setFinishedState(final RegisteredResource.State state) {
+	public void setFinishedState(final ResourceState state) {
 	    this.resourceGroup.setFinishState(state);
 	}
 

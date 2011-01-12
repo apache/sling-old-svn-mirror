@@ -35,6 +35,7 @@ import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +63,8 @@ public class PersistentResourceList {
     /** The persistence file. */
     private final File dataFile;
 
-    /** All unknown resources. */
-    private final List<RegisteredResource> unknownResources;
+    /** All untransformed resources. */
+    private final List<RegisteredResource> untransformedResources;
 
     @SuppressWarnings("unchecked")
     public PersistentResourceList(final File dataFile) {
@@ -99,7 +100,7 @@ public class PersistentResourceList {
             }
         }
         data = restoredData != null ? restoredData : new HashMap<String, EntityResourceList>();
-        this.unknownResources = unknownList != null ? unknownList : new ArrayList<RegisteredResource>();
+        this.untransformedResources = unknownList != null ? unknownList : new ArrayList<RegisteredResource>();
 
         this.updateCache();
     }
@@ -130,7 +131,7 @@ public class PersistentResourceList {
             try {
                 oos.writeInt(VERSION);
                 oos.writeObject(data);
-                oos.writeObject(unknownResources);
+                oos.writeObject(untransformedResources);
                 logger.debug("Persisted resource list.");
             } finally {
                 oos.close();
@@ -167,7 +168,7 @@ public class PersistentResourceList {
             return;
         }
         try {
-            final RegisteredResource registeredResource = RegisteredResourceImpl.create(input);
+            final TaskResource registeredResource = RegisteredResourceImpl.create(input);
             this.checkInstallable(registeredResource);
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + input.getURL(), ioe);
@@ -178,7 +179,7 @@ public class PersistentResourceList {
      * Check if the provided installable resource is already installable (has a
      * known resource type)
      */
-    private void checkInstallable(final RegisteredResource input) {
+    private void checkInstallable(final TaskResource input) {
         if ( !InstallableResource.TYPE_FILE.equals(input.getType())
              && !InstallableResource.TYPE_PROPERTIES.equals(input.getType()) ) {
 
@@ -190,15 +191,15 @@ public class PersistentResourceList {
 
             t.addOrUpdate(input);
         } else {
-            this.unknownResources.add(input);
+            this.untransformedResources.add(input);
         }
     }
 
     /**
-     * Get the list of unknown resources = resources without resource type
+     * Get the list of untransformed resources = resources without resource type
      */
-    public List<RegisteredResource> getUnknownResources() {
-        return this.unknownResources;
+    public List<RegisteredResource> getUntransformedResources() {
+        return this.untransformedResources;
     }
 
     /**
@@ -214,13 +215,16 @@ public class PersistentResourceList {
     /**
      * Remove a resource.
      */
-    public void remove(final RegisteredResource r) {
+    public void remove(final TaskResource r) {
         final EntityResourceList group = this.data.get(r.getEntityId());
         if ( group != null ) {
             group.remove(r);
         }
     }
 
+    /**
+     * Get the resource group for an entity id.
+     */
     public EntityResourceList getEntityResourceList(final String entityId) {
         return this.data.get(entityId);
     }
@@ -247,12 +251,14 @@ public class PersistentResourceList {
      * Transform an unknown resource to a registered one
      */
     public void transform(final RegisteredResource resource,
-            final TransformationResult tr) {
+                          final TransformationResult[] result) {
         // remove resource from unknown list
-        this.unknownResources.remove(resource);
+        this.untransformedResources.remove(resource);
         try {
-            ((RegisteredResourceImpl)resource).update(tr);
-            this.checkInstallable(resource);
+            for(int i=0; i<result.length; i++) {
+                final TaskResource clone =  ((RegisteredResourceImpl)resource).clone(result[i]);
+                this.checkInstallable(clone);
+            }
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + resource, ioe);
         }
