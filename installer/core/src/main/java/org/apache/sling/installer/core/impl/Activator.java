@@ -26,6 +26,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
+import org.apache.sling.installer.core.impl.console.OsgiInstallerWebConsolePlugin;
 import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -47,6 +48,9 @@ public class Activator implements BundleActivator {
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
 
+    /** Registration for the web console plugin. */
+    private ServiceRegistration webReg;
+
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
@@ -66,12 +70,24 @@ public class Activator implements BundleActivator {
                 OsgiInstaller.class.getName()
         };
         osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
+
+        try {
+            this.webReg = OsgiInstallerWebConsolePlugin.register(context,
+                    this.osgiControllerService);
+        } catch (final Throwable ignore) {
+            // ignore this
+        }
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) {
+        // stop web console plugin
+        if ( this.webReg != null ) {
+            this.webReg.unregister();
+            this.webReg = null;
+        }
         // stop osgi installer service
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();

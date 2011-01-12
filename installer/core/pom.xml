@@ -54,6 +54,9 @@
 						<Bundle-Activator>
 							org.apache.sling.installer.core.impl.Activator
                         </Bundle-Activator>
+                        <Import-Package>
+                            javax.servlet;javax.servlet.http;resolution:=optional,*
+                        </Import-Package>
 						<Export-Package>
 							org.apache.sling.installer.api;version=3.0.0,
                             org.apache.sling.installer.api.tasks;version=1.0.0
@@ -124,6 +127,10 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
         </dependency>
       <!-- We use a class from the config admin implementation to read config files -->
         <dependency>
