@@ -176,15 +176,18 @@ public class OsgiInstallerImpl
 
             // if we don't have any tasks, we go to sleep
             if (!tasksCreated) {
-                // No tasks to execute - wait until new resources are
-                // registered
-                logger.debug("No tasks to process, going idle");
                 synchronized ( this.resourcesLock ) {
-                    try {
-                        this.resourcesLock.wait();
-                    } catch (InterruptedException ignore) {}
+  		            // before we go to sleep, check if new resources arrived in the meantime
+                    if ( !this.hasNewResources()) {
+                        // No tasks to execute - wait until new resources are
+                        // registered
+                        logger.debug("No tasks to process, going idle");
+                        try {
+                            this.resourcesLock.wait();
+                        } catch (InterruptedException ignore) {}
+                        logger.debug("Notified of new resources, back to work");
+                    }
                 }
-                logger.debug("Notified of new resources, back to work");
                 sleep = false;
             }
             if ( sleep ) {
@@ -195,6 +198,14 @@ public class OsgiInstallerImpl
                 } catch (final InterruptedException ignore) {}
             }
         }
+    }
+
+    /**
+     * Checks if new resources are available.
+     * This method should only be invoked from within a synchronized (newResources) block!
+     */
+    private boolean hasNewResources() {
+        return !this.newResources.isEmpty() || !this.newResourcesSchemes.isEmpty() || !this.urlsToRemove.isEmpty();
     }
 
     /**
@@ -535,9 +546,10 @@ public class OsgiInstallerImpl
                     if ( services[i] instanceof ResourceTransformer ) {
                         final ResourceTransformer transformer = (ResourceTransformer)services[i];
 
-                        final TransformationResult tr = transformer.transform(resource);
-                        if ( tr != null ) {
-                            this.persistentList.transform(resource, tr);
+                        final TransformationResult[] result = transformer.transform(resource);
+                        if ( result != null && result.length > 0 ) {
+                            // TODO: for now we support just one result
+                            this.persistentList.transform(resource, result[0]);
                             changed = true;
                             index--;
                             break;

@@ -166,9 +166,9 @@ public class RegisteredResourceTest {
         new FileDataStore(new MockBundleContext());
         final InternalResource internal = InternalResource.create("test", is);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
-        final TransformationResult tr = new DefaultTransformer().transform(rr);
+        final TransformationResult[] tr = new DefaultTransformer().transform(rr);
         if ( tr != null ) {
-            rr.update(tr);
+            rr.update(tr[0]);
         }
         return rr;
     }

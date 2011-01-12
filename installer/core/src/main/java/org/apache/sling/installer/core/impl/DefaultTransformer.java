@@ -64,7 +64,7 @@ public class DefaultTransformer
     /**
      * @see org.apache.sling.installer.api.tasks.ResourceTransformer#transform(org.apache.sling.installer.api.tasks.RegisteredResource)
      */
-    public TransformationResult transform(final RegisteredResource resource) {
+    public TransformationResult[] transform(final RegisteredResource resource) {
         if ( resource.getType().equals(InstallableResource.TYPE_FILE) ) {
             return checkBundle(resource);
         } else if ( resource.getType().equals(InstallableResource.TYPE_PROPERTIES) ) {
@@ -77,7 +77,7 @@ public class DefaultTransformer
      * Check if the registered resource is a bundle.
      * @return
      */
-    private TransformationResult checkBundle(final RegisteredResource resource) {
+    private TransformationResult[] checkBundle(final RegisteredResource resource) {
         try {
             final Manifest m = getManifest(resource.getInputStream());
             if (m != null) {
@@ -92,7 +92,7 @@ public class DefaultTransformer
                         tr.setId(sn);
                         tr.setResourceType(InstallableResource.TYPE_BUNDLE);
 
-                        return tr;
+                        return new TransformationResult[] {tr};
                     }
                 }
             }
@@ -106,7 +106,7 @@ public class DefaultTransformer
      * Check if the registered resource is a configuration
      * @param resource The resource
      */
-    private TransformationResult checkConfiguration(final RegisteredResource resource) {
+    private TransformationResult[] checkConfiguration(final RegisteredResource resource) {
         final String url = resource.getURL();
         String lastIdPart = url;
         final int pos = lastIdPart.lastIndexOf('/');
@@ -150,7 +150,7 @@ public class DefaultTransformer
         tr.setId(id);
         tr.setResourceType(InstallableResource.TYPE_CONFIG);
 
-        return tr;
+        return new TransformationResult[] {tr};
     }
 
     /**

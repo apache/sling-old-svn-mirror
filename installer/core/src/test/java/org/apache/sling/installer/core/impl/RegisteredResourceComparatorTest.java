@@ -58,7 +58,7 @@ public class RegisteredResourceComparatorTest {
         final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
         final InternalResource internal = InternalResource.create("test", r);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
-        rr.update(new DefaultTransformer().transform(rr));
+        rr.update(new DefaultTransformer().transform(rr)[0]);
 
         return rr;
     }
