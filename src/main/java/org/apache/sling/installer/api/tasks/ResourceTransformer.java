@@ -30,7 +30,7 @@ public interface ResourceTransformer {
      * resource, it should return <code>null</code>
      *
      * @param resource The resource
-     * @return A transformation result or <code>null</code>
+     * @return An array of transformation results or <code>null</code>
      */
-    TransformationResult transform(RegisteredResource resource);
+    TransformationResult[] transform(RegisteredResource resource);
 }
