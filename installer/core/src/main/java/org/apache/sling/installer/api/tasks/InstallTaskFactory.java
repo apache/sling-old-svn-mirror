@@ -24,5 +24,5 @@ public interface InstallTaskFactory {
      * Creates an {@link InstallTask} for the resource or
      * <code>null</code> if the factory does not support the resource.
      */
-    InstallTask createTask(final RegisteredResourceGroup toActivate);
+    InstallTask createTask(final TaskResourceGroup toActivate);
 }

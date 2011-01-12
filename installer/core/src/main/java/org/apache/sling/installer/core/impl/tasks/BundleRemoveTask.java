@@ -20,8 +20,8 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -36,7 +36,7 @@ public class BundleRemoveTask extends InstallTask {
 
     private final BundleTaskCreator creator;
 
-    public BundleRemoveTask(final RegisteredResourceGroup r,
+    public BundleRemoveTask(final TaskResourceGroup r,
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
@@ -46,7 +46,7 @@ public class BundleRemoveTask extends InstallTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(InstallationContext ctx) {
-        final String symbolicName = (String)getResource().getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             // nothing to do, so just stop

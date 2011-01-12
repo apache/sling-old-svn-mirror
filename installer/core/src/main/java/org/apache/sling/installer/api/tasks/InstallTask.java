@@ -28,11 +28,11 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class InstallTask implements Comparable<InstallTask> {
 
-    private final RegisteredResourceGroup resourceGroup;
+    private final TaskResourceGroup resourceGroup;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public InstallTask(final RegisteredResourceGroup erl) {
+    public InstallTask(final TaskResourceGroup erl) {
         this.resourceGroup = erl;
     }
 
@@ -49,7 +49,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
     /**
      * Return the corresponding resource - depending on the task this might be null.
      */
-    public RegisteredResourceGroup getResourceGroup() {
+    public TaskResourceGroup getResourceGroup() {
         return this.resourceGroup;
     }
 

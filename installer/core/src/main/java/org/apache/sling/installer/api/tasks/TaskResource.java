@@ -18,19 +18,28 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import java.util.Map;
 
-/** A resource that's been registered in the OSGi controller.
- * 	Data can be either an InputStream or a Dictionary, and we store
- *  it locally to avoid holding up to classes or data from our
- *  clients, in case those disappear while we're installing stuff.
+/**
+ * A task resource is a registered resource which has been
+ * processed by a {@link ResourceTransformer} and is now
+ * about to be processed by an {@InstallTask}.
  */
 public interface TaskResource extends RegisteredResource {
 
-	/**
-	 * Attributes include the bundle symbolic name, bundle version, etc.
-	 */
-	Map<String, Object> getAttributes();
+    /**
+     * Get the value of an attribute.
+     * Attributes include the bundle symbolic name, bundle version, etc.
+     * @param key The name of the attribute
+     * @return The value of the attribute or <code>null</code>
+     */
+    Object getAttribute(String key);
+
+    /**
+     * Set the value of an attribute.
+     * @param key The name of the attribute
+     * @param value The attribute value or <code>null</code> to remove it.
+     */
+    void setAttribute(String key, Object value);
 
     /**
      * Get the current state of the resource.
@@ -54,5 +63,5 @@ public interface TaskResource extends RegisteredResource {
      * @param key The name of the attribute
      * @param value The attribute value or <code>null</code> to remove it.
      */
-    void setTemporaryAttributee(String key, Object value);
+    void setTemporaryAttribute(String key, Object value);
 }

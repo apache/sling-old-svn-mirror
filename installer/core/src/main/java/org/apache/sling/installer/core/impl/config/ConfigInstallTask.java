@@ -19,8 +19,8 @@
 package org.apache.sling.installer.core.impl.config;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +32,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
 
     private static final String CONFIG_INSTALL_ORDER = "20-";
 
-    public ConfigInstallTask(final RegisteredResourceGroup r, final ServiceTracker configAdminServiceTracker) {
+    public ConfigInstallTask(final TaskResourceGroup r, final ServiceTracker configAdminServiceTracker) {
         super(r, configAdminServiceTracker);
     }
 
@@ -70,7 +70,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 if (config.getBundleLocation() != null) {
                     config.setBundleLocation(null);
                 }
-                config.update(getResource().getDictionary());
+                config.update(getDictionary());
                 ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
                 this.setFinishedState(ResourceState.INSTALLED);
                 this.getLogger().debug("Configuration " + config.getPid()

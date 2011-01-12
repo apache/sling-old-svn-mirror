@@ -29,7 +29,6 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TransformationResult;
-import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -142,13 +141,9 @@ public class DefaultTransformer
         final Map<String, Object> attr = new HashMap<String, Object>();
 
         attr.put(Constants.SERVICE_PID, configPid);
-        // Add pseudo-properties
-        resource.getDictionary().put(ConfigTaskCreator.CONFIG_PATH_KEY, resource.getURL());
-
         // Factory?
         if (factoryPid != null) {
             attr.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
-            resource.getDictionary().put(ConfigTaskCreator.ALIAS_KEY, configPid);
         }
 
         final TransformationResult tr = new TransformationResult();

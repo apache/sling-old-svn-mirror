@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl.config;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -72,9 +72,9 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
     /**
      * Create a task to install or uninstall a configuration.
      *
-	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
+	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
-	public InstallTask createTask(final RegisteredResourceGroup group) {
+	public InstallTask createTask(final TaskResourceGroup group) {
         final TaskResource toActivate = group.getActiveResource();
         if ( !toActivate.getType().equals(InstallableResource.TYPE_CONFIG) ) {
             return null;

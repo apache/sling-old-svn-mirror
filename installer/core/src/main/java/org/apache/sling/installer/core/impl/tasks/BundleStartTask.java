@@ -22,9 +22,9 @@ import java.text.DecimalFormat;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -48,7 +48,7 @@ public class BundleStartTask extends InstallTask {
 
 	private final BundleTaskCreator creator;
 
-	public BundleStartTask(final RegisteredResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
+	public BundleStartTask(final TaskResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
 	    super(r);
         this.bundleId = bundleId;
         this.creator = btc;
@@ -131,8 +131,8 @@ public class BundleStartTask extends InstallTask {
             if ( this.getResource() == null ) {
                 ctx.addTaskToNextCycle(this);
             } else {
-                this.getResource().setTemporaryAttributee(ATTR_RC, this.retryCount);
-                this.getResource().setTemporaryAttributee(ATTR_EC, this.eventsCountForRetrying);
+                this.getResource().setTemporaryAttribute(ATTR_RC, this.retryCount);
+                this.getResource().setTemporaryAttribute(ATTR_EC, this.eventsCountForRetrying);
             }
         }
 	}

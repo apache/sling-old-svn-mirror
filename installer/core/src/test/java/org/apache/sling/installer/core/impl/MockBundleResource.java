@@ -78,13 +78,6 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
 	}
 
 	/**
-	 * @see org.apache.sling.installer.api.tasks.TaskResource#getAttributes()
-	 */
-	public Map<String, Object> getAttributes() {
-		return attributes;
-	}
-
-	/**
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getDictionary()
 	 */
 	public Dictionary<String, Object> getDictionary() {
@@ -162,6 +155,24 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
     }
 
     /**
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getAttribute(java.lang.String)
+     */
+    public Object getAttribute(String key) {
+        return this.attributes.get(key);
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setAttribute(java.lang.String, java.lang.Object)
+     */
+    public void setAttribute(String key, Object value) {
+        if ( value == null ) {
+            this.attributes.remove(key);
+        } else {
+            this.attributes.put(key, value);
+        }
+    }
+
+    /**
      * @see org.apache.sling.installer.api.tasks.TaskResource#getTemporaryAttribute(java.lang.String)
      */
     public Object getTemporaryAttribute(String key) {
@@ -169,9 +180,9 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttributee(java.lang.String, java.lang.Object)
+     * @see org.apache.sling.installer.api.tasks.TaskResource#setTemporaryAttribute(java.lang.String, java.lang.Object)
      */
-    public void setTemporaryAttributee(String key, Object value) {
+    public void setTemporaryAttribute(String key, Object value) {
         if ( value == null ) {
             this.tempAttributes.remove(key);
         } else {

@@ -22,17 +22,20 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Set;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** Base class for configuration-related tasks */
+/**
+ * Base class for configuration-related tasks
+ */
 abstract class AbstractConfigTask extends InstallTask {
 
     /** Configuration properties to ignore when comparing configs */
@@ -40,19 +43,23 @@ abstract class AbstractConfigTask extends InstallTask {
     static {
         ignoredProperties.add("service.pid");
         ignoredProperties.add(ConfigTaskCreator.CONFIG_PATH_KEY);
+        ignoredProperties.add(ConfigTaskCreator.ALIAS_KEY);
     }
 
+    /** Configuration PID */
     protected final String configPid;
+
+    /** Factory PID or null */
     protected final String factoryPid;
 
     /** Tracker for the configuration admin. */
     private final ServiceTracker configAdminServiceTracker;
 
-    AbstractConfigTask(final RegisteredResourceGroup r, final ServiceTracker configAdminServiceTracker) {
+    AbstractConfigTask(final TaskResourceGroup r, final ServiceTracker configAdminServiceTracker) {
         super(r);
         this.configAdminServiceTracker = configAdminServiceTracker;
-        this.configPid = (String)getResource().getAttributes().get(Constants.SERVICE_PID);
-        this.factoryPid = (String)getResource().getAttributes().get(ConfigurationAdmin.SERVICE_FACTORYPID);
+        this.configPid = (String)getResource().getAttribute(Constants.SERVICE_PID);
+        this.factoryPid = (String)getResource().getAttribute(ConfigurationAdmin.SERVICE_FACTORYPID);
     }
 
     /**
@@ -64,6 +71,26 @@ abstract class AbstractConfigTask extends InstallTask {
 
     protected String getCompositePid() {
         return (factoryPid == null ? "" : factoryPid + ".") + configPid;
+    }
+
+    protected Dictionary<String, Object> getDictionary() {
+        // Copy dictionary and add pseudo-properties
+        final Dictionary<String, Object> d = this.getResource().getDictionary();
+        if ( d == null ) {
+            return null;
+        }
+
+        final Dictionary<String, Object> result = new Hashtable<String, Object>();
+        final Enumeration<String> e = d.keys();
+        while(e.hasMoreElements()) {
+            final String key = e.nextElement();
+            result.put(key, d.get(key));
+        }
+
+        result.put(ConfigTaskCreator.CONFIG_PATH_KEY, getResource().getURL());
+        result.put(ConfigTaskCreator.ALIAS_KEY, configPid);
+
+        return result;
     }
 
     protected Configuration getConfiguration(final ConfigurationAdmin ca,

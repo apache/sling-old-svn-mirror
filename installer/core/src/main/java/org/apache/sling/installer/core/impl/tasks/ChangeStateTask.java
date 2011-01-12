@@ -20,7 +20,7 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 
 /**
@@ -32,7 +32,7 @@ public class ChangeStateTask extends InstallTask {
 
     private final ResourceState state;
 
-    public ChangeStateTask(final RegisteredResourceGroup r,
+    public ChangeStateTask(final TaskResourceGroup r,
                            final ResourceState s) {
         super(r);
         this.state = s;

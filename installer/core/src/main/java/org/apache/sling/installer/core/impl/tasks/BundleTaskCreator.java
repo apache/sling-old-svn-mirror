@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
-import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -133,23 +133,23 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 	/**
      * Create a bundle task - install, update or remove
      *
-	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
+	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
-	public InstallTask createTask(final RegisteredResourceGroup resourceList) {
+	public InstallTask createTask(final TaskResourceGroup resourceList) {
 	    final TaskResource toActivate = resourceList.getActiveResource();
 	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
 	        return null;
 	    }
 	    final InstallTask result;
 
-        final String symbolicName = (String)toActivate.getAttributes().get(Constants.BUNDLE_SYMBOLICNAME);
+        final String symbolicName = (String)toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final BundleInfo info = this.getBundleInfo(symbolicName);
 
 		// Uninstall
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
 		    // Remove corresponding bundle if present and if we installed it
 		    if (info != null
-		        && info.version.equals(new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION))) ) {
+		        && info.version.equals(new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION))) ) {
 		        result = new BundleRemoveTask(resourceList, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
@@ -162,12 +162,12 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 		    if (info == null) {
 			    // bundle is not installed yet: install
 			    result = new BundleInstallTask(resourceList, this);
-		    } else if ( toActivate.getAttributes().get(ATTR_START) != null ) {
+		    } else if ( toActivate.getAttribute(ATTR_START) != null ) {
 	            result = new BundleStartTask(resourceList, info.id, this);
 			} else {
 	            boolean doUpdate = false;
 
-	            final Version newVersion = new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION));
+	            final Version newVersion = new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
 			    final int compare = info.version.compareTo(newVersion);
                 if (compare < 0) {
                     // installed version is lower -> update
