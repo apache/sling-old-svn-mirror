@@ -21,8 +21,9 @@ package org.apache.sling.installer.core.impl.config;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -74,7 +75,7 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
 	 */
 	public InstallTask createTask(final RegisteredResourceGroup group) {
-        final RegisteredResource toActivate = group.getActiveResource();
+        final TaskResource toActivate = group.getActiveResource();
         if ( !toActivate.getType().equals(InstallableResource.TYPE_CONFIG) ) {
             return null;
         }
@@ -83,7 +84,7 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
             return null;
 	    }
 	    final InstallTask result;
-		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
+		if (toActivate.getState() == ResourceState.UNINSTALL) {
 		    result = new ConfigRemoveTask(group, this.configAdminServiceTracker);
 		} else {
 	        result = new ConfigInstallTask(group, this.configAdminServiceTracker);

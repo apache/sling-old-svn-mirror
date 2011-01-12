@@ -19,6 +19,7 @@
 package org.apache.sling.installer.api.tasks;
 
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * A result of a {@link ResourceTransformer}.
@@ -33,6 +34,9 @@ public class TransformationResult {
 
     /** Unique id. */
     private String id;
+
+    /** Attributes */
+    private Map<String, Object> attributes;
 
     /**
      * Get the new resource type
@@ -80,5 +84,19 @@ public class TransformationResult {
      */
     public void setInputStream(final InputStream inputStream) {
         this.inputStream = inputStream;
+    }
+
+    /**
+     * Attributes include the bundle symbolic name, bundle version, etc.
+     */
+    public Map<String, Object> getAttributes() {
+        return this.attributes;
+    }
+
+    /**
+     * Set the new attributes.
+     */
+    public void setAttributes(final Map<String, Object> attr) {
+        this.attributes = attr;
     }
 }

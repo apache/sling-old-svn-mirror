@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -50,7 +50,7 @@ public class BundleRemoveTask extends InstallTask {
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             // nothing to do, so just stop
-            this.setFinishedState(RegisteredResource.State.IGNORED);
+            this.setFinishedState(ResourceState.IGNORED);
             return;
         }
         final int state = b.getState();
@@ -60,7 +60,7 @@ public class BundleRemoveTask extends InstallTask {
             }
             b.uninstall();
             ctx.log("Uninstalled bundle {} from resource {}", b, getResource());
-            this.setFinishedState(RegisteredResource.State.UNINSTALLED);
+            this.setFinishedState(ResourceState.UNINSTALLED);
             ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
         } catch (final BundleException be) {
             this.getLogger().debug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);

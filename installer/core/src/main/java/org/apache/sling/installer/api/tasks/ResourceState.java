@@ -18,24 +18,11 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+public enum ResourceState {
 
-/**
- * This is a group of resources all pointing to the same artifact,
- * but maybe in different versions or locations.
- */
-public interface RegisteredResourceGroup {
-
-
-    /**
-     * Return the first resource if it either needs to be installed or uninstalled.
-     */
-    TaskResource getActiveResource();
-
-
-    /**
-     * Set the finish state for active the resource.
-     * If this resource has been uninstalled, check the next in the list if it needs to
-     * be reactivated.
-     */
-    void setFinishState(ResourceState state);
+        INSTALL,
+        UNINSTALL,
+        INSTALLED,
+        UNINSTALLED,
+        IGNORED
 }

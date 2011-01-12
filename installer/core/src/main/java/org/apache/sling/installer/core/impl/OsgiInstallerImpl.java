@@ -39,7 +39,9 @@ import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -342,9 +344,9 @@ public class OsgiInstallerImpl
                 for(final String entityId : this.persistentList.getEntityIds()) {
                     final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
 
-                    final List<RegisteredResource> toRemove = new ArrayList<RegisteredResource>();
+                    final List<TaskResource> toRemove = new ArrayList<TaskResource>();
                     boolean first = true;
-                    for(final RegisteredResource r : group.getResources()) {
+                    for(final TaskResource r : group.getResources()) {
                         if ( r.getScheme().equals(scheme) ) {
                             logger.debug("Checking {}", r);
                             // search if we have a new entry with the same url
@@ -358,9 +360,9 @@ public class OsgiInstallerImpl
                             }
                             if ( !found) {
                                 logger.debug("Resource {} seems to be removed.", r);
-                                if ( first && (r.getState() == RegisteredResource.State.INSTALLED
-                                           ||  r.getState() == RegisteredResource.State.INSTALL) ) {
-                                     r.setState(RegisteredResource.State.UNINSTALL);
+                                if ( first && (r.getState() == ResourceState.INSTALLED
+                                           ||  r.getState() == ResourceState.INSTALL) ) {
+                                     r.setState(ResourceState.UNINSTALL);
                                 } else {
                                     toRemove.add(r);
                                 }
@@ -368,7 +370,7 @@ public class OsgiInstallerImpl
                         }
                         first = false;
                     }
-                    for(final RegisteredResource rr : toRemove) {
+                    for(final TaskResource rr : toRemove) {
                         this.persistentList.remove(rr);
                     }
                 }
@@ -546,7 +548,7 @@ public class OsgiInstallerImpl
         if ( services != null && services.length > 0 ) {
             // Walk the list of unknown resources and invoke all transformers
             int index = 0;
-            final List<RegisteredResource> unknownList = this.persistentList.getUnknownResources();
+            final List<RegisteredResource> unknownList = this.persistentList.getUntransformedResources();
 
             while ( index < unknownList.size() ) {
                 final RegisteredResource resource = unknownList.get(index);
@@ -556,8 +558,7 @@ public class OsgiInstallerImpl
 
                         final TransformationResult[] result = transformer.transform(resource);
                         if ( result != null && result.length > 0 ) {
-                            // TODO: for now we support just one result
-                            this.persistentList.transform(resource, result[0]);
+                            this.persistentList.transform(resource, result);
                             changed = true;
                             index--;
                             break;

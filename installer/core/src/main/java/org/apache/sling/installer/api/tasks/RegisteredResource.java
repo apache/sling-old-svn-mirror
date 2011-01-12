@@ -20,9 +20,7 @@ package org.apache.sling.installer.api.tasks;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.Dictionary;
-import java.util.Map;
 
 import org.apache.sling.installer.api.OsgiInstaller;
 
@@ -31,15 +29,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
  *  it locally to avoid holding up to classes or data from our
  *  clients, in case those disappear while we're installing stuff.
  */
-public interface RegisteredResource extends Serializable, Comparable<RegisteredResource> {
-
-    enum State {
-        INSTALL,
-        UNINSTALL,
-        INSTALLED,
-        UNINSTALLED,
-        IGNORED
-    }
+public interface RegisteredResource {
 
     /** Return the scheme from where the artifact is orginated. */
     String getScheme();
@@ -89,38 +79,9 @@ public interface RegisteredResource extends Serializable, Comparable<RegisteredR
      */
     int getPriority();
 
-	/**
-	 * Attributes include the bundle symbolic name, bundle version, etc.
-	 */
-	Map<String, Object> getAttributes();
-
 	/** Return the identifier of the OSGi "entity" that this resource
      *  represents, for example "bundle:SID" where SID is the bundle's
      *  symbolic ID, or "config:PID" where PID is config's PID.
      */
     String getEntityId();
-
-    /**
-     * Get the current state of the resource.
-     */
-    State getState();
-
-    /**
-     * Set the new state of teh resource.
-     */
-    void setState(final State s);
-
-    /**
-     * Get the value of a temporary attribute.
-     * @param key The name of the attribute
-     * @return The value of the attribute or <code>null</code>
-     */
-    Object getTemporaryAttribute(String key);
-
-    /**
-     * Set the value of a temporary attribute.
-     * @param key The name of the attribute
-     * @param value The attribute value or <code>null</code> to remove it.
-     */
-    void setTemporaryAttributee(String key, Object value);
 }

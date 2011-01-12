@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 
 /**
  * Simple general task, setting the state of a registered resource.
@@ -30,10 +30,10 @@ public class ChangeStateTask extends InstallTask {
 
     private static final String ORDER = "00-";
 
-    private final RegisteredResource.State state;
+    private final ResourceState state;
 
     public ChangeStateTask(final RegisteredResourceGroup r,
-                           final RegisteredResource.State s) {
+                           final ResourceState s) {
         super(r);
         this.state = s;
     }

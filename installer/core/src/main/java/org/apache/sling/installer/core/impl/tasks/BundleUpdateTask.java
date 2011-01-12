@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -52,7 +52,7 @@ public class BundleUpdateTask extends InstallTask {
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
             this.getLogger().debug("Bundle to update ({}) not found", symbolicName);
-            this.setFinishedState(RegisteredResource.State.IGNORED);
+            this.setFinishedState(ResourceState.IGNORED);
             return;
         }
 
@@ -65,7 +65,7 @@ public class BundleUpdateTask extends InstallTask {
     	if (currentVersion.equals(newVersion) && !snapshot) {
     	    // TODO : Isn't this already checked in the task creator?
     	    this.getLogger().debug("Same version is already installed, and not a snapshot, ignoring update: {}", getResource());
-    	    this.setFinishedState(RegisteredResource.State.INSTALLED);
+    	    this.setFinishedState(ResourceState.INSTALLED);
     		return;
     	}
 
@@ -82,14 +82,14 @@ public class BundleUpdateTask extends InstallTask {
                 this.getResource().getAttributes().put(BundleTaskCreator.ATTR_START, "true");
                 ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
             } else {
-                this.setFinishedState(RegisteredResource.State.INSTALLED);
+                this.setFinishedState(ResourceState.INSTALLED);
             }
             ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
             this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
     	} catch (Exception e) {
             if ( !canRetry ) {
                 this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-                this.setFinishedState(RegisteredResource.State.IGNORED);
+                this.setFinishedState(ResourceState.IGNORED);
             }
     	}
     }

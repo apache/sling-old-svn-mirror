@@ -21,8 +21,9 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.RegisteredResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -135,7 +136,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.RegisteredResourceGroup)
 	 */
 	public InstallTask createTask(final RegisteredResourceGroup resourceList) {
-	    final RegisteredResource toActivate = resourceList.getActiveResource();
+	    final TaskResource toActivate = resourceList.getActiveResource();
 	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
 	        return null;
 	    }
@@ -145,14 +146,14 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
         final BundleInfo info = this.getBundleInfo(symbolicName);
 
 		// Uninstall
-		if (toActivate.getState() == RegisteredResource.State.UNINSTALL) {
+		if (toActivate.getState() == ResourceState.UNINSTALL) {
 		    // Remove corresponding bundle if present and if we installed it
 		    if (info != null
 		        && info.version.equals(new Version((String)toActivate.getAttributes().get(Constants.BUNDLE_VERSION))) ) {
 		        result = new BundleRemoveTask(resourceList, this);
 		    } else {
 	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
-	            result = new ChangeStateTask(resourceList, RegisteredResource.State.IGNORED);
+	            result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
 	        }
 
 		// Install
@@ -188,7 +189,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                     }
                 } else {
                     logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
-                    result = new ChangeStateTask(resourceList, RegisteredResource.State.IGNORED);
+                    result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
                 }
 			}
 		}

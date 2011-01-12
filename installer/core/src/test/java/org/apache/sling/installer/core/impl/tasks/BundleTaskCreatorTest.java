@@ -27,27 +27,23 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.MockBundleResource;
-import org.apache.sling.installer.core.impl.tasks.BundleInstallTask;
-import org.apache.sling.installer.core.impl.tasks.BundleRemoveTask;
-import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
-import org.apache.sling.installer.core.impl.tasks.BundleUpdateTask;
-import org.apache.sling.installer.core.impl.tasks.ChangeStateTask;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
 public class BundleTaskCreatorTest {
 	public static final String SN = "TestSymbolicName";
 
-	private SortedSet<InstallTask> getTasks(RegisteredResource [] resources, BundleTaskCreator btc) throws IOException {
-	    final SortedSet<RegisteredResource> sortedResources = new TreeSet<RegisteredResource>();
-	    for(final RegisteredResource rr : resources) {
+	private SortedSet<InstallTask> getTasks(TaskResource [] resources, BundleTaskCreator btc) throws IOException {
+	    final SortedSet<TaskResource> sortedResources = new TreeSet<TaskResource>();
+	    for(final TaskResource rr : resources) {
 	        sortedResources.add(rr);
 	    }
 		final SortedSet<InstallTask> tasks = new TreeSet<InstallTask>();
-        for(final RegisteredResource r : sortedResources) {
+        for(final TaskResource r : sortedResources) {
             final EntityResourceList erl = new EntityResourceList();
             erl.addOrUpdate(r);
   		    tasks.add(btc.createTask(erl));
@@ -57,7 +53,7 @@ public class BundleTaskCreatorTest {
 
 	@Test
 	public void testSingleBundleNew() throws IOException {
-		final RegisteredResource [] r = {
+		final TaskResource [] r = {
 				new MockBundleResource(SN, "1.0")
 		};
         final MockBundleTaskCreator c = new MockBundleTaskCreator();
@@ -68,7 +64,7 @@ public class BundleTaskCreatorTest {
 
 	@Test
     public void testSingleBundleAlreadyInstalled() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.0")
         };
 
@@ -91,7 +87,7 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testBundleUpgrade() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.1")
         };
 
@@ -106,7 +102,7 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testBundleUpgradeBothRegistered() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.1"),
                 new MockBundleResource(SN, "1.0")
         };
@@ -123,7 +119,7 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testBundleUpgradeBothRegisteredReversed() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.0"),
                 new MockBundleResource(SN, "1.1")
         };
@@ -143,7 +139,7 @@ public class BundleTaskCreatorTest {
         // Need to use OSGi-compliant version number, in bundles
         // bnd and other tools generate correct numbers.
         final String v = "2.0.7.SNAPSHOT";
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, v)
         };
 
@@ -159,10 +155,10 @@ public class BundleTaskCreatorTest {
     @Test
     public void testBundleRemoveSingle() throws IOException {
         final String version = "1.0";
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, version)
         };
-        r[0].setState(RegisteredResource.State.UNINSTALL);
+        r[0].setState(ResourceState.UNINSTALL);
 
         {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
@@ -175,13 +171,13 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testBundleRemoveMultiple() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.0"),
                 new MockBundleResource(SN, "1.1"),
                 new MockBundleResource(SN, "2.0")
         };
-        for(RegisteredResource x : r) {
-            x.setState(RegisteredResource.State.UNINSTALL);
+        for(TaskResource x : r) {
+            x.setState(ResourceState.UNINSTALL);
         }
 
         {
@@ -199,13 +195,13 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testDowngradeOfRemovedResource() throws IOException {
-        final RegisteredResource [] r = {
+        final TaskResource [] r = {
                 new MockBundleResource(SN, "1.0.0"),
                 new MockBundleResource(SN, "1.1.0"),
         };
 
         // Simulate V1.1 installed but resource is gone -> downgrade to 1.0
-        r[1].setState(RegisteredResource.State.UNINSTALL);
+        r[1].setState(ResourceState.UNINSTALL);
 
        {
             final MockBundleTaskCreator c = new MockBundleTaskCreator();
