@@ -57,6 +57,7 @@
                             org.apache.sling.scripting.jsp.util;version=2.0.8,
                             javax.el; javax.servlet.jsp;
                             javax.servlet.jsp.el;
+                            javax.servlet.jsp.resources;
                             javax.servlet.jsp.tagext;version=2.1
                         </Export-Package>
                         <Private-Package>
