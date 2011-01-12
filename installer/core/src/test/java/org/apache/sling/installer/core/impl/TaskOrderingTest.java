@@ -50,7 +50,7 @@ public class TaskOrderingTest {
 	}
 
 	private static EntityResourceList getRegisteredResource(String url) throws IOException {
-        new FileUtil(new MockBundleContext());
+        new FileDataStore(new MockBundleContext());
         final InternalResource internal = InternalResource.create("test",
                 new InstallableResource(url, null, new Hashtable<String, Object>(), null, null, null));
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);

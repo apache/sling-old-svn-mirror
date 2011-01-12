@@ -100,8 +100,30 @@ public class PersistentResourceList {
         }
         data = restoredData != null ? restoredData : new HashMap<String, EntityResourceList>();
         this.unknownResources = unknownList != null ? unknownList : new ArrayList<RegisteredResource>();
+
+        this.updateCache();
     }
 
+    /**
+     * Update the url to digest cache
+     */
+    private void updateCache() {
+        for(final EntityResourceList group : this.data.values()) {
+            for(final RegisteredResource rr : group.getResources()) {
+                try {
+                    if ( rr.getInputStream() != null ) {
+                        FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                    }
+                } catch (final IOException ioe) {
+                    // we just ignore this
+                }
+            }
+        }
+    }
+
+    /**
+     * Persist the current state
+     */
     public void save() {
         try {
             final ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(dataFile)));
@@ -188,6 +210,9 @@ public class PersistentResourceList {
         }
     }
 
+    /**
+     * Remove a resource.
+     */
     public void remove(final RegisteredResource r) {
         final EntityResourceList group = this.data.get(r.getEntityId());
         if ( group != null ) {
@@ -199,6 +224,9 @@ public class PersistentResourceList {
         return this.data.get(entityId);
     }
 
+    /**
+     * Compact the internal state and remove empty groups.
+     */
     public boolean compact() {
         boolean changed = false;
         final Iterator<Map.Entry<String, EntityResourceList>> i = this.data.entrySet().iterator();

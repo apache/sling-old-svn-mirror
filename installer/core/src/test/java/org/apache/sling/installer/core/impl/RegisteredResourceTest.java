@@ -84,10 +84,12 @@ public class RegisteredResourceTest {
 	    final BundleContext bc = new MockBundleContext();
 	    final File f = getTestBundle("testbundle-1.0.jar");
         final InputStream s = new FileInputStream(f);
-        FileUtil.SHARED = new FileUtil(bc) {
+        FileDataStore.SHARED = new FileDataStore(bc) {
 
             @Override
-            public File createNewDataFile(final String hint) {
+            public File createNewDataFile(InputStream stream, String url,
+                    String digest, String hint) throws IOException {
+                this.copyToLocalStorage(stream, localFile);
                 return localFile;
             }
 
@@ -161,7 +163,7 @@ public class RegisteredResourceTest {
     }
 
     private RegisteredResource create(final InstallableResource is) throws IOException {
-        new FileUtil(new MockBundleContext());
+        new FileDataStore(new MockBundleContext());
         final InternalResource internal = InternalResource.create("test", is);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
         final TransformationResult tr = new DefaultTransformer().transform(rr);

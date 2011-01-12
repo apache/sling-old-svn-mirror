@@ -85,14 +85,18 @@ public class InternalResource extends InstallableResource {
             digest = (resource.getDigest() != null && resource.getDigest().length() > 0
                       ? resource.getDigest() : resource.getId() + ":" + computeDigest(dict));
         } else {
+            final String url = scheme + ':' + resource.getId();
             // if input stream is not null, file is expected!
-            dataFile = FileUtil.SHARED.createNewDataFile(resource.getType());
-            FileUtil.SHARED.copyToLocalStorage(is, dataFile);
+            dataFile = FileDataStore.SHARED.createNewDataFile(is,
+                    url,
+                    resource.getDigest(),
+                    resource.getType());
             type = (type != null ? type : InstallableResource.TYPE_FILE);
             if (resource.getDigest() != null && resource.getDigest().length() > 0) {
                 digest = resource.getDigest();
             } else {
                 digest = computeDigest(dataFile);
+                FileDataStore.SHARED.updateDigestCache(url, digest);
             }
         }
         return new InternalResource(scheme,
@@ -152,10 +156,6 @@ public class InternalResource extends InstallableResource {
      * Copy the given file and return it.
      */
     public File getPrivateCopyOfFile() throws IOException {
-        if ( this.dataFile == null && this.getInputStream() != null ) {
-            this.dataFile = FileUtil.SHARED.createNewDataFile(this.getType());
-            FileUtil.SHARED.copyToLocalStorage(this.getInputStream(), this.dataFile);
-        }
         return this.dataFile;
     }
 
