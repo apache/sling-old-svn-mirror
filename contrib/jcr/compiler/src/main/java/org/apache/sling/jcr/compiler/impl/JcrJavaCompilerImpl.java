@@ -24,6 +24,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -37,6 +41,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
+import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -117,12 +122,62 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
             }
 
             // and compile
-            return compiler.compile(units, options);
+            return mapResult(compiler.compile(units, options), srcFiles, units);
         } finally {
             if ( session != null ) {
                 session.logout();
             }
         }
+    }
+
+    /**
+     * Map the source information of the errors
+     */
+    private CompilationResult mapResult(final CompilationResult result,
+            final String[] srcFiles,
+            final CompilationUnit[] units) {
+        if ( result == null || (result.getErrors() == null && result.getWarnings() == null ) ) {
+            return result;
+        }
+
+        final Map<String, String> mapping = new HashMap<String, String>();
+        for(int i=0;i<srcFiles.length;i++) {
+            mapping.put(units[i].getMainClassName() + ".java", srcFiles[i]);
+        }
+        return new CompilationResult() {
+
+            private List<CompilerMessage> mapMessages(final List<CompilerMessage> msgs) {
+                if ( msgs == null || msgs.size() == 0 ) {
+                    return msgs;
+                }
+                final List<CompilerMessage> newMsgs = new ArrayList<CompilerMessage>();
+                for(final CompilerMessage msg : msgs) {
+                    final String mapped = mapping.get(msg.getFile());
+
+                    newMsgs.add(new CompilerMessage(
+                            mapped == null ? msg.getFile() : mapped,
+                            msg.getLine(), msg.getColumn(), msg.getMessage()));
+                }
+                return newMsgs;
+            }
+
+            public Class<?> loadCompiledClass(String className)
+                    throws ClassNotFoundException {
+                return result.loadCompiledClass(className);
+            }
+
+            public List<CompilerMessage> getWarnings() {
+                return mapMessages(result.getWarnings());
+            }
+
+            public List<CompilerMessage> getErrors() {
+                return mapMessages(result.getErrors());
+            }
+
+            public boolean didCompile() {
+                return result.didCompile();
+            }
+        };
     }
 
     //--------------------------------------------------------< misc. helpers >
