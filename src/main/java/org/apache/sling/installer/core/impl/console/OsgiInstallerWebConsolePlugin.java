@@ -23,12 +23,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.Activator;
@@ -92,6 +94,20 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return state;
     }
 
+    private String getType(final RegisteredResource rsrc) {
+        final String type = rsrc.getType();
+        if ( type.equals(InstallableResource.TYPE_BUNDLE) ) {
+            return "Bundle";
+        } else if ( type.equals(InstallableResource.TYPE_CONFIG) ) {
+            return "Configuration";
+        } else if ( type.equals(InstallableResource.TYPE_FILE) ) {
+            return "File";
+        } else if ( type.equals(InstallableResource.TYPE_PROPERTIES) ) {
+            return "Properties";
+        }
+        return type;
+    }
+
     @Override
     public void service(ServletRequest req, ServletResponse res)
     throws IOException {
@@ -105,24 +121,35 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             pw.println("<ul>");
             for(final EntityResourceList group : state.activeResources) {
                 final TaskResource toActivate = group.getActiveResource();
-                pw.printf("<li>%s: %s, %s, %s</li>%n",
+                pw.printf("<li>%s %s: %s, %s, %s</li>%n",
+                        getType(toActivate),
                         toActivate.getEntityId(),
                         toActivate.getDigest(),
-                        toActivate.getScheme(),
+                        toActivate.getURL(),
                         toActivate.getState());
             }
             pw.println("</ul>");
 
-            pw.println("<h1>Installed Resources</h1>");
+            pw.println("<h1>Processed Resources</h1>");
             pw.println("<ul>");
             for(final EntityResourceList group : state.installedResources) {
                 final Collection<TaskResource> resources = group.getResources();
                 if (resources.size() > 0) {
+                    final Iterator<TaskResource> iter = resources.iterator();
+                    final TaskResource first = iter.next();
                     pw.println("<ul>");
-                    for (TaskResource resource : resources) {
-                        pw.printf("<li>%s: %s, %s, %s</li>%n",
-                            resource.getEntityId(), resource.getDigest(),
-                            resource.getScheme(), resource.getState());
+                    pw.printf("<li>%s %s: %s, %s, %s</li>%n",
+                            getType(first),
+                            first.getEntityId(),
+                            first.getDigest(),
+                            first.getURL(),
+                            first.getState());
+                    while ( iter.hasNext() ) {
+                        final TaskResource resource = iter.next();
+                        pw.printf("<li>%s, %s, %s</li>%n",
+                            resource.getDigest(),
+                            resource.getURL(),
+                            resource.getState());
                     }
                     pw.println("</ul>");
                 }
@@ -133,8 +160,9 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             pw.println("<ul>");
             for(final RegisteredResource registeredResource : state.untransformedResources) {
                 pw.printf("<li>%s: %s, %s</li>%n",
-                    registeredResource.getEntityId(),
-                    registeredResource.getDigest(), registeredResource.getScheme());
+                    getType(registeredResource),
+                    registeredResource.getDigest(),
+                    registeredResource.getURL());
             }
             pw.println("</ul>");
         }
@@ -154,25 +182,34 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             pw.println("Active Resources:");
             for(final EntityResourceList group : state.activeResources) {
                 final TaskResource toActivate = group.getActiveResource();
-                pw.printf("- %s: %s, %s, %s%n",
+                pw.printf("- %s %s: %s, %s, %s%n",
+                        getType(toActivate),
                         toActivate.getEntityId(),
                         toActivate.getDigest(),
-                        toActivate.getScheme(),
+                        toActivate.getURL(),
                         toActivate.getState());
             }
             pw.println();
 
-            pw.println("Installed Resources:");
+            pw.println("Processed Resources:");
             for(final EntityResourceList group : state.installedResources) {
                 final Collection<TaskResource> resources = group.getResources();
                 if (resources.size() > 0) {
-                    pw.print("* ");
-                    for (TaskResource resource : resources) {
-                        pw.printf("- %s: %s, %s, %s%n",
-                            resource.getEntityId(), resource.getDigest(),
-                            resource.getScheme(), resource.getState());
+                    final Iterator<TaskResource> iter = resources.iterator();
+                    final TaskResource first = iter.next();
+                    pw.printf("* %s %s: %s, %s, %s%n",
+                            getType(first),
+                            first.getEntityId(),
+                            first.getDigest(),
+                            first.getURL(),
+                            first.getState());
+                    while ( iter.hasNext() ) {
+                        final TaskResource resource = iter.next();
+                        pw.printf("  - %s, %s, %s%n",
+                            resource.getDigest(),
+                            resource.getURL(),
+                            resource.getState());
                     }
-                    pw.println("</ul>");
                 }
             }
             pw.println();
@@ -180,8 +217,9 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
             pw.println("Untransformed Resources:");
             for(final RegisteredResource registeredResource : state.untransformedResources) {
                 pw.printf("- %s: %s, %s%n",
-                    registeredResource.getEntityId(),
-                    registeredResource.getDigest(), registeredResource.getScheme());
+                        getType(registeredResource),
+                        registeredResource.getDigest(),
+                        registeredResource.getURL());
             }
         }
     }
