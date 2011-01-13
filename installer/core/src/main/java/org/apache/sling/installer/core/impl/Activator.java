@@ -40,7 +40,7 @@ import org.osgi.framework.ServiceRegistration;
 public class Activator implements BundleActivator {
 
     /** Vendor of all registered services. */
-    private static final String VENDOR = "The Apache Software Foundation";
+    public static final String VENDOR = "The Apache Software Foundation";
 
     private List<InternalService> services = new ArrayList<InternalService>();
     private List<ServiceRegistration> registrations = new ArrayList<ServiceRegistration>();
