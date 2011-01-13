@@ -72,7 +72,7 @@ public class BundleUpdateTask extends InstallTask {
     	try {
             // If the bundle is active before the update - restart it once updated, but
             // in sequence, not right now
-            final boolean reactivate = (b.getState() == Bundle.ACTIVE);
+            final boolean reactivate = BundleStartTask.isBundleActive(b);
             b.stop();
 
             b.update(getResource().getInputStream());

@@ -82,9 +82,9 @@ public class SynchronousRefreshPackagesTask extends InstallTask implements Frame
         // Refreshing packages might cause some bundles to be stopped,
         // make sure all currently active ones are restarted after
         // this task executes
-    	for(Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
-    		if(b.getState() == Bundle.ACTIVE) {
-    			final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
+    	for(final Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
+    	    if ( BundleStartTask.isBundleActive(b) ) {
+    	        final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
     			this.getLogger().debug("Added {} to restart bundle if needed after refreshing packages", t);
     		}

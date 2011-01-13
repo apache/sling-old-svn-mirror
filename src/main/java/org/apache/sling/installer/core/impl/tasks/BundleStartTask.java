@@ -28,6 +28,7 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
 /** Start a bundle given its bundle ID
  *  Restarts if the bundle does not start on the first try,
@@ -71,6 +72,27 @@ public class BundleStartTask extends InstallTask {
 	}
 
 	/**
+	 * Check if the bundle is active.
+	 * This is true if the bundle has the active state or of the bundle
+	 * is in the starting state and has the lazy activation policy.
+	 */
+	public static boolean isBundleActive(final Bundle b) {
+	    if ( b.getState() == Bundle.ACTIVE ) {
+	        return true;
+	    }
+	    if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
+	        return true;
+	    }
+        return false;
+	}
+	/**
+	 * Check if the bundle has the lazy activation policy
+	 */
+	private static boolean isLazyActivatian(final Bundle b) {
+        return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
+	}
+
+	/**
 	 * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
 	 */
 	public void execute(final InstallationContext ctx) {
@@ -100,7 +122,7 @@ public class BundleStartTask extends InstallTask {
 			return;
 		}
 
-        if (b.getState() == Bundle.ACTIVE) {
+        if (isBundleActive(b) ) {
             this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
             if ( this.getResource() != null ) {
                 this.setFinishedState(ResourceState.INSTALLED);
@@ -115,7 +137,7 @@ public class BundleStartTask extends InstallTask {
             }
             this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
                     new Object[] {retryCount, bundleId, b.getSymbolicName()});
-        } catch(BundleException e) {
+        } catch (final BundleException e) {
             this.getLogger().info("Could not start bundle (retry count={}, bundle ID={}) : {}. Reason: {}. Will retry.",
                     new Object[] {retryCount, bundleId, b.getSymbolicName(), e});
 
