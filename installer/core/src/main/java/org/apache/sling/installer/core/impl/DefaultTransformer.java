@@ -90,6 +90,12 @@ public class DefaultTransformer
                         attr.put(Constants.BUNDLE_SYMBOLICNAME, sn);
                         attr.put(Constants.BUNDLE_VERSION, v.toString());
 
+                        // check for activation policy
+                        final String actPolicy = m.getMainAttributes().getValue(Constants.BUNDLE_ACTIVATIONPOLICY);
+                        if ( Constants.ACTIVATION_LAZY.equals(actPolicy) ) {
+                            attr.put(Constants.BUNDLE_ACTIVATIONPOLICY, actPolicy);
+                        }
+
                         final TransformationResult tr = new TransformationResult();
                         tr.setId(sn);
                         tr.setResourceType(InstallableResource.TYPE_BUNDLE);
