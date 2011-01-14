@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.installer.api.InstallableResource;
@@ -46,19 +46,46 @@ public class InternalResourceTest {
         MockFileDataStore.unset();
     }
 
-    private InstallableResource getInstallableResource() {
-        return new InstallableResource("1",
-                null, new Hashtable<String, Object>(), null, null, null);
+    private Dictionary<String, Object> getSimpleDict() {
+        final Hashtable<String, Object> dict = new Hashtable<String, Object>();
+        dict.put("a", "a");
+        dict.put("b", 2);
+
+        return dict;
     }
 
-    @Test public void testConstructor() throws IOException {
-        final InternalResource ir = InternalResource.create(SCHEME,
-                getInstallableResource());
-        assertTrue(ir.getURL().startsWith(SCHEME + ':'));
-        assertNotNull(ir.getDictionary());
-        assertNotNull(ir.getPrivateCopyOfDictionary());
-        assertNull(ir.getInputStream());
-        assertNull(ir.getPrivateCopyOfFile());
-        assertEquals(InstallableResource.TYPE_PROPERTIES, ir.getType());
+    private void assertIsSimpleDict(final Dictionary<String, Object> dict) {
+        assertEquals(2, dict.size());
+        assertEquals("a", dict.get("a"));
+        assertEquals(2, dict.get("b"));
+    }
+
+    @Test public void testSimpleProps() throws IOException {
+        final String[] types = new String[] {InstallableResource.TYPE_CONFIG,
+                InstallableResource.TYPE_PROPERTIES,
+                null, "zip"};
+
+        for(int i=0;i<types.length; i++) {
+            final InstallableResource instRes = new InstallableResource("1",
+                    null, getSimpleDict(), null, types[i], null);
+
+            final InternalResource ir = InternalResource.create(SCHEME,
+                    instRes);
+            assertEquals(SCHEME + ":1", ir.getURL());
+            assertEquals("1", ir.getId());
+            assertNotNull(ir.getDictionary());
+            assertIsSimpleDict(ir.getDictionary());
+            assertNotNull(ir.getPrivateCopyOfDictionary());
+            assertIsSimpleDict(ir.getPrivateCopyOfDictionary());
+            assertNull(ir.getInputStream());
+            assertNull(ir.getPrivateCopyOfFile());
+            if ( "zip".equals(types[i]) ) {
+                assertEquals("zip", ir.getType());
+            } else {
+                assertEquals(InstallableResource.TYPE_PROPERTIES, ir.getType());
+            }
+            assertNotNull(ir.getDigest());
+            assertEquals(InstallableResource.DEFAULT_PRIORITY, ir.getPriority());
+        }
     }
 }
