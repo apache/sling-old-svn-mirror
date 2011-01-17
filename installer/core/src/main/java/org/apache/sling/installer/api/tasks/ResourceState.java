@@ -18,11 +18,14 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+/**
+ * The state of a resource.
+ */
 public enum ResourceState {
 
-        INSTALL,
-        UNINSTALL,
-        INSTALLED,
-        UNINSTALLED,
-        IGNORED
+        INSTALL,        // the resource should be installed
+        UNINSTALL,      // the resource should be uninstalled
+        INSTALLED,      // the resource is installed
+        UNINSTALLED,    // the resource is uninstalled
+        IGNORED         // the resource has been ignored
 }

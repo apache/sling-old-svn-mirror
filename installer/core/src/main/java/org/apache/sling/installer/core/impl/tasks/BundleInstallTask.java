@@ -19,15 +19,15 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
 
 /** Install a bundle supplied as a RegisteredResource.
  *  Creates a BundleStartTask to start the bundle */
-public class BundleInstallTask extends InstallTask {
+public class BundleInstallTask extends AbstractInstallTask {
 
     private static final String BUNDLE_INSTALL_ORDER = "50-";
 

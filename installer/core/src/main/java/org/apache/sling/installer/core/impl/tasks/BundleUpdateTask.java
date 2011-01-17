@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -30,7 +30,7 @@ import org.osgi.framework.Version;
  *  a bundleStartTask to restart the bundle if it was
  *   active before the update.
  */
-public class BundleUpdateTask extends InstallTask {
+public class BundleUpdateTask extends AbstractInstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "40-";
 

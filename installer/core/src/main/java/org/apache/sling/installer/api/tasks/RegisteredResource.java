@@ -25,6 +25,7 @@ import java.util.Dictionary;
 /**
  * A resource that's been registered in the OSGi controller.
  * Data can be either an input stream or a dictionary.
+ * Registered resources are processed by a {@link ResourceTransformer}.
  */
 public interface RegisteredResource {
 
@@ -50,8 +51,8 @@ public interface RegisteredResource {
      * Return an input stream with the data of this resource.
      * Null if resource contains a configuration instead. Caller is responsible for
      * closing the stream.
-     * If this resource is of type CONFIG it must not return an input stream and
-     * if this resource is of type BUNDLE it must return an input stream!
+     * If this resource is of type PROPERTIES it must not return an input stream and
+     * if this resource is of type FILE it must return an input stream!
      * @return The input stream or null.
      */
     InputStream getInputStream() throws IOException;
@@ -59,7 +60,7 @@ public interface RegisteredResource {
     /**
      * Return this resource's dictionary.
      * Null if resource contains an InputStream instead. If this resource is of
-     * type CONFIG it must return a dictionary and if this resource is of type BUNDLE
+     * type PROPERTIES it must return a dictionary and if this resource is of type FILE
      * it might return a dictionary!
      * @return The resource's dictionary or null.
      */

@@ -24,7 +24,9 @@ import java.util.Dictionary;
 
 /**
  * A piece of data that can be installed by the {@link OsgiInstaller}
- * Currently the OSGi installer supports bundles and configurations.
+ * Currently the OSGi installer supports bundles and configurations,
+ * but it can be extended by additional task factories supporting
+ * other formats.
  *
  * The installable resource contains as much information as the client
  * can provide. An input stream or dictionary is mandatory everything
@@ -32,24 +34,46 @@ import java.util.Dictionary;
  * by the OSGi installer. If such evaluation fails the resource will
  * be ignore during installation.
  *
+ * If the client provides a configuration it should use the
+ * resource type {@link #TYPE_PROPERTIES}. Otherwise the resource
+ * type {@link #TYPE_FILE} should be used. These two generic types
+ * are transformed by resource transformer services to the appropriate
+ * resource type like bundle or configuration etc. This frees the
+ * client from having any knowledge about the provided data.
+ * However, if the client has the knowledge about the data it can
+ * provided a specific resource type.
  */
 public class InstallableResource {
 
-    /** @since 3.1 */
+    /**
+     * The type for properties - in this case {@link #getDictionary()}
+     * should contain a dictionary or the {@link #getInputStream()}
+     * should point to a property or configuration file.
+     * @since 3.1 */
     public static final String TYPE_PROPERTIES = "properties";
-    /** @since 3.1 */
+
+    /**
+     * The type for all other provided data like a bundle etc.
+     * In this case {@link #getInputStream()} must return an input
+     * stream to the data. {@link #getDictionary()} might return
+     * additional information.
+     * @since 3.1 */
     public static final String TYPE_FILE = "file";
 
     /**
      * The type for a bundle - in this case {@link #getInputStream} must
      * return an input stream to the bundle. {@link #getDictionary()} might
      * return additional information.
+     * This type should only be used if the client really knows that the
+     * provided data is a bundle.
      */
     public static final String TYPE_BUNDLE = "bundle";
 
     /**
      * The type for a configuration - in this case {@link #getDictionary()}
      * must return a dictionary with the configuration.
+     * This type should only be used if the client really knows that the
+     * provided data is an OSGi configuration.
      */
     public static final String TYPE_CONFIG = "config";
 
@@ -72,7 +96,7 @@ public class InstallableResource {
     /**
      * Create a data object - this is a simple constructor just using the
      * values as they are provided.
-     * @param id Unique id for the resource, For auto detection if the resource
+     * @param id Unique id for the resource, For auto detection of the resource
      *           type, the id should contain an extension like .jar, .cfg etc.
      * @param is The input stream to the data or
      * @param dict A dictionary with data

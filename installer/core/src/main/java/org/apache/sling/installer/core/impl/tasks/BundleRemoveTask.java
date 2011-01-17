@@ -18,10 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -30,7 +30,7 @@ import org.osgi.framework.Constants;
  *  Creates a SynchronousRefreshPackagesTask when
  *  executed.
  */
-public class BundleRemoveTask extends InstallTask {
+public class BundleRemoveTask extends AbstractInstallTask {
 
     private static final String BUNDLE_REMOVE_ORDER = "30-";
 

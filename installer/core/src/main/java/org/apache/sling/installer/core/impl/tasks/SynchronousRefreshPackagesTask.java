@@ -18,15 +18,16 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Execute an OSGi "refresh packages" operation, synchronously */
-public class SynchronousRefreshPackagesTask extends InstallTask implements FrameworkListener {
+public class SynchronousRefreshPackagesTask extends AbstractInstallTask implements FrameworkListener {
 
     /** Tracker for the package admin. */
     private final BundleTaskCreator bundleTaskCreator;

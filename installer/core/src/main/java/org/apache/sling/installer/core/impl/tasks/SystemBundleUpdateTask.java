@@ -21,9 +21,9 @@ package org.apache.sling.installer.core.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -31,7 +31,7 @@ import org.osgi.framework.Constants;
 /**
  * Update the system bundle from a RegisteredResource.
  */
-public class SystemBundleUpdateTask extends InstallTask {
+public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "99-";
 

@@ -155,7 +155,7 @@ public class BundleTaskCreatorTest {
     @Test
     public void testBundleRemoveSingle() throws IOException {
         final String version = "1.0";
-        final TaskResource [] r = {
+        final MockBundleResource [] r = {
                 new MockBundleResource(SN, version)
         };
         r[0].setState(ResourceState.UNINSTALL);
@@ -171,12 +171,12 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testBundleRemoveMultiple() throws IOException {
-        final TaskResource [] r = {
+        final MockBundleResource [] r = {
                 new MockBundleResource(SN, "1.0"),
                 new MockBundleResource(SN, "1.1"),
                 new MockBundleResource(SN, "2.0")
         };
-        for(TaskResource x : r) {
+        for(MockBundleResource x : r) {
             x.setState(ResourceState.UNINSTALL);
         }
 
@@ -195,7 +195,7 @@ public class BundleTaskCreatorTest {
 
     @Test
     public void testDowngradeOfRemovedResource() throws IOException {
-        final TaskResource [] r = {
+        final MockBundleResource [] r = {
                 new MockBundleResource(SN, "1.0.0"),
                 new MockBundleResource(SN, "1.1.0"),
         };

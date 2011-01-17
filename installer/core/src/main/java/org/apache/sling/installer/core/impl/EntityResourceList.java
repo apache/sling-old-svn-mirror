@@ -28,9 +28,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,18 +125,18 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                     // first resource got uninstalled, go back to second
                     if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {
                         LOGGER.debug("Reactivating for next cycle: {}", second);
-                        second.setState(ResourceState.INSTALL);
+                        ((RegisteredResourceImpl)second).setState(ResourceState.INSTALL);
                     }
                 } else {
                     // don't install as the first did not get uninstalled
                     if ( second.getState() == ResourceState.INSTALL ) {
-                        second.setState(ResourceState.IGNORED);
+                        ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED);
                     }
                     // and now set resource to uninstalled
                     state = ResourceState.UNINSTALLED;
                 }
             }
-            toActivate.setState(state);
+            ((RegisteredResourceImpl)toActivate).setState(state);
             if ( state == ResourceState.UNINSTALLED ) {
                 this.cleanup(toActivate);
             }
@@ -164,7 +164,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 this.cleanup(rr);
                 resources.remove(rr);
                 if ( first && rr.equals(r) ) {
-                    r.setState(rr.getState());
+                    ((RegisteredResourceImpl)r).setState(rr.getState());
                 }
                 break;
             }
@@ -182,7 +182,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 if ( first && (r.getState() == ResourceState.INSTALLED
                         || r.getState() == ResourceState.INSTALL)) {
                     LOGGER.debug("Marking for uninstalling: {}", r);
-                    r.setState(ResourceState.UNINSTALL);
+                    ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL);
                 } else {
                     LOGGER.debug("Removing unused: {}", r);
                     i.remove();

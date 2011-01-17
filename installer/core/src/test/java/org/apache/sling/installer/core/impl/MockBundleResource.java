@@ -148,7 +148,7 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.TaskResource#setState(org.apache.sling.installer.api.tasks.ResourceState)
+     * Set the state
      */
     public void setState(ResourceState s) {
         this.state = s;

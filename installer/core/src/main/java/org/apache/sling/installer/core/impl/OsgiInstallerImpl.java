@@ -38,10 +38,10 @@ import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -362,7 +362,7 @@ public class OsgiInstallerImpl
                                 logger.debug("Resource {} seems to be removed.", r);
                                 if ( first && (r.getState() == ResourceState.INSTALLED
                                            ||  r.getState() == ResourceState.INSTALL) ) {
-                                     r.setState(ResourceState.UNINSTALL);
+                                    ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL);
                                 } else {
                                     toRemove.add(r);
                                 }
