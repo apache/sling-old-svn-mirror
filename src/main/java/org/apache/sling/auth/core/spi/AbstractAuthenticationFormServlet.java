@@ -185,7 +185,8 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
         } else {
             b.append(resource);
         }
-        return b.toString();
+        String contextPath = b.toString();
+        return contextPath.equals("/") ? "" : contextPath;
     }
 
     /**
