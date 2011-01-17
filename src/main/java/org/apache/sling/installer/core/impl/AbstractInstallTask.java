@@ -16,20 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.api.tasks;
+package org.apache.sling.installer.core.impl;
 
-/**
- * The install task factory creates a task for a given
- * resource.
- * An install task factory is a plugin service that
- * checks a resource if it is installable by this plugin
- * and creates an appropriate task.
- */
-public interface InstallTaskFactory {
+import org.apache.sling.installer.api.tasks.InstallTask;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    /**
-     * Creates an {@link InstallTask} for the resource or
-     * <code>null</code> if the factory does not support the resource.
-     */
-    InstallTask createTask(final TaskResourceGroup toActivate);
+public abstract class AbstractInstallTask extends InstallTask {
+
+    public AbstractInstallTask(TaskResourceGroup erl) {
+        super(erl);
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    protected Logger getLogger() {
+        return this.logger;
+    }
+
 }

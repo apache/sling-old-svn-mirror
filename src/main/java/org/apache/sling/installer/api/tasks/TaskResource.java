@@ -47,11 +47,6 @@ public interface TaskResource extends RegisteredResource {
     ResourceState getState();
 
     /**
-     * Set the new state of teh resource.
-     */
-    void setState(final ResourceState s);
-
-    /**
      * Get the value of a temporary attribute.
      * @param key The name of the attribute
      * @return The value of the attribute or <code>null</code>

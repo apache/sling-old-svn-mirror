@@ -18,20 +18,19 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 /**
- * Base class for tasks that can be executed by the {@link OsgiInstallerImpl}
+ * Base class for tasks that can be executed by the
+ * {@link org.apache.sling.installer.api.OsgiInstaller}.
  */
 public abstract class InstallTask implements Comparable<InstallTask> {
 
+    /** The resource group this task is working on. */
     private final TaskResourceGroup resourceGroup;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    /**
+     * Constructor for the task
+     * @param erl The resource group or <code>null</code>.
+     */
     public InstallTask(final TaskResourceGroup erl) {
         this.resourceGroup = erl;
     }
@@ -53,22 +52,28 @@ public abstract class InstallTask implements Comparable<InstallTask> {
         return this.resourceGroup;
     }
 
-    public Logger getLogger() {
-        return this.logger;
-    }
-
+    /**
+     * This is the heart of the task - it performs the actual task.
+     * @param ctx The installation context.
+     */
     public abstract void execute(InstallationContext ctx);
 
-	/** Tasks are sorted according to this key */
+	/**
+	 * Tasks are sorted according to this key.
+	 * Therefore this key must uniquely identify this task.
+	 * A typical sort key contains the entity id of the resource
+	 * in execution.
+	 */
 	public abstract String getSortKey();
 
-	/** All comparisons are based on getSortKey() */
-	public final int compareTo(InstallTask o) {
-		return getSortKey().compareTo(o.getSortKey());
-	}
-
+	/**
+	 * Set the finished state for the resource.
+	 * @param state The new state.
+	 */
 	public void setFinishedState(final ResourceState state) {
-	    this.resourceGroup.setFinishState(state);
+	    if ( this.resourceGroup != null ) {
+	        this.resourceGroup.setFinishState(state);
+	    }
 	}
 
     @Override
@@ -88,4 +93,11 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 	public final int hashCode() {
 		return getSortKey().hashCode();
 	}
+
+    /**
+     * All comparisons are based on getSortKey().
+     */
+    public final int compareTo(InstallTask o) {
+        return getSortKey().compareTo(o.getSortKey());
+    }
 }

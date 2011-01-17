@@ -20,11 +20,11 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.text.DecimalFormat;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -35,7 +35,7 @@ import org.osgi.framework.Constants;
  *  but only after receiving a bundle or framework event,
  *  indicating that it's worth retrying
  */
-public class BundleStartTask extends InstallTask {
+public class BundleStartTask extends AbstractInstallTask {
 
     private static final String BUNDLE_START_ORDER = "70-";
 

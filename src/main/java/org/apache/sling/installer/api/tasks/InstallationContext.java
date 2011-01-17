@@ -18,21 +18,30 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-
 /**
  * Context for the installation tasks.
- * Currently it allows to add a task to the current or the next cycle.
+ *
+ * The context is passed into an {@link InstallTask} during
+ * execution of a task. The task can schedule tasks to the
+ * current or next execution cycle.
+ *
+ * In addition access to an audit log is provided. The task
+ * should make an entry into the log each time a task has
+ * succeeded like something has been installed, updated or
+ * deleted.
  */
 public interface InstallationContext {
 
 	/**
-	 * Schedule a task for execution in the current OsgiController cycle
+	 * Schedule a task for execution in the current cycle.
 	 */
 	void addTaskToCurrentCycle(InstallTask t);
 
 	/**
-	 * Schedule a task for execution in the next OsgiController cycle,
+	 * Schedule a task for execution in the next cycle,
 	 * usually to indicate that a task must be retried
+	 * or the current task is finished and another task
+	 * has to be run.
 	 */
 	void addTaskToNextCycle(InstallTask t);
 

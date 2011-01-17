@@ -19,8 +19,11 @@
 package org.apache.sling.installer.api.tasks;
 
 /**
- * A resource transformer might transform a registered resource
- * before it is installed.
+ * A resource transformer transform a registered resource
+ * before it can be installed.
+ * Based on the transformation result, the installer creates
+ * one or more {@link TaskResource}s from the registered
+ * resources and passes them on to the {@link InstallTaskFactory}.
  */
 public interface ResourceTransformer {
 
