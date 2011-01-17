@@ -131,7 +131,8 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
         form = form.replace("${resource}", getResource(request));
         form = form.replace("${j_reason}", getReason(request));
         form = form.replace("${requestContextPath}", getContextPath(request));
-
+        form = form.replace("${contextPath}", request.getContextPath());
+        
         return form;
     }
 

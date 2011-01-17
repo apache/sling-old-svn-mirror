@@ -18,8 +18,6 @@ package org.apache.sling.launchpad.webapp.integrationtest.login;
 
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
@@ -28,12 +26,25 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
  */
 public class FormGenerationTest extends HttpTestBase {
 
-    public void testSelectorForm() throws Exception {
+    public void testSelectorFormForRootResource() throws Exception {
         String contextPath = getContextPath(HTTP_BASE_URL);
         String content = getContent(HTTP_BASE_URL + "/system/sling/selector/login", CONTENT_TYPE_HTML,
                 Arrays.asList(new NameValuePair("resource", "/")), 200);
 
         assertTrue("form action is not correct.", content.contains("action=\"" + contextPath + "/j_security_check\""));
+        assertTrue("sling image reference is not correct.",
+                content.contains("<img border=\"0\" src=\"" + contextPath + "/sling-logo.png\"/>"));
+    }
+
+    public void testSelectorFormForNonRootResource() throws Exception {
+        String contextPath = getContextPath(HTTP_BASE_URL);
+        String content = getContent(HTTP_BASE_URL + "/system/sling/selector/login", CONTENT_TYPE_HTML,
+                Arrays.asList(new NameValuePair("resource", "/var/classes.json")), 200);
+
+        assertTrue("form action is not correct.",
+                content.contains("action=\"" + contextPath + "/var/classes.json/j_security_check\""));
+        assertTrue("sling image reference is not correct.",
+                content.contains("<img border=\"0\" src=\"" + contextPath + "/sling-logo.png\"/>"));
     }
 
     private static String getContextPath(String baseURL) {
