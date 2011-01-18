@@ -93,6 +93,11 @@ public class SlingMainServlet extends GenericServlet {
     @Property(boolValue=DEFAULT_ALLOW_TRACE)
     public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
 
+    public static final boolean DEFAULT_FILTER_COMPAT_MODE = false;
+
+    @Property(boolValue=DEFAULT_FILTER_COMPAT_MODE)
+    public static final String PROP_FILTER_COMPAT_MODE = "sling.filter.compat.mode";
+
     @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
     private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
 
@@ -306,7 +311,8 @@ public class SlingMainServlet extends GenericServlet {
         // the HttpService as filter initialization may cause the servlet
         // context to be required (see SLING-42)
         filterManager = new ServletFilterManager(bundleContext,
-            slingServletContext);
+            slingServletContext,
+            OsgiUtil.toBoolean(componentConfig.get(PROP_FILTER_COMPAT_MODE), DEFAULT_FILTER_COMPAT_MODE));
         filterManager.open();
         requestProcessor.setFilterManager(filterManager);
 
