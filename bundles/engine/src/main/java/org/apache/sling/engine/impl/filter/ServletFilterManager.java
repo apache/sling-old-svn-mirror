@@ -99,8 +99,11 @@ public class ServletFilterManager extends ServiceTracker {
 
     private final SlingFilterChainHelper[] filterChains;
 
-    public ServletFilterManager(BundleContext context,
-            final SlingServletContext servletContext) {
+    private final boolean compatMode;
+
+    public ServletFilterManager(final BundleContext context,
+            final SlingServletContext servletContext,
+            final boolean compatMode) {
         super(context, FILTER_SERVICE_NAME, null);
         this.servletContext = servletContext;
         this.filterChains = new SlingFilterChainHelper[FilterChainType.values().length];
@@ -109,6 +112,7 @@ public class ServletFilterManager extends ServiceTracker {
         this.filterChains[FilterChainType.INCLUDE.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.FORWARD.ordinal()] = new SlingFilterChainHelper();
         this.filterChains[FilterChainType.COMPONENT.ordinal()] = new SlingFilterChainHelper();
+        this.compatMode = compatMode;
     }
 
     public SlingFilterChainHelper getFilterChain(final FilterChainType chain) {
@@ -146,13 +150,31 @@ public class ServletFilterManager extends ServiceTracker {
         super.removedService(reference, service);
     }
 
+    /**
+     * Check if the filter should be excluded.
+     */
+    private boolean excludeFilter(final ServiceReference reference) {
+        // if the service has a filter scope property, we include it
+        if ( reference.getProperty(EngineConstants.SLING_FILTER_SCOPE) != null
+             || reference.getProperty(EngineConstants.FILTER_SCOPE) != null ) {
+            return false;
+        }
+        // in compat mode we allow all filters not having the felix pattern prop!
+        if ( this.compatMode ) {
+            // Check if filter will be registered by Felix HttpService Whiteboard
+            if (reference.getProperty(FELIX_WHITEBOARD_PATTERN_PROPERTY) != null) {
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
     private void initFilter(final ServiceReference reference,
             final Filter filter) {
-        // Check if filter will be registered by Felix HttpService Whiteboard
-        if (reference.getProperty(FELIX_WHITEBOARD_PATTERN_PROPERTY) != null) {
+        if ( this.excludeFilter(reference) ) {
             return;
         }
-
         final String filterName = SlingFilterConfig.getName(reference);
         if (filterName == null) {
             log.error("initFilter: Missing name for filter {}", reference);
@@ -188,7 +210,11 @@ public class ServletFilterManager extends ServiceTracker {
 
                 // register by scope
                 String[] scopes = OsgiUtil.toStringArray(
-                    reference.getProperty(EngineConstants.FILTER_SCOPE), null);
+                        reference.getProperty(EngineConstants.SLING_FILTER_SCOPE), null);
+                if ( scopes == null ) {
+                    scopes = OsgiUtil.toStringArray(
+                        reference.getProperty(EngineConstants.FILTER_SCOPE), null);
+                }
                 if (scopes != null && scopes.length > 0) {
                     for (String scope : scopes) {
                         scope = scope.toUpperCase();

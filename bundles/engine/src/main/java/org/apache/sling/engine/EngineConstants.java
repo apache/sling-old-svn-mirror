@@ -128,8 +128,32 @@ public class EngineConstants {
      * @see #FILTER_SCOPE_INCLUDE
      * @see #FILTER_SCOPE_REQUEST
      * @since 2.1, Sling Engine 2.2
+     * @deprecated Use {@link #SLING_FILTER_SCOPE} instead
      */
+    @Deprecated
     public static final String FILTER_SCOPE = "filter.scope";
+
+    /**
+     * The name of the service registration property of a
+     * <code>java.servlet.Filter</code> service to be used as a filter by the
+     * {@link SlingRequestProcessor}.
+     * <p>
+     * The specification of the <code>sling.filter.scope</code> service registration
+     * property is required for a <code>javax.servlet.Filter</code> service to
+     * be used as a filter by the Sling Engine.
+     * <p>
+     * The <code>sling.filter.scope</code> registration property is expected to be a
+     * scalar String, an array of Strings or a Vector of Strings. Case of the
+     * value is ignored.
+     *
+     * @see #FILTER_SCOPE_COMPONENT
+     * @see #FILTER_SCOPE_ERROR
+     * @see #FILTER_SCOPE_FORWARD
+     * @see #FILTER_SCOPE_INCLUDE
+     * @see #FILTER_SCOPE_REQUEST
+     * @since 2.1, Sling Engine 2.2
+     */
+    public static final String SLING_FILTER_SCOPE = "sling.filter.scope";
 
     /**
      * Filter scope value identifying a component level filter.
@@ -140,7 +164,7 @@ public class EngineConstants {
      * by the <code>service.ranking</code> (or {@link #FILTER_ORDER}) property
      * and the service registration ID.
      *
-     * @see #FILTER_SCOPE
+     * @see #SLING_FILTER_SCOPE
      * @since 2.1, Sling Engine 2.2
      */
     public static final String FILTER_SCOPE_COMPONENT = "COMPONENT";
