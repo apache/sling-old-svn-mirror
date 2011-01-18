@@ -139,6 +139,7 @@
         <module>installer/core</module>
         <module>installer/providers/file</module>
         <module>installer/providers/jcr</module>
+        <module>installer/factories/deploymentpck</module>
         <module>installer/it</module>
         
         <!-- Launchpad -->
