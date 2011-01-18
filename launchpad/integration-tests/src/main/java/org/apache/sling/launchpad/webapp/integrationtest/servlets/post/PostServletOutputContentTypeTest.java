@@ -30,7 +30,7 @@ public class PostServletOutputContentTypeTest extends HttpTestBase {
     
     private void runTest(String acceptHeaderValue, boolean useHttpEquiv, String expectedContentType) throws Exception {
         final String info = (useHttpEquiv ? "Using http-equiv parameter" : "Using Accept header") + ": ";
-        final String url = HTTP_BASE_URL + "/" + MY_TEST_PATH;
+        final String url = HTTP_BASE_URL + MY_TEST_PATH;
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
         
