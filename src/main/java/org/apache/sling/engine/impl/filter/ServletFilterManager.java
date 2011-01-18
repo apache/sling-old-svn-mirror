@@ -130,7 +130,6 @@ public class ServletFilterManager extends ServiceTracker {
 
     @Override
     public void modifiedService(ServiceReference reference, Object service) {
-        // TODO Auto-generated method stub
         if (service instanceof Filter) {
             destroyFilter(reference, (Filter) service);
             initFilter(reference, (Filter) service);
@@ -171,9 +170,19 @@ public class ServletFilterManager extends ServiceTracker {
                 // get the order, Integer.MAX_VALUE by default
                 Object orderObj = reference.getProperty(Constants.SERVICE_RANKING);
                 if (orderObj == null) {
+                    // filter order is defined as lower value has higher priority
+                    // while service ranking is the opposite
+                    // In addition we allow different types than Integer
                     orderObj = reference.getProperty(EngineConstants.FILTER_ORDER);
+                    if ( orderObj != null ) {
+                        // we can use 0 as the default as this will be applied in
+                        // the next step anyway if this props contains an invalid
+                        // value
+                        Integer order = OsgiUtil.toInteger(orderObj, 0);
+                        order = order * -1;
+                    }
                 }
-                int order = (orderObj instanceof Integer)
+                final int order = (orderObj instanceof Integer)
                         ? ((Integer) orderObj).intValue()
                         : 0;
 

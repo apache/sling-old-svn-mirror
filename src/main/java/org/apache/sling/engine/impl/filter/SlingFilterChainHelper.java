@@ -128,11 +128,11 @@ public class SlingFilterChainHelper {
 
     public static class FilterListEntry implements Comparable<FilterListEntry> {
 
-        private Filter filter;
+        private final Filter filter;
 
-        private Long filterId;
+        private final Long filterId;
 
-        private int order;
+        private final int order;
 
         FilterListEntry(Filter filter, Long filterId, int order) {
             this.filter = filter;
