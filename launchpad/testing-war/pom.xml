@@ -249,6 +249,41 @@
                     </systemProperties>
                 </configuration>
             </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven2-plugin</artifactId>
+                <configuration>
+                    <wait>${integration.test.wait}</wait>
+                    <container>
+                        <containerId>jetty6x</containerId>
+                        <type>embedded</type>
+                        <systemProperties>
+                            <sling.home>
+                                ${basedir}/target/it/sling
+                            </sling.home>
+                        </systemProperties>
+                    </container>
+                    <configuration>
+                        <home>${project.build.directory}/cargo</home>
+                        <properties>
+                            <cargo.servlet.port>
+                                ${http.port}
+                            </cargo.servlet.port>
+                            <!--
+                                <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
+                            -->
+                        </properties>
+                        <deployables>
+                            <deployable>
+                                <properties>
+                                    <context>/${http.base.path}</context>
+                                </properties>
+                            </deployable>
+                        </deployables>
+                    </configuration>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -350,36 +385,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <configuration>
-                            <wait>${integration.test.wait}</wait>
-                            <container>
-                                <containerId>jetty6x</containerId>
-                                <type>embedded</type>
-                                <systemProperties>
-                                    <sling.home>
-                                        ${basedir}/target/it/sling
-                                    </sling.home>
-                                </systemProperties>
-                            </container>
-                            <configuration>
-                                <home>${project.build.directory}/cargo</home>
-                                <properties>
-                                    <cargo.servlet.port>
-                                        ${http.port}
-                                    </cargo.servlet.port>
-                                    <!--
-                                        <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
-                                    -->
-                                </properties>
-                                <deployables>
-                                    <deployable>
-                                        <properties>
-                                            <context>/${http.base.path}</context>
-                                        </properties>
-                                    </deployable>
-                                </deployables>
-                            </configuration>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
