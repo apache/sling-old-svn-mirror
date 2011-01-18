@@ -69,7 +69,9 @@ public class InternalResource extends InstallableResource {
             type = InstallableResource.TYPE_PROPERTIES;
         }
 
-        if ( is != null && InstallableResource.TYPE_PROPERTIES.equals(type) ) {
+        if ( is != null &&
+             (InstallableResource.TYPE_PROPERTIES.equals(type) ||
+              type == null && isConfigExtension(resource.getId()))) {
             dict = readDictionary(is, getExtension(resource.getId()));
             if ( dict == null ) {
                 throw new IOException("Unable to read dictionary from input stream: " + resource.getId());
@@ -238,6 +240,11 @@ public class InternalResource extends InstallableResource {
         }
 
         return ht;
+    }
+
+    private static boolean isConfigExtension(final String url) {
+        final String ext = getExtension(url);
+        return "config".equals(ext) || "properties".equals(ext) || "cfg".equals(ext);
     }
 
     /** Digest is needed to detect changes in data */
