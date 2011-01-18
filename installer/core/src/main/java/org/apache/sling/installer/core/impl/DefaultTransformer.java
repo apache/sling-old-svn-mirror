@@ -167,29 +167,30 @@ public class DefaultTransformer
     private Manifest getManifest(final InputStream ins) throws IOException {
         Manifest result = null;
 
-        JarInputStream jis = null;
-        try {
-            jis = new JarInputStream(ins);
-            result= jis.getManifest();
+        if ( ins != null ) {
+            JarInputStream jis = null;
+            try {
+                jis = new JarInputStream(ins);
+                result= jis.getManifest();
 
-        } finally {
+            } finally {
 
-            // close the jar stream or the inputstream, if the jar
-            // stream is set, we don't need to close the input stream
-            // since closing the jar stream closes the input stream
-            if (jis != null) {
-                try {
-                    jis.close();
-                } catch (IOException ignore) {
-                }
-            } else {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
+                // close the jar stream or the inputstream, if the jar
+                // stream is set, we don't need to close the input stream
+                // since closing the jar stream closes the input stream
+                if (jis != null) {
+                    try {
+                        jis.close();
+                    } catch (IOException ignore) {
+                    }
+                } else {
+                    try {
+                        ins.close();
+                    } catch (IOException ignore) {
+                    }
                 }
             }
         }
-
         return result;
     }
 

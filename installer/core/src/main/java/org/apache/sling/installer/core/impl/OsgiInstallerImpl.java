@@ -164,7 +164,6 @@ public class OsgiInstallerImpl
         while (active) {
             logger.debug("Starting new cycle");
 
-            boolean sleep = true;
             this.mergeNewlyRegisteredResources();
 
             // invoke transformers
@@ -192,15 +191,12 @@ public class OsgiInstallerImpl
                         logger.debug("Notified of new resources, back to work");
                     }
                 }
-                sleep = false;
             }
-            if ( sleep ) {
-                // Some integration tests depend on this delay, make sure to
-                // rerun/adapt them if changing this value
-                try {
-                    Thread.sleep(250);
-                } catch (final InterruptedException ignore) {}
-            }
+            // Some integration tests depend on this delay, make sure to
+            // rerun/adapt them if changing this value
+            try {
+                Thread.sleep(250);
+            } catch (final InterruptedException ignore) {}
         }
     }
 
@@ -517,13 +513,17 @@ public class OsgiInstallerImpl
                 }
             };
             while (this.active && !tasks.isEmpty()) {
-                InstallTask t = null;
+                InstallTask task = null;
                 synchronized (tasks) {
-                    t = tasks.first();
-                    tasks.remove(t);
+                    task = tasks.first();
+                    tasks.remove(task);
                 }
-                logger.debug("Executing task: {}", t);
-                t.execute(ctx);
+                logger.debug("Executing task: {}", task);
+                try {
+                    task.execute(ctx);
+                } catch (final Throwable t) {
+                    logger.error("Uncaught exception during task execution!", t);
+                }
             }
             persistentList.save();
         }
@@ -558,12 +558,16 @@ public class OsgiInstallerImpl
                     if ( services[i] instanceof ResourceTransformer ) {
                         final ResourceTransformer transformer = (ResourceTransformer)services[i];
 
-                        final TransformationResult[] result = transformer.transform(resource);
-                        if ( result != null && result.length > 0 ) {
-                            this.persistentList.transform(resource, result);
-                            changed = true;
-                            index--;
-                            break;
+                        try {
+                            final TransformationResult[] result = transformer.transform(resource);
+                            if ( result != null && result.length > 0 ) {
+                                this.persistentList.transform(resource, result);
+                                changed = true;
+                                index--;
+                                break;
+                            }
+                        } catch (final Throwable t) {
+                            logger.error("Uncaught exception during resource transformation!", t);
                         }
                     }
                 }
