@@ -66,8 +66,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingRequestProcessorImpl.class);
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-
     // used fields ....
 
     private final DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler();
