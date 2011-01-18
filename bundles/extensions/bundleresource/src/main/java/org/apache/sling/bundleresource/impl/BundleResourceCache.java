@@ -232,6 +232,8 @@ class BundleResourceCache {
     private static class BundleResourceMap<K, V> extends
             LinkedHashMap<String, V> {
 
+        private static final long serialVersionUID = 7455098291380945276L;
+
         /**
          * The default size of a bundle resource cache (value is 20).
          */

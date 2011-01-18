@@ -25,11 +25,12 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.AbstractWebConsolePlugin;
-import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -38,7 +39,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
+class BundleResourceWebConsolePlugin extends HttpServlet {
+
+    private static final long serialVersionUID = 566337139719695235L;
 
     private static final String LABEL = "bundleresources";
 
@@ -51,7 +54,7 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
     //--------- setup and shutdown
 
     private static BundleResourceWebConsolePlugin INSTANCE;
-    
+
     static void initPlugin(BundleContext context) {
         if (INSTANCE == null) {
             BundleResourceWebConsolePlugin tmp = new BundleResourceWebConsolePlugin();
@@ -59,7 +62,7 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
             INSTANCE = tmp;
         }
     }
-    
+
     static void destroyPlugin() {
         if (INSTANCE != null) {
             try {
@@ -69,27 +72,14 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
             }
         }
     }
-    
+
     // private constructor to force using static setup and shutdown
     private BundleResourceWebConsolePlugin() {
     }
 
-    //---------- AbstractWebConsolePlugin implementation
-    
     @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    @Override
-    public String getTitle() {
-        return "Bundle Resource Provider";
-    }
-
-    @Override
-    protected void renderContent(HttpServletRequest req, HttpServletResponse res)
-            throws IOException {
-
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse res)
+    throws ServletException, IOException {
         PrintWriter pw = res.getWriter();
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
@@ -160,8 +150,6 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     public void activate(BundleContext context) {
-        super.activate(context);
-
         providerTracker = new ServiceTracker(context,
             ResourceProvider.SERVICE_NAME, null) {
             @Override
@@ -189,10 +177,11 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
             "Web Console Plugin for Bundle Resource Providers");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
-        props.put(WebConsoleConstants.PLUGIN_LABEL, LABEL);
+        props.put("felix.webconsole.label", LABEL);
+        props.put("felix.webconsole.title", "Bundle Resource Provider");
 
         serviceRegistration = context.registerService(
-            WebConsoleConstants.SERVICE_NAME, this, props);
+            Servlet.class.getName(), this, props);
     }
 
     public void deactivate() {
@@ -205,8 +194,6 @@ class BundleResourceWebConsolePlugin extends AbstractWebConsolePlugin {
             providerTracker.close();
             providerTracker = null;
         }
-
-        super.deactivate();
     }
 
     private String getName(Bundle bundle) {
