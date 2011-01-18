@@ -22,7 +22,6 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /** Base test class with common utilities */
@@ -66,7 +65,7 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
 
     protected void assertRegisteredPaths(String [] paths) {
         for(String path : paths) {
-            assertRegistered(path, !path.contains("NOT"));
+            assertRegistered(path, true);
         }
     }
 
