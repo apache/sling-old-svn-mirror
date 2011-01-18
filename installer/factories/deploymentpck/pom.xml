@@ -52,7 +52,7 @@
                             org.apache.sling.installer.factories.deploypck.impl.Activator
                         </Bundle-Activator>
                         <Private-Package>
-                            org.apache.sling.installer.factories.deploypck..impl.*
+                            org.apache.sling.installer.factories.deploypck.impl.*
                         </Private-Package>
                     </instructions>
                 </configuration>

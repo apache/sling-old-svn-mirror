@@ -50,6 +50,7 @@ public class Activator implements ServiceListener, BundleActivator {
      */
     public void start(final BundleContext context) throws Exception {
         this.bundleContext = context;
+        this.getAdmin();
         this.bundleContext.addServiceListener(this, "(" + Constants.OBJECTCLASS
                 + "=" + DEPLOYMENT_ADMIN + ")");
 
@@ -63,26 +64,30 @@ public class Activator implements ServiceListener, BundleActivator {
         this.bundleContext = null;
     }
 
+    private void getAdmin() {
+        this.deploymentAdminReference = this.bundleContext.getServiceReference(DEPLOYMENT_ADMIN);
+        if ( this.deploymentAdminReference != null ) {
+            final DeploymentAdmin deploymentAdmin = (DeploymentAdmin) this.bundleContext.getService(this.deploymentAdminReference);
+            if ( deploymentAdmin == null ) {
+                this.deploymentAdminReference = null;
+            } else {
+                final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installer Support for Deployment Packages");
+                props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                this.serviceReg = this.bundleContext.registerService(new String[] {ResourceTransformer.class.getName(),
+                        InstallTaskFactory.class.getName()},
+                    new DeploymentPackageInstaller(deploymentAdmin), props);
+            }
+        }
+    }
+
     /**
      * Wait for the deployment admin service.
      * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
      */
-    public synchronized void serviceChanged(ServiceEvent event) {
+    public synchronized void serviceChanged(final ServiceEvent event) {
         if ( event.getType() == ServiceEvent.REGISTERED && this.deploymentAdminReference == null ) {
-            this.deploymentAdminReference = this.bundleContext.getServiceReference(DEPLOYMENT_ADMIN);
-            if ( this.deploymentAdminReference != null ) {
-                final DeploymentAdmin deploymentAdmin = (DeploymentAdmin) this.bundleContext.getService(this.deploymentAdminReference);
-                if ( deploymentAdmin == null ) {
-                    this.deploymentAdminReference = null;
-                } else {
-                    final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                    props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installer Support for Deployment Packages");
-                    props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-                    this.serviceReg = this.bundleContext.registerService(new String[] {ResourceTransformer.class.getName(),
-                            InstallTaskFactory.class.getName()},
-                        new DeploymentPackageInstaller(deploymentAdmin), props);
-                }
-            }
+            this.getAdmin();
         } else if ( event.getType() == ServiceEvent.UNREGISTERING && this.deploymentAdminReference != null ) {
             this.unregister();
         }
