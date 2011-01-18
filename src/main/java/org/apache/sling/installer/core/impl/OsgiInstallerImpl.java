@@ -162,6 +162,8 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
+            logger.debug("Starting new cycle");
+
             boolean sleep = true;
             this.mergeNewlyRegisteredResources();
 
