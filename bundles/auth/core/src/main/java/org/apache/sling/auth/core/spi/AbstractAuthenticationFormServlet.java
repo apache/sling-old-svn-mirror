@@ -187,7 +187,14 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
             b.append(resource);
         }
         String contextPath = b.toString();
-        return contextPath.equals("/") ? "" : contextPath;
+        return removeEndingSlash(contextPath);
+    }
+
+    private static String removeEndingSlash(String str) {
+        if(str != null && str.endsWith("/")) {
+            return str.substring(0, str.length() - 1);
+        }
+        return str;
     }
 
     /**
