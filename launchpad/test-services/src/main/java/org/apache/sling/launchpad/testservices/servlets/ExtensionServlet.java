@@ -1,5 +1,3 @@
-package org.apache.sling.launchpad.testservices.servlets;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,24 +14,25 @@ package org.apache.sling.launchpad.testservices.servlets;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.launchpad.testservices.servlets;
 
 /** Example/test Sling Servlet registered with two extensions
- * 
+ *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * 
+ *
  * @scr.property name="service.description" value="Default Query Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * Register this servlet for the default resource type and two selectors:
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default"
- *               
+ *
  * @scr.property name="sling.servlet.extensions"
  *               values.1 = "TEST_EXT_1"
- *               values.2 = "TEST_EXT_2" 
+ *               values.2 = "TEST_EXT_2"
  */
 
 @SuppressWarnings("serial")
-public class ExtensionServlet extends TestServlet {  
+public class ExtensionServlet extends TestServlet {
 }

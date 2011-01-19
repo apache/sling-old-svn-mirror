@@ -1,5 +1,3 @@
-package org.apache.sling.launchpad.testservices.servlets;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,16 +14,17 @@ package org.apache.sling.launchpad.testservices.servlets;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.launchpad.testservices.servlets;
 
 /** Example/test Sling Servlet using a prefix to demonstrate how
  *  PrefixServletZero overrides PrefixServletMinusOne
- * 
+ *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * 
+ *
  * @scr.property name="service.description" value="Default Query Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * @scr.property name="sling.servlet.prefix"
  *               value="0"
  * @scr.property name="sling.servlet.resourceTypes"
@@ -36,5 +35,5 @@ package org.apache.sling.launchpad.testservices.servlets;
  */
 
 @SuppressWarnings("serial")
-public class PrefixServletZero extends TestServlet {  
+public class PrefixServletZero extends TestServlet {
 }
