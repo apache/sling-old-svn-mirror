@@ -1,5 +1,3 @@
-package org.apache.sling.launchpad.testservices.filters;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,11 +14,13 @@ package org.apache.sling.launchpad.testservices.filters;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.launchpad.testservices.filters;
 
 /** Example/test Sling Servlet registered with two extensions
  *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Filter"
+ * @scr.property name="sling.filter.scope" value="request"
  *
  * @scr.property name="service.description" value="Test Filter"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"

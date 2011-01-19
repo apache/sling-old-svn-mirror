@@ -1,16 +1,3 @@
-package org.apache.sling.launchpad.testservices.filters;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -27,15 +14,27 @@ import javax.servlet.http.HttpServletResponse;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.launchpad.testservices.filters;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Example/test Filter.
  */
 abstract class TestFilter implements Filter {
-    
-    private FilterConfig filterConfig;
-    
+
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.filterConfig = filterConfig;
+        // nothing to do
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {

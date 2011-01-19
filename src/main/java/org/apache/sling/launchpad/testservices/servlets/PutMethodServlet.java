@@ -1,12 +1,3 @@
-package org.apache.sling.launchpad.testservices.servlets;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,19 +14,27 @@ import org.apache.sling.api.SlingHttpServletResponse;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.sling.launchpad.testservices.servlets;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 
 /** Example/test Sling Servlet registered for the PUT method
  *  on a specific resource type
- * 
+ *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * 
+ *
  * @scr.property name="service.description" value="Default Query Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="LAUNCHPAD_TEST_ResourceType"
- *               
+ *
  * @scr.property name="sling.servlet.methods"
  *               value = "PUT"
 */
@@ -44,7 +43,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 public class PutMethodServlet extends TestServlet {
 
   @Override
-  protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+  protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response)
   throws ServletException, IOException {
     dumpRequestAsProperties(request, response);
   }
