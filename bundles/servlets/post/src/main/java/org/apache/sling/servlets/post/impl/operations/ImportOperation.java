@@ -208,12 +208,12 @@ public class ImportOperation extends AbstractCreateOperation {
                 Modification modification = changes.get(0);
                 if (modification.getType() == ModificationType.CREATE) {
                 	String importedPath = modification.getSource();
-                	response.setLocation(importedPath);
+                	response.setLocation(externalizePath(request, importedPath));
                 	response.setPath(importedPath);
                 	int lastSlashIndex = importedPath.lastIndexOf('/');
                 	if (lastSlashIndex != -1) {
                 		String parentPath = importedPath.substring(0, lastSlashIndex);
-                		response.setParentLocation(parentPath);
+                		response.setParentLocation(externalizePath(request, parentPath));
                 	}
                 }
             }
