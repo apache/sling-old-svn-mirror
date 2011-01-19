@@ -47,6 +47,7 @@ import org.slf4j.MDC;
 public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
     public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888"));
+    public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", ""));
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -172,7 +173,7 @@ public class HttpTestBase extends TestCase {
         slingStartupOk = false;
 
         System.err.println("Checking if the required Sling services are started (timeout " + READY_TIMEOUT_SECONDS + " seconds)...");
-        System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + ")");
+        System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + "; servlet context="+ SERVLET_CONTEXT +")");
 
         // Try creating a node on server, every 500msec, until ok, with timeout
         final List<String> exceptionMessages = new LinkedList<String>();
