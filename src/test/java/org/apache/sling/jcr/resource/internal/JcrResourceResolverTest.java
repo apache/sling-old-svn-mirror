@@ -410,29 +410,33 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         final ResourceResolver rr = resFac.getResourceResolver(authInfo);
         final Session s = rr.adaptTo(Session.class);
 
-        assertEquals("Expect 3 session attributes", 3,
-            s.getAttributeNames().length);
-        assertEquals("AStringValue", s.getAttribute("testAttributeString"));
-        assertEquals(999, s.getAttribute("testAttributeNumber"));
-        assertEquals("admin", s.getAttribute(ResourceResolverFactory.USER));
-        assertNull(session.getAttribute(ResourceResolverFactory.PASSWORD));
+        try {
+            assertEquals("Expect 3 session attributes", 3,
+                s.getAttributeNames().length);
+            assertEquals("AStringValue", s.getAttribute("testAttributeString"));
+            assertEquals(999, s.getAttribute("testAttributeNumber"));
+            assertEquals("admin", s.getAttribute(ResourceResolverFactory.USER));
+            assertNull(session.getAttribute(ResourceResolverFactory.PASSWORD));
 
-        assertEquals("AStringValue", rr.getAttribute("testAttributeString"));
-        assertEquals(999, rr.getAttribute("testAttributeNumber"));
-        assertEquals("admin", rr.getAttribute(ResourceResolverFactory.USER));
-        assertNull(rr.getAttribute(ResourceResolverFactory.PASSWORD));
+            assertEquals("AStringValue", rr.getAttribute("testAttributeString"));
+            assertEquals(999, rr.getAttribute("testAttributeNumber"));
+            assertEquals("admin", rr.getAttribute(ResourceResolverFactory.USER));
+            assertNull(rr.getAttribute(ResourceResolverFactory.PASSWORD));
 
-        final HashSet<String> validNames = new HashSet<String>();
-        validNames.add(ResourceResolverFactory.USER);
-        validNames.add("testAttributeString");
-        validNames.add("testAttributeNumber");
-        final Iterator<String> names = rr.getAttributeNames();
-        assertTrue(validNames.remove(names.next()));
-        assertTrue(validNames.remove(names.next()));
-        assertTrue(validNames.remove(names.next()));
-        assertFalse("Expect no more names", names.hasNext());
-        assertTrue("Expect validNames set to be empty now",
-            validNames.isEmpty());
+            final HashSet<String> validNames = new HashSet<String>();
+            validNames.add(ResourceResolverFactory.USER);
+            validNames.add("testAttributeString");
+            validNames.add("testAttributeNumber");
+            final Iterator<String> names = rr.getAttributeNames();
+            assertTrue(validNames.remove(names.next()));
+            assertTrue(validNames.remove(names.next()));
+            assertTrue(validNames.remove(names.next()));
+            assertFalse("Expect no more names", names.hasNext());
+            assertTrue("Expect validNames set to be empty now",
+                validNames.isEmpty());
+        } finally {
+            rr.close();
+        }
     }
 
     public void testGetResource() throws Exception {
