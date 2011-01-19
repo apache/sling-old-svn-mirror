@@ -60,7 +60,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_OK, params, null);
         assertTrue(post.getResponseBodyAsString().length() == 0);
 
-        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "?j_validate=true", HttpServletResponse.SC_OK);
+        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/?j_validate=true", HttpServletResponse.SC_OK);
         assertTrue(get.getResponseBodyAsString().length() == 0);
     }
 
@@ -96,7 +96,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, null);
         assertXReason(post);
 
-        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "?j_validate=true", HttpServletResponse.SC_FORBIDDEN);
+        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/?j_validate=true", HttpServletResponse.SC_FORBIDDEN);
         assertXReason(get);
     }
 
