@@ -131,7 +131,7 @@ public class PostServletImportTest extends HttpTestBase {
         
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         props.put(SlingPostConstants.RP_REPLACE, "true");
         String importedNodeUrl2 = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
@@ -171,7 +171,7 @@ public class PostServletImportTest extends HttpTestBase {
         String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
         props.put(SlingPostConstants.RP_CONTENT, jsonContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
 
         // assert content at new location
@@ -229,7 +229,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport3.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         props.put(SlingPostConstants.RP_CHECKIN, "true");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
@@ -254,7 +254,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName2);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport3.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         props.put(SlingPostConstants.RP_CHECKIN, "false");
         String importedNodeUrl2 = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
@@ -286,7 +286,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -316,7 +316,7 @@ public class PostServletImportTest extends HttpTestBase {
         
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.json"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -352,7 +352,7 @@ public class PostServletImportTest extends HttpTestBase {
         String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
         props.put(SlingPostConstants.RP_CONTENT, jsonContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
 
         // assert content at new location
@@ -382,7 +382,7 @@ public class PostServletImportTest extends HttpTestBase {
         String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.json"));
         props.put(SlingPostConstants.RP_CONTENT, jsonContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
 
         //make sure the name is what was inside the file.
@@ -413,7 +413,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.xml"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "xml");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -440,7 +440,7 @@ public class PostServletImportTest extends HttpTestBase {
         
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.xml"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "xml");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -473,7 +473,7 @@ public class PostServletImportTest extends HttpTestBase {
         String xmlContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.xml"));
         props.put(SlingPostConstants.RP_CONTENT, xmlContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "xml");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
         
         // assert content at new location
@@ -500,7 +500,7 @@ public class PostServletImportTest extends HttpTestBase {
         String xmlContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport2.xml"));
         props.put(SlingPostConstants.RP_CONTENT, xmlContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "xml");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
         
         //make sure the name is what was inside the file.
@@ -532,7 +532,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.zip"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "zip");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -561,7 +561,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.jar"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "jar");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -591,7 +591,7 @@ public class PostServletImportTest extends HttpTestBase {
         props.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
         testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.jcr.xml"));
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "jcr.xml");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
         		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
         
@@ -623,7 +623,7 @@ public class PostServletImportTest extends HttpTestBase {
         String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
         props.put(SlingPostConstants.RP_CONTENT, jsonContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
         String location = testClient.createNode(HTTP_BASE_URL + testPath, props);
 
         // assert content at new location
@@ -671,7 +671,7 @@ public class PostServletImportTest extends HttpTestBase {
         String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport.json"));
 		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT, jsonContent));
 		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT_TYPE, "json"));
-		postParams.add(new NameValuePair(SlingPostConstants.RP_REDIRECT_TO, testPath + "/*"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*"));
 
         //expect a 500 status since the name is invalid
         String location = HTTP_BASE_URL + testPath;
