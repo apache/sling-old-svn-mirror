@@ -540,17 +540,20 @@ public class JcrResourceResolver
 
 
         // cut off scheme and host, if the same as requested
-        String schemehostport;
+        final String schemehostport;
+        final String schemePrefix;
         if (request != null) {
             schemehostport = MapEntry.getURI(request.getScheme(),
                 request.getServerName(), request.getServerPort(), "/");
-
-            LOGGER.debug("map: Mapping path {} for {}", resourcePath,
-                schemehostport);
+            schemePrefix = request.getScheme().concat("://");
+            LOGGER.debug(
+                "map: Mapping path {} for {} (at least with scheme prefix {})",
+                new Object[] { resourcePath, schemehostport, schemePrefix });
 
         } else {
 
             schemehostport = null;
+            schemePrefix = null;
             LOGGER.debug("map: Mapping path {} for default", resourcePath);
 
         }
@@ -635,10 +638,12 @@ public class JcrResourceResolver
 
                 LOGGER.debug("map: Match for Entry {}", mapEntry);
 
-                mappedPath = mappedPaths[0];
                 mappedPathIsUrl = !mapEntry.isInternal();
 
                 if (mappedPathIsUrl && schemehostport != null) {
+
+                    mappedPath = null;
+
                     for (final String candidate : mappedPaths) {
                         if (candidate.startsWith(schemehostport)) {
                             mappedPath = candidate.substring(schemehostport.length() - 1);
@@ -647,8 +652,21 @@ public class JcrResourceResolver
                                 "map: Found host specific mapping {} resolving to {}",
                                 candidate, mappedPath);
                             break;
+                        } else if (candidate.startsWith(schemePrefix)
+                            && mappedPath == null) {
+                            mappedPath = candidate;
                         }
                     }
+
+                    if (mappedPath == null) {
+                        mappedPath = mappedPaths[0];
+                    }
+
+                } else {
+
+                    // we can only go with assumptions selecting the first entry
+                    mappedPath = mappedPaths[0];
+
                 }
 
                 LOGGER.debug(
