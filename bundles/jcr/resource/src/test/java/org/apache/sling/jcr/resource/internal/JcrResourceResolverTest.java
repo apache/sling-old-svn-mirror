@@ -100,10 +100,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // test mappings
         mapRoot = getSession().getRootNode().addNode("etc", "nt:folder");
         Node map = mapRoot.addNode("map", "sling:Mapping");
-        Node https = map.addNode("https", "sling:Mapping");
-        https.addNode("localhost.443", "sling:Mapping");
         Node http = map.addNode("http", "sling:Mapping");
         http.addNode("localhost.80", "sling:Mapping");
+        Node https = map.addNode("https", "sling:Mapping");
+        https.addNode("localhost.443", "sling:Mapping");
 
         session.save();
 
@@ -1083,6 +1083,88 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             mapped10);
         final String mapped11 = resResolver.map(request, res1.getPath());
         assertEquals("/playground/en.html", mapped11);
+    }
+
+    public void testResolveVirtualHostHttpVsHttps() throws Exception {
+
+        final String host0 = "www.host.com";
+        final String host1 = "secure.host.com";
+        final String content = "/content/page";
+
+        Node virtualhost80 = mapRoot.getNode("map/http").addNode(host0 + ".80",
+            "sling:Mapping");
+        virtualhost80.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            content);
+        Node virtualhost443 = mapRoot.getNode("map/https").addNode(
+            host0 + ".443", "sling:Mapping");
+        virtualhost443.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            content);
+        session.save();
+
+        Thread.sleep(1000L);
+
+        // HTTP request
+
+        final HttpServletRequest requestHttp0 = new ResourceResolverTestRequest(
+            null, host0, -1, rootPath);
+        final Resource resHttp0 = resResolver.resolve(requestHttp0, "/playground.html");
+        assertNotNull(resHttp0);
+        assertEquals(content + "/playground.html", resHttp0.getPath());
+
+        final Resource resHttp1 = resResolver.resolve(requestHttp0,
+        "/playground/index.html");
+        assertNotNull(resHttp1);
+        assertEquals(content + "/playground/index.html", resHttp1.getPath());
+
+        // HTTPS request
+        final HttpServletRequest requestHttps0 = new ResourceResolverTestRequest(
+            "https", host0, -1, rootPath);
+        final Resource resHttps0 = resResolver.resolve(requestHttps0, "/playground.html");
+        assertNotNull(resHttps0);
+        assertEquals(content + "/playground.html", resHttps0.getPath());
+
+        final Resource resHttps1 = resResolver.resolve(requestHttps0,
+            "/playground/index.html");
+        assertNotNull(resHttps1);
+        assertEquals(content + "/playground/index.html", resHttps1.getPath());
+
+        // HTTP Mapping
+
+        final String mappedHttp00 = resResolver.map(resHttp0.getPath());
+        assertEquals("http://" + host0 + "/playground.html", mappedHttp00);
+        final String mappedHttp01 = resResolver.map(requestHttp0, resHttp0.getPath());
+        assertEquals("/playground.html", mappedHttp01);
+
+        final String mappedHttp10 = resResolver.map(resHttp1.getPath());
+        assertEquals("http://" + host0 + "/playground/index.html", mappedHttp10);
+        final String mappedHttp11 = resResolver.map(requestHttp0, resHttp1.getPath());
+        assertEquals("/playground/index.html", mappedHttp11);
+
+        // HTTPS Mapping
+
+        final HttpServletRequest requestHttp1 = new ResourceResolverTestRequest(
+            null, host1, -1, rootPath);
+        final HttpServletRequest requestHttps1 = new ResourceResolverTestRequest(
+            "https", host1, -1, rootPath);
+
+        final String mappedHttps00 = resResolver.map(resHttps0.getPath());
+        assertEquals("http://" + host0 + "/playground.html", mappedHttps00);
+        final String mappedHttps01 = resResolver.map(requestHttps0, resHttps0.getPath());
+        assertEquals("/playground.html", mappedHttps01);
+        final String mappedHttps02 = resResolver.map(requestHttp1, resHttps0.getPath());
+        assertEquals("http://" + host0 + "/playground.html", mappedHttps02);
+        final String mappedHttps03 = resResolver.map(requestHttps1, resHttps0.getPath());
+        assertEquals("https://" + host0 + "/playground.html", mappedHttps03);
+
+        final String mappedHttps10 = resResolver.map(resHttps1.getPath());
+        assertEquals("http://" + host0 + "/playground/index.html", mappedHttps10);
+        final String mappedHttps11 = resResolver.map(requestHttps0, resHttps1.getPath());
+        assertEquals("/playground/index.html", mappedHttps11);
+        final String mappedHttps12 = resResolver.map(requestHttp1, resHttps1.getPath());
+        assertEquals("http://" + host0 + "/playground/index.html", mappedHttps12);
+        final String mappedHttps13 = resResolver.map(requestHttps1, resHttps1.getPath());
+        assertEquals("https://" + host0 + "/playground/index.html", mappedHttps13);
+
     }
 
     public void testResolveResourceAlias() throws Exception {
