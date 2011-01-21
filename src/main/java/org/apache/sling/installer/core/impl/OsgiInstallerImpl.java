@@ -446,8 +446,8 @@ public class OsgiInstallerImpl
         }
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
-        final InstallTaskFactory[] services = this.factoryTracker.getSortedServices();
-        if ( services != null && services.length > 0 ) {
+        final List<InstallTaskFactory> services = this.factoryTracker.getSortedServices();
+        if ( services.size() > 0 ) {
             for(final String entityId : this.persistentList.getEntityIds()) {
                 final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
                 // Check the first resource in each group
@@ -467,12 +467,11 @@ public class OsgiInstallerImpl
     /**
      * Get the task for the resource.
      */
-    private InstallTask getTask(final InstallTaskFactory[] services,
+    private InstallTask getTask(List<InstallTaskFactory> services,
             final TaskResourceGroup rrg) {
         InstallTask result = null;
 
-        for(int i=0; i<services.length; i++) {
-            final InstallTaskFactory factory = services[i];
+        for(final InstallTaskFactory factory : services) {
             if ( factory != null ) {
                 result = factory.createTask(rrg);
                 if ( result != null ) {
@@ -542,30 +541,26 @@ public class OsgiInstallerImpl
     private void transformResources() {
         boolean changed = false;
 
-        final ResourceTransformer[] services = this.transformerTracker.getSortedServices();
+        final List<ResourceTransformer> services = this.transformerTracker.getSortedServices();
 
-        if ( services != null && services.length > 0 ) {
+        if ( services.size() > 0 ) {
             // Walk the list of unknown resources and invoke all transformers
             int index = 0;
             final List<RegisteredResource> unknownList = this.persistentList.getUntransformedResources();
 
             while ( index < unknownList.size() ) {
                 final RegisteredResource resource = unknownList.get(index);
-                for(int i=0; i<services.length; i++) {
-                    final ResourceTransformer transformer = services[i];
-                    if ( transformer != null ) {
-
-                        try {
-                            final TransformationResult[] result = transformer.transform(resource);
-                            if ( result != null && result.length > 0 ) {
-                                this.persistentList.transform(resource, result);
-                                changed = true;
-                                index--;
-                                break;
-                            }
-                        } catch (final Throwable t) {
-                            logger.error("Uncaught exception during resource transformation!", t);
+                for(final ResourceTransformer transformer : services) {
+                    try {
+                        final TransformationResult[] result = transformer.transform(resource);
+                        if ( result != null && result.length > 0 ) {
+                            this.persistentList.transform(resource, result);
+                            changed = true;
+                            index--;
+                            break;
                         }
+                    } catch (final Throwable t) {
+                        logger.error("Uncaught exception during resource transformation!", t);
                     }
                 }
                 index++;
