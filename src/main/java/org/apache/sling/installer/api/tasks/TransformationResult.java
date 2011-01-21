@@ -23,6 +23,13 @@ import java.util.Map;
 
 /**
  * A result of a {@link ResourceTransformer}.
+ *
+ * In most cases the new transformation result just contains new
+ * content (provided through {@link #getInputStream()}.
+ *
+ * However, if the transformer is able to detect the new resource
+ * type and sets it, it must also provide a unique id (
+ * {@link #getResourceType()} and {@link #getId()}.
  */
 public class TransformationResult {
 

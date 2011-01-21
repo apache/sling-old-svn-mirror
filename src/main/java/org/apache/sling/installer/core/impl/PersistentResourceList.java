@@ -256,6 +256,17 @@ public class PersistentResourceList {
         this.untransformedResources.remove(resource);
         try {
             for(int i=0; i<result.length; i++) {
+                // check the result
+                final TransformationResult tr = result[i];
+                if ( tr == null ) {
+                    logger.warn("Ignoring null result for {}", resource);
+                    continue;
+                }
+                if ( tr.getResourceType() != null && tr.getId() == null) {
+                    logger.error("Result for {} contains new resource type {} but no unique id!",
+                            resource, tr.getResourceType());
+                    continue;
+                }
                 final TaskResource clone =  ((RegisteredResourceImpl)resource).clone(result[i]);
                 this.checkInstallable(clone);
             }
