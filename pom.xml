@@ -61,7 +61,10 @@
 							org.apache.sling.installer.api;version=3.0.0,
                             org.apache.sling.installer.api.tasks;version=1.0.0
                         </Export-Package>
-						<Private-Package>org.apache.sling.installer.core.impl.*</Private-Package>
+						<Private-Package>
+						    org.apache.sling.installer.core.impl.*,
+                            org.osgi.util.tracker
+						</Private-Package>
                         <Embed-Dependency>
                             org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
                         </Embed-Dependency>
