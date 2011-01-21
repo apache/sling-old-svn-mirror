@@ -18,7 +18,10 @@
  */
 package org.apache.sling.installer.core.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +38,7 @@ public class SortingServiceTracker<T>
 
     private int lastCount = -1;
 
-    private T[] sortedServiceCache;
+    private List<T> sortedServiceCache;
 
     /**
      * Constructor
@@ -79,17 +82,20 @@ public class SortingServiceTracker<T>
      * Return a sorted array of the services.
      */
     @SuppressWarnings("unchecked")
-    public T[] getSortedServices() {
+    public List<T> getSortedServices() {
         if ( this.sortedServiceCache == null || this.lastCount < this.getTrackingCount() ) {
             this.lastCount = this.getTrackingCount();
             final ServiceReference[] references = this.getServiceReferences();
             if ( references == null || references.length == 0 ) {
-                this.sortedServiceCache = (T[])new Object[0];
+                this.sortedServiceCache = Collections.emptyList();
             } else {
                 Arrays.sort(references);
-                this.sortedServiceCache = (T[])new Object[references.length];
+                this.sortedServiceCache = new ArrayList<T>();
                 for(int i=0;i<references.length;i++) {
-                    this.sortedServiceCache[i] = (T)this.getService(references[references.length - 1 - i]);
+                    final T service = (T)this.getService(references[references.length - 1 - i]);
+                    if ( service != null ) {
+                        this.sortedServiceCache.add(service);
+                    }
                 }
             }
         }

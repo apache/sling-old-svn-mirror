@@ -25,6 +25,7 @@ import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
+import org.apache.sling.installer.core.impl.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -140,12 +141,25 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
 	        return null;
 	    }
-	    final InstallTask result;
 
+	    // check if symbolic name and version is provided in the attributes
+        if ( toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME) == null ) {
+            final Util.BundleHeaders headers = Util.readBundleHeaders(toActivate);
+            if ( headers == null ) {
+                logger.info("Resource of type bundle {} is not really a bundle - manifest entries are missing.", toActivate);
+                return new ChangeStateTask(resourceList, ResourceState.IGNORED);
+            }
+            toActivate.setAttribute(Constants.BUNDLE_SYMBOLICNAME, headers.symbolicName);
+            toActivate.setAttribute(Constants.BUNDLE_VERSION, headers.version);
+            if ( headers.activationPolicy != null ) {
+                toActivate.setAttribute(Constants.BUNDLE_ACTIVATIONPOLICY, headers.activationPolicy);
+            }
+        }
         final String symbolicName = (String)toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final BundleInfo info = this.getBundleInfo(symbolicName);
 
 		// Uninstall
+        final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
 		    // Remove corresponding bundle if present and if we installed it
 		    if (info != null

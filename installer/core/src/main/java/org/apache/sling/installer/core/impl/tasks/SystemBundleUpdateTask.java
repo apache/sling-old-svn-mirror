@@ -44,7 +44,12 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
     }
 
     @Override
-    public void execute(InstallationContext ctx) {
+    public void execute(final InstallationContext ctx) {
+        // restart system bundle
+        if ( this.getResource() == null ) {
+            this.restartSystemBundleDelayed();
+            return;
+        }
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = this.creator.getMatchingBundle(symbolicName);
         if (b == null) {
@@ -101,4 +106,30 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
         return BUNDLE_UPDATE_ORDER + getResource().getURL();
     }
 
+    private void restartSystemBundleDelayed() {
+        final Bundle systemBundle = this.creator.getBundleContext().getBundle(0);
+        // sanity check
+        if ( systemBundle == null ) {
+            return;
+        }
+        final Thread t = new Thread(new Runnable() {
+
+            /**
+             * @see java.lang.Runnable#run()
+             */
+            public void run() {
+                try {
+                    Thread.sleep(800);
+                } catch(InterruptedException ignored) {
+                }
+                try {
+                    systemBundle.update();
+                } catch (final BundleException be) {
+                    getLogger().warn("Unable to refresh system bundle", be);
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
 }

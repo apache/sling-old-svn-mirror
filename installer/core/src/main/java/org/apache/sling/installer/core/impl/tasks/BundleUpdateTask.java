@@ -79,8 +79,13 @@ public class BundleUpdateTask extends AbstractInstallTask {
             ctx.log("Updated bundle {} from resource {}", b, getResource());
 
             if (reactivate) {
-                this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
-                ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
+ //               if ( isSystemBundleFragment(b) ) {
+ //                   this.setFinishedState(ResourceState.INSTALLED);
+ //                   ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, creator));
+ //               } else {
+                    this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
+                    ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
+ //               }
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
@@ -99,4 +104,10 @@ public class BundleUpdateTask extends AbstractInstallTask {
         return BUNDLE_UPDATE_ORDER + getResource().getEntityId();
     }
 
+    private boolean isSystemBundleFragment(final Bundle installedBundle) {
+        final String fragmentHeader = (String) installedBundle.getHeaders().get(
+            Constants.FRAGMENT_HOST);
+        return fragmentHeader != null
+            && fragmentHeader.indexOf(Constants.EXTENSION_DIRECTIVE) > 0;
+    }
 }

@@ -18,12 +18,8 @@
  */
 package org.apache.sling.installer.core.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
@@ -79,34 +75,23 @@ public class DefaultTransformer
      * @return
      */
     private TransformationResult[] checkBundle(final RegisteredResource resource) {
-        try {
-            final Manifest m = getManifest(resource.getInputStream());
-            if (m != null) {
-                final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
-                if (sn != null) {
-                    final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
-                    if (v != null) {
-                        final Map<String, Object> attr = new HashMap<String, Object>();
-                        attr.put(Constants.BUNDLE_SYMBOLICNAME, sn);
-                        attr.put(Constants.BUNDLE_VERSION, v.toString());
+        final Util.BundleHeaders headers = Util.readBundleHeaders(resource);
+        if ( headers != null ) {
+            final Map<String, Object> attr = new HashMap<String, Object>();
+            attr.put(Constants.BUNDLE_SYMBOLICNAME, headers.symbolicName);
+            attr.put(Constants.BUNDLE_VERSION, headers.version);
 
-                        // check for activation policy
-                        final String actPolicy = m.getMainAttributes().getValue(Constants.BUNDLE_ACTIVATIONPOLICY);
-                        if ( Constants.ACTIVATION_LAZY.equals(actPolicy) ) {
-                            attr.put(Constants.BUNDLE_ACTIVATIONPOLICY, actPolicy);
-                        }
-
-                        final TransformationResult tr = new TransformationResult();
-                        tr.setId(sn);
-                        tr.setResourceType(InstallableResource.TYPE_BUNDLE);
-                        tr.setAttributes(attr);
-
-                        return new TransformationResult[] {tr};
-                    }
-                }
+            // check for activation policy
+            if ( headers.activationPolicy != null ) {
+                attr.put(Constants.BUNDLE_ACTIVATIONPOLICY, headers.activationPolicy);
             }
-        } catch (final IOException ignore) {
-            // ignore
+
+            final TransformationResult tr = new TransformationResult();
+            tr.setId(headers.symbolicName);
+            tr.setResourceType(InstallableResource.TYPE_BUNDLE);
+            tr.setAttributes(attr);
+
+            return new TransformationResult[] {tr};
         }
         return null;
     }
@@ -161,38 +146,7 @@ public class DefaultTransformer
         return new TransformationResult[] {tr};
     }
 
-    /**
-     * Read the manifest from supplied input stream, which is closed before return.
-     */
-    private Manifest getManifest(final InputStream ins) throws IOException {
-        Manifest result = null;
 
-        if ( ins != null ) {
-            JarInputStream jis = null;
-            try {
-                jis = new JarInputStream(ins);
-                result= jis.getManifest();
-
-            } finally {
-
-                // close the jar stream or the inputstream, if the jar
-                // stream is set, we don't need to close the input stream
-                // since closing the jar stream closes the input stream
-                if (jis != null) {
-                    try {
-                        jis.close();
-                    } catch (IOException ignore) {
-                    }
-                } else {
-                    try {
-                        ins.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
-        }
-        return result;
-    }
 
     /**
      * Compute the extension

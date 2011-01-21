@@ -75,6 +75,7 @@ public class BundleStartTask extends AbstractInstallTask {
 	 * Check if the bundle is active.
 	 * This is true if the bundle has the active state or of the bundle
 	 * is in the starting state and has the lazy activation policy.
+	 * Or if the bundle is a fragment, it's considered active as well
 	 */
 	public static boolean isBundleActive(final Bundle b) {
 	    if ( b.getState() == Bundle.ACTIVE ) {
@@ -83,6 +84,10 @@ public class BundleStartTask extends AbstractInstallTask {
 	    if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
 	        return true;
 	    }
+	    /*
+	    if ( b.getHeaders().get(Constants.FRAGMENT_HOST) != null ) {
+	        return true;
+	    }*/
         return false;
 	}
 	/**
