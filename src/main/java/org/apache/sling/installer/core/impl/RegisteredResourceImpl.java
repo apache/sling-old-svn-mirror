@@ -293,7 +293,7 @@ public class RegisteredResourceImpl
             return false;
         }
         if ( this.entity == null ) {
-            return super.equals(obj);
+            return this.getURL().equals(((RegisteredResourceImpl)obj).getURL());
         }
         return compareTo((RegisteredResourceImpl)obj) == 0;
     }
