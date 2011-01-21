@@ -25,6 +25,7 @@ import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
 import static org.apache.sling.api.scripting.SlingBindings.RESOURCE;
 import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
+import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,9 +39,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.script.Bindings;
 import javax.script.Invocable;
@@ -81,6 +84,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** Thread local containing the resource resolver. */
     private static ThreadLocal<ResourceResolver> requestResourceResolver = new ThreadLocal<ResourceResolver>();
 
+    /** The set of protected keys. */
+    private static final Set<String> PROTECTED_KEYS = 
+        new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, FLUSH, LOG));
+    
     /** The resource pointing to the script. */
     private final Resource scriptResource;
 
@@ -359,7 +366,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 }
             }
             // optionall flush the output channel
-            Object flushObject = bindings.get(SlingBindings.FLUSH);
+            Object flushObject = bindings.get(FLUSH);
             if (flushObject instanceof Boolean && (Boolean) flushObject) {
                 ctx.getWriter().flush();
             }
@@ -673,7 +680,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         }
 
         if (!bindingsValuesProviders.isEmpty()) {
-            ProtectedBindings protectedBindings = new ProtectedBindings(bindings);
+            Set<String> protectedKeys = new HashSet<String>();
+            protectedKeys.addAll(PROTECTED_KEYS);
+            
+            ProtectedBindings protectedBindings = new ProtectedBindings(bindings, protectedKeys);
             for (BindingsValuesProvider provider : bindingsValuesProviders) {
                 provider.addBindings(protectedBindings);
             }
