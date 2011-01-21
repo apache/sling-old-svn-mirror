@@ -191,6 +191,10 @@ public class PersistentResourceList {
 
             t.addOrUpdate(input);
         } else {
+            // check if there is an old resource and remove it first
+            if ( this.untransformedResources.contains(input) ) {
+                this.untransformedResources.remove(input);
+            }
             this.untransformedResources.add(input);
         }
     }
@@ -203,12 +207,24 @@ public class PersistentResourceList {
     }
 
     /**
-     * Remove a resource by url
+     * Remove a resource by url.
+     * Check all resource groups and the list of untransformed resources.
      * @param url The url to remove
      */
     public void remove(final String url) {
+        // iterate over all resource groups and remove resources
+        // with the given url
         for(final EntityResourceList group : this.data.values()) {
             group.remove(url);
+        }
+        // iterate over untransformed resources and remove
+        // the resource with that url
+        for(final RegisteredResource rr : this.untransformedResources) {
+            if ( rr.getURL().equals(url) ) {
+                ((RegisteredResourceImpl)rr).cleanup();
+                this.untransformedResources.remove(rr);
+                break;
+            }
         }
     }
 
