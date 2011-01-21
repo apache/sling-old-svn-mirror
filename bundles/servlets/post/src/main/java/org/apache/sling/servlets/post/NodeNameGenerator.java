@@ -31,6 +31,8 @@ public interface NodeNameGenerator {
      * @param parentPath the path to the new node's parent
      * @param requirePrefix if true, ignore parameters which do not being with ./
      * @param defaultNodeNameGenerator the default node name generator
+     *
+     * @return the node name to be created or null if other NodeNameGenerators should be consulted
      */
     public String getNodeName(SlingHttpServletRequest request, String parentPath, boolean requirePrefix,
             NodeNameGenerator defaultNodeNameGenerator);
