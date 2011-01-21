@@ -48,9 +48,6 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +62,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OsgiInstallerImpl
     extends Thread
-    implements BundleListener, FrameworkListener, OsgiInstaller, ServiceTrackerCustomizer {
+    implements BundleListener, FrameworkListener, OsgiInstaller {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -95,10 +92,10 @@ public class OsgiInstallerImpl
     private PersistentResourceList persistentList;
 
     /** A tracker for the factories. */
-    private ServiceTracker factoryTracker;
+    private SortingServiceTracker<InstallTaskFactory> factoryTracker;
 
     /** A tracker for the transformers. */
-    private ServiceTracker transformerTracker;
+    private SortingServiceTracker<ResourceTransformer> transformerTracker;
 
     /** New resources lock. */
     private final Object resourcesLock = new Object();
@@ -146,9 +143,9 @@ public class OsgiInstallerImpl
      */
     private void init() {
         // start service trackers
-        this.factoryTracker = new ServiceTracker(ctx, InstallTaskFactory.class.getName(), this);
+        this.factoryTracker = new SortingServiceTracker<InstallTaskFactory>(ctx, InstallTaskFactory.class.getName(), this);
         this.factoryTracker.open();
-        this.transformerTracker = new ServiceTracker(ctx, ResourceTransformer.class.getName(), this);
+        this.transformerTracker = new SortingServiceTracker<ResourceTransformer>(ctx, ResourceTransformer.class.getName(), this);
         this.transformerTracker.open();
 
         // listen to framework and bundle events
@@ -449,7 +446,7 @@ public class OsgiInstallerImpl
         }
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
-        final Object[] services = this.factoryTracker.getServices();
+        final InstallTaskFactory[] services = this.factoryTracker.getSortedServices();
         if ( services != null && services.length > 0 ) {
             for(final String entityId : this.persistentList.getEntityIds()) {
                 final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
@@ -470,13 +467,13 @@ public class OsgiInstallerImpl
     /**
      * Get the task for the resource.
      */
-    private InstallTask getTask(final Object[] services,
+    private InstallTask getTask(final InstallTaskFactory[] services,
             final TaskResourceGroup rrg) {
         InstallTask result = null;
 
         for(int i=0; i<services.length; i++) {
-            if ( services[i] instanceof InstallTaskFactory ) {
-                final InstallTaskFactory factory = (InstallTaskFactory)services[i];
+            final InstallTaskFactory factory = services[i];
+            if ( factory != null ) {
                 result = factory.createTask(rrg);
                 if ( result != null ) {
                     break;
@@ -545,7 +542,7 @@ public class OsgiInstallerImpl
     private void transformResources() {
         boolean changed = false;
 
-        final Object[] services = this.transformerTracker.getServices();
+        final ResourceTransformer[] services = this.transformerTracker.getSortedServices();
 
         if ( services != null && services.length > 0 ) {
             // Walk the list of unknown resources and invoke all transformers
@@ -555,8 +552,8 @@ public class OsgiInstallerImpl
             while ( index < unknownList.size() ) {
                 final RegisteredResource resource = unknownList.get(index);
                 for(int i=0; i<services.length; i++) {
-                    if ( services[i] instanceof ResourceTransformer ) {
-                        final ResourceTransformer transformer = (ResourceTransformer)services[i];
+                    final ResourceTransformer transformer = services[i];
+                    if ( transformer != null ) {
 
                         try {
                             final TransformationResult[] result = transformer.transform(resource);
@@ -632,29 +629,9 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     * Wake up the run cycle.
      */
-    public void removedService(ServiceReference reference, Object service) {
-        ctx.ungetService(reference);
-    }
-
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void modifiedService(ServiceReference reference, Object service) {
-        // do nothing
-    }
-
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public Object addingService(ServiceReference reference) {
-        // new factory has been added, wake up main thread
-        this.wakeUp();
-        return ctx.getService(reference);
-    }
-
-    private void wakeUp() {
+    public void wakeUp() {
         synchronized (this.resourcesLock) {
             this.resourcesLock.notify();
         }
