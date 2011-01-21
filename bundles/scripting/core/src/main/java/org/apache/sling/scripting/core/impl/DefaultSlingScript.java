@@ -86,7 +86,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     /** The set of protected keys. */
     private static final Set<String> PROTECTED_KEYS = 
-        new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, FLUSH, LOG));
+        new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, LOG));
     
     /** The resource pointing to the script. */
     private final Resource scriptResource;
