@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scripting.core.impl.helper;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class ProtectedBindingsTest {
     public void setup() {
         SimpleBindings inner = new SimpleBindings();
         inner.put("test1", "value1");
-        this.bindings = new ProtectedBindings(inner);
+        this.bindings = new ProtectedBindings(inner, Collections.singleton("test1"));
     }
 
     @Test(expected=IllegalArgumentException.class)
