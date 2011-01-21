@@ -44,7 +44,7 @@ public class DefaultTransformer
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
      */
-    public void init(BundleContext bctx) {
+    public void init(final BundleContext bctx) {
         // nothing to do
     }
 
