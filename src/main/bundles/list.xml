@@ -258,6 +258,11 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.groovy</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.explorer</artifactId>
             <version>1.0.0</version>
         </bundle> 
