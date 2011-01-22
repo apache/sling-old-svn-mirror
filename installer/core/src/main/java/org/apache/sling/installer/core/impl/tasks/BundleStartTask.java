@@ -84,10 +84,9 @@ public class BundleStartTask extends AbstractInstallTask {
 	    if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
 	        return true;
 	    }
-	    /*
 	    if ( b.getHeaders().get(Constants.FRAGMENT_HOST) != null ) {
 	        return true;
-	    }*/
+	    }
         return false;
 	}
 	/**
