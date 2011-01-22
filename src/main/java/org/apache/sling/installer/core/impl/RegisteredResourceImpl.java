@@ -479,6 +479,7 @@ public class RegisteredResourceImpl
                 this.digest,
                 this.priority,
                 this.urlScheme);
+        rr.attributes.putAll(this.attributes);
         rr.update(transformationResult);
 
         return rr;

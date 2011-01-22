@@ -38,7 +38,11 @@ public class SortingServiceTracker<T>
 
     private int lastCount = -1;
 
+    private int lastRefCount = -1;
+
     private List<T> sortedServiceCache;
+
+    private List<ServiceReference> sortedReferences;
 
     /**
      * Constructor
@@ -56,6 +60,7 @@ public class SortingServiceTracker<T>
     @Override
     public void removedService(ServiceReference reference, Object service) {
         this.sortedServiceCache = null;
+        this.sortedReferences = null;
         this.context.ungetService(reference);
     }
 
@@ -65,6 +70,7 @@ public class SortingServiceTracker<T>
     @Override
     public void modifiedService(ServiceReference reference, Object service) {
         this.sortedServiceCache = null;
+        this.sortedReferences = null;
     }
 
     /**
@@ -73,15 +79,15 @@ public class SortingServiceTracker<T>
     @Override
     public Object addingService(ServiceReference reference) {
         this.sortedServiceCache = null;
-        // new factory has been added, wake up main thread
+        this.sortedReferences = null;
+        // new factory or resource transformer has been added, wake up main thread
         this.listener.wakeUp();
         return context.getService(reference);
     }
 
     /**
-     * Return a sorted array of the services.
+     * Return a sorted list of the services.
      */
-    @SuppressWarnings("unchecked")
     public List<T> getSortedServices() {
         if ( this.sortedServiceCache == null || this.lastCount < this.getTrackingCount() ) {
             this.lastCount = this.getTrackingCount();
@@ -92,6 +98,7 @@ public class SortingServiceTracker<T>
                 Arrays.sort(references);
                 this.sortedServiceCache = new ArrayList<T>();
                 for(int i=0;i<references.length;i++) {
+                    @SuppressWarnings("unchecked")
                     final T service = (T)this.getService(references[references.length - 1 - i]);
                     if ( service != null ) {
                         this.sortedServiceCache.add(service);
@@ -100,5 +107,25 @@ public class SortingServiceTracker<T>
             }
         }
         return this.sortedServiceCache;
+    }
+
+    /**
+     * Return a sorted list of the services references.
+     */
+    public List<ServiceReference> getSortedServiceReferences() {
+        if ( this.sortedReferences == null || this.lastRefCount < this.getTrackingCount() ) {
+            this.lastRefCount = this.getTrackingCount();
+            final ServiceReference[] references = this.getServiceReferences();
+            if ( references == null || references.length == 0 ) {
+                this.sortedReferences = Collections.emptyList();
+            } else {
+                Arrays.sort(references);
+                this.sortedReferences = new ArrayList<ServiceReference>();
+                for(int i=0;i<references.length;i++) {
+                    this.sortedReferences.add(references[i]);
+                }
+            }
+        }
+        return this.sortedReferences;
     }
 }
