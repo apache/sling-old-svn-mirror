@@ -18,6 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
@@ -156,22 +159,26 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
             }
         }
         final String symbolicName = (String)toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME);
-        final BundleInfo info = this.getBundleInfo(symbolicName);
 
 		// Uninstall
         final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
+		    // find the info with the exact version
+            final BundleInfo info = this.getBundleInfo(symbolicName,
+                    (String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
 		    // Remove corresponding bundle if present and if we installed it
-		    if (info != null
-		        && info.version.equals(new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION))) ) {
+		    if ( info != null ) {
 		        result = new BundleRemoveTask(resourceList, this);
 		    } else {
-	            logger.info("Bundle {} was not installed by this module, not removed", symbolicName);
+	            logger.debug("Bundle {}:{} is not installed anymore - nothing to remove.", symbolicName,
+	                    toActivate.getAttribute(Constants.BUNDLE_VERSION));
 	            result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
 	        }
 
 		// Install
 		} else {
+		    // for install and update, we want the bundle with the highest version
+	        final BundleInfo info = this.getBundleInfo(symbolicName, null);
 		    // check if we should start the bundle as we installed it in the previous run
 		    if (info == null) {
 			    // bundle is not installed yet: install
@@ -210,8 +217,8 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 		return result;
 	}
 
-	protected BundleInfo getBundleInfo(final String symbolicName) {
-		final Bundle b = this.getMatchingBundle(symbolicName);
+	protected BundleInfo getBundleInfo(final String symbolicName, final String version) {
+		final Bundle b = this.getMatchingBundle(symbolicName, version);
 		if (b == null) {
 		    return null;
         }
@@ -221,20 +228,45 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
     /**
      * Finds the bundle with given symbolic name in our bundle context.
      */
-    public Bundle getMatchingBundle(String bundleSymbolicName) {
+    public Bundle getMatchingBundle(final String bundleSymbolicName, final String version) {
+        Bundle match = null;
         if (bundleSymbolicName != null) {
             // check if this is the system bundle
             if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bundleSymbolicName) ) {
                 return bundleContext.getBundle(0);
             }
+            final List<Bundle> matchingBundles = new ArrayList<Bundle>();
             final Bundle[] bundles = bundleContext.getBundles();
             for (Bundle bundle : bundles) {
                 if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
-                    return bundle;
+                    matchingBundles.add(bundle);
+                }
+            }
+            if ( matchingBundles.size() > 0 ) {
+                final Version searchVersion = (version == null ? null : new Version(version));
+                if ( searchVersion == null || searchVersion.compareTo(getBundleVersion(matchingBundles.get(0))) == 0 ) {
+                    match = matchingBundles.get(0);
+                }
+                for(int i=1; i<matchingBundles.size(); i++) {
+                    final Bundle current = matchingBundles.get(i);
+                    if ( searchVersion == null ) {
+                        if ( getBundleVersion(match).compareTo(getBundleVersion(current)) < 0 ) {
+                            match = current;
+                        }
+                    } else {
+                        if ( searchVersion.compareTo(getBundleVersion(current)) == 0 ) {
+                            match = current;
+                            break;
+                        }
+                    }
                 }
             }
         }
-        return null;
+        return match;
+    }
+
+    private Version getBundleVersion(final Bundle b) {
+        return new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
     }
 
     /**

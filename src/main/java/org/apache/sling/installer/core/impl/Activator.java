@@ -19,6 +19,7 @@
 package org.apache.sling.installer.core.impl;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -122,9 +123,10 @@ public class Activator implements BundleActivator {
         for(final Class<?> serviceClass : serviceClasses) {
             final InternalService service = (InternalService) serviceClass.newInstance();
 
-            final Hashtable<String, String> props = new Hashtable<String, String>();
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(Constants.SERVICE_DESCRIPTION, service.getDescription());
             props.put(Constants.SERVICE_VENDOR, VENDOR);
+            props.put(Constants.SERVICE_RANKING, new Integer(-100));
 
             final String[] serviceInterfaces;
             if ( service instanceof ResourceTransformer && service instanceof InstallTaskFactory ) {
