@@ -26,35 +26,36 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
  */
 public class FormGenerationTest extends HttpTestBase {
 
-    public void testSelectorFormForRootResource() throws Exception {
-        String contextPath = getContextPath(HTTP_BASE_URL);
+    public void testSelectorFormForDefaultResource() throws Exception {
         String content = getContent(HTTP_BASE_URL + "/system/sling/selector/login", CONTENT_TYPE_HTML,
-                Arrays.asList(new NameValuePair("resource", "/")), 200);
+                null, 200);
 
-        assertTrue("form action is not correct.", content.contains("action=\"" + contextPath + "/j_security_check\""));
+        assertTrue("form action is not correct.", content.contains("action=\"" + SERVLET_CONTEXT + "/j_security_check\""));
         assertTrue("sling image reference is not correct.",
-                content.contains("<img border=\"0\" src=\"" + contextPath + "/sling-logo.png\"/>"));
+                content.contains("<img border=\"0\" src=\"" + SERVLET_CONTEXT + "/sling-logo.png\"/>"));
+    }
+
+    public void testSelectorFormForRootResource() throws Exception {
+        String resource = SERVLET_CONTEXT.equals("") ? "/" : SERVLET_CONTEXT;
+        
+        String content = getContent(HTTP_BASE_URL + "/system/sling/selector/login", CONTENT_TYPE_HTML,
+                Arrays.asList(new NameValuePair("resource", resource)), 200);
+
+        assertTrue("form action is not correct.", content.contains("action=\"" + SERVLET_CONTEXT + "/j_security_check\""));
+        assertTrue("sling image reference is not correct.",
+                content.contains("<img border=\"0\" src=\"" + SERVLET_CONTEXT + "/sling-logo.png\"/>"));
     }
 
     public void testSelectorFormForNonRootResource() throws Exception {
-        String contextPath = getContextPath(HTTP_BASE_URL);
+        String resource = SERVLET_CONTEXT + "/var/classes.json";
+        
         String content = getContent(HTTP_BASE_URL + "/system/sling/selector/login", CONTENT_TYPE_HTML,
-                Arrays.asList(new NameValuePair("resource", "/var/classes.json")), 200);
+                Arrays.asList(new NameValuePair("resource", resource)), 200);
 
         assertTrue("form action is not correct.",
-                content.contains("action=\"" + contextPath + "/var/classes.json/j_security_check\""));
+                content.contains("action=\"" + SERVLET_CONTEXT + "/var/classes.json/j_security_check\""));
         assertTrue("sling image reference is not correct.",
-                content.contains("<img border=\"0\" src=\"" + contextPath + "/sling-logo.png\"/>"));
-    }
-
-    private static String getContextPath(String baseURL) {
-        // get the index of the first slash after http:// or https://
-        int idx = baseURL.indexOf('/', 8);
-        if (idx == -1) {
-            return "";
-        } else {
-            return baseURL.substring(idx);
-        }
+                content.contains("<img border=\"0\" src=\"" + SERVLET_CONTEXT + "/sling-logo.png\"/>"));
     }
 
 }

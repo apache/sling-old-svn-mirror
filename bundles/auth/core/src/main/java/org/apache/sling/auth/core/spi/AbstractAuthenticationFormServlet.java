@@ -162,31 +162,25 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
 
     /**
      * Returns the context path for the authentication form request. This path
-     * includes the following parts:
-     * <ol>
-     * <li>The Servlet context path (
-     * <code>HttpServletRequest.getContextPath()</code></li>
-     * <li>The path to the authenticated resource as returned by
+     * is the path to the authenticated resource as returned by
      * {@link #getResource(HttpServletRequest)} (without the optional query
-     * string which may be contained in the resource path)</li>
-     * </ol>
+     * string which may be contained in the resource path). If {@link #getResource(HttpServletRequest)}
+     * return an empty string, the servlet context path is used.
      *
      * @param request The request
-     * @return The context path for the form action consisting of the request
-     *         context path and the resource to which the user is to
-     *         authenticate.
+     * @return The context path for the form action consisting of the resource to
+     *         which the user is to authenticate.
      */
     protected String getContextPath(final HttpServletRequest request) {
-        StringBuilder b = new StringBuilder();
-        b.append(request.getContextPath());
-        String resource = getResource(request);
-        int query = resource.indexOf('?');
-        if (query > 0) {
-            b.append(resource.substring(0, query));
-        } else {
-            b.append(resource);
+        String contextPath = getResource(request);
+        if ("".equals(contextPath)) {
+            contextPath = request.getContextPath();
         }
-        String contextPath = b.toString();
+        int query = contextPath.indexOf('?');
+        if (query > 0) {
+            contextPath = contextPath.substring(0, query);
+        }
+        
         return removeEndingSlash(contextPath);
     }
 
