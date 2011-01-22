@@ -140,6 +140,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
 	public InstallTask createTask(final TaskResourceGroup resourceList) {
+	    // quick check of the resource type.
 	    final TaskResource toActivate = resourceList.getActiveResource();
 	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
 	        return null;

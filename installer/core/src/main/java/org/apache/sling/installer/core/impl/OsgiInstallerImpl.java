@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -553,6 +554,10 @@ public class OsgiInstallerImpl
                 for(final ResourceTransformer transformer : services) {
                     try {
                         final TransformationResult[] result = transformer.transform(resource);
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Invoked transformer {} on {} : {}",
+                                    new Object[] {transformer, resource, Arrays.toString(result)});
+                        }
                         if ( result != null && result.length > 0 ) {
                             this.persistentList.transform(resource, result);
                             changed = true;
