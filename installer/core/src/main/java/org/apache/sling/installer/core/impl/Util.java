@@ -105,8 +105,10 @@ public class Util {
                 if (sn != null) {
                     final String v = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
                     if (v != null) {
+                        final int paramPos = sn.indexOf(';');
+                        final String symbolicName = (paramPos == -1 ? sn : sn.substring(0, paramPos));
                         final BundleHeaders headers = new BundleHeaders();
-                        headers.symbolicName = sn;
+                        headers.symbolicName = symbolicName;
                         headers.version = v.toString();
 
                         // check for activation policy
