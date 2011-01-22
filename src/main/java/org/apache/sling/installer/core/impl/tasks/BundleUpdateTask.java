@@ -79,13 +79,13 @@ public class BundleUpdateTask extends AbstractInstallTask {
             ctx.log("Updated bundle {} from resource {}", b, getResource());
 
             if (reactivate) {
- //               if ( isSystemBundleFragment(b) ) {
- //                   this.setFinishedState(ResourceState.INSTALLED);
- //                   ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, creator));
- //               } else {
+                if ( isSystemBundleFragment(b) ) {
+                    this.setFinishedState(ResourceState.INSTALLED);
+                    ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, creator));
+                } else {
                     this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
                     ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.creator));
- //               }
+                }
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
