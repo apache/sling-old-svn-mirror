@@ -47,8 +47,10 @@ import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -542,30 +544,42 @@ public class OsgiInstallerImpl
     private void transformResources() {
         boolean changed = false;
 
-        final List<ResourceTransformer> services = this.transformerTracker.getSortedServices();
+        final List<ServiceReference> serviceRefs = this.transformerTracker.getSortedServiceReferences();
 
-        if ( services.size() > 0 ) {
+        if ( serviceRefs.size() > 0 ) {
             // Walk the list of unknown resources and invoke all transformers
             int index = 0;
             final List<RegisteredResource> unknownList = this.persistentList.getUntransformedResources();
 
             while ( index < unknownList.size() ) {
                 final RegisteredResource resource = unknownList.get(index);
-                for(final ResourceTransformer transformer : services) {
-                    try {
-                        final TransformationResult[] result = transformer.transform(resource);
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug("Invoked transformer {} on {} : {}",
-                                    new Object[] {transformer, resource, Arrays.toString(result)});
+                for(final ServiceReference reference : serviceRefs) {
+                    final Long id = (Long)reference.getProperty(Constants.SERVICE_ID);
+                    // check if this transformer has already been invoked for the resource
+                    final String transformers = (String)((RegisteredResourceImpl)resource).getAttribute(ResourceTransformer.class.getName());
+                    if ( id == null ||
+                         (transformers != null && transformers.contains(":" + id + ':'))) {
+                        continue;
+                    }
+                    final ResourceTransformer transformer = (ResourceTransformer) this.transformerTracker.getService(reference);
+                    if ( transformer != null ) {
+                        try {
+                            final TransformationResult[] result = transformer.transform(resource);
+                            final String newTransformers = (transformers == null ? ":" + id + ':' : transformers + id + ':');
+                            ((RegisteredResourceImpl)resource).setAttribute(ResourceTransformer.class.getName(), newTransformers);
+                            if ( logger.isDebugEnabled() ) {
+                                logger.debug("Invoked transformer {} on {} : {}",
+                                        new Object[] {transformer, resource, Arrays.toString(result)});
+                            }
+                            if ( result != null && result.length > 0 ) {
+                                this.persistentList.transform(resource, result);
+                                changed = true;
+                                index--;
+                                break;
+                            }
+                        } catch (final Throwable t) {
+                            logger.error("Uncaught exception during resource transformation!", t);
                         }
-                        if ( result != null && result.length > 0 ) {
-                            this.persistentList.transform(resource, result);
-                            changed = true;
-                            index--;
-                            break;
-                        }
-                    } catch (final Throwable t) {
-                        logger.error("Uncaught exception during resource transformation!", t);
                     }
                 }
                 index++;
@@ -600,7 +614,7 @@ public class OsgiInstallerImpl
             eventsCount++;
         }
         final int t = e.getType();
-        if(t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
+        if (t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
             logger.debug("Received BundleEvent that might allow installed bundles to start, scheduling retries if any");
             // TODO - for now we always reschedule regardless if we have retries
             // If the config task factory is only registered when config admin is available we can relax this again.
