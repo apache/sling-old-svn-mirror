@@ -49,7 +49,7 @@ public class BundleUpdateTask extends AbstractInstallTask {
      */
     public void execute(InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = this.creator.getMatchingBundle(symbolicName);
+        final Bundle b = this.creator.getMatchingBundle(symbolicName, null);
         if (b == null) {
             this.getLogger().debug("Bundle to update ({}) not found", symbolicName);
             this.setFinishedState(ResourceState.IGNORED);

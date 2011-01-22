@@ -51,7 +51,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
             return;
         }
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = this.creator.getMatchingBundle(symbolicName);
+        final Bundle b = this.creator.getMatchingBundle(symbolicName, null);
         if (b == null) {
             throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
         }

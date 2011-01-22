@@ -47,7 +47,8 @@ public class BundleRemoveTask extends AbstractInstallTask {
      */
     public void execute(InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = this.creator.getMatchingBundle(symbolicName);
+        final String version = (String)getResource().getAttribute(Constants.BUNDLE_VERSION);
+        final Bundle b = this.creator.getMatchingBundle(symbolicName, version);
         if (b == null) {
             // nothing to do, so just stop
             this.setFinishedState(ResourceState.IGNORED);
