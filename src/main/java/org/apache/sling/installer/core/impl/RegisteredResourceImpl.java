@@ -165,10 +165,39 @@ public class RegisteredResourceImpl
 
 	@Override
 	public String toString() {
-	    return "RegisteredResource(url=" + this.getURL() +
-	        ", entity=" + this.getEntityId() +
-	        ", state=" + this.state +
-	        ", digest=" + this.getDigest() + ")";
+	    final StringBuilder sb = new StringBuilder();
+	    if ( this.getEntityId() == null ) {
+	        sb.append("RegisteredResource");
+	    } else {
+	        sb.append("TaskResource");
+	    }
+	    sb.append("(url=");
+	    sb.append(this.getURL());
+
+	    if ( this.getEntityId() != null ) {
+	        sb.append(", entity=");
+	        sb.append(this.getEntityId());
+	        sb.append(", state=");
+	        sb.append(this.state);
+            if ( this.attributes.size() > 0 ) {
+                sb.append(", attributes=[");
+                boolean first = true;
+                for(final Map.Entry<String, Object> entry : this.attributes.entrySet()) {
+                    if ( !first ) {
+                        sb.append(", ");
+                    }
+                    first = false;
+                    sb.append(entry.getKey());
+                    sb.append("=");
+                    sb.append(entry.getValue());
+                }
+                sb.append("]");
+            }
+	    }
+	    sb.append(", digest=");
+	    sb.append(this.getDigest());
+	    sb.append(')');
+	    return sb.toString();
 	}
 
 	/**
