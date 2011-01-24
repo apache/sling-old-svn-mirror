@@ -122,7 +122,7 @@ public class SortingServiceTracker<T>
                 Arrays.sort(references);
                 this.sortedReferences = new ArrayList<ServiceReference>();
                 for(int i=0;i<references.length;i++) {
-                    this.sortedReferences.add(references[i]);
+                    this.sortedReferences.add(references[references.length - 1 - i]);
                 }
             }
         }
