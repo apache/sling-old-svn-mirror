@@ -173,7 +173,7 @@ public class ServletWrapper {
 
         final List<CompilerMessage> errors = result.getErrors();
         if ( errors != null && errors.size() > 0 ) {
-            throw CompilerException.create(errors);
+            throw CompilerException.create(errors, this.sourcePath);
         }
         if ( result.didCompile() || this.theServlet == null ) {
             destroy();
@@ -189,12 +189,16 @@ public class ServletWrapper {
 
     protected final static class CompilerException extends ServletException {
 
-        public static CompilerException create(List<CompilerMessage> errors) {
+        private static final long serialVersionUID = 7353686069328527452L;
+
+        public static CompilerException create(final List<CompilerMessage> errors,
+                final String fileName) {
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("Compilation errors:\n");
+            buffer.append("Compilation errors in ");
+            buffer.append(fileName);
+            buffer.append(":\n");
             for(final CompilerMessage e : errors) {
-                buffer.append(e.getFile());
-                buffer.append(", line ");
+                buffer.append("Line ");
                 buffer.append(e.getLine());
                 buffer.append(", column ");
                 buffer.append(e.getColumn());
