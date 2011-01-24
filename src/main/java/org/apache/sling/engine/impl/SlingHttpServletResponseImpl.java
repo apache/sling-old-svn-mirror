@@ -127,16 +127,6 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     //---------- SlingHttpServletResponse interface
 
     @Override
-    public void flushBuffer() throws IOException {
-        getRequestData().getContentData().flushBuffer();
-    }
-
-    @Override
-    public int getBufferSize() {
-        return getRequestData().getContentData().getBufferSize();
-    }
-
-    @Override
     public Locale getLocale() {
         // TODO Should use our Locale Resolver and not let the component set the locale, right ??
         return getResponse().getLocale();
@@ -168,18 +158,38 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     @Override
     public void reset() {
-        // TODO: integrate with our output catcher
+        if (isCommitted()) {
+            throw new IllegalStateException("Response already committed");
+        }
+        getRequestData().getContentData().resetBuffer();
         getResponse().reset();
     }
 
     @Override
+    public void flushBuffer() throws IOException {
+        getRequestData().getContentData().flushBuffer();
+        getResponse().flushBuffer();
+    }
+
+    @Override
     public void resetBuffer() {
+        if (isCommitted()) {
+            throw new IllegalStateException("Response already committed");
+        }
+
         getRequestData().getContentData().resetBuffer();
+        getResponse().resetBuffer();
     }
 
     @Override
     public void setBufferSize(int size) {
         getRequestData().getContentData().setBufferSize(size);
+        getResponse().setBufferSize(size);
+    }
+
+    @Override
+    public int getBufferSize() {
+        return getRequestData().getContentData().getBufferSize();
     }
 
     // ---------- Redirection support through PathResolver --------------------
