@@ -543,7 +543,6 @@ public class OsgiInstallerImpl
      */
     private void transformResources() {
         boolean changed = false;
-
         final List<ServiceReference> serviceRefs = this.transformerTracker.getSortedServiceReferences();
 
         if ( serviceRefs.size() > 0 ) {
