@@ -638,6 +638,14 @@ public class RequestData implements BufferProvider {
                 : this;
     }
 
+    public int getBufferSize() {
+        return getServletResponse().getBufferSize();
+    }
+
+    public void setBufferSize(int size) {
+        getServletResponse().setBufferSize(size);
+    }
+
     public ServletOutputStream getOutputStream() throws IOException {
         return getServletResponse().getOutputStream();
     }

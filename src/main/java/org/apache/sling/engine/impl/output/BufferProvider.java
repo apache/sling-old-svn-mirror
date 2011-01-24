@@ -24,14 +24,40 @@ import java.io.PrintWriter;
 import javax.servlet.ServletOutputStream;
 
 /**
- * The <code>BufferProvider</code> provides
- * buffered versions of the servlet output
- * stream and the print writer.
+ * The <code>BufferProvider</code> provides buffered versions of the servlet
+ * output stream and the print writer.
  */
 public interface BufferProvider {
 
+    /**
+     * Sets the size of the buffer to be used (by default) for output streams
+     * returned by {@link #getOutputStream()} or writers returned by
+     * {@link #getWriter()}
+     *
+     * @param size The default buffersize. Negative values or zero disable
+     *            buffering.
+     */
+    void setBufferSize(int size);
+
+    /**
+     * @return the currently set buffer size. This is either some default buffer
+     *         size or the size last set by the {@link #setBufferSize(int)}
+     *         method.
+     */
+    int getBufferSize();
+
+    /**
+     * @return a buffered <code>ServletOutputStream</code> whose initial buffer
+     *         size is set to {@link #getBufferSize()}.
+     * @throws IOException If an error occurrs setting up the output stream
+     */
     ServletOutputStream getOutputStream() throws IOException;
 
+    /**
+     * @return a buffered <code>PrintWriter</code> whose initial buffer size is
+     *         set to {@link #getBufferSize()}.
+     * @throws IOException If an error occurrs setting up the writer
+     */
     PrintWriter getWriter() throws IOException;
 
 }
