@@ -57,6 +57,7 @@ public class ContentData implements BufferProvider {
         this.resource = resource;
         this.requestPathInfo = requestPathInfo;
         this.parent = parent;
+        this.requestedBufferSize = parent.getBufferSize();
     }
 
     /* package */void dispose() {
