@@ -61,7 +61,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.auth.core</artifactId>
-            <version>1.0.5-SNAPSHOT</version>
+            <version>1.0.7-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -81,7 +81,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.auth.selector</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.5-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
