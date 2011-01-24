@@ -216,21 +216,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         }
 
         if (shouldInstall) {
-            // only run the deployment package stuff and war/jar copies when this war/jar is new/changed
-
-            // register deployment package support
-            try {
-                final DeploymentPackageInstaller dpi = new DeploymentPackageInstaller(
-                    context, logger, resourceProvider);
-                context.addFrameworkListener(dpi);
-                context.addServiceListener(dpi, "(" + Constants.OBJECTCLASS
-                    + "=" + DeploymentPackageInstaller.DEPLOYMENT_ADMIN + ")");
-            } catch (Throwable t) {
-                logger.log(
-                    Logger.LOG_WARNING,
-                    "Cannot register Deployment Admin support, continuing without",
-                    t);
-            }
+            // only run the war/jar copies when this war/jar is new/changed
 
             // see if the loading of bundles from the package is disabled
             String dpblString = context.getProperty(SharedConstants.DISABLE_PACKAGE_BUNDLE_LOADING);
