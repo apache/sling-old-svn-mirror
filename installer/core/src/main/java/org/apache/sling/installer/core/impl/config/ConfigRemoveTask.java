@@ -19,8 +19,8 @@
 package org.apache.sling.installer.core.impl.config;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -61,7 +61,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
                     this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
                     this.setFinishedState(ResourceState.IGNORED);
                 } else if ( !isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
-                    this.getLogger().debug("Configuration has changed after is has been installed. Not removing!");
+                    this.getLogger().debug("Configuration has changed after it has been installed. Not removing!");
                     this.setFinishedState(ResourceState.IGNORED);
                 } else {
                     this.getLogger().debug("Deleting config {} ({})", getCompositePid(), getResource());
