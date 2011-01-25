@@ -41,7 +41,7 @@ abstract class AbstractConfigTask extends AbstractInstallTask {
     /** Configuration properties to ignore when comparing configs */
     protected static final Set<String> ignoredProperties = new HashSet<String>();
     static {
-        ignoredProperties.add("service.pid");
+        ignoredProperties.add(Constants.SERVICE_PID);
         ignoredProperties.add(ConfigTaskCreator.CONFIG_PATH_KEY);
         ignoredProperties.add(ConfigTaskCreator.ALIAS_KEY);
     }
@@ -88,7 +88,9 @@ abstract class AbstractConfigTask extends AbstractInstallTask {
         }
 
         result.put(ConfigTaskCreator.CONFIG_PATH_KEY, getResource().getURL());
-        result.put(ConfigTaskCreator.ALIAS_KEY, configPid);
+        if ( this.factoryPid != null ) {
+            result.put(ConfigTaskCreator.ALIAS_KEY, configPid);
+        }
 
         return result;
     }
