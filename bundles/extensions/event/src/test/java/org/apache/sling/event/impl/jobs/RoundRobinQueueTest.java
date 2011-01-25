@@ -147,6 +147,7 @@ public class RoundRobinQueueTest extends AbstractJobEventHandlerTest {
 
                                 public boolean process(Event job) {
                                     if ( parallelCount.incrementAndGet() > MAX_PAR ) {
+                                        parallelCount.decrementAndGet();
                                         return false;
                                     }
                                     try {

@@ -145,6 +145,7 @@ public class OrderedJobQueueTest extends AbstractJobEventHandlerTest {
 
                                 public boolean process(Event job) {
                                     if ( parallelCount.incrementAndGet() > 1 ) {
+                                        parallelCount.decrementAndGet();
                                         return false;
                                     }
                                     final String topic = (String)job.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
