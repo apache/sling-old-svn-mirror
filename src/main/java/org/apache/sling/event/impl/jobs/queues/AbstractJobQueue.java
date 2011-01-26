@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
@@ -85,7 +84,7 @@ public abstract class AbstractJobQueue
     private final Map<String, JobEvent> processsingJobsLists = new HashMap<String, JobEvent>();
 
     /** Suspended since. */
-    private final AtomicLong suspendedSince = new AtomicLong(-1);
+    private volatile long suspendedSince = -1L;
 
     /** Suspend lock. */
     private final Object suspendLock = new Object();
@@ -110,7 +109,9 @@ public abstract class AbstractJobQueue
      * @see org.apache.sling.event.jobs.Queue#getStateInfo()
      */
     public String getStateInfo() {
-        return "isWaiting=" + this.isWaiting + ", markedForRemoval=" + this.markedForRemoval + ", suspendedSince=" + this.suspendedSince.longValue();
+        synchronized ( this.suspendLock ) {
+            return "isWaiting=" + this.isWaiting + ", markedForRemoval=" + this.markedForRemoval + ", suspendedSince=" + this.suspendedSince;
+        }
     }
 
     /**
@@ -410,15 +411,15 @@ public abstract class AbstractJobQueue
     private void runJobQueue() {
         JobEvent info = null;
         while ( this.running ) {
-            while ( this.suspendedSince.longValue() != -1 ) {
-                synchronized ( this.suspendLock ) {
+            synchronized ( this.suspendLock ) {
+                while ( this.suspendedSince != -1 ) {
                     try {
                         this.suspendLock.wait(MAX_SUSPEND_TIME);
                     } catch (final InterruptedException ignore) {
                         this.ignoreException(ignore);
                     }
-                    if ( System.currentTimeMillis() > this.suspendedSince.longValue() + MAX_SUSPEND_TIME ) {
-                        this.suspendedSince.set(-1);
+                    if ( System.currentTimeMillis() > this.suspendedSince + MAX_SUSPEND_TIME ) {
+                        this.resume();
                     }
                 }
             }
@@ -538,26 +539,32 @@ public abstract class AbstractJobQueue
      * @see org.apache.sling.event.jobs.Queue#resume()
      */
     public void resume() {
-        if ( this.isSuspended() ) {
-            synchronized ( this.suspendLock ) {
+        synchronized ( this.suspendLock ) {
+            if ( this.suspendedSince != -1 ) {
+                this.suspendedSince = -1;
                 this.suspendLock.notify();
             }
         }
-        this.suspendedSince.set(-1);
     }
 
     /**
      * @see org.apache.sling.event.jobs.Queue#suspend()
      */
     public void suspend() {
-        this.suspendedSince.compareAndSet(-1, System.currentTimeMillis());
+        synchronized ( this.suspendLock ) {
+            if ( this.suspendedSince == -1 ) {
+                this.suspendedSince = System.currentTimeMillis();
+            }
+        }
     }
 
     /**
      * @see org.apache.sling.event.jobs.Queue#isSuspended()
      */
     public boolean isSuspended() {
-        return this.suspendedSince.longValue() != -1;
+        synchronized ( this.suspendLock ) {
+            return this.suspendedSince != -1;
+        }
     }
 
 
