@@ -406,27 +406,35 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Execute the qeue
+     * Check if the queue is suspended and go into suspend mode
+     */
+    private void checkSuspended() {
+        synchronized ( this.suspendLock ) {
+            while ( this.suspendedSince != -1 ) {
+                try {
+                    this.suspendLock.wait(MAX_SUSPEND_TIME);
+                } catch (final InterruptedException ignore) {
+                    this.ignoreException(ignore);
+                }
+                if ( System.currentTimeMillis() > this.suspendedSince + MAX_SUSPEND_TIME ) {
+                    this.resume();
+                }
+            }
+        }
+    }
+
+    /**
+     * Execute the queue
      */
     private void runJobQueue() {
         JobEvent info = null;
         while ( this.running ) {
-            synchronized ( this.suspendLock ) {
-                while ( this.suspendedSince != -1 ) {
-                    try {
-                        this.suspendLock.wait(MAX_SUSPEND_TIME);
-                    } catch (final InterruptedException ignore) {
-                        this.ignoreException(ignore);
-                    }
-                    if ( System.currentTimeMillis() > this.suspendedSince + MAX_SUSPEND_TIME ) {
-                        this.resume();
-                    }
-                }
-            }
             if ( info == null ) {
                 // so let's wait/get the next job from the queue
                 info = this.take();
             }
+
+            checkSuspended();
 
             if ( info != null && this.running ) {
                 info = this.start(info);
