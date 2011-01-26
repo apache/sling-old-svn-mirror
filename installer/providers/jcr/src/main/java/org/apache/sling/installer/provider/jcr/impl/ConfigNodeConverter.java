@@ -89,41 +89,47 @@ class ConfigNodeConverter implements JcrInstaller.NodeConverter {
             if(name.contains(":")) {
                 continue;
             }
-            if(p.getDefinition().isMultiple()) {
+            if (p.getDefinition().isMultiple()) {
                 Object [] data = null;
                 final Value [] values = p.getValues();
                 int i = 0;
-                for(Value v : values) {
+                for (Value v : values) {
                     Object o = convertValue(v);
-                    if(i == 0) {
+                    if (i == 0) {
                         data = (Object[])Array.newInstance(o.getClass(), values.length);
                     }
                     data[i++] = o;
+                }
+                // create empty array in case no value is specified
+                if ( data == null ) {
+                    data = new String[0];
                 }
                 d.put(name, data);
 
             } else {
                 final Object o = convertValue(p.getValue());
-                if(o != null) {
+                if (o != null) {
                     d.put(name, o);
                 }
             }
         }
     }
 
-    /** Convert v according to its type */
+    /**
+     * Convert v according to its type.
+     */
     protected Object convertValue(Value v) throws RepositoryException {
         switch(v.getType()) {
-        case PropertyType.STRING:
-            return v.getString();
-        case PropertyType.DATE:
-            return v.getDate();
-        case PropertyType.DOUBLE:
-            return v.getDouble();
-        case PropertyType.LONG:
-            return v.getLong();
-        case PropertyType.BOOLEAN:
-            return v.getBoolean();
+            case PropertyType.STRING:
+                return v.getString();
+            case PropertyType.DATE:
+                return v.getDate();
+            case PropertyType.DOUBLE:
+                return v.getDouble();
+            case PropertyType.LONG:
+                return v.getLong();
+            case PropertyType.BOOLEAN:
+                return v.getBoolean();
         }
         log.debug("Value of type {} ignored", v.getType());
         return null;
