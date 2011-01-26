@@ -674,7 +674,6 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
                         }
                     }}));
         // we start 20 jobs, every second job has no processor
-        final long startTime = System.currentTimeMillis();
         final int COUNT = 20;
         for(int i = 0; i < COUNT; i++ ) {
             final String jobTopic = (i % 2 == 0 ? "sling/test" : "sling/test2");
@@ -682,6 +681,7 @@ public class JobEventHandlerTest extends AbstractJobEventHandlerTest {
             props.put(JobUtil.PROPERTY_JOB_TOPIC, jobTopic);
             jeh.handleEvent(new Event(JobUtil.TOPIC_JOB, props));
         }
+        final long startTime = System.currentTimeMillis();
         while ( count.get() < COUNT / 2) {
             try {
                 Thread.sleep(500);
