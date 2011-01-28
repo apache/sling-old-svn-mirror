@@ -29,6 +29,16 @@ package org.apache.sling.commons.classloader;
  * service to load classes and resources. The search
  * path can be extended by providing
  * {@link DynamicClassLoaderProvider}s.
+ *
+ * Keep in mind, that the class loader might get invalid.
+ * This happens for example, if the class loader loaded
+ * a class from a bundle which has been updated in the
+ * meantime. Or a dynamic class loader provider has changed.
+ *
+ * In these cases, the dynamic class loader manager service
+ * is unregistered and reregistered again, so you should
+ * reget your classloader and invalidate loaded objects
+ * whenever this happens.
  */
 public interface DynamicClassLoaderManager {
 
