@@ -29,28 +29,48 @@ import org.slf4j.LoggerFactory;
 
 public class LaunchpadConfigInstaller {
 
-    /** Resources supplied under this path by
-     *  LaunchpadContentProvider are considered for installation
+    /**
+     * Resources supplied under this path by
+     * LaunchpadContentProvider are considered for installation
+     * as configurations
      */
     private static final String ROOT_CONFIG_PATH = "resources/config";
 
-    private static Logger LOGGER = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
+    /**
+     * Resources supplied under this path by
+     * LaunchpadContentProvider are considered for installation
+     * as files
+     */
+    private static final String ROOT_INSTALL_PATH = "resources/install";
 
     public static void install(final OsgiInstaller installer,
             final LaunchpadContentProvider resourceProvider) {
-        LOGGER.info("Activating launchpad config installer, resources path={}", ROOT_CONFIG_PATH);
-        Collection<InstallableResource> installables = new HashSet<InstallableResource>();
+        final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
+        logger.info("Activating launchpad config installer, configuration path={}, install path={}",
+                ROOT_CONFIG_PATH, ROOT_INSTALL_PATH);
 
-        Iterator<String> configPaths = resourceProvider.getChildren(ROOT_CONFIG_PATH);
+        final Collection<InstallableResource> installables = new HashSet<InstallableResource>();
+
+        // configurations
+        final Iterator<String> configPaths = resourceProvider.getChildren(ROOT_CONFIG_PATH);
         while (configPaths.hasNext()) {
-            String path = configPaths.next();
-            LOGGER.info("Config launchpad file will be installed: {}", path);
-            InputStream stream = resourceProvider.getResourceAsStream(path);
-            installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_PROPERTIES, 0));
+            final String path = configPaths.next();
+            logger.info("Config launchpad file will be installed: {}", path);
+            final InputStream stream = resourceProvider.getResourceAsStream(path);
+            installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_PROPERTIES, null));
+        }
+
+        // files
+        final Iterator<String> filePaths = resourceProvider.getChildren(ROOT_INSTALL_PATH);
+        while (filePaths.hasNext()) {
+            final String path = filePaths.next();
+            logger.info("Launchpad file will be installed: {}", path);
+            final InputStream stream = resourceProvider.getResourceAsStream(path);
+            installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_FILE, null));
         }
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
         installer.registerResources("launchpad", (toInstall));
-        LOGGER.info("{} resources registered with OsgiInstaller", toInstall.length);
+        logger.info("{} resources registered with OsgiInstaller", toInstall.length);
     }
 }
