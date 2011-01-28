@@ -20,10 +20,13 @@ package org.apache.sling.installer.core.impl.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -34,10 +37,12 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.core.impl.Activator;
 import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
+import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -150,6 +155,20 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return id;
     }
 
+    /** Default date format used. */
+    private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS yyyy-MMM-dd");
+
+    /**
+     * Format a date
+     */
+    private synchronized String formatDate(final long time) {
+        if ( time == -1 ) {
+            return "-";
+        }
+        final Date d = new Date(time);
+        return dateFormat.format(d);
+    }
+
     @Override
     public void service(ServletRequest req, ServletResponse res)
     throws IOException {
@@ -201,11 +220,23 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL</th><th>State</th></tr>");
                         rt = first.getType();
                     }
-                    pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                            getEntityId(first),
-                            first.getDigest(),
-                            first.getURL(),
-                            first.getState());
+                    pw.print("<tr><td>");
+                    pw.print(getEntityId(first));
+                    pw.print("</td><td>");
+                    pw.print(first.getDigest());
+                    pw.print("</td><td>");
+                    pw.print(first.getURL());
+                    pw.print("</td><td>");
+                    pw.print(first.getState());
+                    if ( first.getState() == ResourceState.INSTALLED ) {
+                        final long lastChange = ((RegisteredResourceImpl)first).getLastChange();
+                        if ( lastChange > 0 ) {
+                            pw.print("<br/>");
+                            pw.print(formatDate(lastChange));
+                        }
+                    }
+                    pw.print("</td></tr>");
+
                     while ( iter.hasNext() ) {
                         final TaskResource resource = iter.next();
                         pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
