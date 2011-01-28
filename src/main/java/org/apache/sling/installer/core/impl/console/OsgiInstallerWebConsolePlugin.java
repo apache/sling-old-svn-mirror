@@ -156,31 +156,35 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
         final PrintWriter pw = res.getWriter();
 
+        pw.print("<p class='statline ui-state-highlight'>Apache Sling OSGi Installer</p>");
         synchronized ( this.installer.getResourcesLock() ) {
             final State state = this.getCurrentState();
 
-            pw.println("<h1>Active Resources</h1>");
             String rt = null;
             for(final EntityResourceList group : state.activeResources) {
                 final TaskResource toActivate = group.getActiveResource();
                 if ( !toActivate.getType().equals(rt) ) {
                     if ( rt != null ) {
-                        pw.println("</ul>");
+                        pw.println("</tbody></table>");
                     }
-                    pw.printf("<h2>%s</h2>%n", getType(toActivate));
-                    pw.println("<ul>");
+                    pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
+                    pw.printf("<span style='float: left; margin-left: 1em;'>Active Resources - %s</span>", getType(toActivate));
+                    pw.println("</div>");
+                    pw.println("<table class='nicetable'><tbody>");
+                    pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL</th><th>State</th></tr>");
                     rt = toActivate.getType();
                 }
-                pw.printf("<li>%s: %s, %s, %s</li>%n",
+                pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
                         getEntityId(toActivate),
                         toActivate.getDigest(),
                         toActivate.getURL(),
                         toActivate.getState());
             }
-            pw.println("</ul>");
+            if ( rt != null ) {
+                pw.println("</tbody></table>");
+            }
             rt = null;
 
-            pw.println("<h1>Processed Resources</h1>");
             for(final EntityResourceList group : state.installedResources) {
                 final Collection<TaskResource> resources = group.getResources();
                 if (resources.size() > 0) {
@@ -188,49 +192,53 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     final TaskResource first = iter.next();
                     if ( !first.getType().equals(rt) ) {
                         if ( rt != null ) {
-                            pw.println("</ul>");
+                            pw.println("</tbody></table>");
                         }
-                        pw.printf("<h2>%s</h2>%n", getType(first));
+                        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
+                        pw.printf("<span style='float: left; margin-left: 1em;'>Processed Resources - %s</span>", getType(first));
+                        pw.println("</div>");
+                        pw.println("<table class='nicetable'><tbody>");
+                        pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL</th><th>State</th></tr>");
                         rt = first.getType();
-                        pw.println("<ul>");
                     }
-                    pw.println("<ul>");
-                    pw.printf("<li>%s: %s, %s, %s</li>%n",
+                    pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
                             getEntityId(first),
                             first.getDigest(),
                             first.getURL(),
                             first.getState());
                     while ( iter.hasNext() ) {
                         final TaskResource resource = iter.next();
-                        pw.printf("<li>%s, %s, %s</li>%n",
+                        pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
                             resource.getDigest(),
                             resource.getURL(),
                             resource.getState());
                     }
-                    pw.println("</ul>");
                 }
             }
             if ( rt != null ) {
-                pw.println("</ul>");
+                pw.println("</tbody></table>");
             }
 
-            pw.println("<h1>Untransformed Resources</h1>");
             rt = null;
             for(final RegisteredResource registeredResource : state.untransformedResources) {
                 if ( !registeredResource.getType().equals(rt) ) {
                     if ( rt != null ) {
-                        pw.println("</ul>");
+                        pw.println("</tbody></table>");
                     }
-                    pw.printf("<h2>%s</h2>%n", getType(registeredResource));
+                    pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
+                    pw.printf("<span style='float: left; margin-left: 1em;'>Untransformed Resources - %s</span>", getType(registeredResource));
+                    pw.println("</div>");
+                    pw.println("<table class='nicetable'><tbody>");
+                    pw.printf("<tr><th>Digest</th><th>URL</th></tr>");
+
                     rt = registeredResource.getType();
-                    pw.println("<ul>");
                 }
-                pw.printf("<li>%s, %s</li>%n",
+                pw.printf("<tr><td>%s</td><td>%s</td></tr>",
                     registeredResource.getDigest(),
                     registeredResource.getURL());
             }
             if ( rt != null ) {
-                pw.println("</ul>");
+                pw.println("</tbody></table>");
             }
         }
     }
