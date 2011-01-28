@@ -46,7 +46,7 @@ public class RegisteredResourceImpl
     private static final long serialVersionUID = 6L;
 
     /** Serialization version. */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     /** The resource url. */
     private final String url;
@@ -80,6 +80,9 @@ public class RegisteredResourceImpl
 
     private boolean cleanedUp = false;
 
+    /** When was the last status change? */
+    private long lastChange = -1;
+
     /**
      * Serialize the object
      * - write version id
@@ -100,6 +103,7 @@ public class RegisteredResourceImpl
         out.writeObject(resourceType);
         out.writeInt(priority);
         out.writeObject(state.toString());
+        out.writeLong(this.lastChange);
     }
 
     /**
@@ -110,7 +114,7 @@ public class RegisteredResourceImpl
     private void readObject(final java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         final int version = in.readInt();
-        if ( version != VERSION ) {
+        if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
         Util.setField(this, "url", in.readObject());
@@ -123,6 +127,11 @@ public class RegisteredResourceImpl
         Util.setField(this, "resourceType", in.readObject());
         Util.setField(this, "priority", in.readInt());
         this.state = ResourceState.valueOf((String) in.readObject());
+        if ( version > 1 ) {
+            this.lastChange = in.readLong();
+        } else {
+            this.lastChange = 0;
+        }
     }
 
     /**
@@ -305,10 +314,19 @@ public class RegisteredResourceImpl
     }
 
     /**
-     *Set the state for the resource.
+     * Set the state for the resource.
      */
     public void setState(ResourceState s) {
+        this.lastChange = System.currentTimeMillis();
         this.state = s;
+    }
+
+    /**
+     * When did the last change happen?
+     * @return -1 if no change , 0 if unknown, > 0 otherwise
+     */
+    public long getLastChange() {
+        return this.lastChange;
     }
 
     /**
