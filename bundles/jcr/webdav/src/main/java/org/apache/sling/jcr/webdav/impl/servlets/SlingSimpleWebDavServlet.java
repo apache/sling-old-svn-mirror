@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingSimpleWebDavServlet</code> extends the
@@ -35,6 +37,9 @@ import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
  * Sling-specific features
  */
 public class SlingSimpleWebDavServlet extends SimpleWebdavServlet {
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final SlingResourceConfig resourceConfig;
 
@@ -57,6 +62,19 @@ public class SlingSimpleWebDavServlet extends SimpleWebdavServlet {
 
     @Override
     protected void service(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
+        try {
+            doService(request, response);
+        } catch (RuntimeException re) {
+            log.error("service: Uncaught RuntimeException", re);
+            throw new ServletException("Uncaught RuntimeException: " + re);
+        } catch (Error e) {
+            log.error("service: Uncaught Error", e);
+            throw new ServletException("Uncaught Error: " + e);
+        }
+    }
+
+    protected void doService(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
 
         // According to the spec the path info is either null or
