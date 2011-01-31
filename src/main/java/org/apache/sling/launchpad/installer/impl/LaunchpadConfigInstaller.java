@@ -53,20 +53,24 @@ public class LaunchpadConfigInstaller {
 
         // configurations
         final Iterator<String> configPaths = resourceProvider.getChildren(ROOT_CONFIG_PATH);
-        while (configPaths.hasNext()) {
-            final String path = configPaths.next();
-            logger.info("Config launchpad file will be installed: {}", path);
-            final InputStream stream = resourceProvider.getResourceAsStream(path);
-            installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_PROPERTIES, null));
+        if ( configPaths != null ) {
+            while (configPaths.hasNext()) {
+                final String path = configPaths.next();
+                logger.info("Config launchpad file will be installed: {}", path);
+                final InputStream stream = resourceProvider.getResourceAsStream(path);
+                installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_PROPERTIES, null));
+            }
         }
 
         // files
         final Iterator<String> filePaths = resourceProvider.getChildren(ROOT_INSTALL_PATH);
-        while (filePaths.hasNext()) {
-            final String path = filePaths.next();
-            logger.info("Launchpad file will be installed: {}", path);
-            final InputStream stream = resourceProvider.getResourceAsStream(path);
-            installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_FILE, null));
+        if ( filePaths != null ) {
+            while (filePaths.hasNext()) {
+                final String path = filePaths.next();
+                logger.info("Launchpad file will be installed: {}", path);
+                final InputStream stream = resourceProvider.getResourceAsStream(path);
+                installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_FILE, null));
+            }
         }
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
