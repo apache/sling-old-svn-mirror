@@ -58,7 +58,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.apache.sling.extensions.junit.testbundle.*</Export-Package>
-                        <Test-Package>org.apache.sling.extensions.junit.testbundle.tests</Test-Package>
+                        <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                     </instructions>
                 </configuration>
             </plugin>
