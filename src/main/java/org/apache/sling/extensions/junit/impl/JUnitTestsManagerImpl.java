@@ -16,12 +16,16 @@
  */
 package org.apache.sling.extensions.junit.impl;
 
+import static org.apache.sling.extensions.junit.JUnitConstants.SLING_TEST_REGEXP;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
@@ -38,7 +42,6 @@ import org.slf4j.LoggerFactory;
 @Service
 public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    public static final String TEST_PACKAGE_HEADER = "Test-Package";
     private BundleContext bundleContext;
     
     /** Symbolic names of bundles that changed state - if not empty, need
@@ -51,8 +54,8 @@ public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
      */
     private final Map<String, List<String>> testClassesMap = new HashMap<String, List<String>>();
 
-    private String getTestPackageName(Bundle b) {
-        return (String)b.getHeaders().get(TEST_PACKAGE_HEADER);
+    private String getSlingTestRegexp(Bundle b) {
+        return (String)b.getHeaders().get(SLING_TEST_REGEXP);
     }
     
     protected void activate(ComponentContext ctx) {
@@ -61,7 +64,7 @@ public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
         
         // Initially consider all bundles as "changed"
         for(Bundle b : bundleContext.getBundles()) {
-            if(getTestPackageName(b) != null) {
+            if(getSlingTestRegexp(b) != null) {
                 changedBundles.add(b.getSymbolicName());
                 log.debug("Will look for test classes inside bundle {}", b.getSymbolicName());
             }
@@ -78,9 +81,9 @@ public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
     public void bundleChanged(BundleEvent event) {
         // Only consider bundles which contain tests
         final Bundle b = event.getBundle();
-        if(getTestPackageName(b) == null) {
+        if(getSlingTestRegexp(b) == null) {
             log.debug("Bundle {} does not have {} header, ignored", 
-                    b.getSymbolicName(), TEST_PACKAGE_HEADER);
+                    b.getSymbolicName(), SLING_TEST_REGEXP);
             return;
         }
         synchronized (changedBundles) {
@@ -135,10 +138,19 @@ public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
     /** Get test classes that bundle b provides (as done in Felix/Sigil) */
     private List<String> getTestClasses(Bundle b) {
         final List<String> result = new ArrayList<String>();
-        final String testPackage = getTestPackageName(b);
+        Pattern testClassRegexp = null;
+        final String headerValue = getSlingTestRegexp(b); 
+        try {
+            testClassRegexp = Pattern.compile(headerValue);
+        } catch(PatternSyntaxException pse) {
+            log.warn(
+                    "Invalid pattern '" + headerValue 
+                    + "' for bundle " + b.getSymbolicName() + ", ignored", 
+                    pse);
+        }
         
-        if(testPackage == null) {
-            log.info("Bundle {} does not have {} header, not looking for test classes", TEST_PACKAGE_HEADER);
+        if(testClassRegexp == null) {
+            log.info("Bundle {} does not have {} header, not looking for test classes", SLING_TEST_REGEXP);
         } else if(Bundle.ACTIVE != b.getState()) {
             log.info("Bundle {} is not active, no test classes considered", b.getSymbolicName());
         } else {
@@ -147,11 +159,11 @@ public class JUnitTestsManagerImpl implements BundleListener,JUnitTestsManager {
             while (classUrls.hasMoreElements()) {
                 URL url = classUrls.nextElement();
                 final String name = toClassName(url);
-                if(name.startsWith(testPackage)) {
+                if(testClassRegexp.matcher(name).matches()) {
                     result.add(name);
                 } else {
-                    log.debug("Class {} is not in test package {} of bundle {}, ignored",
-                            new Object[] { name, testPackage, b.getSymbolicName() });
+                    log.debug("Class {} does not match {} pattern {} of bundle {}, ignored",
+                            new Object[] { name, SLING_TEST_REGEXP, testClassRegexp, b.getSymbolicName() });
                 }
             }
             log.info("{} test classes found in bundle {}", result.size(), b.getSymbolicName());

@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.extensions.junit.JUnitConstants;
 import org.apache.sling.extensions.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
 
@@ -56,15 +57,15 @@ public class JUnitServlet extends SlingAllMethodsServlet {
         final List<String> testClasses = testsManager.getTestClasses();
         if(testClasses.isEmpty()) {
             pw.println(
-                    "No test classes found, please activate at least one bundle"
-                    + " which exports JUnit test classes and points to them using a"
-                    + " Test-Package header."
+                    "No test classes found, please activate at least one bundle "
+                    + "which exports JUnit test classes and points to them using a "
+                    + JUnitConstants.SLING_TEST_REGEXP + " header."
                     );
             return;
         }
         
         // List test classes
-        pw.println("TEST CLASSES (found in bundles with Test-Package headers):");
+        pw.println("TEST CLASSES (found in bundles that have a " + JUnitConstants.SLING_TEST_REGEXP + " header):");
         for(String className : testClasses) {
             pw.println(className);
         }
