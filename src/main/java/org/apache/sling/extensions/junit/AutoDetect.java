@@ -16,16 +16,13 @@
  */
 package org.apache.sling.extensions.junit;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-public class Activator implements BundleActivator {
-
-    public void start(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(context);
-    }
-
-    public void stop(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(null);
+/**
+ * Placeholder class for default value of annotation 
+ * properties with "auto detect" capabilities. As done
+ * in the Felix SCR plugin.
+ */
+public class AutoDetect {
+    private AutoDetect() {
+        // disallows instancing this class
     }
 }

@@ -16,16 +16,7 @@
  */
 package org.apache.sling.extensions.junit;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-public class Activator implements BundleActivator {
-
-    public void start(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(context);
-    }
-
-    public void stop(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(null);
-    }
+/** Process test objects, to handle annotations, etc. */
+public interface TestObjectProcessor {
+    public Object process(Object testObject) throws Exception;
 }

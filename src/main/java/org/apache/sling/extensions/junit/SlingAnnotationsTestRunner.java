@@ -19,24 +19,43 @@ package org.apache.sling.extensions.junit;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** TestRunner which uses a TestObjectProcessor to 
+ *  handle annotations in test classes.
+ *  A test that has RunWith=SlingAnnotationsTestRunner can
+ *  use @TestReference, for example, to access OSGi services.
+ */
 public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    // TODO better way to inject this?
-    static BundleContext bundleContext;
+    private static final Logger log = LoggerFactory.getLogger(SlingAnnotationsTestRunner.class);
+
+    private static BundleContext bundleContext;
+    private static TestObjectProcessor testObjectProcessor;  
     
     public SlingAnnotationsTestRunner(Class<?> clazz) throws InitializationError {
         super(clazz);
     }
     
+    static void setBundleContext(BundleContext ctx) {
+        bundleContext = ctx;
+        testObjectProcessor = null;
+    }
+    
     @Override
     protected Object createTest() throws Exception {
-        final Object result = super.createTest();
-        log.info("TODO handle annotations for {}, BundleContext={}", 
-                result.getClass().getName(), bundleContext);
-        return super.createTest();
+        if(testObjectProcessor == null && bundleContext != null) {
+            final ServiceReference ref = bundleContext.getServiceReference(TestObjectProcessor.class.getName());
+            if(ref != null) {
+                testObjectProcessor = (TestObjectProcessor)bundleContext.getService(ref);
+            }
+            log.info("Got TestObjectProcessor {}", testObjectProcessor);
+        }
+
+        if(testObjectProcessor == null) {
+            throw new IllegalStateException("No TestObjectProcessor service available");
+        }
+        return testObjectProcessor.process(super.createTest());
     }
 }
