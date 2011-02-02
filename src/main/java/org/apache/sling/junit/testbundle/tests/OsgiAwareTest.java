@@ -18,8 +18,8 @@ package org.apache.sling.junit.testbundle.tests;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.sling.junit.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.TestReference;
+import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
+import org.apache.sling.junit.annotations.TestReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
