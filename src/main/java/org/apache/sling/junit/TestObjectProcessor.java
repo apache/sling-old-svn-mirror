@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit;
+package org.apache.sling.junit;
 
-public class JUnitConstants {
-    public static final String SLING_TEST_REGEXP = "Sling-Test-Regexp"; 
+/** Process test objects, to handle annotations, etc. */
+public interface TestObjectProcessor {
+    public Object process(Object testObject) throws Exception;
 }

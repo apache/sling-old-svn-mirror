@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.impl;
+package org.apache.sling.junit.impl;
 
 import java.io.PrintWriter;
 

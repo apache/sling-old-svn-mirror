@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.impl;
+package org.apache.sling.junit.impl;
 
-import static org.apache.sling.extensions.junit.JUnitConstants.SLING_TEST_REGEXP;
+import static org.apache.sling.junit.JUnitConstants.SLING_TEST_REGEXP;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.extensions.junit.JUnitTestsManager;
+import org.apache.sling.junit.JUnitTestsManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;

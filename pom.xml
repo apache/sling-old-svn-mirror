@@ -57,9 +57,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>org.apache.sling.extensions.junit.Activator</Bundle-Activator>
+                        <Bundle-Activator>org.apache.sling.junit.Activator</Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.extensions.junit;version=${project.version},
+                            org.apache.sling.junit;version=${project.version},
                             junit.framework;version=${junit.version},
                             org.junit;version=${junit.version},
                             org.junit.matchers.*;version=${junit.version},
@@ -67,7 +67,7 @@
                             org.junit.runner.*;version=${junit.version},
                             org.junit.runners.*;version=${junit.version}
                         </Export-Package>
-                        <Private-Package>org.apache.sling.extensions.junit.impl.*</Private-Package>
+                        <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
                         <Embed-Dependency>*;artifactId=junit</Embed-Dependency>
                     </instructions>
                 </configuration>

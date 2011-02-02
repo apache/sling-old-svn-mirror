@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.impl;
+package org.apache.sling.junit.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,8 +29,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.extensions.junit.JUnitConstants;
-import org.apache.sling.extensions.junit.JUnitTestsManager;
+import org.apache.sling.junit.JUnitConstants;
+import org.apache.sling.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
 
 /** Simple test runner servlet */

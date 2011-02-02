@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.impl;
+package org.apache.sling.junit.impl;
 
 import java.lang.reflect.Field;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.extensions.junit.TestObjectProcessor;
-import org.apache.sling.extensions.junit.TestReference;
+import org.apache.sling.junit.TestObjectProcessor;
+import org.apache.sling.junit.TestReference;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
