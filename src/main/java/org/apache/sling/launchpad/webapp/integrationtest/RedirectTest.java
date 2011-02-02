@@ -76,6 +76,19 @@ public class RedirectTest extends HttpTestBase {
         location = get.getResponseHeader("Location").getValue();
         assertNotNull(location);
         assertTrue(location.endsWith("/index.html.html"));
+
+        // get the created node without following redirects
+        get = new GetMethod(redirNodeUrl + "?param=value");
+        get.setFollowRedirects(false);
+        status = httpClient.executeMethod(get);
+
+        // expect temporary redirect ...
+        assertEquals(302, status);
+
+        // ... to */index.html
+        location = get.getResponseHeader("Location").getValue();
+        assertNotNull(location);
+        assertTrue(location.endsWith("/index.html?param=value"));
     }
 
     /** test 404 response when sling:target is missing */
