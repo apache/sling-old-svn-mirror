@@ -149,6 +149,11 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
                 targetPath = toRedirectPath(targetPath, request);
             }
 
+            // append current querystring
+            if (request.getQueryString() != null) {
+                targetPath += "?" + request.getQueryString();
+            }
+
             final int status = getStatus(valueMap);
 
             // redirect the client, use our own setup since we might have a
@@ -235,11 +240,6 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             if (rpi.getSuffix() != null) {
                 target.append(rpi.getSuffix());
             }
-        }
-
-        // append current querystring
-        if (request.getQueryString() != null) {
-            target.append('?').append(request.getQueryString());
         }
 
         // return the mapped full path and return if already an absolute URI
