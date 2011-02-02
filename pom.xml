@@ -30,7 +30,7 @@
     <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling JUnit extension</name>
+    <name>Apache Sling JUnit Extension</name>
     <description>Runs JUnit tests in a Sling instance</description>
     
     <properties>
