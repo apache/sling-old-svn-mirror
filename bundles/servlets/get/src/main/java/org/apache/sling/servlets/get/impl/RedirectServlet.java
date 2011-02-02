@@ -147,11 +147,10 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
                 // make path relative and append selectors, extension etc.
                 // this is an absolute URI suitable for the Location header
                 targetPath = toRedirectPath(targetPath, request);
-            }
-
-            // append current querystring
-            if (request.getQueryString() != null) {
-                targetPath += "?" + request.getQueryString();
+            } else {
+                // just append any selectors, extension, suffix and query string
+                targetPath = appendSelectorsExtensionSuffixQuery(request,
+                    new StringBuilder(targetPath)).toString();
             }
 
             final int status = getStatus(valueMap);
@@ -207,9 +206,6 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     static String toRedirectPath(String targetPath,
             SlingHttpServletRequest request) {
 
-        // if the target path is an URL, do nothing and return it unmodified
-        final RequestPathInfo rpi = request.getRequestPathInfo();
-
         // make sure the target path is absolute
         final String rawAbsPath;
         if (targetPath.startsWith("/")) {
@@ -228,7 +224,35 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             target.append(absPath);
         }
 
+        appendSelectorsExtensionSuffixQuery(request, target);
+
+        // return the mapped full path and return if already an absolute URI
+        final String finalTarget = request.getResourceResolver().map(request, target.toString());
+        if (isUrl(finalTarget)) {
+            return finalTarget;
+        }
+
+        // otherwise prepend the current request's information
+        return toAbsoluteUri(request.getScheme(), request.getServerName(),
+            request.getServerPort(), finalTarget);
+    }
+
+    /**
+     * Appends optional request selectors, extension, suffix and query string to
+     * the URL to be prepared in the target string builder and returns the
+     * string builder.
+     *
+     * @param request The Sling HTTP Servlet Request providing access to the
+     *            data to be appended
+     * @param target The String builder to append the data to. This must not be
+     *            null.
+     * @return The <code>target</code> string builder.
+     * @throws NullPointerException if request or target is <code>null</code>.
+     */
+    private static StringBuilder appendSelectorsExtensionSuffixQuery(
+            SlingHttpServletRequest request, StringBuilder target) {
         // append current selectors, extension and suffix
+        final RequestPathInfo rpi = request.getRequestPathInfo();
         if (rpi.getExtension() != null) {
 
             if (rpi.getSelectorString() != null) {
@@ -242,15 +266,12 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             }
         }
 
-        // return the mapped full path and return if already an absolute URI
-        final String finalTarget = request.getResourceResolver().map(request, target.toString());
-        if (isUrl(finalTarget)) {
-            return finalTarget;
+        // append current querystring
+        if (request.getQueryString() != null) {
+            target.append('?').append(request.getQueryString());
         }
 
-        // otherwise prepend the current request's information
-        return toAbsoluteUri(request.getScheme(), request.getServerName(),
-            request.getServerPort(), finalTarget);
+        return target;
     }
 
     /**
