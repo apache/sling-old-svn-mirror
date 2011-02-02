@@ -16,13 +16,13 @@
  */
 package org.apache.sling.junit;
 
-import java.util.List;
+import java.util.Collection;
 
 /** Service that gives access to JUnit test classes */
 public interface JUnitTestsManager {
-    /** Return the names of all currently registered test classes */
-    public List<String> getTestClasses();
+    /** Return the names of all currently available tests */
+    public Collection<String> getTestNames();
     
-    /** Instantiate specified test class from the appropriate bundle */
-    public Class<?> getTestClass(String className) throws ClassNotFoundException;
+    /** Instantiate test class for specified test */
+    public Class<?> getTestClass(String testName) throws ClassNotFoundException;
 }

@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit;
+package org.apache.sling.junit.annotations;
 
+import org.apache.sling.junit.Activator;
+import org.apache.sling.junit.TestObjectProcessor;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.osgi.framework.BundleContext;
@@ -31,24 +33,19 @@ import org.slf4j.LoggerFactory;
 public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
     private static final Logger log = LoggerFactory.getLogger(SlingAnnotationsTestRunner.class);
 
-    private static BundleContext bundleContext;
     private static TestObjectProcessor testObjectProcessor;  
     
     public SlingAnnotationsTestRunner(Class<?> clazz) throws InitializationError {
         super(clazz);
     }
     
-    static void setBundleContext(BundleContext ctx) {
-        bundleContext = ctx;
-        testObjectProcessor = null;
-    }
-    
     @Override
     protected Object createTest() throws Exception {
-        if(testObjectProcessor == null && bundleContext != null) {
-            final ServiceReference ref = bundleContext.getServiceReference(TestObjectProcessor.class.getName());
+        final BundleContext ctx = Activator.getBundleContext();
+        if(testObjectProcessor == null && ctx != null) {
+            final ServiceReference ref = ctx.getServiceReference(TestObjectProcessor.class.getName());
             if(ref != null) {
-                testObjectProcessor = (TestObjectProcessor)bundleContext.getService(ref);
+                testObjectProcessor = (TestObjectProcessor)ctx.getService(ref);
             }
             log.info("Got TestObjectProcessor {}", testObjectProcessor);
         }

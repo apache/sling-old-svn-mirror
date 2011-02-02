@@ -19,13 +19,23 @@ package org.apache.sling.junit;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+/** Used to make our BundleContext available to
+ *  JUnit classes that need it but have no
+ *  OSGi context.
+ */
 public class Activator implements BundleActivator {
 
+    private static BundleContext bundleContext;
+    
+    public static BundleContext getBundleContext() {
+        return bundleContext;
+    }
+    
     public void start(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(context);
+        bundleContext = context;
     }
 
     public void stop(BundleContext context) throws Exception {
-        SlingAnnotationsTestRunner.setBundleContext(null);
+        bundleContext = null;
     }
 }

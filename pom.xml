@@ -60,6 +60,7 @@
                         <Bundle-Activator>org.apache.sling.junit.Activator</Bundle-Activator>
                         <Export-Package>
                             org.apache.sling.junit;version=${project.version},
+                            org.apache.sling.junit.annotations;version=${project.version},
                             junit.framework;version=${junit.version},
                             org.junit;version=${junit.version},
                             org.junit.matchers.*;version=${junit.version},

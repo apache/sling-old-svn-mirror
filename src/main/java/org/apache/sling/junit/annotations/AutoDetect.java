@@ -14,8 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit;
+package org.apache.sling.junit.annotations;
 
-public class JUnitConstants {
-    public static final String SLING_TEST_REGEXP = "Sling-Test-Regexp"; 
+/**
+ * Placeholder class for default value of annotation 
+ * properties with "auto detect" capabilities. As done
+ * in the Felix SCR plugin.
+ */
+public class AutoDetect {
+    private AutoDetect() {
+        // disallows instancing this class
+    }
 }

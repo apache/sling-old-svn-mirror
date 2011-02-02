@@ -16,13 +16,23 @@
  */
 package org.apache.sling.junit;
 
-/**
- * Placeholder class for default value of annotation 
- * properties with "auto detect" capabilities. As done
- * in the Felix SCR plugin.
+import java.util.List;
+
+/** Provides tests, for example by scanning bundles, 
+ *  finding test resources in a content repository, etc.
  */
-public class AutoDetect {
-    private AutoDetect() {
-        // disallows instancing this class
-    }
+public interface TestsProvider {
+    /** Return this service's PID, client might use it later
+     *  to instantiate a specific test. 
+     */
+    String getServicePid();
+    
+    /** Return the list of available tests */
+    List<String> getTestNames();
+    
+    /** Create a test class to execute the specified test */
+    Class<?> createTestClass(String testName) throws ClassNotFoundException;
+    
+    /** Return the timestamp at which our list of tests was last modified */
+    long lastModified();
 }

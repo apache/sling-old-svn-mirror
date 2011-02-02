@@ -18,7 +18,7 @@ package org.apache.sling.junit.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
+import java.util.Collection;
 
 import javax.servlet.ServletException;
 
@@ -29,7 +29,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.junit.JUnitConstants;
 import org.apache.sling.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
 
@@ -54,18 +53,17 @@ public class JUnitServlet extends SlingAllMethodsServlet {
         pw.println();
         
         // Any test classes?
-        final List<String> testClasses = testsManager.getTestClasses();
+        final Collection<String> testClasses = testsManager.getTestNames();
         if(testClasses.isEmpty()) {
             pw.println(
-                    "No test classes found, please activate at least one bundle "
-                    + "which exports JUnit test classes and points to them using a "
-                    + JUnitConstants.SLING_TEST_REGEXP + " header."
+                    "No test classes found, check the requirements of the active " +
+                    "TestsProvider services for how to supply tests." 
                     );
             return;
         }
         
         // List test classes
-        pw.println("TEST CLASSES (found in bundles that have a " + JUnitConstants.SLING_TEST_REGEXP + " header):");
+        pw.println("TEST CLASSES");
         for(String className : testClasses) {
             pw.println(className);
         }
