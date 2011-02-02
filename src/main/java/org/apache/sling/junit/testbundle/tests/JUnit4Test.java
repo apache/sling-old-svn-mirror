@@ -14,38 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.testbundle.tests;
+package org.apache.sling.junit.testbundle.tests;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
-import org.apache.sling.extensions.junit.SlingAnnotationsTestRunner;
-import org.apache.sling.extensions.junit.TestReference;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.ConfigurationAdmin;
 
-/** Test OSGi services injection */
-@RunWith(SlingAnnotationsTestRunner.class)
-public class OsgiAwareTest {
+/** Example test using the JUnit4 annotations */
+public class JUnit4Test {
+    private String title;
     
-    @TestReference
-    private ConfigurationAdmin configAdmin;
-
-    @TestReference
-    private BundleContext bundleContext;
+    @Before
+    public void setTitle() {
+        title = "FOO";
+    }
     
-    @Test
-    public void testConfigAdmin() {
-        assertNotNull(
-                "Expecting ConfigurationAdmin to be injected by Sling test runner", 
-                configAdmin);
+    @After
+    public void resetTitle() {
+        title = null;
     }
     
     @Test
-    public void testBundleContext() {
-        assertNotNull(
-                "Expecting BundleContext to be injected by Sling test runner", 
-                bundleContext);
+    public void testPasses() {
+    }
+    
+    @Test
+    public void testRequiresBefore() {
+        assertNotNull(title);
+    }
+    
+    @Test
+    public void testFailsEveryTime() {
+        fail("This JUnit4 test fails every time");
+    }
+    
+    @Test
+    public void testFailsSometimes() {
+        if(Math.random() > 0.5) {
+            fail("This JUnit4 test fails 50% of the time");
+        }
     }
 }

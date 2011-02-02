@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.testbundle.tests;
+package org.apache.sling.junit.testbundle.tests;
 
-/** JUnit should complain that this class doesn't contain
- *  any tests.
+/** Verify that this class is not included in the list
+ *  of tests (due to the Sling-Test-Regexp bundle header.
  */
-public class MissingTest {
+public class SomeOtherClass {
+
 }

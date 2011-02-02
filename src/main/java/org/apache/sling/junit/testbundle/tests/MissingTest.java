@@ -14,22 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.extensions.junit.testbundle.tests;
+package org.apache.sling.junit.testbundle.tests;
 
-import junit.framework.TestCase;
-
-/** Example test using the JUnit3 APIs */
-public class JUnit3Test extends TestCase {
-    public void testPasses() {
-    }
-    
-    public void testFailsEveryTime() {
-        fail("This JUnit3 test fails every time");
-    }
-    
-    public void testFailsSometimes() {
-        if(Math.random() > 0.5) {
-            fail("This JUnit3 test fails 50% of the time");
-        }
-    }
+/** JUnit should complain that this class doesn't contain
+ *  any tests.
+ */
+public class MissingTest {
 }
