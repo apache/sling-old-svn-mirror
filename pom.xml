@@ -26,12 +26,12 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.extensions.junit.testbundle</artifactId>
+    <artifactId>org.apache.sling.junit.testbundle</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling JUnit extensions test bundle</name>
-    <description>Contains test classes to test the Sling JUnit extensions</description>
+    <name>Apache Sling JUnit extension test bundle</name>
+    <description>Provides test classes to test the Sling JUnit extensions</description>
     
     <properties>
         <junit.version>4.8.2</junit.version>
@@ -95,7 +95,7 @@
         <dependency>
             <!-- TODO create separate API package, this is just to get the special Sling test runner -->
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.junit</artifactId>
+            <artifactId>org.apache.sling.junit.core</artifactId>
             <version>0.1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
