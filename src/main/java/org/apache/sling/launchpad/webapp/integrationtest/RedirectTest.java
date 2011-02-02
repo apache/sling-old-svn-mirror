@@ -91,6 +91,55 @@ public class RedirectTest extends HttpTestBase {
         assertTrue(location.endsWith("/index.html?param=value"));
     }
 
+    /** test 302 response with existing sling:target */
+    public void testRedirect302_absolute() throws IOException {
+
+        // create a node redirecting to /index
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("sling:resourceType", "sling:redirect");
+        props.put("sling:target", "http://some.host.none/index.html");
+        String redirNodeUrl = testClient.createNode(postUrl, props);
+
+        // get the created node without following redirects
+        GetMethod get = new GetMethod(redirNodeUrl);
+        get.setFollowRedirects(false);
+        int status = httpClient.executeMethod(get);
+
+        // expect temporary redirect ...
+        assertEquals(302, status);
+
+        // ... to */index.html
+        String location = get.getResponseHeader("Location").getValue();
+        assertNotNull(location);
+        assertTrue(location.equals("http://some.host.none/index.html"));
+
+        // get the created node without following redirects
+        get = new GetMethod(redirNodeUrl + ".html");
+        get.setFollowRedirects(false);
+        status = httpClient.executeMethod(get);
+
+        // expect temporary redirect ...
+        assertEquals(302, status);
+
+        // ... to */index.html
+        location = get.getResponseHeader("Location").getValue();
+        assertNotNull(location);
+        assertTrue(location.equals("http://some.host.none/index.html.html"));
+
+        // get the created node without following redirects
+        get = new GetMethod(redirNodeUrl + "?param=value");
+        get.setFollowRedirects(false);
+        status = httpClient.executeMethod(get);
+
+        // expect temporary redirect ...
+        assertEquals(302, status);
+
+        // ... to */index.html
+        location = get.getResponseHeader("Location").getValue();
+        assertNotNull(location);
+        assertTrue(location.equals("http://some.host.none/index.html?param=value"));
+    }
+
     /** test 404 response when sling:target is missing */
     public void testRedirect404() throws IOException {
         // create a sling:redirect node without a target
