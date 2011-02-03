@@ -60,6 +60,25 @@
         <url>http://svn.apache.org/viewvc/sling/trunk</url>
     </scm>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>sling</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <!-- List modules to be included in the build here ! -->
     <modules>
         <!-- The real Sling Parent Project -->
