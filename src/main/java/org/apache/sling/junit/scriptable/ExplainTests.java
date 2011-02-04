@@ -30,9 +30,10 @@ public class ExplainTests {
         fail(
                 "No scriptable tests found."
                 + " To create scriptable tests, create nodes with the sling:Test"
-                + " mixin, and setup Sling so that requesting them with .test.txt generates"
+                + " mixin under /apps or /libs (*), and setup Sling so that requesting them with .test.txt generates"
                 + " a text response containing just TEST_PASSED if the test is successful."
                 + " Empty lines and lines starting with # are ignored in the test output."
+                + " (*) depends on the JCR resource resolver configuration."
                 );
     }
 }

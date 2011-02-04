@@ -16,6 +16,7 @@
  */
 package org.apache.sling.junit.scriptable;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,9 +46,18 @@ import org.slf4j.LoggerFactory;
 public class ScriptableTestsProvider implements TestsProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private String pid;
-    private static List<String> testPaths = new LinkedList<String>();
     private Session session;
     private ResourceResolver resolver;
+    
+    /** List of resource paths that point to tests */
+    private static List<String> testPaths = new LinkedList<String>();
+    
+    /** We only consider test resources under the search path
+     *  of the JCR resource resolver. These paths are supposed 
+     *  to be secured, as they contain other admin stuff anyway, 
+     *  so non-admin users are prevented from creating test nodes. 
+     */
+    private String[] allowedRoots;
     
     @Reference
     private SlingRepository repository;
@@ -62,6 +72,16 @@ public class ScriptableTestsProvider implements TestsProvider {
         pid = (String)ctx.getProperties().get(Constants.SERVICE_PID);
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         resolver = resolverFactory.getResourceResolver(session);
+        
+        // Copy resource resolver paths and make sure they end with a /
+        final String [] paths = resolver.getSearchPath();
+        allowedRoots = Arrays.copyOf(paths, paths.length);
+        for(int i=0; i < allowedRoots.length; i++) {
+            if(!allowedRoots[i].endsWith("/")) {
+                allowedRoots[i] += "/";
+            }
+        }
+        log.info("Activated, will look for test resources under {}", Arrays.asList(allowedRoots));
     }
     
     protected void deactivate(ComponentContext ctx) throws RepositoryException {
@@ -78,8 +98,6 @@ public class ScriptableTestsProvider implements TestsProvider {
         if(testPaths.size() == 0) {
             return ExplainTests.class;
         } else {
-            // TODO this would cause a mess if TestAllPaths is executed concurrently
-            // and these values change
             TestAllPaths.testPaths = testPaths;
             TestAllPaths.requestProcessor = requestProcessor;
             TestAllPaths.resolver = resolver;
@@ -105,11 +123,19 @@ public class ScriptableTestsProvider implements TestsProvider {
         
         // TODO do we want to cache results, use observation, etc.
         try {
-            final Query q = session.getWorkspace().getQueryManager().createQuery("//element(*, sling:Test)", Query.XPATH);
-            final NodeIterator it = q.execute().getNodes();
-            while(it.hasNext()) {
-                result.add(it.nextNode().getPath());
+            for(String root : allowedRoots) {
+                final String statement = "/jcr:root" + root + "/element(*, sling:Test)";
+                log.debug("Querying for test nodes: {}", statement);
+                final Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
+                final NodeIterator it = q.execute().getNodes();
+                while(it.hasNext()) {
+                    final String path = it.nextNode().getPath();
+                    result.add(path);
+                    log.debug("Test resource found: {}", path);
+                }
             }
+            log.info("List of test resources updated, {} resource(s) found under {}", 
+                    result.size(), Arrays.asList(allowedRoots));
         } catch(RepositoryException re) {
             log.warn("RepositoryException in getTestNames()", re);
         }
