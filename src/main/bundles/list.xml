@@ -172,6 +172,11 @@
             <artifactId>groovy-all</artifactId>
             <version>1.7.4</version>
         </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.groovy</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </bundle>
 
         <!-- felix httpservice whiteboard -->
         <bundle>
@@ -260,11 +265,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.webconsole</artifactId>
             <version>1.0.0</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.groovy</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
