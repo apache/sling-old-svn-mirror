@@ -27,6 +27,8 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.engine.SlingRequestProcessor;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,6 +39,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class TestAllPaths {
 
     private String path;
+    private static boolean executing = false;
     public static final String TEST_URL_SUFFIX = ".test.txt";
     public static final String PASSED = "TEST_PASSED";
     
@@ -47,6 +50,21 @@ public class TestAllPaths {
 
     public TestAllPaths(String path) {
         this.path = path;
+    }
+    
+    // Due to our use of static context, only one instance of this test can
+    // execute at any given time.
+    @BeforeClass
+    public static void checkConcurrency() {
+        if(executing) {
+            fail("Concurrent execution detected, not supported by this class");
+        }
+        executing = true;
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        executing = false;
     }
 
     /** Let JUnit run this all on our paths */
