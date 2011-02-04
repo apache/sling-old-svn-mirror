@@ -85,7 +85,7 @@ public class JUnitTestsManagerImpl implements JUnitTestsManager {
             throw new IllegalStateException("No TestsProvider found for PID " + providerPid);
         }
 
-        log.debug("Using provider {} to create test class {}", testName);
+        log.debug("Using provider {} to create test class {}", provider, testName);
         return provider.createTestClass(testName);
     }
 
