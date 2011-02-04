@@ -38,7 +38,7 @@
     </description>
 
     <properties>
-        <felix.httpservice.version>2.0.5-SNAPSHOT</felix.httpservice.version>
+        <felix.httpservice.version>2.2.0</felix.httpservice.version>
     </properties>
 
     <scm>
