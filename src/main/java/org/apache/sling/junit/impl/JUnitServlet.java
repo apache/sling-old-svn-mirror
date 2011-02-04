@@ -19,6 +19,9 @@ package org.apache.sling.junit.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -76,7 +79,10 @@ public class JUnitServlet extends HttpServlet {
         pw.println();
         
         // Any test classes?
-        final Collection<String> testClasses = testsManager.getTestNames();
+        final Collection<String> testClassesCollection = testsManager.getTestNames();
+        final List<String> testClasses = new LinkedList<String>();
+        testClasses.addAll(testClassesCollection);
+        Collections.sort(testClasses);
         if(testClasses.isEmpty()) {
             pw.println(
                     "No test classes found, check the requirements of the active " +
