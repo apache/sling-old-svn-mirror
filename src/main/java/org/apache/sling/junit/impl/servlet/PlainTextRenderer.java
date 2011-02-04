@@ -14,44 +14,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.impl;
+package org.apache.sling.junit.impl.servlet;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
 
-class PlainTextRunListener extends RunListener {
-    final PrintWriter pw;
+class PlainTextRenderer extends Renderer {
+    private PrintWriter output;
     
-    PlainTextRunListener(PrintWriter w) {
-        pw = w;
+    public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        response.setContentType("text/plain");
+        response.setCharacterEncoding("UTF-8");
+        output = response.getWriter();
+        title(1, pageTitle);
     }
     
+    public void cleanup() {
+    }
+
+    public void info(String cssClass, String str) {
+        output.println(str);
+    }
+    
+    public void list(String cssClass, List<String> data) {
+        for(String str : data) {
+            output.println(str);
+        }
+    }
+    
+    public void title(int level, String title) {
+        output.print(title);
+        output.println(" ****");
+    }
+
     @Override
     public void testFailure(Failure failure) throws Exception {
         super.testFailure(failure);
-        pw.println("FAILURE " + failure);
+        output.println("FAILURE " + failure);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
         super.testFinished(description);
-        pw.println("FINISHED " + description);
+        output.println("FINISHED " + description);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
         super.testIgnored(description);
-        pw.println("IGNORED " + description);
+        output.println("IGNORED " + description);
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
         super.testRunFinished(result);
-        pw.println("TEST RUN FINISHED: "
+        output.println("TEST RUN FINISHED: "
                 + "tests:" + result.getRunCount()
                 + ", failures:" + result.getFailureCount()
                 + ", ignored:" + result.getIgnoreCount()
