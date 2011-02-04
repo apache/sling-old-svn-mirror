@@ -21,29 +21,52 @@ import java.io.PrintWriter;
 import java.util.Collection;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Simple test runner servlet */
 @SuppressWarnings("serial")
 @Component
 @Service
-@Property(name="sling.servlet.paths",value="/system/sling/junit")
-public class JUnitServlet extends SlingAllMethodsServlet {
+public class JUnitServlet extends HttpServlet {
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    /** TODO make this configurable */
+    public static final String SERVLET_PATH = "/system/sling/junit";
     
     @Reference
     private JUnitTestsManager testsManager;
     
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    private HttpService httpService;
+
+    protected void bindHttpService(HttpService h) throws ServletException, NamespaceException {
+        httpService = h;
+        httpService.registerServlet(SERVLET_PATH, this, null, null);
+        log.info("Servlet registered at path {}", SERVLET_PATH);
+    }
+    
+    protected void unbindHttpService(HttpService h) throws ServletException, NamespaceException {
+        h.unregister(SERVLET_PATH);
+        httpService = null;
+        log.info("Servlet unregistered from path {}", SERVLET_PATH);
+    }
+    
     @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
         
         response.setContentType("text/plain");
