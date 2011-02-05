@@ -22,12 +22,22 @@ package org.apache.sling.api.adapter;
  * The <code>AdapterManager</code> defines the service interface for a manager
  * for object adaption. The adapter manager coordinates the registered
  * {@link AdapterFactory} services on behalf of clients wishing to adapt objects
- * to other types. One such client is the {@link Adaptable} class, which uses
- * the implementation of this bundle to adapt "itself".
+ * to other types. One such client is the {@link SlingAdaptable} class, which
+ * uses the implementation of this bundle to adapt "itself".
+ * <p>
+ * Clients may either extend from the {@link SlingAdaptable} class or access the
+ * <code>AdapterManager</code> service from the OSGi service registry to adapt
+ * objects to other types.
  * <p>
  * This interface is not intended to be implemented by clients.
  */
 public interface AdapterManager {
+
+    /**
+     * The name under which this service is registered with the OSGi service
+     * registry.
+     */
+    String SERVICE_NAME = "org.apache.sling.api.adapter.AdapterManager";
 
     /**
      * Returns an adapter object of the requested <code>AdapterType</code> for
@@ -35,7 +45,7 @@ public interface AdapterManager {
      * <p>
      * The <code>adaptable</code> object may be any non-<code>null</code> object
      * and is not required to implement the <code>Adaptable</code> interface.
-     * 
+     *
      * @param <AdapterType> The generic type of the adapter (target) type.
      * @param adaptable The object to adapt to the adapter type.
      * @param type The type to which the object is to be adapted.
