@@ -26,21 +26,26 @@ package org.apache.sling.api.adapter;
  * used by the {@link AdapterManager} to adapt objects on demand. The
  * <code>AdapterFactory</code> services are not really intended to be used by
  * clients directly.
+ * <p>
+ * The {@link AdapterManager} implementations ensures that the
+ * {@link #getAdapter(Object, Class)} method is only called for the combination
+ * of adaptable and adapter type which is allowed as per the service
+ * registration properties {@link #ADAPTABLE_CLASSES} and
+ * {@link #ADAPTER_CLASSES}.
  */
 public interface AdapterFactory {
 
     /**
      * The service name to use when registering implementations of this
-     * interface as services (value is
-     * "org.apache.sling.osgi.commons.AdapterFactory").
+     * interface as services.
      */
-    String SERVICE_NAME = AdapterFactory.class.getName();
+    String SERVICE_NAME = "org.apache.sling.api.adapter.AdapterFactory";
 
     /**
      * The service registration property listing the fully qualified names of
      * classes which can be adapted by this adapter factory (value is
      * "adaptables"). The "adaptable" parameters of the
-     * {@link #getAdapter(Object, Class)} method must be an instance of any of
+     * {@link #getAdapter(Object, Class)} method must be an instance of one of
      * these classes for this factory to be able to adapt the object.
      */
     String ADAPTABLE_CLASSES = "adaptables";
@@ -55,10 +60,10 @@ public interface AdapterFactory {
      * Adapt the given object to the adaptable type. The adaptable object is
      * guaranteed to be an instance of one of the classes listed in the
      * {@link #ADAPTABLE_CLASSES} services registration property. The type
-     * parameter is on of the classes listed in the {@link #ADAPTER_CLASSES}
+     * parameter is one of the classes listed in the {@link #ADAPTER_CLASSES}
      * service registration properties.
      * <p>
-     * This method may return <code>null</code> if the adaptable object may not
+     * This method may return <code>null</code> if the adaptable object cannot
      * be adapted to the adapter (target) type for any reason. In this case, the
      * implementation should log a message to the log facility noting the cause
      * for not being able to adapt.

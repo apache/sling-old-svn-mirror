@@ -18,15 +18,31 @@
  */
 package org.apache.sling.api.adapter;
 
+/**
+ * The <code>Adaptable</code> interface identifies objects which can be adapted
+ * to other types or representations of the same object. For example a JCR Node
+ * based {@link org.apache.sling.api.resource.Resource} can adapt to the
+ * underlying JCR Node or a file based resource could adapt to the underlying
+ * <code>java.io.File</code>.
+ */
 public interface Adaptable {
 
     /**
      * Adapts the adaptable to another type.
+     * <p>
+     * Please not that it is explicitly left as an implementation detail whether
+     * each call to this method with the same <code>type</code> yields the same
+     * object or a new object on each call.
+     * <p>
+     * Implementations of this method should document their adapted types as
+     * well as their behaviour with respect to returning newly created or not
+     * instance on each call.
      *
      * @param <AdapterType> The generic type to which this resource is adapted
      *            to
      * @param type The Class object of the target type, such as
-     *            <code>Node.class</code>
+     *            <code>javax.jcr.Node.class</code> or
+     *            <code>java.io.File.class</code>
      * @return The adapter target or <code>null</code> if the resource cannot
      *         adapt to the requested type
      */
