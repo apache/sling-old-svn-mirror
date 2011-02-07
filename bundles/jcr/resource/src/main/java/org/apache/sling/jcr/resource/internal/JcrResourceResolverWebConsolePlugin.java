@@ -20,6 +20,8 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -51,7 +53,8 @@ public class JcrResourceResolverWebConsolePlugin extends
 
     private static final String ATTR_SUBMIT = "plugin.submit";
 
-    private static final String ATTR_RESULT = "plugin.result";
+    private static final String PAR_MSG = "msg";
+    private static final String PAR_TEST = "test";
 
     private final transient JcrResourceResolverFactoryImpl resolverFactory;
 
@@ -67,7 +70,7 @@ public class JcrResourceResolverWebConsolePlugin extends
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", "jcrresolver");
-        props.put("felix.webconsole.title", "JCR ResourceResolver");
+        props.put("felix.webconsole.title", "Sling Resource Resolver");
         props.put("felix.webconsole.configprinter.modes", "always");
 
         service = context.registerService(new String[] {
@@ -85,15 +88,19 @@ public class JcrResourceResolverWebConsolePlugin extends
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
     throws ServletException, IOException {
-        String test = (String) request.getAttribute(ATTR_TEST);
-        if (test == null) test = "";
-        String result = (String) request.getAttribute(ATTR_RESULT);
+        final String msg = request.getParameter(PAR_MSG);
+        final String test;
+        if ( msg != null ) {
+            test = request.getParameter(PAR_TEST);
+        } else {
+            test = null;
+        }
 
-        PrintWriter pw = response.getWriter();
+        final PrintWriter pw = response.getWriter();
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
-        MapEntries mapEntries = resolverFactory.getMapEntries();
+        final MapEntries mapEntries = resolverFactory.getMapEntries();
 
         titleHtml(pw, "Configuration", null);
         pw.println("<tr class='content'>");
@@ -132,7 +139,7 @@ public class JcrResourceResolverWebConsolePlugin extends
         pw.println("<td class='content'>Test</td>");
         pw.print("<td class='content' colspan='2'>");
         pw.print("<form method='post'>");
-        pw.println("<input type='text' name='" + ATTR_TEST + "' value='" + test
+        pw.println("<input type='text' name='" + ATTR_TEST + "' value='" + (test != null ? test : "")
             + "' class='input' size='50'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
             + "' value='Resolve' class='submit'>");
@@ -142,10 +149,10 @@ public class JcrResourceResolverWebConsolePlugin extends
         pw.print("</td>");
         pw.println("</tr>");
 
-        if (result != null) {
+        if (msg != null) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content' colspan='2'>" + result + "</td>");
+            pw.println("<td class='content' colspan='2'>" + msg + "</td>");
             pw.println("</tr>");
         }
 
@@ -173,11 +180,9 @@ public class JcrResourceResolverWebConsolePlugin extends
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
 
-        String test = request.getParameter(ATTR_TEST);
+        final String test = request.getParameter(ATTR_TEST);
+        String msg = null;
         if (test != null && test.length() > 0) {
-
-            // set test value for the re-rendering of the form
-            request.setAttribute(ATTR_TEST, test);
 
             Session session = null;
             try {
@@ -202,12 +207,12 @@ public class JcrResourceResolverWebConsolePlugin extends
                 }
 
                 // set the result to render the result
-                request.setAttribute(ATTR_RESULT, result.toString());
+                msg = result.toString();
 
             } catch (Throwable t) {
 
                 // some error occurred, report it as a result
-                request.setAttribute(ATTR_RESULT, "Test Failure: " + t);
+                msg = "Test Failure: " + t;
 
             } finally {
                 if (session != null) {
@@ -217,8 +222,24 @@ public class JcrResourceResolverWebConsolePlugin extends
 
         }
 
-        // finally render the result
-        doGet(request, response);
+        // finally redirect
+        final String path = request.getContextPath() + request.getServletPath() + request.getPathInfo();
+        final String redirectTo;
+        if ( msg == null ) {
+            redirectTo = path;
+        } else {
+            redirectTo = path + '?' + PAR_MSG + '=' + encodeParam(msg) + '&' + PAR_TEST + '=' + encodeParam(test);
+        }
+        response.sendRedirect(redirectTo);
+    }
+
+    private String encodeParam(final String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // should never happen
+            return value;
+        }
     }
 
     // ---------- ConfigurationPrinter
