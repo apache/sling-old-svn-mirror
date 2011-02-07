@@ -116,9 +116,13 @@ public class JUnitServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
+        
+        // Redirect to / if called without it, and serve CSS if requested 
         {
             final String pi = request.getPathInfo();
-            if(pi != null && pi.endsWith(CSS)) {
+            if(pi == null) {
+                response.sendRedirect(request.getContextPath() + SERVLET_PATH + "/");
+            } else if(pi.endsWith(CSS)) {
                 sendCss(response);
                 return;
             }
