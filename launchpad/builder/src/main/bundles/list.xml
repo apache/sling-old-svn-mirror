@@ -190,7 +190,7 @@
             <artifactId>org.apache.aries.jmx.api</artifactId>
             <version>0.3</version>
         </bundle>
-         <bundle>
+        <bundle>
             <groupId>org.apache.aries</groupId>
             <artifactId>org.apache.aries.util</artifactId>
             <version>0.3</version>
