@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
 import org.osgi.service.http.HttpService;
@@ -42,8 +42,7 @@ import org.slf4j.LoggerFactory;
 
 /** Simple test runner servlet */
 @SuppressWarnings("serial")
-@Component
-@Service
+@Component(immediate=true)
 public class JUnitServlet extends HttpServlet {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -56,7 +55,7 @@ public class JUnitServlet extends HttpServlet {
     @Reference
     private JUnitTestsManager testsManager;
     
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private HttpService httpService;
     
     protected void bindHttpService(HttpService h) throws ServletException, NamespaceException {
