@@ -56,6 +56,7 @@ public class Activator implements BundleActivator, BundleListener {
 
         if ( this.settingsService.isDelayedStart() ) {
             this.bundleContext.addBundleListener(this);
+            this.tryToStart();
         } else {
             this.startService();
         }
@@ -66,13 +67,19 @@ public class Activator implements BundleActivator, BundleListener {
      */
     public void bundleChanged(BundleEvent event) {
         if ( SlingSettingsServiceImpl.ENGINE_SYMBOLIC_NAME.equals(event.getBundle().getSymbolicName())) {
+            this.tryToStart();
+        }
+
+    }
+
+    private synchronized void tryToStart() {
+        if ( this.settingsService.isDelayedStart() ) {
             this.settingsService.initDelayed(this.bundleContext);
             if ( !this.settingsService.isDelayedStart() ) {
                 this.bundleContext.removeBundleListener(this);
                 this.startService();
             }
         }
-
     }
 
     private void startService() {
