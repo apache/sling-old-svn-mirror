@@ -37,7 +37,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -146,6 +145,17 @@ public class JspScriptEngineFactory
      */
     public String getLanguageVersion() {
         return "2.1";
+    }
+
+    /**
+     * @see javax.script.ScriptEngineFactory#getParameter(String)
+     */
+    public Object getParameter(String name) {
+        if ("THREADING".equals(name)) {
+            return "STATELESS”";
+        }
+
+        return super.getParameter(name);
     }
 
     /**
