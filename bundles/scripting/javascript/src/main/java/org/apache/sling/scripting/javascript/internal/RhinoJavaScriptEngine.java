@@ -47,7 +47,6 @@ import org.slf4j.Logger;
 public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
     private Scriptable rootScope;
-    private Scriptable scope;
 
     public RhinoJavaScriptEngine(ScriptEngineFactory factory,
             Scriptable rootScope) {
@@ -73,32 +72,28 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
         // container for replaced properties
         Map<String, Object> replacedProperties = null;
+        Scriptable scope = null;
 
         // create a rhino Context and execute the script
         try {
 
             final Context rhinoContext = Context.enter();
 
-            if (ScriptRuntime.hasTopCall(rhinoContext) && scope == null) {
-
+            if (ScriptRuntime.hasTopCall(rhinoContext)) {
                 // reuse the top scope if we are included
                 scope = ScriptRuntime.getTopCallScope(rhinoContext);
-
             } else {
+                // create the request top scope, use the ImporterToplevel here
+                // to support the importPackage and importClasses functions
+                scope = new ImporterTopLevel();
 
-                if (scope == null) {
-                    // create the request top scope, use the ImporterToplevel here
-                    // to support the importPackage and importClasses functions
-                    scope = new ImporterTopLevel(); // new NativeObject();
+                // Set the global scope to be our prototype
+                scope.setPrototype(rootScope);
 
-                    // Set the global scope to be our prototype
-                    scope.setPrototype(rootScope);
-
-                    // We want "scope" to be a new top-level scope, so set its
-                    // parent scope to null. This means that any variables created
-                    // by assignments will be properties of "scope".
-                    scope.setParentScope(null);
-                }
+                // We want "scope" to be a new top-level scope, so set its
+                // parent scope to null. This means that any variables created
+                // by assignments will be properties of "scope".
+                scope.setParentScope(null);
 
                 // setup the context for use
                 WrapFactory wrapFactory = ((RhinoJavaScriptEngineFactory) getFactory()).getWrapFactory();
@@ -121,7 +116,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
             // log the script stack trace
             ((Logger) bindings.get(SlingBindings.LOG)).error(t.getScriptStackTrace());
-            
+
             // set the exception cause
             Object value = t.getValue();
             if (value != null) {
@@ -132,12 +127,12 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
                     se.initCause((Throwable) value);
                 }
             }
-            
+
             // if the cause could not be set, overwrite the stack trace
             if (se.getCause() == null) {
                 se.setStackTrace(t.getStackTrace());
             }
-            
+
             throw se;
 
         } catch (Throwable t) {
@@ -153,7 +148,6 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             resetBoundProperties(scope, replacedProperties);
 
             Context.exit();
-
         }
     }
 
