@@ -100,6 +100,14 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         return languageVersion;
     }
 
+    public Object getParameter(String name) {
+        if ("THREADING".equals(name)) {
+            return "MULTITHREADED”";
+        }
+
+        return super.getParameter(name);
+    }
+
     public Scriptable getScope() {
         return getRootScope();
     }
