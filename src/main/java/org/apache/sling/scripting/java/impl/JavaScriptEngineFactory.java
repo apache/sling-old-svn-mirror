@@ -124,7 +124,19 @@ public class JavaScriptEngineFactory
     }
 
     /**
+     * @see javax.script.ScriptEngineFactory#getParameter(String)
+     */
+    public Object getParameter(String name) {
+        if ("THREADING".equals(name)) {
+            return "STATELESS”";
+        }
+
+        return super.getParameter(name);
+    }
+
+    /**
      * Activate this engine
+     *
      * @param componentContext
      */
     @SuppressWarnings("unchecked")
