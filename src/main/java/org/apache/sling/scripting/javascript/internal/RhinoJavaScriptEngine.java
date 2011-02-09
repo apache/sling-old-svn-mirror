@@ -73,6 +73,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         // container for replaced properties
         Map<String, Object> replacedProperties = null;
         Scriptable scope = null;
+        boolean isTopLevelCall = false;
 
         // create a rhino Context and execute the script
         try {
@@ -82,6 +83,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             if (ScriptRuntime.hasTopCall(rhinoContext)) {
                 // reuse the top scope if we are included
                 scope = ScriptRuntime.getTopCallScope(rhinoContext);
+
             } else {
                 // create the request top scope, use the ImporterToplevel here
                 // to support the importPackage and importClasses functions
@@ -98,6 +100,9 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
                 // setup the context for use
                 WrapFactory wrapFactory = ((RhinoJavaScriptEngineFactory) getFactory()).getWrapFactory();
                 rhinoContext.setWrapFactory(wrapFactory);
+
+                // this is the top level call
+                isTopLevelCall = true;
             }
 
             // add initial properties to the scope
@@ -110,6 +115,9 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
                     lineNumber, securityDomain);
 
         } catch (JavaScriptException t) {
+
+            // prevent variables to be pushed back in case of errors
+            isTopLevelCall = false;
 
             final ScriptException se = new ScriptException(t.details(),
                 t.sourceName(), t.lineNumber());
@@ -137,12 +145,21 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
         } catch (Throwable t) {
 
+            // prevent variables to be pushed back in case of errors
+            isTopLevelCall = false;
+
             final ScriptException se = new ScriptException(
                 "Failure running script " + scriptName + ": " + t.getMessage());
             se.initCause(t);
             throw se;
 
         } finally {
+
+            // if we are the top call (the Context is now null) we have to
+            // play back any properties from the scope back to the bindings
+            if (isTopLevelCall) {
+                getBoundProperties(scope, bindings);
+            }
 
             // if properties have been replaced, reset them
             resetBoundProperties(scope, replacedProperties);
@@ -172,6 +189,23 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         }
 
         return replacedProperties;
+    }
+
+    private void getBoundProperties(Scriptable scope, Bindings bindings) {
+        Object[] ids = scope.getIds();
+        for (Object id : ids) {
+            if (id instanceof String) {
+                String key = (String) id;
+                Object value = scope.get(key, scope);
+                if (value != Scriptable.NOT_FOUND) {
+                    if (value instanceof Wrapper) {
+                        bindings.put(key, ((Wrapper) value).unwrap());
+                    } else {
+                        bindings.put(key, value);
+                    }
+                }
+            }
+        }
     }
 
     private void resetBoundProperties(Scriptable scope,
