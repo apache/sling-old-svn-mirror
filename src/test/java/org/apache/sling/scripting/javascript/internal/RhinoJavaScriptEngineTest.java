@@ -18,8 +18,10 @@
  */
 package org.apache.sling.scripting.javascript.internal;
 
+import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 
 import junit.framework.TestCase;
 
@@ -33,10 +35,11 @@ public class RhinoJavaScriptEngineTest extends TestCase {
     public void testPreserveScopeBetweenEvals() throws ScriptException {
         MockRhinoJavaScriptEngineFactory factory = new MockRhinoJavaScriptEngineFactory();
         ScriptEngine engine = factory.getScriptEngine();
-        engine.eval("var f = 1");
+        Bindings context = new SimpleBindings();
+        engine.eval("var f = 1", context);
         Object result = null;
         try {
-            result = engine.eval("f += 1");
+            result = engine.eval("f += 1", context);
         } catch (ScriptException e) {
             TestCase.fail(e.getMessage());
         }
