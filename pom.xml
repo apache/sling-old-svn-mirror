@@ -36,13 +36,11 @@
         so that they can be run as tests.
     </description>
     
-<!-- TODO
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/jcr/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/scriptable</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/scriptable</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/scriptable</url>
     </scm>
--->
 
     <build>
         <plugins>
