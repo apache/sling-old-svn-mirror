@@ -33,13 +33,11 @@
     <name>Apache Sling JUnit Reactor POM</name>
     <description>Builds the JUnit extension modules</description>
     
-<!-- TODO
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/jcr/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit</url>
     </scm>
--->
 
     <modules>
         <module>core</module>
