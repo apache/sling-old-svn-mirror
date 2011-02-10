@@ -37,13 +37,11 @@
         <junit.version>4.8.2</junit.version>
     </properties>
 
-<!-- TODO
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/providers/jcr</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/installer/providers/jcr/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/testbundle</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/testbundle</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/testbundle</url>
     </scm>
--->
 
     <build>
         <plugins>
