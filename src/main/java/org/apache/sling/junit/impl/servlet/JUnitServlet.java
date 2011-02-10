@@ -92,6 +92,8 @@ public class JUnitServlet extends HttpServlet {
     private Renderer getRenderer(RequestInfo requestInfo) {
         if(".txt".equals(requestInfo.extension)) {
             return new PlainTextRenderer();
+        } else if(".xml".equals(requestInfo.extension)) {
+            return new XmlRenderer();
         } else {
             return new HtmlRenderer();
         }
@@ -166,5 +168,6 @@ public class JUnitServlet extends HttpServlet {
                 throw new ServletException("Test class not found", cnfe);
             }
         }
+        renderer.cleanup();
     }
 }
