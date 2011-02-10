@@ -152,7 +152,7 @@ public class JspScriptEngineFactory
      */
     public Object getParameter(String name) {
         if ("THREADING".equals(name)) {
-            return "STATELESS”";
+            return "STATELESS";
         }
 
         return super.getParameter(name);
