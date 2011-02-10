@@ -102,7 +102,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
 
     public Object getParameter(String name) {
         if ("THREADING".equals(name)) {
-            return "MULTITHREADED”";
+            return "MULTITHREADED";
         }
 
         return super.getParameter(name);
