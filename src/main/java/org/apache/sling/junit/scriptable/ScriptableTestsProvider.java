@@ -100,7 +100,8 @@ public class ScriptableTestsProvider implements TestsProvider {
         
         // Copy resource resolver paths and make sure they end with a /
         final String [] paths = resolver.getSearchPath();
-        allowedRoots = Arrays.copyOf(paths, paths.length);
+        allowedRoots = new String[paths.length];
+        System.arraycopy(paths, 0, allowedRoots, 0, paths.length);
         for(int i=0; i < allowedRoots.length; i++) {
             if(!allowedRoots[i].endsWith("/")) {
                 allowedRoots[i] += "/";
