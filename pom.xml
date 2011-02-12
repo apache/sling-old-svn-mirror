@@ -154,6 +154,9 @@
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         
+        <!-- Testing Support -->
+        <module>testing/junit</module>
+        
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/providers/file</module>
