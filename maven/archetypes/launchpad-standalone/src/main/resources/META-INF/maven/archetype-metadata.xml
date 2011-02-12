@@ -26,4 +26,5 @@
         <include>**/*.properties</include>
       </includes>
     </fileSet>
+  </fileSets>
 </archetype-descriptor>
