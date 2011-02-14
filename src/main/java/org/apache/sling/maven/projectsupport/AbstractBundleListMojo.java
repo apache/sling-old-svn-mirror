@@ -24,10 +24,13 @@ import java.util.Properties;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
+import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
@@ -129,6 +132,13 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     private ArtifactFactory factory;
 
     /**
+     * Used to look up Artifacts in the remote repository.
+     *
+     * @component hint="maven"
+     */
+    private ArtifactMetadataSource metadataSource;
+
+    /**
      * If true, include the default bundles.
      *
      * @parameter default-value="true"
@@ -225,6 +235,19 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
             artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, classifier,
                     Artifact.SCOPE_COMPILE);
         }
+
+        // This code kicks in when the version specifier is a range.
+        if (vr.getRecommendedVersion() == null) {
+            try {
+                List availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
+                ArtifactVersion resolvedVersion = vr.matchVersion(availVersions);
+                artifact.setVersion(resolvedVersion.toString());
+            } catch (ArtifactMetadataRetrievalException e) {
+                throw new MojoExecutionException("Unable to find version for artifact", e);
+            }
+            
+        }
+
         try {
             resolver.resolve(artifact, remoteRepos, local);
         } catch (ArtifactResolutionException e) {
