@@ -30,6 +30,12 @@
         This module installs the contents of the launchpad archive into the framework.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/installer</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/installer</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/installer</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
@@ -50,7 +56,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
