@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>10</version>
+    </parent>
+
+    <artifactId>org.apache.sling.testing.sample</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Apache Sling Testing Sample</name>
+    <description>
+        Sample project that demonstrates the various tools and techniques
+        available to test Sling applications: plain build-time JUnit tests,
+        HTTP-based integration tests, server-side JUnit tests injected via
+        bundles and server-side scriptable tests.
+    </description>
+    
+    <properties>
+        <!-- Set this to run the server on a specific port -->
+        <http.port></http.port>
+        
+        <!-- Set this to run tests against an existing server instance -->
+        <test.server.url></test.server.url>
+        
+        <!-- Options for the VM that executes our runnable jar -->
+        <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
+        
+        <!-- Set this to true to keep the runnable jar running - useful to debug tests -->
+        <keepJarRunning>false</keepJarRunning>
+    </properties>
+    
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/sample</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/sample</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/sample</url>
+    </scm>
+
+    <build>
+        <plugins>
+           <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <!-- sling folder is the workdir of the executable jar that we test -->
+                                <include>sling</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-runnable-jar</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                            <phase>process-resources</phase>
+                        <configuration>
+                            <includeArtifactIds>org.apache.sling.launchpad</includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Find free ports to run our server -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-server-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <test.server.url>${test.server.url}</test.server.url>
+                        <jar.executor.server.port>${http.port}</jar.executor.server.port>
+                        <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
+                        <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
+                        <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
+                        <keepJarRunning>${keepJarRunning}</keepJarRunning>
+                        <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
+                        <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
+                        <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
+                        <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+         </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.stanbol</groupId>
+            <artifactId>org.apache.stanbol.commons.testing.jarexec</artifactId>
+            <version>0.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.stanbol</groupId>
+            <artifactId>org.apache.stanbol.commons.testing.http</artifactId>
+            <version>0.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad</artifactId>
+            <classifier>standalone</classifier>
+            <version>6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.5.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
