@@ -30,6 +30,12 @@
         This module contains the API exposed by Launchpad to bundles.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/api</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
