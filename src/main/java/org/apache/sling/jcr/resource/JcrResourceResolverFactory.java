@@ -32,6 +32,14 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
  * is implemented by this bundle and the implementation registered as a service
  * for use by client applications.
  *
+ * This interface is deprecated. You should use
+ * {@link org.apache.sling.api.resource.ResourceResolverFactory}
+ * instead. If you need a resource resolver based on an existing session
+ * you can create an authentication map just containing this session
+ * (using the key {@link JcrResourceConstants#AUTHENTICATION_INFO_SESSION})
+ * and then call {@link org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)}
+ * with exactly this map.
+ *
  * @deprecated Since 2.1. Use the
  *             {@link org.apache.sling.api.resource.ResourceResolverFactory}
  */
