@@ -26,11 +26,11 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.junit.testbundle</artifactId>
+    <artifactId>org.apache.sling.testing.samples.testbundle</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling JUnit Extension Test Bundle</name>
+    <name>Apache Sling Tests Sample Bundle</name>
     <description>Provides test classes to test the Sling JUnit extensions</description>
     
     <properties>
@@ -38,9 +38,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/testbundle</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/testbundle</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/testbundle</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/testbundle</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/testbundle</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/testbundle</url>
     </scm>
 
     <build>

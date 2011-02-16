@@ -26,22 +26,25 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.junit.reactor</artifactId>
+    <artifactId>org.apache.sling.testing.reactor</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Apache Sling JUnit Reactor POM</name>
-    <description>Builds the JUnit extension modules</description>
+    <name>Apache Sling Testing Reactor POM</name>
+    <description>Builds the Sling testing modules</description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing</url>
     </scm>
 
     <modules>
-        <module>core</module>
-        <module>scriptable</module>
-        <module>testbundle</module>
+        <module>junit/core</module>
+        <module>junit/scriptable</module>
+        <module>samples/testbundle</module>
+
+        <!-- TODO cannot enable yet, uses unreleased Stanbol snapshots -->
+        <module>samples/test-tools</module>
     </modules>
 </project>
