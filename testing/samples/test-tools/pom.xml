@@ -26,11 +26,11 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.testing.sample</artifactId>
+    <artifactId>org.apache.sling.testing.samples.testtools</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling Testing Sample</name>
+    <name>Apache Sling Test Tools Sample</name>
     <description>
         Sample project that demonstrates the various tools and techniques
         available to test Sling applications: plain build-time JUnit tests,
