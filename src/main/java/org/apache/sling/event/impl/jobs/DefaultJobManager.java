@@ -213,20 +213,23 @@ public class DefaultJobManager
      * @see java.lang.Runnable#run()
      */
     private void cleanup() {
-        this.schedulerRuns++;
+        // check for unprocessed jobs first
+        for(final AbstractJobQueue jbq : this.queues.values() ) {
+            jbq.checkForUnprocessedJobs();
+        }
+        
         // we only do a full clean up on every fifth run
+        this.schedulerRuns++;
         final boolean doFullCleanUp = (schedulerRuns % 5 == 0);
 
-        // check for idle queue
-        // we synchronize to avoid creating a queue which is about to be removed during cleanup
-        synchronized ( queuesLock ) {
-            final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
-            while ( i.hasNext() ) {
-                final Map.Entry<String, AbstractJobQueue> current = i.next();
-                // clean up
-                final AbstractJobQueue jbq = current.getValue();
-                jbq.checkForUnprocessedJobs();
-                if ( doFullCleanUp ) {
+        if ( doFullCleanUp ) {
+            // check for idle queue
+           // we synchronize to avoid creating a queue which is about to be removed during cleanup
+            synchronized ( queuesLock ) {
+                final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
+                while ( i.hasNext() ) {
+                    final Map.Entry<String, AbstractJobQueue> current = i.next();
+                    final AbstractJobQueue jbq = current.getValue();
                     if ( jbq.isMarkedForRemoval() ) {
                         // close
                         jbq.close();
