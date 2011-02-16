@@ -155,7 +155,7 @@
         <module>bundles/extensions/explorer</module>
         
         <!-- Testing Support -->
-        <module>testing/junit</module>
+        <module>testing</module>
         
         <!-- Installer -->
         <module>installer/core</module>

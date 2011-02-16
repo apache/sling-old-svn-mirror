@@ -44,7 +44,8 @@
         <module>junit/scriptable</module>
         <module>samples/testbundle</module>
 
-        <!-- TODO cannot enable yet, uses unreleased Stanbol snapshots -->
+        <!-- TODO cannot enable yet, uses unreleased Stanbol snapshots
         <module>samples/test-tools</module>
+        -->
     </modules>
 </project>
