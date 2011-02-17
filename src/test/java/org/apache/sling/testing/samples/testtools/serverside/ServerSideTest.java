@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.sample.serverside;
+package org.apache.sling.testing.samples.testtools.serverside;
 
-import org.apache.sling.junit.sample.SlingTestBase;
+import org.apache.sling.testing.samples.testtools.SlingTestBase;
 import org.apache.stanbol.commons.testing.http.RetryLoop;
 import org.junit.Before;
 import org.junit.Test;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.sample;
+package org.apache.sling.testing.samples.testtools;
 
 import static org.junit.Assert.fail;
 
