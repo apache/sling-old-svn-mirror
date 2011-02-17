@@ -17,10 +17,15 @@
 package org.apache.sling.junit.sample;
 
 import static org.junit.Assert.fail;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.stanbol.commons.testing.http.RequestBuilder;
 import org.apache.stanbol.commons.testing.http.RequestExecutor;
@@ -38,6 +43,8 @@ public class SlingTestBase {
     public static final String SERVER_READY_TIMEOUT_PROP = "server.ready.timeout.seconds";
     public static final String SERVER_READY_PROP_PREFIX = "server.ready.path";
     public static final String KEEP_JAR_RUNNING_PROP = "keepJarRunning";
+    public static final String ADDITONAL_BUNDLES_PATH = "additional.bundles.path";
+    public static final String ADMIN = "admin";
     
     protected static String serverBaseUrl;
     protected static RequestBuilder builder;
@@ -132,11 +139,70 @@ public class SlingTestBase {
             Thread.sleep(1000L);
         }
         
-        if(!serverReady) {
+        if(serverReady) {
+            onServerReady();
+        } else {
             serverReadyTestFailed = true;
             final String msg = "Server not ready after " + timeoutSec + " seconds, giving up";
             log.info(msg);
             fail(msg);
         }
+    }
+    
+    /** Called once when the server is found to be ready, can be used for additional
+     *  server setup (extra bundles etc.). If overridden, must be called by overriding
+     *  method. 
+     */
+    protected void onServerReady() throws Exception {
+        installExtraBundles();
+    }
+    
+    /** Install all bundles found under our additional bundles path */
+    protected void installExtraBundles() throws Exception {
+        final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
+        if(path == null) {
+            log.info("System property {} not set, additional bundles won't be installed", 
+                    ADDITONAL_BUNDLES_PATH);
+            return;
+        }
+        
+        final File dir = new File(path);
+        if(!dir.isDirectory() || !dir.canRead()) {
+            log.info("Cannot read additional bundles directory {}, ignored", dir.getAbsolutePath());
+            return;
+        }
+        
+        int count = 0;
+        final String [] files = dir.list();
+        if(files != null) {
+            for(String file : files) {
+                if(file.endsWith(".jar")) {
+                    File f = new File(dir, file);
+                    installBundle(f);
+                    count++;
+                }
+            }
+        }
+        
+        log.info("{} additional bundles installed from {}", count, dir.getAbsolutePath());
+    }
+ 
+    /** Install a bundle using the Felix webconsole HTTP interface */
+    protected void installBundle(File f) throws Exception {
+        log.info("Installing additional bundle {}", f.getName());
+        
+        // Setup request for Felix Webconsole bundle install
+        final MultipartEntity entity = new MultipartEntity();
+        entity.addPart("action",new StringBody("install"));
+        entity.addPart("bundlestart", new StringBody("true"));
+        entity.addPart("bundlefile", new FileBody(f));
+        
+        // Console returns a 302 on success (and in a POST this
+        // is not handled automatically as per HTTP spec)
+        executor.execute(
+                builder.buildPostRequest("/system/console/bundles")
+                .withCredentials(ADMIN, ADMIN)
+                .withEntity(entity)
+        ).assertStatus(302);
     }
 }
