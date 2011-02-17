@@ -92,6 +92,27 @@
                             <overWriteSnapshots>false</overWriteSnapshots>
                         </configuration>
                     </execution>
+                    <execution>
+                        <!-- 
+                            Consider all "provided" dependencies 
+                            as additional bundles that need to be
+                            installed before running tests  
+                        -->
+                        <id>copy-additional-bundles</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                            <phase>process-resources</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
+                            <includeArtifactIds>
+                                org.apache.sling.junit.core,org.apache.sling.testing.samples.testbundle
+                            </includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -124,6 +145,7 @@
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
+                        <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
                         <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
@@ -136,6 +158,21 @@
     </build>
 
     <dependencies>
+        <!-- Additional bundles needed by the Sling instance under test -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.core</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.samples.testbundle</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- actual dependencies -->
         <dependency>
             <groupId>org.apache.stanbol</groupId>
             <artifactId>org.apache.stanbol.commons.testing.jarexec</artifactId>
@@ -151,6 +188,11 @@
             <artifactId>org.apache.sling.launchpad</artifactId>
             <classifier>standalone</classifier>
             <version>6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
