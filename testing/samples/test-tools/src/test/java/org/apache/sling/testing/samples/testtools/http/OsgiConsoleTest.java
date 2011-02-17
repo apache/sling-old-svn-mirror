@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.sample.httptests;
+package org.apache.sling.testing.samples.testtools.http;
 
-import org.apache.sling.junit.sample.SlingTestBase;
+import org.apache.sling.testing.samples.testtools.SlingTestBase;
 import org.junit.Test;
 
 /** Simple HTTP test example, checks the validity of some
