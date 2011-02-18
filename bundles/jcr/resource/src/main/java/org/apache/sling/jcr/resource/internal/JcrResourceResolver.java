@@ -245,7 +245,9 @@ public class JcrResourceResolver
         checkClosed();
         final Set<String> names = new HashSet<String>();
         names.addAll(Arrays.asList(getSession().getAttributeNames()));
-        names.addAll(originalAuthInfo.keySet());
+        if (originalAuthInfo != null) {
+            names.addAll(originalAuthInfo.keySet());
+        }
         return new Iterator<String>() {
             final Iterator<String> keys = names.iterator();
 
@@ -293,7 +295,9 @@ public class JcrResourceResolver
             if (sessionAttr != null) {
                 return sessionAttr;
             }
-            return originalAuthInfo.get(name);
+            if (originalAuthInfo != null) {
+                return originalAuthInfo.get(name);
+            }
         }
 
         // not a visible attribute
