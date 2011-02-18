@@ -21,6 +21,12 @@ package org.apache.sling.engine.impl.log;
 import java.io.IOException;
 import java.util.Dictionary;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.engine.RequestLog;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
@@ -31,29 +37,32 @@ import org.osgi.service.component.ComponentContext;
  * The <code>RequestLoggerService</code> is a factory component which gets
  * configuration to register loggers for the {@link RequestLogger}.
  *
- * @scr.component label="%request.log.service.name"
- *                description="%request.log.service.description"
- *                configurationFactory="true" policy="require"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Factory for configuration
- *               based request/access loggers"
- * @scr.service interface="org.apache.sling.engine.impl.log.RequestLoggerService"
  */
+@Component(metatype=true,label="%request.log.service.name",
+        description="%request.log.service.description", configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE)
+@Properties({
+    @Property(name="service.description",value="Factory for configuration based request/access loggers"),
+    @Property(name="service.vendor",value="The Apache Software Foundation")
+})
+@Service(value=RequestLoggerService.class)
+
 public class RequestLoggerService {
 
-    /** @scr.property */
+    @Property
     public static final String PARAM_FORMAT = "request.log.service.format";
 
-    /** @scr.property value="request.log" */
+    @Property(value="request.log")
     public static final String PARAM_OUTPUT = "request.log.service.output";
 
-    /**
-     * @scr.property value="0" type="Integer" options 0="Logger Name" 1="File
-     *               Name" 2="RequestLog Service"
-     */
+    @Property(intValue=0,options={
+            @PropertyOption(name = "0", value = "Logger Name"),
+            @PropertyOption(name = "1", value = "File Name"),
+            @PropertyOption(name = "2", value = "RequestLog Service")
+    })
     public static final String PARAM_OUTPUT_TYPE = "request.log.service.outputtype";
 
-    /** @scr.property value="false" type="Boolean" */
+    @Property(boolValue=false)
     public static final String PARAM_ON_ENTRY = "request.log.service.onentry";
 
     private static final int OUTPUT_TYPE_LOGGER = 0;

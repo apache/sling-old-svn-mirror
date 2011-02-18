@@ -21,6 +21,14 @@ package org.apache.sling.engine.impl.log;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
@@ -33,47 +41,43 @@ import org.osgi.framework.BundleContext;
  * is the first filter called when processing a request and the last filter
  * acting just before the request handling terminates.
  *
- * @scr.component immediate="true" label="%request.log.name"
- *                description="%request.log.description"
- * @scr.property name="service.description" value="Request Logger"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.engine.impl.log.RequestLogger"
- * @scr.reference name="RequestLoggerService"
- *                interface="org.apache.sling.engine.impl.log.RequestLoggerService"
- *                cardinality="0..n" policy="dynamic"
  */
+@Component(immediate=true,metatype=true,label="%request.log.name",description="%request.log.description")
+@Properties({
+    @Property(name="service.description",value="Request Logger"),
+    @Property(name="service.vendor",value="The Apache Software Foundation")
+})
+@Service(value=RequestLogger.class)
+@Reference(name="RequestLoggerService",
+       referenceInterface=RequestLoggerService.class,
+       cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+       policy=ReferencePolicy.DYNAMIC)
 public class RequestLogger {
 
-    /**
-     * @scr.property value="logs/request.log"
-     */
+    @Property(value="logs/request.log")
     public static final String PROP_REQUEST_LOG_OUTPUT = "request.log.output";
 
-    /**
-     * @scr.property value="0" type="Integer" options 0="Logger Name" 1="File
-     *               Name" 2="RequestLog Service"
-     */
+    @Property(intValue=0,options={
+            @PropertyOption(name = "0", value = "Logger Name"),
+            @PropertyOption(name = "1", value = "File Name"),
+            @PropertyOption(name = "2", value = "RequestLog Service")
+    })
     public static final String PROP_REQUEST_LOG_OUTPUT_TYPE = "request.log.outputtype";
 
-    /**
-     * @scr.property value="true" type="Boolean"
-     */
+    @Property(boolValue=true)
     public static final String PROP_REQUEST_LOG_ENABLED = "request.log.enabled";
 
-    /**
-     * @scr.property value="logs/access.log"
-     */
+    @Property(value="logs/access.log")
     public static final String PROP_ACCESS_LOG_OUTPUT = "access.log.output";
 
-    /**
-     * @scr.property value="0" type="Integer" options 0="Logger Name" 1="File
-     *               Name" 2="RequestLog Service"
-     */
+    @Property(intValue=0,options={
+            @PropertyOption(name = "0", value = "Logger Name"),
+            @PropertyOption(name = "1", value = "File Name"),
+            @PropertyOption(name = "2", value = "RequestLog Service")
+    })
     public static final String PROP_ACCESS_LOG_OUTPUT_TYPE = "access.log.outputtype";
 
-    /**
-     * @scr.property value="true" type="Boolean"
-     */
+    @Property(boolValue=true)
     public static final String PROP_ACCESS_LOG_ENABLED = "access.log.enabled";
 
     /**
@@ -194,7 +198,7 @@ public class RequestLogger {
                 REQUEST_LOG_ENTRY_FORMAT, requestLogName, requestLogType);
             this.requestLogExit = this.createRequestLoggerService(bundleContext, false,
                 REQUEST_LOG_EXIT_FORMAT, requestLogName, requestLogType);
-            
+
             this.bindRequestLoggerService(this.requestLogEntry);
             this.bindRequestLoggerService(this.requestLogExit);
         }
