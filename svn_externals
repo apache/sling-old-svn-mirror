@@ -1,0 +1,74 @@
+maven/archetypes/initial-content               http://svn.apache.org/repos/asf/incubator/sling/tags/sling-initial-content-archetype-1.0.0
+##maven/archetypes/launchpad-standalone        http://svn.apache.org/repos/asf/incubator/sling/tags/launchpad-standalone-archetype-1.0.0
+##maven/archetypes/launchpad-webapp            http://svn.apache.org/repos/asf/incubator/sling/tags/launchpad-webapp-archetype-1.0.0
+maven/archetypes/servlet                       http://svn.apache.org/repos/asf/incubator/sling/tags/sling-servlet-archetype-1.0.0
+
+maven/maven-jcrocm-plugin                      http://svn.apache.org/repos/asf/incubator/sling/tags/maven-jcrocm-plugin-2.0.4-incubator
+maven/maven-jspc-plugin                        http://svn.apache.org/repos/asf/incubator/sling/tags/maven-jspc-plugin-2.0.4-incubator
+maven/maven-launchpad-plugin                   http://svn.apache.org/repos/asf/incubator/sling/tags/maven-launchpad-plugin-2.0.10
+maven/maven-sling-plugin                       http://svn.apache.org/repos/asf/incubator/sling/tags/maven-sling-plugin-2.0.4-incubator
+
+bundles/parent                                 http://svn.apache.org/repos/asf/incubator/sling/tags/sling-10
+
+bundles/api                                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.api-2.2.0
+bundles/engine                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.engine-2.2.0
+
+bundles/auth/core                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.auth.core-1.0.6
+bundles/auth/form                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.auth.form-1.0.2
+bundles/auth/openid                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.auth.openid-1.0.2
+bundles/auth/selector                          http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.auth.selector-1.0.4
+
+bundles/commons/classloader                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.classloader-1.2.2
+bundles/commons/json                           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.json-2.0.6
+bundles/commons/log                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.log-2.1.2
+bundles/commons/mime                           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.mime-2.1.4
+bundles/commons/osgi                           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.osgi-2.0.6
+bundles/commons/scheduler                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.scheduler-2.2.0
+bundles/commons/testing                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.testing-2.0.8
+bundles/commons/threads                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.threads-3.1.0
+
+bundles/extensions/adapter                     http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.adapter-2.0.8
+bundles/extensions/bundleresource              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.bundleresource.impl-2.0.6
+bundles/extensions/event                       http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.event-3.0.2
+bundles/extensions/explorer                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.explorer-1.0.0
+bundles/extensions/fsresource                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.fsresource-1.0.2
+##bundles/extensions/groovy                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.groovy-1.0.0
+bundles/extensions/settings                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.settings-1.0.2
+bundles/extensions/threaddump                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.threaddump-0.2.0
+bundles/extensions/webconsolebranding          http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.webconsolebranding-1.0.0
+bundles/extensions/webconsolesecurityprovider  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.webconsolesecurityprovider-1.0.0
+
+bundles/jcr/api                                http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.api-2.1.0
+bundles/jcr/base                               http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.base-2.1.0
+bundles/jcr/classloader                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.classloader-3.1.4
+bundles/jcr/contentloader                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.contentloader-2.1.2
+bundles/jcr/davex                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.davex-1.0.0
+bundles/jcr/jackrabbit-accessmanager           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.1.0
+bundles/jcr/jackrabbit-server                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.server-2.1.0
+bundles/jcr/jackrabbit-usermanager             http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.usermanager-2.1.0
+bundles/jcr/ocm                                http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.ocm-2.0.4-incubator
+bundles/jcr/resource                           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.resource-2.0.8
+bundles/jcr/webconsole                         http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.webconsole-1.0.0
+bundles/jcr/webdav                             http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.webdav-2.1.0
+
+bundles/scripting/api                          http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.scripting.api-2.1.2
+bundles/scripting/core                         http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.scripting.core-2.0.16
+bundles/scripting/javascript                   http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.scripting.javascript-2.0.10
+bundles/scripting/jsp                          http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.scripting.jsp-2.0.14
+bundles/scripting/jsp-taglib                   http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.scripting.jsp.taglib-2.1.0
+
+bundles/servlets/resolver                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.servlets.resolver-2.1.0
+bundles/servlets/get                           http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.servlets.get-2.1.2
+bundles/servlets/post                          http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.servlets.post-2.1.0
+
+launchpad/api                                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.api-1.0.0
+launchpad/base                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.base-2.3.0
+##launchpad/builder                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad-6
+launchpad/content                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.4-incubator
+launchpad/installer                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.installer-1.0.0
+##launchpad/integration-tests                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.integration-tests-0.0.1
+##launchpad/testing                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-6
+##launchpad/testing-war                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-war-6
+##launchpad/test-services                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.8
+##launchpad/test-services-war                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.8
+
