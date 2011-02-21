@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.installer.it</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Installer Integration Tests</name>
@@ -43,7 +43,6 @@
         <osgi.installer.BundleInstallStressTest.bundles.folder>${BundleInstallStressTest.default.bundles.folder}</osgi.installer.BundleInstallStressTest.bundles.folder>
         <osgi.installer.BundleInstallStressTest.cycle.count>10</osgi.installer.BundleInstallStressTest.cycle.count>
         <osgi.installer.BundleInstallStressTest.expect.timeout.seconds>30</osgi.installer.BundleInstallStressTest.expect.timeout.seconds>
-
     </properties>
 
     <scm>
@@ -76,10 +75,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
-                        <property>
-                            <name>maven.pom.version</name>
-                            <value>${pom.version}</value>
-                        </property>
                         <property>
                             <name>pax.exam.log.level</name>
                             <value>${pax.exam.log.level}</value>
@@ -404,7 +399,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.1.2</version>
+            <version>${pom.version}</version>
             <scope>provided</scope>
         </dependency>          
         <dependency>
