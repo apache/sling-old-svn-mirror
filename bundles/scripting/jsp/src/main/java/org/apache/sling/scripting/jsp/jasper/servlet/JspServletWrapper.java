@@ -219,9 +219,9 @@ public class JspServletWrapper {
             if (ctxt.isRemoved()) {
                 throw new FileNotFoundException(jspUri);
             }
-            if (firstTime || this.lastModificationTest == 0) {
+            if (firstTime || this.lastModificationTest <= 0) {
                 synchronized (this) {
-                    if (firstTime || this.lastModificationTest == 0 ) {
+                    if (firstTime || this.lastModificationTest <= 0 ) {
                         ctxt.compile();
                         this.lastModificationTest = System.currentTimeMillis();
                         firstTime = false;
@@ -347,9 +347,9 @@ public class JspServletWrapper {
             /*
              * (1) Compile
              */
-            if (firstTime || this.lastModificationTest == 0 ) {
+            if (firstTime || this.lastModificationTest <= 0 ) {
                 synchronized (this) {
-                    if (firstTime || this.lastModificationTest == 0 ) {
+                    if (firstTime || this.lastModificationTest <= 0 ) {
                         // The following sets reload to true, if necessary
                         ctxt.compile();
                         this.lastModificationTest = System.currentTimeMillis();
@@ -475,7 +475,7 @@ public class JspServletWrapper {
      *Clea the lastModificationTest.
      */
     public void clearLastModificationTest() {
-        this.lastModificationTest = 0;
+        this.lastModificationTest = -1;
     }
 
     /**
