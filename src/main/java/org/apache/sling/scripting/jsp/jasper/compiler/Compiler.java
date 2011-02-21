@@ -358,8 +358,11 @@ public abstract class Compiler {
      *            .java file.
      */
     public boolean isOutDated(final boolean checkClass) {
-        if ( jsw.getLastModificationTest() != 0 ) {
+        final long lastModifiedTest = jsw.getLastModificationTest();
+        if ( lastModifiedTest > 0 ) {
             return false;
+        } else if ( lastModifiedTest < 0 ) {
+            return true;
         }
         final String jsp = ctxt.getJspFile();
 
