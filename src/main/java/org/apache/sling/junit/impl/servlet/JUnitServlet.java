@@ -94,6 +94,8 @@ public class JUnitServlet extends HttpServlet {
             return new PlainTextRenderer();
         } else if(".xml".equals(requestInfo.extension)) {
             return new XmlRenderer();
+        } else if(".json".equals(requestInfo.extension)) {
+            return new JsonRenderer();
         } else {
             return new HtmlRenderer();
         }
