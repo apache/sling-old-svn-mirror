@@ -16,48 +16,13 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
-import org.apache.sling.testing.samples.testtools.SlingTestBase;
-import org.apache.stanbol.commons.testing.http.RetryLoop;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Run all server-side tests */ 
-public class ServerSideTest extends SlingTestBase {
-    public static final String JUNIT_SERVLET_PATH = "/system/sling/junit";
-    private static boolean junitServletOk;
+public class ServerSideTest extends ServerSideTestsBase {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    // TODO compute those timeouts based on a configured factor
-    // to cope with slower testing systems??
-    public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = 60;
-    
-    @Before
-    public void checkJunitServletPresent() throws Exception {
-        if(junitServletOk) {
-            return;
-        }
-    
-        // Retry accessing the junit servlet until it responds or timeout
-        // (as we might just have installed the required bundles)
-        final RetryLoop.Condition c = new RetryLoop.Condition() {
-            public String getDescription() {
-                return "Checking that " + JUNIT_SERVLET_PATH + " returns 200";
-            }
-
-            public boolean isTrue() throws Exception {
-                executor.execute(
-                        builder.buildGetRequest(JUNIT_SERVLET_PATH))
-                .assertStatus(200);
-                return true;
-            }
-                
-        };
-        
-        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, 500); 
-        junitServletOk = true;
-    }
     
     @Test
     public void testNothing() {

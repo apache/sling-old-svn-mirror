@@ -106,7 +106,7 @@
                         <configuration>
                             <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
                             <includeArtifactIds>
-                                org.apache.sling.junit.core,org.apache.sling.testing.samples.testbundle
+                                org.apache.sling.junit.core,org.apache.sling.testing.samples.testbundle,org.apache.sling.junit.scriptable
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
@@ -167,6 +167,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.scriptable</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.samples.testbundle</artifactId>
             <version>0.1.1-SNAPSHOT</version>
             <scope>provided</scope>
@@ -182,6 +188,11 @@
             <groupId>org.apache.stanbol</groupId>
             <artifactId>org.apache.stanbol.commons.testing.http</artifactId>
             <version>0.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.json</artifactId>
+            <version>2.0.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
