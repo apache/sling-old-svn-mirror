@@ -28,7 +28,7 @@ bundles/commons/threads                        http://svn.apache.org/repos/asf/i
 bundles/extensions/adapter                     http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.adapter-2.0.8
 bundles/extensions/bundleresource              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.bundleresource.impl-2.0.6
 bundles/extensions/event                       http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.event-3.0.2
-bundles/extensions/explorer                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.explorer-1.0.0
+bundles/extensions/explorer                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.explorer-1.0.2
 bundles/extensions/fsresource                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.fsresource-1.0.2
 bundles/extensions/settings                    http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.settings-1.0.2
 bundles/extensions/threaddump                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.extensions.threaddump-0.2.0
