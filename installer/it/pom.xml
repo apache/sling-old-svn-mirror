@@ -399,7 +399,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>${pom.version}</version>
+            <version>3.1.2</version>
             <scope>provided</scope>
         </dependency>          
         <dependency>
