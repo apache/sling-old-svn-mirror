@@ -61,7 +61,7 @@ bundles/servlets/post                          http://svn.apache.org/repos/asf/i
 installer/core                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.installer.core-3.1.2
 installer/providers/file                       http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.installer.provider.file-1.0.0
 installer/providers/jcr                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.installer.provider.jcr-3.0.4
-##installer/it                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.installer.it-3.0.2
+installer/it                                   http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.installer.it-3.1.2
 
 launchpad/api                                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.api-1.0.0
 launchpad/base                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.base-2.3.0
