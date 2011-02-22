@@ -51,12 +51,17 @@ public class SlingTestBase {
     protected static DefaultHttpClient httpClient = new DefaultHttpClient();
     protected static RequestExecutor executor = new RequestExecutor(httpClient);
     
+    private static boolean serverStarted;
     private static boolean serverReady;
     private static boolean serverReadyTestFailed;
     private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
     
     @BeforeClass
     public static synchronized void startRunnableJar() throws Exception {
+        if(serverStarted) {
+            return;
+        }
+        
         final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP);
         if(configuredUrl != null) {
             serverBaseUrl = configuredUrl;
@@ -78,6 +83,7 @@ public class SlingTestBase {
             }
         }
         
+        serverStarted = true;
         builder = new RequestBuilder(serverBaseUrl);
     }
     

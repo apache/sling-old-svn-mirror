@@ -44,11 +44,11 @@ public class JSONResponseTest extends ServerSideTestsBase {
     public static final int TEST_LIST_TIMEOUT_SECONDS = 30;
     
     @Test
-    @Ignore // TODO: fails in mvn build, why??
     public void testWithRetries() {
         // Need a retry loop as the tests might still be registering
         // when this test runs...we'd need to make the readyness detection
         // more extensive to avoid this
+        // TODO we could probably use a JUnit Rule to retry tests.
         final RetryLoop.Condition c = new RetryLoop.Condition() {
 
             public String getDescription() {
