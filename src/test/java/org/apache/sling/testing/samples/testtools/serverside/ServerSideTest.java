@@ -16,17 +16,36 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
+import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
+import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
 
-/** Run all server-side tests */ 
-public class ServerSideTest extends ServerSideTestsBase {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+/** Run all server-side tests */
+@RunWith(SlingRemoteTestRunner.class)
+public class ServerSideTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
     
+    public int getExpectedNumberOfTests() {
+        return 11;
+    }
+
+    public String getJunitServletPath() {
+        return JUNIT_SERVLET_PATH;
+    }
+
+    public String getServerBaseUrl() {
+        try {
+            // TODO do those really belong here??
+            // Needed to init serverBaseUrl
+            startRunnableJar();
+            checkJunitServletPresent();
+        } catch (Exception e) {
+            throw new IllegalStateException("checkJunitServletPresent failed", e);
+        }
+        return serverBaseUrl;
+    }
+
     @Test
-    public void testNothing() {
-        // TODO run the actual tests via junit servlet
-        log.info("If we get there that means " + JUNIT_SERVLET_PATH + " works");
+    public void dummyTest() {
     }
 }
