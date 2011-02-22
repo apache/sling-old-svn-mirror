@@ -30,8 +30,8 @@
     <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling JUnit Remote Extension</name>
-    <description>Runs JUnit tests remotely</description>
+    <name>Apache Sling JUnit Remote Tests Runners</name>
+    <description>Utilities to run server-side JUnit tests remotely</description>
     
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</connection>
