@@ -30,8 +30,8 @@
     <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling JUnit Extension</name>
-    <description>Runs JUnit tests in OSGi</description>
+    <name>Apache Sling JUnit Core</name>
+    <description>Runs JUnit tests in an OSGi framework</description>
     
     <properties>
         <junit.version>4.8.2</junit.version>
