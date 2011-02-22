@@ -34,7 +34,7 @@ public class ServerSideTestsBase extends SlingTestBase {
     // TODO compute those timeouts based on a configured factor
     // to cope with slower testing systems??
     public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = 60;
-    
+
     @Before
     public void checkJunitServletPresent() throws Exception {
         if(junitServletOk) {

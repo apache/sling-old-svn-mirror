@@ -16,8 +16,8 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +27,6 @@ import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
 import org.apache.stanbol.commons.testing.http.Request;
 import org.apache.stanbol.commons.testing.http.RetryLoop;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
