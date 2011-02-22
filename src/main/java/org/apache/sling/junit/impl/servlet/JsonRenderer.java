@@ -47,7 +47,7 @@ class JsonRenderer extends Renderer {
         try {
             writer.array();
         } catch(JSONException jex) {
-            throw new IOException(jex);
+            throw (IOException)new IOException().initCause(jex);
         }
     }
 
