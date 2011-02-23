@@ -18,7 +18,7 @@ package org.apache.sling.junit;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
+import java.util.Collection;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -38,7 +38,7 @@ import org.junit.runner.notification.RunListener;
     /** Render a list of things 
      * @param describes the role of the list, must be a valid CSS class value
      */
-    void list(String role, List<String> data);
+    void list(String role, Collection<String> data);
     
     /** Render general information 
      * @param describes the role of the list, must be a valid CSS class value

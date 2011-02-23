@@ -19,7 +19,7 @@ package org.apache.sling.junit.impl.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
+import java.util.Collection;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -61,7 +61,7 @@ public class PlainTextRenderer extends RunListener implements Renderer {
     }
     
     /** @inheritDoc */
-    public void list(String cssClass, List<String> data) {
+    public void list(String cssClass, Collection<String> data) {
         for(String str : data) {
             output.println(str);
         }
