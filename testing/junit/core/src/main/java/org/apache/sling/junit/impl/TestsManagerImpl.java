@@ -16,6 +16,7 @@
  */
 package org.apache.sling.junit.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,8 +25,10 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.junit.JUnitTestsManager;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.TestsManager;
 import org.apache.sling.junit.TestsProvider;
+import org.junit.runner.JUnitCore;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -35,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Service
-public class JUnitTestsManagerImpl implements JUnitTestsManager {
+public class TestsManagerImpl implements TestsManager {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private ServiceTracker tracker;
     private int lastTrackingCount = -1;
@@ -142,5 +145,22 @@ public class JUnitTestsManagerImpl implements JUnitTestsManager {
             log.info("Updated list of TestsProvider: {}", providers);
         }
         lastTrackingCount = tracker.getTrackingCount();
+    }
+
+    /** @inheritDoc */
+    public void executeTests(Collection<String> testNames, Renderer renderer) throws IOException {
+        renderer.title(2, "Test classes");
+        renderer.list("testNames", testNames);
+    }
+
+    /** @inheritDoc */
+    public void listTests(Collection<String> testNames, Renderer renderer) throws Exception {
+        renderer.title(2, "Running tests");
+        final JUnitCore junit = new JUnitCore();
+        junit.addListener(renderer.getRunListener());
+        for(String className : testNames) {
+            renderer.title(3, className);
+            junit.run(getTestClass(className));
+        }
     }
 }

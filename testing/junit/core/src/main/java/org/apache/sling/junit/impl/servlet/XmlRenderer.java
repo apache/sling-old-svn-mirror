@@ -23,8 +23,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -129,7 +129,7 @@ public class XmlRenderer extends RunListener implements Renderer {
 	}
 
     /** @inheritDoc */
-	public void list(String cssClass, List<String> data) {
+	public void list(String cssClass, Collection<String> data) {
 	}
 
     /** @inheritDoc */

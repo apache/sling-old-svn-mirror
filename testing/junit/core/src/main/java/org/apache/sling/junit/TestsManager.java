@@ -19,10 +19,20 @@ package org.apache.sling.junit;
 import java.util.Collection;
 
 /** Service that gives access to JUnit test classes */
-public interface JUnitTestsManager {
+public interface TestsManager {
     /** Return the names of all currently available tests */
     public Collection<String> getTestNames();
     
     /** Instantiate test class for specified test */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException;
+    
+    /** List tests using supplied Renderer - does NOT call setup or cleanup
+     *  on renderer.
+     */
+    public void listTests(Collection<String> testNames, Renderer renderer) throws Exception;
+    
+    /** Execute tests and report results using supplied Renderer - does NOT call setup or cleanup
+     *  on renderer.
+     */ 
+    public void executeTests(Collection<String> testNames, Renderer renderer) throws Exception;
 }
