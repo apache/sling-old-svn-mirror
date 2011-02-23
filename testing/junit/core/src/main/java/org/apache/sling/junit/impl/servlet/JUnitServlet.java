@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,11 +31,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.junit.JUnitTestsManager;
 import org.junit.runner.JUnitCore;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.slf4j.Logger;
@@ -42,32 +43,46 @@ import org.slf4j.LoggerFactory;
 
 /** Simple test runner servlet */
 @SuppressWarnings("serial")
-@Component(immediate=true)
+@Component(immediate=true, metatype=true)
 public class JUnitServlet extends HttpServlet {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public static final String CSS = "junit.css";
     
-    /** TODO make this configurable */
-    public static final String SERVLET_PATH = "/system/sling/junit";
+    @Property(value="/system/sling/junit")
+    static final String SERVLET_PATH_NAME = "servlet.path";
+    
+    @Property(boolValue=false)
+    static final String SERVLET_DISABLED_NAME = "servlet.disabled";
+    
+    /** This will be null if we're disabled by configuration */ 
+    private String servletPath;
     
     @Reference
     private JUnitTestsManager testsManager;
     
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
+    @Reference
     private HttpService httpService;
     
-    protected void bindHttpService(HttpService h) throws ServletException, NamespaceException {
-        httpService = h;
-        httpService.registerServlet(SERVLET_PATH, this, null, null);
-        log.info("Servlet registered at path {}", SERVLET_PATH);
+    protected void activate(ComponentContext ctx) throws ServletException, NamespaceException {
+        final Dictionary<?, ?> config = ctx.getProperties();
+        boolean disabled = ((Boolean)config.get(SERVLET_DISABLED_NAME)).booleanValue();
+        if(disabled) {
+            servletPath = null;
+            log.info("Servlet disabled by {} configuration parameter", SERVLET_DISABLED_NAME);
+        } else {
+            servletPath = (String)config.get(SERVLET_PATH_NAME);
+            httpService.registerServlet(servletPath, this, null, null);
+            log.info("Servlet registered at {}", servletPath);
+        }
     }
     
-    protected void unbindHttpService(HttpService h) throws ServletException, NamespaceException {
-        h.unregister(SERVLET_PATH);
-        httpService = null;
-        log.info("Servlet unregistered from path {}", SERVLET_PATH);
+    protected void deactivate(ComponentContext ctx) throws ServletException, NamespaceException {
+        if(servletPath != null) {
+            httpService.unregister(servletPath);
+            log.info("Servlet unregistered from path {}", servletPath);
+        }
     }
     
     /** Return the list of available tests
@@ -125,7 +140,7 @@ public class JUnitServlet extends HttpServlet {
         {
             final String pi = request.getPathInfo();
             if(pi == null) {
-                response.sendRedirect(request.getContextPath() + SERVLET_PATH + "/");
+                response.sendRedirect(request.getContextPath() + servletPath + "/");
             } else if(pi.endsWith(CSS)) {
                 sendCss(response);
                 return;
