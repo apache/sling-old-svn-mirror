@@ -137,6 +137,10 @@ public class XmlRenderer extends RunListener implements Renderer {
 		if (level == 3)
 			name = title;
 	}
+	
+    /** @inheritDoc */
+    public void link(String info, String url, String method) {
+    }
 
     /** @inheritDoc */
 	public void cleanup() {

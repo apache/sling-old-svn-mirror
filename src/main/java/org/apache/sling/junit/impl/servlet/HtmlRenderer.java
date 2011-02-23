@@ -70,6 +70,29 @@ public class HtmlRenderer extends RunListener implements Renderer {
         HtmlFilter.escape(output, title);
         output.print("</h" + level + ">");
     }
+    
+    /** @inheritDoc */
+    public void link(String info, String url, String method) {
+        output.println("<div class='link'>");
+        
+        if("POST".equalsIgnoreCase(method)) {
+            output.print("<form method='POST' action='");
+            output.print(url);
+            output.print("'>");
+            output.print("<input type='submit' value='");
+            HtmlFilter.escape(output, info);
+            output.print("'/>");
+            output.println("</form>");
+        } else {
+            output.print("<a href='");
+            output.print(url);
+            HtmlFilter.escape(output, info);
+            output.print("'>");
+            output.println("</a>");
+        }
+        
+        output.println("</div>");
+    }
 
     /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {

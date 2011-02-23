@@ -107,9 +107,22 @@ public class JsonRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
     public void title(int level, String title) {
-        // Titles are not needed
+        // Titles are not needed in JSON
     }
     
+    /** @inheritDoc */
+    public void link(String info, String url, String method) {
+        try {
+            startItem("link");
+            writer.key("info").value(info);
+            writer.key("method").value(method);
+            writer.key("url").value(url);
+            endItem();
+        } catch(JSONException jex) {
+            log.warn("JSONException in link()", jex);
+        }
+    }
+
     /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
