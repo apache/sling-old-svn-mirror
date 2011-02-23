@@ -74,6 +74,16 @@ public class PlainTextRenderer extends RunListener implements Renderer {
     }
     
     /** @inheritDoc */
+    public void link(String info, String url, String method) {
+        output.print("LINK: ");
+        output.print(info);
+        output.print(", url=");
+        output.print(url);
+        output.print(", method=");
+        output.println(method);
+    }
+
+    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }

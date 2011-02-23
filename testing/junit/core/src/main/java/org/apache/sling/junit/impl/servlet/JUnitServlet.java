@@ -125,6 +125,7 @@ public class JUnitServlet extends HttpServlet {
         }
     }
     
+    /** GET request lists available tests */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
@@ -168,11 +169,45 @@ public class JUnitServlet extends HttpServlet {
         } else {
             try {
                 testsManager.listTests(testNames, renderer);
-                testsManager.executeTests(testNames, renderer);
+                final String postPath = 
+                    request.getContextPath() 
+                    + servletPath
+                    + "/"
+                    + requestParser.getTestSelector()
+                    + "."
+                    + requestParser.getExtension();
+                renderer.link("Execute these tests", postPath, "POST");
             } catch(Exception e) {
                 throw new ServletException(e);
             }
         }
+        renderer.cleanup();
+    }
+    
+    /** POST request executes tests */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    throws ServletException, IOException {
+        final RequestParser requestParser = new RequestParser(request);
+        
+        final Renderer renderer = rendererSelector.getRenderer(request);
+        if(renderer == null) {
+            throw new ServletException("No Renderer found for " + requestParser);
+        }
+        renderer.setup(response, getClass().getSimpleName());
+        
+        final List<String> testNames = getTestNames(requestParser.getTestSelector());
+        if(testNames.isEmpty()) {
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, 
+                    "No tests found for " + requestParser);
+        }
+        try {
+            testsManager.executeTests(testNames, renderer);
+        } catch(Exception e) {
+            throw new ServletException(e);
+        }
+        
         renderer.cleanup();
     }
 }

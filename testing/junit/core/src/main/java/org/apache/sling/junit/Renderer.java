@@ -48,6 +48,9 @@ import org.junit.runner.notification.RunListener;
     /** Render a title of a specified hierarchical level */
     void title(int level, String title);
     
+    /** Render a link to specified URL using specified HTTP method */
+    void link(String info, String url, String method);
+    
     /** Provide a RunListener for JUnit tests */
     RunListener getRunListener();
 }

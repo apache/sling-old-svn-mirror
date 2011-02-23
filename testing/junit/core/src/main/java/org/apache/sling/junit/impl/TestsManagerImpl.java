@@ -148,13 +148,7 @@ public class TestsManagerImpl implements TestsManager {
     }
 
     /** @inheritDoc */
-    public void executeTests(Collection<String> testNames, Renderer renderer) throws IOException {
-        renderer.title(2, "Test classes");
-        renderer.list("testNames", testNames);
-    }
-
-    /** @inheritDoc */
-    public void listTests(Collection<String> testNames, Renderer renderer) throws Exception {
+    public void executeTests(Collection<String> testNames, Renderer renderer) throws Exception {
         renderer.title(2, "Running tests");
         final JUnitCore junit = new JUnitCore();
         junit.addListener(renderer.getRunListener());
@@ -162,5 +156,11 @@ public class TestsManagerImpl implements TestsManager {
             renderer.title(3, className);
             junit.run(getTestClass(className));
         }
+    }
+
+    /** @inheritDoc */
+    public void listTests(Collection<String> testNames, Renderer renderer) throws Exception {
+        renderer.title(2, "Test classes");
+        renderer.list("testNames", testNames);
     }
 }
