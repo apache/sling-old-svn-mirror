@@ -106,7 +106,7 @@
                         <configuration>
                             <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
                             <includeArtifactIds>
-                                org.apache.sling.junit.core,org.apache.sling.testing.samples.testbundle,org.apache.sling.junit.scriptable
+                                org.apache.sling.junit.core,org.apache.sling.testing.samples.sampletests,org.apache.sling.junit.core,org.apache.sling.testing.samples.failingtests,org.apache.sling.junit.scriptable
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
@@ -173,7 +173,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.samples.testbundle</artifactId>
+            <artifactId>org.apache.sling.testing.samples.sampletests</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.samples.failingtests</artifactId>
             <version>0.1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>

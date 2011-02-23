@@ -14,10 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.testbundle.tests;
+package org.apache.sling.testing.samples.failingtests;
 
-/** JUnit should complain that this class doesn't contain
- *  any tests.
- */
-public class MissingTest {
+import junit.framework.TestCase;
+
+/** Example failing tests using the JUnit3 APIs */
+public class JUnit3FailingTest extends TestCase {
+    public void testFailsEveryTime() {
+        fail("This JUnit3 test fails every time");
+    }
+
+    public void testAssertsEveryTime() {
+        assertTrue("This JUnit3 test asserts every time", false);
+    }
 }

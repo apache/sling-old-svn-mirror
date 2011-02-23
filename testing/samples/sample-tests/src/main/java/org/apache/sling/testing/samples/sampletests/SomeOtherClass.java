@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.testbundle.tests;
+package org.apache.sling.testing.samples.sampletests;
 
-/** Verify that this class is not included in the list
- *  of tests (due to the Sling-Test-Regexp bundle header.
+/** This class should not be included in the list
+ *  of tests, due to our Sling-Test-Regexp bundle header.
  */
 public class SomeOtherClass {
 

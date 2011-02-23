@@ -26,21 +26,21 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.testing.samples.testbundle</artifactId>
+    <artifactId>org.apache.sling.testing.samples.failingtests</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Tests Sample Bundle</name>
-    <description>Provides test classes to test the Sling JUnit extensions</description>
+    <name>Apache Sling Failing Server-Side Tests</name>
+    <description>Bundle that supplies server-side tests that fail, to test the Sling JUnit extensions</description>
     
     <properties>
         <junit.version>4.8.2</junit.version>
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/testbundle</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/testbundle</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/testbundle</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/failing-tests</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/failing-tests</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/failing-tests</url>
     </scm>
 
     <build>
@@ -55,7 +55,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.apache.sling.extensions.junit.testbundle.*</Export-Package>
+                        <Export-Package>org.apache.sling.extensions.junit.failingtests.*</Export-Package>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                     </instructions>
                 </configuration>

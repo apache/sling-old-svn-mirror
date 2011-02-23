@@ -84,7 +84,7 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         builder = new RequestBuilder(testParameters.getServerBaseUrl());
         
         // POST request executes the tests
-        final Request r = builder.buildPostRequest(testParameters.getJunitServletPath() + "/.json");
+        final Request r = builder.buildPostRequest(testParameters.getJunitServletPath() + ".json");
         executor.execute(r)
         .assertStatus(200)
         .assertContentType("application/json");
