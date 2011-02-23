@@ -38,14 +38,22 @@ import javax.xml.transform.stream.StreamResult;
 
 import junit.runner.BaseTestRunner;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RequestParser;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
-public class XmlRenderer extends Renderer {
+/** XML renderer for JUnit servlet */
+@Component(immediate=false)
+@Service
+public class XmlRenderer extends RunListener implements Renderer {
 
 	/**
 	 * Writer used for output.
@@ -97,6 +105,12 @@ public class XmlRenderer extends Renderer {
 	 */
 	private int testSuiteCount = 0;
 
+    /** @inheritDoc */
+    public boolean appliesTo(RequestParser p) {
+        return "xml".equals(p.getExtension());
+    }
+
+    /** @inheritDoc */
 	public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
 		suiteStartTime = System.currentTimeMillis();
 
@@ -110,23 +124,32 @@ public class XmlRenderer extends Renderer {
 
 	}   
 
+    /** @inheritDoc */
 	public void info(String cssClass, String str) {
 	}
 
+    /** @inheritDoc */
 	public void list(String cssClass, List<String> data) {
 	}
 
+    /** @inheritDoc */
 	public void title(int level, String title) {
 		if (level == 3)
 			name = title;
 	}
 
+    /** @inheritDoc */
 	public void cleanup() {
 		if (testSuiteCount > 1)
 			output.println(getStringFromElement(suitesElement));
 		else
 			output.println(getStringFromElement(rootElement));
 	}
+	
+    /** @inheritDoc */
+    public RunListener getRunListener() {
+        return this;
+    }
 
 	@Override
 	public void testFailure(Failure failure) throws Exception {

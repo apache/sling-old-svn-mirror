@@ -23,20 +23,37 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RequestParser;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
-class HtmlRenderer extends Renderer {
+/** HTML renderer for JUnit servlet */
+@Component(immediate=false)
+@Service
+public class HtmlRenderer extends RunListener implements Renderer {
 
     private PrintWriter output;
     
+    /** @inheritDoc */
+    public boolean appliesTo(RequestParser p) {
+        // This is our default renderer, applies to the empty
+        // extension as well
+        return "html".equals(p.getExtension()) || "".equals(p.getExtension()); 
+    }
+
+    /** @inheritDoc */
     public void info(String cssClass, String str) {
         output.println("<p class='" + cssClass + "'>");
         HtmlFilter.escape(output, str);
         output.println("</p>");
     }
     
+    /** @inheritDoc */
     public void list(String cssClass, List<String> data) {
         output.println("<ul class='testNames'>");
         for(String str : data) {
@@ -47,12 +64,14 @@ class HtmlRenderer extends Renderer {
         output.println("</ul>");
     }
     
+    /** @inheritDoc */
     public void title(int level, String title) {
         output.print("<h" + level + ">");
         HtmlFilter.escape(output, title);
         output.print("</h" + level + ">");
     }
 
+    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
@@ -67,9 +86,15 @@ class HtmlRenderer extends Renderer {
         output.println("</h1>");
     }
     
+    /** @inheritDoc */
     public void cleanup() {
         output.println("</body>");
         output.println("</html>");
+    }
+    
+    /** @inheritDoc */
+    public RunListener getRunListener() {
+        return this;
     }
     
     @Override
