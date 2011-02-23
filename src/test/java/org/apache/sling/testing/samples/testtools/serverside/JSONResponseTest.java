@@ -16,13 +16,13 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
 import org.apache.stanbol.commons.testing.http.Request;
@@ -63,6 +63,22 @@ public class JSONResponseTest extends ServerSideTestsBase {
         log.info("{} (timeout={} seconds)", c.getDescription(), TEST_LIST_TIMEOUT_SECONDS);
         new RetryLoop(c, TEST_LIST_TIMEOUT_SECONDS, 500);
     }
+    
+    private boolean findTestName(JSONArray json, String name) throws JSONException {
+        for(int i = 0 ; i < json.length(); i++) {
+            final JSONObject obj = json.getJSONObject(i);
+            if("list".equals(obj.getString("INFO_TYPE")) && "testNames".equals(obj.getString("INFO_SUBTYPE"))) {
+                final JSONArray data = obj.getJSONArray("data");
+                for(int j=0; j < data.length(); j++) {
+                    if(name.equals(data.getString(j))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        log.info("Test name not found in JSON response: {}", name);
+        return false;
+    }
 
     private void testJsonListOfTests() throws Exception {
         Request r = builder.buildGetRequest(JUNIT_SERVLET_PATH + "/.json");
@@ -75,38 +91,21 @@ public class JSONResponseTest extends ServerSideTestsBase {
         // Parse JSON response for more precise testing
         final JSONArray json = new JSONArray(new JSONTokener((executor.getContent())));
         
-        // Verify that all our test names are in the response
+        // Verify that some test names are present in the response
         final List<String> expectedTestNames = Arrays.asList(new String []{
-                "org.apache.sling.junit.scriptable.ScriptableTestsProvider",
-                "org.apache.sling.junit.testbundle.tests.JUnit3Test",
-                "org.apache.sling.junit.testbundle.tests.JUnit4Test",
-                "org.apache.sling.junit.testbundle.tests.MissingTest",
-                "org.apache.sling.junit.testbundle.tests.OsgiAwareTest"
+                "org.apache.sling.testing.samples.failingtests.EmptyTest",
+                "org.apache.sling.testing.samples.failingtests.JUnit3FailingTest",
+                "org.apache.sling.testing.samples.failingtests.JUnit4FailingTest",
+                "org.apache.sling.testing.samples.sampletests.JUnit3Test",
+                "org.apache.sling.testing.samples.sampletests.JUnit4Test",
+                "org.apache.sling.testing.samples.sampletests.OsgiAwareTest",
+                "org.apache.sling.junit.scriptable.ScriptableTestsProvider"
         });
-
-        // Response contains an array of objects identified by 
-        // their INFO_TYPE and INFO_SUBTYPE: check the one
-        // that has type=list and subtype=testNames
-        boolean dataFound = false;
-        for(int i = 0 ; i < json.length(); i++) {
-            final JSONObject obj = json.getJSONObject(i);
-            if("list".equals(obj.getString("INFO_TYPE")) && "testNames".equals(obj.getString("INFO_SUBTYPE"))) {
-                dataFound = true;
-                final JSONArray data = obj.getJSONArray("data");
-                assertEquals("Expecting correct number of tests", expectedTestNames.size(), data.length());
-                
-                int matched = 0;
-                for(int j=0; j < data.length(); j++) {
-                    if(expectedTestNames.contains(data.getString(j))) {
-                        matched++;
-                    }
-                }
-                assertEquals("Expecting to find all test names in data array", expectedTestNames.size(), matched);
-            }
-        }
         
-        if(!dataFound) {
-            fail("Test names object not found in response");
+        for(String name : expectedTestNames) {
+            assertTrue(
+                    "Expecting test name " + name + " in json response", 
+                    findTestName(json, name));
         }
     }
 }

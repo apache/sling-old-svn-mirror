@@ -25,12 +25,15 @@ import org.junit.runner.RunWith;
 @RunWith(SlingRemoteTestRunner.class)
 public class ServerSideTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
     
+    public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
+    public static final int TESTS_AT_THIS_PATH = 5;
+    
     public int getExpectedNumberOfTests() {
-        return 11;
+        return TESTS_AT_THIS_PATH;
     }
 
     public String getJunitServletPath() {
-        return JUNIT_SERVLET_PATH;
+        return JUNIT_SERVLET_PATH + "/" + TEST_SELECTOR;
     }
 
     public String getServerBaseUrl() {
