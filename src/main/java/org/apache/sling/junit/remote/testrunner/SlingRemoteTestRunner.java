@@ -83,11 +83,8 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         }
         builder = new RequestBuilder(testParameters.getServerBaseUrl());
         
-        // TODO for now we run tests at the same time as we count them,
-        // as the junit servlet uses only GET - need to change that to GET and POST
-        final Request r = builder.buildGetRequest(testParameters.getJunitServletPath() + "/.json");
-        
-        // Get list of tests in JSON format
+        // POST request executes the tests
+        final Request r = builder.buildPostRequest(testParameters.getJunitServletPath() + "/.json");
         executor.execute(r)
         .assertStatus(200)
         .assertContentType("application/json");
