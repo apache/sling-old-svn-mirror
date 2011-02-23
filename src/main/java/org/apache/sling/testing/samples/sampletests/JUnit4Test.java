@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.testbundle.tests;
+package org.apache.sling.testing.samples.sampletests;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,17 +43,5 @@ public class JUnit4Test {
     @Test
     public void testRequiresBefore() {
         assertNotNull(title);
-    }
-    
-    @Test
-    public void testFailsEveryTime() {
-        fail("This JUnit4 test fails every time");
-    }
-    
-    @Test
-    public void testFailsSometimes() {
-        if(Math.random() > 0.5) {
-            fail("This JUnit4 test fails 50% of the time");
-        }
     }
 }
