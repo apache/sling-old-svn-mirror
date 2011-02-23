@@ -19,6 +19,7 @@ package org.apache.sling.junit.impl.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -34,10 +35,15 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.junit.JUnitTestsManager;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RequestParser;
 import org.junit.runner.JUnitCore;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +71,14 @@ public class JUnitServlet extends HttpServlet {
     @Reference
     private HttpService httpService;
     
+    // Keep track of available Renderer
+    private final List<Renderer> renderers = new ArrayList<Renderer>();
+    private ServiceTracker renderersTracker;
+    private int renderersTrackerTrackingCount = -1;
+    private BundleContext bundleContext;
+    
     protected void activate(ComponentContext ctx) throws ServletException, NamespaceException {
+        bundleContext = ctx.getBundleContext();
         final Dictionary<?, ?> config = ctx.getProperties();
         boolean disabled = ((Boolean)config.get(SERVLET_DISABLED_NAME)).booleanValue();
         if(disabled) {
@@ -76,13 +89,21 @@ public class JUnitServlet extends HttpServlet {
             httpService.registerServlet(servletPath, this, null, null);
             log.info("Servlet registered at {}", servletPath);
         }
+        
+        renderersTracker = new ServiceTracker(ctx.getBundleContext(), Renderer.class.getName(), null);
+        renderersTracker.open();
     }
     
     protected void deactivate(ComponentContext ctx) throws ServletException, NamespaceException {
+        if(renderersTracker != null) {
+            renderersTracker.close();
+            renderersTracker = null;
+        }
         if(servletPath != null) {
             httpService.unregister(servletPath);
             log.info("Servlet unregistered from path {}", servletPath);
         }
+        bundleContext = null;
     }
     
     /** Return the list of available tests
@@ -104,16 +125,30 @@ public class JUnitServlet extends HttpServlet {
         return testClasses;
     }
     
-    private Renderer getRenderer(RequestInfo requestInfo) {
-        if(".txt".equals(requestInfo.extension)) {
-            return new PlainTextRenderer();
-        } else if(".xml".equals(requestInfo.extension)) {
-            return new XmlRenderer();
-        } else if(".json".equals(requestInfo.extension)) {
-            return new JsonRenderer();
-        } else {
-            return new HtmlRenderer();
+    /** Return a Renderer, null if none found */
+    private Renderer getRenderer(RequestParser rp) {
+        if(renderersTracker.getTrackingCount() != renderersTrackerTrackingCount) {
+            log.debug("Rebuilding list of {}", Renderer.class.getSimpleName());
+            renderersTrackerTrackingCount = renderersTracker.getTrackingCount();
+            final ServiceReference [] refs = renderersTracker.getServiceReferences();
+            renderers.clear();
+            if(refs != null) {
+                for(ServiceReference ref : refs) {
+                    renderers.add( (Renderer)bundleContext.getService(ref) );
+                }
+            }
+            log.info("List of {} rebuilt: {}", 
+                    Renderer.class.getSimpleName(),
+                    renderers);
         }
+        
+        for(Renderer r : renderers) {
+            if(r.appliesTo(rp)) {
+                return r;
+            }
+        }
+        
+        return null;
     }
     
     private void sendCss(HttpServletResponse response) throws IOException {
@@ -147,25 +182,28 @@ public class JUnitServlet extends HttpServlet {
             }
         }
         
-        final RequestInfo requestInfo = new RequestInfo(request);
-        final Renderer renderer = getRenderer(requestInfo);
-        log.debug("GET request: {}", requestInfo);
+        final RequestParser requestParser = new RequestParser(request);
+        final Renderer renderer = getRenderer(requestParser);
+        if(renderer == null) {
+            throw new ServletException("No Renderer found for " + requestParser);
+        }
+        log.debug("GET request: {}", requestParser);
 
         renderer.setup(response, getClass().getSimpleName());
         
-        if(requestInfo.testSelector.length() > 0) {
-            renderer.info("info", "Test selector: " + requestInfo.testSelector); 
+        if(requestParser.getTestSelector().length() > 0) {
+            renderer.info("info", "Test selector: " + requestParser.getTestSelector()); 
         } else {
             renderer.info("info", "Test selector is empty: " 
                     + "add class name prefix + extension at the end of the URL to select a subset of tests"); 
         }
         
         // Any test classes?
-        final List<String> testNames = getTestNames(requestInfo.testSelector); 
+        final List<String> testNames = getTestNames(requestParser.getTestSelector()); 
         if(testNames.isEmpty()) {
             renderer.info(
                     "warning",
-                    "No test classes found with prefix=" + requestInfo.testSelector
+                    "No test classes found with prefix=" + requestParser.getTestSelector()
                     + ", check the requirements of the active " +
                     "TestsProvider services for how to supply tests." 
                     );
@@ -175,7 +213,7 @@ public class JUnitServlet extends HttpServlet {
             
             renderer.title(2, "Running tests");
             final JUnitCore junit = new JUnitCore();
-            junit.addListener(renderer);
+            junit.addListener(renderer.getRunListener());
             try {
                 for(String className : testNames) {
                     renderer.title(3, className);

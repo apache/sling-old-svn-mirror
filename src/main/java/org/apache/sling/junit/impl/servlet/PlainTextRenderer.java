@@ -23,13 +23,27 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RequestParser;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
-class PlainTextRenderer extends Renderer {
+@Component(immediate=false)
+@Service
+/** Plain text renderer */
+public class PlainTextRenderer extends RunListener implements Renderer {
     private PrintWriter output;
     
+    /** @inheritDoc */
+    public boolean appliesTo(RequestParser p) {
+        return "txt".equals(p.getExtension());
+    }
+
+    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");
@@ -37,22 +51,31 @@ class PlainTextRenderer extends Renderer {
         title(1, pageTitle);
     }
     
+    /** @inheritDoc */
     public void cleanup() {
     }
 
+    /** @inheritDoc */
     public void info(String cssClass, String str) {
         output.println(str);
     }
     
+    /** @inheritDoc */
     public void list(String cssClass, List<String> data) {
         for(String str : data) {
             output.println(str);
         }
     }
     
+    /** @inheritDoc */
     public void title(int level, String title) {
         output.print(title);
         output.println(" ****");
+    }
+    
+    /** @inheritDoc */
+    public RunListener getRunListener() {
+        return this;
     }
 
     @Override

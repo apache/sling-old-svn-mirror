@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.junit.impl.servlet;
+package org.apache.sling.junit;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -25,10 +25,29 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.runner.notification.RunListener;
 
 /** Renderer for our servlet output */
-abstract class Renderer extends RunListener {
-    abstract void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException;
-    abstract void cleanup();
-    abstract void list(String cssClass, List<String> data);
-    abstract void info(String cssClass, String info);
-    abstract void title(int level, String title);
+ public interface Renderer {
+    /** True if this renderer applies to supplied request */
+     boolean appliesTo(RequestParser p);
+     
+    /** Called first to setup rendering */
+    void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException;
+    
+    /** Called once rendering is done */
+    void cleanup();
+    
+    /** Render a list of things 
+     * @param describes the role of the list, must be a valid CSS class value
+     */
+    void list(String role, List<String> data);
+    
+    /** Render general information 
+     * @param describes the role of the list, must be a valid CSS class value
+     */
+    void info(String role, String info);
+    
+    /** Render a title of a specified hierarchical level */
+    void title(int level, String title);
+    
+    /** Provide a RunListener for JUnit tests */
+    RunListener getRunListener();
 }

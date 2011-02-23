@@ -22,15 +22,23 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RequestParser;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class JsonRenderer extends Renderer {
+/** HTML renderer for JUnit servlet */
+@Component(immediate=false)
+@Service
+public class JsonRenderer extends RunListener implements Renderer {
 
     public static final String INFO_TYPE_KEY = "INFO_TYPE";
     public static final String INFO_SUBTYPE_KEY = "INFO_SUBTYPE";
@@ -38,8 +46,13 @@ class JsonRenderer extends Renderer {
     private JSONWriter writer;
     private int counter;
     
-    @Override
-    void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+    /** @inheritDoc */
+    public boolean appliesTo(RequestParser p) {
+        return "json".equals(p.getExtension());
+    }
+
+    /** @inheritDoc */
+    public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         writer = new JSONWriter(response.getWriter());
@@ -51,8 +64,8 @@ class JsonRenderer extends Renderer {
         }
     }
 
-    @Override
-    void cleanup() {
+    /** @inheritDoc */
+    public void cleanup() {
         if(writer != null) {
             try {
                 writer.endArray();
@@ -63,8 +76,8 @@ class JsonRenderer extends Renderer {
         writer = null;
     }
 
-    @Override
-    void info(String cssClass, String info) {
+    /** @inheritDoc */
+    public void info(String cssClass, String info) {
         try {
             startItem("info");
             writer.key(INFO_SUBTYPE_KEY).value(cssClass);
@@ -75,8 +88,8 @@ class JsonRenderer extends Renderer {
         }
     }
 
-    @Override
-    void list(String cssClass, List<String> data) {
+    /** @inheritDoc */
+    public void list(String cssClass, List<String> data) {
         try {
             startItem("list");
             writer.key(INFO_SUBTYPE_KEY).value(cssClass);
@@ -92,11 +105,16 @@ class JsonRenderer extends Renderer {
         }
     }
 
-    @Override
-    void title(int level, String title) {
+    /** @inheritDoc */
+    public void title(int level, String title) {
         // Titles are not needed
     }
     
+    /** @inheritDoc */
+    public RunListener getRunListener() {
+        return this;
+    }
+
     @Override
     public void testStarted(Description description) throws Exception {
         super.testStarted(description);
