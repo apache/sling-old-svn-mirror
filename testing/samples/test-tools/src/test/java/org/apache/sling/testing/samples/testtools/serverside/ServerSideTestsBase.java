@@ -18,7 +18,6 @@ package org.apache.sling.testing.samples.testtools.serverside;
 
 import org.apache.sling.testing.samples.testtools.SlingTestBase;
 import org.apache.sling.testing.tools.retry.RetryLoop;
-import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +34,15 @@ public class ServerSideTestsBase extends SlingTestBase {
     // to cope with slower testing systems??
     public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = 60;
 
-    @Before
-    public void checkJunitServletPresent() throws Exception {
+    protected ServerSideTestsBase() {
+        try {
+            checkJunitServletPresent();
+        } catch(Exception e) {
+            throw new IllegalStateException("JUnit Servlet not ready: ", e);
+        }
+    }
+    
+    private void checkJunitServletPresent() throws Exception {
         if(junitServletOk) {
             return;
         }

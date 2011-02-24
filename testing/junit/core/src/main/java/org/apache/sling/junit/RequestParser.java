@@ -27,15 +27,20 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RequestParser {
     private final String testSelector;
+    private final String methodName;
     private final String extension;
     private final HttpServletRequest request;
     private static final String EMPTY_STRING = "";
 
     public RequestParser(HttpServletRequest request) {
+        this(parsePathInfo(request.getPathInfo()), request);
+    }
+    
+    RequestParser(String [] s, HttpServletRequest request) {
         this.request = request;
-        final String [] s = parsePathInfo(request.getPathInfo());
         testSelector = s[0];
         extension = s[1];
+        methodName = s[2];
     }
     
     static String [] parsePathInfo(String pathInfo) {
@@ -46,12 +51,25 @@ public class RequestParser {
                 pathInfo = pathInfo.substring(1);
             }
             
-            final int pos = pathInfo.lastIndexOf('.');
-            if (pos >= 0) {
-                result[0] = pathInfo.substring(0, pos);
-                result[1] = pathInfo.substring(pos+1);
-            } else {
-                result[0] = pathInfo;
+            // Split at last dot to find extension
+            {
+                final int pos = pathInfo.lastIndexOf('.');
+                if (pos >= 0) {
+                    result[0] = pathInfo.substring(0, pos);
+                    result[1] = pathInfo.substring(pos+1);
+                } else {
+                    result[0] = pathInfo;
+                }
+            }
+            
+            // And if extension contains a /, what follows is test method selector
+            final String ext = result[1];
+            if(ext != null) {
+                final int pos = ext.indexOf('/');
+                if(pos >= 0) {
+                    result[1] = ext.substring(0, pos);
+                    result[2] = ext.substring(pos+1);
+                }
             }
         }
         
@@ -65,8 +83,11 @@ public class RequestParser {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + ": testSelector=[" + testSelector
-                + "], extension=[" + extension + "]";
+        return getClass().getSimpleName() 
+                + ", testSelector [" + testSelector + "]"
+                + ", methodName [" + methodName + "]"
+                + ", extension [" + extension + "]"
+                ;
     }
 
     public String getTestSelector() {
@@ -77,8 +98,11 @@ public class RequestParser {
         return extension;
     }
     
-    public HttpServletRequest getRequest() {
-        return request;
+    public String getMethodName() {
+        return methodName;
     }
     
+    public HttpServletRequest getRequest() {
+        return request;
+    }   
 }

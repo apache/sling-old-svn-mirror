@@ -31,16 +31,14 @@ public class RequestParserTest {
     final String expectedTestSelector;
     final String expectedExtension;
     final String expectedMethodSelector;
-    final String [] parseResult;
+    final RequestParser parser;
     
     public RequestParserTest(String pathInfo, String expectedTestSelector, String expectedExtension, String expectedMethodSelector) {
         this.pathInfo = pathInfo;
         this.expectedTestSelector = expectedTestSelector;
         this.expectedExtension = expectedExtension;
         this.expectedMethodSelector = expectedMethodSelector;
-        this.parseResult = RequestParser.parsePathInfo(pathInfo);
-        
-        assertEquals(3, parseResult.length);
+        parser = new RequestParser(RequestParser.parsePathInfo(pathInfo), null);
     }
 
     @Override
@@ -50,17 +48,17 @@ public class RequestParserTest {
     
     @Test
     public void testSelector() {
-        assertEquals(toString(), expectedTestSelector, parseResult[0]);
+        assertEquals(toString(), expectedTestSelector, parser.getTestSelector());
     }
     
     @Test
     public void testExtension() {
-        assertEquals(toString(), expectedExtension, parseResult[1]);
+        assertEquals(toString(), expectedExtension, parser.getExtension());
     }
     
     @Test
-    public void testMethodSelector() {
-        assertEquals(toString(), expectedMethodSelector, parseResult[2]);
+    public void testMethodName() {
+        assertEquals(toString(), expectedMethodSelector, parser.getMethodName());
     }
     
     @Parameters
@@ -73,6 +71,10 @@ public class RequestParserTest {
                 { "/someTests.here.html", "someTests.here", "html", EMPTY },
                 { "someTests.here.html", "someTests.here", "html", EMPTY },
                 { "someTests.here.html.json", "someTests.here.html", "json", EMPTY },
+                { "someTests.here.html.json/TEST_METHOD_NAME", "someTests.here.html", "json", "TEST_METHOD_NAME" },
+                { ".json/TEST_METHOD_NAME", "", "json", "TEST_METHOD_NAME" },
+                { "/.json/TEST_METHOD_NAME", "", "json", "TEST_METHOD_NAME" },
+                { "/.html.json/TEST_METHOD_NAME", ".html", "json", "TEST_METHOD_NAME" },
         };
         
         return Arrays.asList(data);

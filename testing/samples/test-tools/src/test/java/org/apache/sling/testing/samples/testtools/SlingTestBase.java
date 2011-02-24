@@ -30,8 +30,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +54,15 @@ public class SlingTestBase {
     private static boolean serverReadyTestFailed;
     private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
     
-    @BeforeClass
+    protected SlingTestBase() {
+        try {
+            startRunnableJar();
+            waitForServerReady();
+        } catch(Exception e) {
+            throw new IllegalStateException("JUnit Servlet not ready: ", e);
+        }
+    }
+    
     public static synchronized void startRunnableJar() throws Exception {
         if(serverStarted) {
             return;
@@ -87,7 +93,6 @@ public class SlingTestBase {
         builder = new RequestBuilder(serverBaseUrl);
     }
     
-    @Before
     public void waitForServerReady() throws Exception {
         if(serverReady) {
             return;
