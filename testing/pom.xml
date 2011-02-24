@@ -40,6 +40,7 @@
     </scm>
 
     <modules>
+        <module>tools</module>
         <module>junit/core</module>
         <module>junit/scriptable</module>
         <module>junit/remote</module>

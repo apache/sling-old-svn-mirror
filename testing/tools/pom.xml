@@ -26,30 +26,41 @@
         <version>10</version>
     </parent>
 
-    <artifactId>org.apache.sling.junit.remote</artifactId>
+    <artifactId>org.apache.sling.testing.tools</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling JUnit Remote Tests Runners</name>
-    <description>Utilities to run server-side JUnit tests remotely</description>
+    <name>Apache Sling Test Tools</name>
+    <description>
+        Sling testing utilities.
+    </description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/remote</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/tools</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/tools</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/tools</url>
     </scm>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.1</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
-            <scope>compile</scope>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -57,14 +68,10 @@
             <version>1.5.11</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
