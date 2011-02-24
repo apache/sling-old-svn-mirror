@@ -41,6 +41,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
 @Component
 @Service
 @Properties({
+    @Property(name="service.description", value="GetConfig Test Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="sling.servlet.paths",value="/testing/GetConfigServlet"),
     @Property(name="sling.servlet.extensions",value="json")
 })
