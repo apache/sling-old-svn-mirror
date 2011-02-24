@@ -20,31 +20,27 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.jackrabbit.server.TestContentLoader;
 import org.osgi.service.component.ComponentContext;
 
 /**
  * Component which loads the JCR test content on startup.
- *
- * @scr.component enabled="false" metatype="no"
- *
- * @scr.property name="service.description" value="Test Content Loader"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
  */
+@Component(enabled=false, metatype=false)
+@Properties({
+    @Property(name="service.description", value="Test Content Loader"),
+    @Property(name="service.vendor", value="The Apache Software Foundation")
+})
 public class StartupTestContentLoader {
 
-    /** @scr.reference */
+    @Reference
     private TestContentLoader loader;
-
-    // ---------- SCR integration
 
     protected void activate(ComponentContext context) throws RepositoryException, IOException {
         loader.loadTestContent();
     }
-
-    protected void deactivate(ComponentContext context) {
-        ;
-    }
-
 }

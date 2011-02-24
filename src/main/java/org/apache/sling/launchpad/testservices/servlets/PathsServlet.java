@@ -16,18 +16,22 @@
  */
 package org.apache.sling.launchpad.testservices.servlets;
 
-/** Servlet that registers itself for specific paths
- * 
- *  @scr.component immediate="true" metatype="no"
- *  @scr.service interface="javax.servlet.Servlet"
- * 
- *  @scr.property name="service.description" value="Paths Test Servlet"
- *  @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
- *  @scr.property name="sling.servlet.paths" 
- *                  values.0="/testing/PathsServlet/foo" 
- *                  values.1="/testing/PathsServlet/bar/more/foo.html" 
- * 
- */
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+
+/** Servlet that registers itself for specific paths */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Paths Test Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.paths", value={
+            "/testing/PathsServlet/foo", 
+            "/testing/PathsServlet/bar/more/foo.html" 
+    })
+})
+@SuppressWarnings("serial")
 public class PathsServlet extends TestServlet {
 }

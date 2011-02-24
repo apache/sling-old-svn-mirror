@@ -16,23 +16,20 @@
  */
 package org.apache.sling.launchpad.testservices.servlets;
 
-/** Example/test Sling Servlet registered with two extensions
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description" value="Default Query Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * Register this servlet for the default resource type and two selectors:
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- *
- * @scr.property name="sling.servlet.extensions"
- *               values.1 = "TEST_EXT_1"
- *               values.2 = "TEST_EXT_2"
- */
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 
+/** Example/test Sling Servlet registered with two extensions */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Extension Test Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value={ "TEST_EXT_1", "TEST_EXT_2" })
+})
 @SuppressWarnings("serial")
 public class ExtensionServlet extends TestServlet {
 }

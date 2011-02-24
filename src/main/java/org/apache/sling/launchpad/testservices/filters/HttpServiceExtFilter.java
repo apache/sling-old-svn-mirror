@@ -16,17 +16,21 @@
  */
 package org.apache.sling.launchpad.testservices.filters;
 
-/** Example/test Filter.
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Filter"
- *
- * @scr.property name="service.description" value="Test HttpService Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * Register this filter with the whiteboard-specific registration property
- * @scr.property name="pattern" value="/.*"
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+
+/** Example/test Filter, registered
+ *  with the whiteboard-specific registration property
  */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Filter.class)
+@Properties({
+    @Property(name="service.description", value="Test HttpService Filter"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="pattern", value="/.*")
+})
 public class HttpServiceExtFilter extends TestFilter {
 
     @Override

@@ -16,24 +16,27 @@
  */
 package org.apache.sling.launchpad.testservices.servlets;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+
 /**
  * Default servlet for the html extension, see SLING-1069.
- * <p>
  * This servlet collides with the Default GET Servlet generating proper HTML not
  * expected by HtmlDefaultServletTest. For this reason this component is
  * disabled by default and must be enabled for testing in the
  * HtmlDefaultServletTest class.
- *
- * @scr.component enabled="false"
- *                name="org.apache.sling.launchpad.testservices.servlets.HtmlDefaultServlet"
- *                metatype="no" immediate="true" label="%sling.name"
- *                description="%sling.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="sling.servlet.extensions" value="html"
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="GET"
  */
+@Component(enabled=false, immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Extension Test Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value="html"),
+    @Property(name="sling.servlet.methods", value="GET")
+})
 @SuppressWarnings("serial")
 public class HtmlDefaultServlet extends TestServlet {
 }
