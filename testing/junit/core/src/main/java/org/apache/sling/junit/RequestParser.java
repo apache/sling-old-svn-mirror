@@ -29,24 +29,39 @@ public class RequestParser {
     private final String testSelector;
     private final String extension;
     private final HttpServletRequest request;
+    private static final String EMPTY_STRING = "";
 
     public RequestParser(HttpServletRequest request) {
         this.request = request;
-        String pathinfo = request.getPathInfo();
-        if (pathinfo == null) {
-            pathinfo = "";
-        } else if (pathinfo.startsWith("/")) {
-            pathinfo = pathinfo.substring(1);
+        final String [] s = parsePathInfo(request.getPathInfo());
+        testSelector = s[0];
+        extension = s[1];
+    }
+    
+    static String [] parsePathInfo(String pathInfo) {
+        final String [] result = new String[3];
+        
+        if (pathInfo != null) {
+            if (pathInfo.startsWith("/")) {
+                pathInfo = pathInfo.substring(1);
+            }
+            
+            final int pos = pathInfo.lastIndexOf('.');
+            if (pos >= 0) {
+                result[0] = pathInfo.substring(0, pos);
+                result[1] = pathInfo.substring(pos+1);
+            } else {
+                result[0] = pathInfo;
+            }
         }
-
-        final int pos = pathinfo.lastIndexOf('.');
-        if (pos >= 0) {
-            testSelector = pathinfo.substring(0, pos);
-            extension = pathinfo.substring(pos+1);
-        } else {
-            testSelector = pathinfo;
-            extension = "";
+        
+        for(int i=0; i < result.length; i++) {
+            if(result[i] == null) {
+                result[i] = EMPTY_STRING;
+            }
         }
+        
+        return result;
     }
 
     public String toString() {
