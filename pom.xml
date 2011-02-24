@@ -57,9 +57,9 @@
             <version>1.5.11</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.stanbol</groupId>
-            <artifactId>org.apache.stanbol.commons.testing.http</artifactId>
-            <version>0.9-SNAPSHOT</version>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.tools</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
