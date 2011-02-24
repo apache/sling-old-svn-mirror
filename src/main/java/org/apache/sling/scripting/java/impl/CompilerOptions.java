@@ -31,7 +31,7 @@ public class CompilerOptions extends Options {
      * the component configuration.
      */
     public static CompilerOptions createOptions(final Dictionary<String, Object> props) {
-        CompilerOptions opts = new CompilerOptions();
+        final CompilerOptions opts = new CompilerOptions();
 
         final Boolean classDebugInfo = (Boolean)props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO);
         opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo != null ? classDebugInfo : true);
@@ -46,6 +46,18 @@ public class CompilerOptions extends Options {
         opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
 
         opts.put(Options.KEY_IGNORE_WARNINGS, true);
+
+        return opts;
+    }
+
+    /**
+     * Copy options
+     */
+    public static CompilerOptions copyOptions(final CompilerOptions opt) {
+        final CompilerOptions opts = new CompilerOptions();
+        opts.putAll(opt);
+
+        opts.encoding = opt.getJavaEncoding();
 
         return opts;
     }

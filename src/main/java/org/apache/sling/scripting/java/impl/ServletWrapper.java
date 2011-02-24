@@ -17,7 +17,6 @@
 
 package org.apache.sling.scripting.java.impl;
 
-import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.Servlet;
@@ -28,6 +27,7 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilerMessage;
 import org.slf4j.Logger;
@@ -54,14 +54,16 @@ public class ServletWrapper {
     /** The path to the servlet. */
     private final String sourcePath;
 
+    /** Flag for handling modifications. */
     private volatile long lastModificationTest = 0L;
 
-    private volatile Class<?> servletClass;
-
+    /** The compiled and instantiated servlet. */
     private volatile Servlet theServlet;
 
-    private long available = 0L;
+    /** Flag handling an unavailable exception. */
+    private volatile long available = 0L;
 
+    /** The exception thrown by the compilation. */
     private volatile Exception compileException;
 
     /**
@@ -80,8 +82,7 @@ public class ServletWrapper {
      * Call the servlet.
      * @param request The current request.
      * @param response The current response.
-     * @throws ServletException
-     * @throws IOException
+     * @throws Exception
      */
     public void service(HttpServletRequest request,
                          HttpServletResponse response)
@@ -101,20 +102,10 @@ public class ServletWrapper {
             }
 
             // check for compilation
-            if (this.lastModificationTest == 0 ) {
+            if (this.lastModificationTest <= 0 ) {
                 synchronized (this) {
-                    if (this.lastModificationTest == 0 ) {
-                        try {
-                            // clear exception
-                            this.compileException = null;
-                            this.compile();
-                        } catch (Exception ex) {
-                            // store exception for futher access attempts
-                            this.compileException = ex;
-                            throw ex;
-                        } finally {
-                            this.lastModificationTest = System.currentTimeMillis();
-                        }
+                    if (this.lastModificationTest <= 0 ) {
+                        this.compile();
                     } else if (compileException != null) {
                         // Throw cached compilation exception
                         throw compileException;
@@ -125,15 +116,17 @@ public class ServletWrapper {
                 throw compileException;
             }
 
+            final Servlet servlet = getServlet();
+
             // invoke the servlet
-            if (theServlet instanceof SingleThreadModel) {
+            if (servlet instanceof SingleThreadModel) {
                 // sync on the wrapper so that the freshness
                 // of the page is determined right before servicing
                 synchronized (this) {
-                    theServlet.service(request, response);
+                    servlet.service(request, response);
                 }
             } else {
-                theServlet.service(request, response);
+                servlet.service(request, response);
             }
 
         } catch (UnavailableException ex) {
@@ -147,7 +140,6 @@ public class ServletWrapper {
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
             logger.error("Java servlet {} is unavailable.", this.sourcePath);
-            return;
         }
     }
 
@@ -161,32 +153,80 @@ public class ServletWrapper {
         }
     }
 
-    /** Handle the modification. */
+    /**
+     * Handle the modification.
+     */
     public void handleModification() {
-        this.lastModificationTest = 0;
+        logger.debug("Received modification event for {}", this.sourcePath);
+        this.lastModificationTest = -1;
     }
 
-    private void compile() throws Exception {
-        final CompilationUnit unit = new CompilationUnit(this.sourcePath, className, ioProvider);
-        final CompilationResult result = this.ioProvider.getCompiler().compile(new org.apache.sling.commons.compiler.CompilationUnit[] {unit},
-                ioProvider.getOptions());
-
-        final List<CompilerMessage> errors = result.getErrors();
-        if ( errors != null && errors.size() > 0 ) {
-            throw CompilerException.create(errors, this.sourcePath);
+    /**
+     * Check if the used classloader is still valid
+     */
+    private boolean checkReload() {
+        final Servlet servlet = this.theServlet;
+        final Class<?> servletClass  = servlet != null ? servlet.getClass() : null;
+        if ( servletClass != null && servletClass.getClassLoader() instanceof DynamicClassLoader ) {
+            return !((DynamicClassLoader)servletClass.getClassLoader()).isLive();
         }
-        if ( result.didCompile() || this.theServlet == null ) {
-            destroy();
+        return false;
+    }
 
-            this.servletClass = result.loadCompiledClass(this.className);
-            final Servlet servlet = (Servlet) servletClass.newInstance();
-            servlet.init(config);
+    /**
+     * Get the servlet class - if the used classloader is not valid anymore
+     * the class is reloaded.
+     */
+    public Servlet getServlet()
+    throws Exception {
+        // check if the used class loader is still alive
+        if (this.checkReload()) {
+            synchronized (this) {
+                if (this.checkReload()) {
+                    this.compile();
+                }
+            }
+        }
+        return theServlet;
+    }
 
-            theServlet = servlet;
+    /**
+     * Compile the servlet java class
+     * and instantiate the servlet
+     */
+    private void compile()
+    throws Exception {
+        logger.debug("Compiling {}", this.sourcePath);
+        // clear exception
+        this.compileException = null;
+        try {
+            final CompilerOptions opts = (this.lastModificationTest == -1 ? this.ioProvider.getForceCompileOptions() : this.ioProvider.getOptions());
+            final CompilationUnit unit = new CompilationUnit(this.sourcePath, className, ioProvider);
+            final CompilationResult result = this.ioProvider.getCompiler().compile(new org.apache.sling.commons.compiler.CompilationUnit[] {unit},
+                    opts);
 
+            final List<CompilerMessage> errors = result.getErrors();
+            if ( errors != null && errors.size() > 0 ) {
+                throw CompilerException.create(errors, this.sourcePath);
+            }
+            if ( result.didCompile() || this.theServlet == null ) {
+                destroy();
+                final Class<?> servletClass = result.loadCompiledClass(this.className);
+                final Servlet servlet = (Servlet) servletClass.newInstance();
+                servlet.init(this.config);
+
+                this.theServlet = servlet;
+            }
+        } catch (final Exception ex) {
+            // store exception for futher access attempts
+            this.compileException = ex;
+            throw ex;
+        } finally {
+            this.lastModificationTest = System.currentTimeMillis();
         }
     }
 
+    /** Compiler exception .*/
     protected final static class CompilerException extends ServletException {
 
         private static final long serialVersionUID = 7353686069328527452L;

@@ -57,7 +57,10 @@ public final class ServletCache {
      * @param servletUri Servlet URI
      */
     public void removeWrapper(String servletUri) {
-        servlets.remove(servletUri);
+        final ServletWrapper wrapper = servlets.remove(servletUri);
+        if ( wrapper != null ) {
+            wrapper.destroy();
+        }
     }
 
     /**
