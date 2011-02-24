@@ -18,26 +18,21 @@
  */
 package org.apache.sling.launchpad.testservices.war.servlets;
 
-/** Example/test Sling Servlet registered with two selectors
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description" value="Default Query Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * Register this servlet for the default resource type and two selectors:
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- *
- * @scr.property name="sling.servlet.selectors"
- *               values.1 = "WAR_TEST_SEL_1"
- *               values.2 = "WAR_TEST_SEL_2"
- *
- * @scr.property name="sling.servlet.extensions"
- *               value = "txt"
-*/
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 
+/** Example/test Sling Servlet registered with two selectors */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Default Query Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.selectors", value={"WAR_TEST_SEL_1","WAR_TEST_SEL_2"}),
+    @Property(name="sling.servlet.extensions", value="txt")
+})
 @SuppressWarnings("serial")
 public class SelectorServlet extends TestServlet {
 }
