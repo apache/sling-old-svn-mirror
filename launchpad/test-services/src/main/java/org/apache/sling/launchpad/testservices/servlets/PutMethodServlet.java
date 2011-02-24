@@ -33,7 +33,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 @Component(immediate=true, metatype=false)
 @Service(value=javax.servlet.Servlet.class)
 @Properties({
-    @Property(name="service.description", value="Default Query Servlet"),
+    @Property(name="service.description", value="Put Method Test Servlet"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="sling.servlet.methods", value="PUT"),
     @Property(name="sling.servlet.resourceTypes", value="LAUNCHPAD_TEST_ResourceType")
