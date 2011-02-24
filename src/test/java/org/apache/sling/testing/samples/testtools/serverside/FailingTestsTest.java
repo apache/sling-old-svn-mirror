@@ -22,7 +22,7 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
-import org.apache.stanbol.commons.testing.http.Request;
+import org.apache.sling.testing.tools.http.Request;
 import org.junit.Test;
 
 /** Verify that failures are correctly reported, using

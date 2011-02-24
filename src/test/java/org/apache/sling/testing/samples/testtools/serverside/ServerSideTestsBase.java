@@ -17,7 +17,7 @@
 package org.apache.sling.testing.samples.testtools.serverside;
 
 import org.apache.sling.testing.samples.testtools.SlingTestBase;
-import org.apache.stanbol.commons.testing.http.RetryLoop;
+import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
