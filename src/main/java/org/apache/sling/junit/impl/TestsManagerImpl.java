@@ -16,7 +16,6 @@
  */
 package org.apache.sling.junit.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +28,7 @@ import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.TestsManager;
 import org.apache.sling.junit.TestsProvider;
 import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -148,13 +148,19 @@ public class TestsManagerImpl implements TestsManager {
     }
 
     /** @inheritDoc */
-    public void executeTests(Collection<String> testNames, Renderer renderer) throws Exception {
+    public void executeTests(Collection<String> testNames, Renderer renderer, String testMethodName) throws Exception {
         renderer.title(2, "Running tests");
         final JUnitCore junit = new JUnitCore();
         junit.addListener(renderer.getRunListener());
         for(String className : testNames) {
             renderer.title(3, className);
-            junit.run(getTestClass(className));
+            if(testMethodName != null && testMethodName.length() > 0) {
+                log.debug("Running test method {} from test class {}", testMethodName, className);
+                junit.run(Request.method(getTestClass(className), testMethodName));
+            } else {
+                log.debug("Running test class {}", className);
+                junit.run(getTestClass(className));
+            }
         }
     }
 

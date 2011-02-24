@@ -189,6 +189,7 @@ public class JUnitServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
         final RequestParser requestParser = new RequestParser(request);
+        log.info("POST request, executing tests: {}", requestParser);
         
         final Renderer renderer = rendererSelector.getRenderer(request);
         if(renderer == null) {
@@ -203,7 +204,7 @@ public class JUnitServlet extends HttpServlet {
                     "No tests found for " + requestParser);
         }
         try {
-            testsManager.executeTests(testNames, renderer);
+            testsManager.executeTests(testNames, renderer, requestParser.getMethodName());
         } catch(Exception e) {
             throw new ServletException(e);
         }

@@ -33,6 +33,7 @@ public interface TestsManager {
     
     /** Execute tests and report results using supplied Renderer - does NOT call setup or cleanup
      *  on renderer.
+     *  @param testMethodName if not empty, only test methods that have this name are executed
      */ 
-    public void executeTests(Collection<String> testNames, Renderer renderer) throws Exception;
+    public void executeTests(Collection<String> testNames, Renderer renderer, String testMethodName) throws Exception;
 }
