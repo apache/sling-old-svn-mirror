@@ -18,37 +18,29 @@ package org.apache.sling.testing.samples.testtools.serverside;
 
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/** Run all server-side tests */
+/** Run a single test method from a servet-side test */ 
 @RunWith(SlingRemoteTestRunner.class)
-public class ServerSideTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
+public class SingleServerSideMethodTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
     
-    public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
-    public static final int TESTS_AT_THIS_PATH = 5;
-    
+    public static final String TEST_CLASS = "org.apache.sling.testing.samples.sampletests.JUnit4Test";
+    public static final String TEST_METHOD = "testRequiresBefore";
+    public static final int TESTS_AT_THIS_PATH = 1;
+
     public int getExpectedNumberOfTests() {
         return TESTS_AT_THIS_PATH;
     }
 
-    public String getJunitServletPath() {
-        return JUNIT_SERVLET_PATH + "/" + TEST_SELECTOR;
+    public String getJunitServletUrl() {
+        return serverBaseUrl + JUNIT_SERVLET_PATH;
     }
 
-    public String getServerBaseUrl() {
-        try {
-            // TODO do those really belong here??
-            // Needed to init serverBaseUrl
-            startRunnableJar();
-            checkJunitServletPresent();
-        } catch (Exception e) {
-            throw new IllegalStateException("checkJunitServletPresent failed", e);
-        }
-        return serverBaseUrl;
+    public String getTestClassesSelector() {
+        return TEST_CLASS;
     }
 
-    @Test
-    public void dummyTest() {
+    public String getTestMethodSelector() {
+        return TEST_METHOD;
     }
 }
