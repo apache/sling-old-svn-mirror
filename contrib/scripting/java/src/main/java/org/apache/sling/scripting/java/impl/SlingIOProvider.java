@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.compiler.JavaCompiler;
+import org.apache.sling.commons.compiler.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,11 @@ public class SlingIOProvider  {
 
     private final JavaCompiler compiler;
 
+    /** Options for compilation. */
     private final CompilerOptions options;
+
+    /** Options for compilation including the force compile option. */
+    private final CompilerOptions forceCompileOptions;
 
     /**
      * Servlet cache.
@@ -60,6 +65,8 @@ public class SlingIOProvider  {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
         this.compiler = compiler;
         this.options = options;
+        this.forceCompileOptions = CompilerOptions.copyOptions(options);
+        this.forceCompileOptions.put(Options.KEY_FORCE_COMPILATION, true);
     }
 
     void destroy() {
@@ -82,6 +89,10 @@ public class SlingIOProvider  {
 
     public CompilerOptions getOptions() {
         return this.options;
+    }
+
+    public CompilerOptions getForceCompileOptions() {
+        return this.forceCompileOptions;
     }
 
     public ServletCache getServletCache() {

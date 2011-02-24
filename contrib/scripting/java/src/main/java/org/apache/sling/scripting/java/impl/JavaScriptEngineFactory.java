@@ -250,16 +250,20 @@ public class JavaScriptEngineFactory
      */
     public void handleEvent(Event event) {
         if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()) ) {
-            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH), false);
         } else if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
-            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH), true);
         }
     }
 
-    private void handleModification(final String scriptName) {
-        final ServletWrapper wrapper = this.ioProvider.getServletCache().getWrapper(scriptName);
-        if ( wrapper != null ) {
-            wrapper.handleModification();
+    private void handleModification(final String scriptName, final boolean remove) {
+        if ( remove ) {
+            this.ioProvider.getServletCache().removeWrapper(scriptName);
+        } else {
+            final ServletWrapper wrapper = this.ioProvider.getServletCache().getWrapper(scriptName);
+            if ( wrapper != null ) {
+                wrapper.handleModification();
+            }
         }
     }
 
