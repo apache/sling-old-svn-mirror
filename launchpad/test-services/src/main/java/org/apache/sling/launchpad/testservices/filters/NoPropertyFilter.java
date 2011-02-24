@@ -16,18 +16,19 @@
  */
 package org.apache.sling.launchpad.testservices.filters;
 
-/** Example/test Sling Servlet registered with two extensions
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Filter"
- *
- * @scr.property name="service.description" value="Test Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * @scr.property name="sling.filter.scope" value="request"
- *
- * Register this filter with the no pattern registration properties
- */
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+
+/** Example/test filter */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Filter.class)
+@Properties({
+    @Property(name="service.description", value="NoProperty Test Filter"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.filter.scope", value="request")
+})
 public class NoPropertyFilter extends TestFilter {
 
     @Override

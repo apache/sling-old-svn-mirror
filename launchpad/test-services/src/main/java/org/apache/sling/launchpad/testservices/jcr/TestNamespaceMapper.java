@@ -19,18 +19,23 @@ package org.apache.sling.launchpad.testservices.jcr;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.NamespaceMapper;
 
 /**
  * Test Implementation of NamespaceMapper
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="org.apache.sling.jcr.api.NamespaceMapper"
- *
- * @scr.property name="service.description" value="Test NamespaceMapper"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
  */
+@Component(immediate=true, metatype=false)
+@Service(value=org.apache.sling.jcr.api.NamespaceMapper.class)
+@Properties({
+    @Property(name="service.description", value="Test NamespaceMapper"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="filter.scope", value="request"),
+    @Property(name="sling.filter.scope", value="request")
+})
 public class TestNamespaceMapper implements NamespaceMapper {
 
     public void defineNamespacePrefixes(Session session) throws RepositoryException {

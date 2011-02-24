@@ -22,24 +22,24 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * Test Servlet which outputs the current namespace mappings.
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description"
- *               value="NamespaceMapping Test Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * @scr.property name="sling.servlet.paths"
- *               values.0="/testing/NamespaceTestServlet/output"
- *
  */
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="NamespaceMapping Test Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.paths", value="/testing/NamespaceTestServlet/output")
+})
 @SuppressWarnings("serial")
 public class NamespaceTestServlet extends SlingSafeMethodsServlet {
 

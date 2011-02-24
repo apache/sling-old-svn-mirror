@@ -18,17 +18,19 @@ package org.apache.sling.launchpad.testservices.scripting;
 
 import javax.script.Bindings;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
-/** Example/test BindingsValuesProvider targeting JSP scripts.
-*
-* @scr.component immediate="true" metatype="no"
-* @scr.service
-*
-* @scr.property name="service.description" value="JSP BindingsValuesProvider"
-* @scr.property name="service.vendor" value="The Apache Software Foundation"
-*
-* @scr.property name="javax.script.name" value="JSP"
-*/
+
+/** Example/test BindingsValuesProvider targeting JSP scripts */
+@Component(immediate=true, metatype=false)
+@Service
+@Properties({
+    @Property(name="service.description", value="JSP BindingsValuesProvider"),
+    @Property(name="service.vendor", value="The Apache Software Foundation")
+})
 public class JSPBindingsValuesProvider implements BindingsValuesProvider {
 
     public void addBindings(Bindings bindings) {

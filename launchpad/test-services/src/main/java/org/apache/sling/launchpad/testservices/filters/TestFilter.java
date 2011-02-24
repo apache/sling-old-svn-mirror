@@ -28,9 +28,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Example/test Filter.
- */
+/** Base class for test filters */
 abstract class TestFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {

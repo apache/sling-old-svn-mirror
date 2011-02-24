@@ -16,24 +16,23 @@
  */
 package org.apache.sling.launchpad.testservices.servlets;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+
 /** Example/test Sling Servlet using a prefix to demonstrate how
  *  PrefixServletZero overrides PrefixServletMinusOne
- *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description" value="Default Query Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * @scr.property name="sling.servlet.prefix"
- *               value="0"
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- * @scr.property name="sling.servlet.extensions"
- *               values.1="TEST_EXT_3"
- *               values.2="TEST_EXT_5"
  */
-
+@Component(immediate=true, metatype=false)
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Default Query Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.prefix", intValue=0),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value={ "TEST_EXT_3", "TEST_EXT_5" })
+})
 @SuppressWarnings("serial")
 public class PrefixServletZero extends TestServlet {
 }
