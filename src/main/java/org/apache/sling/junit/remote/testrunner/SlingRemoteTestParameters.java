@@ -20,7 +20,21 @@ package org.apache.sling.junit.remote.testrunner;
  *  run the tests.
  */
 public interface SlingRemoteTestParameters {
+    /** Return the URL of the JUnit servlet */
+    String getJunitServletUrl();
+    
+    /** Return the optional selector for the test classes to run,
+     *  for example "org.apache.sling.testing.samples.sampletests.JUnit4Test"
+     */
+    String getTestClassesSelector();
+    
+    /** Return the optional selector for the test methods to run,
+     *  for example "someMethodName"
+     */
+    String getTestMethodSelector();
+    
+    /** Return the expected number of tests - if zero, no check
+     *  is done.
+     */
     int getExpectedNumberOfTests();
-    String getServerBaseUrl();
-    String getJunitServletPath();
 }
