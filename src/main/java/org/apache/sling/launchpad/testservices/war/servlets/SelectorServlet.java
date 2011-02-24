@@ -27,7 +27,7 @@ import org.apache.felix.scr.annotations.Service;
 @Component(immediate=true, metatype=false)
 @Service(value=javax.servlet.Servlet.class)
 @Properties({
-    @Property(name="service.description", value="Default Query Servlet"),
+    @Property(name="service.description", value="Selector Test Servlet"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
     @Property(name="sling.servlet.selectors", value={"WAR_TEST_SEL_1","WAR_TEST_SEL_2"}),
