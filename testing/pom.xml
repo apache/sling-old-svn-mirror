@@ -44,7 +44,7 @@
         <module>junit/core</module>
         <module>junit/scriptable</module>
         <module>junit/remote</module>
-        <module>samples/test-tools</module>
+        <module>samples/integration-tests</module>
         <module>samples/sample-tests</module>
         <module>samples/failing-tests</module>
     </modules>
