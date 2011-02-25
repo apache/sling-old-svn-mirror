@@ -30,7 +30,10 @@ public interface TestsProvider {
     /** Return the list of available tests */
     List<String> getTestNames();
     
-    /** Create a test class to execute the specified test */
+    /** Create a test class to execute the specified test.
+     *  The test executes in the same thread that calls
+     *  this method, to allow using ThreadLocals to pass
+     *  context to the test if needed. */
     Class<?> createTestClass(String testName) throws ClassNotFoundException;
     
     /** Return the timestamp at which our list of tests was last modified */
