@@ -123,12 +123,10 @@ public class JarExecutor {
      */
     public void start() throws Exception {
         final ExecuteResultHandler h = new ExecuteResultHandler() {
-            @Override
             public void onProcessFailed(ExecuteException ex) {
                 log.error("Process execution failed:" + ex, ex);
             }
 
-            @Override
             public void onProcessComplete(int result) {
                 log.info("Process execution complete, exit code=" + result);
             }
