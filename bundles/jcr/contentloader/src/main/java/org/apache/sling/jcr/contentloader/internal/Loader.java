@@ -27,6 +27,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -153,8 +154,15 @@ public class Loader extends BaseImportLoader {
             try {
 
                 final boolean contentAlreadyLoaded = ((Boolean) bundleContentInfo.get(ContentLoaderService.PROPERTY_CONTENT_LOADED)).booleanValue();
-
-                if (!isUpdate && contentAlreadyLoaded) {
+                boolean isBundleUpdated = false;
+                Calendar lastLoadedAt = (Calendar) bundleContentInfo.get(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT);
+                if ( lastLoadedAt != null) {
+                    // this assumes that the bundle has been installed  or updated after the content has been loaded
+                    if ( lastLoadedAt.getTimeInMillis() < bundle.getLastModified() ) {
+                        isBundleUpdated = true;
+                    }
+                }
+                if (!isUpdate && !isBundleUpdated && contentAlreadyLoaded) {
 
                     log.info("Content of bundle already loaded {}.",
                         bundle.getSymbolicName());
