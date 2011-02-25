@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -61,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
-    private static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
+    public static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
     private static final String PROPERTY_CONTENT_LOADED_BY = "content-loaded-by";
     private static final String PROPERTY_CONTENT_UNLOADED_AT = "content-unload-time";
     private static final String PROPERTY_CONTENT_UNLOADED_BY = "content-unloaded-by";
@@ -368,6 +369,9 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
             return null;
         }
         final Map<String, Object> info = new HashMap<String, Object>();
+        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT)) {
+            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT).getDate());
+        }
         if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED) ) {
             info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED,
                     bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED).getBoolean());
