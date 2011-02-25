@@ -23,12 +23,8 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.engine.SlingRequestProcessor;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.sling.junit.scriptable.ScriptableTestsProvider.TestContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -38,40 +34,19 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class TestAllPaths {
 
-    private String path;
-    private static boolean executing = false;
+    private final String path;
     public static final String TEST_URL_SUFFIX = ".test.txt";
     public static final String PASSED = "TEST_PASSED";
     
-    // TODO can we do better than this to inject our environment here?
-    static List<String> testPaths;
-    static SlingRequestProcessor requestProcessor;
-    static ResourceResolver resolver;
-
     public TestAllPaths(String path) {
         this.path = path;
     }
     
-    // Due to our use of static context, only one instance of this test can
-    // execute at any given time.
-    @BeforeClass
-    public static void checkConcurrency() {
-        if(executing) {
-            fail("Concurrent execution detected, not supported by this class");
-        }
-        executing = true;
-    }
-
-    @AfterClass
-    public static void cleanup() {
-        executing = false;
-    }
-
     /** Let JUnit run this all on our paths */
     @Parameters
     public static Collection<Object[]> data() {
         Collection<Object[]> data = new ArrayList<Object[]>();
-        for(String path : testPaths) {
+        for(String path : ScriptableTestsProvider.getTestContext().testPaths) {
             data.add(new Object[] { path + TEST_URL_SUFFIX });
         }
         return data;
@@ -79,11 +54,12 @@ public class TestAllPaths {
 
     @Test
     public void verifyContent() throws Exception {
+        final TestContext ctx = ScriptableTestsProvider.getTestContext();
         
         // Get content via internal Sling request
         final HttpRequest req = new HttpRequest(path);
         final HttpResponse resp = new HttpResponse();
-        requestProcessor.processRequest(req, resp, resolver);
+        ctx.requestProcessor.processRequest(req, resp, ctx.resourceResolver);
         final String content = resp.getContent();
         assertEquals("Expecting HTTP status 200 for path " + path, 200, resp.getStatus());
         
@@ -107,4 +83,3 @@ public class TestAllPaths {
         }
     }
 }
-

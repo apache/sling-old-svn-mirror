@@ -61,6 +61,24 @@ public class ScriptableTestsProvider implements TestsProvider {
     public static final String SLING_TEST_NODETYPE = "sling:Test";
     public static final String TEST_CLASS_NAME = ScriptableTestsProvider.class.getName();
     
+    /** Context that's passed to TestAllPaths */
+    static class TestContext {
+        final List<String> testPaths;
+        final SlingRequestProcessor requestProcessor;
+        final ResourceResolver resourceResolver;
+
+        TestContext(List<String> p, SlingRequestProcessor rp, ResourceResolver rr) {
+            testPaths = p;
+            requestProcessor = rp;
+            resourceResolver = rr;
+        }
+    }
+    
+    /** Need a ThreadLocal to pass context, as it's JUnit who instantiates the
+     *  test classes, we can't easily decorate them (AFAIK).
+     */
+    static final ThreadLocal<TestContext> testContext = new ThreadLocal<TestContext>(); 
+    
     /** We only consider test resources under the search path
      *  of the JCR resource resolver. These paths are supposed 
      *  to be secured, as they contain other admin stuff anyway, 
@@ -147,9 +165,7 @@ public class ScriptableTestsProvider implements TestsProvider {
         if(testPaths.size() == 0) {
             return ExplainTests.class;
         } else {
-            TestAllPaths.testPaths = testPaths;
-            TestAllPaths.requestProcessor = requestProcessor;
-            TestAllPaths.resolver = resolver;
+            testContext.set(new TestContext(testPaths, requestProcessor, resolver));
             return TestAllPaths.class;
         }
     }
@@ -205,5 +221,9 @@ public class ScriptableTestsProvider implements TestsProvider {
     
     public long lastModified() {
         return lastModified;
+    }
+    
+    static TestContext getTestContext() {
+        return testContext.get();
     }
 }
