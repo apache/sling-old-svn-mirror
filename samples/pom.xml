@@ -67,5 +67,6 @@
           <module>custom-login-form</module>
           <module>slingbucks</module>
           <module>installing-dependencies</module>
+          <module>framework-fragment</module>
   </modules>
 </project>
