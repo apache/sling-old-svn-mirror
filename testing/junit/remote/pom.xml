@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.junit.remote</artifactId>
     <version>0.1.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>Apache Sling JUnit Remote Tests Runners</name>
     <description>Utilities to run server-side JUnit tests remotely</description>
@@ -39,11 +39,47 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/remote</url>
     </scm>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.apache.sling.junit.remote.exported.*</Export-Package>
+                        <Import-Package>
+                            org.apache.http.*; resolution:=optional,
+                            org.apache.sling.testing.tools.http; resolution:=optional,
+                            org.junit.internal.*; resolution:=optional,
+                            *
+                        </Import-Package>
+                        <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
     <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
             <version>0.1.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -57,6 +93,12 @@
             <version>1.5.11</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.5.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
             <version>0.1.1-SNAPSHOT</version>
@@ -65,6 +107,10 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
         </dependency>
     </dependencies>
 </project>

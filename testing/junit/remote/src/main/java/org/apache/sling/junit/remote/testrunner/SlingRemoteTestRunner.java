@@ -21,12 +21,10 @@ import static org.junit.Assert.assertEquals;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
-import org.apache.sling.testing.tools.http.Request;
-import org.apache.sling.testing.tools.http.RequestBuilder;
+import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.EachTestNotifier;
@@ -47,8 +45,7 @@ import org.slf4j.LoggerFactory;
 public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
     private static final Logger log = LoggerFactory.getLogger(SlingRemoteTestRunner.class);
     private final SlingRemoteTestParameters testParameters;
-    private RequestExecutor executor;
-    private RequestBuilder builder;
+    private RemoteTestHttpClient testHttpClient;
     private final Class<?> testClass;
     
     private final List<SlingRemoteTest> children = new LinkedList<SlingRemoteTest>();
@@ -72,32 +69,18 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
     }
     
     private void maybeExecuteTests() throws Exception {
-        if(executor != null) {
+        if(testHttpClient != null) {
+            // Tests already ran
             return;
         }
         
-        // Setup request execution
-        executor = new RequestExecutor(new DefaultHttpClient());
-        if(testParameters.getJunitServletUrl() == null) {
-            throw new IllegalStateException("Server base URL is null, cannot run tests");
-        }
-        builder = new RequestBuilder(testParameters.getJunitServletUrl());
-        
-        // POST request executes the tests
-        final StringBuilder subpath = new StringBuilder();
-        subpath.append("/");
-        subpath.append(testParameters.getTestClassesSelector());
-        subpath.append(".json");
-        final String testMethodSelector = testParameters.getTestMethodSelector();
-        if(testMethodSelector != null && testMethodSelector.length() > 0) {
-            subpath.append("/");
-            subpath.append(testMethodSelector);
-        }
-        final Request r = builder.buildPostRequest(subpath.toString());
-        executor.execute(r)
-        .assertStatus(200)
-        .assertContentType("application/json");
-        
+        testHttpClient = new RemoteTestHttpClient(testParameters.getJunitServletUrl(), true);
+        final RequestExecutor executor = testHttpClient.runTests(
+                testParameters.getTestClassesSelector(),
+                testParameters.getTestMethodSelector(),
+                "json"
+                );
+        executor.assertContentType("application/json");
         final JSONArray json = new JSONArray(new JSONTokener((executor.getContent())));
 
         // Response contains an array of objects identified by 
@@ -111,7 +94,7 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         }
         
         log.info("Server-side tests executed at {} with path {}", 
-                testParameters.getJunitServletUrl(), subpath);
+                testParameters.getJunitServletUrl(), testHttpClient.getTestExecutionPath());
         
         // Check that number of tests is as expected
         assertEquals("Expecting " + testParameters.getExpectedNumberOfTests() + " tests",

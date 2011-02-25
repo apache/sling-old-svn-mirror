@@ -126,13 +126,15 @@ public class RequestExecutor {
         response = httpClient.execute(request);
         entity = response.getEntity();
         if(entity != null) {
-            // We fully read the content every time, not super efficient but
-            // how can we read it on demand while avoiding a (boring) cleanup() 
-            // method on this class?
-            content = EntityUtils.toString(entity);
-            entity.consumeContent();
+            consumeEntity();
         }
         return this;
+    }
+
+    /** Can be overridden to consume in a different way, or not at all */ 
+    protected void consumeEntity() throws ParseException, IOException {
+        content = EntityUtils.toString(entity);
+        entity.consumeContent();
     }
     
     protected void clear() {
@@ -204,18 +206,18 @@ public class RequestExecutor {
         documentor.generateDocumentation(this, metadata);
     }
 
-    HttpUriRequest getRequest() {
+    public HttpUriRequest getRequest() {
         return request;
     }
 
-    HttpResponse getResponse() {
+    public HttpResponse getResponse() {
         return response;
     }
 
-    HttpEntity getEntity() {
+    public HttpEntity getEntity() {
         return entity;
     }
-
+    
     public String getContent() {
         return content;
     }
