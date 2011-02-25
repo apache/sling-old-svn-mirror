@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>10</version>
+        <relativePath>../../parent</relativePath>
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>org.apache.sling.samples.frameworkfragment</artifactId>
+    <version>0.9.9-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Apache Sling Sample Framework Fragment Bundle</name>
+    <description>
+        Shows how to create a fragment bundle that causes additional
+        packages from the JVM environment to be exported.
+        After starting this bundle, the OSGi console detail view of
+        the system bundle (/system/console/bundles/0) should list two
+        com.example packages as being exported. 
+        Those packages are just dummy examples, the list of exported 
+        packages will obviously need to be adapted to create your own
+        fragment bundle.
+    </description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.groovy.maven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <rawVersion>${project.version}</rawVersion>
+                            </properties>
+                            <source>
+                                // Convert POM version to valid OSGi version identifier
+                                project.properties['osgi.version'] = 
+                                (project.properties['rawVersion'] =~ /-/).replaceAll('.')
+                        </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- 
+                    The POM packaging is jar but with these settings
+                    we create a valid bundle.
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addClasspath>false</addClasspath>
+                        </manifest>
+                        <manifestEntries>
+                            <Bundle-Version>${osgi.version}</Bundle-Version>
+                            <Bundle-Description>${project.description}</Bundle-Description>
+                            <Bundle-Name>${project.name}</Bundle-Name>
+                            <Bundle-DocURL>http://sling.apache.org</Bundle-DocURL>
+                            <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+                            <Bundle-Vendor>Apache Software Foundation</Bundle-Vendor>
+                            <Fragment-Host>system.bundle; extension:=framework</Fragment-Host>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            
+                            <!-- 
+                                Packages listed here will be exported by the system 
+                                bundle once this bundle is active.
+                                The OSGi framework does not check whether the packages
+                                are actually available.
+                            -->
+                            <Export-Package>
+                                com.example.somepackage; version=1.2.3,
+                                com.example.anotherpackage; version=4.5.6
+                            </Export-Package>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
