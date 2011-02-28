@@ -26,6 +26,8 @@ public class ExtendedJobManager extends DefaultJobManager {
 
     private final AtomicInteger added = new AtomicInteger();
 
+    private final AtomicInteger removed = new AtomicInteger();
+
     @Override
     public void process(JobEvent event) {
         super.process(event);
@@ -38,11 +40,21 @@ public class ExtendedJobManager extends DefaultJobManager {
         this.added.incrementAndGet();
     }
 
+    @Override
+    public void notifyRemoveJob(String key) {
+        super.notifyRemoveJob(key);
+        this.removed.incrementAndGet();
+    }
+
     public int getProcessed() {
         return processed.intValue();
     }
 
     public int getAdded() {
         return added.intValue();
+    }
+
+    public int getRemoved() {
+        return removed.intValue();
     }
 }
