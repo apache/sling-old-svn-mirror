@@ -25,6 +25,7 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
+import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.Test;
@@ -38,9 +39,7 @@ public class JSONResponseTest extends ServerSideTestsBase {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    // TODO compute those timeouts based on a configured factor
-    // to cope with slower testing systems??
-    public static final int TEST_LIST_TIMEOUT_SECONDS = 30;
+    public static final int TEST_LIST_TIMEOUT_SECONDS = TimeoutsProvider.getInstance().getTimeout(30);
     
     @Test
     public void testWithRetries() {
@@ -61,7 +60,7 @@ public class JSONResponseTest extends ServerSideTestsBase {
         };
 
         log.info("{} (timeout={} seconds)", c.getDescription(), TEST_LIST_TIMEOUT_SECONDS);
-        new RetryLoop(c, TEST_LIST_TIMEOUT_SECONDS, 500);
+        new RetryLoop(c, TEST_LIST_TIMEOUT_SECONDS, TimeoutsProvider.getInstance().getTimeout(500));
     }
     
     private boolean findTestName(JSONArray json, String name) throws JSONException {

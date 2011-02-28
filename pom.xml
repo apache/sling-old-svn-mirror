@@ -50,6 +50,9 @@
         
         <!-- Set this to true to keep the runnable jar running - useful to debug tests -->
         <keepJarRunning>false</keepJarRunning>
+        
+        <!-- Change this to use longer or shorter timeouts for testing -->
+        <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
     </properties>
     
     <scm>
@@ -148,6 +151,7 @@
                         <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
+                        <sling.testing.timeout.multiplier>${sling.testing.timeout.multiplier}</sling.testing.timeout.multiplier>
                         <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
                         <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
                         <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
