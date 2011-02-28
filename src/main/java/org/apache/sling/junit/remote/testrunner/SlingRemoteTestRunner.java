@@ -97,9 +97,11 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
                 testParameters.getJunitServletUrl(), testHttpClient.getTestExecutionPath());
         
         // Check that number of tests is as expected
-        assertEquals("Expecting " + testParameters.getExpectedNumberOfTests() + " tests",
-                testParameters.getExpectedNumberOfTests(),
-                children.size());
+        if(testParameters.getExpectedNumberOfTests() >= 0) {
+            assertEquals("Expecting " + testParameters.getExpectedNumberOfTests() + " tests",
+                    testParameters.getExpectedNumberOfTests(),
+                    children.size());
+        }
     }
     
     @Override
