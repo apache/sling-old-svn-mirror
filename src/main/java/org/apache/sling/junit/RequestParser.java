@@ -32,8 +32,17 @@ public class RequestParser {
     private final HttpServletRequest request;
     private static final String EMPTY_STRING = "";
 
+    /** Build from a request using standard parsing */
     public RequestParser(HttpServletRequest request) {
         this(parsePathInfo(request.getPathInfo()), request);
+    }
+    
+    /** Build from pre-parsed values */
+    public RequestParser(HttpServletRequest request, String testSelector, String outputExtension, String testMethodName) {
+        this.request = request;
+        this.testSelector = testSelector;
+        this.extension = outputExtension;
+        this.methodName = testMethodName;
     }
     
     RequestParser(String [] s, HttpServletRequest request) {
