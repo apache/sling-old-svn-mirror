@@ -16,30 +16,16 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
-import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
 import org.junit.runner.RunWith;
 
-/** Verify that getExpectedNumberOfTests() < 0 means "don't care" */
+/** Run server-side tests from the sampletests bundle */
 @RunWith(SlingRemoteTestRunner.class)
-public class ServerSideSampleTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
-    
-    public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
-    public static final int TESTS_AT_THIS_PATH = 5;
+public class DontCareForTestsCountTest extends ServerSideSampleTest {
     
     public int getExpectedNumberOfTests() {
-        return TESTS_AT_THIS_PATH;
-    }
-    
-    public String getJunitServletUrl() {
-        return serverBaseUrl + JUNIT_SERVLET_PATH;
-    }
-
-    public String getTestClassesSelector() {
-        return TEST_SELECTOR;
-    }
-
-    public String getTestMethodSelector() {
-        return null;
+        // Negative value here means "don't care", check that
+        // this test passes with this value 
+        return -1;
     }
 }
