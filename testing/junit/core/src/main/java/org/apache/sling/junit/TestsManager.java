@@ -20,8 +20,10 @@ import java.util.Collection;
 
 /** Service that gives access to JUnit test classes */
 public interface TestsManager {
-    /** Return the names of all currently available tests */
-    public Collection<String> getTestNames();
+    /** Return the names of available tests 
+     *  @param selector if null, returns all available tests.
+     */
+    public Collection<String> getTestNames(TestSelector selector);
     
     /** Instantiate test class for specified test */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException;
@@ -33,7 +35,7 @@ public interface TestsManager {
     
     /** Execute tests and report results using supplied Renderer - does NOT call setup or cleanup
      *  on renderer.
-     *  @param testMethodName if not empty, only test methods that have this name are executed
+     *  @param selector if not null, used to select tests and test methods.
      */ 
-    public void executeTests(Collection<String> testNames, Renderer renderer, String testMethodName) throws Exception;
+    public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception;
 }
