@@ -54,6 +54,21 @@ public class ParameterSupport {
 
     private boolean requestDataUsed;
 
+    /**
+     * Sets the default encoding used to decode request parameters if the
+     * <code>_charset_</code> request parameter is not set (or is not set to an
+     * encoding supported by the platform). By default this default encoding is
+     * <code>ISO-8859-1</code>. For applications which alway use the same
+     * encoding this default can be changed.
+     *
+     * @param encoding The default encoding to be used. If this encoding is
+     *            <code>null</code> or not supported by the platform the current
+     *            default encoding remains unchanged.
+     */
+    public static void setDefaultParameterEncoding(final String encoding) {
+        Util.setDefaultFixEncoding(encoding);
+    }
+
     public static ParameterSupport getInstance(ServletRequest servletRequest) {
         ParameterSupport instance = (ParameterSupport) servletRequest.getAttribute(ATTR_NAME);
         if (instance == null) {

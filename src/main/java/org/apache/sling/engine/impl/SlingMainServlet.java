@@ -53,6 +53,7 @@ import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
 import org.apache.sling.engine.impl.log.RequestLogger;
+import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.servlets.ErrorHandler;
@@ -100,6 +101,9 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
     private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
+
+    @Property
+    private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
 
     @Reference
     private HttpService httpService;
@@ -289,6 +293,10 @@ public class SlingMainServlet extends GenericServlet {
             componentConfig.get(PROP_MAX_CALL_COUNTER),
             RequestData.DEFAULT_MAX_CALL_COUNTER));
         RequestData.setSlingMainServlet(this);
+
+        // configure default request parameter encoding
+        ParameterSupport.setDefaultParameterEncoding(OsgiUtil.toString(
+            componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING), null));
 
         // register the servlet and resources
         try {
