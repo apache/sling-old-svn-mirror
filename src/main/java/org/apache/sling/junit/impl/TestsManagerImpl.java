@@ -19,12 +19,14 @@ package org.apache.sling.junit.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.TestSelector;
 import org.apache.sling.junit.TestsManager;
 import org.apache.sling.junit.TestsProvider;
 import org.junit.runner.JUnitCore;
@@ -93,7 +95,7 @@ public class TestsManagerImpl implements TestsManager {
     }
 
     /** inheritDoc */
-    public Collection<String> getTestNames() {
+    public Collection<String> getTestNames(TestSelector selector) {
         maybeUpdateProviders();
         
         // If any provider has changes, reload the whole list
@@ -126,7 +128,20 @@ public class TestsManagerImpl implements TestsManager {
             log.info("Test names reloaded, total {} names from {} providers", tests.size(), providers.size());
         }
         
-        return tests.keySet();
+        final Collection<String> allTests = tests.keySet();
+        if(selector == null) {
+            log.debug("No TestSelector supplied, returning all {} tests", allTests.size());
+            return allTests;
+        } else {
+            final List<String> result = new LinkedList<String>();
+            for(String test : allTests) {
+                if(selector.acceptTestName(test)) {
+                    result.add(test);
+                }
+            }
+            log.debug("{} selected {} tests out of {}", new Object[] { selector, result.size(), allTests.size() });
+            return result;
+        }
     }
     
     /** Update our list of providers if tracker changed */
@@ -148,12 +163,13 @@ public class TestsManagerImpl implements TestsManager {
     }
 
     /** @inheritDoc */
-    public void executeTests(Collection<String> testNames, Renderer renderer, String testMethodName) throws Exception {
+    public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception {
         renderer.title(2, "Running tests");
         final JUnitCore junit = new JUnitCore();
         junit.addListener(renderer.getRunListener());
         for(String className : testNames) {
             renderer.title(3, className);
+            final String testMethodName = selector == null ? null : selector.getSelectedTestMethodName();
             if(testMethodName != null && testMethodName.length() > 0) {
                 log.debug("Running test method {} from test class {}", testMethodName, className);
                 junit.run(Request.method(getTestClass(className), testMethodName));

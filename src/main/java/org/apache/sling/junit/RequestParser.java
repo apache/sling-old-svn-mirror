@@ -25,9 +25,9 @@ import javax.servlet.http.HttpServletRequest;
  *  keep the junit core module reusable in other OSGi 
  *  environments.
  */
-public class RequestParser {
-    private final String testSelector;
-    private final String methodName;
+public class RequestParser implements TestSelector {
+    private final String testNameSelector;
+    private final String selectedMethodName;
     private final String extension;
     private final HttpServletRequest request;
     private static final String EMPTY_STRING = "";
@@ -40,16 +40,16 @@ public class RequestParser {
     /** Build from pre-parsed values */
     public RequestParser(HttpServletRequest request, String testSelector, String outputExtension, String testMethodName) {
         this.request = request;
-        this.testSelector = testSelector;
+        this.testNameSelector = testSelector;
         this.extension = outputExtension;
-        this.methodName = testMethodName;
+        this.selectedMethodName = testMethodName;
     }
     
     RequestParser(String [] s, HttpServletRequest request) {
         this.request = request;
-        testSelector = s[0];
+        testNameSelector = s[0];
         extension = s[1];
-        methodName = s[2];
+        selectedMethodName = s[2];
     }
     
     static String [] parsePathInfo(String pathInfo) {
@@ -93,14 +93,14 @@ public class RequestParser {
 
     public String toString() {
         return getClass().getSimpleName() 
-                + ", testSelector [" + testSelector + "]"
-                + ", methodName [" + methodName + "]"
+                + ", testSelector [" + testNameSelector + "]"
+                + ", methodName [" + selectedMethodName + "]"
                 + ", extension [" + extension + "]"
                 ;
     }
 
     public String getTestSelector() {
-        return testSelector;
+        return testNameSelector;
     }
 
     public String getExtension() {
@@ -108,10 +108,24 @@ public class RequestParser {
     }
     
     public String getMethodName() {
-        return methodName;
+        return selectedMethodName;
     }
     
     public HttpServletRequest getRequest() {
         return request;
-    }   
+    }
+
+    /** @inheritDoc */
+    public boolean acceptTestName(String testName) {
+        if(testNameSelector.isEmpty()) {
+            return true;
+        } else {
+            return testName.startsWith(testNameSelector);
+        }
+    }
+
+    /** @inheritDoc */
+    public String getSelectedTestMethodName() {
+        return selectedMethodName;
+    }
 }

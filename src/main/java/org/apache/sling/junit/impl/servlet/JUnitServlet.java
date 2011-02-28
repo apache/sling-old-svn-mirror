@@ -19,7 +19,6 @@ package org.apache.sling.junit.impl.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.LinkedList;
@@ -36,6 +35,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.RendererSelector;
 import org.apache.sling.junit.RequestParser;
+import org.apache.sling.junit.TestSelector;
 import org.apache.sling.junit.TestsManager;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
@@ -90,23 +90,14 @@ public class JUnitServlet extends HttpServlet {
         }
     }
     
-    /** Return the list of available tests
+    /** Return sorted list of available tests
      * @param prefix optionally select only names that match this prefix
      */
-    private List<String> getTestNames(String prefix) {
-        final Collection<String> testClassesCollection = testsManager.getTestNames();
-        final List<String> testClasses = new LinkedList<String>();
-        if(prefix == null || prefix.length() == 0) {
-            testClasses.addAll(testClassesCollection);
-        } else {
-            for(String name : testClassesCollection) {
-                if(name.startsWith(prefix)) {
-                    testClasses.add(name);
-                }
-            }
-        }
-        Collections.sort(testClasses);
-        return testClasses;
+    private List<String> getTestNames(TestSelector selector) {
+        final List<String> result = new LinkedList<String>();
+        result.addAll(testsManager.getTestNames(selector));
+        Collections.sort(result);
+        return result;
     }
     
     private void sendCss(HttpServletResponse response) throws IOException {
@@ -158,7 +149,7 @@ public class JUnitServlet extends HttpServlet {
         }
         
         // Any test classes?
-        final List<String> testNames = getTestNames(requestParser.getTestSelector()); 
+        final List<String> testNames = getTestNames(requestParser); 
         if(testNames.isEmpty()) {
             renderer.info(
                     "warning",
@@ -197,14 +188,14 @@ public class JUnitServlet extends HttpServlet {
         }
         renderer.setup(response, getClass().getSimpleName());
         
-        final List<String> testNames = getTestNames(requestParser.getTestSelector());
+        final List<String> testNames = getTestNames(requestParser);
         if(testNames.isEmpty()) {
             response.sendError(
                     HttpServletResponse.SC_NOT_FOUND, 
                     "No tests found for " + requestParser);
         }
         try {
-            testsManager.executeTests(testNames, renderer, requestParser.getMethodName());
+            testsManager.executeTests(testNames, renderer, requestParser);
         } catch(Exception e) {
             throw new ServletException(e);
         }
