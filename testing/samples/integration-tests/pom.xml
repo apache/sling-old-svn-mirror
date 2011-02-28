@@ -97,9 +97,9 @@
                     </execution>
                     <execution>
                         <!-- 
-                            Consider all "provided" dependencies 
-                            as additional bundles that need to be
-                            installed before running tests  
+                            Consider all dependencies as candidates to be installed
+                            as additional bundles. We use system properties to define
+                            which bundles to install in which order.  
                         -->
                         <id>copy-additional-bundles</id>
                         <goals>
@@ -108,9 +108,6 @@
                             <phase>process-resources</phase>
                         <configuration>
                             <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
-                            <includeArtifactIds>
-                                org.apache.sling.junit.core,org.apache.sling.testing.samples.sampletests,org.apache.sling.junit.core,org.apache.sling.testing.samples.failingtests,org.apache.sling.junit.scriptable,org.apache.sling.junit.remote
-                            </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
@@ -155,6 +152,17 @@
                         <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
                         <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
                         <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
+                        
+                        <!-- 
+                            Define additional bundles to install by specifying the beginning of their artifact name.
+                            The bundles are installed in lexical order of these property names.
+                            All bundles must be listed as dependencies in this pom, or they won't be installed. 
+                        -->
+                        <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
+                        <sling.additional.bundle.2>org.apache.sling.junit.scriptable</sling.additional.bundle.2>
+                        <sling.additional.bundle.3>org.apache.sling.testing.samples.sampletests</sling.additional.bundle.3>
+                        <sling.additional.bundle.4>org.apache.sling.testing.samples.failingtests</sling.additional.bundle.4>
+                        <sling.additional.bundle.5>org.apache.sling.junit.remote</sling.additional.bundle.5>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
