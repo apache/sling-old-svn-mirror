@@ -20,6 +20,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -186,15 +188,23 @@ public class SlingTestBase {
         }
         
         int count = 0;
+        final List<File> bundlesToInstall = new ArrayList<File>();
         final String [] files = dir.list();
         if(files != null) {
             for(String file : files) {
                 if(file.endsWith(".jar")) {
                     File f = new File(dir, file);
-                    installBundle(f);
+                    bundlesToInstall.add(f);
                     count++;
                 }
             }
+        }
+        
+        // Install bundles in a predictable order, to
+        // be as deterministic as possible
+        Collections.sort(bundlesToInstall);
+        for(File f : bundlesToInstall) {
+            installBundle(f);
         }
         
         log.info("{} additional bundles installed from {}", count, dir.getAbsolutePath());
