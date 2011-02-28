@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -45,6 +45,7 @@ public class SlingTestBase {
     public static final String SERVER_READY_PROP_PREFIX = "server.ready.path";
     public static final String KEEP_JAR_RUNNING_PROP = "keepJarRunning";
     public static final String ADDITONAL_BUNDLES_PATH = "additional.bundles.path";
+    public static final String BUNDLE_TO_INSTALL_PREFIX = "sling.additional.bundle";
     public static final String ADMIN = "admin";
     
     protected static String serverBaseUrl;
@@ -187,24 +188,35 @@ public class SlingTestBase {
             return;
         }
         
-        int count = 0;
-        final List<File> bundlesToInstall = new ArrayList<File>();
+        // Collect all filenames of candidate bundles
+        final List<String> bundleNames = new ArrayList<String>();
         final String [] files = dir.list();
         if(files != null) {
             for(String file : files) {
                 if(file.endsWith(".jar")) {
-                    File f = new File(dir, file);
-                    bundlesToInstall.add(f);
-                    count++;
+                    bundleNames.add(file);
                 }
             }
         }
         
-        // Install bundles in a predictable order, to
-        // be as deterministic as possible
-        Collections.sort(bundlesToInstall);
-        for(File f : bundlesToInstall) {
-            installBundle(f);
+        // And install those that are specified by system properties, in order
+        int count = 0;
+        final List<String> sortedPropertyKeys = new ArrayList<String>();
+        for(Object key : System.getProperties().keySet()) {
+            final String str = key.toString();
+            if(str.startsWith(BUNDLE_TO_INSTALL_PREFIX)) {
+                sortedPropertyKeys.add(str);
+            }
+        }
+        Collections.sort(sortedPropertyKeys);
+        for(String key : sortedPropertyKeys) {
+            final String filenamePrefix = System.getProperty(key);
+            for(String bundleFilename : bundleNames) {
+                if(bundleFilename.startsWith(filenamePrefix)) {
+                    installBundle(new File(dir, bundleFilename));
+                    count++;
+                }
+            }
         }
         
         log.info("{} additional bundles installed from {}", count, dir.getAbsolutePath());
