@@ -27,6 +27,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
@@ -103,7 +104,7 @@ public class SlingTestBase {
         
         // Timeout for readiness test
         final String sec = System.getProperty(SERVER_READY_TIMEOUT_PROP);
-        final int timeoutSec = sec == null ? 60 : Integer.valueOf(sec);
+        final int timeoutSec = TimeoutsProvider.getInstance().getTimeout(sec == null ? 60 : Integer.valueOf(sec));
         log.info("Will wait up to " + timeoutSec + " seconds for server to become ready");
         final long endTime = System.currentTimeMillis() + timeoutSec * 1000L;
 
@@ -148,7 +149,7 @@ public class SlingTestBase {
                 log.info("All {} paths return expected content, server ready", testPaths.size());
                 break;
             }
-            Thread.sleep(1000L);
+            Thread.sleep(TimeoutsProvider.getInstance().getTimeout(1000L));
         }
         
         if(serverReady) {

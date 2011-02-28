@@ -16,6 +16,7 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
+import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.samples.testtools.SlingTestBase;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.slf4j.Logger;
@@ -29,10 +30,7 @@ public class ServerSideTestsBase extends SlingTestBase {
     
     private static boolean junitServletOk;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    // TODO compute those timeouts based on a configured factor
-    // to cope with slower testing systems??
-    public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = 60;
+    public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = TimeoutsProvider.getInstance().getTimeout(60);
 
     protected ServerSideTestsBase() {
         try {
@@ -65,7 +63,7 @@ public class ServerSideTestsBase extends SlingTestBase {
         };
         
         log.info(c.getDescription());
-        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, 500); 
+        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, TimeoutsProvider.getInstance().getTimeout(500)); 
         junitServletOk = true;
     }
 }
