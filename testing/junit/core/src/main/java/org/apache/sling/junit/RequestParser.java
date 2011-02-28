@@ -117,7 +117,7 @@ public class RequestParser implements TestSelector {
 
     /** @inheritDoc */
     public boolean acceptTestName(String testName) {
-        if(testNameSelector.isEmpty()) {
+        if(testNameSelector.length() == 0) {
             return true;
         } else {
             return testName.startsWith(testNameSelector);
