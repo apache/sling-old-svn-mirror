@@ -26,6 +26,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.sling.event.impl.AbstractTest;
 import org.apache.sling.event.impl.SimpleEventAdmin;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -127,7 +128,7 @@ public class IgnoreQueueTest extends AbstractJobEventHandlerTest {
 
         // we wait until NUM_JOBS have been processed by the JobManager
         while ( ((ExtendedJobManager)this.jobManager).getAdded() < NUM_JOBS ) {
-            Thread.sleep(400);
+            AbstractTest.sleep(400);
         }
 
         // no jobs queued, none processed but available
@@ -139,13 +140,13 @@ public class IgnoreQueueTest extends AbstractJobEventHandlerTest {
         // let'see if restarting helps
         this.createConfiguration(QueueConfiguration.Type.UNORDERED);
         this.jobManager.restart();
-        // we wait
+        // we wait until all jobs are processed
         while ( count.get() < NUM_JOBS ) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ie) {
-                // ignore
-            }
+            AbstractTest.sleep(500);
+        }
+        // we wait until all jobs are removed
+        while ( ((ExtendedJobManager)this.jobManager).getRemoved() < NUM_JOBS ) {
+            AbstractTest.sleep(500);
         }
         // no jobs queued, but processed and not available
         assertEquals(0, this.jobManager.getStatistics().getNumberOfQueuedJobs());

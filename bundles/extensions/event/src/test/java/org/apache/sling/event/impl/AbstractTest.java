@@ -183,4 +183,12 @@ public abstract class AbstractTest {
         }
 
     }
+
+    public static void sleep(final long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (final InterruptedException ie) {
+            // ignore
+        }
+    }
 }
