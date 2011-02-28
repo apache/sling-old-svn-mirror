@@ -40,9 +40,9 @@ public class RequestParser implements TestSelector {
     /** Build from pre-parsed values */
     public RequestParser(HttpServletRequest request, String testSelector, String outputExtension, String testMethodName) {
         this.request = request;
-        this.testNameSelector = testSelector;
-        this.extension = outputExtension;
-        this.selectedMethodName = testMethodName;
+        this.testNameSelector = testSelector == null ? "" : testSelector;
+        this.extension = outputExtension == null ? "" : outputExtension;
+        this.selectedMethodName = testMethodName == null ? "" : testMethodName;
     }
     
     RequestParser(String [] s, HttpServletRequest request) {
