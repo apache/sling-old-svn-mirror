@@ -663,14 +663,18 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary)
      */
     public void resourceAddedOrUpdated(final String resourceType,
-            final String resourceId,
+            String resourceId,
             final InputStream is,
             final Dictionary<String, Object> dict) {
-        final String key = resourceType + ':' + resourceId;
+        String key = resourceType + ':' + resourceId;
         try {
             final ResourceData data = ResourceData.create(is, dict);
             synchronized ( this.resourcesLock ) {
                 final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
+                if ( erl != null ) {
+                    resourceId = erl.getResourceId();
+                    key = resourceType + ':' + resourceId;
+                }
                 logger.info("Added or updated {}:{}: {}", new Object[] {resourceType, resourceId, erl});
 
                 // we first check for update
@@ -783,13 +787,15 @@ public class OsgiInstallerImpl
     /**
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
      */
-    public void resourceRemoved(final String resourceType, final String resourceId) {
-        final String key = resourceType + ':' + resourceId;
+    public void resourceRemoved(final String resourceType, String resourceId) {
+        String key = resourceType + ':' + resourceId;
         synchronized ( this.resourcesLock ) {
             final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
             logger.info("Removed {}:{}: {}", new Object[] {resourceType, resourceId, erl});
             // if this is not registered at all, we can simply ignore this
             if ( erl != null ) {
+                resourceId = erl.getResourceId();
+                key = resourceType + ':' + resourceId;
                 final TaskResource tr = erl.getFirstResource();
                 if ( tr != null ) {
                     if ( tr.getState() != ResourceState.IGNORED ) {

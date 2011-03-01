@@ -19,6 +19,7 @@
 package org.apache.sling.installer.factories.configuration.impl;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -41,12 +42,19 @@ abstract class ConfigUtil {
      */
     private static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
 
+    /**
+     * This property has been used in older versions to keep track of factory
+     * configurations.
+     */
+    private static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
+
     /** Configuration properties to ignore when comparing configs */
     private static final Set<String> IGNORED_PROPERTIES = new HashSet<String>();
     static {
         IGNORED_PROPERTIES.add(Constants.SERVICE_PID);
         IGNORED_PROPERTIES.add(CONFIG_PATH_KEY);
-        IGNORED_PROPERTIES.add(ConfigTaskCreator.ALIAS_KEY);
+        IGNORED_PROPERTIES.add(ALIAS_KEY);
+        IGNORED_PROPERTIES.add(ConfigurationAdmin.SERVICE_FACTORYPID);
     }
 
     private static Set<String> collectKeys(final Dictionary<String, Object>a) {
@@ -69,8 +77,25 @@ abstract class ConfigUtil {
             final Set<String> keysB = collectKeys(b);
             if ( keysA.size() == keysB.size() && keysA.containsAll(keysB) ) {
                 for(final String key : keysA ) {
-                    if ( !a.get(key).equals(b.get(key)) ) {
-                        return result;
+                    final Object valA = a.get(key);
+                    final Object valB = b.get(key);
+                    if ( valA.getClass().isArray() ) {
+                        if ( !Arrays.equals((Object[])valA, (Object[])valB) ) {
+                            return result;
+                        }
+                    } else if ( valA instanceof Number ) {
+                        // JCR only supports Long but not Integer
+                        // therefore we have to add a special case here!
+                        if ( ! (valB instanceof Number) ) {
+                            return result;
+                        }
+                        if ( !(String.valueOf(valA).equals(String.valueOf(valB))) ) {
+                            return result;
+                        }
+                    } else {
+                        if ( !a.get(key).equals(b.get(key)) ) {
+                            return result;
+                        }
                     }
                 }
                 result = true;
@@ -98,8 +123,7 @@ abstract class ConfigUtil {
     public static Configuration getConfiguration(final ConfigurationAdmin ca,
             final String factoryPid,
             final String configPid,
-            final boolean createIfNeeded,
-            final boolean useAliasForFactory)
+            final boolean createIfNeeded)
     throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
@@ -115,11 +139,13 @@ abstract class ConfigUtil {
                 }
             }
         } else {
-            Configuration configs[] = ca.listConfigurations("(&("
-                    + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + factoryPid
-                    + ")(" + (useAliasForFactory ? ConfigTaskCreator.ALIAS_KEY : Constants.SERVICE_PID) + "=" + configPid
-                    + "))");
-
+            Configuration configs[] = null;
+            if ( configPid != null ) {
+                configs = ca.listConfigurations("(&("
+                        + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + factoryPid
+                        + ")(" + Constants.SERVICE_PID + "=" + configPid
+                        + "))");
+            }
             if (configs == null || configs.length == 0) {
                 if (createIfNeeded) {
                     result = ca.createFactoryConfiguration(factoryPid, null);

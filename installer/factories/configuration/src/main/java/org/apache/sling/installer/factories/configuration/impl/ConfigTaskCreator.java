@@ -44,8 +44,6 @@ import org.osgi.service.cm.ConfigurationListener;
 public class ConfigTaskCreator
     implements InstallTaskFactory, ConfigurationListener, ResourceTransformer {
 
-    public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
-
     /** Configuration admin. */
     private ConfigurationAdmin configAdmin;
 
@@ -90,7 +88,7 @@ public class ConfigTaskCreator
                 final Configuration config = ConfigUtil.getConfiguration(configAdmin,
                         event.getFactoryPid(),
                         event.getPid(),
-                        false, false);
+                        false);
                 if ( config != null ) {
                     final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
                     this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);

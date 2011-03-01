@@ -20,8 +20,6 @@ package org.apache.sling.installer.factories.configuration.impl;
 
 import java.io.IOException;
 import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
@@ -43,6 +41,9 @@ abstract class AbstractConfigTask extends InstallTask {
     /** Factory PID or null */
     protected final String factoryPid;
 
+    /** Alias factory pid or null. */
+    protected String aliasPid;
+
     /** Configuration admin. */
     private final ConfigurationAdmin configAdmin;
 
@@ -53,6 +54,11 @@ abstract class AbstractConfigTask extends InstallTask {
         this.configAdmin = configAdmin;
         this.configPid = (String)getResource().getAttribute(Constants.SERVICE_PID);
         this.factoryPid = (String)getResource().getAttribute(ConfigurationAdmin.SERVICE_FACTORYPID);
+        if ( r.getAlias() != null ) {
+            this.aliasPid = r.getAlias().substring(this.factoryPid.length() + 1);
+        } else {
+            this.aliasPid = null;
+        }
     }
 
     protected Logger getLogger() {
@@ -70,30 +76,20 @@ abstract class AbstractConfigTask extends InstallTask {
         return (factoryPid == null ? "" : factoryPid + ".") + configPid;
     }
 
-    protected Dictionary<String, Object> getDictionary() {
-        // Copy dictionary and add pseudo-properties
-        final Dictionary<String, Object> d = this.getResource().getDictionary();
-        if ( d == null ) {
+    protected String getCompositeAliasPid() {
+        if ( this.aliasPid == null || this.factoryPid == null ) {
             return null;
         }
+        return factoryPid + "." + this.aliasPid;
+    }
 
-        final Dictionary<String, Object> result = new Hashtable<String, Object>();
-        final Enumeration<String> e = d.keys();
-        while(e.hasMoreElements()) {
-            final String key = e.nextElement();
-            result.put(key, d.get(key));
-        }
-
-        if ( this.factoryPid != null ) {
-            result.put(ConfigTaskCreator.ALIAS_KEY, configPid);
-        }
-
-        return result;
+    protected Dictionary<String, Object> getDictionary() {
+        return this.getResource().getDictionary();
     }
 
     protected Configuration getConfiguration(final ConfigurationAdmin ca,
                                              final boolean createIfNeeded)
     throws IOException, InvalidSyntaxException {
-        return ConfigUtil.getConfiguration(ca, this.factoryPid, this.configPid, createIfNeeded, true);
+        return ConfigUtil.getConfiguration(ca, this.factoryPid, (this.factoryPid != null ? this.aliasPid : this.configPid), createIfNeeded);
     }
 }
