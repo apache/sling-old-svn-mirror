@@ -676,7 +676,15 @@ public class OsgiInstallerImpl
                 // we first check for update
                 boolean updated = false;
                 if ( erl != null && erl.getFirstResource() != null ) {
+                    // check digest for dictionaries
                     final TaskResource tr = erl.getFirstResource();
+                    if ( dict != null ) {
+                        final String digest = FileDataStore.computeDigest(dict);
+                        if ( tr.getState() == ResourceState.INSTALLED && tr.getDigest().equals(digest) ) {
+                            logger.debug("Resource did not change {}:{}", resourceType, resourceId);
+                            return;
+                        }
+                    }
                     final UpdateHandler handler = this.findHandler(tr.getScheme());
                     if ( handler == null ) {
                         logger.info("No handler found to handle update of resource with scheme {}", tr.getScheme());
