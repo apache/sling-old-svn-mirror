@@ -59,7 +59,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 created = true;
                 config = getConfiguration(ca, true);
             } else {
-    			if (isSameData(config.getProperties(), getResource().getDictionary())) {
+    			if (ConfigUtil.isSameData(config.getProperties(), getResource().getDictionary())) {
     			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
     	                        config.getPid(), getResource());
     				config = null;

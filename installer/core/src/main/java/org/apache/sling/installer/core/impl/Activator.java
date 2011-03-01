@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
@@ -56,19 +57,22 @@ public class Activator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
-        // register internal services
-        this.registerServices(context);
-
-        // register osgi installer service
+        // create osgi installer
         final Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installer Controller Service");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
 
         this.osgiControllerService = new OsgiInstallerImpl(context);
         this.osgiControllerService.setDaemon(true);
+
+        // register internal services
+        this.registerServices(context);
+
+        // start and register osgi installer service
         this.osgiControllerService.start();
         final String [] serviceInterfaces = {
-                OsgiInstaller.class.getName()
+                OsgiInstaller.class.getName(),
+                ResourceChangeListener.class.getName()
         };
         osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
 
@@ -148,7 +152,7 @@ public class Activator implements BundleActivator {
             }
             if ( serviceInterfaces != null ) {
                 this.services.add(service);
-                service.init(context);
+                service.init(context, this.osgiControllerService);
                 this.registrations.add(context.registerService(
                         serviceInterfaces, service, props));
             }

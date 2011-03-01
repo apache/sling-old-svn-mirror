@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TransformationResult;
@@ -38,9 +39,9 @@ public class DefaultTransformer
     implements InternalService, ResourceTransformer {
 
     /**
-     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
      */
-    public void init(final BundleContext bctx) {
+    public void init(final BundleContext bctx, final ResourceChangeListener rcl) {
         // nothing to do
     }
 

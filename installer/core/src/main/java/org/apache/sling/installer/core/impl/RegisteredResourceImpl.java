@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class RegisteredResourceImpl
 	private final String urlScheme;
 
 	/** The digest for the resource. */
-	private final String digest;
+	private String digest;
 
 	/** The entity id. */
 	private String entity;
@@ -68,7 +69,7 @@ public class RegisteredResourceImpl
 
 	private File dataFile;
 
-	private final int priority;
+	private int priority;
 
     private String resourceType;
 
@@ -501,5 +502,26 @@ public class RegisteredResourceImpl
         rr.update(transformationResult);
 
         return rr;
+    }
+
+    public void update(final File file,
+            final Dictionary<String, Object> dict,
+            final String digest,
+            final int priority) {
+        this.removeDataFile();
+        if ( file != null ) {
+            this.dataFile = file;
+        } else {
+            while ( !this.dictionary.isEmpty() ) {
+                this.dictionary.remove(this.dictionary.keys().nextElement());
+            }
+            final Enumeration<String> keys = dict.keys();
+            while ( keys.hasMoreElements() ) {
+                final String key = keys.nextElement();
+                this.dictionary.put(key, dict.get(key));
+            }
+        }
+        this.digest = digest;
+        this.priority = priority;
     }
 }

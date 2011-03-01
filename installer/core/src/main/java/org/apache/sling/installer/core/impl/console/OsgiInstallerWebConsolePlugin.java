@@ -125,8 +125,10 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                 state.installedResources.add(group);
             }
         }
+
         Collections.sort(state.activeResources, COMPARATOR);
         Collections.sort(state.installedResources, COMPARATOR);
+
         state.untransformedResources.addAll(this.installer.getPersistentResourceList().getUntransformedResources());
 
         return state;

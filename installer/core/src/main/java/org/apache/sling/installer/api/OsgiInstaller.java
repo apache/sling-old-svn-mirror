@@ -18,7 +18,6 @@
  */
 package org.apache.sling.installer.api;
 
-
 /**
  * OSGi Service that installs/updates/removes installable data
  * {@link InstallableResource} in the OSGi framework.
@@ -48,7 +47,7 @@ public interface OsgiInstaller {
 	 */
 	void registerResources(String urlScheme, InstallableResource[] resources);
 
-	/**
+    /**
 	 * Inform the installer that resources are available for installation
 	 * and/or other resources are no longer available.
 	 * This method is called if

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -67,9 +68,9 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
     private BundleContext bundleContext;
 
     /**
-     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
      */
-    public void init(final BundleContext bc) {
+    public void init(final BundleContext bc, final ResourceChangeListener listener) {
         this.bundleContext = bc;
         // create and start tracker
         this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);

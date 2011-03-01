@@ -80,8 +80,10 @@ public class SortingServiceTracker<T>
     public Object addingService(ServiceReference reference) {
         this.sortedServiceCache = null;
         this.sortedReferences = null;
-        // new factory or resource transformer has been added, wake up main thread
-        this.listener.wakeUp();
+        if ( listener != null ) {
+            // new factory or resource transformer has been added, wake up main thread
+            this.listener.wakeUp();
+        }
         return context.getService(reference);
     }
 

@@ -107,6 +107,16 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     /**
+     * Return the first resource or null
+     */
+    public TaskResource getFirstResource() {
+        if ( !resources.isEmpty() ) {
+            return resources.first();
+        }
+        return null;
+    }
+
+    /**
      * Set the finish state for the resource.
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
