@@ -39,7 +39,7 @@ public class ServerSideTestsBase extends SlingTestBase {
             throw new IllegalStateException("JUnit Servlet not ready: ", e);
         }
     }
-    
+
     private void checkJunitServletPresent() throws Exception {
         if(junitServletOk) {
             return;

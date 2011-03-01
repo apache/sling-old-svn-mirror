@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -54,6 +53,7 @@ public class SlingTestBase {
     protected static RequestExecutor executor = new RequestExecutor(httpClient);
     
     private static boolean serverStarted;
+    private static boolean serverStartedByThisClass;
     private static boolean serverReady;
     private static boolean serverReadyTestFailed;
     private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
@@ -62,12 +62,14 @@ public class SlingTestBase {
         try {
             startRunnableJar();
             waitForServerReady();
+            blockIfRequested();
         } catch(Exception e) {
-            throw new IllegalStateException("JUnit Servlet not ready: ", e);
+            throw new IllegalStateException("Exception in SlingTestBase constructor", e);
         }
     }
-    
-    public static synchronized void startRunnableJar() throws Exception {
+
+    /** Start the configured runnable jar and initialize our http client */
+    private synchronized void startRunnableJar() throws Exception {
         if(serverStarted) {
             return;
         }
@@ -81,23 +83,32 @@ public class SlingTestBase {
             log.info(TEST_SERVER_URL_PROP + " not set, starting server jar {}", j);
             j.start();
             serverBaseUrl = "http://localhost:" + j.getServerPort();
-            
-            // Optionally block here so that the runnable jar stays up - we can
-            // then run tests against it from another VM
-            if ("true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP))) {
-                log.info(KEEP_JAR_RUNNING_PROP + " set to true - entering infinite loop"
-                         + " so that runnable jar stays up. Kill this process to exit.");
-                while (true) {
-                    Thread.sleep(1000L);
-                }
-            }
+            serverStartedByThisClass = true;
         }
         
         serverStarted = true;
         builder = new RequestBuilder(serverBaseUrl);
     }
     
-    public void waitForServerReady() throws Exception {
+    /** Optionally block here so that the runnable jar stays up - we can 
+     *  then run tests against it from another VM.
+     */
+    private void blockIfRequested() {
+        if ("true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP))) {
+            log.info(KEEP_JAR_RUNNING_PROP + " set to true - entering infinite loop"
+                     + " so that runnable jar stays up. Kill this process to exit.");
+            synchronized (this) {
+                try {
+                    wait();
+                } catch(InterruptedException iex) {
+                    log.info("InterruptedException in blockIfRequested");
+                }
+            }
+        }
+    }
+    
+    /** Check a number of server URLs for readyness */
+    private void waitForServerReady() throws Exception {
         if(serverReady) {
             return;
         }
@@ -170,7 +181,13 @@ public class SlingTestBase {
      *  method. 
      */
     protected void onServerReady() throws Exception {
-        installExtraBundles();
+        if(serverStartedByThisClass) {
+            installExtraBundles();
+        } else {
+            // Assume extra bundles are already in place, avoid transient effects
+            // caused by updating them
+            log.info("Server was not started here, additional bundles will not be installed");
+        }
     }
     
     /** Install all bundles found under our additional bundles path */
@@ -239,5 +256,9 @@ public class SlingTestBase {
                 .withCredentials(ADMIN, ADMIN)
                 .withEntity(entity)
         ).assertStatus(302);
+    }
+    
+    protected boolean isServerStartedByThisClass() {
+        return serverStartedByThisClass;
     }
 }
