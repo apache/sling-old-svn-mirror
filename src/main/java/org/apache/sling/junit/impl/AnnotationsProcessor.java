@@ -37,6 +37,9 @@ public class AnnotationsProcessor implements TestObjectProcessor {
     
     protected void activate(ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
+        if(bundleContext == null) {
+            throw new IllegalArgumentException("Null BundleContext in activate()");
+        }
     }
     
     protected void deactivate(ComponentContext ctx) {
@@ -55,6 +58,10 @@ public class AnnotationsProcessor implements TestObjectProcessor {
     
     /** Process the TestReference annotation to inject services into fields */
     private void processTestReference(Object testObject, Field f) throws Exception {
+        if(bundleContext == null) {
+            throw new IllegalArgumentException("Null BundleContext in processTestReference(), not activated?");
+        }
+        
         final Class<?> serviceType = f.getType();
         final Object service = getService(serviceType);
         if(service != null) {
@@ -70,15 +77,13 @@ public class AnnotationsProcessor implements TestObjectProcessor {
     
     private Object getService(Class<?> c) {
         Object result = null;
-        if(bundleContext != null) {
-            // BundleContext is not a service, but can be injected
-            if(c.equals(BundleContext.class)) {
-                result = bundleContext;
-            } else {
-                ServiceReference ref = bundleContext.getServiceReference(c.getName());
-                if(ref != null) {
-                    result = bundleContext.getService(ref);
-                }
+        // BundleContext is not a service, but can be injected
+        if(c.equals(BundleContext.class)) {
+            result = bundleContext;
+        } else {
+            ServiceReference ref = bundleContext.getServiceReference(c.getName());
+            if(ref != null) {
+                result = bundleContext.getService(ref);
             }
         }
         return result;
