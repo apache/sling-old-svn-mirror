@@ -24,14 +24,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
+import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +49,7 @@ public class SlingTestBase {
     protected static RequestBuilder builder;
     protected static DefaultHttpClient httpClient = new DefaultHttpClient();
     protected static RequestExecutor executor = new RequestExecutor(httpClient);
-    
+    protected static WebconsoleClient webconsoleClient;
     private static boolean serverStarted;
     private static boolean serverStartedByThisClass;
     private static boolean serverReady;
@@ -88,6 +86,7 @@ public class SlingTestBase {
         
         serverStarted = true;
         builder = new RequestBuilder(serverBaseUrl);
+        webconsoleClient = new WebconsoleClient(executor, builder, ADMIN, ADMIN);
     }
     
     /** Optionally block here so that the runnable jar stays up - we can 
@@ -230,7 +229,7 @@ public class SlingTestBase {
             final String filenamePrefix = System.getProperty(key);
             for(String bundleFilename : bundleNames) {
                 if(bundleFilename.startsWith(filenamePrefix)) {
-                    installBundle(new File(dir, bundleFilename));
+                    webconsoleClient.installBundle(new File(dir, bundleFilename), true);
                     count++;
                 }
             }
@@ -239,25 +238,6 @@ public class SlingTestBase {
         log.info("{} additional bundles installed from {}", count, dir.getAbsolutePath());
     }
  
-    /** Install a bundle using the Felix webconsole HTTP interface */
-    protected void installBundle(File f) throws Exception {
-        log.info("Installing additional bundle {}", f.getName());
-        
-        // Setup request for Felix Webconsole bundle install
-        final MultipartEntity entity = new MultipartEntity();
-        entity.addPart("action",new StringBody("install"));
-        entity.addPart("bundlestart", new StringBody("true"));
-        entity.addPart("bundlefile", new FileBody(f));
-        
-        // Console returns a 302 on success (and in a POST this
-        // is not handled automatically as per HTTP spec)
-        executor.execute(
-                builder.buildPostRequest("/system/console/bundles")
-                .withCredentials(ADMIN, ADMIN)
-                .withEntity(entity)
-        ).assertStatus(302);
-    }
-    
     protected boolean isServerStartedByThisClass() {
         return serverStartedByThisClass;
     }
