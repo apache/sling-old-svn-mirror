@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
@@ -819,7 +818,7 @@ public class OsgiInstallerImpl
     private UpdateHandler findHandler(final String scheme) {
         final List<ServiceReference> references = this.updateHandlerTracker.getSortedServiceReferences();
         for(final ServiceReference ref : references) {
-            final String[] supportedSchemes = OsgiUtil.toStringArray(ref.getProperty(UpdateHandler.PROPERTY_SCHEMES));
+            final String[] supportedSchemes = toStringArray(ref.getProperty(UpdateHandler.PROPERTY_SCHEMES));
             if ( supportedSchemes != null ) {
                 for(final String support : supportedSchemes ) {
                     if ( scheme.equals(support) ) {
@@ -827,6 +826,25 @@ public class OsgiInstallerImpl
                     }
                 }
             }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the parameter as an array of Strings.
+     */
+    public static String[] toStringArray(final Object propValue) {
+        if (propValue == null) {
+            return null;
+
+        } else if (propValue instanceof String) {
+            // single string
+            return new String[] { (String) propValue };
+
+        } else if (propValue instanceof String[]) {
+            // String[]
+            return (String[]) propValue;
+
         }
         return null;
     }

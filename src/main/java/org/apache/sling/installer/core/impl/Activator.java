@@ -27,7 +27,6 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
-import org.apache.sling.installer.core.impl.config.ConfigTaskCreator;
 import org.apache.sling.installer.core.impl.console.OsgiInstallerWebConsolePlugin;
 import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
 import org.osgi.framework.BundleActivator;
@@ -121,7 +120,6 @@ public class Activator implements BundleActivator {
 
         final Class<?>[] serviceClasses = new Class<?>[] {
             BundleTaskCreator.class,
-            ConfigTaskCreator.class,
             DefaultTransformer.class
         };
         for(final Class<?> serviceClass : serviceClasses) {
