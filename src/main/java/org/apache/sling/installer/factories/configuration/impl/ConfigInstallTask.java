@@ -67,12 +67,15 @@ public class ConfigInstallTask extends AbstractConfigTask {
                 }
                 config.update(getDictionary());
                 ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
-                this.setFinishedState(ResourceState.INSTALLED);
+                if ( this.factoryPid != null ) {
+                    this.aliasPid = config.getPid();
+                }
+                this.setFinishedState(ResourceState.INSTALLED, this.getCompositeAliasPid());
                 this.getLogger().debug("Configuration " + config.getPid()
                             + " " + (created ? "created" : "updated")
                             + " from " + getResource());
             } else {
-                this.setFinishedState(ResourceState.IGNORED);
+                this.setFinishedState(ResourceState.IGNORED, this.getCompositeAliasPid());
             }
         } catch (Exception e) {
             this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
