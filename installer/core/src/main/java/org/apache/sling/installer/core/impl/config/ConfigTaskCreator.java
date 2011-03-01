@@ -87,7 +87,7 @@ public class ConfigTaskCreator
         this.bundleContext = null;
     }
 
-    /**dann
+    /**
      * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
      */
     public String getDescription() {
