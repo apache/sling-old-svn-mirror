@@ -84,7 +84,6 @@ abstract class AbstractConfigTask extends InstallTask {
             result.put(key, d.get(key));
         }
 
-        result.put(ConfigTaskCreator.CONFIG_PATH_KEY, getResource().getURL());
         if ( this.factoryPid != null ) {
             result.put(ConfigTaskCreator.ALIAS_KEY, configPid);
         }

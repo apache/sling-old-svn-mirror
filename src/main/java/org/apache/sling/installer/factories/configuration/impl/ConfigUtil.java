@@ -35,11 +35,17 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 abstract class ConfigUtil {
 
+    /**
+     * This property has been used in older versions to keep track where the
+     * configuration has been installed from.
+     */
+    private static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
+
     /** Configuration properties to ignore when comparing configs */
     private static final Set<String> IGNORED_PROPERTIES = new HashSet<String>();
     static {
         IGNORED_PROPERTIES.add(Constants.SERVICE_PID);
-        IGNORED_PROPERTIES.add(ConfigTaskCreator.CONFIG_PATH_KEY);
+        IGNORED_PROPERTIES.add(CONFIG_PATH_KEY);
         IGNORED_PROPERTIES.add(ConfigTaskCreator.ALIAS_KEY);
     }
 

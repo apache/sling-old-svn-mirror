@@ -45,7 +45,6 @@ public class ConfigTaskCreator
     implements InstallTaskFactory, ConfigurationListener, ResourceTransformer {
 
     public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
-    public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
 
     /** Configuration admin. */
     private ConfigurationAdmin configAdmin;
