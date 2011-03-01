@@ -42,6 +42,10 @@ import java.util.Dictionary;
  * client from having any knowledge about the provided data.
  * However, if the client has the knowledge about the data it can
  * provided a specific resource type.
+ *
+ * The provider should provide a digest for files (input streams).
+ * The installer will calculate a digest for dictionaries, regardless
+ * if the provider provided a dictionary.
  */
 public class InstallableResource {
 
@@ -102,7 +106,7 @@ public class InstallableResource {
      * @param dict A dictionary with data
      * @param digest A digest of the data - providers should make sure to set
      *               a digest. Calculating a digest by the installer can be very
-     *               expensive.
+     *               expensive for input streams
      * @param type The resource type if known, otherwise {@link #TYPE_PROPERTIES}
      *             or {@link #TYPE_FILE}
      * @param priority Optional priority - if not specified {@link #DEFAULT_PRIORITY}

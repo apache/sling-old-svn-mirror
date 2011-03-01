@@ -77,8 +77,8 @@ public class InternalResource extends InstallableResource {
         if ( is == null ) {
             // if input stream is null, properties is expected!
             type = (type != null ? type : InstallableResource.TYPE_PROPERTIES);
-            digest = (resource.getDigest() != null && resource.getDigest().length() > 0
-                      ? resource.getDigest() : resource.getId() + ":" + FileDataStore.computeDigest(dict));
+            // we always compute a digest
+            digest = FileDataStore.computeDigest(dict);
         } else {
             final String url = scheme + ':' + resource.getId();
             // if input stream is not null, file is expected!
