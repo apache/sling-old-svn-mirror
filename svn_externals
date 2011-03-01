@@ -66,11 +66,11 @@ installer/it                                   http://svn.apache.org/repos/asf/i
 launchpad/api                                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.api-1.0.0
 launchpad/base                                 http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.base-2.3.0
 ##launchpad/builder                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad-6
-launchpad/content                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.4-incubator
+##launchpad/content                              http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.6
 launchpad/installer                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.installer-1.0.0
-##launchpad/integration-tests                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.integration-tests-0.0.1
+launchpad/integration-tests                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.0
 ##launchpad/testing                            http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-6
 ##launchpad/testing-war                        http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-war-6
-##launchpad/test-services                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.8
-##launchpad/test-services-war                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.8
+launchpad/test-services                      http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.8
+launchpad/test-services-war                  http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-war-2.0.8
 
