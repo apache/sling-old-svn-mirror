@@ -38,18 +38,31 @@
         bundles and server-side scriptable tests.
     </description>
     
+    <!-- 
+        To keep the instance under test running and run individual tests
+        against it, use:
+        
+            mvn clean test -DkeepJarRunning=true -Dhttp.port=8080
+            
+        optionally using jar.executor.vm.options to enable remote debugging,
+        and in another console:
+        
+            mvn -o test -Dtest=**Test -Dtest.server.url=http://localhost:8080
+            
+        optionally using -Dmaven.surefire.debug to enable debugging.            
+     -->
     <properties>
         <!-- Set this to run the server on a specific port -->
         <http.port></http.port>
         
         <!-- Set this to run tests against an existing server instance -->
+        <keepJarRunning>false</keepJarRunning>
+        
+        <!-- URL of a server against which to run tests -->
         <test.server.url></test.server.url>
         
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
-        
-        <!-- Set this to true to keep the runnable jar running - useful to debug tests -->
-        <keepJarRunning>false</keepJarRunning>
         
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
