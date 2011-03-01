@@ -58,6 +58,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /** Base class for OsgiInstaller testing */
 class OsgiInstallerTestBase implements FrameworkListener {
 	private final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
+    private final static String CONFIG_VERSION = System.getProperty("installer.configuration.version");
 
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
@@ -380,10 +381,12 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
 
                 provision(
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
-        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
-        	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
-        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION)
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
+        	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "2.1.2"),
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
+                        mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
         		)
         );
     }

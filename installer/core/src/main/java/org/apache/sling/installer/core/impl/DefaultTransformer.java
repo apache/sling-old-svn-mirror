@@ -28,12 +28,10 @@ import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * The default transformer transforms:
  * - file resources containing a bundle into OSGI bundle resources
- * - properties resources with specific extensions into OSGi configurations
  */
 public class DefaultTransformer
     implements InternalService, ResourceTransformer {
@@ -65,8 +63,6 @@ public class DefaultTransformer
     public TransformationResult[] transform(final RegisteredResource resource) {
         if ( resource.getType().equals(InstallableResource.TYPE_FILE) ) {
             return checkBundle(resource);
-        } else if ( resource.getType().equals(InstallableResource.TYPE_PROPERTIES) ) {
-            return checkConfiguration(resource);
         }
         return null;
     }
@@ -95,75 +91,5 @@ public class DefaultTransformer
             return new TransformationResult[] {tr};
         }
         return null;
-    }
-
-    /**
-     * Check if the registered resource is a configuration
-     * @param resource The resource
-     */
-    private TransformationResult[] checkConfiguration(final RegisteredResource resource) {
-        final String url = resource.getURL();
-        String lastIdPart = url;
-        final int pos = lastIdPart.lastIndexOf('/');
-        if ( pos != -1 ) {
-            lastIdPart = lastIdPart.substring(pos + 1);
-        }
-
-        final String pid;
-        // remove extension if known
-        if ( isConfigExtension(getExtension(lastIdPart)) ) {
-            final int lastDot = lastIdPart.lastIndexOf('.');
-            pid = lastIdPart.substring(0, lastDot);
-        } else {
-            pid = lastIdPart;
-        }
-
-        // split pid and factory pid alias
-        final String factoryPid;
-        final String configPid;
-        int n = pid.indexOf('-');
-        if (n > 0) {
-            configPid = pid.substring(n + 1);
-            factoryPid = pid.substring(0, n);
-        } else {
-            factoryPid = null;
-            configPid = pid;
-        }
-
-        final Map<String, Object> attr = new HashMap<String, Object>();
-
-        attr.put(Constants.SERVICE_PID, configPid);
-        // Factory?
-        if (factoryPid != null) {
-            attr.put(ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid);
-        }
-
-        final TransformationResult tr = new TransformationResult();
-        final String id = (factoryPid == null ? "" : factoryPid + ".") + configPid;
-        tr.setId(id);
-        tr.setResourceType(InstallableResource.TYPE_CONFIG);
-        tr.setAttributes(attr);
-
-        return new TransformationResult[] {tr};
-    }
-
-
-
-    /**
-     * Compute the extension
-     */
-    private static String getExtension(String url) {
-        final int pos = url.lastIndexOf('.');
-        return (pos < 0 ? "" : url.substring(pos+1));
-    }
-
-    private static boolean isConfigExtension(String extension) {
-        if ( extension.equals("cfg")
-                || extension.equals("config")
-                || extension.equals("xml")
-                || extension.equals("properties")) {
-            return true;
-        }
-        return false;
     }
 }

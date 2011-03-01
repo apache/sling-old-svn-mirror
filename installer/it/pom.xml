@@ -84,7 +84,11 @@
                         </property>
                         <property>
                             <name>osgi.installer.pom.version</name>
-                            <value>${pom.version}</value>
+                            <value>${project.version}</value>
+                        </property>
+                        <property>
+                            <name>installer.configuration.version</name>
+                            <value>0.9.0-SNAPSHOT</value>
                         </property>
                         <property>
                             <name>osgi.installer.base.dir</name>
@@ -398,7 +402,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>          
         <dependency>
