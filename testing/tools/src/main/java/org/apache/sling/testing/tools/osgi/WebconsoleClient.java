@@ -21,6 +21,7 @@ import java.io.File;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.slf4j.Logger;
@@ -34,9 +35,9 @@ public class WebconsoleClient {
     private final String username;
     private final String password;
     
-    public WebconsoleClient(RequestExecutor executor, RequestBuilder builder, String username, String password) {
-        this.executor = executor;
-        this.builder = builder;
+    public WebconsoleClient(String slingServerUrl, String username, String password) {
+        this.builder = new RequestBuilder(slingServerUrl);
+        this.executor = new RequestExecutor(new DefaultHttpClient());
         this.username = username;
         this.password = password;
     }
