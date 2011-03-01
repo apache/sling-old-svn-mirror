@@ -60,7 +60,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
                 if ( cfg.getProperties().get(ConfigTaskCreator.CONFIG_PATH_KEY) == null ) {
                     this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
                     this.setFinishedState(ResourceState.IGNORED);
-                } else if ( !isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
+                } else if ( !ConfigUtil.isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
                     this.getLogger().debug("Configuration has changed after it has been installed. Not removing!");
                     this.setFinishedState(ResourceState.IGNORED);
                 } else {

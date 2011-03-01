@@ -19,20 +19,13 @@
 package org.apache.sling.installer.core.impl;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.installer.api.InstallableResource;
@@ -85,7 +78,7 @@ public class InternalResource extends InstallableResource {
             // if input stream is null, properties is expected!
             type = (type != null ? type : InstallableResource.TYPE_PROPERTIES);
             digest = (resource.getDigest() != null && resource.getDigest().length() > 0
-                      ? resource.getDigest() : resource.getId() + ":" + computeDigest(dict));
+                      ? resource.getDigest() : resource.getId() + ":" + FileDataStore.computeDigest(dict));
         } else {
             final String url = scheme + ':' + resource.getId();
             // if input stream is not null, file is expected!
@@ -97,7 +90,7 @@ public class InternalResource extends InstallableResource {
             if (resource.getDigest() != null && resource.getDigest().length() > 0) {
                 digest = resource.getDigest();
             } else {
-                digest = computeDigest(dataFile);
+                digest = FileDataStore.computeDigest(dataFile);
                 FileDataStore.SHARED.updateDigestCache(url, digest);
             }
         }
@@ -117,7 +110,7 @@ public class InternalResource extends InstallableResource {
     /** The data file (if copied) */
     private File dataFile;
 
-    private InternalResource(
+    public InternalResource(
             final String scheme,
             final String id,
             final InputStream is,
@@ -159,39 +152,6 @@ public class InternalResource extends InstallableResource {
      */
     public File getPrivateCopyOfFile() throws IOException {
         return this.dataFile;
-    }
-
-    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
-    private static String digestToString(MessageDigest d) {
-        final BigInteger bigInt = new BigInteger(1, d.digest());
-        return new String(bigInt.toString(16));
-    }
-
-    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
-    private static String computeDigest(Dictionary<String, Object> data) {
-        try {
-            final MessageDigest d = MessageDigest.getInstance("MD5");
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            final ObjectOutputStream oos = new ObjectOutputStream(bos);
-
-            final SortedSet<String> sortedKeys = new TreeSet<String>();
-            if(data != null) {
-                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
-                    final String key = e.nextElement();
-                    sortedKeys.add(key);
-                }
-            }
-            for(String key : sortedKeys) {
-                oos.writeObject(key);
-                oos.writeObject(data.get(key));
-            }
-
-            bos.flush();
-            d.update(bos.toByteArray());
-            return digestToString(d);
-        } catch (Exception ignore) {
-            return data.toString();
-        }
     }
 
     /**
@@ -245,29 +205,6 @@ public class InternalResource extends InstallableResource {
     private static boolean isConfigExtension(final String url) {
         final String ext = getExtension(url);
         return "config".equals(ext) || "properties".equals(ext) || "cfg".equals(ext);
-    }
-
-    /** Digest is needed to detect changes in data */
-    private static String computeDigest(final File data) throws IOException {
-        try {
-            final InputStream is = new FileInputStream(data);
-            try {
-                final MessageDigest d = MessageDigest.getInstance("MD5");
-
-                final byte[] buffer = new byte[8192];
-                int count = 0;
-                while( (count = is.read(buffer, 0, buffer.length)) > 0) {
-                    d.update(buffer, 0, count);
-                }
-                return digestToString(d);
-            } finally {
-                is.close();
-            }
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (Exception ignore) {
-            return data.toString();
-        }
     }
 
     /**

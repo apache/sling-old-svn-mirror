@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,8 +34,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.ResourceChangeListener;
+import org.apache.sling.installer.api.UpdateHandler;
+import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -65,7 +70,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OsgiInstallerImpl
     extends Thread
-    implements BundleListener, FrameworkListener, OsgiInstaller {
+    implements BundleListener, FrameworkListener, OsgiInstaller, ResourceChangeListener {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -99,6 +104,9 @@ public class OsgiInstallerImpl
 
     /** A tracker for the transformers. */
     private SortingServiceTracker<ResourceTransformer> transformerTracker;
+
+    /** A tracker for update handlers. */
+    private SortingServiceTracker<UpdateHandler> updateHandlerTracker;
 
     /** New resources lock. */
     private final Object resourcesLock = new Object();
@@ -150,6 +158,8 @@ public class OsgiInstallerImpl
         this.factoryTracker.open();
         this.transformerTracker = new SortingServiceTracker<ResourceTransformer>(ctx, ResourceTransformer.class.getName(), this);
         this.transformerTracker.open();
+        this.updateHandlerTracker = new SortingServiceTracker<UpdateHandler>(ctx, UpdateHandler.class.getName(), null);
+        this.updateHandlerTracker.open();
 
         // listen to framework and bundle events
         this.ctx.addFrameworkListener(this);
@@ -648,5 +658,176 @@ public class OsgiInstallerImpl
         synchronized (this.resourcesLock) {
             this.resourcesLock.notify();
         }
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary)
+     */
+    public void resourceAddedOrUpdated(final String resourceType,
+            final String resourceId,
+            final InputStream is,
+            final Dictionary<String, Object> dict) {
+        final String key = resourceType + ':' + resourceId;
+        try {
+            final ResourceData data = ResourceData.create(is, dict);
+            synchronized ( this.resourcesLock ) {
+                final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
+                logger.info("Added or updated {}:{}: {}", new Object[] {resourceType, resourceId, erl});
+
+                // we first check for update
+                boolean updated = false;
+                if ( erl != null && erl.getFirstResource() != null ) {
+                    final TaskResource tr = erl.getFirstResource();
+                    final UpdateHandler handler = this.findHandler(tr.getScheme());
+                    if ( handler == null ) {
+                        logger.info("No handler found to handle update of resource with scheme {}", tr.getScheme());
+                    } else {
+                        final InputStream localIS = data.getInputStream();
+                        try {
+                            final UpdateResult result = handler.handleUpdate(resourceType, resourceId, tr.getURL(), localIS, data.getDictionary());
+                            if ( result != null ) {
+                                ((RegisteredResourceImpl)tr).update(
+                                        data.getDataFile(), data.getDictionary(),
+                                        data.getDigest(result.getURL(), result.getDigest()),
+                                        result.getPriority());
+                                // TODO : Handle move and add
+                                updated = true;
+                                // We first set the state of the resource to install to make setFinishState work in all cases
+                                ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                                erl.setFinishState(ResourceState.INSTALLED);
+                                erl.compact();
+                                this.persistentList.save();
+                                this.wakeUp();
+                            }
+                        } finally {
+                            if ( localIS != null ) {
+                                // always close the input stream!
+                                try {
+                                    localIS.close();
+                                } catch (final IOException ignore) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                boolean created = false;
+                if ( !updated ) {
+                    // create
+                    final List<UpdateHandler> handlerList = this.updateHandlerTracker.getSortedServices();
+                    for(final UpdateHandler handler : handlerList) {
+                        final InputStream localIS = data.getInputStream();
+                        try {
+                            final UpdateResult result = handler.handleUpdate(resourceType, resourceId, null, localIS, data.getDictionary());
+                            if ( result != null ) {
+                                final InternalResource internalResource = new InternalResource(result.getScheme(),
+                                        result.getResourceId(),
+                                        null,
+                                        data.getDictionary(),
+                                        (data.getDictionary() != null ? InstallableResource.TYPE_PROPERTIES : InstallableResource.TYPE_FILE),
+                                        data.getDigest(result.getURL(), result.getDigest()),
+                                        result.getPriority(),
+                                        data.getDataFile());
+                                final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
+                                final TransformationResult transRes = new TransformationResult();
+                                transRes.setId(resourceId);
+                                transRes.setResourceType(resourceType);
+                                this.persistentList.transform(rr, new TransformationResult[] {
+                                        transRes
+                                });
+                                this.persistentList.save();
+                                created = true;
+                                this.wakeUp();
+                                break;
+                            }
+                        } finally {
+                            if ( localIS != null ) {
+                                // always close the input stream!
+                                try {
+                                    localIS.close();
+                                } catch (final IOException ignore) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+                    if ( !created ) {
+                        logger.info("No handler found to handle creation of resource {}:{}", resourceType, resourceId);
+                    }
+                }
+
+            }
+        } catch (final IOException ioe) {
+            logger.error("Unable to handle resource add or update of " + key, ioe);
+        } finally {
+            // always close the input stream!
+            if ( is != null ) {
+                try {
+                    is.close();
+                } catch (final IOException ignore) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
+     */
+    public void resourceRemoved(final String resourceType, final String resourceId) {
+        final String key = resourceType + ':' + resourceId;
+        synchronized ( this.resourcesLock ) {
+            final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
+            logger.info("Removed {}:{}: {}", new Object[] {resourceType, resourceId, erl});
+            // if this is not registered at all, we can simply ignore this
+            if ( erl != null ) {
+                final TaskResource tr = erl.getFirstResource();
+                if ( tr != null ) {
+                    if ( tr.getState() != ResourceState.IGNORED ) {
+                        final UpdateHandler handler = this.findHandler(tr.getScheme());
+                        if ( handler == null ) {
+                            logger.info("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                        } else {
+                            // we don't need to check the result, we just check if a result is returned
+                            if ( handler.handleUpdate(resourceType, resourceId, tr.getURL(), null, null) != null ) {
+                                // We first set the state of the resource to uninstall to make setFinishState work in all cases
+                                ((RegisteredResourceImpl)tr).setState(ResourceState.UNINSTALL);
+                                erl.setFinishState(ResourceState.UNINSTALLED);
+                                erl.compact();
+                                this.persistentList.save();
+                                this.wakeUp();
+                            } else {
+                                logger.info("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                            }
+                        }
+                    } else {
+                        // if it has been ignored before, we activate it now again!
+                        ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                        this.persistentList.save();
+                        this.wakeUp();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Search a handler for the scheme.
+     */
+    private UpdateHandler findHandler(final String scheme) {
+        final List<ServiceReference> references = this.updateHandlerTracker.getSortedServiceReferences();
+        for(final ServiceReference ref : references) {
+            final String[] supportedSchemes = OsgiUtil.toStringArray(ref.getProperty(UpdateHandler.PROPERTY_SCHEMES));
+            if ( supportedSchemes != null ) {
+                for(final String support : supportedSchemes ) {
+                    if ( scheme.equals(support) ) {
+                        return (UpdateHandler) this.updateHandlerTracker.getService(ref);
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

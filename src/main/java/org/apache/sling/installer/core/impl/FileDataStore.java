@@ -19,13 +19,22 @@
 package org.apache.sling.installer.core.impl;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.osgi.framework.BundleContext;
 import org.slf4j.LoggerFactory;
@@ -191,6 +200,62 @@ public class FileDataStore {
                 LoggerFactory.getLogger(this.getClass()).warn("Remove {} : {}", url, digest);
                 this.digestCache.remove(url);
             }
+        }
+    }
+
+    /** Digest is needed to detect changes in data */
+    public static String computeDigest(final File data) throws IOException {
+        try {
+            final InputStream is = new FileInputStream(data);
+            try {
+                final MessageDigest d = MessageDigest.getInstance("MD5");
+
+                final byte[] buffer = new byte[8192];
+                int count = 0;
+                while( (count = is.read(buffer, 0, buffer.length)) > 0) {
+                    d.update(buffer, 0, count);
+                }
+                return digestToString(d);
+            } finally {
+                is.close();
+            }
+        } catch (IOException ioe) {
+            throw ioe;
+        } catch (Exception ignore) {
+            return data.toString();
+        }
+    }
+
+    /** convert digest to readable string (http://www.javalobby.org/java/forums/t84420.html) */
+    private static String digestToString(MessageDigest d) {
+        final BigInteger bigInt = new BigInteger(1, d.digest());
+        return new String(bigInt.toString(16));
+    }
+
+    /** Digest is needed to detect changes in data, and must not depend on dictionary ordering */
+    public static String computeDigest(Dictionary<String, Object> data) {
+        try {
+            final MessageDigest d = MessageDigest.getInstance("MD5");
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutputStream oos = new ObjectOutputStream(bos);
+
+            final SortedSet<String> sortedKeys = new TreeSet<String>();
+            if(data != null) {
+                for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
+                    final String key = e.nextElement();
+                    sortedKeys.add(key);
+                }
+            }
+            for(String key : sortedKeys) {
+                oos.writeObject(key);
+                oos.writeObject(data.get(key));
+            }
+
+            bos.flush();
+            d.update(bos.toByteArray());
+            return digestToString(d);
+        } catch (Exception ignore) {
+            return data.toString();
         }
     }
 }

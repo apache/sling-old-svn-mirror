@@ -149,29 +149,23 @@ public class PersistentResourceList {
      * Add or update an installable resource.
      * @param input The installable resource
      */
-    public void addOrUpdate(final InternalResource input) {
-        boolean found = false;
+    public RegisteredResource addOrUpdate(final InternalResource input) {
         // first check if there are resources with the same url and digest
         for(final EntityResourceList group : this.data.values()) {
             for(final RegisteredResource rr : group.getResources()) {
                 if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {
-                    found = true;
-                    break;
+                    // if we found the resource we can immediately return
+                    return rr;
                 }
             }
-            if ( found ) {
-                break;
-            }
-        }
-        // if we found the resource we can immediately return
-        if ( found ) {
-            return;
         }
         try {
             final TaskResource registeredResource = RegisteredResourceImpl.create(input);
             this.checkInstallable(registeredResource);
+            return registeredResource;
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + input.getURL(), ioe);
+            return null;
         }
     }
 

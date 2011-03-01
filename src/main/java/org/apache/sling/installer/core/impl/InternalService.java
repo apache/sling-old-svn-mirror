@@ -18,6 +18,7 @@
  */
 package org.apache.sling.installer.core.impl;
 
+import org.apache.sling.installer.api.ResourceChangeListener;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -25,7 +26,7 @@ import org.osgi.framework.BundleContext;
  */
 public interface InternalService {
 
-    void init(BundleContext bctx);
+    void init(BundleContext bctx, ResourceChangeListener listener);
 
     void deactivate();
 

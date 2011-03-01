@@ -18,7 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.config;
 
+import java.util.Dictionary;
+
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -26,13 +29,18 @@ import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Task creator for configurations.
  */
-public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
+public class ConfigTaskCreator
+    implements InternalService, InstallTaskFactory, ConfigurationListener {
 
     public static final String ALIAS_KEY = "org.apache.sling.installer.osgi.factoryaliaspid";
     public static final String CONFIG_PATH_KEY = "org.apache.sling.installer.osgi.path";
@@ -44,12 +52,23 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
     /** Service tracker for the configuration admin. */
     private ServiceTracker configAdminServiceTracker;
 
+    /** Resource change listener. */
+    private ResourceChangeListener changeListener;
+
+    /** Service registration. */
+    private ServiceRegistration listenerReg;
+
+    private BundleContext bundleContext;
+
     /**
-     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext)
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
      */
-    public void init(final BundleContext bc) {
+    public void init(final BundleContext bc, final ResourceChangeListener listener) {
+        this.changeListener = listener;
         this.configAdminServiceTracker = new ServiceTracker(bc, CONFIG_ADMIN_SERVICE_NAME, null);
         this.configAdminServiceTracker.open();
+        listenerReg = bc.registerService(ConfigurationListener.class.getName(), this, null);
+        this.bundleContext = bc;
     }
 
     /**
@@ -60,9 +79,15 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
             this.configAdminServiceTracker.close();
             this.configAdminServiceTracker = null;
         }
+        if ( this.listenerReg != null ) {
+            this.listenerReg.unregister();
+            this.listenerReg = null;
+        }
+        this.changeListener = null;
+        this.bundleContext = null;
     }
 
-    /**
+    /**dann
      * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
      */
     public String getDescription() {
@@ -91,4 +116,31 @@ public class ConfigTaskCreator implements InternalService, InstallTaskFactory {
 		}
 		return result;
 	}
+
+    /**
+     * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
+     */
+    @SuppressWarnings("unchecked")
+    public void configurationEvent(final ConfigurationEvent event) {
+        final String id = (event.getFactoryPid() == null ? "" : event.getFactoryPid() + ".") + event.getPid();
+        if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
+            this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+        } else {
+            final ConfigurationAdmin configAdmin = (ConfigurationAdmin) this.bundleContext.getService(event.getReference());
+            if ( configAdmin != null ) {
+                try {
+                    final Configuration config = ConfigUtil.getConfiguration(configAdmin,
+                            event.getFactoryPid(),
+                            event.getPid(),
+                            false, false);
+                    if ( config != null ) {
+                        final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
+                        this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+                    }
+                } catch ( final Exception ignore) {
+                    // ignore for now (TODO)
+                }
+            }
+        }
+    }
 }
