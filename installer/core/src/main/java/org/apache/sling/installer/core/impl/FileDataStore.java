@@ -240,15 +240,20 @@ public class FileDataStore {
             final ObjectOutputStream oos = new ObjectOutputStream(bos);
 
             final SortedSet<String> sortedKeys = new TreeSet<String>();
-            if(data != null) {
+            if (data != null) {
                 for(Enumeration<String> e = data.keys(); e.hasMoreElements(); ) {
                     final String key = e.nextElement();
                     sortedKeys.add(key);
                 }
             }
-            for(String key : sortedKeys) {
+            for(final String key : sortedKeys) {
                 oos.writeObject(key);
-                oos.writeObject(data.get(key));
+                final Object val = data.get(key);
+                if ( val instanceof Number ) {
+                    oos.writeObject(String.valueOf(val));
+                } else {
+                    oos.writeObject(val);
+                }
             }
 
             bos.flush();
