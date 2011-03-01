@@ -86,7 +86,7 @@ public class SlingTestBase {
         
         serverStarted = true;
         builder = new RequestBuilder(serverBaseUrl);
-        webconsoleClient = new WebconsoleClient(executor, builder, ADMIN, ADMIN);
+        webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
     }
     
     /** Optionally block here so that the runnable jar stays up - we can 
