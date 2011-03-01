@@ -1,10 +1,2 @@
-Recreating the site project
----------------------------
-
-The site project currently only contains the new and old logos. It will
-later be used to generate the JavaDoc to be integrated with the Site
-exported from Confluence.
-
-Currently this project is just the hold of the logos ....
-
-fmeschbe, 2008/01/19
+Working on the conversion of the Sling website to the ASF CMS,
+see https://issues.apache.org/jira/browse/SLING-2002
