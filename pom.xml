@@ -14,8 +14,7 @@
     License for the specific language governing permissions and
     limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -27,7 +26,7 @@
 
   <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>Apache Sling Integration Tests</name>
   <description>
@@ -40,10 +39,10 @@
     <http.port>8080</http.port>
 
     <!-- path suffix for HTTP access to Sling test instance -->
-    <http.base.path/>
+    <http.base.path />
 
     <!-- path suffix for WebDAV access to Sling test instance -->
-    <webdav.workspace.path/>
+    <webdav.workspace.path />
 
     <!-- hostname of Sling instance to test -->
     <test.host>localhost</test.host>
@@ -53,9 +52,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/integration-tests</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/integration-tests</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.integration-tests-1.0.0</url>
   </scm>
 
   <profiles>
