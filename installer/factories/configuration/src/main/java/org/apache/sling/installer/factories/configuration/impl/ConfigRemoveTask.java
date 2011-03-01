@@ -52,10 +52,7 @@ public class ConfigRemoveTask extends AbstractConfigTask {
                 this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
                 this.setFinishedState(ResourceState.IGNORED);
             } else {
-                if ( cfg.getProperties().get(ConfigTaskCreator.CONFIG_PATH_KEY) == null ) {
-                    this.getLogger().debug("Configuration has not been installed by this resource. Not removing!");
-                    this.setFinishedState(ResourceState.IGNORED);
-                } else if ( !ConfigUtil.isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
+                if ( !ConfigUtil.isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
                     this.getLogger().debug("Configuration has changed after it has been installed. Not removing!");
                     this.setFinishedState(ResourceState.IGNORED);
                 } else {
