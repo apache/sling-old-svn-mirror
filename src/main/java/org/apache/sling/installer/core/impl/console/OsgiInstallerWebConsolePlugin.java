@@ -148,13 +148,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return type;
     }
 
-    private String getEntityId(final RegisteredResource rsrc) {
+    private String getEntityId(final RegisteredResource rsrc, String alias) {
         String id = rsrc.getEntityId();
         final int pos = id.indexOf(':');
         if ( pos != -1 ) {
             id = id.substring(pos + 1);
         }
-        return id;
+        return (alias == null ? id : id + '\n' + alias);
     }
 
     /** Default date format used. */
@@ -196,7 +196,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     rt = toActivate.getType();
                 }
                 pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                        getEntityId(toActivate),
+                        getEntityId(toActivate, group.getAlias()),
                         toActivate.getDigest(),
                         toActivate.getURL(),
                         toActivate.getState());
@@ -223,7 +223,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         rt = first.getType();
                     }
                     pw.print("<tr><td>");
-                    pw.print(getEntityId(first));
+                    pw.print(getEntityId(first, group.getAlias()));
                     pw.print("</td><td>");
                     pw.print(first.getDigest());
                     pw.print("</td><td>");
@@ -297,7 +297,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     rt = toActivate.getType();
                 }
                 pw.printf("- %s: %s, %s, %s%n",
-                        getEntityId(toActivate),
+                        getEntityId(toActivate, group.getAlias()),
                         toActivate.getDigest(),
                         toActivate.getURL(),
                         toActivate.getState());
@@ -317,7 +317,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         rt = first.getType();
                     }
                     pw.printf("* %s: %s, %s, %s%n",
-                            getEntityId(first),
+                            getEntityId(first, group.getAlias()),
                             first.getDigest(),
                             first.getURL(),
                             first.getState());

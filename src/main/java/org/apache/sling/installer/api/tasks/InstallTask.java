@@ -76,6 +76,18 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 	    }
 	}
 
+    /**
+     * Set the finished state for the resource and the alias
+     * @param state The new state.
+     * @param alias The new alias
+     * @since 1.1
+     */
+    public void setFinishedState(final ResourceState state, final String alias) {
+        if ( this.resourceGroup != null ) {
+            this.resourceGroup.setFinishState(state, alias);
+        }
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + ": " + this.getResource();

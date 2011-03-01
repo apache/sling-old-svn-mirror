@@ -19,7 +19,6 @@
 package org.apache.sling.installer.core.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -131,8 +130,8 @@ public class RegisteredResourceTest {
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
         final InstallableResource rA = new InstallableResource("test:urlA", null, data, null, null, null);
         final InstallableResource rB = new InstallableResource("test:urlB", null, data, null, null, null);
-        assertFalse(
-                "Expecting configs with same data but different URLs to have different digests",
+        assertTrue(
+                "Expecting configs with same data but different URLs to have same digests",
                 create(rA).getDigest().equals(create(rB).getDigest()));
     }
 

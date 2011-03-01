@@ -59,14 +59,14 @@
                         </Import-Package>
 						<Export-Package>
 							org.apache.sling.installer.api;version=3.1.0,
-                            org.apache.sling.installer.api.tasks;version=1.0.0
+                            org.apache.sling.installer.api.tasks;version=1.1.0
                         </Export-Package>
 						<Private-Package>
-						    org.apache.sling.installer.core.impl.*,
-                            org.osgi.util.tracker
+						    org.apache.sling.installer.core.impl.*
 						</Private-Package>
                         <Embed-Dependency>
-                            org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
+                            org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
+                            org.osgi.compendium;inline="org/osgi/util/tracker/*"
                         </Embed-Dependency>
 					</instructions>
 				</configuration>

@@ -103,6 +103,11 @@ public class PersistentResourceList {
         this.untransformedResources = unknownList != null ? unknownList : new ArrayList<RegisteredResource>();
 
         this.updateCache();
+
+        // update resource ids
+        for(final Map.Entry<String, EntityResourceList> entry : this.data.entrySet()) {
+            entry.getValue().setResourceId(entry.getKey());
+        }
     }
 
     /**
@@ -179,7 +184,7 @@ public class PersistentResourceList {
 
             EntityResourceList t = this.data.get(input.getEntityId());
             if (t == null) {
-                t = new EntityResourceList();
+                t = new EntityResourceList(input.getEntityId());
                 this.data.put(input.getEntityId(), t);
             }
 
@@ -236,7 +241,16 @@ public class PersistentResourceList {
      * Get the resource group for an entity id.
      */
     public EntityResourceList getEntityResourceList(final String entityId) {
-        return this.data.get(entityId);
+        EntityResourceList erl = this.data.get(entityId);
+        if ( erl == null ) {
+            for(final EntityResourceList group : this.data.values()) {
+                if ( entityId.equals(group.getFullAlias()) ) {
+                    erl = group;
+                    break;
+                }
+            }
+        }
+        return erl;
     }
 
     /**

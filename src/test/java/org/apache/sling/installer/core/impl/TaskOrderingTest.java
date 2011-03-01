@@ -54,7 +54,7 @@ public class TaskOrderingTest {
         RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
         rr = (RegisteredResourceImpl)rr.clone(new DefaultTransformer().transform(rr)[0]);
 
-        final EntityResourceList erl = new EntityResourceList();
+        final EntityResourceList erl = new EntityResourceList("test");
 	    erl.addOrUpdate(rr);
 	    return erl;
 	}

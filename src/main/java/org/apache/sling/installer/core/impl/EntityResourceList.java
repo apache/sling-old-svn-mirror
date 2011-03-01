@@ -44,7 +44,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     private static final long serialVersionUID = 6L;
 
     /** Serialization version. */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     /** Logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityResourceList.class);
@@ -52,6 +52,15 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     /** The set of registered resources for this entity. */
     private final SortedSet<TaskResource> resources = new TreeSet<TaskResource>();
 
+    /** Alias for this id. */
+    private String alias;
+
+    /** The resource id of this group. */
+    private String resourceId;
+
+    public EntityResourceList(final String resourceId) {
+        this.resourceId = resourceId;
+    }
     /**
      * Serialize the object
      * - write version id
@@ -66,6 +75,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         for(final RegisteredResource rr : this.resources) {
             out.writeObject(rr);
         }
+        out.writeObject(this.alias);
+        out.writeObject(this.resourceId);
     }
 
     /**
@@ -76,7 +87,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     private void readObject(final java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         final int version = in.readInt();
-        if ( version != VERSION ) {
+        if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
         Util.setField(this, "resources", new TreeSet<RegisteredResource>());
@@ -85,9 +96,15 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             final TaskResource rr = (TaskResource)in.readObject();
             this.resources.add(rr);
         }
+        if ( version > 1 ) {
+            this.alias = (String)in.readObject();
+            this.resourceId = (String)in.readObject();
+        }
     }
 
-    /** The resource list is empty if it contains no resources. */
+    /**
+     * The resource list is empty if it contains no resources.
+     */
     public boolean isEmpty() {
         return resources.isEmpty();
     }
@@ -117,9 +134,39 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     /**
-     * Set the finish state for the resource.
-     * If this resource has been uninstalled, check the next in the list if it needs to
-     * be reactivated.
+     * Get the alias for this group or null
+     */
+    public String getAlias() {
+        return this.alias;
+    }
+
+    /**
+     * Get the alias for this group or null
+     */
+    public String getFullAlias() {
+        if ( this.alias != null ) {
+            final int pos = this.resourceId.indexOf(':');
+            return this.resourceId.substring(0, pos + 1) + this.alias;
+        }
+        return null;
+    }
+
+    /**
+     * Get the resource id.
+     */
+    public String getResourceId() {
+        return this.resourceId;
+    }
+
+    /**
+     * Set the resource id
+     */
+    public void setResourceId(final String id) {
+        this.resourceId = id;
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState)
      */
     public void setFinishState(ResourceState state) {
         final TaskResource toActivate = getActiveResource();
@@ -151,6 +198,14 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 this.cleanup(toActivate);
             }
         }
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState, java.lang.String)
+     */
+    public void setFinishState(final ResourceState state, final String alias) {
+        this.setFinishState(state);
+        this.alias = alias;
     }
 
     private void cleanup(final RegisteredResource rr) {

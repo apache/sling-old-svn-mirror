@@ -33,9 +33,26 @@ public interface TaskResourceGroup {
 
 
     /**
-     * Set the finish state for active the resource.
+     * Set the finish state for the active resource.
      * If this resource has been uninstalled, check the next in the list if it needs to
      * be reactivated.
      */
     void setFinishState(ResourceState state);
+
+    /**
+     * Set the finish state for the active resource and register an alias.
+     * This method does the same as {@link #setFinishState(ResourceState)}
+     * but in addition registers an alias id for the resource.
+     *
+     * @see #setFinishState(ResourceState)
+     * @since 1.1
+     */
+    void setFinishState(ResourceState state, String alias);
+
+    /**
+     * Get the current alias for this group.
+     * @return The alias or <code>null</code>
+     * @since 1.1
+     */
+    String getAlias();
 }
