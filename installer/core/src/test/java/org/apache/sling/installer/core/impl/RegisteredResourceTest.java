@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -61,12 +62,12 @@ public class RegisteredResourceTest {
             assertNull("BUNDLE resource does not provide a Dictionary", r.getDictionary());
             assertEquals("RegisteredResource entity ID must match", "bundle:osgi-installer-testbundle", r.getEntityId());
         }
-/**
+
         {
             final Hashtable<String, Object> data = new Hashtable<String, Object>();
             data.put("foo", "bar");
             data.put("other", 2);
-            final TaskResource r = create(new InstallableResource("test:1", null, data, null, null, null));
+            final TaskResource r = create(new InstallableResource("configuration:1", null, data, null, null, null));
             assertEquals("No-extension URL with Dictionary creates a CONFIG resource",
                     InstallableResource.TYPE_CONFIG, r.getType());
             final InputStream rs = r.getInputStream();
@@ -76,7 +77,6 @@ public class RegisteredResourceTest {
             assertEquals("CONFIG resource dictionary has two properties", 2, d.size());
             assertNotNull("CONFIG resource has a pid attribute", r.getAttribute(Constants.SERVICE_PID));
         }
-        */
     }
 
 	@org.junit.Test public void testLocalFileCopy() throws Exception {
@@ -171,6 +171,12 @@ public class RegisteredResourceTest {
         final TransformationResult[] tr = new DefaultTransformer().transform(rr);
         if ( tr != null ) {
             return rr.clone(tr[0]);
+        } else if ( is.getId().startsWith("configuration:") ) {
+            final TransformationResult result = new TransformationResult();
+            result.setId(is.getId().substring(14));
+            result.setResourceType(InstallableResource.TYPE_CONFIG);
+            result.setAttributes(Collections.singletonMap(Constants.SERVICE_PID, (Object)result.getId()));
+            return rr.clone(result);
         }
         return rr;
     }

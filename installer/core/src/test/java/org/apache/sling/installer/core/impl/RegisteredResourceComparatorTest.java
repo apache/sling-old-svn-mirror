@@ -31,6 +31,7 @@ import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
@@ -58,7 +59,16 @@ public class RegisteredResourceComparatorTest {
         final InstallableResource r = new InstallableResource(url, null, data, digest, null, priority);
         final InternalResource internal = InternalResource.create("test", r);
         final RegisteredResourceImpl rr = RegisteredResourceImpl.create(internal);
-        return (RegisteredResourceImpl)rr.clone(new DefaultTransformer().transform(rr)[0]);
+        TransformationResult[] tr = new DefaultTransformer().transform(rr);
+        if ( tr == null ) {
+            final TransformationResult result = new TransformationResult();
+            result.setId(url);
+            result.setResourceType(InstallableResource.TYPE_CONFIG);
+            tr = new TransformationResult[] {
+                      result
+            };
+        }
+        return (RegisteredResourceImpl)rr.clone(tr[0]);
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
@@ -138,7 +148,7 @@ public class RegisteredResourceComparatorTest {
         assertOrder(inOrder);
     }
 
-//    @Test
+    @Test
     public void testConfigPriority() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [3];
         inOrder[0] = getConfig("pid", null, 2);
@@ -147,7 +157,7 @@ public class RegisteredResourceComparatorTest {
         assertOrder(inOrder);
     }
 
-//    @Test
+    @Test
     public void testConfigDigests() throws IOException {
     	final Dictionary<String, Object> data = new Hashtable<String, Object>();
         data.put("foo", "bar");
@@ -161,7 +171,7 @@ public class RegisteredResourceComparatorTest {
         assertEquals("Digests must be included in configs comparison", 0, a2.compareTo(b2));
     }
 
-//    @Test
+    @Test
     public void testConfigPid() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [3];
         inOrder[0] = getConfig("pidA", null, 0);
@@ -170,7 +180,7 @@ public class RegisteredResourceComparatorTest {
         assertOrder(inOrder);
     }
 
-//    @Test
+    @Test
     public void testConfigComposite() throws IOException {
         final RegisteredResource [] inOrder = new RegisteredResource [4];
         inOrder[0] = getConfig("pidA", null, 10);
