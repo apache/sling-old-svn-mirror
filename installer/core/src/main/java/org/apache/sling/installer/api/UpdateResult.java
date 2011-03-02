@@ -22,13 +22,29 @@ package org.apache.sling.installer.api;
  * The update result is returned by an {@link UpdateHandler} if
  * a resource could be persisted by the handler.
  *
+ * The update result always contains the complete url where the
+ * resource has been persisted.
+ * If this url is different from the previous location of this
+ * resource, the {@link #getResourceIsMoved()} flag tells the
+ * installer whether the resource has moved to a new location
+ * or if the resource has been additionally added to a new
+ * location (old location contains the old version of
+ * the resource).
+ *
  * @since 3.1
  */
 public class UpdateResult {
 
+    /** The url where the resource has been persisted. */
     private final String url;
+
+    /** A new digest (optional) */
     private String digest;
+
+    /** New priority. */
     private Integer priority;
+
+    /** Is the resource moved or added. */
     private boolean resourceIsMoved = false;
 
     /**
@@ -54,11 +70,18 @@ public class UpdateResult {
         return this.url;
     }
 
+    /**
+     * Return the scheme of the provider.
+     */
     public String getScheme() {
         final int pos = this.url.indexOf(':');
         return this.url.substring(0, pos);
     }
 
+    /**
+     * Return just the resource id (everything in the url
+     * after the colon)
+     */
     public String getResourceId() {
         final int pos = this.url.indexOf(':');
         return this.url.substring(pos + 1);
@@ -82,18 +105,30 @@ public class UpdateResult {
         return this.priority != null ? this.priority : InstallableResource.DEFAULT_PRIORITY;
     }
 
+    /**
+     * Set the priority.
+     */
     public void setPriority(final Integer prio) {
         this.priority = prio;
     }
 
+    /**
+     * Set the digest.
+     */
     public void setDigest(final String digest) {
         this.digest = digest;
     }
 
+    /**
+     * Sett whether this resource has been moved or added.
+     */
     public void setResourceIsMoved(final boolean flag) {
         this.resourceIsMoved = flag;
     }
 
+    /**
+     * Has this resource been moved or added?
+     */
     public boolean getResourceIsMoved() {
         return this.resourceIsMoved;
     }
