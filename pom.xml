@@ -52,8 +52,9 @@
         optionally using -Dmaven.surefire.debug to enable debugging.            
      -->
     <properties>
-        <!-- Set this to run the server on a specific port -->
+        <!-- Set this to run the server on a specific port
         <http.port></http.port>
+         -->
         
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
