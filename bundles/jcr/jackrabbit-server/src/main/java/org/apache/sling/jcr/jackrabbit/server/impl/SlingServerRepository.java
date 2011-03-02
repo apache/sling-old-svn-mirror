@@ -38,6 +38,7 @@ import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCredentials;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AnonCredentials;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 /**
@@ -98,6 +99,19 @@ public class SlingServerRepository extends AbstractSlingRepository
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);
 
+        // ensure absolute home (path)
+        File homeFile = new File(home);
+        if (!homeFile.isAbsolute()) {
+            BundleContext context = getComponentContext().getBundleContext();
+            String slingHomePath = context.getProperty("sling.home");
+            if (slingHomePath != null) {
+                homeFile = new File(slingHomePath, home);
+            } else {
+                homeFile = homeFile.getAbsoluteFile();
+            }
+            home = homeFile.getAbsolutePath();
+        }
+
         // somewhat dirty hack to have the derby.log file in a sensible
         // location, but don't overwrite anything already set
         if (System.getProperty("derby.stream.error.file") == null) {
@@ -108,36 +122,41 @@ public class SlingServerRepository extends AbstractSlingRepository
         InputStream ins = null;
         try {
 
-            // check whether the URL is a file path
-            File configFile = new File(configURLObj);
-            if (configFile.canRead()) {
-
-                ins = new FileInputStream(configFile);
-                log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
-
-            } else {
-
-                try {
-
-                    URL configURL = new URL(configURLObj);
-                    ins = configURL.openStream();
-                    log(LogService.LOG_INFO, "Using configuration URL " + configURL);
-
-                } catch (MalformedURLException mue) {
-
-                    log(LogService.LOG_INFO, "Configuration File "
-                        + configFile.getAbsolutePath()
-                        + " has been lost, trying to recreate");
-
-                    final Bundle bundle = getComponentContext().getBundleContext().getBundle();
-                    SlingServerRepository.copyFile(bundle, "repository.xml", configFile);
+            RepositoryConfig crc;
+            if (configURLObj != null && configURLObj.length() > 0) {
+                // check whether the URL is a file path
+                File configFile = new File(configURLObj);
+                if (configFile.canRead()) {
 
                     ins = new FileInputStream(configFile);
                     log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
+
+                } else {
+
+                    try {
+
+                        URL configURL = new URL(configURLObj);
+                        ins = configURL.openStream();
+                        log(LogService.LOG_INFO, "Using configuration URL " + configURL);
+
+                    } catch (MalformedURLException mue) {
+
+                        log(LogService.LOG_INFO, "Configuration File "
+                            + configFile.getAbsolutePath()
+                            + " has been lost, trying to recreate");
+
+                        final Bundle bundle = getComponentContext().getBundleContext().getBundle();
+                        SlingServerRepository.copyFile(bundle, "repository.xml", configFile);
+
+                        ins = new FileInputStream(configFile);
+                        log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
+                    }
                 }
+                crc = RepositoryConfig.create(ins, home);
+            } else {
+                crc = RepositoryConfig.create(homeFile);
             }
 
-            RepositoryConfig crc = RepositoryConfig.create(ins, home);
             return RepositoryImpl.create(crc);
 
         } catch (IOException ioe) {
