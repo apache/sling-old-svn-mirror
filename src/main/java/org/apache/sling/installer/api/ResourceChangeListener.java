@@ -37,20 +37,20 @@ public interface ResourceChangeListener {
      * Inform the installer about an added or updated
      * resource
      * @param resourceType The resource type
-     * @param resourceId   The resource id (symbolic name etc.)
+     * @param entityId     The entity id (symbolic name etc.)
      * @param is           Input stream or
      * @param dict         Dictionary
      */
     void resourceAddedOrUpdated(final String resourceType,
-            final String resourceId,
+            final String entityId,
             final InputStream is,
             final Dictionary<String, Object> dict);
 
     /**
      * Inform the installer about a removed resource
      * @param resourceType The resource type
-     * @param resourceId   The resource id (symbolic name etc.)
+     * @param entityId     The entity id (symbolic name etc.)
      */
     void resourceRemoved(final String resourceType,
-            final String resourceId);
+            final String entityId);
 }

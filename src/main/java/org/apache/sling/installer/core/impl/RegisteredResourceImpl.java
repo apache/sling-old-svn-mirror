@@ -50,10 +50,10 @@ public class RegisteredResourceImpl
     private static final int VERSION = 2;
 
     /** The resource url. */
-    private final String url;
+    private String url;
 
     /** The installer scheme. */
-	private final String urlScheme;
+	private String urlScheme;
 
 	/** The digest for the resource. */
 	private String digest;
@@ -507,7 +507,8 @@ public class RegisteredResourceImpl
     public void update(final File file,
             final Dictionary<String, Object> dict,
             final String digest,
-            final int priority) {
+            final int priority,
+            final String url) {
         this.removeDataFile();
         if ( file != null ) {
             this.dataFile = file;
@@ -523,5 +524,8 @@ public class RegisteredResourceImpl
         }
         this.digest = digest;
         this.priority = priority;
+        this.url = url;
+        final int pos = url.indexOf(':');
+        this.urlScheme = url.substring(0, pos);
     }
 }
