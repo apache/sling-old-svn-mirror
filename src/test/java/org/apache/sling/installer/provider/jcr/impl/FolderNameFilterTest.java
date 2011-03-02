@@ -25,8 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.sling.installer.provider.jcr.impl.FolderNameFilter;
-import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
 import org.junit.Test;
 
 public class FolderNameFilterTest {
@@ -47,16 +45,16 @@ public class FolderNameFilterTest {
     	{
     		final String [] paths = { "a:100", "/b/: 200 " };
             final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new HashSet<String>());
-            assertEquals("/a", f.getRootPaths()[0]);
-            assertEquals("/b", f.getRootPaths()[1]);
+            assertEquals("/b", f.getRootPaths()[0]);
+            assertEquals("/a", f.getRootPaths()[1]);
             assertEquals(100, f.getRootPriority("/a/foo"));
             assertEquals(200, f.getRootPriority("/b/foo"));
     	}
     	{
     		final String [] paths = { "a/:NOT_AN_INTEGER", "/b/: 200 " };
             final FolderNameFilter f = new FolderNameFilter(paths, DEFAULT_REGEXP, new HashSet<String>());
-            assertEquals("/a", f.getRootPaths()[0]);
-            assertEquals("/b", f.getRootPaths()[1]);
+            assertEquals("/b", f.getRootPaths()[0]);
+            assertEquals("/a", f.getRootPaths()[1]);
             assertEquals(FolderNameFilter.DEFAULT_ROOT_PRIORITY, f.getRootPriority("/a/foo"));
             assertEquals(200, f.getRootPriority("/b/foo"));
     	}
