@@ -50,7 +50,11 @@ public class BundleInstallTask extends AbstractInstallTask {
             if ( providedLevel instanceof Number ) {
                 startLevel = ((Number)providedLevel).intValue();
             } else {
-                startLevel = Integer.valueOf(providedLevel.toString());
+                try {
+                    startLevel = Integer.valueOf(providedLevel.toString());
+                } catch (final NumberFormatException nfe) {
+                    // ignore this
+                }
             }
         }
         // get the start level service (if possible) so we can set the initial start level
