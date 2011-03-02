@@ -175,16 +175,22 @@ public class OsgiInstallerImpl
 
             this.mergeNewlyRegisteredResources();
 
-            // invoke transformers
-            this.transformResources();
+            // invoke transformers - sync as we change state
+            synchronized ( this.resourcesLock ) {
+                this.transformResources();
+            }
 
             // execute tasks
             final SortedSet<InstallTask> tasks = this.computeTasks();
             final boolean tasksCreated = !tasks.isEmpty();
-            this.executeTasks(tasks);
 
-            // clean up and save
-            this.cleanupInstallableResources();
+            // sync as we might change state
+            synchronized ( this.resourcesLock ) {
+                this.executeTasks(tasks);
+
+                // clean up and save
+                this.cleanupInstallableResources();
+            }
 
             // if we don't have any tasks, we go to sleep
             if (!tasksCreated) {
@@ -663,19 +669,19 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary)
      */
     public void resourceAddedOrUpdated(final String resourceType,
-            String resourceId,
+            String entityId,
             final InputStream is,
             final Dictionary<String, Object> dict) {
-        String key = resourceType + ':' + resourceId;
+        String key = resourceType + ':' + entityId;
         try {
             final ResourceData data = ResourceData.create(is, dict);
             synchronized ( this.resourcesLock ) {
                 final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
                 if ( erl != null ) {
-                    resourceId = erl.getResourceId();
-                    key = resourceType + ':' + resourceId;
+                    entityId = erl.getResourceId();
+                    key = resourceType + ':' + entityId;
                 }
-                logger.info("Added or updated {}:{}: {}", new Object[] {resourceType, resourceId, erl});
+                logger.debug("Added or updated {} : {}", key, erl);
 
                 // we first check for update
                 boolean updated = false;
@@ -685,28 +691,51 @@ public class OsgiInstallerImpl
                     if ( dict != null ) {
                         final String digest = FileDataStore.computeDigest(dict);
                         if ( tr.getState() == ResourceState.INSTALLED && tr.getDigest().equals(digest) ) {
-                            logger.debug("Resource did not change {}:{}", resourceType, resourceId);
+                            logger.debug("Resource did not change {}", key);
                             return;
                         }
                     }
                     final UpdateHandler handler = this.findHandler(tr.getScheme());
                     if ( handler == null ) {
-                        logger.info("No handler found to handle update of resource with scheme {}", tr.getScheme());
+                        logger.debug("No handler found to handle update of resource with scheme {}", tr.getScheme());
                     } else {
                         final InputStream localIS = data.getInputStream();
                         try {
-                            final UpdateResult result = handler.handleUpdate(resourceType, resourceId, tr.getURL(), localIS, data.getDictionary());
+                            final UpdateResult result = handler.handleUpdate(resourceType, entityId, tr.getURL(), localIS, data.getDictionary());
                             if ( result != null ) {
-                                ((RegisteredResourceImpl)tr).update(
-                                        data.getDataFile(), data.getDictionary(),
-                                        data.getDigest(result.getURL(), result.getDigest()),
-                                        result.getPriority());
-                                // TODO : Handle move and add
+                                if ( !result.getURL().equals(tr.getURL()) && !result.getResourceIsMoved() ) {
+                                    // resource has been added!
+                                    final InternalResource internalResource = new InternalResource(result.getScheme(),
+                                            result.getResourceId(),
+                                            null,
+                                            data.getDictionary(),
+                                            (data.getDictionary() != null ? InstallableResource.TYPE_PROPERTIES : InstallableResource.TYPE_FILE),
+                                            data.getDigest(result.getURL(), result.getDigest()),
+                                            result.getPriority(),
+                                            data.getDataFile());
+                                    final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
+                                    final TransformationResult transRes = new TransformationResult();
+                                    transRes.setId(entityId);
+                                    transRes.setResourceType(resourceType);
+                                    this.persistentList.transform(rr, new TransformationResult[] {
+                                            transRes
+                                    });
+                                    final EntityResourceList newGroup = this.persistentList.getEntityResourceList(key);
+                                    newGroup.setFinishState(ResourceState.INSTALLED);
+                                    newGroup.compact();
+                                } else {
+                                    // resource has been updated or moved
+                                    ((RegisteredResourceImpl)tr).update(
+                                            data.getDataFile(), data.getDictionary(),
+                                            data.getDigest(result.getURL(), result.getDigest()),
+                                            result.getPriority(),
+                                            result.getURL());
+                                    // We first set the state of the resource to install to make setFinishState work in all cases
+                                    ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                                    erl.setFinishState(ResourceState.INSTALLED);
+                                    erl.compact();
+                                }
                                 updated = true;
-                                // We first set the state of the resource to install to make setFinishState work in all cases
-                                ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
-                                erl.setFinishState(ResourceState.INSTALLED);
-                                erl.compact();
                                 this.persistentList.save();
                                 this.wakeUp();
                             }
@@ -731,7 +760,7 @@ public class OsgiInstallerImpl
                     for(final UpdateHandler handler : handlerList) {
                         final InputStream localIS = data.getInputStream();
                         try {
-                            final UpdateResult result = handler.handleUpdate(resourceType, resourceId, null, localIS, data.getDictionary());
+                            final UpdateResult result = handler.handleUpdate(resourceType, entityId, null, localIS, data.getDictionary());
                             if ( result != null ) {
                                 final InternalResource internalResource = new InternalResource(result.getScheme(),
                                         result.getResourceId(),
@@ -743,11 +772,14 @@ public class OsgiInstallerImpl
                                         data.getDataFile());
                                 final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
                                 final TransformationResult transRes = new TransformationResult();
-                                transRes.setId(resourceId);
+                                transRes.setId(entityId);
                                 transRes.setResourceType(resourceType);
                                 this.persistentList.transform(rr, new TransformationResult[] {
                                         transRes
                                 });
+                                final EntityResourceList newGroup = this.persistentList.getEntityResourceList(key);
+                                newGroup.setFinishState(ResourceState.INSTALLED);
+                                newGroup.compact();
                                 this.persistentList.save();
                                 created = true;
                                 this.wakeUp();
@@ -765,7 +797,7 @@ public class OsgiInstallerImpl
                         }
                     }
                     if ( !created ) {
-                        logger.info("No handler found to handle creation of resource {}:{}", resourceType, resourceId);
+                        logger.debug("No handler found to handle creation of resource {}", key);
                     }
                 }
 
@@ -791,7 +823,7 @@ public class OsgiInstallerImpl
         String key = resourceType + ':' + resourceId;
         synchronized ( this.resourcesLock ) {
             final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
-            logger.info("Removed {}:{}: {}", new Object[] {resourceType, resourceId, erl});
+            logger.debug("Removed {} : {}", key, erl);
             // if this is not registered at all, we can simply ignore this
             if ( erl != null ) {
                 resourceId = erl.getResourceId();
@@ -801,7 +833,7 @@ public class OsgiInstallerImpl
                     if ( tr.getState() != ResourceState.IGNORED ) {
                         final UpdateHandler handler = this.findHandler(tr.getScheme());
                         if ( handler == null ) {
-                            logger.info("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                            logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
                         } else {
                             // we don't need to check the result, we just check if a result is returned
                             if ( handler.handleUpdate(resourceType, resourceId, tr.getURL(), null, null) != null ) {
@@ -812,7 +844,7 @@ public class OsgiInstallerImpl
                                 this.persistentList.save();
                                 this.wakeUp();
                             } else {
-                                logger.info("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                                logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
                             }
                         }
                     } else {

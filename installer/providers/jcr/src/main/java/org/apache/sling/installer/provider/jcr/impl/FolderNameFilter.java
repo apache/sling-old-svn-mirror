@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +53,7 @@ class FolderNameFilter {
     public static final int DEFAULT_ROOT_PRIORITY = 99;
 
     FolderNameFilter(final String [] rootsConfig, final String regexp, final Set<String> runModes) {
+        final List<RootPathInfo> rootPathInfos = new ArrayList<RootPathInfo>();
         this.regexp = regexp;
         this.pattern = Pattern.compile(regexp);
         this.runModes = runModes;
@@ -58,10 +61,10 @@ class FolderNameFilter {
         // Each entry in rootsConfig is like /libs:100, where 100
         // is the priority.
         // Break that up into paths and priorities
-        rootPaths = new String[rootsConfig.length];
+        this.rootPaths = new String[rootsConfig.length];
         for(int i = 0; i < rootsConfig.length; i++) {
         	final String [] parts = rootsConfig[i].split(":");
-        	rootPaths[i] = cleanupRootPath(parts[0]);
+        	this.rootPaths[i] = cleanupRootPath(parts[0]);
         	Integer priority = new Integer(DEFAULT_ROOT_PRIORITY);
         	if(parts.length > 1) {
         		try {
@@ -70,14 +73,41 @@ class FolderNameFilter {
         			log.warn("Invalid priority in path definition '{}'", rootsConfig[i]);
         		}
         	}
-        	rootPriorities.put(rootPaths[i], priority);
-        	log.debug("Root path {} has priority {}", rootPaths[i], priority);
+        	rootPriorities.put(this.rootPaths[i], priority);
+        	rootPathInfos.add(new RootPathInfo(this.rootPaths[i], priority));
+        	log.debug("Root path {} has priority {}", this.rootPaths[i], priority);
+        }
+        // sort root paths by priority
+        Collections.sort(rootPathInfos);
+        int index = 0;
+        for(final RootPathInfo rpi : rootPathInfos) {
+            this.rootPaths[index++] = rpi.path;
+        }
+    }
+
+    private static final class RootPathInfo implements Comparable<RootPathInfo> {
+
+        public final String path;
+        private final Integer priority;
+
+        public RootPathInfo(final String path, final Integer prio) {
+            this.path = path;
+            this.priority = prio;
+        }
+
+        public int compareTo(RootPathInfo o) {
+            int result = -this.priority.compareTo(o.priority);
+            if ( result == 0 ) {
+                result = this.path.compareTo(o.path);
+            }
+            return result;
         }
     }
 
     /**
      * Return the list of root paths.
-     * Every entry in the list starts with a slash
+     * Every entry in the list starts with a slash and the entries are
+     * sorted by priority - highest priority first
      */
     String [] getRootPaths() {
     	return rootPaths;

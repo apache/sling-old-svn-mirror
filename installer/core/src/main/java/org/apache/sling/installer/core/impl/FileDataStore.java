@@ -256,7 +256,7 @@ public class FileDataStore {
                 }
             }
 
-            bos.flush();
+            oos.flush();
             d.update(bos.toByteArray());
             return digestToString(d);
         } catch (Exception ignore) {

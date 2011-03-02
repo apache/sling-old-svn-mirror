@@ -18,8 +18,10 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,9 +33,17 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.UpdateHandler;
+import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentConstants;
@@ -41,27 +51,26 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Main class of jcrinstall, runs as a service, observes the
- * 	repository for changes in folders having names that match
- * 	configurable regular expressions, and registers resources
- *  found in those folders with the OSGi installer for installation.
- *
- * @scr.component
- *  label="%jcrinstall.name"
- *  description="%jcrinstall.description"
- *  immediate="true"
- *  @scr.property
- *      name="service.description"
- *      value="Sling Jcrinstall Service"
- *  @scr.property
- *      name="service.vendor"
- *      value="The Apache Software Foundation"
+/**
+ * Main class of jcrinstall, runs as a service, observes the
+ * repository for changes in folders having names that match
+ * configurable regular expressions, and registers resources
+ * found in those folders with the OSGi installer for installation.
  */
-public class JcrInstaller implements EventListener {
+@Component(label="%jcrinstall.name", description="%jcrinstall.description", immediate=true, metatype=true)
+@Properties({
+    @Property(name="service.description", value="Sling Jcrinstall Service"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name=UpdateHandler.PROPERTY_SCHEMES, value=JcrInstaller.URL_SCHEME),
+    @Property(name="service.ranking", intValue=100)
+})
+@Service(value=UpdateHandler.class)
+public class JcrInstaller implements EventListener, UpdateHandler {
+
 	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	/** Counters, used for statistics and testing */
 	private final long [] counters = new long[COUNTERS_COUNT];
@@ -70,46 +79,52 @@ public class JcrInstaller implements EventListener {
     public static final int RUN_LOOP_COUNTER = 2;
     public static final int COUNTERS_COUNT = 3;
 
-    /**	This class watches the repository for installable resources
-     * @scr.reference
+    /**
+     * This class watches the repository for installable resources
      */
+    @Reference
     private SlingRepository repository;
 
-    /** Additional installation folders are activated based
-     *  on the current RunMode. For example, /libs/foo/install.dev
-     *  if the current run mode is "dev".
-     *  @scr.reference
+    /**
+     * Additional installation folders are activated based
+     * on the current RunMode. For example, /libs/foo/install.dev
+     * if the current run mode is "dev".
      */
+    @Reference
     private SlingSettingsService settings;
 
-    /**	The OsgiInstaller installs resources in the OSGi framework.
-     * 	@scr.reference
+    /**
+     * The OsgiInstaller installs resources in the OSGi framework.
      */
+    @Reference
     private OsgiInstaller installer;
 
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
 
-    /** ComponentContext property that overrides the folder name regexp
-     * 	@scr.property valueRef="DEFAULT_FOLDER_NAME_REGEXP"
+    /**
+     * ComponentContext property that overrides the folder name regexp
      */
+    @Property(value=DEFAULT_FOLDER_NAME_REGEXP)
     public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
 
-    /** Configurable max. path depth for watched folders
-     *  @scr.property valueRef="DEFAULT_FOLDER_MAX_DEPTH" type="Integer"
+    public static final int DEFAULT_FOLDER_MAX_DEPTH = 4;
+
+    /**
+     * Configurable max. path depth for watched folders
      */
+    @Property(intValue=DEFAULT_FOLDER_MAX_DEPTH)
     public static final String PROP_INSTALL_FOLDER_MAX_DEPTH = "sling.jcrinstall.folder.max.depth";
 
-    /**	Configurable search path, with per-path priorities.
-     *  We could get it from the ResourceResolver, but introducing a dependency on this just to get those
-     *  values is too much for this module that's meant to bootstrap other services.
-     *
-     * 	@scr.property values.1="/libs:100" values.2="/apps:200"
+    /**
+     * Configurable search path, with per-path priorities.
+     * We could get it from the ResourceResolver, but introducing a dependency on this just to get those
+     * values is too much for this module that's meant to bootstrap other services.
      */
+    @Property(value={"/libs:100", "/apps:200"}, unbounded=PropertyUnbounded.ARRAY)
     public static final String PROP_SEARCH_PATH = "sling.jcrinstall.search.path";
     public static final String [] DEFAULT_SEARCH_PATH = { "/libs:100", "/apps:200" };
 
-    public static final int DEFAULT_FOLDER_MAX_DEPTH = 4;
     private int maxWatchedFolderDepth;
 
     /** Filter for folder names */
@@ -125,6 +140,20 @@ public class JcrInstaller implements EventListener {
     private String [] roots;
 
     private ComponentContext componentContext;
+
+    private static final String DEFAULT_NEW_CONFIG_PATH = "/apps/sling/config";
+    @Property(value=DEFAULT_NEW_CONFIG_PATH)
+    private static final String PROP_NEW_CONFIG_PATH = "sling.jcrinstall.new.config.path";
+
+    /** The path for new configurations. */
+    private String newConfigPath;
+
+    private static final boolean DEFAULT_ENABLE_WRITEBACK = true;
+    @Property(boolValue=DEFAULT_ENABLE_WRITEBACK)
+    private static final String PROP_ENABLE_WRITEBACK = "sling.jcrinstall.enable.writeback";
+
+    /** Write back enabled? */
+    private boolean writeBack;
 
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
@@ -154,14 +183,14 @@ public class JcrInstaller implements EventListener {
 
         @Override
         public final void run() {
-            log.info("Background thread {} starting", Thread.currentThread().getName());
+            logger.info("Background thread {} starting", Thread.currentThread().getName());
             try {
                 // open session
                 session = repository.loginAdministrative(repository.getDefaultWorkspace());
 
                 for (String path : roots) {
                     listeners.add(new RootFolderListener(session, folderNameFilter, path, updateFoldersListTimer));
-                    log.debug("Configured root folder: {}", path);
+                    logger.debug("Configured root folder: {}", path);
                 }
 
                 // Watch for events on the root - that might be one of our root folders
@@ -172,7 +201,7 @@ public class JcrInstaller implements EventListener {
                         null,
                         null,
                         true); // noLocal
-                log.debug("Watching for node events on / to detect removal/add of our root folders");
+                logger.debug("Watching for node events on / to detect removal/add of our root folders");
 
 
                 // Find paths to watch and create WatchedFolders to manage them
@@ -185,14 +214,14 @@ public class JcrInstaller implements EventListener {
                 final List<InstallableResource> resources = new LinkedList<InstallableResource>();
                 for(WatchedFolder f : watchedFolders) {
                     final WatchedFolder.ScanResult r = f.scan();
-                    log.debug("Startup: {} provides resources {}", f, r.toAdd);
+                    logger.debug("Startup: {} provides resources {}", f, r.toAdd);
                     resources.addAll(r.toAdd);
                 }
 
-                log.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
+                logger.debug("Registering {} resources with OSGi installer: {}", resources.size(), resources);
                 installer.registerResources(URL_SCHEME, resources.toArray(new InstallableResource[resources.size()]));
             } catch (final RepositoryException re) {
-                log.error("Repository exception during startup - deactivating installer!", re);
+                logger.error("Repository exception during startup - deactivating installer!", re);
                 active = false;
                 final ComponentContext ctx = componentContext;
                 if ( ctx  != null ) {
@@ -204,7 +233,7 @@ public class JcrInstaller implements EventListener {
             while (active) {
                 runOneCycle();
             }
-            log.info("Background thread {} done", Thread.currentThread().getName());
+            logger.info("Background thread {} done", Thread.currentThread().getName());
             counters[RUN_LOOP_COUNTER] = -1;
         }
     };
@@ -218,7 +247,13 @@ public class JcrInstaller implements EventListener {
             throw new IllegalStateException("Expected backgroundThread to be null in activate()");
         }
         this.componentContext = context;
-        log.info("Activating Apache Sling JCR Installer");
+        logger.info("Activating Apache Sling JCR Installer");
+
+        this.newConfigPath = OsgiUtil.toString(context.getProperties().get(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
+        if ( !newConfigPath.endsWith("/") ) {
+            this.newConfigPath = this.newConfigPath.concat("/");
+        }
+        this.writeBack = OsgiUtil.toBoolean(context.getProperties().get(PROP_ENABLE_WRITEBACK), DEFAULT_ENABLE_WRITEBACK);
 
     	// Setup converters
     	converters.add(new FileNodeConverter());
@@ -229,20 +264,20 @@ public class JcrInstaller implements EventListener {
     	if (obj != null) {
     		// depending on where it's coming from, obj might be a string or integer
     		maxWatchedFolderDepth = Integer.valueOf(String.valueOf(obj)).intValue();
-            log.debug("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
+            logger.debug("Using configured ({}) folder name max depth '{}'", PROP_INSTALL_FOLDER_MAX_DEPTH, maxWatchedFolderDepth);
     	} else {
             maxWatchedFolderDepth = DEFAULT_FOLDER_MAX_DEPTH;
-            log.debug("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
+            logger.debug("Using default folder max depth {}, not provided by {}", maxWatchedFolderDepth, PROP_INSTALL_FOLDER_MAX_DEPTH);
     	}
 
     	// Configurable folder regexp, system property overrides default value
     	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp != null) {
     		folderNameRegexp = folderNameRegexp.trim();
-            log.debug("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
+            logger.debug("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
     	} else {
     	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
-            log.debug("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
+            logger.debug("Using default folder name regexp '{}', not provided by {}", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
 
     	// Setup folder filtering and watching
@@ -257,11 +292,11 @@ public class JcrInstaller implements EventListener {
      * Deactivate this component
      */
     protected void deactivate(final ComponentContext context) {
-    	log.info("Deactivating Apache Sling JCR Installer");
+    	logger.info("Deactivating Apache Sling JCR Installer");
 
     	final long timeout = 30000L;
         backgroundThread.active = false;
-        log.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
+        logger.debug("Waiting for " + backgroundThread.getName() + " Thread to end...");
         backgroundThread.interrupt();
     	try {
             backgroundThread.join(timeout);
@@ -281,7 +316,7 @@ public class JcrInstaller implements EventListener {
                 session.getWorkspace().getObservationManager().removeEventListener(this);
             }
         } catch (final RepositoryException e) {
-            log.warn("Exception in deactivate()", e);
+            logger.warn("Exception in deactivate()", e);
         }
         if ( session != null ) {
             session.logout();
@@ -308,9 +343,9 @@ public class JcrInstaller implements EventListener {
         try {
             s = repository.loginAdministrative(repository.getDefaultWorkspace());
             if (!s.itemExists(rootPath) || !s.getItem(rootPath).isNode() ) {
-                log.info("Bundles root node {} not found, ignored", rootPath);
+                logger.info("Bundles root node {} not found, ignored", rootPath);
             } else {
-                log.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
+                logger.debug("Bundles root node {} found, looking for bundle folders inside it", rootPath);
                 final Node n = (Node)s.getItem(rootPath);
                 findPathsUnderNode(n, result);
             }
@@ -333,7 +368,7 @@ public class JcrInstaller implements EventListener {
         }
         final int depth = path.split("/").length;
         if(depth > maxWatchedFolderDepth) {
-            log.debug("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
+            logger.debug("Not recursing into {} due to maxWatchedFolderDepth={}", path, maxWatchedFolderDepth);
             return;
         }
         final NodeIterator it = n.getNodes();
@@ -364,7 +399,7 @@ public class JcrInstaller implements EventListener {
      *  	for folders that have been removed
      */
     private List<String> updateFoldersList() throws Exception {
-        log.debug("Updating folder list.");
+        logger.debug("Updating folder list.");
 
         final List<String> result = new LinkedList<String>();
 
@@ -379,7 +414,7 @@ public class JcrInstaller implements EventListener {
         // Check all WatchedFolder, in case some were deleted
         final List<WatchedFolder> toRemove = new ArrayList<WatchedFolder>();
         for(WatchedFolder wf : watchedFolders) {
-            log.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
+            logger.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
 
             if(!session.itemExists(wf.getPath())) {
                 result.addAll(wf.scan().toRemove);
@@ -388,7 +423,7 @@ public class JcrInstaller implements EventListener {
             }
         }
         for(WatchedFolder wf : toRemove) {
-            log.info("Deleting {}, path does not exist anymore", wf);
+            logger.info("Deleting {}, path does not exist anymore", wf);
             watchedFolders.remove(wf);
         }
 
@@ -401,23 +436,23 @@ public class JcrInstaller implements EventListener {
         try {
             while(it.hasNext()) {
                 final Event e = it.nextEvent();
-                log.debug("Got event {}", e);
+                logger.debug("Got event {}", e);
 
                 for(String root : roots) {
                     if (e.getPath().startsWith(root)) {
-                        log.info("Got event for root {}, scheduling scanning of new folders", root);
+                        logger.info("Got event for root {}, scheduling scanning of new folders", root);
                         updateFoldersListTimer.scheduleScan();
                     }
                 }
             }
         } catch(RepositoryException re) {
-            log.warn("RepositoryException in onEvent", re);
+            logger.warn("RepositoryException in onEvent", re);
         }
     }
 
     /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
     public void runOneCycle() {
-        log.debug("Running watch cycle.");
+        logger.debug("Running watch cycle.");
 
         try {
             boolean didRefresh = true;
@@ -434,8 +469,8 @@ public class JcrInstaller implements EventListener {
                     WatchedFolder.getRescanTimer().reset();
                     counters[SCAN_FOLDERS_COUNTER]++;
                     final WatchedFolder.ScanResult sr = wf.scan();
-                    log.info("Registering resource with OSGi installer: {}",sr.toAdd);
-                    log.info("Removing resource from OSGi installer: {}", sr.toRemove);
+                    logger.info("Registering resource with OSGi installer: {}",sr.toAdd);
+                    logger.info("Removing resource from OSGi installer: {}", sr.toRemove);
                     installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
                             sr.toRemove.toArray(new String[sr.toRemove.size()]));
                 }
@@ -451,7 +486,7 @@ public class JcrInstaller implements EventListener {
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
                 final List<String> toRemove = updateFoldersList();
-                log.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
+                logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
                 installer.updateResources(URL_SCHEME, null,
                         toRemove.toArray(new String[toRemove.size()]));
             }
@@ -462,7 +497,7 @@ public class JcrInstaller implements EventListener {
             }
 
         } catch(Exception e) {
-            log.warn("Exception in run()", e);
+            logger.warn("Exception in run()", e);
             try {
                 Thread.sleep(RUN_LOOP_DELAY_MSEC);
             } catch(InterruptedException ignore) {
@@ -475,4 +510,87 @@ public class JcrInstaller implements EventListener {
         return counters;
     }
 
+    /**
+     * @see org.apache.sling.installer.api.UpdateHandler#handleUpdate(java.lang.String, java.lang.String, String, java.io.InputStream, java.util.Dictionary)
+     */
+    public UpdateResult handleUpdate(final String resourceType,
+            final String id,
+            final String url,
+            final InputStream is,
+            final Dictionary<String, Object> dict) {
+        if ( !this.writeBack ) {
+            return null;
+        }
+
+        if ( is == null && dict == null ) {
+            final int pos = url.indexOf(':');
+            final String path = url.substring(pos + 1);
+            // remove
+            logger.debug("Removal of {}", path);
+            Session session = null;
+            try {
+                session = this.repository.loginAdministrative(null);
+                if ( session.nodeExists(path) ) {
+                    session.getNode(path).remove();
+                    session.save();
+                }
+            } catch (final RepositoryException re) {
+                logger.error("Unable to remove resource from " + path, re);
+                return null;
+            } finally {
+                if ( session != null ) {
+                    session.logout();
+                }
+            }
+            return new UpdateResult(url);
+        }
+        // we only handle add and remove for configs for now
+        if ( !resourceType.equals(InstallableResource.TYPE_CONFIG) ) {
+            return null;
+        }
+
+        final String path;
+        boolean resourceIsMoved = true;
+        if ( url != null ) {
+            // update
+            final int pos = url.indexOf(':');
+            final String oldPath = url.substring(pos + 1);
+            // check root path, we use the path with highest prio
+            final String rootPath = this.folderNameFilter.getRootPaths()[0] + '/';
+            if ( !oldPath.startsWith(rootPath) ) {
+                final int slashPos = oldPath.indexOf('/', 1);
+                path = rootPath + oldPath.substring(slashPos + 1);
+                resourceIsMoved = false;
+            } else {
+                path = oldPath;
+            }
+            logger.debug("Update of {} at {}", resourceType, path);
+        } else {
+            // add
+            path = this.newConfigPath + id;
+            logger.debug("Add of {} at {}", resourceType, path);
+        }
+
+        Session session = null;
+        try {
+            session = this.repository.loginAdministrative(null);
+            final Node configNode = JcrUtil.createPath(session, path, ConfigNodeConverter.CONFIG_NODE_TYPE);
+            JcrUtil.removeAllProperties(configNode);
+            JcrUtil.saveProperties(configNode, dict);
+            session.save();
+
+            final UpdateResult result = new UpdateResult(JcrInstaller.URL_SCHEME + ':' + path);
+            // priority
+            result.setPriority(this.folderNameFilter.getPriority(path));
+            result.setResourceIsMoved(resourceIsMoved);
+            return result;
+        } catch (final RepositoryException re) {
+            logger.error("Unable to remove resource from " + path, re);
+            return null;
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
+        }
+    }
 }
