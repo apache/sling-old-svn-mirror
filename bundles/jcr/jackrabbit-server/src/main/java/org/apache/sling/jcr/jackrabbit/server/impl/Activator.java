@@ -261,18 +261,26 @@ public class Activator implements BundleActivator, ServiceListener {
     }
 
     private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
-        File homeDir = getHomeDir(bundleContext);
-        if (homeDir == null)
+        String slingHomePath = bundleContext.getProperty("sling.home");
+        String home = getHomePath(bundleContext, slingHomePath);
+        if (home == null) {
         	return;
+        }
 
-        String configFileUrl = getConfigFileUrl(bundleContext, homeDir);
+        String configFileUrl = getConfigFileUrl(bundleContext, home);
+
+        // make home relative if inside sling.home
+        if (slingHomePath != null && home.startsWith(slingHomePath + "/")) {
+            home = home.substring(slingHomePath.length() + 1);
+        }
 
         // default config values
         props.put(SLING_CONTEXT, slingContext);
-        props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
-            configFileUrl);
-        props.put(SlingServerRepository.REPOSITORY_HOME_DIR,
-            homeDir.getPath());
+        if (configFileUrl != null) {
+            props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
+                configFileUrl);
+        }
+        props.put(SlingServerRepository.REPOSITORY_HOME_DIR, home);
         props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
             this.getRepositoryName());
 
@@ -281,21 +289,18 @@ public class Activator implements BundleActivator, ServiceListener {
         props.put(AbstractSlingRepository.PROPERTY_ANONYMOUS_PASS, "not-used");
     }
 
-    private File getHomeDir(BundleContext bundleContext) throws IOException {
-    	File homeDir;
-
-    	String repoHomePath = bundleContext.getProperty("sling.repository.home");
-    	String slingHomePath = bundleContext.getProperty("sling.home");
-
-    	if (repoHomePath != null) {
-         	homeDir = new File(repoHomePath, getRepositoryName());
+    private String getHomePath(BundleContext bundleContext, String slingHomePath) {
+        File homeDir;
+        String repoHomePath = bundleContext.getProperty("sling.repository.home");
+        if (repoHomePath != null) {
+            homeDir = new File(repoHomePath, getRepositoryName());
         } else if (slingHomePath != null) {
-    		homeDir = new File(slingHomePath, getRepositoryName());
-    	} else {
-    		homeDir = new File(getRepositoryName());
-    	}
+            homeDir = new File(slingHomePath, getRepositoryName());
+        } else {
+            homeDir = new File(getRepositoryName());
+        }
 
-    	// make sure jackrabbit home exists
+        // make sure jackrabbit home exists
         log.info("Creating default config for Jackrabbit in " + homeDir);
         if (!homeDir.isDirectory()) {
             if (!homeDir.mkdirs()) {
@@ -305,10 +310,10 @@ public class Activator implements BundleActivator, ServiceListener {
             }
         }
 
-    	return homeDir;
+        return homeDir.getPath();
     }
 
-    private String getConfigFileUrl(BundleContext bundleContext, File homeDir) throws IOException {
+    private String getConfigFileUrl(BundleContext bundleContext, String home) throws IOException {
     	String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
     	if (repoConfigFileUrl != null) {
     		// the repository config file is set
@@ -328,9 +333,9 @@ public class Activator implements BundleActivator, ServiceListener {
     	}
 
         // ensure the configuration file (inside the home Dir !)
-        File configFile = new File(homeDir, "repository.xml");
+        File configFile = new File(home, "repository.xml");
         boolean copied = false;
-        
+
         try {
             URL contextConfigURL = new URL("context:repository.xml");
             InputStream contextConfigStream = contextConfigURL.openStream();
@@ -339,12 +344,13 @@ public class Activator implements BundleActivator, ServiceListener {
                 copied = true;
             }
         } catch (Exception e) {}
-        
+
         if (!copied) {
             SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
         }
-        return configFile.toURI().toURL().toString();
 
+        // config file is repository.xml (default) in homeDir
+        return null;
     }
 
 }
