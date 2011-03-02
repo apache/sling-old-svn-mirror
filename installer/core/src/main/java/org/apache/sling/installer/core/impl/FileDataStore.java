@@ -37,7 +37,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.osgi.framework.BundleContext;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for all file handling.
@@ -146,7 +145,7 @@ public class FileDataStore {
                 }
             }
         }
-        final String filename = hint + "-resource-" + getNextSerialNumber() + ".ser";
+        final String filename = (hint == null ? "unknown" : hint) + "-resource-" + getNextSerialNumber() + ".ser";
         final File file = this.getDataFile(filename);
 
         this.copyToLocalStorage(stream, file);
@@ -185,7 +184,7 @@ public class FileDataStore {
 
     public File createNewDataFile(final String hint, final InputStream stream)
     throws IOException {
-        final String filename = hint + "-resource-" + getNextSerialNumber() + ".ser";
+        final String filename = (hint == null ? "unknown" : hint) + "-resource-" + getNextSerialNumber() + ".ser";
         final File file = this.getDataFile(filename);
 
         this.copyToLocalStorage(stream, file);
@@ -197,7 +196,6 @@ public class FileDataStore {
         synchronized ( this.digestCache ) {
             final String storedDigest = this.digestCache.get(url);
             if ( storedDigest != null && storedDigest.equals(digest) ) {
-                LoggerFactory.getLogger(this.getClass()).warn("Remove {} : {}", url, digest);
                 this.digestCache.remove(url);
             }
         }

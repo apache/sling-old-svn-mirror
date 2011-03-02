@@ -43,42 +43,44 @@ public class ConfigInstallTask extends AbstractConfigTask {
     @SuppressWarnings("unchecked")
 	@Override
     public void execute(final InstallationContext ctx) {
-        final ConfigurationAdmin ca = this.getConfigurationAdmin();
+        synchronized ( ConfigTaskCreator.getLock() ) {
+            final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
-        // Get or create configuration, but do not
-        // update if the new one has the same values.
-        boolean created = false;
-        try {
-            Configuration config = getConfiguration(ca, false);
-            if (config == null) {
-                created = true;
-                config = getConfiguration(ca, true);
-            } else {
-    			if (ConfigUtil.isSameData(config.getProperties(), getResource().getDictionary())) {
-    			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
-    	                        config.getPid(), getResource());
-    				config = null;
-    			}
-            }
+            // Get or create configuration, but do not
+            // update if the new one has the same values.
+            boolean created = false;
+            try {
+                Configuration config = getConfiguration(ca, false);
+                if (config == null) {
+                    created = true;
+                    config = getConfiguration(ca, true);
+                } else {
+        			if (ConfigUtil.isSameData(config.getProperties(), getResource().getDictionary())) {
+        			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
+        	                        config.getPid(), getResource());
+        				config = null;
+        			}
+                }
 
-            if (config != null) {
-                if (config.getBundleLocation() != null) {
-                    config.setBundleLocation(null);
+                if (config != null) {
+                    if (config.getBundleLocation() != null) {
+                        config.setBundleLocation(null);
+                    }
+                    config.update(getDictionary());
+                    ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
+                    if ( this.factoryPid != null ) {
+                        this.aliasPid = config.getPid();
+                    }
+                    this.setFinishedState(ResourceState.INSTALLED, this.getCompositeAliasPid());
+                    this.getLogger().debug("Configuration " + config.getPid()
+                                + " " + (created ? "created" : "updated")
+                                + " from " + getResource());
+                } else {
+                    this.setFinishedState(ResourceState.IGNORED, this.getCompositeAliasPid());
                 }
-                config.update(getDictionary());
-                ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
-                if ( this.factoryPid != null ) {
-                    this.aliasPid = config.getPid();
-                }
-                this.setFinishedState(ResourceState.INSTALLED, this.getCompositeAliasPid());
-                this.getLogger().debug("Configuration " + config.getPid()
-                            + " " + (created ? "created" : "updated")
-                            + " from " + getResource());
-            } else {
-                this.setFinishedState(ResourceState.IGNORED, this.getCompositeAliasPid());
+            } catch (Exception e) {
+                this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             }
-        } catch (Exception e) {
-            this.getLogger().debug("Exception during installation of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
         }
     }
 }

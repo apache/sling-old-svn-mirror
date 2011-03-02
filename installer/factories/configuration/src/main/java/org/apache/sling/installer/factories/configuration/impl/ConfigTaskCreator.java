@@ -80,21 +80,23 @@ public class ConfigTaskCreator
      */
     @SuppressWarnings("unchecked")
     public void configurationEvent(final ConfigurationEvent event) {
-        final String id = (event.getFactoryPid() == null ? "" : event.getFactoryPid() + ".") + event.getPid();
-        if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
-            this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
-        } else {
-            try {
-                final Configuration config = ConfigUtil.getConfiguration(configAdmin,
-                        event.getFactoryPid(),
-                        event.getPid(),
-                        false);
-                if ( config != null ) {
-                    final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
-                    this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+        synchronized ( ConfigTaskCreator.getLock() ) {
+            final String id = (event.getFactoryPid() == null ? "" : event.getFactoryPid() + ".") + event.getPid();
+            if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
+                this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+            } else {
+                try {
+                    final Configuration config = ConfigUtil.getConfiguration(configAdmin,
+                            event.getFactoryPid(),
+                            event.getPid(),
+                            false);
+                    if ( config != null ) {
+                        final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
+                        this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+                    }
+                } catch ( final Exception ignore) {
+                    // ignore for now (TODO)
                 }
-            } catch ( final Exception ignore) {
-                // ignore for now (TODO)
             }
         }
     }
@@ -175,5 +177,11 @@ public class ConfigTaskCreator
             return true;
         }
         return false;
+    }
+
+    private static final Object LOCK = new Object();
+
+    public static Object getLock() {
+        return LOCK;
     }
 }
