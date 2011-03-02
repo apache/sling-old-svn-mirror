@@ -20,7 +20,7 @@ import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
 import org.junit.runner.RunWith;
 
-/** Verify that getExpectedNumberOfTests() < 0 means "don't care" */
+/** Run some server-side tests */
 @RunWith(SlingRemoteTestRunner.class)
 public class ServerSideSampleTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
     
@@ -32,7 +32,7 @@ public class ServerSideSampleTest extends ServerSideTestsBase implements SlingRe
     }
     
     public String getJunitServletUrl() {
-        return serverBaseUrl + JUNIT_SERVLET_PATH;
+        return getServerBaseUrl() + JUNIT_SERVLET_PATH;
     }
 
     public String getTestClassesSelector() {

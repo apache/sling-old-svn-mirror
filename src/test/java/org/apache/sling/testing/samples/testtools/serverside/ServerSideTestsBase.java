@@ -16,12 +16,13 @@
  */
 package org.apache.sling.testing.samples.testtools.serverside;
 
-import org.apache.sling.junit.TimeoutsProvider;
-import org.apache.sling.testing.samples.testtools.SlingTestBase;
+import static org.junit.Assert.fail;
+
 import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.junit.Assert.fail;
 
 /** Base class for tests that require the server-side test bundles
  *  to be active.
@@ -34,7 +35,9 @@ public class ServerSideTestsBase extends SlingTestBase {
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = TimeoutsProvider.getInstance().getTimeout(60);
 
-    protected ServerSideTestsBase() {
+    @Override
+    protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
+        super.onServerReady(serverStartedByThisClass);
         try {
             checkJunitServletPresent();
         } catch(Exception e) {
@@ -59,8 +62,8 @@ public class ServerSideTestsBase extends SlingTestBase {
             }
 
             public boolean isTrue() throws Exception {
-                executor.execute(
-                        builder.buildGetRequest(JUNIT_SERVLET_PATH))
+                getRequestExecutor().execute(
+                        getRequestBuilder().buildGetRequest(JUNIT_SERVLET_PATH))
                 .assertStatus(expectedStatus);
                 return true;
             }
