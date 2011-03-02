@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.samples.testtools;
+package org.apache.sling.testing.tools.sling;
 
 import static org.junit.Assert.fail;
 
@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
@@ -45,29 +45,52 @@ public class SlingTestBase {
     public static final String BUNDLE_TO_INSTALL_PREFIX = "sling.additional.bundle";
     public static final String ADMIN = "admin";
     
-    protected static String serverBaseUrl;
-    protected static RequestBuilder builder;
-    protected static DefaultHttpClient httpClient = new DefaultHttpClient();
-    protected static RequestExecutor executor = new RequestExecutor(httpClient);
-    protected static WebconsoleClient webconsoleClient;
+    private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
+    private static String serverBaseUrl;
+    private static RequestBuilder builder;
+    private static DefaultHttpClient httpClient = new DefaultHttpClient();
+    private static RequestExecutor executor = new RequestExecutor(httpClient);
+    private static WebconsoleClient webconsoleClient;
     private static boolean serverStarted;
     private static boolean serverStartedByThisClass;
     private static boolean serverReady;
     private static boolean serverReadyTestFailed;
     private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
-    
-    protected SlingTestBase() {
+
+    /** Start the server, if not done yet */
+    private void startServer() {
         try {
             startRunnableJar();
+            builder = new RequestBuilder(serverBaseUrl);
+            webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
+            builder = new RequestBuilder(serverBaseUrl);
             waitForServerReady();
+            onServerReady(serverStartedByThisClass);
             blockIfRequested();
         } catch(Exception e) {
-            throw new IllegalStateException("Exception in SlingTestBase constructor", e);
+            log.error("Exception in maybeStartServer()", e);
+            fail("maybeStartServer() failed: " + e);
         }
+    }
+    
+    /** Start server if needed, and return a RequestBuilder that points to it */
+    protected RequestBuilder getRequestBuilder() {
+        if(builder == null) {
+            startServer();
+        }
+        return builder;
+    }
+
+    /** Start server if needed, and return its base URL */
+    protected String getServerBaseUrl() {
+        if(serverBaseUrl == null) {
+            startServer();
+        }
+        return serverBaseUrl;
     }
 
     /** Start the configured runnable jar and initialize our http client */
-    private synchronized void startRunnableJar() throws Exception {
+    protected synchronized void startRunnableJar() throws Exception {
         if(serverStarted) {
             return;
         }
@@ -85,15 +108,13 @@ public class SlingTestBase {
         }
         
         serverStarted = true;
-        builder = new RequestBuilder(serverBaseUrl);
-        webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
     }
     
     /** Optionally block here so that the runnable jar stays up - we can 
      *  then run tests against it from another VM.
      */
-    private void blockIfRequested() {
-        if ("true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP))) {
+    protected void blockIfRequested() {
+        if (keepJarRunning) {
             log.info(KEEP_JAR_RUNNING_PROP + " set to true - entering infinite loop"
                      + " so that runnable jar stays up. Kill this process to exit.");
             synchronized (this) {
@@ -107,7 +128,7 @@ public class SlingTestBase {
     }
     
     /** Check a number of server URLs for readyness */
-    private void waitForServerReady() throws Exception {
+    protected void waitForServerReady() throws Exception {
         if(serverReady) {
             return;
         }
@@ -165,9 +186,7 @@ public class SlingTestBase {
             Thread.sleep(TimeoutsProvider.getInstance().getTimeout(1000L));
         }
         
-        if(serverReady) {
-            onServerReady();
-        } else {
+        if(!serverReady) {
             serverReadyTestFailed = true;
             final String msg = "Server not ready after " + timeoutSec + " seconds, giving up";
             log.info(msg);
@@ -178,8 +197,11 @@ public class SlingTestBase {
     /** Called once when the server is found to be ready, can be used for additional
      *  server setup (extra bundles etc.). If overridden, must be called by overriding
      *  method. 
+     *  
+     *  @param serverStartedByThisClass true if we started the server, in which case
+     *      additional setup might be needed
      */
-    protected void onServerReady() throws Exception {
+    protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
         if(serverStartedByThisClass) {
             installExtraBundles();
         } else {
@@ -240,5 +262,20 @@ public class SlingTestBase {
  
     protected boolean isServerStartedByThisClass() {
         return serverStartedByThisClass;
+    }
+    
+    protected HttpClient getHttpClient() {
+        return httpClient;
+    }
+    
+    protected RequestExecutor getRequestExecutor() {
+        return executor;
+    }
+    
+    protected WebconsoleClient getWebconsoleClient() {
+        if(webconsoleClient == null) {
+            startServer();
+        }
+        return webconsoleClient;
     }
 }

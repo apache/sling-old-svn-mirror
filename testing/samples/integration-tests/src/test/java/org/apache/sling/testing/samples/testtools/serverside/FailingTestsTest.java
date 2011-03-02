@@ -58,11 +58,11 @@ public class FailingTestsTest extends ServerSideTestsBase {
     public void testFailures() throws Exception{
         
         // Execute tests from the failingtests bundle and verify response
-        final Request r = builder.buildPostRequest(JUNIT_SERVLET_PATH 
+        final Request r = getRequestBuilder().buildPostRequest(JUNIT_SERVLET_PATH 
                 + "/org.apache.sling.testing.samples.failingtests.json");
-        executor.execute(r).assertStatus(200);
+        getRequestExecutor().execute(r).assertStatus(200);
         
-        final JSONArray json = new JSONArray(new JSONTokener((executor.getContent())));
+        final JSONArray json = new JSONArray(new JSONTokener((getRequestExecutor().getContent())));
         
         assertEquals(
                 "initializationError(org.apache.sling.testing.samples.failingtests.EmptyTest): No runnable methods",

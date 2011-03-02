@@ -16,7 +16,7 @@
  */
 package org.apache.sling.testing.samples.testtools.http;
 
-import org.apache.sling.testing.samples.testtools.SlingTestBase;
+import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.junit.Test;
 
 /** Simple HTTP test example, checks the validity of some
@@ -41,8 +41,8 @@ public class OsgiConsoleTest extends SlingTestBase {
         
         for(String subpath : subpaths) {
             final String path = "/system/console/" + subpath;
-            executor.execute(
-                    builder.buildGetRequest(path)
+            getRequestExecutor().execute(
+                    getRequestBuilder().buildGetRequest(path)
                     .withCredentials("admin", "admin")
             ).assertStatus(200);
         }

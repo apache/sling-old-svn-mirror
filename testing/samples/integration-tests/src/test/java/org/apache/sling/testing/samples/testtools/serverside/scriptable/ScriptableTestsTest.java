@@ -58,8 +58,8 @@ public class ScriptableTestsTest extends ServerSideTestsBase {
     
     @Before
     public void setupContent() throws Exception {
-        slingClient = new SlingClient(serverBaseUrl, ADMIN, ADMIN);
-        testClient = new RemoteTestHttpClient(serverBaseUrl + JUNIT_SERVLET_PATH, true);
+        slingClient = new SlingClient(getServerBaseUrl(), ADMIN, ADMIN);
+        testClient = new RemoteTestHttpClient(getServerBaseUrl() + JUNIT_SERVLET_PATH, true);
         
         cleanupContent();
 

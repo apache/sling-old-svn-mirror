@@ -25,9 +25,9 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
-import org.apache.sling.junit.TimeoutsProvider;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,15 +80,15 @@ public class JSONResponseTest extends ServerSideTestsBase {
     }
 
     private void testJsonListOfTests() throws Exception {
-        Request r = builder.buildGetRequest(JUNIT_SERVLET_PATH + "/.json");
+        Request r = getRequestBuilder().buildGetRequest(JUNIT_SERVLET_PATH + "/.json");
         
         // Get list of tests in JSON format
-        executor.execute(r)
+        getRequestExecutor().execute(r)
         .assertStatus(200)
         .assertContentType("application/json");
         
         // Parse JSON response for more precise testing
-        final JSONArray json = new JSONArray(new JSONTokener((executor.getContent())));
+        final JSONArray json = new JSONArray(new JSONTokener((getRequestExecutor().getContent())));
         
         // Verify that some test names are present in the response
         final List<String> expectedTestNames = Arrays.asList(new String []{

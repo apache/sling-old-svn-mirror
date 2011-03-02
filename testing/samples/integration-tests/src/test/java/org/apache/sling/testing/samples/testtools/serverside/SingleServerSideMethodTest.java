@@ -33,7 +33,7 @@ public class SingleServerSideMethodTest extends ServerSideTestsBase implements S
     }
 
     public String getJunitServletUrl() {
-        return serverBaseUrl + JUNIT_SERVLET_PATH;
+        return getServerBaseUrl() + JUNIT_SERVLET_PATH;
     }
 
     public String getTestClassesSelector() {
