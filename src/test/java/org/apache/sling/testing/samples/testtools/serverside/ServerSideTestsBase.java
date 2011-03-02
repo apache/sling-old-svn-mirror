@@ -21,6 +21,7 @@ import org.apache.sling.testing.samples.testtools.SlingTestBase;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.junit.Assert.fail;
 
 /** Base class for tests that require the server-side test bundles
  *  to be active.
@@ -29,6 +30,7 @@ public class ServerSideTestsBase extends SlingTestBase {
     public static final String JUNIT_SERVLET_PATH = "/system/sling/junit";
     
     private static boolean junitServletOk;
+    private static boolean junitServletCheckFailed;
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = TimeoutsProvider.getInstance().getTimeout(60);
 
@@ -43,6 +45,9 @@ public class ServerSideTestsBase extends SlingTestBase {
     private void checkJunitServletPresent() throws Exception {
         if(junitServletOk) {
             return;
+        }
+        if(junitServletCheckFailed) {
+            fail("Previous check of JUnit servlet failed, cannot run tests");
         }
 
         // Retry accessing the junit servlet until it responds or timeout
@@ -63,7 +68,14 @@ public class ServerSideTestsBase extends SlingTestBase {
         };
         
         log.info(c.getDescription());
-        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, TimeoutsProvider.getInstance().getTimeout(500)); 
+        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, TimeoutsProvider.getInstance().getTimeout(500)) {
+            @Override
+            protected void onTimeout() {
+                super.onTimeout();
+                junitServletCheckFailed = true;
+            }
+            
+        };
         junitServletOk = true;
     }
 }
