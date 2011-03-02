@@ -44,26 +44,28 @@ public class ConfigRemoveTask extends AbstractConfigTask {
      */
     @SuppressWarnings("unchecked")
     public void execute(final InstallationContext ctx) {
-        final ConfigurationAdmin ca = this.getConfigurationAdmin();
+        synchronized ( ConfigTaskCreator.getLock() ) {
+            final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
-        try {
-            final Configuration cfg = getConfiguration(ca, false);
-            if (cfg == null) {
-                this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
-                this.setFinishedState(ResourceState.IGNORED);
-            } else {
-                if ( !ConfigUtil.isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
-                    this.getLogger().debug("Configuration has changed after it has been installed. Not removing!");
+            try {
+                final Configuration cfg = getConfiguration(ca, false);
+                if (cfg == null) {
+                    this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
                     this.setFinishedState(ResourceState.IGNORED);
                 } else {
-                    this.getLogger().debug("Deleting config {} ({})", getCompositePid(), getResource());
-                    cfg.delete();
-                    ctx.log("Deleted configuration {} from resource {}", getCompositePid(), getResource());
-                    this.setFinishedState(ResourceState.UNINSTALLED);
+                    if ( !ConfigUtil.isSameData(cfg.getProperties(), this.getResource().getDictionary()) ) {
+                        this.getLogger().debug("Configuration has changed after it has been installed. Not removing!");
+                        this.setFinishedState(ResourceState.IGNORED);
+                    } else {
+                        this.getLogger().debug("Deleting config {} ({})", getCompositePid(), getResource());
+                        cfg.delete();
+                        ctx.log("Deleted configuration {} from resource {}", getCompositePid(), getResource());
+                        this.setFinishedState(ResourceState.UNINSTALLED);
+                    }
                 }
+            } catch (Exception e) {
+                this.getLogger().debug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
             }
-        } catch (Exception e) {
-            this.getLogger().debug("Exception during removal of config " + this.getResource() + " : " + e.getMessage() + ". Retrying later.", e);
         }
     }
 }
