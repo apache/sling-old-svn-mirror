@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
 
     <name>Apache Sling JUnit Core</name>
-    <description>Runs JUnit tests in an OSGi framework</description>
+    <description>Runs JUnit tests in an OSGi framework and provides the JUnit libraries</description>
     
     <properties>
         <junit.version>4.8.2</junit.version>
