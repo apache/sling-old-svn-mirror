@@ -175,22 +175,17 @@ public class OsgiInstallerImpl
 
             this.mergeNewlyRegisteredResources();
 
-            // invoke transformers - sync as we change state
-            synchronized ( this.resourcesLock ) {
-                this.transformResources();
-            }
+            // invoke transformers
+            this.transformResources();
 
             // execute tasks
             final SortedSet<InstallTask> tasks = this.computeTasks();
             final boolean tasksCreated = !tasks.isEmpty();
 
-            // sync as we might change state
-            synchronized ( this.resourcesLock ) {
-                this.executeTasks(tasks);
+            this.executeTasks(tasks);
 
-                // clean up and save
-                this.cleanupInstallableResources();
-            }
+            // clean up and save
+            this.cleanupInstallableResources();
 
             // if we don't have any tasks, we go to sleep
             if (!tasksCreated) {
