@@ -736,8 +736,6 @@ public class OsgiInstallerImpl
                                     erl.compact();
                                 }
                                 updated = true;
-                                this.persistentList.save();
-                                this.wakeUp();
                             }
                         } finally {
                             if ( localIS != null ) {
@@ -780,9 +778,7 @@ public class OsgiInstallerImpl
                                 final EntityResourceList newGroup = this.persistentList.getEntityResourceList(key);
                                 newGroup.setFinishState(ResourceState.INSTALLED);
                                 newGroup.compact();
-                                this.persistentList.save();
                                 created = true;
-                                this.wakeUp();
                                 break;
                             }
                         } finally {
@@ -799,6 +795,10 @@ public class OsgiInstallerImpl
                     if ( !created ) {
                         logger.debug("No handler found to handle creation of resource {}", key);
                     }
+                }
+                if ( updated || created ) {
+                    this.persistentList.save();
+                    this.wakeUp();
                 }
 
             }
