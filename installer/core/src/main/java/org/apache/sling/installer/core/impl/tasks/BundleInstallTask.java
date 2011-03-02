@@ -44,8 +44,17 @@ public class BundleInstallTask extends AbstractInstallTask {
      */
     public void execute(final InstallationContext ctx) {
         int startLevel = 0;
-        final Object providedLevel = (this.getResource().getDictionary() != null
-            ? this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) : null);
+        final Object providedLevel;
+
+        if (this.getResource().getDictionary() != null) {
+            if ( this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) != null ) {
+                providedLevel = this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL);
+            } else {
+                providedLevel = this.getResource().getDictionary().get(InstallableResource.INSTALLATION_HINT);
+            }
+        } else {
+            providedLevel = null;
+        }
         if ( providedLevel != null ) {
             if ( providedLevel instanceof Number ) {
                 startLevel = ((Number)providedLevel).intValue();

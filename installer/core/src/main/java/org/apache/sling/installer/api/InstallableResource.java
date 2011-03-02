@@ -87,6 +87,14 @@ public class InstallableResource {
      */
     public static final String BUNDLE_START_LEVEL = "bundle.startlevel";
 
+    /**
+     * Optional parameter in the dictionary if a resource (not a dict) is installed.
+     * This parameter might be used by the installation task for any purpose like
+     * bundle start level etc.
+     * @since 3.1
+     */
+    public static final String INSTALLATION_HINT = "installation.hint";
+
     /** Default resource priority */
     public static final int DEFAULT_PRIORITY = 100;
 

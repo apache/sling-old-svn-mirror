@@ -18,6 +18,8 @@ package org.apache.sling.installer.provider.jcr.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -78,6 +80,8 @@ public class FileNodeConverter implements JcrInstaller.NodeConverter {
         	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
         }
 
-        return new InstallableResource(path, is, null, digest, null, priority);
+        final Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        dict.put(InstallableResource.INSTALLATION_HINT, n.getParent().getName());
+        return new InstallableResource(path, is, dict, digest, null, priority);
 	}
 }
