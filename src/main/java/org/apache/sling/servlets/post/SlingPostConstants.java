@@ -58,6 +58,19 @@ public interface SlingPostConstants {
     public static final String STAR_CREATE_SUFFIX = "/*";
 
     /**
+     * Name of the predefined modify operation (value is "modify").
+     * <p>
+     * The modify operation uses the remaining request parameters to indicate
+     * nodes and properties to create.
+     * <p>
+     * The modify operation is actually chosen by the Sling POST Servlet if the
+     * request has no {@link #RP_OPERATION} request parameter.
+     *
+     * @since 2.0.6 (Bundle version 2.0.6)
+     */
+    public static final String OPERATION_MODIFY = "modify";
+
+    /**
      * Name of the predefined delete operation (value is "delete").
      * <p>
      * The delete operation requires no further request parameters and just
@@ -133,11 +146,11 @@ public interface SlingPostConstants {
 
     /**
      * Name of the predefined import operation (value is "import").
-     * 
+     *
      * <p>
-     * The import operation requires either the {@link #RP_CONTENT} and {@link #RP_CONTENT_TYPE} 
+     * The import operation requires either the {@link #RP_CONTENT} and {@link #RP_CONTENT_TYPE}
      * request parameters or the {@link #RP_CONTENT_FILE} request parameter.
-     * Finally the {@link #RP_REPLACE} parameter may be set to indicate whether 
+     * Finally the {@link #RP_REPLACE} parameter may be set to indicate whether
      * an existing item at the destination should be overwritten or not.
      */
     public static final String OPERATION_IMPORT = "import";
@@ -165,9 +178,9 @@ public interface SlingPostConstants {
      * copy or move operation is to be replaced if existing (value is
      * ":replace"). Copy or move is only possible if the destination exists if
      * the replace parameter is set to the case-insignificant value true.
-     * 
+     *
      * This request parameter is also used to indicate whether the destination node
-     * for an import operation is to be replaced if existing. The parameter value is 
+     * for an import operation is to be replaced if existing. The parameter value is
      * checked to see if it matches the case-insignificant value true.
      */
     public static final String RP_REPLACE = RP_PREFIX + "replace";
@@ -175,11 +188,11 @@ public interface SlingPostConstants {
     /**
      * Name of the request parameter indicating whether the destination for a
      * property change during an import operation is to be replaced if existing.
-     * The parameter value is checked to see if it matches the case-insignificant 
+     * The parameter value is checked to see if it matches the case-insignificant
      * value true.
      */
     public static final String RP_REPLACE_PROPERTIES = RP_PREFIX + "replaceProperties";
-    
+
     /**
      * Optional request parameter indicating the order of newly created nodes in
      * creation, copy and move operation requests (value is ":order").
@@ -394,7 +407,7 @@ public interface SlingPostConstants {
      * useful for HTML checkboxes.
      */
     public static final String SUFFIX_USE_DEFAULT_WHEN_MISSING = "@UseDefaultWhenMissing";
-    
+
     /**
      * Name of the request parameter containing the content to be imported
      * by the 'import' operation.
@@ -406,7 +419,7 @@ public interface SlingPostConstants {
      * to be imported by the 'import' operation.
      */
     public static final String RP_CONTENT_TYPE = RP_PREFIX + "contentType";
-    
+
     /**
      * Name of the request parameter containing the file to be imported
      * by the 'import' operation.
@@ -414,9 +427,9 @@ public interface SlingPostConstants {
     public static final String RP_CONTENT_FILE = RP_PREFIX + "contentFile";
 
     /**
-     * Name of the request parameter indicating whether versionable nodes should 
+     * Name of the request parameter indicating whether versionable nodes should
      * be checked in during an {@link SlingPostConstants#OPERATION_IMPORT} operation.
      */
     public static final String RP_CHECKIN = RP_PREFIX + "checkin";
-    
+
 }

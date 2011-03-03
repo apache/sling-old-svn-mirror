@@ -59,7 +59,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.servlets.post;version=2.0.6
+                            org.apache.sling.servlets.post;version=2.0.8
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.servlets.post.impl.*
@@ -148,6 +148,14 @@
             <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>

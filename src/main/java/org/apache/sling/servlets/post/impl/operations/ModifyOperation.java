@@ -28,16 +28,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.NodeNameGenerator;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
@@ -61,19 +59,23 @@ public class ModifyOperation extends AbstractCreateOperation {
     private final SlingFileUploadHandler uploadHandler;
 
     public ModifyOperation(NodeNameGenerator defaultNodeNameGenerator,
-            DateParser dateParser, ServletContext servletContext) {
-    	super(defaultNodeNameGenerator);
+            DateParser dateParser) {
+        super(defaultNodeNameGenerator);
         this.dateParser = dateParser;
-        this.uploadHandler = new SlingFileUploadHandler(servletContext);
+        this.uploadHandler = new SlingFileUploadHandler();
+    }
+
+    public void setServletContext(final ServletContext servletContext) {
+        this.uploadHandler.setServletContext(servletContext);
     }
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, HtmlResponse response, List<Modification> changes)
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
             throws RepositoryException {
 
         Map<String, RequestProperty> reqProperties = collectContent(request,
                 response);
-        
+
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         // do not change order unless you have a very good reason.
@@ -236,7 +238,7 @@ public class ModifyOperation extends AbstractCreateOperation {
             if (session.itemExists(propPath)) {
                 Node parent = session.getItem(propPath).getParent();
                 checkoutIfNecessary(parent, changes, versioningConfiguration);
-                
+
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
@@ -354,8 +356,8 @@ public class ModifyOperation extends AbstractCreateOperation {
                 Node parent = deepGetOrCreateNode(session,
                     prop.getParentPath(), reqProperties, changes, versioningConfiguration);
 
-                checkoutIfNecessary(parent, changes, versioningConfiguration); 
-                
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
+
                 // skip jcr special properties
                 if (prop.getName().equals("jcr:primaryType")
                     || prop.getName().equals("jcr:mixinTypes")) {

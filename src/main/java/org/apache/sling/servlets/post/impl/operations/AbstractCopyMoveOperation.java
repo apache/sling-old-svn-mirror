@@ -28,9 +28,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
@@ -39,15 +39,15 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
  * the {@link CopyOperation} and {@link MoveOperation} classes implementing
  * commong behaviour.
  */
-abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
+abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
 
     @Override
     protected final void doRun(SlingHttpServletRequest request,
-            HtmlResponse response,
+            PostResponse response,
             List<Modification> changes)
     throws RepositoryException {
         Session session = request.getResourceResolver().adaptTo(Session.class);
-        
+
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         Resource resource = request.getResource();

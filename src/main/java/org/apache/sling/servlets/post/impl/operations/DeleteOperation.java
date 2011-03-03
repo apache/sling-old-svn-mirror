@@ -25,9 +25,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
 /**
@@ -35,10 +35,10 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_DELETE delete}
  * operation for the Sling default POST servlet.
  */
-public class DeleteOperation extends AbstractSlingPostOperation {
+public class DeleteOperation extends AbstractPostOperation {
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, HtmlResponse response, List<Modification> changes)
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
     throws RepositoryException {
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 

@@ -16,7 +16,10 @@
  */
 package org.apache.sling.servlets.post.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +32,8 @@ import junitx.util.PrivateAccessor;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.HtmlResponse;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.jmock.Expectations;
@@ -199,7 +203,7 @@ public class RequestPropertyTest {
         assertFalse(prop.hasValues());
     }
 
-    private static final Class[] COLLECT_CLASSES = new Class[] { SlingHttpServletRequest.class, HtmlResponse.class };
+    private static final Class[] COLLECT_CLASSES = new Class[] { SlingHttpServletRequest.class, PostResponse.class };
 
     private class Param {
         String key;
@@ -276,8 +280,9 @@ public class RequestPropertyTest {
         final HtmlResponse response = new HtmlResponse();
         response.setPath("/test/path");
 
-        Map<String, RequestProperty> props = (Map<String, RequestProperty>) PrivateAccessor.invoke(new ModifyOperation(
-                null, null, null), "collectContent", COLLECT_CLASSES, new Object[] { request, response });
+        Map<String, RequestProperty> props = (Map<String, RequestProperty>) PrivateAccessor.invoke(
+            new ModifyOperation(null, null), "collectContent", COLLECT_CLASSES,
+            new Object[] { request, response });
         return props;
     }
 }
