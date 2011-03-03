@@ -41,7 +41,7 @@ import junit.runner.BaseTestRunner;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
-import org.apache.sling.junit.RequestParser;
+import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -54,6 +54,11 @@ import org.w3c.dom.Text;
 @Component(immediate=false)
 @Service
 public class XmlRenderer extends RunListener implements Renderer {
+    
+    /**
+     * This renderer's extension
+     */
+    public static final String EXTENSION = "xml";
 
 	/**
 	 * Writer used for output.
@@ -106,8 +111,13 @@ public class XmlRenderer extends RunListener implements Renderer {
 	private int testSuiteCount = 0;
 
     /** @inheritDoc */
-    public boolean appliesTo(RequestParser p) {
-        return "xml".equals(p.getExtension());
+    public boolean appliesTo(TestSelector selector) {
+        return EXTENSION.equals(selector.getExtension());
+    }
+
+    /** @inheritDoc */
+    public String getExtension() {
+        return EXTENSION;
     }
 
     /** @inheritDoc */

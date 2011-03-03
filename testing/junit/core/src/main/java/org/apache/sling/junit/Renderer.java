@@ -27,7 +27,7 @@ import org.junit.runner.notification.RunListener;
 /** Renderer for our servlet output */
  public interface Renderer {
     /** True if this renderer applies to supplied request */
-     boolean appliesTo(RequestParser p);
+     boolean appliesTo(TestSelector selector);
      
     /** Called first to setup rendering */
     void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException;
@@ -53,4 +53,7 @@ import org.junit.runner.notification.RunListener;
     
     /** Provide a RunListener for JUnit tests */
     RunListener getRunListener();
+    
+    /** Return the extension that triggers this renderer */
+    String getExtension();
 }

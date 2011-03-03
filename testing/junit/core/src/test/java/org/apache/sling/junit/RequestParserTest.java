@@ -38,7 +38,7 @@ public class RequestParserTest {
         this.expectedTestSelector = expectedTestSelector;
         this.expectedExtension = expectedExtension;
         this.expectedMethodSelector = expectedMethodSelector;
-        parser = new RequestParser(RequestParser.parsePathInfo(pathInfo), null);
+        parser = new RequestParser(pathInfo);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class RequestParserTest {
     
     @Test
     public void testSelector() {
-        assertEquals(toString(), expectedTestSelector, parser.getTestSelector());
+        assertEquals(toString(), expectedTestSelector, parser.getTestSelectorString());
     }
     
     @Test
@@ -71,10 +71,12 @@ public class RequestParserTest {
                 { "/someTests.here.html", "someTests.here", "html", EMPTY },
                 { "someTests.here.html", "someTests.here", "html", EMPTY },
                 { "someTests.here.html.json", "someTests.here.html", "json", EMPTY },
-                { "someTests.here.html.json/TEST_METHOD_NAME", "someTests.here.html", "json", "TEST_METHOD_NAME" },
-                { ".json/TEST_METHOD_NAME", "", "json", "TEST_METHOD_NAME" },
-                { "/.json/TEST_METHOD_NAME", "", "json", "TEST_METHOD_NAME" },
-                { "/.html.json/TEST_METHOD_NAME", ".html", "json", "TEST_METHOD_NAME" },
+                { "someTests.here.html.json/TEST_METHOD_NAME.txt", "someTests.here.html.json", "txt", "TEST_METHOD_NAME" },
+                { ".json/TEST_METHOD_NAME", "", "json/TEST_METHOD_NAME", "" },
+                { ".json/TEST_METHOD_NAME.txt", ".json", "txt", "TEST_METHOD_NAME" },
+                { "/.json/TEST_METHOD_NAME.txt", ".json", "txt", "TEST_METHOD_NAME" },
+                { "/.json/TEST_METHOD_NAME.txt", ".json", "txt", "TEST_METHOD_NAME" },
+                { "/.html.json/TEST_METHOD_NAME.txt", ".html.json", "txt", "TEST_METHOD_NAME" },
         };
         
         return Arrays.asList(data);

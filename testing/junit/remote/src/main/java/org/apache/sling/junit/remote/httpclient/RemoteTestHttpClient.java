@@ -59,20 +59,26 @@ public class RemoteTestHttpClient {
             }
         };
         
-        // POST request executes the tests
+        // Build path for POST request to execute the tests
+        
+        // Test classes selector
         subpath = new StringBuilder();
         if(!junitServletUrl.endsWith(SLASH)) {
             subpath.append(SLASH);
         }
         subpath.append(testClassesSelector);
-        if(!extension.startsWith(DOT)) {
-            subpath.append(DOT);
-        }
-        subpath.append(extension);
+        
+        // Test method selector
         if(testMethodSelector != null && testMethodSelector.length() > 0) {
             subpath.append("/");
             subpath.append(testMethodSelector);
         }
+        
+        // Extension
+        if(!extension.startsWith(DOT)) {
+            subpath.append(DOT);
+        }
+        subpath.append(extension);
         
         log.info("Executing test remotely, path={} JUnit servlet URL={}", 
                 subpath, junitServletUrl);
