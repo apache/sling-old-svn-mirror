@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
-import org.apache.sling.junit.RequestParser;
+import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -36,11 +36,18 @@ import org.junit.runner.notification.RunListener;
 @Service
 /** Plain text renderer */
 public class PlainTextRenderer extends RunListener implements Renderer {
+    public static final String EXTENSION = "txt";
     private PrintWriter output;
     
     /** @inheritDoc */
-    public boolean appliesTo(RequestParser p) {
-        return "txt".equals(p.getExtension());
+    public boolean appliesTo(TestSelector selector) {
+        return EXTENSION.equals(selector.getExtension());
+    }
+
+    
+    /** @inheritDoc */
+    public String getExtension() {
+        return EXTENSION;
     }
 
     /** @inheritDoc */

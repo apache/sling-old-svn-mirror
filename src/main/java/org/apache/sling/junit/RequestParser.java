@@ -16,7 +16,6 @@
  */
 package org.apache.sling.junit;
 
-import javax.servlet.http.HttpServletRequest;
 
 /** Parse information from a request, to define which
  *  tests to run and which renderer to select.
@@ -29,66 +28,49 @@ public class RequestParser implements TestSelector {
     private final String testNameSelector;
     private final String selectedMethodName;
     private final String extension;
-    private final HttpServletRequest request;
     private static final String EMPTY_STRING = "";
 
-    /** Build from a request using standard parsing */
-    public RequestParser(HttpServletRequest request) {
-        this(parsePathInfo(request.getPathInfo()), request);
-    }
-    
-    /** Build from pre-parsed values */
-    public RequestParser(HttpServletRequest request, String testSelector, String outputExtension, String testMethodName) {
-        this.request = request;
-        this.testNameSelector = testSelector == null ? "" : testSelector;
-        this.extension = outputExtension == null ? "" : outputExtension;
-        this.selectedMethodName = testMethodName == null ? "" : testMethodName;
-    }
-    
-    RequestParser(String [] s, HttpServletRequest request) {
-        this.request = request;
-        testNameSelector = s[0];
-        extension = s[1];
-        selectedMethodName = s[2];
-    }
-    
-    static String [] parsePathInfo(String pathInfo) {
-        final String [] result = new String[3];
+    /** Parse subpath, which is in the form 
+     *  TEST_SELECTOR/TEST_METHOD.EXTENSION
+     *  or
+     *  TEST_SELECTOR.EXTENSION
+     */
+    public RequestParser(String subpath) {
         
-        if (pathInfo != null) {
-            if (pathInfo.startsWith("/")) {
-                pathInfo = pathInfo.substring(1);
+        if (subpath == null) {
+            testNameSelector = EMPTY_STRING;
+            selectedMethodName = EMPTY_STRING;
+            extension = EMPTY_STRING;
+        } else {
+            if (subpath.startsWith("/")) {
+                subpath = subpath.substring(1);
             }
             
             // Split at last dot to find extension
+            String beforeExtension = null;
             {
-                final int pos = pathInfo.lastIndexOf('.');
+                final int pos = subpath.lastIndexOf('.');
                 if (pos >= 0) {
-                    result[0] = pathInfo.substring(0, pos);
-                    result[1] = pathInfo.substring(pos+1);
+                    beforeExtension = subpath.substring(0, pos);
+                    extension = subpath.substring(pos+1);
                 } else {
-                    result[0] = pathInfo;
+                    beforeExtension = subpath;
+                    extension = EMPTY_STRING;
                 }
             }
             
-            // And if extension contains a /, what follows is test method selector
-            final String ext = result[1];
-            if(ext != null) {
-                final int pos = ext.indexOf('/');
+            // And split at last / between test selector and test method name
+            {
+                final int pos = beforeExtension.lastIndexOf('/');
                 if(pos >= 0) {
-                    result[1] = ext.substring(0, pos);
-                    result[2] = ext.substring(pos+1);
+                    testNameSelector = beforeExtension.substring(0, pos);
+                    selectedMethodName = beforeExtension.substring(pos+1);
+                } else {
+                    testNameSelector = beforeExtension;
+                    selectedMethodName = EMPTY_STRING;
                 }
             }
         }
-        
-        for(int i=0; i < result.length; i++) {
-            if(result[i] == null) {
-                result[i] = EMPTY_STRING;
-            }
-        }
-        
-        return result;
     }
 
     public String toString() {
@@ -99,7 +81,7 @@ public class RequestParser implements TestSelector {
                 ;
     }
 
-    public String getTestSelector() {
+    public String getTestSelectorString() {
         return testNameSelector;
     }
 
@@ -111,10 +93,6 @@ public class RequestParser implements TestSelector {
         return selectedMethodName;
     }
     
-    public HttpServletRequest getRequest() {
-        return request;
-    }
-
     /** @inheritDoc */
     public boolean acceptTestName(String testName) {
         if(testNameSelector.length() == 0) {

@@ -22,13 +22,12 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.RendererSelector;
-import org.apache.sling.junit.RequestParser;
+import org.apache.sling.junit.TestSelector;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -51,11 +50,7 @@ public class RendererSelectorImpl implements RendererSelector {
         return Collections.unmodifiableCollection(renderers);
     }
     
-    public Renderer getRenderer(HttpServletRequest request) {
-        return getRenderer(new RequestParser(request));
-    }
-    
-    public Renderer getRenderer(RequestParser rp) {
+    public Renderer getRenderer(TestSelector selector) {
         if(renderersTracker.getTrackingCount() != renderersTrackerTrackingCount) {
             log.debug("Rebuilding list of {}", Renderer.class.getSimpleName());
             renderersTrackerTrackingCount = renderersTracker.getTrackingCount();
@@ -72,7 +67,7 @@ public class RendererSelectorImpl implements RendererSelector {
         }
         
         for(Renderer r : renderers) {
-            if(r.appliesTo(rp)) {
+            if(r.appliesTo(selector)) {
                 return r;
             }
         }

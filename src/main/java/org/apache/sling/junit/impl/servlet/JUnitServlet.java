@@ -55,10 +55,7 @@ public class JUnitServlet extends HttpServlet {
     @Property(value="/system/sling/junit")
     static final String SERVLET_PATH_NAME = "servlet.path";
     
-    @Property(boolValue=false)
-    static final String SERVLET_DISABLED_NAME = "servlet.disabled";
-    
-    /** This will be null if we're disabled by configuration */ 
+    /** Non-null if we are registered with HttpService */ 
     private String servletPath;
     
     @Reference
@@ -71,16 +68,25 @@ public class JUnitServlet extends HttpServlet {
     private RendererSelector rendererSelector;
     
     protected void activate(ComponentContext ctx) throws ServletException, NamespaceException {
-        final Dictionary<?, ?> config = ctx.getProperties();
-        boolean disabled = ((Boolean)config.get(SERVLET_DISABLED_NAME)).booleanValue();
-        if(disabled) {
-            servletPath = null;
-            log.info("Servlet disabled by {} configuration parameter", SERVLET_DISABLED_NAME);
+        servletPath = getServletPath(ctx);
+        if(servletPath == null) {
+            log.info("Servlet path is null, not registering with HttpService");
         } else {
-            servletPath = (String)config.get(SERVLET_PATH_NAME);
             httpService.registerServlet(servletPath, this, null, null);
             log.info("Servlet registered at {}", servletPath);
         }
+    }
+
+    /** Return the path at which to mount this servlet, or null
+     *  if it must not be mounted.
+     */
+    protected String getServletPath(ComponentContext ctx) {
+        final Dictionary<?, ?> config = ctx.getProperties();
+        String result = (String)config.get(SERVLET_PATH_NAME);
+        if(result != null && result.trim().length() == 0) {
+            result = null;
+        }
+        return result;
     }
     
     protected void deactivate(ComponentContext ctx) throws ServletException, NamespaceException {
@@ -88,6 +94,7 @@ public class JUnitServlet extends HttpServlet {
             httpService.unregister(servletPath);
             log.info("Servlet unregistered from path {}", servletPath);
         }
+        servletPath = null;
     }
     
     /** Return sorted list of available tests
@@ -131,42 +138,30 @@ public class JUnitServlet extends HttpServlet {
                 return;
             }
         }
-        
-        final RequestParser requestParser = new RequestParser(request);
-        final Renderer renderer = rendererSelector.getRenderer(request);
+
+        final TestSelector selector = getTestSelector(request);
+        final Renderer renderer = rendererSelector.getRenderer(selector);
         if(renderer == null) {
-            throw new ServletException("No Renderer found for " + requestParser);
+            throw new ServletException("No Renderer found for " + selector);
         }
-        log.debug("GET request: {}", requestParser);
+        log.debug("GET request: {}", selector);
 
         renderer.setup(response, getClass().getSimpleName());
-        
-        if(requestParser.getTestSelector().length() > 0) {
-            renderer.info("info", "Test selector: " + requestParser.getTestSelector()); 
-        } else {
-            renderer.info("info", "Test selector is empty: " 
-                    + "add class name prefix + extension at the end of the URL to select a subset of tests"); 
-        }
+        renderer.info("info", "Test selector: " + selector); 
         
         // Any test classes?
-        final List<String> testNames = getTestNames(requestParser); 
+        final List<String> testNames = getTestNames(selector); 
         if(testNames.isEmpty()) {
             renderer.info(
                     "warning",
-                    "No test classes found with prefix=" + requestParser.getTestSelector()
+                    "No test classes found for selector " + selector
                     + ", check the requirements of the active " +
                     "TestsProvider services for how to supply tests." 
                     );
         } else {
             try {
                 testsManager.listTests(testNames, renderer);
-                final String postPath = 
-                    request.getContextPath() 
-                    + servletPath
-                    + "/"
-                    + requestParser.getTestSelector()
-                    + "."
-                    + requestParser.getExtension();
+                final String postPath = getTestExecutionPath(request, selector, renderer.getExtension()); 
                 renderer.link("Execute these tests", postPath, "POST");
             } catch(Exception e) {
                 throw new ServletException(e);
@@ -179,27 +174,48 @@ public class JUnitServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
-        final RequestParser requestParser = new RequestParser(request);
-        log.info("POST request, executing tests: {}", requestParser);
+        final TestSelector selector = getTestSelector(request);
+        log.info("POST request, executing tests: {}", selector);
         
-        final Renderer renderer = rendererSelector.getRenderer(request);
+        final Renderer renderer = rendererSelector.getRenderer(selector);
         if(renderer == null) {
-            throw new ServletException("No Renderer found for " + requestParser);
+            throw new ServletException("No Renderer found for " + selector);
         }
         renderer.setup(response, getClass().getSimpleName());
         
-        final List<String> testNames = getTestNames(requestParser);
+        final List<String> testNames = getTestNames(selector);
         if(testNames.isEmpty()) {
             response.sendError(
                     HttpServletResponse.SC_NOT_FOUND, 
-                    "No tests found for " + requestParser);
+                    "No tests found for " + selector);
         }
         try {
-            testsManager.executeTests(testNames, renderer, requestParser);
+            testsManager.executeTests(testNames, renderer, selector);
         } catch(Exception e) {
             throw new ServletException(e);
         }
         
         renderer.cleanup();
+    }
+    
+    /** Return a TestSelector for supplied request */
+    protected TestSelector getTestSelector(HttpServletRequest request) {
+        return new RequestParser(getTestSelectionPath(request));
+    }
+    
+    /** Return subpath to use for selecting tests */
+    protected String getTestSelectionPath(HttpServletRequest request) {
+        return request.getPathInfo();
+    }
+    
+    /** Return path to which to POST to execute specified test */
+    protected String getTestExecutionPath(HttpServletRequest request, TestSelector selector, String extension) {
+        return request.getContextPath() 
+        + servletPath
+        + "/"
+        + selector.getTestSelectorString()
+        + "."
+        + extension
+        ;
     }
 }

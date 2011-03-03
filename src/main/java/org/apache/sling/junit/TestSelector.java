@@ -23,4 +23,10 @@ public interface TestSelector {
     
     /** If not null, only test methods having this name are executed */
     String getSelectedTestMethodName();
+    
+    /** Return the String used to select tests */
+    String getTestSelectorString();
+    
+    /** Return the extension used to render results */
+    String getExtension();
 }

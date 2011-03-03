@@ -18,16 +18,11 @@ package org.apache.sling.junit;
 
 import java.util.Collection;
 
-import javax.servlet.http.HttpServletRequest;
-
 /** Provides a Renderer to execute tests */
 public interface RendererSelector {
     /** Return all available Renderers */
     Collection<Renderer> getRenderers();
     
-    /** Select a Renderer for supplied request */
-    Renderer getRenderer(HttpServletRequest r);
-    
-    /** Select a Renderer for supplied RequestParser */
-    Renderer getRenderer(RequestParser rp);
+    /** Select a Renderer for supplied TestSelector */
+    Renderer getRenderer(TestSelector selector);
 }
