@@ -18,15 +18,11 @@
  */
 package org.apache.sling.commons.osgi;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
@@ -34,7 +30,9 @@ import org.osgi.service.event.EventConstants;
 /**
  * The <code>OsgiUtil</code> is a utility class providing some usefull utility
  * methods.
+ * @deprecated
  */
+@Deprecated
 public class OsgiUtil {
 
     /**
@@ -46,15 +44,8 @@ public class OsgiUtil {
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default boolean value
      */
-    public static boolean toBoolean(Object propValue, boolean defaultValue) {
-        propValue = toObject(propValue);
-        if (propValue instanceof Boolean) {
-            return (Boolean) propValue;
-        } else if (propValue != null) {
-            return Boolean.valueOf(String.valueOf(propValue));
-        }
-
-        return defaultValue;
+    public static boolean toBoolean(final Object propValue, final boolean defaultValue) {
+        return PropertiesUtil.toBoolean(propValue, defaultValue);
     }
 
     /**
@@ -63,9 +54,8 @@ public class OsgiUtil {
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default string value
      */
-    public static String toString(Object propValue, String defaultValue) {
-        propValue = toObject(propValue);
-        return (propValue != null) ? propValue.toString() : defaultValue;
+    public static String toString(final Object propValue, final String defaultValue) {
+        return PropertiesUtil.toString(propValue, defaultValue);
     }
 
     /**
@@ -76,19 +66,8 @@ public class OsgiUtil {
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default long value
      */
-    public static long toLong(Object propValue, long defaultValue) {
-        propValue = toObject(propValue);
-        if (propValue instanceof Long) {
-            return (Long) propValue;
-        } else if (propValue != null) {
-            try {
-                return Long.valueOf(String.valueOf(propValue));
-            } catch (NumberFormatException nfe) {
-                // don't care, fall through to default value
-            }
-        }
-
-        return defaultValue;
+    public static long toLong(final Object propValue, final long defaultValue) {
+        return PropertiesUtil.toLong(propValue, defaultValue);
     }
 
     /**
@@ -99,19 +78,8 @@ public class OsgiUtil {
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default integer value
      */
-    public static int toInteger(Object propValue, int defaultValue) {
-        propValue = toObject(propValue);
-        if (propValue instanceof Integer) {
-            return (Integer) propValue;
-        } else if (propValue != null) {
-            try {
-                return Integer.valueOf(String.valueOf(propValue));
-            } catch (NumberFormatException nfe) {
-                // don't care, fall through to default value
-            }
-        }
-
-        return defaultValue;
+    public static int toInteger(final Object propValue, final int defaultValue) {
+        return PropertiesUtil.toInteger(propValue, defaultValue);
     }
 
     /**
@@ -125,8 +93,8 @@ public class OsgiUtil {
      * @deprecated since 2.0.4, use {@link #toDouble(Object, double)} instead
      */
     @Deprecated
-    public static double getProperty(Object propValue, double defaultValue) {
-        return toDouble(propValue, defaultValue);
+    public static double getProperty(final Object propValue, final double defaultValue) {
+        return PropertiesUtil.toDouble(propValue, defaultValue);
     }
 
     /**
@@ -139,19 +107,8 @@ public class OsgiUtil {
      *
      * @since 2.0.4
      */
-    public static double toDouble(Object propValue, double defaultValue) {
-        propValue = toObject(propValue);
-        if (propValue instanceof Double) {
-            return (Double) propValue;
-        } else if (propValue != null) {
-            try {
-                return Double.valueOf(String.valueOf(propValue));
-            } catch (NumberFormatException nfe) {
-                // don't care, fall through to default value
-            }
-        }
-
-        return defaultValue;
+    public static double toDouble(final Object propValue, final double defaultValue) {
+        return PropertiesUtil.toDouble(propValue, defaultValue);
     }
 
     /**
@@ -163,18 +120,8 @@ public class OsgiUtil {
      * Otherwise <code>null</code> is returned.
      * @param propValue the parameter to convert.
      */
-    public static Object toObject(Object propValue) {
-        if (propValue == null) {
-            return null;
-        } else if (propValue.getClass().isArray()) {
-            Object[] prop = (Object[]) propValue;
-            return prop.length > 0 ? prop[0] : null;
-        } else if (propValue instanceof Collection<?>) {
-            Collection<?> prop = (Collection<?>) propValue;
-            return prop.isEmpty() ? null : prop.iterator().next();
-        } else {
-            return propValue;
-        }
+    public static Object toObject(final Object propValue) {
+        return PropertiesUtil.toObject(propValue);
     }
 
     /**
@@ -187,8 +134,8 @@ public class OsgiUtil {
      * returned.
      * @param propValue The object to convert.
      */
-    public static String[] toStringArray(Object propValue) {
-        return toStringArray(propValue, null);
+    public static String[] toStringArray(final Object propValue) {
+        return PropertiesUtil.toStringArray(propValue);
     }
 
     /**
@@ -203,43 +150,9 @@ public class OsgiUtil {
      * @param propValue The object to convert.
      * @param defaultArray The default array to return.
      */
-    public static String[] toStringArray(Object propValue, String[] defaultArray) {
-        if (propValue == null) {
-            // no value at all
-            return defaultArray;
+    public static String[] toStringArray(final Object propValue, final String[] defaultArray) {
+        return PropertiesUtil.toStringArray(propValue, defaultArray);
 
-        } else if (propValue instanceof String) {
-            // single string
-            return new String[] { (String) propValue };
-
-        } else if (propValue instanceof String[]) {
-            // String[]
-            return (String[]) propValue;
-
-        } else if (propValue.getClass().isArray()) {
-            // other array
-            Object[] valueArray = (Object[]) propValue;
-            List<String> values = new ArrayList<String>(valueArray.length);
-            for (Object value : valueArray) {
-                if (value != null) {
-                    values.add(value.toString());
-                }
-            }
-            return values.toArray(new String[values.size()]);
-
-        } else if (propValue instanceof Collection<?>) {
-            // collection
-            Collection<?> valueCollection = (Collection<?>) propValue;
-            List<String> valueList = new ArrayList<String>(valueCollection.size());
-            for (Object value : valueCollection) {
-                if (value != null) {
-                    valueList.add(value.toString());
-                }
-            }
-            return valueList.toArray(new String[valueList.size()]);
-        }
-
-        return defaultArray;
     }
 
     /**
@@ -254,9 +167,10 @@ public class OsgiUtil {
      * @param props A non-null map of properties for the event.
      * @return The OSGi event.
      */
-    public static Event createEvent(Bundle sourceBundle,
-            ServiceReference sourceService, String topic,
-            Map<String, Object> props) {
+    public static Event createEvent(final Bundle sourceBundle,
+            final ServiceReference sourceService,
+            final String topic,
+            final Map<String, Object> props) {
 
         // get a private copy of the properties
         Dictionary<String, Object> table = new Hashtable<String, Object>(props);
@@ -300,73 +214,6 @@ public class OsgiUtil {
      * @since 2.0.6
      */
     public static Comparable<Object> getComparableForServiceRanking(final Map<String, Object> props) {
-        return new ComparableImplementation(props);
-    }
-
-    private static final class ComparableImplementation implements Comparable<Object> {
-
-        private final Map<String, Object> props;
-
-        private ComparableImplementation(Map<String, Object> props) {
-            this.props = props;
-        }
-
-        @SuppressWarnings("unchecked")
-        public int compareTo(Object reference) {
-            final Long otherId;
-            Object otherRankObj;
-            if ( reference instanceof ServiceReference ) {
-                final ServiceReference other = (ServiceReference) reference;
-                otherId = (Long) other.getProperty(Constants.SERVICE_ID);
-                otherRankObj = other.getProperty(Constants.SERVICE_RANKING);
-            } else if (reference instanceof Map){
-                final Map<String, Object> otherProps = (Map<String, Object>)reference;
-                otherId = (Long) otherProps.get(Constants.SERVICE_ID);
-                otherRankObj = otherProps.get(Constants.SERVICE_RANKING);
-            } else {
-                final ComparableImplementation other = (ComparableImplementation)reference;
-                otherId = (Long) other.props.get(Constants.SERVICE_ID);
-                otherRankObj = other.props.get(Constants.SERVICE_RANKING);
-            }
-            final Long id = (Long) props.get(Constants.SERVICE_ID);
-            if (id.equals(otherId)) {
-                return 0; // same service
-            }
-
-            Object rankObj = props.get(Constants.SERVICE_RANKING);
-
-            // If no rank, then spec says it defaults to zero.
-            rankObj = (rankObj == null) ? new Integer(0) : rankObj;
-            otherRankObj = (otherRankObj == null) ? new Integer(0) : otherRankObj;
-
-            // If rank is not Integer, then spec says it defaults to zero.
-            Integer rank = (rankObj instanceof Integer)
-                ? (Integer) rankObj : new Integer(0);
-            Integer otherRank = (otherRankObj instanceof Integer)
-                ? (Integer) otherRankObj : new Integer(0);
-
-            // Sort by rank in ascending order.
-            if (rank.compareTo(otherRank) < 0) {
-                return -1; // lower rank
-            } else if (rank.compareTo(otherRank) > 0) {
-                return 1; // higher rank
-            }
-
-            // If ranks are equal, then sort by service id in descending order.
-            return (id.compareTo(otherId) < 0) ? 1 : -1;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ( obj instanceof ComparableImplementation ) {
-                return this.props.equals(((ComparableImplementation)obj).props);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return this.props.hashCode();
-        }
+        return ServiceUtil.getComparableForServiceRanking(props);
     }
 }
