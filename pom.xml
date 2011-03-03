@@ -154,9 +154,6 @@
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         
-        <!-- Testing Support -->
-        <module>testing</module>
-        
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/providers/file</module>
@@ -172,6 +169,8 @@
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
 
+        <!-- Testing Support -->
+        <module>testing</module>
     </modules>
 
     <profiles>
