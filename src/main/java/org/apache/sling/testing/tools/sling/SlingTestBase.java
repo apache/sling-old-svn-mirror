@@ -157,6 +157,7 @@ public class SlingTestBase {
         // our configured request paths with a 200 result and content
         // that contains the pattern that's optionally supplied with the 
         // path, separated by a colon
+        log.info("Checking that GET requests return expected content (timeout={} seconds): {}", timeoutSec, testPaths);
         while(System.currentTimeMillis() < endTime) {
             boolean errors = false;
             for(String p : testPaths) {
@@ -169,11 +170,11 @@ public class SlingTestBase {
                     .assertContentContains(pattern);
                 } catch(AssertionError ae) {
                     errors = true;
-                    log.info("Request to {}{} failed, will retry ({})", 
+                    log.debug("Request to {}{} failed, will retry ({})", 
                             new Object[] { serverBaseUrl, path, ae});
                 } catch(Exception e) {
                     errors = true;
-                    log.info("Request to {}{} failed, will retry ({})",
+                    log.debug("Request to {}{} failed, will retry ({})",
                             new Object[] { serverBaseUrl, path, pattern, e });
                 }
             }
