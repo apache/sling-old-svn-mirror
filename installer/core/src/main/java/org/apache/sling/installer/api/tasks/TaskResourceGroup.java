@@ -18,7 +18,6 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-
 /**
  * This is a group of resources all pointing to the same artifact,
  * but maybe in different versions or locations.
@@ -31,6 +30,12 @@ public interface TaskResourceGroup {
      */
     TaskResource getActiveResource();
 
+    /**
+     * If there is more than the active resource in the group, return the second
+     * resource from the group.
+     * @since 1.1
+     */
+    TaskResource getNextActiveResource();
 
     /**
      * Set the finish state for the active resource.

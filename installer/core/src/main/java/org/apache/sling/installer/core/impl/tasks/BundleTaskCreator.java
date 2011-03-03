@@ -45,6 +45,11 @@ import org.slf4j.LoggerFactory;
  */
 public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 
+    /** If this property is set, the bundle is installed if the currently installed version
+     * is the version specified by the property.
+     */
+    private final static String FORCE_INSTALL_VERSION = "force.install.version";
+
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
@@ -165,12 +170,22 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 		// Uninstall
         final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
-		    // find the info with the exact version
+            // find the info with the exact version
             final BundleInfo info = this.getBundleInfo(symbolicName,
                     (String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
 		    // Remove corresponding bundle if present and if we installed it
 		    if ( info != null ) {
-		        result = new BundleRemoveTask(resourceList, this);
+	            // if this is an uninstall, check if we have to install an older version
+	            // in this case we should do an update instead of uninstall/install (!)
+	            final TaskResource second = resourceList.getNextActiveResource();
+	            if ( second != null &&
+	                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
+                    second.setAttribute(FORCE_INSTALL_VERSION, info.version.toString());
+                    logger.debug("Detected downgrad of bundle {}", symbolicName);
+                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
+	            } else {
+	                result = new BundleRemoveTask(resourceList, this);
+	            }
 		    } else {
 	            logger.debug("Bundle {}:{} is not installed anymore - nothing to remove.", symbolicName,
 	                    toActivate.getAttribute(Constants.BUNDLE_VERSION));
@@ -196,8 +211,13 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                     // installed version is lower -> update
                     doUpdate = true;
                 } else if (compare > 0) {
-                    logger.debug("Bundle " + info.symbolicName + " " + newVersion
-                                + " is not installed, bundle with higher version is already installed.");
+                    final String forceVersion = (String) toActivate.getAttribute(FORCE_INSTALL_VERSION);
+                    if ( forceVersion != null && info.version.compareTo(new Version(forceVersion)) == 0 ) {
+                        doUpdate = true;
+                    } else {
+                        logger.debug("Bundle " + info.symbolicName + " " + newVersion
+                                    + " is not installed, bundle with higher version is already installed.");
+                    }
 			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
 			        // installed, same version but SNAPSHOT
 			        doUpdate = true;
@@ -215,6 +235,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                     result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
                 }
 			}
+		    toActivate.setAttribute(FORCE_INSTALL_VERSION, null);
 		}
 		return result;
 	}
