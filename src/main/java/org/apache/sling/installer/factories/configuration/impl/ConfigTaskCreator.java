@@ -32,6 +32,7 @@ import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.TransformationResult;
+import org.apache.sling.installer.factories.configuration.ConfigurationConstants;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -92,10 +93,21 @@ public class ConfigTaskCreator
                             false);
                     if ( config != null ) {
                         final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
-                        this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+                        boolean persist = true;
+                        final Object persistProp = dict.get(ConfigurationConstants.PROPERTY_PERSISTENCE);
+                        if ( persistProp != null ) {
+                            if (persistProp instanceof Boolean) {
+                                persist = ((Boolean) persistProp).booleanValue();
+                            } else {
+                                persist = Boolean.valueOf(String.valueOf(persistProp));
+                            }
+                        }
+                        if ( persist ) {
+                            this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+                        }
                     }
                 } catch ( final Exception ignore) {
-                    // ignore for now (TODO)
+                    // ignore for now
                 }
             }
         }
