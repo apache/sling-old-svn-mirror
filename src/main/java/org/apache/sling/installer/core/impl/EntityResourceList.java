@@ -110,7 +110,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     /**
-     * Return the first resource if it either needs to be installed or uninstalled.
+     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#getActiveResource()
      */
     public TaskResource getActiveResource() {
         if ( !resources.isEmpty() ) {
@@ -123,6 +123,20 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         return null;
     }
 
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#getNextActiveResource()
+     */
+    public TaskResource getNextActiveResource() {
+        if ( this.getActiveResource() != null ) {
+            if ( this.resources.size() > 1 ) {
+                // to get the second item in the set we have to use an iterator!
+                final Iterator<TaskResource> i = this.resources.iterator();
+                i.next(); // skip first
+                return i.next();
+            }
+        }
+        return null;
+    }
     /**
      * Return the first resource or null
      */
@@ -174,10 +188,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             if ( toActivate.getState() == ResourceState.UNINSTALL
                  && this.resources.size() > 1 ) {
 
-                // to get the second item in the set we have to use an iterator!
-                final Iterator<TaskResource> i = this.resources.iterator();
-                i.next(); // skip first
-                final TaskResource second = i.next();
+                final TaskResource second = this.getNextActiveResource();
                 if ( state == ResourceState.UNINSTALLED ) {
                     // first resource got uninstalled, go back to second
                     if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {
