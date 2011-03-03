@@ -14,33 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.samples.testtools.serverside;
+package org.apache.sling.testing.samples.integrationtests.serverside;
 
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
 import org.junit.runner.RunWith;
 
-/** Run a single test method from a servet-side test */ 
+/** Run some server-side tests */
 @RunWith(SlingRemoteTestRunner.class)
-public class SingleServerSideMethodTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
+public class ServerSideSampleTest extends ServerSideTestsBase implements SlingRemoteTestParameters {
     
-    public static final String TEST_CLASS = "org.apache.sling.testing.samples.sampletests.JUnit4Test";
-    public static final String TEST_METHOD = "testRequiresBefore";
-    public static final int TESTS_AT_THIS_PATH = 1;
-
+    public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
+    public static final int TESTS_AT_THIS_PATH = 5;
+    
     public int getExpectedNumberOfTests() {
         return TESTS_AT_THIS_PATH;
     }
-
+    
     public String getJunitServletUrl() {
         return getServerBaseUrl() + JUNIT_SERVLET_PATH;
     }
 
     public String getTestClassesSelector() {
-        return TEST_CLASS;
+        return TEST_SELECTOR;
     }
 
     public String getTestMethodSelector() {
-        return TEST_METHOD;
+        return null;
     }
 }

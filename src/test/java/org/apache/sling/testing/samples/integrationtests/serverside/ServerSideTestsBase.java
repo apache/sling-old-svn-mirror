@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.samples.testtools.serverside;
+package org.apache.sling.testing.samples.integrationtests.serverside;
 
 import static org.junit.Assert.fail;
 
-import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.http.RetryingContentChecker;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.slf4j.Logger;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public class ServerSideTestsBase extends SlingTestBase {
     public static final String JUNIT_SERVLET_PATH = "/system/sling/junit";
     
+    private RetryingContentChecker junitServletChecker;
     private static boolean junitServletOk;
     private static boolean junitServletCheckFailed;
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -38,47 +39,35 @@ public class ServerSideTestsBase extends SlingTestBase {
     @Override
     protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
         super.onServerReady(serverStartedByThisClass);
-        try {
-            checkJunitServletPresent();
-        } catch(Exception e) {
-            throw new IllegalStateException("JUnit Servlet not ready: ", e);
-        }
-    }
-
-    private void checkJunitServletPresent() throws Exception {
-        if(junitServletOk) {
-            return;
-        }
         if(junitServletCheckFailed) {
             fail("Previous check of JUnit servlet failed, cannot run tests");
         }
-
-        // Retry accessing the junit servlet until it responds or timeout
-        // (as we might just have installed the required bundles)
-        final int expectedStatus = 200;
-        final RetryLoop.Condition c = new RetryLoop.Condition() {
-            public String getDescription() {
-                return "Checking that " + JUNIT_SERVLET_PATH + " returns " + expectedStatus;
-            }
-
-            public boolean isTrue() throws Exception {
-                getRequestExecutor().execute(
-                        getRequestBuilder().buildGetRequest(JUNIT_SERVLET_PATH))
-                .assertStatus(expectedStatus);
-                return true;
-            }
-                
-        };
         
-        log.info(c.getDescription());
-        new RetryLoop(c, JUNIT_SERVLET_TIMEOUT_SECONDS, TimeoutsProvider.getInstance().getTimeout(500)) {
-            @Override
-            protected void onTimeout() {
-                super.onTimeout();
-                junitServletCheckFailed = true;
+        try {
+            if(!junitServletOk) {
+                if(junitServletChecker == null) {
+                    junitServletChecker = 
+                        new RetryingContentChecker(getRequestExecutor(), getRequestBuilder()) {
+                        @Override
+                        public void onTimeout() {
+                            junitServletCheckFailed = true;
+                        }
+                    };
+                }
+                
+                final String path = JUNIT_SERVLET_PATH;
+                final int status = 200;
+                final int timeout = TimeoutsProvider.getInstance().getTimeout(JUNIT_SERVLET_TIMEOUT_SECONDS);
+                final int intervalMsec = TimeoutsProvider.getInstance().getTimeout(500);
+                
+                log.info("Checking that {} returns status {}, timeout={} seconds",
+                        new Object[] { path, status, timeout });
+                junitServletChecker.check(path,status,timeout,intervalMsec);
+                junitServletOk = true;
             }
             
-        };
-        junitServletOk = true;
+        } catch(Exception e) {
+            throw new IllegalStateException("JUnit Servlet not ready: ", e);
+        }
     }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.testing.samples.testtools.serverside.scriptable;
+package org.apache.sling.testing.samples.integrationtests.serverside.scriptable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -28,7 +28,7 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
-import org.apache.sling.testing.samples.testtools.serverside.ServerSideTestsBase;
+import org.apache.sling.testing.samples.integrationtests.serverside.ServerSideTestsBase;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.junit.After;
