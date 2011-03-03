@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.sling.servlets.post.impl.helper;
+package org.apache.sling.servlets.post;
 
 import junit.framework.TestCase;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.servlets.post.JSONResponse;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -105,6 +105,7 @@ public class JsonResponseTest extends TestCase {
         private StringBuffer output = new StringBuffer();
         private String contentType;
         private String encoding;
+        private int status = SC_OK;
 
         public StringBuffer getOutput() {
             return output;
@@ -171,9 +172,11 @@ public class JsonResponseTest extends TestCase {
         }
 
         public void setStatus(int i) {
+            this.status = i;
         }
 
         public void setStatus(int i, String s) {
+            this.status = i;
         }
 
         public String getCharacterEncoding() {

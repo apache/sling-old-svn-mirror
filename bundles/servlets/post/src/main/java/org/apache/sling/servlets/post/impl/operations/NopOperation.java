@@ -19,9 +19,9 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.SlingPostOperation;
+import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 
 /**
@@ -29,9 +29,9 @@ import org.apache.sling.servlets.post.SlingPostProcessor;
  * sets the response status accroding to the <i>:nopstatus</i> parameter if
  * availables. Otherwise the status is set as 200/OK.
  */
-public class NopOperation implements SlingPostOperation {
+public class NopOperation implements PostOperation {
 
-    public void run(SlingHttpServletRequest request, HtmlResponse response,
+    public void run(SlingHttpServletRequest request, PostResponse response,
             SlingPostProcessor[] processors) {
 
         // get the :nopstatus parameter for a specific code

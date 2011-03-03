@@ -20,10 +20,10 @@ package org.apache.sling.servlets.post.impl;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
+import org.apache.sling.servlets.post.JSONResponse;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.impl.helper.JSONResponse;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 
 public class SlingPostServletTest extends TestCase {
@@ -68,7 +68,7 @@ public class SlingPostServletTest extends TestCase {
             }
         };
         SlingPostServlet servlet = new SlingPostServlet();
-        HtmlResponse result = servlet.createHtmlResponse(req);
+        PostResponse result = servlet.createHtmlResponse(req);
         assertTrue(result instanceof JSONResponse);
     }
 

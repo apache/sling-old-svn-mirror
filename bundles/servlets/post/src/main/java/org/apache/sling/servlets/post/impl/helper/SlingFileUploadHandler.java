@@ -86,14 +86,10 @@ public class SlingFileUploadHandler {
     /**
      * The servlet context.
      */
-    private final ServletContext servletContext;
+    private ServletContext servletContext;
 
-    /**
-     * Constructs file upload handler
-     * @param servletCtx the post processor
-     */
-    public SlingFileUploadHandler(ServletContext servletCtx) {
-        this.servletContext = servletCtx;
+    public void setServletContext(ServletContext servletContext) {
+        this.servletContext = servletContext;
     }
 
     /**
@@ -179,7 +175,10 @@ public class SlingFileUploadHandler {
             }
             if (contentType == null || contentType.equals("application/octet-stream")) {
                 // try to find a better content type
-                contentType = this.servletContext.getMimeType(value.getFileName());
+                ServletContext ctx = this.servletContext;
+                if (ctx != null) {
+                    contentType = ctx.getMimeType(value.getFileName());
+                }
                 if (contentType == null || contentType.equals("application/octet-stream")) {
                     contentType = "application/octet-stream";
                 }
@@ -219,7 +218,7 @@ public class SlingFileUploadHandler {
         return result;
     }
 
-    private Node createWithChanges(Node parent, String name, String typeHint, 
+    private Node createWithChanges(Node parent, String name, String typeHint,
             List<Modification> changes) throws RepositoryException {
         Node result = parent.addNode(name, typeHint);
         changes.add(Modification.onCreated(result.getPath()));

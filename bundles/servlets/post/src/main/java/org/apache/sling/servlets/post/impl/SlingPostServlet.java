@@ -22,26 +22,38 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.contentloader.ContentImporter;
+import org.apache.sling.servlets.post.HtmlResponse;
+import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.NodeNameGenerator;
+import org.apache.sling.servlets.post.PostOperation;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
-import org.apache.sling.servlets.post.impl.helper.JSONResponse;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 import org.apache.sling.servlets.post.impl.operations.CheckinOperation;
 import org.apache.sling.servlets.post.impl.operations.CheckoutOperation;
@@ -51,46 +63,29 @@ import org.apache.sling.servlets.post.impl.operations.ImportOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
 import org.apache.sling.servlets.post.impl.operations.NopOperation;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the sling client library "protocol"
- *
- * @scr.component immediate="true" label="%servlet.post.name"
- *                description="%servlet.post.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="Sling Post Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * Use this as the default servlet for POST requests for Sling
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
- *
- *
- * @scr.property name="sling.servlet.paths"
- *          values.0="sling/servlet/default/POST"
- *          private="true"
- *
- * Get all SlingPostProcessors
- * @scr.reference name="postProcessor"
- *                interface="org.apache.sling.servlets.post.SlingPostProcessor"
- *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="postOperation"
- * 					interface="org.apache.sling.servlets.post.SlingPostOperation"
- * 					cardinality="0..n"
- * 					policy="dynamic"
- * @scr.reference name="nodeNameGenerator"
- *                  interface="org.apache.sling.servlets.post.NodeNameGenerator"
- *                  cardinality="0..n"
- *                  policy="dynamic"
- * @scr.reference name="contentImporter"
- *                  interface="org.apache.sling.jcr.contentloader.ContentImporter"
- *                  cardinality="0..1"
- *                  policy="dynamic"
  */
+@Component(immediate = true, metatype = true, label = "%servlet.post.name", description = "%servlet.post.description")
+@Service(value = Servlet.class)
+@org.apache.felix.scr.annotations.Properties({
+    @Property(name = "service.description", value = "Sling Post Servlet"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
+    @Property(name = "sling.servlet.prefix", intValue = -1, propertyPrivate = true),
+    @Property(name = "sling.servlet.paths", value = "sling/servlet/default/POST", propertyPrivate = true) })
+@References({
+    @Reference(name = "postProcessor", referenceInterface = SlingPostProcessor.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+    @Reference(name = "postOperation", referenceInterface = PostOperation.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+    @Reference(name = "nodeNameGenerator", referenceInterface = NodeNameGenerator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+    @Reference(name = "contentImporter", referenceInterface = ContentImporter.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC) })
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1837674988291697074L;
@@ -100,46 +95,33 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /**
-     * @scr.property values.0="EEE MMM dd yyyy HH:mm:ss 'GMT'Z"
-     *               values.1="ISO8601"
-     *               values.2="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-     *               values.3="yyyy-MM-dd'T'HH:mm:ss" values.4="yyyy-MM-dd"
-     *               values.5="dd.MM.yyyy HH:mm:ss" values.6="dd.MM.yyyy"
-     */
+    @Property({ "EEE MMM dd yyyy HH:mm:ss 'GMT'Z", "ISO8601",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd",
+        "dd.MM.yyyy HH:mm:ss", "dd.MM.yyyy" })
     private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 
-    /**
-     * @scr.property values.0="title" values.1="jcr:title" values.2="name"
-     *               values.3="description" values.4="jcr:description"
-     *               values.5="abstract" values.6="text" values.7="jcr:text"
-     */
+    @Property({ "title", "jcr:title", "name", "description",
+        "jcr:description", "abstract", "text", "jcr:text" })
     private static final String PROP_NODE_NAME_HINT_PROPERTIES = "servlet.post.nodeNameHints";
 
-    /**
-     * @scr.property value="20" type="Integer"
-     */
+    @Property(intValue = 20)
     private static final String PROP_NODE_NAME_MAX_LENGTH = "servlet.post.nodeNameMaxLength";
-
-    /**
-     * @scr.property valueRef="DEFAULT_CHECKIN_ON_CREATE" type="Boolean"
-     */
-    private static final String PROP_CHECKIN_ON_CREATE = "servlet.post.checkinNewVersionableNodes";
-
-    /**
-     * @scr.property valueRef="DEFAULT_AUTO_CHECKOUT" type="Boolean"
-     */
-    private static final String PROP_AUTO_CHECKOUT = "servlet.post.autoCheckout";
-    /**
-     * @scr.property valueRef="DEFAULT_AUTO_CHECKIN" type="Boolean"
-     */
-    private static final String PROP_AUTO_CHECKIN = "servlet.post.autoCheckin";
 
     private static final boolean DEFAULT_CHECKIN_ON_CREATE = false;
 
+    @Property(boolValue = DEFAULT_CHECKIN_ON_CREATE)
+    private static final String PROP_CHECKIN_ON_CREATE = "servlet.post.checkinNewVersionableNodes";
+
     private static final boolean DEFAULT_AUTO_CHECKOUT = false;
 
+    @Property(boolValue = DEFAULT_AUTO_CHECKOUT)
+    private static final String PROP_AUTO_CHECKOUT = "servlet.post.autoCheckout";
+
     private static final boolean DEFAULT_AUTO_CHECKIN = true;
+
+    @Property(boolValue = DEFAULT_AUTO_CHECKIN)
+    private static final String PROP_AUTO_CHECKIN = "servlet.post.autoCheckin";
+
 
     private static final String PARAM_CHECKIN_ON_CREATE = ":checkinNewVersionableNodes";
 
@@ -154,9 +136,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private ModifyOperation modifyOperation;
 
+    private ServiceRegistration[] internalOperations;
+
     private final List<ServiceReference> delayedPostOperations = new ArrayList<ServiceReference>();
 
-    private final Map<String, SlingPostOperation> postOperations = new HashMap<String, SlingPostOperation>();
+    private final Map<String, PostOperation> postOperations = new HashMap<String, PostOperation>();
 
     private final List<ServiceReference> delayedPostProcessors = new ArrayList<ServiceReference>();
 
@@ -184,37 +168,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private VersioningConfiguration baseVersioningConfiguration;
 
     @Override
-    public void init() {
-        // default operation: create/modify
-        modifyOperation = new ModifyOperation(defaultNodeNameGenerator, dateParser,
-            getServletContext());
-        modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
-
-        // other predefined operations
-        postOperations.put(SlingPostConstants.OPERATION_COPY,
-            new CopyOperation());
-        postOperations.put(SlingPostConstants.OPERATION_MOVE,
-            new MoveOperation());
-        postOperations.put(SlingPostConstants.OPERATION_DELETE,
-            new DeleteOperation());
-        postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
-        postOperations.put(SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation());
-        postOperations.put(SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation());
-
-        importOperation = new ImportOperation(defaultNodeNameGenerator,
-            contentImporter);
-        importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
-        postOperations.put(SlingPostConstants.OPERATION_IMPORT,
-            importOperation);
-    }
-
-    @Override
-    public void destroy() {
-        modifyOperation = null;
-        postOperations.clear();
-    }
-
-    @Override
     protected void doPost(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
         VersioningConfiguration localVersioningConfig = createRequestVersioningConfiguration(request);
@@ -222,10 +175,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         request.setAttribute(VersioningConfiguration.class.getName(), localVersioningConfig);
 
         // prepare the response
-        HtmlResponse htmlResponse = createHtmlResponse(request);
+        PostResponse htmlResponse = createHtmlResponse(request);
         htmlResponse.setReferer(request.getHeader("referer"));
 
-        SlingPostOperation operation = getSlingPostOperation(request);
+        PostOperation operation = getSlingPostOperation(request);
         if (operation == null) {
 
             htmlResponse.setStatus(
@@ -276,7 +229,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * </ul>
      * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
      */
-     HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
+     PostResponse createHtmlResponse(SlingHttpServletRequest req) {
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         MediaRangeList mediaRangeList = new MediaRangeList(req);
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE))) {
@@ -286,7 +239,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
     }
 
-    private SlingPostOperation getSlingPostOperation(
+    private PostOperation getSlingPostOperation(
             SlingHttpServletRequest request) {
         String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
         if (operation == null || operation.length() == 0) {
@@ -304,7 +257,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
-    protected String getRedirectUrl(HttpServletRequest request, HtmlResponse ctx) {
+    protected String getRedirectUrl(HttpServletRequest request, PostResponse ctx) {
         // redirect param has priority (but see below, magic star)
         String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
         if (result != null && ctx.getPath() != null) {
@@ -415,9 +368,58 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
 
         this.baseVersioningConfiguration = createBaseVersioningConfiguration(props);
+
+        // default operation: create/modify
+        modifyOperation = new ModifyOperation(defaultNodeNameGenerator,
+            dateParser);
+        modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
+
+        importOperation = new ImportOperation(defaultNodeNameGenerator,
+            contentImporter);
+        importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
+
+        // other predefined operations
+        final ArrayList<ServiceRegistration> providedServices = new ArrayList<ServiceRegistration>();
+        final BundleContext bundleContext = componentContext.getBundleContext();
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_MODIFY, modifyOperation));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_COPY, new CopyOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_MOVE, new MoveOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_DELETE, new DeleteOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_NOP, new NopOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation()));
+        providedServices.add(registerOperation(bundleContext,
+            SlingPostConstants.OPERATION_IMPORT, importOperation));
+
+        internalOperations = providedServices.toArray(new ServiceRegistration[providedServices.size()]);
+    }
+
+    @Override
+    public void init() throws ServletException {
+        modifyOperation.setServletContext(getServletContext());
+    }
+
+    @Override
+    public void destroy() {
+        modifyOperation.setServletContext(null);
     }
 
     protected void deactivate(ComponentContext context) {
+        if (internalOperations != null) {
+            for (ServiceRegistration registration : internalOperations) {
+                registration.unregister();
+            }
+            internalOperations = null;
+        }
+        modifyOperation = null;
+        defaultNodeNameGenerator = null;
         dateParser = null;
         this.componentContext = null;
     }
@@ -434,7 +436,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     protected void registerPostOperation(ServiceReference ref) {
     	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
-		SlingPostOperation operation = (SlingPostOperation) this.componentContext.locateService("postOperation", ref);
+		PostOperation operation = (PostOperation) this.componentContext.locateService("postOperation", ref);
 		if ( operation != null ) {
 	        synchronized (this.postOperations) {
 	            this.postOperations.put(operationName, operation);
@@ -496,6 +498,18 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 this.cachedPostProcessors[i] = oldArray[i];
             }
         }
+    }
+
+    private ServiceRegistration registerOperation(final BundleContext context,
+            final String opCode, final PostOperation operation) {
+        Properties properties = new Properties();
+        properties.put(PostOperation.PROP_OPERATION_NAME, opCode);
+        properties.put(Constants.SERVICE_DESCRIPTION,
+            "Sling POST Servlet Operation " + opCode);
+        properties.put(Constants.SERVICE_VENDOR,
+            context.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
+        return context.registerService(PostOperation.SERVICE_NAME, operation,
+            properties);
     }
 
     protected void bindNodeNameGenerator(ServiceReference ref) {

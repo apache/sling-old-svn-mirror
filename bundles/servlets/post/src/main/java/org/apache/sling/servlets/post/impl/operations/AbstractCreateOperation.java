@@ -34,21 +34,20 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionException;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.NodeNameGenerator;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
-abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
+abstract class AbstractCreateOperation extends AbstractPostOperation {
     /**
      * The default node name generator
      */
@@ -73,7 +72,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
      * @throws RepositoryException if a repository error occurs
      */
     protected void processCreate(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response, List<Modification> changes,
+            Map<String, RequestProperty> reqProperties, PostResponse response, List<Modification> changes,
             VersioningConfiguration versioningConfiguration)
             throws RepositoryException {
 
@@ -126,7 +125,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
             }
         }
     }
-    
+
     /**
      * Collects the properties that form the content to be written back to the
      * repository.
@@ -135,7 +134,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
      * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
-            SlingHttpServletRequest request, HtmlResponse response) {
+            SlingHttpServletRequest request, PostResponse response) {
 
         boolean requireItemPrefix = requireItemPathPrefix(request);
 
@@ -308,7 +307,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
      * property path by prepending the response path (<code>response.getPath</code>)
      * to the parameter name if not already absolute.
      */
-    private String toPropertyPath(String paramName, HtmlResponse response) {
+    private String toPropertyPath(String paramName, PostResponse response) {
         if (!paramName.startsWith("/")) {
             paramName = ResourceUtil.normalize(response.getPath() + '/' + paramName);
         }
@@ -465,10 +464,10 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
     protected String generateName(SlingHttpServletRequest request, String basePath)
     	throws RepositoryException {
 
-		// SLING-1091: If a :name parameter is supplied, the (first) value of this parameter is used unmodified as the name 
-		//    for the new node. If the name is illegally formed with respect to JCR name requirements, an exception will be 
-		//    thrown when trying to create the node. The assumption with the :name parameter is, that the caller knows what 
-		//    he (or she) is supplying and should get the exact result if possible.        
+		// SLING-1091: If a :name parameter is supplied, the (first) value of this parameter is used unmodified as the name
+		//    for the new node. If the name is illegally formed with respect to JCR name requirements, an exception will be
+		//    thrown when trying to create the node. The assumption with the :name parameter is, that the caller knows what
+		//    he (or she) is supplying and should get the exact result if possible.
 		RequestParameterMap parameters = request.getRequestParameterMap();
 		RequestParameter specialParam = parameters.getValue(SlingPostConstants.RP_NODE_NAME);
 		if ( specialParam != null ) {
@@ -476,7 +475,7 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 		        // If the path ends with a *, create a node under its parent, with
 		        // a generated node name
 		        basePath = basePath += "/" + specialParam.getString();
-		
+
 		        // if the resulting path already exists then report an error
 		        Session session = request.getResourceResolver().adaptTo(Session.class);
 	            String jcrPath = removeAndValidateWorkspace(basePath, session);
@@ -484,14 +483,14 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 	    		    throw new RepositoryException(
 	    			        "Collision in node names for path=" + basePath);
 	            }
-		
+
 		        return basePath;
 		    }
 		}
 
 		// no :name value was supplied, so generate a name
 		boolean requirePrefix = requireItemPathPrefix(request);
-		
+
 		String generatedName = null;
 		if (extraNodeNameGenerators != null) {
 		    for (NodeNameGenerator generator : extraNodeNameGenerators) {
@@ -504,13 +503,13 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 		if (generatedName == null) {
 		    generatedName = defaultNodeNameGenerator.getNodeName(request, basePath, requirePrefix, defaultNodeNameGenerator);
 		}
-		
+
 		// If the path ends with a *, create a node under its parent, with
 		// a generated node name
 		basePath += "/" + generatedName;
-		
+
 		basePath = ensureUniquePath(request, basePath);
-		
+
 		return basePath;
     }
 
@@ -518,9 +517,9 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
 		Session session = request.getResourceResolver().adaptTo(Session.class);
-		
+
 		String jcrPath = removeAndValidateWorkspace(basePath, session);
-		
+
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
 		if (session.itemExists(jcrPath)) {
@@ -533,14 +532,14 @@ abstract class AbstractCreateOperation extends AbstractSlingPostOperation {
 		        }
 		    }
 		}
-		
+
 		// if it still exists there are more than 1000 nodes ?
 		if (session.itemExists(jcrPath)) {
 		    throw new RepositoryException(
 		        "Collision in generated node names for path=" + basePath);
 		}
-		
+
 		return basePath;
     }
-    
+
 }

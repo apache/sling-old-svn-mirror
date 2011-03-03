@@ -29,13 +29,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.NodeNameGenerator;
+import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
@@ -61,9 +61,9 @@ public class ImportOperation extends AbstractCreateOperation {
     public void setContentImporter(ContentImporter importer) {
 		this.contentImporter = importer;
 	}
-    
+
     @Override
-    protected void doRun(SlingHttpServletRequest request, HtmlResponse response, final List<Modification> changes)
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
     		throws RepositoryException {
     	ContentImporter importer = contentImporter;
     	if (importer == null) {
@@ -73,7 +73,7 @@ public class ImportOperation extends AbstractCreateOperation {
     	}
     	Map<String, RequestProperty> reqProperties = collectContent(request,
              response);
-     
+
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
         // do not change order unless you have a very good reason.
@@ -92,7 +92,7 @@ public class ImportOperation extends AbstractCreateOperation {
             // it was not a node
         }
         if (node == null) {
-            
+
             response.setStatus(HttpServletResponse.SC_NOT_FOUND,
                     "Missing target node " + path + " for import");
             return;
@@ -109,17 +109,17 @@ public class ImportOperation extends AbstractCreateOperation {
         final boolean replace = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE));
         final boolean replaceProperties = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE_PROPERTIES));
         final boolean checkin = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_CHECKIN));
-        
+
         String basePath = getItemPath(request);
         basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
         if (basePath.endsWith("/")) {
         	//remove the trailing slash
         	basePath = basePath.substring(0, basePath.length() - 1);
         }
-        
+
         String contentRootName;
         //check if a name was posted to use as the name of the imported root node
-        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null || 
+        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null ||
         		request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
    			String nodePath = generateName(request, basePath);
    			String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
@@ -129,7 +129,7 @@ public class ImportOperation extends AbstractCreateOperation {
    	        contentRootName = "." + contentType;
         }
         response.setCreateRequest(true);
-        
+
         try {
             InputStream contentStream = null;
             String content = request.getParameter(SlingPostConstants.RP_CONTENT);
@@ -176,27 +176,27 @@ public class ImportOperation extends AbstractCreateOperation {
 							}
     					},
     					new ContentImportListener() {
-							
+
 							public void onReorder(String orderedPath, String beforeSibbling) {
 								changes.add(Modification.onOrder(orderedPath, beforeSibbling));
 							}
-							
+
 							public void onMove(String srcPath, String destPath) {
 								changes.add(Modification.onMoved(srcPath, destPath));
 							}
-							
+
 							public void onModify(String srcPath) {
 								changes.add(Modification.onModified(srcPath));
 							}
-							
+
 							public void onDelete(String srcPath) {
 								changes.add(Modification.onDeleted(srcPath));
 							}
-							
+
 							public void onCreate(String srcPath) {
 								changes.add(Modification.onCreated(srcPath));
 							}
-							
+
 							public void onCopy(String srcPath, String destPath) {
 								changes.add(Modification.onMoved(srcPath, destPath));
 							}
