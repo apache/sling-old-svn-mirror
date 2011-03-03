@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
-import org.apache.sling.junit.RequestParser;
+import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 import org.slf4j.Logger;
@@ -46,8 +46,13 @@ public class SerializedRenderer extends RunListener implements Renderer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** @inheritDoc */
-    public boolean appliesTo(RequestParser p) {
-        return EXTENSION.equals(p.getExtension());
+    public boolean appliesTo(TestSelector s) {
+        return EXTENSION.equals(s.getExtension());
+    }
+    
+    /** @inheritDoc */
+    public String getExtension() {
+        return EXTENSION;
     }
 
     /** @inheritDoc */
