@@ -52,7 +52,7 @@
                             org.apache.sling.installer.factories.configuration.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.installer.factories.configuration
+                            org.apache.sling.installer.factories.configuration;version=1.0.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.installer.factories.configuration.impl.*
