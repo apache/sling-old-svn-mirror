@@ -51,6 +51,9 @@
                         <Bundle-Activator>
                             org.apache.sling.installer.factories.configuration.impl.Activator
                         </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.sling.installer.factories.configuration
+                        </Export-Package>
                         <Private-Package>
                             org.apache.sling.installer.factories.configuration.impl.*
                         </Private-Package>
