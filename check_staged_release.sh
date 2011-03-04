@@ -22,7 +22,7 @@ then
  fi
 
  wget $CHECK_SSL \
-  -nv -r -np "--reject=html,txt" "--follow-tags=" \
+  -e "robots=off" --wait 1 -nv -r -np "--reject=html,txt" "--follow-tags=" \
   -P "${DOWNLOAD}/${STAGING}" -nH "--cut-dirs=3" --ignore-length \
   "http://repository.apache.org/content/repositories/orgapachesling-${STAGING}/org/apache/sling/"
 
