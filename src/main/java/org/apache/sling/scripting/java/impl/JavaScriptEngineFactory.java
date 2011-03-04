@@ -203,7 +203,7 @@ public class JavaScriptEngineFactory
         try {
             final ServletWrapper servlet = getWrapperAdapter(scriptHelper);
 
-            request.setAttribute(SlingBindings.class.getName(), bindings);
+            request.setAttribute(SlingBindings.class.getName(), slingBindings);
             servlet.service(request, slingBindings.getResponse());
         } catch (SlingException se) {
             // rethrow as is
