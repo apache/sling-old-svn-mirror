@@ -51,22 +51,24 @@ import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
  */
 public class ModifyOperation extends AbstractCreateOperation {
 
-    private final DateParser dateParser;
+    private DateParser dateParser;
 
     /**
      * handler that deals with file upload
      */
     private final SlingFileUploadHandler uploadHandler;
 
-    public ModifyOperation(NodeNameGenerator defaultNodeNameGenerator,
-            DateParser dateParser) {
-        super(defaultNodeNameGenerator);
-        this.dateParser = dateParser;
+    public ModifyOperation() {
+        this.dateParser = new DateParser();
         this.uploadHandler = new SlingFileUploadHandler();
     }
 
     public void setServletContext(final ServletContext servletContext) {
         this.uploadHandler.setServletContext(servletContext);
+    }
+
+    public void setDateParser(final DateParser dateParser) {
+        this.dateParser = dateParser;
     }
 
     @Override

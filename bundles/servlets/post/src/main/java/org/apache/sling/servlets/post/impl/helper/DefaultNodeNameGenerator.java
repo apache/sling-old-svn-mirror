@@ -37,6 +37,10 @@ public class DefaultNodeNameGenerator implements NodeNameGenerator {
     private int maxLength = DEFAULT_MAX_NAME_LENGTH;
     private int counter;
 
+    public DefaultNodeNameGenerator() {
+        this(null, -1);
+    }
+
     public DefaultNodeNameGenerator(String[] parameterNames, int maxNameLength) {
         if (parameterNames == null) {
             this.parameterNames = new String[0];
