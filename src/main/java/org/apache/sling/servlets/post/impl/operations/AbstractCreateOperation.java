@@ -45,24 +45,31 @@ import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
+import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 abstract class AbstractCreateOperation extends AbstractPostOperation {
     /**
      * The default node name generator
      */
-    private final NodeNameGenerator defaultNodeNameGenerator;
+    private NodeNameGenerator defaultNodeNameGenerator;
 
     /**
      * utility class for generating node names
      */
     private NodeNameGenerator[] extraNodeNameGenerators;
 
-    public AbstractCreateOperation(NodeNameGenerator defaultNodeNameGenerator) {
-		this.defaultNodeNameGenerator = defaultNodeNameGenerator;
-	}
+    protected AbstractCreateOperation() {
+		this.defaultNodeNameGenerator = new DefaultNodeNameGenerator();
+    }
 
-	public void setExtraNodeNameGenerators(NodeNameGenerator[] extraNodeNameGenerators) {
+    public void setDefaultNodeNameGenerator(
+            NodeNameGenerator defaultNodeNameGenerator) {
+        this.defaultNodeNameGenerator = defaultNodeNameGenerator;
+    }
+
+    public void setExtraNodeNameGenerators(
+            NodeNameGenerator[] extraNodeNameGenerators) {
         this.extraNodeNameGenerators = extraNodeNameGenerators;
     }
 

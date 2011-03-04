@@ -281,7 +281,7 @@ public class RequestPropertyTest {
         response.setPath("/test/path");
 
         Map<String, RequestProperty> props = (Map<String, RequestProperty>) PrivateAccessor.invoke(
-            new ModifyOperation(null, null), "collectContent", COLLECT_CLASSES,
+            new ModifyOperation(), "collectContent", COLLECT_CLASSES,
             new Object[] { request, response });
         return props;
     }

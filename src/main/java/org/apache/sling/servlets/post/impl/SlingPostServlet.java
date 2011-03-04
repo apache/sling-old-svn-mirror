@@ -18,7 +18,6 @@ package org.apache.sling.servlets.post.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
 /**
  * POST servlet that implements the sling client library "protocol"
  */
-@Component(immediate = true, metatype = true, label = "%servlet.post.name", description = "%servlet.post.description")
+@Component(immediate = true, specVersion = "1.1", metatype = true, label = "%servlet.post.name", description = "%servlet.post.description")
 @Service(value = Servlet.class)
 @org.apache.felix.scr.annotations.Properties({
     @Property(name = "service.description", value = "Sling Post Servlet"),
@@ -129,11 +129,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private static final String PARAM_AUTO_CHECKIN = ":autoCheckin";
 
-    /**
-     * utility class for parsing date strings
-     */
-    private DateParser dateParser;
-
     private ModifyOperation modifyOperation;
 
     private ServiceRegistration[] internalOperations;
@@ -155,8 +150,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private NodeNameGenerator[] cachedNodeNameGenerators = new NodeNameGenerator[0];
 
     private ComponentContext componentContext;
-
-    private NodeNameGenerator defaultNodeNameGenerator;
 
     private ImportOperation importOperation;
 
@@ -327,7 +320,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     // ---------- SCR Integration ----------------------------------------------
 
-    protected void activate(ComponentContext context) {
+    protected void activate(final ComponentContext context,
+            final Map<String, Object> configuration) {
         synchronized ( this.delayedPostProcessors ) {
             this.componentContext = context;
             for(final ServiceReference ref : this.delayedPostProcessors) {
@@ -341,24 +335,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             }
             this.delayedPostOperations.clear();
         }
-        Dictionary<?, ?> props = context.getProperties();
 
-        String[] nameHints = OsgiUtil.toStringArray(props.get(PROP_NODE_NAME_HINT_PROPERTIES));
-        int nameMax = (int) OsgiUtil.toLong(
-            props.get(PROP_NODE_NAME_MAX_LENGTH), -1);
-        defaultNodeNameGenerator = new DefaultNodeNameGenerator(nameHints, nameMax);
-
-        dateParser = new DateParser();
-        String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
-        for (String dateFormat : dateFormats) {
-            try {
-                dateParser.register(dateFormat);
-            } catch (Throwable t) {
-                log.warn(
-                    "activate: Ignoring format {} because it is invalid: {}",
-                    dateFormat, t);
-            }
-        }
+        // Dictionary<?, ?> props = context.getProperties();
 
         synchronized ( this.delayedNodeNameGenerators ) {
             for(final ServiceReference ref : this.delayedNodeNameGenerators) {
@@ -367,16 +345,15 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             this.delayedNodeNameGenerators.clear();
         }
 
-        this.baseVersioningConfiguration = createBaseVersioningConfiguration(props);
-
         // default operation: create/modify
-        modifyOperation = new ModifyOperation(defaultNodeNameGenerator,
-            dateParser);
+        modifyOperation = new ModifyOperation();
         modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
 
-        importOperation = new ImportOperation(defaultNodeNameGenerator,
-            contentImporter);
+        importOperation = new ImportOperation(contentImporter);
         importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
+
+        // configure now
+        configure(configuration);
 
         // other predefined operations
         final ArrayList<ServiceRegistration> providedServices = new ArrayList<ServiceRegistration>();
@@ -406,6 +383,33 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         modifyOperation.setServletContext(getServletContext());
     }
 
+    @Modified
+    private void configure(Map<String, Object> configuration) {
+        this.baseVersioningConfiguration = createBaseVersioningConfiguration(configuration);
+
+        final DateParser dateParser = new DateParser();
+        String[] dateFormats = OsgiUtil.toStringArray(configuration.get(PROP_DATE_FORMAT));
+        for (String dateFormat : dateFormats) {
+            try {
+                dateParser.register(dateFormat);
+            } catch (Throwable t) {
+                log.warn(
+                    "configure: Ignoring DateParser format {} because it is invalid: {}",
+                    dateFormat, t);
+            }
+        }
+
+        String[] nameHints = OsgiUtil.toStringArray(configuration.get(PROP_NODE_NAME_HINT_PROPERTIES));
+        int nameMax = (int) OsgiUtil.toLong(
+            configuration.get(PROP_NODE_NAME_MAX_LENGTH), -1);
+        NodeNameGenerator nodeNameGenerator = new DefaultNodeNameGenerator(
+            nameHints, nameMax);
+
+        this.modifyOperation.setDateParser(dateParser);
+        this.modifyOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
+        this.importOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
+    }
+
     @Override
     public void destroy() {
         modifyOperation.setServletContext(null);
@@ -419,8 +423,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             internalOperations = null;
         }
         modifyOperation = null;
-        defaultNodeNameGenerator = null;
-        dateParser = null;
         this.componentContext = null;
     }
 
@@ -579,7 +581,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
     }
 
-    private VersioningConfiguration createBaseVersioningConfiguration(Dictionary<?, ?> props) {
+    private VersioningConfiguration createBaseVersioningConfiguration(Map<?, ?> props) {
         VersioningConfiguration cfg = new VersioningConfiguration();
         cfg.setCheckinOnNewVersionableNode(OsgiUtil.toBoolean(
                 props.get(PROP_CHECKIN_ON_CREATE), DEFAULT_CHECKIN_ON_CREATE));

@@ -34,7 +34,6 @@ import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
-import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
@@ -52,9 +51,7 @@ public class ImportOperation extends AbstractCreateOperation {
      */
 	private ContentImporter contentImporter;
 
-    public ImportOperation(NodeNameGenerator defaultNodeNameGenerator,
-            ContentImporter contentImporter) {
-    	super(defaultNodeNameGenerator);
+    public ImportOperation(ContentImporter contentImporter) {
         this.contentImporter = contentImporter;
     }
 
