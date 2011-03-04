@@ -141,7 +141,7 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
                     new BundleEvent("osgi-installer-snapshot-test", "1.0.0.SNAPSHOT", org.osgi.framework.BundleEvent.STARTED),
                     new BundleEvent("osgi-installer-testB", org.osgi.framework.BundleEvent.STOPPED),
                     new BundleEvent("osgi-installer-testB", org.osgi.framework.BundleEvent.UNINSTALLED),
-                    new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.UPDATED),
                     new BundleEvent("osgi-installer-testbundle", org.osgi.framework.BundleEvent.STARTED));
 
             assertBundle("Snapshot bundle must be started",
