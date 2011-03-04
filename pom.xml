@@ -154,6 +154,12 @@
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         
+        <!-- Testing Support -->
+        <module>testing/tools</module>
+        <module>testing/junit/core</module>
+        <module>testing/junit/scriptable</module>
+        <module>testing/junit/remote</module>
+        
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/providers/file</module>
@@ -168,9 +174,11 @@
         <module>launchpad/installer</module>
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
-
-        <!-- Testing Support -->
-        <module>testing</module>
+        
+        <!-- Testing Samples -->
+        <module>testing/samples/sample-tests</module>
+        <module>testing/samples/failing-tests</module>
+        <module>testing/samples/integration-tests</module>
     </modules>
 
     <profiles>
