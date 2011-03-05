@@ -1,3 +1,5 @@
+parent                                         http://svn.apache.org/repos/asf/sling/tags/sling-10
+
 maven/archetypes/initial-content               http://svn.apache.org/repos/asf/sling/tags/sling-initial-content-archetype-1.0.0
 maven/archetypes/servlet                       http://svn.apache.org/repos/asf/sling/tags/sling-servlet-archetype-1.0.0
 
