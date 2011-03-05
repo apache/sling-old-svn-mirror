@@ -89,8 +89,6 @@
         <module>maven/maven-jspc-plugin</module>
         <module>maven/maven-sling-plugin</module>
         <module>maven/maven-launchpad-plugin</module>
-        <module>maven/archetypes/launchpad-standalone</module>
-        <module>maven/archetypes/launchpad-webapp</module>
         <module>maven/archetypes/initial-content</module>
         <module>maven/archetypes/servlet</module>
 
@@ -151,14 +149,12 @@
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
-        <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         
         <!-- Installer -->
         <module>installer/core</module>
         <module>installer/providers/file</module>
         <module>installer/providers/jcr</module>
-        <module>installer/factories/deploymentpck</module>
         <module>installer/it</module>
         
         <!-- Launchpad -->
