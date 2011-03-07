@@ -17,6 +17,7 @@
 package org.apache.sling.testing.tools.jarexec;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -28,7 +29,6 @@ import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.Executor;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.ShutdownHookProcessDestroyer;
-import org.apache.commons.exec.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +39,7 @@ public class JarExecutor {
     private final File jarToExecute;
     private final String javaExecutable;
     private final int serverPort;
+    private final Properties config;
     
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -49,6 +50,9 @@ public class JarExecutor {
     public static final String PROP_SERVER_PORT = PROP_PREFIX + "server.port";
     public static final String PROP_JAR_FOLDER = PROP_PREFIX + "jar.folder";
     public static final String PROP_JAR_NAME_REGEXP = PROP_PREFIX + "jar.name.regexp";
+    public static final String PROP_VM_OPTIONS = PROP_PREFIX + "vm.options";
+    public static final String PROP_WORK_FOLDER = PROP_PREFIX + "work.folder";
+    public static final String PROP_JAR_OPTIONS = PROP_PREFIX + "jar.options";
     
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
@@ -66,6 +70,7 @@ public class JarExecutor {
 
     /** Build a JarExecutor, locate the jar to run, etc */
     public JarExecutor(Properties config) throws ExecutorException {
+        this.config = config;
         final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
         String portStr = config.getProperty(PROP_SERVER_PORT);
@@ -119,21 +124,36 @@ public class JarExecutor {
                 log.info("Process execution complete, exit code=" + result);
             }
         };
-
-        final String vmOptions = System.getProperty("jar.executor.vm.options");
+        
+        final String vmOptions = config.getProperty(PROP_VM_OPTIONS);
         final Executor e = new DefaultExecutor();
         final CommandLine cl = new CommandLine(javaExecutable);
         if (vmOptions != null && vmOptions.length() > 0) {
-            // TODO: this will fail if one of the vm options as a quoted value with a space in it, but this is
-            // not the case for common usage patterns
-            for (String option : StringUtils.split(vmOptions, " ")) {
-                cl.addArgument(option);
-            }
+            cl.addArguments(vmOptions);
         }
         cl.addArgument("-jar");
         cl.addArgument(jarToExecute.getAbsolutePath());
-        cl.addArgument("-p");
-        cl.addArgument(String.valueOf(serverPort));
+        
+        // Additional options for the jar that's executed.
+        // $JAREXEC_SERVER_PORT$ is replaced our serverPort value
+        String jarOptions = config.getProperty(PROP_JAR_OPTIONS);
+        if(jarOptions != null && jarOptions.length() > 0) {
+            jarOptions = jarOptions.replaceAll("\\$JAREXEC_SERVER_PORT\\$", String.valueOf(serverPort));
+            log.info("Executable jar options: {}", jarOptions);
+            cl.addArguments(jarOptions);
+        }
+        
+        final String workFolderOption = config.getProperty(PROP_WORK_FOLDER);
+        if(workFolderOption != null && workFolderOption.length() > 0) {
+            final File workFolder = new File(workFolderOption);
+            if(!workFolder.isDirectory()) {
+                throw new IOException("Work dir set by " + PROP_WORK_FOLDER + " option does not exist: " 
+                        + workFolder.getAbsolutePath());
+            }
+            log.info("Setting working directory for executable jar: {}", workFolder.getAbsolutePath());
+            e.setWorkingDirectory(workFolder);
+        }
+
         log.info("Executing " + cl);
         e.setStreamHandler(new PumpStreamHandler());
         e.setProcessDestroyer(new ShutdownHookProcessDestroyer());
