@@ -46,7 +46,7 @@ public class SlingTestBase {
     public static final String ADMIN = "admin";
     
     private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
-    private static String serverBaseUrl;
+    private final String serverBaseUrl;
     private static RequestBuilder builder;
     private static DefaultHttpClient httpClient = new DefaultHttpClient();
     private static RequestExecutor executor = new RequestExecutor(httpClient);
@@ -55,17 +55,56 @@ public class SlingTestBase {
     private static boolean serverStartedByThisClass;
     private static boolean serverReady;
     private static boolean serverReadyTestFailed;
+    private static boolean extraBundlesInstalled;
+    private static boolean startupInfoProvided;
+
     private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
+    private static JarExecutor jarExecutor;
+    
+    /** Get configuration but do not start server yet, that's done on demand */
+    public SlingTestBase() {
+        if(jarExecutor == null) {
+            synchronized(this) {
+                try {
+                    jarExecutor = new JarExecutor(System.getProperties());
+                } catch(Exception e) {
+                    log.error("JarExecutor setup failed", e);
+                    fail("JarExecutor setup failed: " + e);
+                }
+            }
+        }
+        
+        final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP);
+        if(configuredUrl != null) {
+            serverBaseUrl = configuredUrl;
+            serverStarted = true;
+        } else {
+            serverBaseUrl = "http://localhost:" + jarExecutor.getServerPort();
+        }
+        
+        builder = new RequestBuilder(serverBaseUrl);
+        webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
+        builder = new RequestBuilder(serverBaseUrl);
+    }
 
     /** Start the server, if not done yet */
-    private void startServer() {
+    private void startServerIfNeeded() {
         try {
-            startRunnableJar();
-            builder = new RequestBuilder(serverBaseUrl);
-            webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
-            builder = new RequestBuilder(serverBaseUrl);
+            if(serverStarted && !serverStartedByThisClass && !startupInfoProvided) {
+                log.info(TEST_SERVER_URL_PROP + " was set: not starting server jar (" + serverBaseUrl + ")");
+            }
+            if(!serverStarted) {
+                synchronized (jarExecutor) {
+                    if(!serverStarted) {
+                        jarExecutor.start();
+                        serverStartedByThisClass = true;
+                        serverStarted = true;
+                    }
+                }
+            }
+            startupInfoProvided = true;
             waitForServerReady();
-            onServerReady(serverStartedByThisClass);
+            installExtraBundles();
             blockIfRequested();
         } catch(Exception e) {
             log.error("Exception in maybeStartServer()", e);
@@ -75,41 +114,16 @@ public class SlingTestBase {
     
     /** Start server if needed, and return a RequestBuilder that points to it */
     protected RequestBuilder getRequestBuilder() {
-        if(builder == null) {
-            startServer();
-        }
+        startServerIfNeeded();
         return builder;
     }
 
     /** Start server if needed, and return its base URL */
     protected String getServerBaseUrl() {
-        if(serverBaseUrl == null) {
-            startServer();
-        }
+        startServerIfNeeded();
         return serverBaseUrl;
     }
 
-    /** Start the configured runnable jar and initialize our http client */
-    protected synchronized void startRunnableJar() throws Exception {
-        if(serverStarted) {
-            return;
-        }
-        
-        final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP);
-        if(configuredUrl != null) {
-            serverBaseUrl = configuredUrl;
-            log.info(TEST_SERVER_URL_PROP + " is set: not starting server jar (" + serverBaseUrl + ")");
-        } else {
-            final JarExecutor j = new JarExecutor(System.getProperties());
-            log.info(TEST_SERVER_URL_PROP + " not set, starting server jar {}", j);
-            j.start();
-            serverBaseUrl = "http://localhost:" + j.getServerPort();
-            serverStartedByThisClass = true;
-        }
-        
-        serverStarted = true;
-    }
-    
     /** Optionally block here so that the runnable jar stays up - we can 
      *  then run tests against it from another VM.
      */
@@ -195,25 +209,18 @@ public class SlingTestBase {
         }
     }
     
-    /** Called once when the server is found to be ready, can be used for additional
-     *  server setup (extra bundles etc.). If overridden, must be called by overriding
-     *  method. 
-     *  
-     *  @param serverStartedByThisClass true if we started the server, in which case
-     *      additional setup might be needed
-     */
-    protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
-        if(serverStartedByThisClass) {
-            installExtraBundles();
-        } else {
-            // Assume extra bundles are already in place, avoid transient effects
-            // caused by updating them
-            log.info("Server was not started here, additional bundles will not be installed");
-        }
-    }
-    
     /** Install all bundles found under our additional bundles path */
     protected void installExtraBundles() throws Exception {
+        if(extraBundlesInstalled) {
+            return;
+        }
+        extraBundlesInstalled = true;
+        
+        if(!serverStartedByThisClass) {
+            log.info("Server was not started here, additional bundles will not be installed");
+            return;
+        }
+        
         final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
         if(path == null) {
             log.info("System property {} not set, additional bundles won't be installed", 
@@ -274,9 +281,7 @@ public class SlingTestBase {
     }
     
     protected WebconsoleClient getWebconsoleClient() {
-        if(webconsoleClient == null) {
-            startServer();
-        }
+        startServerIfNeeded();
         return webconsoleClient;
     }
 }

@@ -36,9 +36,8 @@ public class ServerSideTestsBase extends SlingTestBase {
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final int JUNIT_SERVLET_TIMEOUT_SECONDS = TimeoutsProvider.getInstance().getTimeout(60);
 
-    @Override
-    protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
-        super.onServerReady(serverStartedByThisClass);
+    /** Verify that JUnit servlet is started before running these tests */
+    public ServerSideTestsBase() {
         if(junitServletCheckFailed) {
             fail("Previous check of JUnit servlet failed, cannot run tests");
         }

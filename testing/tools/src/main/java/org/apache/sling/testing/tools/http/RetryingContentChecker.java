@@ -39,7 +39,7 @@ public class RetryingContentChecker {
 
             public boolean isTrue() throws Exception {
                 executor.execute(builder.buildGetRequest(path)).assertStatus(expectedStatus);
-                return true;
+                return assertMore(executor);
             }
                 
         };
@@ -51,6 +51,12 @@ public class RetryingContentChecker {
         };
     }
     
+    /** Optionally perform additional tests in retry condition */
+    protected boolean assertMore(RequestExecutor executor) throws Exception {
+        return true;
+    }
+
+    /** Called if a timeout occurs */
     protected void onTimeout() {
     }
 }

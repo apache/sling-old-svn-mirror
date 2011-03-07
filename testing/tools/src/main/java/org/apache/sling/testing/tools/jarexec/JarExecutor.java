@@ -64,6 +64,11 @@ public class JarExecutor {
         }
     }
     
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": " + jarToExecute.getName() + " (port " + serverPort + ")";
+    }
+    
     public int getServerPort() {
         return serverPort;
     }

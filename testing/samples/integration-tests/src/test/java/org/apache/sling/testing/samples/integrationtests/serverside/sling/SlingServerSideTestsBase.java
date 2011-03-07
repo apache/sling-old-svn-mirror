@@ -16,14 +16,15 @@
  */
 package org.apache.sling.testing.samples.integrationtests.serverside.sling;
 
+import static org.junit.Assert.fail;
+
+import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.http.RetryingContentChecker;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.fail;
 
 /** Test server-side tests using the Sling JUnit servlet, as opposed
  *  to the plain JUnit servlet.
@@ -36,20 +37,15 @@ public class SlingServerSideTestsBase extends SlingTestBase {
     public static final String SLING_JUNIT_SERVLET_PATH = SERVLET_NODE_PATH + ".junit";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private RetryingContentChecker servletChecker;
-    private boolean servletCheckFailed;
-    private boolean servletOk;
-    private SlingClient slingClient;
+    private static boolean servletCheckFailed;
+    private static boolean servletOk;
     private static boolean servletNodeCreated;
     
-    /** At startup, setup a node that gives access to the Sling JUnit servlet,
+    /** Before running tests, setup a node that gives access to the Sling JUnit servlet,
      *  and check (with timeout) that the servlet is ready */
-    @Override
-    protected void onServerReady(boolean serverStartedByThisClass) throws Exception {
-        super.onServerReady(serverStartedByThisClass);
-        
+    public SlingServerSideTestsBase() {
         if(!servletNodeCreated) {
-            slingClient = new SlingClient(getServerBaseUrl(), ADMIN, ADMIN);
+            final SlingClient slingClient = new SlingClient(getServerBaseUrl(), ADMIN, ADMIN);
             try {
                 slingClient.createNode(SERVLET_NODE_PATH, "sling:resourceType", "sling/junit/testing");
                 servletNodeCreated = true;
@@ -63,14 +59,19 @@ public class SlingServerSideTestsBase extends SlingTestBase {
         }
         
         if(!servletOk) {
-            if(servletChecker == null) {
-                servletChecker = new RetryingContentChecker(getRequestExecutor(), getRequestBuilder()) {
-                    @Override
-                    public void onTimeout() {
-                        servletCheckFailed = true;
-                    }
-                };
-            }
+            final RetryingContentChecker servletChecker = new RetryingContentChecker(getRequestExecutor(), getRequestBuilder()) 
+            {
+                @Override
+                public void onTimeout() {
+                    servletCheckFailed = true;
+                }
+                
+                @Override
+                protected boolean assertMore(RequestExecutor e) throws Exception {
+                    e.assertContentContains("SlingJUnitServlet");
+                    return true;
+                }
+            };
 
             final String path = SLING_JUNIT_SERVLET_PATH;
             final int status = 200;
@@ -80,6 +81,7 @@ public class SlingServerSideTestsBase extends SlingTestBase {
                     new Object[] { path, status, timeout });
             servletChecker.check(path, status, timeout, intervalMsec);
             servletOk = true;
+            log.info("{} is ready, returns expected content", path);
         }
     }
 }
