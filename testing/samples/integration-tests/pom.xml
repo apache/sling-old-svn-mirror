@@ -67,6 +67,13 @@
         
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
+        
+        <!-- Set this to run the executable jar in a specified filesystem folder -->
+        <jar.executor.work.folder></jar.executor.work.folder>
+        
+        <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
+            selected port number -->
+        <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
     </properties>
     
     <scm>
@@ -159,6 +166,8 @@
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
+                        <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
+                        <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
                         <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
