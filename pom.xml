@@ -42,12 +42,12 @@
         To keep the instance under test running and run individual tests
         against it, use:
         
-            mvn clean test -DkeepJarRunning=true -Dhttp.port=8080
+            mvn clean verify -DkeepJarRunning=true -Dhttp.port=8080
             
         optionally using jar.executor.vm.options to enable remote debugging,
         and in another console:
         
-            mvn -o test -Dtest=**Test -Dtest.server.url=http://localhost:8080
+            mvn -o verify -Dtests.to.run=**/**Test.java -Dtest.server.url=http://localhost:8080
             
         optionally using -Dmaven.surefire.debug to enable debugging.            
      -->
@@ -74,6 +74,9 @@
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
             selected port number -->
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
+        
+        <!-- Change this to run selected tests only -->
+        <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
     
     <scm>
@@ -160,6 +163,35 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
+                    <!-- We run all tests in the integration-tests phase -->
+                    <excludes>
+                        <exclude>**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.7.2</version>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <debugForkedProcess>${maven.surefire.debug}</debugForkedProcess>
+                    <includes>
+                        <include>${tests.to.run}</include>
+                    </includes>
                     <systemPropertyVariables>
                         <test.server.url>${test.server.url}</test.server.url>
                         <jar.executor.server.port>${http.port}</jar.executor.server.port>
