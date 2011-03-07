@@ -100,7 +100,7 @@ public class SlingTestBase {
             serverBaseUrl = configuredUrl;
             log.info(TEST_SERVER_URL_PROP + " is set: not starting server jar (" + serverBaseUrl + ")");
         } else {
-            final JarExecutor j = JarExecutor.getInstance(System.getProperties());
+            final JarExecutor j = new JarExecutor(System.getProperties());
             log.info(TEST_SERVER_URL_PROP + " not set, starting server jar {}", j);
             j.start();
             serverBaseUrl = "http://localhost:" + j.getServerPort();

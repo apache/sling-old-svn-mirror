@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
  *  and terminate the process when this VM exits.
  */
 public class JarExecutor {
-    private static JarExecutor instance;
     private final File jarToExecute;
     private final String javaExecutable;
     private final int serverPort;
@@ -65,19 +64,8 @@ public class JarExecutor {
         return serverPort;
     }
 
-    public static JarExecutor getInstance(Properties config) throws ExecutorException {
-        if(instance == null) {
-            synchronized (JarExecutor.class) {
-                if(instance == null) {
-                    instance = new JarExecutor(config);
-                }
-            }
-        }
-        return instance;
-    }
-    
     /** Build a JarExecutor, locate the jar to run, etc */
-    private JarExecutor(Properties config) throws ExecutorException {
+    public JarExecutor(Properties config) throws ExecutorException {
         final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
         String portStr = config.getProperty(PROP_SERVER_PORT);
