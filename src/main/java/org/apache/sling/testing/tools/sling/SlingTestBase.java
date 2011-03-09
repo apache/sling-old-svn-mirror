@@ -41,6 +41,7 @@ public class SlingTestBase {
     public static final String SERVER_READY_TIMEOUT_PROP = "server.ready.timeout.seconds";
     public static final String SERVER_READY_PROP_PREFIX = "server.ready.path";
     public static final String KEEP_JAR_RUNNING_PROP = "keepJarRunning";
+    public static final String SERVER_HOSTNAME_PROP = "test.server.hostname";
     public static final String ADDITONAL_BUNDLES_PATH = "additional.bundles.path";
     public static final String BUNDLE_TO_INSTALL_PREFIX = "sling.additional.bundle";
     public static final String ADMIN = "admin";
@@ -79,9 +80,14 @@ public class SlingTestBase {
             serverBaseUrl = configuredUrl;
             serverStarted = true;
         } else {
-            serverBaseUrl = "http://localhost:" + jarExecutor.getServerPort();
+            String serverHost = System.getProperty(SERVER_HOSTNAME_PROP);
+            if(serverHost == null || serverHost.trim().length() == 0) {
+                serverHost = "localhost";
+            }
+            serverBaseUrl = "http://" + serverHost + ":" + jarExecutor.getServerPort();
         }
-        
+
+        log.info("Server base URL={}", serverBaseUrl);
         builder = new RequestBuilder(serverBaseUrl);
         webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
         builder = new RequestBuilder(serverBaseUrl);
