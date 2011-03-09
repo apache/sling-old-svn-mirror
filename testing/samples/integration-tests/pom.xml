@@ -55,12 +55,15 @@
         <!-- Set this to run the server on a specific port
         <http.port></http.port>
          -->
-        
+         
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
         
         <!-- URL of a server against which to run tests -->
         <test.server.url></test.server.url>
+        
+         <!-- Set this to run tests against a specific hostname, if test.server.url is not set-->
+         <test.server.hostname></test.server.hostname>
         
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
@@ -194,6 +197,7 @@
                     </includes>
                     <systemPropertyVariables>
                         <test.server.url>${test.server.url}</test.server.url>
+                        <test.server.hostname>${test.server.hostname}</test.server.hostname>
                         <jar.executor.server.port>${http.port}</jar.executor.server.port>
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
