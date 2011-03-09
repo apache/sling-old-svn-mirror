@@ -51,7 +51,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.apache.sling.junit.remote.exported.*</Export-Package>
+                        <Export-Package>
+                            org.apache.sling.junit.remote.exported.*,
+                            org.apache.sling.junit.remote.ide.*
+                        </Export-Package>
                         <Import-Package>
                             org.apache.http.*; resolution:=optional,
                             org.apache.sling.testing.tools.http; resolution:=optional,
