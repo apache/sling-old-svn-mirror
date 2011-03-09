@@ -58,14 +58,16 @@
                         <Bundle-Activator>org.apache.sling.junit.Activator</Bundle-Activator>
                         <Export-Package>
                             org.apache.sling.junit;version=${project.version},
-                            org.apache.sling.junit.annotations;version=${project.version},
+                            org.apache.sling.junit.annotations;version=${project.version}
+                        </Export-Package>
+                        <_exportcontents>
                             junit.framework;version=${junit.version},
                             org.junit;version=${junit.version},
                             org.junit.matchers.*;version=${junit.version},
                             org.junit.rules.*;version=${junit.version},
                             org.junit.runner.*;version=${junit.version},
                             org.junit.runners.*;version=${junit.version}
-                        </Export-Package>
+                        </_exportcontents>
                         <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
                         <Embed-Dependency>*;artifactId=junit</Embed-Dependency>
                     </instructions>
@@ -108,7 +110,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
