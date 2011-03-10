@@ -51,8 +51,10 @@ public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
         }
 
         if(testObjectProcessor == null) {
-            throw new IllegalStateException("No TestObjectProcessor service available");
+            log.info("No TestObjectProcessor service available, annotations will not be processed");
+            return super.createTest();
+        } else { 
+            return testObjectProcessor.process(super.createTest());
         }
-        return testObjectProcessor.process(super.createTest());
     }
 }

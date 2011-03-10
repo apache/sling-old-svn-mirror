@@ -27,6 +27,11 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** JUnit MethodRule that executes tests remotely if the 
+ *  {@link #SLING_REMOTE_TEST_URL} property is set.
+ *  Used to execute tests from an IDE and have then run
+ *  on a remote Sling instance. 
+ */
 public class SlingRemoteExecutionRule implements MethodRule {
    private static final Logger log = 
        LoggerFactory.getLogger(SlingRemoteExecutionRule.class);
