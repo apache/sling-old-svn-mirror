@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.LineIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -178,14 +178,14 @@ public class RequestExecutor {
      *  Regexps are automatically prefixed/suffixed with .* so as
      *  to have match partial lines.
      */
-    public RequestExecutor assertContentRegexp(String... regexp) {
+    public RequestExecutor assertContentRegexp(String... regexp) throws IOException {
         assertNotNull(this.toString(), response);
         nextPattern:
         for(String expr : regexp) {
             final Pattern p = Pattern.compile(".*" + expr + ".*");
-            final LineIterator it = new LineIterator(new StringReader(content));
-            while(it.hasNext()) {
-                final String line = it.nextLine(); 
+            final BufferedReader br = new BufferedReader(new StringReader(content));
+            String line = null;
+            while( (line = br.readLine()) != null) {
                 if(p.matcher(line).matches()) {
                     continue nextPattern;
                 }
