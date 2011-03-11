@@ -43,6 +43,7 @@ import org.apache.sling.testing.tools.http.RequestExecutor;
  *  tests but should be general purpose */
 public class SlingClient {
     public static final String LOCATION_HEADER = "Location";
+    public static final String HTTP_PREFIX = "http://";
     private final RequestExecutor executor;
     private final RequestBuilder builder;
     private final String slingServerUrl;
@@ -127,8 +128,22 @@ public class SlingClient {
         
         final Header location = response.getFirstHeader(LOCATION_HEADER);
         assertNotNull("Expecting " + LOCATION_HEADER + " in response", location);
-        actualPath = location.getValue().substring(slingServerUrl.length());
+        actualPath = locationToPath(location.getValue());
         return actualPath;
+    }
+    
+    /** Convert a Location value to the corresponding node path */
+    String locationToPath(String locationHeaderValue) {
+        if(locationHeaderValue.startsWith(slingServerUrl)) {
+            return locationHeaderValue.substring(slingServerUrl.length());
+        } else if(locationHeaderValue.startsWith(HTTP_PREFIX)){
+            throw new IllegalArgumentException(
+                    "Unexpected Location header value [" + locationHeaderValue 
+                    + "], should start with [" + slingServerUrl + "] if starting with " 
+                    + HTTP_PREFIX);
+        } else {
+            return locationHeaderValue;
+        }
     }
     
     /** Delete supplied path */
