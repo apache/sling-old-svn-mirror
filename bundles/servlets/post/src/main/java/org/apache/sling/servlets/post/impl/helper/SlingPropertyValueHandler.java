@@ -17,6 +17,7 @@
 
 package org.apache.sling.servlets.post.impl.helper;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
  * Sets a Property on the given Node, in some cases with a specific type and
@@ -195,8 +197,118 @@ public class SlingPropertyValueHandler {
      */
     private void setPropertyAsIs(Node parent, RequestProperty prop)
             throws RepositoryException {
-        final ValueFactory valFac = parent.getSession().getValueFactory();
 
+        String[] values = prop.getStringValues();
+
+        if (values == null || (values.length == 1 && values[0].length() == 0)) {
+            // if no value is present or a single empty string is given,
+            // just remove the existing property (if any)
+            removeProperty(parent, prop);
+
+        } else if (values.length == 0) {
+            // do not create new prop here, but clear existing
+            clearProperty(parent, prop);
+
+        } else {
+            // when patching, simply update the value list using the patch operations
+            if (prop.isPatch()) {
+                values = patch(parent, prop.getName(), values);
+                if (values == null) {
+                    return;
+                }
+            }
+
+            final ValueFactory valFac = parent.getSession().getValueFactory();
+
+            final boolean multiValue = isMultiValue(parent, prop, values);
+            final int type = getType(parent, prop);
+
+            if (multiValue) {
+                // converting single into multi value props requires deleting it first
+                removeIfSingleValueProperty(parent, prop);
+            }
+
+            if (type == PropertyType.DATE) {
+                if (storeAsDate(parent, prop.getName(), values, multiValue, valFac)) {
+                    return;
+                }
+            } else if (isReferencePropertyType(type)) {
+                if (storeAsReference(parent, prop.getName(), values, type, multiValue, valFac)) {
+                    return;
+                }
+            }
+
+            store(parent, prop.getName(), values, type, multiValue);
+        }
+    }
+
+    /**
+     * Patches a multi-value property using add and remove operations per value.
+     */
+    private String[] patch(Node parent, String name, String[] values) throws RepositoryException {
+        // we do not use a Set here, as we want to be very restrictive in our
+        // actions and avoid touching elements that are not modified through the
+        // add/remove patch operations; e.g. if the value "foo" occurs twice
+        // in the existing array, and is not touched, afterwards there should
+        // still be two times "foo" in the list, even if this is not a real set.
+        List<String> oldValues = new ArrayList<String>();
+
+        if (parent.hasProperty(name)) {
+            Property p = parent.getProperty(name);
+
+            // can only patch multi-value props
+            if (!p.getDefinition().isMultiple()) {
+                return null;
+            }
+
+            for (Value v : p.getValues()) {
+                oldValues.add(v.getString());
+            }
+        }
+
+        boolean modified = false;
+        for (String v : values) {
+            if (v != null && v.length() > 0) {
+                final char op = v.charAt(0);
+                final String val = v.substring(1);
+
+                if (op == SlingPostConstants.PATCH_ADD) {
+                    if (!oldValues.contains(val)) {
+                        oldValues.add(val);
+                        modified = true;
+                    }
+                } else if (op == SlingPostConstants.PATCH_REMOVE) {
+                    while (oldValues.remove(val)) {
+                        modified = true;
+                    }
+                }
+            }
+        }
+
+        // if the patch does not include any operations (e.g. invalid ops)
+        // return null to indicate that nothing should be done
+        if (modified) {
+            return oldValues.toArray(new String[oldValues.size()]);
+        }
+
+        return null;
+    }
+
+
+    private boolean isReferencePropertyType(int propertyType) {
+        return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+    }
+
+    private boolean isWeakReference(int propertyType) {
+        return propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+    }
+
+    /**
+     * Returns the property type to use for the given property. This is defined
+     * either by an explicit type hint in the request or simply the type of the
+     * existing property.
+     */
+    private int getType(Node parent, RequestProperty prop) throws RepositoryException {
         // no explicit typehint
         int type = PropertyType.UNDEFINED;
         if (prop.getTypeHint() != null) {
@@ -212,149 +324,160 @@ public class SlingPropertyValueHandler {
                 type = parent.getProperty(prop.getName()).getType();
             }
         }
+        return type;
+    }
 
-        if (values == null) {
-            // remove property
-            final String removePath = removePropertyIfExists(parent, prop.getName());
-            if ( removePath != null ) {
-                changes.add(Modification.onDeleted(removePath));
-            }
-        } else if (values.length == 0) {
-            // do not create new prop here, but clear existing
-            if (parent.hasProperty(prop.getName())) {
-        		if (parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
-        			//the existing property is multi-valued, so just delete it?
-                    final String removePath = removePropertyIfExists(parent, prop.getName());
-                    if ( removePath != null ) {
-                        changes.add(Modification.onDeleted(removePath));
-                    }
-        		} else {
-            		changes.add(Modification.onModified(
-                            parent.setProperty(prop.getName(), "").getPath()
-                        ));
-        		}
-            }
-        } else if (values.length == 1) {
-            //if a MultiValueTypeHint is supplied, or the current value is multiple,
-            // store the updated property as multi-value.
-            boolean storePropertyAsMultiValued = prop.hasMultiValueTypeHint();
-            if (!prop.hasMultiValueTypeHint() && parent.hasProperty(prop.getName()) ) {
-            	//no type hint supplied, so check the current property definition
-                storePropertyAsMultiValued = parent.getProperty(prop.getName()).getDefinition().isMultiple();
-            }
+    /**
+     * Returns whether the property should be handled as multi-valued.
+     */
+    private boolean isMultiValue(Node parent, RequestProperty prop, String[] values) throws RepositoryException {
+        // multiple values are provided
+        if (values != null && values.length > 1) {
+            return true;
+        }
+        // TypeHint with []
+        if (prop.hasMultiValueTypeHint()) {
+            return true;
+        }
+        // patch method requires multi value
+        if (prop.isPatch()) {
+            return true;
+        }
+        // nothing in the request, so check the current JCR property definition
+        if (parent.hasProperty(prop.getName()) ) {
+            return parent.getProperty(prop.getName()).getDefinition().isMultiple();
+        }
+        return false;
+    }
 
-        	// if the provided value is the empty string, just remove the existing property (if any).
-            if ( values[0].length() == 0 ) {
+    /**
+     * Clears a property: sets an empty string for single-value properties, and
+     * removes multi-value properties.
+     */
+    private void clearProperty(Node parent, RequestProperty prop) throws RepositoryException {
+        if (parent.hasProperty(prop.getName())) {
+            if (parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
+                //the existing property is multi-valued, so just delete it?
                 final String removePath = removePropertyIfExists(parent, prop.getName());
                 if ( removePath != null ) {
                     changes.add(Modification.onDeleted(removePath));
                 }
             } else {
-                // modify property
-                if (type == PropertyType.DATE) {
-                    // try conversion
-                    Calendar c = dateParser.parse(values[0]);
-                    if (c != null) {
-                        if ( storePropertyAsMultiValued ) {
-                            final Value[] array = new Value[1];
-                            array[0] = parent.getSession().getValueFactory().createValue(c);
-                            changes.add(Modification.onModified(
-                                parent.setProperty(prop.getName(), array).getPath()
-                            ));
-                        } else {
-                            changes.add(Modification.onModified(
-                                    parent.setProperty(prop.getName(), c).getPath()
-                                ));
-                        }
-                        return;
-                    }
-                } else if (isReferencePropertyType(type)) {
-                    Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
-                    if (v != null) {
-                        if ( storePropertyAsMultiValued ) {
-                            final Value[] array = new Value[] { v };
-                            changes.add(Modification.onModified(
-                                parent.setProperty(prop.getName(), array).getPath()
-                            ));
-                        } else {
-                            changes.add(Modification.onModified(
-                                    parent.setProperty(prop.getName(), v).getPath()
-                                ));
-                        }
-                        return;
-                    }
-
-                }
-
-                // fall back to default behaviour
-                final Property p;
-                if ( type == PropertyType.UNDEFINED ) {
-                	if ( storePropertyAsMultiValued ) {
-                        final Value[] array = new Value[1];
-                        array[0] = parent.getSession().getValueFactory().createValue(values[0]);
-                        p = parent.setProperty(prop.getName(), array);
-                	} else {
-                        p = parent.setProperty(prop.getName(), values[0]);
-                	}
-                } else {
-                    if ( storePropertyAsMultiValued ) {
-                        final Value[] array = new Value[1];
-                        array[0] = parent.getSession().getValueFactory().createValue(values[0], type);
-                        p = parent.setProperty(prop.getName(), array);
-                    } else {
-                        p = parent.setProperty(prop.getName(), values[0], type);
-                    }
-                }
-                changes.add(Modification.onModified(p.getPath()));
+                changes.add(Modification.onModified(
+                    parent.setProperty(prop.getName(), "").getPath()
+                ));
             }
-        } else {
-        	if (parent.hasProperty(prop.getName())) {
-        		if (!parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
-        			//the existing property is single-valued, so we have to delete it before setting the
-        			// multi-value variation
-                    final String removePath = removePropertyIfExists(parent, prop.getName());
-                    if ( removePath != null ) {
-                        changes.add(Modification.onDeleted(removePath));
-                    }
-        		}
-        	}
-        			
-            if (type == PropertyType.DATE) {
-                // try conversion
-                Value[] c = dateParser.parse(values, valFac);
-                if (c != null) {
-                    changes.add(Modification.onModified(
-                        parent.setProperty(prop.getName(), c).getPath()
-                    ));
-                    return;
-                }
-            } else if (isReferencePropertyType(type)) {
-                // try conversion
-                Value[] n = referenceParser.parse(values, valFac, isWeakReference(type));
-                if (n != null) {
-                    changes.add(Modification.onModified(
-                        parent.setProperty(prop.getName(), n).getPath()
-                    ));
-                    return;
-                }
-            }
-            // fall back to default behaviour
-            final Property p;
-            if ( type == PropertyType.UNDEFINED ) {
-                p = parent.setProperty(prop.getName(), values);
-            } else {
-                p = parent.setProperty(prop.getName(), values, type);
-            }
-            changes.add(Modification.onModified(p.getPath()));
         }
     }
 
-    private boolean isReferencePropertyType(int propertyType) {
-        return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+    /**
+     * Removes the property if it exists.
+     */
+    private void removeProperty(Node parent, RequestProperty prop) throws RepositoryException {
+        final String removePath = removePropertyIfExists(parent, prop.getName());
+        if ( removePath != null ) {
+            changes.add(Modification.onDeleted(removePath));
+        }
     }
 
-    private boolean isWeakReference(int propertyType) {
-        return propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+    /**
+     * Removes the property if it exists and is single-valued.
+     */
+    private void removeIfSingleValueProperty(Node parent, RequestProperty prop) throws RepositoryException {
+        if (parent.hasProperty(prop.getName())) {
+            if (!parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
+                // the existing property is single-valued, so we have to delete it before setting the
+                // multi-value variation
+                final String removePath = removePropertyIfExists(parent, prop.getName());
+                if ( removePath != null ) {
+                    changes.add(Modification.onDeleted(removePath));
+                }
+            }
+        }
+    }
+
+    /**
+     * Stores property value(s) as date(s). Will parse the date(s) from the string
+     * value(s) in the {@link RequestProperty}.
+     *
+     * @return true only if parsing was successfull and the property was actually changed
+     */
+    private boolean storeAsDate(Node parent, String name, String[] values, boolean multiValued, ValueFactory valFac) throws RepositoryException {
+        if (multiValued) {
+            Value[] array = dateParser.parse(values, valFac);
+            if (array != null) {
+                changes.add(Modification.onModified(
+                    parent.setProperty(name, array).getPath()
+                ));
+                return true;
+            }
+        } else {
+            if (values.length >= 1) {
+                Calendar c = dateParser.parse(values[0]);
+                if (c != null) {
+                    changes.add(Modification.onModified(
+                        parent.setProperty(name, c).getPath()
+                    ));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stores property value(s) as reference(s). Will parse the reference(s) from the string
+     * value(s) in the {@link RequestProperty}.
+     *
+     * @return true only if parsing was successfull and the property was actually changed
+     */
+    private boolean storeAsReference(Node parent, String name, String[] values, int type, boolean multiValued, ValueFactory valFac) throws RepositoryException {
+        if (multiValued) {
+            Value[] array = referenceParser.parse(values, valFac, isWeakReference(type));
+            if (array != null) {
+                changes.add(Modification.onModified(
+                    parent.setProperty(name, array).getPath()
+                ));
+                return true;
+            }
+        } else {
+            if (values.length >= 1) {
+                Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
+                if (v != null) {
+                    changes.add(Modification.onModified(
+                        parent.setProperty(name, v).getPath()
+                    ));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stores the property as string or via a strign value, but with an explicit
+     * type. Both multi-value or single-value.
+     */
+    private void store(Node parent, String name, String[] values, int type, boolean multiValued /*, ValueFactory valFac */) throws RepositoryException {
+        Property p = null;
+
+        if (multiValued) {
+            if (type == PropertyType.UNDEFINED) {
+                p = parent.setProperty(name, values);
+            } else {
+                p = parent.setProperty(name, values, type);
+            }
+        } else if (values.length >= 1) {
+            if (type == PropertyType.UNDEFINED) {
+                p = parent.setProperty(name, values[0]);
+            } else {
+                p = parent.setProperty(name, values[0], type);
+            }
+        }
+
+        if (p != null) {
+            changes.add(Modification.onModified(p.getPath()));
+        }
     }
 
     /**

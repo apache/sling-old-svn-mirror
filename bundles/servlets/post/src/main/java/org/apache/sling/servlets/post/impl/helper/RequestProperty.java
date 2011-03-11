@@ -63,6 +63,8 @@ public class RequestProperty {
 
     private boolean useDefaultWhenMissing;
 
+    private boolean patch = false;
+
     public RequestProperty(String path) {
         assert path.startsWith("/");
         this.path = ResourceUtil.normalize(path);
@@ -284,5 +286,17 @@ public class RequestProperty {
 
     public void setUseDefaultWhenMissing(boolean b) {
         useDefaultWhenMissing = b;
+    }
+
+    public void setPatch(boolean b) {
+        patch = b;
+    }
+
+    /**
+     * Returns whether this property is to be handled as a multi-value property
+     * seen as set.
+     */
+    public boolean isPatch() {
+        return patch;
     }
 }
