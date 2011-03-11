@@ -16,14 +16,11 @@
  */
 package org.apache.sling.scripting.scala
 
-import javax.script.{ ScriptEngineFactory, ScriptEngine, ScriptContext, Bindings }
+import javax.script.{ ScriptEngineFactory, ScriptEngine, ScriptContext }
 import java.io.StringWriter
-import java.util.ServiceLoader
 import java.util.concurrent.{ TimeUnit, Executors, Callable, Future }
-import junit.framework.TestCase
 import junit.framework.Assert._
-
-import scala.collection.JavaConversions._
+import junit.framework.TestCase
 
 /**
  * JSR 223 compliance test
@@ -38,16 +35,14 @@ class ScriptEngineTest extends TestCase {
   implicit def fun2Call[R](f: () => R) = new Callable[R] { def call: R = f() }
 
   def getScriptEngine(): ScriptEngine = {
+    import scala.collection.JavaConversions._
 
-    var scriptEngine: ScriptEngine = null;
+    val factories = javax.imageio.spi.ServiceRegistry.lookupProviders(classOf[ScriptEngineFactory])
+    val scalaEngineFactory = factories.find(_.getEngineName == "Scala Scripting Engine")
 
-    for (val load <- ServiceLoader.load(classOf[ScriptEngineFactory])) yield load.getEngineName match {
-      case "Scala Scripting Engine" => scriptEngine = load.getScriptEngine;
-      case _ => ; //ignore other script engines
-    };
-
-    assertNotNull(scriptEngine)
-    scriptEngine
+    scalaEngineFactory.map(_.getScriptEngine).getOrElse(
+      throw new AssertionError("Scala Scripting Engine not found")
+    )
   }
 
   /**
