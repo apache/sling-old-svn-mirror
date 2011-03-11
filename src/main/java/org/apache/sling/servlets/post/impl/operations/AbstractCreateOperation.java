@@ -299,6 +299,21 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
                 continue;
             }
+            // @Patch
+            // Example:
+            // <input name="tags@TypeHint" value="String[]" type="hidden" />
+            // <input name="tags@Patch"    value="true" type="hidden" />
+            // <input name="tags"          value="+apple" type="hidden" />
+            // <input name="tags"          value="-orange" type="hidden" />
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_PATCH)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                        reqProperties, propPath,
+                        SlingPostConstants.SUFFIX_PATCH);
+
+                prop.setPatch(true);
+
+                continue;
+            }
 
             // plain property, create from values
             RequestProperty prop = getOrCreateRequestProperty(reqProperties,

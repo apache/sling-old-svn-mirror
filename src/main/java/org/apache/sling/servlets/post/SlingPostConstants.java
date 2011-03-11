@@ -409,6 +409,39 @@ public interface SlingPostConstants {
     public static final String SUFFIX_USE_DEFAULT_WHEN_MISSING = "@UseDefaultWhenMissing";
 
     /**
+     * Suffix indicating that a multi-value property is to be handled as an
+     * ordered set and the sent values start with either "+" or "-" to indicate
+     * wether a value should be added to or removed from the set.
+     * <p>
+     * If a property is marked to be patched with this suffix only properties
+     * whose value start with {@link #PATCH_ADD +} or {@link #PATCH_REMOVE -}
+     * are considered. Other values are ignored.
+     *
+     * @see #PATCH_ADD
+     * @see #PATCH_REMOVE
+     */
+    public static final String SUFFIX_PATCH = "@Patch";
+
+    /**
+     * Indicates a value to be added to the named multi-value property if the
+     * property is being #{@link #SUFFIX_PATCH patched}.
+     * <p>
+     * If the given value
+     * already exists amongst the values of the multi-value properties it is
+     * not added.
+     */
+    public static final char PATCH_ADD = '+';
+
+    /**
+     * Indicates a value to be removed from the named multi-value property if
+     * the property is being #{@link #SUFFIX_PATCH patched}.
+     * <p>
+     * If the given value exists multiple times amongst the values of the
+     * multi-value properties all occurrences are removed.
+     */
+    public static final char PATCH_REMOVE = '-';
+
+    /**
      * Name of the request parameter containing the content to be imported
      * by the 'import' operation.
      */
