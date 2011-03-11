@@ -16,16 +16,28 @@
  */
 package org.apache.sling.testing.samples.integrationtests.serverside;
 
+import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
 import org.junit.runner.RunWith;
 
-/** Run server-side tests from the sampletests bundle */
+/** Run server-side tests from the sampletests bundle, without
+ *  checking the number of tests executed (by not implementing
+ *  {@link SlingTestsCountChecker} */
 @RunWith(SlingRemoteTestRunner.class)
-public class DontCareForTestsCountTest extends ServerSideSampleTest {
+public class DontCareForTestsCountTest extends ServerSideTestsBase 
+implements SlingRemoteTestParameters {
+
+    public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
     
-    public int getExpectedNumberOfTests() {
-        // Negative value here means "don't care", check that
-        // this test passes with this value 
-        return -1;
+    public String getJunitServletUrl() {
+        return getServerBaseUrl() + JUNIT_SERVLET_PATH;
+    }
+
+    public String getTestClassesSelector() {
+        return TEST_SELECTOR;
+    }
+
+    public String getTestMethodSelector() {
+        return null;
     }
 }

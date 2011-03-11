@@ -16,19 +16,23 @@
  */
 package org.apache.sling.testing.samples.integrationtests.serverside.sling;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestParameters;
 import org.apache.sling.junit.remote.testrunner.SlingRemoteTestRunner;
+import org.apache.sling.junit.remote.testrunner.SlingTestsCountChecker;
 import org.junit.runner.RunWith;
 
 /** Run a single server-side test method using the Sling JUnit servlet */
 @RunWith(SlingRemoteTestRunner.class)
-public class SlingServerSideSingleMethodTest extends SlingServerSideTestsBase implements SlingRemoteTestParameters{
+public class SlingServerSideSingleMethodTest extends SlingServerSideTestsBase 
+implements SlingRemoteTestParameters, SlingTestsCountChecker {
     public static final String TEST_CLASS = "org.apache.sling.testing.samples.sampletests.JUnit4Test";
     public static final String TEST_METHOD = "testRequiresBefore";
     public static final int TESTS_AT_THIS_PATH = 1;
 
-    public int getExpectedNumberOfTests() {
-        return TESTS_AT_THIS_PATH;
+    public void checkNumberOfTests(int numberOfTestsExecuted) {
+        assertEquals(TESTS_AT_THIS_PATH, numberOfTestsExecuted);
     }
 
     public String getJunitServletUrl() {

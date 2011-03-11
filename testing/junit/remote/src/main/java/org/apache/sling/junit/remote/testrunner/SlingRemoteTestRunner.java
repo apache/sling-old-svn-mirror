@@ -16,8 +16,6 @@
  */
 package org.apache.sling.junit.remote.testrunner;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -96,11 +94,9 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         log.info("Server-side tests executed at {} with path {}", 
                 testParameters.getJunitServletUrl(), testHttpClient.getTestExecutionPath());
         
-        // Check that number of tests is as expected
-        if(testParameters.getExpectedNumberOfTests() >= 0) {
-            assertEquals("Expecting " + testParameters.getExpectedNumberOfTests() + " tests",
-                    testParameters.getExpectedNumberOfTests(),
-                    children.size());
+        // Optionally check that number of tests is as expected
+        if(testParameters instanceof SlingTestsCountChecker) {
+            ((SlingTestsCountChecker)testParameters).checkNumberOfTests(children.size());
         }
     }
     
