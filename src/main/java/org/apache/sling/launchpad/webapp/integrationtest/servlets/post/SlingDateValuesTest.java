@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
@@ -52,26 +53,35 @@ public class SlingDateValuesTest extends HttpTestBase {
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
 
-    private void doDateTest(String expected, String input)
+    private void doDateTest(String expected, String input, String expected2, String input2)
             throws IOException {
-        final Map<String, String> props = new HashMap<String, String>();
-        props.put("someDate", input);
-        props.put("someDate@TypeHint", "Date");
+        final NameValuePairList props = new NameValuePairList();
+        props.add("someDate", input);
+        props.add("someDate@TypeHint", "Date");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        props.add("manyDates", input);
+        props.add("manyDates", input2);
+        props.add("manyDates@TypeHint", "Date[]");
+        
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props, null, false);
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         // default behaviour writes empty string
         assertJavascript(expected, content, "out.println(data.someDate)");
+        assertJavascript(expected, content, "out.println(data.manyDates[0])");
+        assertJavascript(expected2, content, "out.println(data.manyDates[1])");
     }
 
     public void testDateValues() throws IOException {
         SimpleDateFormat ecmaFmt = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
         Date now = new Date();
+        Date date2 = new Date(1000);
         String nowStr = ecmaFmt.format(now);
+        String date2Str = ecmaFmt.format(date2);
         for (SimpleDateFormat fmt: testFormats) {
             String testStr = fmt.format(now);
-            doDateTest(nowStr, testStr);
+            String test2Str = fmt.format(date2);
+            doDateTest(nowStr, testStr, date2Str, test2Str);
         }
     }
 
