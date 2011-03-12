@@ -10,8 +10,7 @@
         either express or implied. See the License for the specific language governing permissions
         and limitations under the License.
     -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -23,7 +22,7 @@
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>war</packaging>
-    <version>6-SNAPSHOT</version>
+    <version>6</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -31,9 +30,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/builder</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-6</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-6</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad-6</url>
     </scm>
 
 
