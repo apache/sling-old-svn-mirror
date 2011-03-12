@@ -22,7 +22,7 @@
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>war</packaging>
-    <version>6</version>
+    <version>7-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -30,9 +30,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-6</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad-6</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad-6</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/builder</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/builder</url>
     </scm>
 
 
