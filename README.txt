@@ -1,6 +1,7 @@
 Apache Sling Launchpad Content
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+The Launchpad Content bundle provides some initial and sample content
+as well as links to the Online resources at http://sling.apache.org
 
 
 Getting Started
