@@ -153,13 +153,7 @@
                             <resources>
                                 <!-- Legal stuff -->
                                 <resource>
-                                    <directory>${basedir}</directory>
-                                    <targetPath>META-INF</targetPath>
-                                    <includes>
-                                        <include>LICENSE*</include>
-                                        <include>NOTICE*</include>
-                                        <include>DISCLAIMER</include>
-                                    </includes>
+                                    <directory>${project.build.directory}/maven-shared-archive-resources</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -237,7 +231,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
-                    <packagingExcludes>WEB-INF/classes/resources/**</packagingExcludes>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>
+                                true
+                            </addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
+                    <packagingExcludes>WEB-INF/classes/resources/**,WEB-INF/classes/META-INF/**</packagingExcludes>
                     <webResources>
                         <!-- the configuration resources -->
                         <resource>
@@ -246,16 +247,12 @@
                             </directory>
                             <targetPath>WEB-INF</targetPath>
                         </resource>
-                        <!-- Legal stuff -->
-                        <resource>
-                            <directory>${basedir}</directory>
-                            <targetPath>META-INF</targetPath>
-                            <includes>
-                                <include>LICENSE*</include>
-                                <include>NOTICE*</include>
-                                <include>DISCLAIMER</include>
-                            </includes>
-                        </resource>
+                        <!-- ensure the legalize stuff is in the war -->
+                        <webResource>
+                            <targetPath />
+                            <filtering>false</filtering>
+                            <directory>${project.build.directory}/maven-shared-archive-resources</directory>
+                        </webResource>
                     </webResources>
                 </configuration>
             </plugin>
@@ -311,38 +308,6 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>dist</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>assemble-distribution</id>
-                                <configuration>
-                                    <descriptors>
-                                        <descriptor>
-                                            assembly.xml
-                                        </descriptor>
-                                    </descriptors>
-                                    <appendAssemblyId>
-                                        false
-                                    </appendAssemblyId>
-                                </configuration>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>attached</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <repositories>
         <repository>

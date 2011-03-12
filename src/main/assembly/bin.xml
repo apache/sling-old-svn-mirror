@@ -30,19 +30,14 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>src/main/resources/META-INF</directory>
+      <directory>${project.build.directory}/maven-shared-archive-resources/META-INF</directory>
       <outputDirectory></outputDirectory>
-      <includes>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
-        <include>DISCLAIMER</include>
-      </includes>
     </fileSet>
     <fileSet>
       <directory>target</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>*.jar</include>
+        <include>*-standalone.jar</include>
         <include>*.war</include>
       </includes>
     </fileSet>
