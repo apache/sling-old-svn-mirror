@@ -9,3 +9,47 @@ The Apache Software Foundation (http://www.apache.org/).
 
 This product contains code derived from JSON in Java code from JSON.org.
 Copyright (c) 2002 JSON.org
+
+This product includes software from http://kxml.sourceforge.net.
+Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany.
+
+This product contains an XPath parser from the World Wide Web Consortium.
+Copyright (c) 2002 World Wide Web Consortium, (Massachusetts Institute of
+Technology, European Research Consortium for Informatics and Mathematics,
+Keio University).
+
+This product includes software developed at pdfbox.org.
+Copyright (c) 2003-2005, www.pdfbox.org
+
+This product includes the CyberNeko HTML Parser
+(C) Copyright 2002-2005, Andy Clark.
+
+This software contains code written by Ryan Ackley.
+Please go to http://www.textmining.org for the latest version.
+
+This product includes Apache Xerces, portions of which were
+originally based on the following:
+- software copyright (c) 1999, IBM Corporation., http://www.ibm.com.
+- software copyright (c) 1999, Sun Microsystems., http://www.sun.com.
+- voluntary contributions made by Paul Eng on behalf of the
+  Apache Software Foundation that were originally developed at iClick, Inc.,
+  software copyright (c) 1999.
+
+This product includes Apache Derby, which is based on source code originally
+developed at the International Business Machines Corporation.
+(C) Copyright 1997,2004 International Business Machines Corporation.
+All rights reserved.
+(C) Copyright IBM Corp. 2003.
+
+This product contains the Mozilla Rhino JavaScript implementation
+developed at http://www.mozilla.org/rhino/
+licensed under the Mozilla Public License 1.1
+
+This product includes JQuery TreeTable developed by
+Ludo van den Boom (http://blog.cubicphuse.nl/)
+Copyright (c) 2009 Ludo van den Boom
+Licensed under the MIT License
+
+This product includes JQuery (http://docs.jquery.com)
+Copyright (c) 2009 John Resig
+Licensed under the MIT License
