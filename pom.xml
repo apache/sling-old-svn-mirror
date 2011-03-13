@@ -195,20 +195,6 @@
                 <module>launchpad/testing-war</module>
             </modules>
         </profile>
-      <!-- Profile for including samples -->
-        <profile>
-            <id>withSamples</id>
-            <modules>
-                <module>samples</module>
-            </modules>
-        </profile>
-      <!-- Profile for including contrib -->
-        <profile>
-            <id>withContrib</id>
-            <modules>
-                <module>contrib</module>
-            </modules>
-        </profile>
     </profiles>
 
 </project>
