@@ -311,8 +311,8 @@ public class LockManager implements Runnable, EventListener {
             final String searchString = OWNER_PREFIX + id;
 
             final QueryManager qm = this.backgroundSession.getWorkspace().getQueryManager();
-            final Query q = qm.createQuery("select * from [nt:base] where [" + JCRHelper.NODE_PROPERTY_LOCK_OWNER + "] = '" + searchString + "'",
-                    Query.JCR_SQL2);
+            final Query q = qm.createQuery("select * from nt:base where " + JCRHelper.NODE_PROPERTY_LOCK_OWNER + " = '" + searchString + "'",
+                    Query.SQL);
             final QueryResult qr = q.execute();
             final NodeIterator nI = qr.getNodes();
             while ( nI.hasNext() ) {
