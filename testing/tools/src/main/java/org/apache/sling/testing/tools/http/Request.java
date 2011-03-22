@@ -31,6 +31,7 @@ public class Request {
     private String username;
     private String password;
     private boolean redirects = true;
+    private RequestCustomizer customizer;
     
     Request(HttpUriRequest r) {
         request = r;
@@ -38,6 +39,10 @@ public class Request {
     
     public HttpUriRequest getRequest() {
         return request;
+    }
+    
+    public String toString() {
+        return getClass().getSimpleName() + ": " + request.getURI();
     }
     
     public Request withHeader(String name, String value) {
@@ -75,6 +80,18 @@ public class Request {
         return this;
     }
     
+    public Request withCustomizer(RequestCustomizer c) {
+        customizer = c;
+        return this;
+    }
+    
+    // Execute our {@link RequestCustomizer} if we have one */
+    void customizeIfNeeded() {
+        if(customizer != null) {
+            customizer.customizeRequest(this);
+        }
+    }
+    
     public String getUsername() {
         return username;
     }
@@ -85,5 +102,9 @@ public class Request {
     
     public boolean getRedirects() {
         return redirects;
+    }
+    
+    public RequestCustomizer getCustomizer() {
+        return customizer;
     }
 }

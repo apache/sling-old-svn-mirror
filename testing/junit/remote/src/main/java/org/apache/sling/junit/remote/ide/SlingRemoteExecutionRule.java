@@ -20,6 +20,8 @@ import java.io.ObjectInputStream;
 
 import org.apache.http.HttpEntity;
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
+import org.apache.sling.testing.tools.http.Request;
+import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -32,7 +34,7 @@ import org.slf4j.LoggerFactory;
  *  Used to execute tests from an IDE and have then run
  *  on a remote Sling instance. 
  */
-public class SlingRemoteExecutionRule implements MethodRule {
+public class SlingRemoteExecutionRule implements MethodRule, RequestCustomizer {
    private static final Logger log = 
        LoggerFactory.getLogger(SlingRemoteExecutionRule.class);
 
@@ -76,6 +78,7 @@ public class SlingRemoteExecutionRule implements MethodRule {
        final String methodName = method.getMethod().getName();
        
        final RemoteTestHttpClient testHttpClient = new RemoteTestHttpClient(remoteUrl, false);
+       testHttpClient.setRequestCustomizer(this);
        final RequestExecutor executor = testHttpClient.runTests(
                testClassesSelector, methodName, "serialized"
        );
@@ -97,5 +100,11 @@ public class SlingRemoteExecutionRule implements MethodRule {
                entity.consumeContent();
            }
        }
+   }
+   
+   /** @inheritDoc */
+   public void customizeRequest(Request r) {
+       // Do nothing by default, tests that use this rule can
+       // customize this method
    }
 }

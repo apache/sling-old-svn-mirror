@@ -23,6 +23,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.http.RequestBuilder;
+import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class RemoteTestHttpClient {
     private final String junitServletUrl;
     private StringBuilder subpath;
     private boolean consumeContent;
+    private RequestCustomizer requestCustomizer;
     private static final String SLASH = "/";
     private static final String DOT = ".";
     
@@ -43,6 +45,10 @@ public class RemoteTestHttpClient {
         }
         this.junitServletUrl = junitServletUrl;
         this.consumeContent = consumeContent;
+    }
+    
+    public void setRequestCustomizer(RequestCustomizer c) {
+        requestCustomizer = c;
     }
     
     public RequestExecutor runTests(String testClassesSelector, String testMethodSelector, String extension) 
@@ -82,7 +88,9 @@ public class RemoteTestHttpClient {
         
         log.info("Executing test remotely, path={} JUnit servlet URL={}", 
                 subpath, junitServletUrl);
-        final Request r = builder.buildPostRequest(subpath.toString());
+        final Request r = builder
+        .buildPostRequest(subpath.toString())
+        .withCustomizer(requestCustomizer);
         executor.execute(r).assertStatus(200);
 
         return executor;

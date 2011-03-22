@@ -222,6 +222,7 @@
                         <sling.additional.bundle.3>org.apache.sling.testing.samples.sampletests</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.sling.testing.samples.failingtests</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.sling.junit.remote</sling.additional.bundle.5>
+                        <sling.additional.bundle.6>org.apache.sling.testing.tools</sling.additional.bundle.6>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -257,6 +258,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.remote</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.tools</artifactId>
             <version>0.1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
