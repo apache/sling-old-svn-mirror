@@ -104,6 +104,7 @@ public class RequestExecutor {
     
     public RequestExecutor execute(Request r) throws ClientProtocolException, IOException {
         clear();
+        r.customizeIfNeeded();
         request = r.getRequest();
         
         // Optionally setup for basic authentication
