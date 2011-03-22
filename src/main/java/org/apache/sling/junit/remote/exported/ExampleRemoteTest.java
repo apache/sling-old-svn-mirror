@@ -18,8 +18,11 @@ package org.apache.sling.junit.remote.exported;
 
 import static org.junit.Assert.fail;
 import org.apache.sling.junit.remote.ide.SlingRemoteExecutionRule;
+import org.apache.sling.testing.tools.http.Request;
 import org.junit.Rule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Test that can be run remotely on a Sling instance from an IDE, by
  *  setting the {@link SlingRemoteExecutionRule.SLING_REMOTE_TEST_URL}
@@ -27,9 +30,18 @@ import org.junit.Test;
  *  the Sling JUnit servlet (like http://localhost:8080/system/sling/junit)
  */
 public class ExampleRemoteTest {
-    
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /** Execute this test remotely and customize the request (could be
+     *  used to set credentials for example)
+     */
     @Rule
-    public SlingRemoteExecutionRule execRule = new SlingRemoteExecutionRule();
+    public SlingRemoteExecutionRule execRule = new SlingRemoteExecutionRule() {
+        @Override
+        public void customizeRequest(Request r) {
+            log.info("Customizing request {}", r);
+        }
+    };
     
     @Test
     public void testAlwaysPasses() {

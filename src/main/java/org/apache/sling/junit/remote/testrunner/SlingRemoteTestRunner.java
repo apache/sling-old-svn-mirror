@@ -23,6 +23,7 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
+import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.EachTestNotifier;
@@ -73,6 +74,13 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
         }
         
         testHttpClient = new RemoteTestHttpClient(testParameters.getJunitServletUrl(), true);
+
+        // Let the parameters class customize the request if desired 
+        if(testParameters instanceof RequestCustomizer) {
+            testHttpClient.setRequestCustomizer((RequestCustomizer)testParameters);
+        }
+        
+        // Run tests remotely and get response
         final RequestExecutor executor = testHttpClient.runTests(
                 testParameters.getTestClassesSelector(),
                 testParameters.getTestMethodSelector(),
