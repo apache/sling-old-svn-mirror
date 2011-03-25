@@ -395,16 +395,16 @@ k = document.documentElement.clientHeight + d(document).scrollTop(); b.left -= t
 
         _selectDay: function(id, month, year, hour, minute, td) {
             var inst = d(id);
-		    if (!(d(td).hasClass(this._unselectableClass) || this._isDisabledDatepicker(inst[0]))) {
+            if (!(d(td).hasClass(this._unselectableClass) || this._isDisabledDatepicker(inst[0]))) {
                 inst = this._getInst(inst[0]);
-		        inst.selectedDay = inst.currentDay = td != null ? d("a", td).html() : inst.currentDay;
-		        inst.selectedMonth = inst.currentMonth = month != null ? month : inst.currentMonth;
-		        inst.selectedYear = inst.currentYear = year != null ? year : inst.currentYear;
+                inst.selectedDay = inst.currentDay = td != null ? d("a", td).html() : inst.currentDay;
+                inst.selectedMonth = inst.currentMonth = month != null ? month : inst.currentMonth;
+                inst.selectedYear = inst.currentYear = year != null ? year : inst.currentYear;
                 inst.selectedHour = inst.currentHour = hour != null ? hour : inst.currentHour;
                 inst.selectedMinute = inst.currentMinute = minute != null ? minute : inst.currentMinute;
-		        this._selectDate(id, this._formatDateTime(inst, inst.currentDay, inst.currentMonth, inst.currentYear, inst.currentHour, inst.currentMinute));
+                this._selectDate(id, this._formatDateTime(inst, inst.currentDay, inst.currentMonth, inst.currentYear, inst.currentHour, inst.currentMinute));
             }
-	    },
+        },
 
 
         _clearDate: function (a) {
@@ -460,116 +460,116 @@ k = document.documentElement.clientHeight + d(document).scrollTop(); b.left -= t
             
         
         parseDate: function (format, value, settings) {
-		    if (format == null || value == null)
-			    throw 'Invalid arguments';
-		    value = (typeof value == 'object' ? value.toString() : value + '');
-		    if (value == '')
-			    return null;
-		    var shortYearCutoff = (settings ? settings.shortYearCutoff : null) || this._defaults.shortYearCutoff;
-		    var dayNamesShort = (settings ? settings.dayNamesShort : null) || this._defaults.dayNamesShort;
-		    var dayNames = (settings ? settings.dayNames : null) || this._defaults.dayNames;
-		    var monthNamesShort = (settings ? settings.monthNamesShort : null) || this._defaults.monthNamesShort;
-		    var monthNames = (settings ? settings.monthNames : null) || this._defaults.monthNames;
-		    var year = -1;
-		    var month = -1;
-		    var day = -1;
-		    var hour = -1;
-		    var minute = -1;
-		    var literal = false;
-		    // Check whether a format character is doubled
-		    var lookAhead = function(match) {
-			    var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) == match);
-			    if (matches)
-				    iFormat++;
-			    return matches;	
-		    };
-		    // Extract a number from the string value
-		    var getNumber = function(match) {
-			    lookAhead(match);
-			    var size = (match == 'y' ? 4 : 2);
-			    var num = 0;
-			    while (size > 0 && iValue < value.length &&
-					    value.charAt(iValue) >= '0' && value.charAt(iValue) <= '9') {
-				    num = num * 10 + (value.charAt(iValue++) - 0);
-				    size--;
-			    }
-			    if (size == (match == 'y' ? 4 : 2))
-				    throw 'Missing number at position ' + iValue;
-			    return num;
-		    };
-		    // Extract a name from the string value and convert to an index
-		    var getName = function(match, shortNames, longNames) {
-			    var names = (lookAhead(match) ? longNames : shortNames);
-			    var size = 0;
-			    for (var j = 0; j < names.length; j++)
-				    size = Math.max(size, names[j].length);
-			    var name = '';
-			    var iInit = iValue;
-			    while (size > 0 && iValue < value.length) {
-				    name += value.charAt(iValue++);
-				    for (var i = 0; i < names.length; i++)
-					    if (name == names[i])
-						    return i + 1;
-				    size--;
-			    }
-			    throw 'Unknown name at position ' + iInit;
-		    };
-		    // Confirm that a literal character matches the string value
-		    var checkLiteral = function() {
-			    if (value.charAt(iValue) != format.charAt(iFormat))
-				    throw 'Unexpected literal at position ' + iValue;
-			    iValue++;
-		    };
-		    var iValue = 0;
-		    for (var iFormat = 0; iFormat < format.length; iFormat++) {
-			    if (literal)
-				    if (format.charAt(iFormat) == "'" && !lookAhead("'"))
-					    literal = false;
-				    else
-					    checkLiteral();
-			    else
-				    switch (format.charAt(iFormat)) {
-					    case 'h':
-						    hour = getNumber('h');
-						    break;
-					    case 'i':
-						    minute = getNumber('i');
-						    break;
-					    case 'd':
-						    day = getNumber('d');
-						    break;
-					    case 'D': 
-						    getName('D', dayNamesShort, dayNames);
-						    break;
-					    case 'm': 
-						    month = getNumber('m');
-						    break;
-					    case 'M':
-						    month = getName('M', monthNamesShort, monthNames); 
-						    break;
-					    case 'y':
-						    year = getNumber('y');
-						    break;
-					    case "'":
-						    if (lookAhead("'"))
-							    checkLiteral();
-						    else
-							    literal = true;
-						    break;
-					    default:
-						    checkLiteral();
-				    }
-		    }
-		    if (year < 100) {
-			    year += new Date().getFullYear() - new Date().getFullYear() % 100 +
-				    (year <= shortYearCutoff ? 0 : -100);
-		    }
-		    var date = new Date(year, month - 1, day,hour,minute);
-		    if (date.getFullYear() != year || date.getMonth() + 1 != month || date.getDate() != day) {
-			    throw 'Invalid date'; // E.g. 31/02/*
-		    }
-		    return date;
-	    }, 
+            if (format == null || value == null)
+                throw 'Invalid arguments';
+            value = (typeof value == 'object' ? value.toString() : value + '');
+            if (value == '')
+                return null;
+            var shortYearCutoff = (settings ? settings.shortYearCutoff : null) || this._defaults.shortYearCutoff;
+            var dayNamesShort = (settings ? settings.dayNamesShort : null) || this._defaults.dayNamesShort;
+            var dayNames = (settings ? settings.dayNames : null) || this._defaults.dayNames;
+            var monthNamesShort = (settings ? settings.monthNamesShort : null) || this._defaults.monthNamesShort;
+            var monthNames = (settings ? settings.monthNames : null) || this._defaults.monthNames;
+            var year = -1;
+            var month = -1;
+            var day = -1;
+            var hour = -1;
+            var minute = -1;
+            var literal = false;
+            // Check whether a format character is doubled
+            var lookAhead = function(match) {
+                var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) == match);
+                if (matches)
+                    iFormat++;
+                return matches; 
+            };
+            // Extract a number from the string value
+            var getNumber = function(match) {
+                lookAhead(match);
+                var size = (match == 'y' ? 4 : 2);
+                var num = 0;
+                while (size > 0 && iValue < value.length &&
+                        value.charAt(iValue) >= '0' && value.charAt(iValue) <= '9') {
+                    num = num * 10 + (value.charAt(iValue++) - 0);
+                    size--;
+                }
+                if (size == (match == 'y' ? 4 : 2))
+                    throw 'Missing number at position ' + iValue;
+                return num;
+            };
+            // Extract a name from the string value and convert to an index
+            var getName = function(match, shortNames, longNames) {
+                var names = (lookAhead(match) ? longNames : shortNames);
+                var size = 0;
+                for (var j = 0; j < names.length; j++)
+                    size = Math.max(size, names[j].length);
+                var name = '';
+                var iInit = iValue;
+                while (size > 0 && iValue < value.length) {
+                    name += value.charAt(iValue++);
+                    for (var i = 0; i < names.length; i++)
+                        if (name == names[i])
+                            return i + 1;
+                    size--;
+                }
+                throw 'Unknown name at position ' + iInit;
+            };
+            // Confirm that a literal character matches the string value
+            var checkLiteral = function() {
+                if (value.charAt(iValue) != format.charAt(iFormat))
+                    throw 'Unexpected literal at position ' + iValue;
+                iValue++;
+            };
+            var iValue = 0;
+            for (var iFormat = 0; iFormat < format.length; iFormat++) {
+                if (literal)
+                    if (format.charAt(iFormat) == "'" && !lookAhead("'"))
+                        literal = false;
+                    else
+                        checkLiteral();
+                else
+                    switch (format.charAt(iFormat)) {
+                        case 'h':
+                            hour = getNumber('h');
+                            break;
+                        case 'i':
+                            minute = getNumber('i');
+                            break;
+                        case 'd':
+                            day = getNumber('d');
+                            break;
+                        case 'D': 
+                            getName('D', dayNamesShort, dayNames);
+                            break;
+                        case 'm': 
+                            month = getNumber('m');
+                            break;
+                        case 'M':
+                            month = getName('M', monthNamesShort, monthNames); 
+                            break;
+                        case 'y':
+                            year = getNumber('y');
+                            break;
+                        case "'":
+                            if (lookAhead("'"))
+                                checkLiteral();
+                            else
+                                literal = true;
+                            break;
+                        default:
+                            checkLiteral();
+                    }
+            }
+            if (year < 100) {
+                year += new Date().getFullYear() - new Date().getFullYear() % 100 +
+                    (year <= shortYearCutoff ? 0 : -100);
+            }
+            var date = new Date(year, month - 1, day,hour,minute);
+            if (date.getFullYear() != year || date.getMonth() + 1 != month || date.getDate() != day) {
+                throw 'Invalid date'; // E.g. 31/02/*
+            }
+            return date;
+        }, 
         
         ATOM: "yy-mm-dd", 
         COOKIE: "D, dd M yy", 
@@ -603,11 +603,11 @@ k = document.documentElement.clientHeight + d(document).scrollTop(); b.left -= t
                     else 
                         switch (a.charAt(j)) {
                             case 'h':
-							    l += g('h', b.getHours(), 2);
-							    break;
-						    case 'i':
-							    l += g('i', b.getMinutes(), 2);
-							    break;
+                                l += g('h', b.getHours(), 2);
+                                break;
+                            case 'i':
+                                l += g('i', b.getMinutes(), 2);
+                                break;
                             case "d": 
                                 l += g("d", b.getDate(), 2); 
                                 break;
@@ -963,21 +963,21 @@ e = function (h) { (h = f + 1 < a.length && a.charAt(f + 1) == h) && f++; return
             j += '<br />';
 
             j += '<span class="ui-datepicker-time">' + tm + '</span>';
-			j += '<select id="'+a.id+'_selectHour" class="ui-datepicker-hour" onchange="DP_jQuery_' + y + ".datetimebox._selectHourMinute('#" + a.id + "', this, 'h');\" onclick=\"DP_jQuery_" + y + ".datetimebox._clickHourMinute('#" + a.id + "');\">";
-			for (hour=0; hour < 24; hour++) {
-				j += '<option value="' + hour + '"' +
-					(hour == drawHour ? ' selected="selected"' : '') +
-					'>' + ((hour<10)?'0'+hour:hour) + '</option>';
-			}
-			j += '</select>';
-			j += '<span class="ui-datepicker-time">&nbsp;:&nbsp;</span>';
-			j += '<select id="'+a.id+'_selectMinute" class="ui-datepicker-minute" onchange="DP_jQuery_' + y + ".datetimebox._selectHourMinute('#" + a.id + "', this, 'i');\" onclick=\"DP_jQuery_" + y + ".datetimebox._clickHourMinute('#" + a.id + "');\">";
-			for (minute=0; minute < 60; minute++) {
-				j += '<option value="' + minute + '"' +
-					(minute == drawMinute ? ' selected="selected"' : '') +
-					'>' + ((minute<10)?'0'+minute:minute) + '</option>';
-			}
-			j += '</select>';
+            j += '<select id="'+a.id+'_selectHour" class="ui-datepicker-hour" onchange="DP_jQuery_' + y + ".datetimebox._selectHourMinute('#" + a.id + "', this, 'h');\" onclick=\"DP_jQuery_" + y + ".datetimebox._clickHourMinute('#" + a.id + "');\">";
+            for (hour=0; hour < 24; hour++) {
+                j += '<option value="' + hour + '"' +
+                    (hour == drawHour ? ' selected="selected"' : '') +
+                    '>' + ((hour<10)?'0'+hour:hour) + '</option>';
+            }
+            j += '</select>';
+            j += '<span class="ui-datepicker-time">&nbsp;:&nbsp;</span>';
+            j += '<select id="'+a.id+'_selectMinute" class="ui-datepicker-minute" onchange="DP_jQuery_' + y + ".datetimebox._selectHourMinute('#" + a.id + "', this, 'i');\" onclick=\"DP_jQuery_" + y + ".datetimebox._clickHourMinute('#" + a.id + "');\">";
+            for (minute=0; minute < 60; minute++) {
+                j += '<option value="' + minute + '"' +
+                    (minute == drawMinute ? ' selected="selected"' : '') +
+                    '>' + ((minute<10)?'0'+minute:minute) + '</option>';
+            }
+            j += '</select>';
 
             j += "</div>"; 
 
