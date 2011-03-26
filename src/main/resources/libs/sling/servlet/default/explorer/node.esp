@@ -54,7 +54,7 @@
           if (path != '/')
           {
           %>
-            <form class="deleteNote" action="<%= path %>" method="post">
+            <form class="deleteNote" action="<%= request.getContextPath() %><%= path %>" method="post">
                 <input name=":operation" type="hidden" value="delete"> 
                 <input name=":redirect" type="hidden" value="<%=request.getContextPath()%><%= Packages.org.apache.sling.api.resource.ResourceUtil.getParent(resource) %>.explorer.html"> 
                 <input type="submit" class="button" value="delete this node">
@@ -193,9 +193,10 @@
                                                 var child_node_location = xmlHttpRequest.getResponseHeader('Location');
                                                 if ( child_node_location )
                                                 {
+                                                        var childPath = child_node_location.substring(Sling.contextPath.length);
                                                         load_branch( 
                                                                 '<%=path%>', 
-                                                                function() { skip_to( child_node_location );},
+                                                                function() { skip_to( childPath );},
                                                                 true
                                                         );
                                                 }

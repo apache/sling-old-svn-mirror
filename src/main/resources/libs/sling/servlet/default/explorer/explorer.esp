@@ -46,7 +46,7 @@
         <form accept-charset="UTF-8" enctype="multipart/form-data" action="#" method="post" id="login-form">            
             <fieldset>
                 <input type="hidden" value="UTF-8" name="_charset_" />
-                <input type="hidden" value="/" name="resource" />
+                <input type="hidden" value="<%= request.getContextPath() %>" name="resource" />
                 <input type="hidden" value="form" name="selectedAuthType" />
             </fieldset>
                         

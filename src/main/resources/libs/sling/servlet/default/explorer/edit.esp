@@ -80,7 +80,7 @@
     if ( mixinTypes || canModifyProperties ) { %>
         <h3>mixin types</h3>
         <div id="property_element_<%= mixinTypesId %>" class="multivalued property_element">
-            <form id="properties_form_<%= mixinTypesId %>" action="<%= path %>" method="post">
+            <form id="properties_form_<%= mixinTypesId %>" action="<%= request.getContextPath() %><%= path %>" method="post">
                 <fieldset>
                     <label for="<%= mixinTypesId %>"><%= mixinTypesId %></label>
                     <%  
@@ -131,7 +131,7 @@
             } 
             if ( !id.equals( primaryNodeTypeId ) && !id.equals( mixinTypesId ) ) { %>
             <div id="property_element_<%= id %>" class="<% if ( isMultivalueProperty ) {%> multivalued <% } %> property_element">
-            <form id="properties_form_<%= id %>" action="<%=path%>" method="post">
+            <form id="properties_form_<%= id %>" action="<%= request.getContextPath() %><%=path%>" method="post">
                 <fieldset>
                     <label for="<%= id %>"><%= id %> 
                     <% if (isProperty) { %>

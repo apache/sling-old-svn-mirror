@@ -19,23 +19,31 @@
  
 /** replace the default get and post jQuery utility functions */
 (function($) {
+    Sling.contextPath = "";
+    if (Sling.baseurl.lastIndexOf('/') > window.location.protocol.length + 3) {
+    	Sling.contextPath = Sling.baseurl.substring(Sling.baseurl.lastIndexOf('/')); 
+    };
+    
     $.ajaxSetup({
        timeout: 5 * 60 * 1000 // in ms, 5 minutes
     });
-    $.getRaw = $.get;
-    $.getJSONRaw = $.getJSON;
     $.postRaw = $.post;
-    $.get = function(url, parameters, callback) {
-       return $.getRaw(Sling.baseurl + url, parameters, callback)
-    };
-    $.getJson = function(url, parameters, callback) {
-       return $.getJSONRaw(Sling.baseurl + url, parameters, callback)
-    };
+    $.ajaxRaw = $.ajax;
     $.post = function(url, parameters, callback) {
       var params = { "_charset_":"utf-8" };
       $.extend(params, parameters);
-      return $.postRaw(Sling.baseurl + url, parameters, callback)
+      return $.postRaw(Sling.baseurl + url, parameters, callback);
     };
+    $.ajax = function(settings) {
+    	var url = settings.url;
+    	if (url.charAt(0) == '/' && url.indexOf(Sling.contextPath) == -1) {
+        	settings.url = Sling.baseurl + url;
+    	}
+    	if (settings.url && settings.url.charAt(0) == '/') {
+    	}
+        return $.ajaxRaw(settings);
+     };
+     
 })(jQuery);
 
 /** load the initial tree on editor startup */
@@ -164,7 +172,7 @@ load_branch = function( path, callback, reload ) {
             },
             complete: function( xmlHttpRequest, textStatus) {
                 loadingbranch = false;
-                if ( textStatus.equals("timeout") )
+                if ( textStatus == "timeout" )
                 {
                     show_error("Timeout!");
                 }
