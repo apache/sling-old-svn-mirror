@@ -1,0 +1,85 @@
+Index: src/main/javadoc/overview.html
+===================================================================
+--- src/main/javadoc/overview.html	(Revision 0)
++++ src/main/javadoc/overview.html	(Revision 0)
+@@ -0,0 +1,61 @@
++<body>
++
++<p><b>Apache Sling</b><small><sup>TM</sup></small>
++ is an innovative web framework that is intended to bring back the fun to web development.</p> 
++ 
++<h1>Apache Sling in five bullets points</h1> 
++ 
++<uL> 
++	<li>REST based web framework</li> 
++	<li>Content-driven, using a JCR content repository</li> 
++	<li>Powered by OSGi</li> 
++	<li>Scripting inside, multiple languages (JSP, server-side javascript, Scala, etc.)</li> 
++	<li>Apache Open Source project</li> 
++</ul> 
++ 
++ 
++<h1>Apache Sling in a hundred words</h1> 
++ 
++<p>Apache Sling is a web framework that uses a <a
++href="http://en.wikipedia.org/wiki/JSR-170">Java Content Repository</a>,
++such as <a href="http://jackrabbit.apache.org/" class="external-link"
++rel="nofollow">Apache Jackrabbit</a>, to store and manage content.</p> 
++ 
++<p>Sling applications use either scripts or Java servlets, selected based
++on simple name conventions, to process HTTP requests in a RESTful way.</p> 
++ 
++<p>The embedded <a href="http://felix.apache.org/">Apache Felix</a> OSGi
++framework and console provide a dynamic runtime environment, where code and
++content bundles can be loaded, unloaded and reconfigured at runtime.</p> 
++ 
++<p>As the first web framework dedicated to <a
++href="http://jcp.org/en/jsr/detail?id=170">JSR-170</a> Java Content
++Repositories, Sling makes it very simple to implement simple applications,
++while providing an enterprise-level framework for more complex
++applications. </p> 
++
++
++<h1>JavaDoc generation</h1>
++
++<p> 
++This documentation has been created from the <a
++href="http://svn.apache.org/repos/asf/sling/tags/sling-6-source-release">Sling
++6 Source Release tag</a> using the Maven JavaDoc plugin as follows:
++</p> 
++ 
++<pre> 
++$ svn export http://svn.apache.org/repos/asf/sling/tags/sling-6-source-release sling6
++$ cd sling6
++$ curl http://svn.apache.org/repos/asf/sling/trunk/src/misc/sling-6-source-release.javadoc.patch | patch  -p0
++$ mvn -DexcludePackageNames="*.impl:*.internal:*.jsp:sun.misc:*.juli:*.testservices:*.integrationtest:*.maven" \
++     org.apache.maven.plugins:maven-javadoc-plugin:2.7:aggregate
++</pre> 
++
++<p>
++The <a
++href="http://svn.apache.org/repos/asf/sling/trunk/src/misc/sling-6-source-release.javadoc.patch">sling-6-source-release.javadoc.patch</a>
++file just patches the builder project's version number and adds this
++overview page file.
++</p>
++
++</body>
+
+Eigenschaftsänderungen: src/main/javadoc/overview.html
+___________________________________________________________________
+Hinzugefügt: svn:eol-style
+   + native
+
+Index: pom.xml
+===================================================================
+--- pom.xml	(Revision 1082130)
++++ pom.xml	(Arbeitskopie)
+@@ -30,7 +30,7 @@
+     <groupId>org.apache.sling</groupId>
+     <artifactId>sling-builder</artifactId>
+     <packaging>pom</packaging>
+-    <version>6-SNAPSHOT</version>
++    <version>6</version>
+ 
+     <name>Apache Sling (Builder)</name>
+     <description>
