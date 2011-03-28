@@ -114,18 +114,33 @@ public class ImportOperation extends AbstractCreateOperation {
         	basePath = basePath.substring(0, basePath.length() - 1);
         }
 
-        String contentRootName;
-        //check if a name was posted to use as the name of the imported root node
-        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null ||
-        		request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
-   			String nodePath = generateName(request, basePath);
-   			String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
-   	        contentRootName = name + "." + contentType;
-        } else {
-        	//no name posted, so the import won't create a root node
-   	        contentRootName = "." + contentType;
-        }
+        // default to creating content
         response.setCreateRequest(true);
+
+        final String targetName;
+        //check if a name was posted to use as the name of the imported root node
+        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null) {
+            // exact name
+            targetName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
+            if (targetName.length() > 0 && node.hasNode(targetName) && !replace) {
+                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
+                    "Cannot import " + path + "/" + targetName
+                        + ": node exists");
+                return;
+            }
+
+            // node exists to be overwritten
+            response.setCreateRequest(false);
+        } else if (request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
+            // node name hint only
+            String nodePath = generateName(request, basePath);
+            String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
+            targetName = name;
+        } else {
+            // no name posted, so the import won't create a root node
+            targetName = "";
+        }
+        final String contentRootName = targetName + "." + contentType;
 
         try {
             InputStream contentStream = null;
