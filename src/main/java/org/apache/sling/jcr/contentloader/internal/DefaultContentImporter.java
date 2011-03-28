@@ -88,12 +88,15 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
 
         // special treatment for system view imports
         if (name.endsWith(EXT_JCR_XML)) {
-            Node node = importSystemView(parent, name, contentStream);
+            boolean replace = (importOptions == null)
+                    ? false
+                    : importOptions.isOverwrite();
+            Node node = importSystemView(parent, name, contentStream, replace);
             if (node != null) {
-            	if (importListener != null) {
-            		importListener.onCreate(node.getPath());
-            	}
-            	return;
+                if (importListener != null) {
+                    importListener.onCreate(node.getPath());
+                }
+                return;
             }
         }
 
@@ -137,12 +140,14 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
      * @param parent The parent node below which to import
      * @param name the name of the import resource
      * @param contentStream The XML content to import
+     * @param replace Whether or not to replace the subtree at name if the
+     *    node exists.
      * @return <code>true</code> if the import succeeds, <code>false</code>
      *         if the import fails due to XML format errors.
      * @throws IOException If an IO error occurrs reading the XML file.
      */
-    private Node importSystemView(Node parent, String name, InputStream contentStream)
-    		throws IOException {
+    private Node importSystemView(Node parent, String name,
+            InputStream contentStream, boolean replace) throws IOException {
         InputStream ins = null;
         try {
 
@@ -156,11 +161,19 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
                 throw new IOException("Node name must not be empty (or extension only)");
             }
 
+            // check for existence/replacement
             if (parent.hasNode(nodeName)) {
-                log.debug(
-                    "importSystemView: Node {} for XML already exists, nothing to to",
-                    nodeName);
-                return parent.getNode(nodeName);
+                Node existingNode = parent.getNode(nodeName);
+                if (replace) {
+                    log.debug("importSystemView: Removing existing node at {}",
+                        nodeName);
+                    existingNode.remove();
+                } else {
+                    log.debug(
+                        "importSystemView: Node {} for XML already exists, nothing to to",
+                        nodeName);
+                    return existingNode;
+                }
             }
 
             ins = contentStream;
