@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>DefaultContentImporter</code> is the default implementation of the 
+ * The <code>DefaultContentImporter</code> is the default implementation of the
  * ContentImporter service providing the following functionality:
  * <ul>
  * <li>Import content into the content repository.
@@ -67,7 +67,7 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
      * @scr.reference
      */
     private MimeTypeService mimeTypeService;
-    
+
     /**
      * To be used for the encryption. E.g. for passwords in
      * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
@@ -77,15 +77,15 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
     private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
     private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
     private String passwordDigestAlgoritm = null;
-    
-    
+
+
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.ContentImporter#importContent(javax.jcr.Node, java.lang.String, java.io.InputStream, org.apache.sling.jcr.contentloader.ImportOptions, org.apache.sling.jcr.contentloader.ContentImportListener)
 	 */
 	public void importContent(Node parent, String name,
 			InputStream contentStream, ImportOptions importOptions,
 			ContentImportListener importListener) throws RepositoryException, IOException {
-		
+
         // special treatment for system view imports
         if (name.endsWith(EXT_JCR_XML)) {
             Node node = importSystemView(parent, name, contentStream);
@@ -96,13 +96,13 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             	return;
             }
         }
-		
+
     	DefaultContentCreator contentCreator = new DefaultContentCreator(this);
         List<String> createdPaths = new ArrayList<String>();
         contentCreator.init(importOptions, this.defaultImportProviders, createdPaths, importListener);
-        
+
         contentCreator.prepareParsing(parent, toPlainName(contentCreator, name));
-        
+
         final ImportProvider ip = contentCreator.getImportProvider(name);
         ContentReader reader = ip.getReader();
 		reader.parse(contentStream, contentCreator);
@@ -116,7 +116,7 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             versionable.checkin();
         }
     }
-    
+
     private String toPlainName(DefaultContentCreator contentCreator, String name) {
         final String providerExt = contentCreator.getImportProviderExtension(name);
         if (providerExt != null) {
@@ -128,7 +128,7 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         return name;
     }
 
-    
+
     /**
      * Import the XML file as JCR system or document view import. If the XML
      * file is not a valid system or document view export/import file,
@@ -147,14 +147,20 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         try {
 
             // check whether we have the content already, nothing to do then
-            if ( name.endsWith(EXT_JCR_XML) ) {
-                name = name.substring(0, name.length() - EXT_JCR_XML.length());
+            final String nodeName = (name.endsWith(EXT_JCR_XML))
+                    ? name.substring(0, name.length() - EXT_JCR_XML.length())
+                    : name;
+
+            // ensure the name is not empty
+            if (nodeName.length() == 0) {
+                throw new IOException("Node name must not be empty (or extension only)");
             }
-            if (parent.hasNode(name)) {
+
+            if (parent.hasNode(nodeName)) {
                 log.debug(
                     "importSystemView: Node {} for XML already exists, nothing to to",
-                    name);
-                return parent.getNode(name);
+                    nodeName);
+                return parent.getNode(nodeName);
             }
 
             ins = contentStream;
@@ -162,7 +168,7 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
 
             // additionally check whether the expected child node exists
-            return (parent.hasNode(name)) ? parent.getNode(name) : null;
+            return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
         } catch (InvalidSerializedDataException isde) {
 
             // the xml might not be System or Document View export, fall back
@@ -188,10 +194,10 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             }
         }
     }
-    
-    
+
+
     // ---------- JcrContentHelper implementation ---------------------------------------------
-    
+
 	/* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.internal.JcrContentHelper#digestPassword(java.lang.String)
 	 */
@@ -218,8 +224,8 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         MimeTypeService mts = mimeTypeService;
         return (mts != null) ? mts.getMimeType(name) : null;
 	}
-	
-	
+
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -232,10 +238,10 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
         }
     }
- 
+
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
         passwordDigestAlgoritm = null;
     }
-    
+
 }
