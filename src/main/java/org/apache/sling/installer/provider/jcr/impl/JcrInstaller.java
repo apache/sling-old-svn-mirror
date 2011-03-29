@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -511,40 +512,84 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     }
 
     /**
-     * @see org.apache.sling.installer.api.UpdateHandler#handleUpdate(java.lang.String, java.lang.String, String, java.io.InputStream, java.util.Dictionary)
+     * @see org.apache.sling.installer.api.UpdateHandler#handleRemoval(java.lang.String, java.lang.String, java.lang.String)
+     */
+    public UpdateResult handleRemoval(final String resourceType,
+            final String id,
+            final String url) {
+        if ( !this.writeBack ) {
+            return null;
+        }
+        final int pos = url.indexOf(':');
+        final String path = url.substring(pos + 1);
+        // remove
+        logger.debug("Removal of {}", path);
+        Session session = null;
+        try {
+            session = this.repository.loginAdministrative(null);
+            if ( session.nodeExists(path) ) {
+                session.getNode(path).remove();
+                session.save();
+            }
+        } catch (final RepositoryException re) {
+            logger.error("Unable to remove resource from " + path, re);
+            return null;
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
+        }
+        return new UpdateResult(url);
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.UpdateHandler#handleUpdate(java.lang.String, java.lang.String, java.lang.String, java.util.Dictionary, Map)
+     */
+    public UpdateResult handleUpdate(final String resourceType,
+            final String id,
+            final String url,
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes) {
+        return this.handleUpdate(resourceType, id, url, null, dict, attributes);
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.UpdateHandler#handleUpdate(java.lang.String, java.lang.String, java.lang.String, java.io.InputStream, Map)
      */
     public UpdateResult handleUpdate(final String resourceType,
             final String id,
             final String url,
             final InputStream is,
-            final Dictionary<String, Object> dict) {
+            final Map<String, Object> attributes) {
+        return this.handleUpdate(resourceType, id, url, is, null, attributes);
+    }
+
+    private String getPathWithHighestPrio(final String oldPath) {
+        final String path;
+        // check root path, we use the path with highest prio
+        final String rootPath = this.folderNameFilter.getRootPaths()[0] + '/';
+        if ( !oldPath.startsWith(rootPath) ) {
+            final int slashPos = oldPath.indexOf('/', 1);
+            path = rootPath + oldPath.substring(slashPos + 1);
+        } else {
+            path = oldPath;
+        }
+        return path;
+    }
+    /**
+     * Internal implementation of update handling
+     */
+    private UpdateResult handleUpdate(final String resourceType,
+            final String id,
+            final String url,
+            final InputStream is,
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes) {
         if ( !this.writeBack ) {
             return null;
         }
 
-        if ( is == null && dict == null ) {
-            final int pos = url.indexOf(':');
-            final String path = url.substring(pos + 1);
-            // remove
-            logger.debug("Removal of {}", path);
-            Session session = null;
-            try {
-                session = this.repository.loginAdministrative(null);
-                if ( session.nodeExists(path) ) {
-                    session.getNode(path).remove();
-                    session.save();
-                }
-            } catch (final RepositoryException re) {
-                logger.error("Unable to remove resource from " + path, re);
-                return null;
-            } finally {
-                if ( session != null ) {
-                    session.logout();
-                }
-            }
-            return new UpdateResult(url);
-        }
-        // we only handle add and remove for configs for now
+        // we only handle add/update of configs for now
         if ( !resourceType.equals(InstallableResource.TYPE_CONFIG) ) {
             return null;
         }
@@ -555,19 +600,32 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             // update
             final int pos = url.indexOf(':');
             final String oldPath = url.substring(pos + 1);
-            // check root path, we use the path with highest prio
-            final String rootPath = this.folderNameFilter.getRootPaths()[0] + '/';
-            if ( !oldPath.startsWith(rootPath) ) {
-                final int slashPos = oldPath.indexOf('/', 1);
-                path = rootPath + oldPath.substring(slashPos + 1);
-                resourceIsMoved = false;
-            } else {
-                path = oldPath;
-            }
+            path = getPathWithHighestPrio(oldPath);
+            resourceIsMoved = path.equals(oldPath);
             logger.debug("Update of {} at {}", resourceType, path);
         } else {
+            // check for path hint
+            String hint = null;
+            if ( attributes != null ) {
+                hint = (String)attributes.get(InstallableResource.INSTALLATION_HINT);
+                if ( hint != null && hint.startsWith(URL_SCHEME + ':')) {
+                    hint = hint.substring(URL_SCHEME.length() + 1);
+                    final int lastSlash = hint.lastIndexOf('/');
+                    if ( lastSlash < 1 ) {
+                        hint = null;
+                    } else {
+                        int slashPos = hint.lastIndexOf('/', lastSlash - 1);
+                        final String dirName = hint.substring(slashPos + 1, lastSlash);
+                        if ( "install".equals(dirName) ) {
+                            hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config/");
+                        } else {
+                            hint = null;
+                        }
+                    }
+                }
+            }
             // add
-            path = this.newConfigPath + id;
+            path = (hint != null ? hint : this.newConfigPath) + id;
             logger.debug("Add of {} at {}", resourceType, path);
         }
 
