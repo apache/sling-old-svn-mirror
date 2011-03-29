@@ -20,6 +20,7 @@ package org.apache.sling.installer.api;
 
 import java.io.InputStream;
 import java.util.Dictionary;
+import java.util.Map;
 
 
 /**
@@ -38,12 +39,40 @@ public interface UpdateHandler {
     String PROPERTY_SCHEMES = "handler.schemes";
 
     /**
+     * Handle the remove of a resource
+     * @param resourceType The resource type
+     * @param id The resource id, e.g. symbolic name etc.
+     * @param url The url where an earlier version of this resource came from
+     * @return If the handler could handle/perist the resource an update result is returned
+     *         otherwise the handler should return <code>null</code>
+     */
+    UpdateResult handleRemoval(final String resourceType,
+            final String id,
+            final String url);
+
+    /**
      * Handle the update of a resource
      * @param resourceType The resource type
      * @param id The resource id, e.g. symbolic name etc.
      * @param url The url where an earlier version of this resource came from (optional)
-     * @param is Input stream to the contents of the resource (optional)
-     * @param dict Dictionary (optional)
+     * @param dict Dictionary
+     * @param attributes Optional additional attributes.
+     * @return If the handler could handle/perist the resource an update result is returned
+     *         otherwise the handler should return <code>null</code>
+     */
+    UpdateResult handleUpdate(final String resourceType,
+            final String id,
+            final String url,
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes);
+
+    /**
+     * Handle the update of a resource
+     * @param resourceType The resource type
+     * @param id The resource id, e.g. symbolic name etc.
+     * @param url The url where an earlier version of this resource came from (optional)
+     * @param is Input stream to the contents of the resource
+     * @param attributes Optional additional attributes.
      * @return If the handler could handle/perist the resource an update result is returned
      *         otherwise the handler should return <code>null</code>
      */
@@ -51,5 +80,5 @@ public interface UpdateHandler {
             final String id,
             final String url,
             final InputStream is,
-            final Dictionary<String, Object> dict);
+            final Map<String, Object> attributes);
 }
