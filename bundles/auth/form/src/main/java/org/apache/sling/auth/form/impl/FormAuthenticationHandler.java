@@ -457,31 +457,34 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         refreshAuthData(request, response, authInfo);
 
         final boolean result;
-        if (DefaultAuthenticationFeedbackHandler.handleRedirect(
-            request, response)) {
-
-            // terminate request, all done in the default handler
-            result = false;
-
-        } else {
-
-            // check whether redirect is requested by the resource parameter
-
-            final String resource = getLoginResource(request, null);
-            if (resource != null) {
-                try {
-                    response.sendRedirect(resource);
-                } catch (IOException ioe) {
-                    log.error("Failed to send redirect to: " + resource, ioe);
-                }
-
-                // terminate request, all done
-                result = true;
+        // SLING-1847: only consider a resource redirect if this is a POST request
+        // to the j_security_check URL
+        if (REQUEST_METHOD.equals(request.getMethod())
+        		&& request.getRequestURI().endsWith(REQUEST_URL_SUFFIX)) {
+        	
+            if (DefaultAuthenticationFeedbackHandler.handleRedirect(request, response)) {
+            	// terminate request, all done in the default handler
+            	result = false;
             } else {
-                // no redirect, hence continue processing
-                result = false;
-            }
+            	// check whether redirect is requested by the resource parameter
+            	final String resource = getLoginResource(request, null);
+            	if (resource != null) {
+            		try {
+            			response.sendRedirect(resource);
+            		} catch (IOException ioe) {
+            			log.error("Failed to send redirect to: " + resource, ioe);
+            		}
 
+            		// terminate request, all done
+            		result = true;
+            	} else {
+            		// no redirect, hence continue processing
+            		result = false;
+            	}
+            }
+        } else {
+            // no redirect, hence continue processing
+            result = false;
         }
 
         // no redirect
