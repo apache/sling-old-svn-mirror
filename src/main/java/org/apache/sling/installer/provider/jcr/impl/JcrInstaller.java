@@ -18,8 +18,12 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.LinkedList;
@@ -34,6 +38,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -60,7 +65,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(label="%jcrinstall.name", description="%jcrinstall.description", immediate=true, metatype=true)
 @Properties({
-    @Property(name="service.description", value="Sling Jcrinstall Service"),
+    @Property(name="service.description", value="Sling JCR Install Service"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name=UpdateHandler.PROPERTY_SCHEMES, value=JcrInstaller.URL_SCHEME),
     @Property(name="service.ranking", intValue=100)
@@ -594,47 +599,63 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             return null;
         }
 
-        final String path;
-        boolean resourceIsMoved = true;
-        if ( url != null ) {
-            // update
-            final int pos = url.indexOf(':');
-            final String oldPath = url.substring(pos + 1);
-            path = getPathWithHighestPrio(oldPath);
-            resourceIsMoved = path.equals(oldPath);
-            logger.debug("Update of {} at {}", resourceType, path);
-        } else {
-            // check for path hint
-            String hint = null;
-            if ( attributes != null ) {
-                hint = (String)attributes.get(InstallableResource.INSTALLATION_HINT);
-                if ( hint != null && hint.startsWith(URL_SCHEME + ':')) {
-                    hint = hint.substring(URL_SCHEME.length() + 1);
-                    final int lastSlash = hint.lastIndexOf('/');
-                    if ( lastSlash < 1 ) {
-                        hint = null;
-                    } else {
-                        int slashPos = hint.lastIndexOf('/', lastSlash - 1);
-                        final String dirName = hint.substring(slashPos + 1, lastSlash);
-                        if ( "install".equals(dirName) ) {
-                            hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config/");
-                        } else {
-                            hint = null;
-                        }
-                    }
-                }
-            }
-            // add
-            path = (hint != null ? hint : this.newConfigPath) + id;
-            logger.debug("Add of {} at {}", resourceType, path);
-        }
-
         Session session = null;
         try {
             session = this.repository.loginAdministrative(null);
-            final Node configNode = JcrUtil.createPath(session, path, ConfigNodeConverter.CONFIG_NODE_TYPE);
-            JcrUtil.removeAllProperties(configNode);
-            JcrUtil.saveProperties(configNode, dict);
+
+            final String path;
+            boolean resourceIsMoved = true;
+            if ( url != null ) {
+                // update
+                final int pos = url.indexOf(':');
+                final String oldPath = url.substring(pos + 1);
+                final String nodePath = getPathWithHighestPrio(oldPath);
+                if ( !nodePath.endsWith(".config") && session.itemExists(nodePath) ) {
+                    session.getItem(nodePath).remove();
+                    path = nodePath + ".config";
+                } else {
+                    path = nodePath;
+                }
+                resourceIsMoved = nodePath.equals(oldPath);
+                logger.debug("Update of {} at {}", resourceType, path);
+            } else {
+                // check for path hint
+                String hint = null;
+                if ( attributes != null ) {
+                    hint = (String)attributes.get(InstallableResource.INSTALLATION_HINT);
+                    if ( hint != null && hint.startsWith(URL_SCHEME + ':')) {
+                        hint = hint.substring(URL_SCHEME.length() + 1);
+                        final int lastSlash = hint.lastIndexOf('/');
+                        if ( lastSlash < 1 ) {
+                            hint = null;
+                        } else {
+                            int slashPos = hint.lastIndexOf('/', lastSlash - 1);
+                            final String dirName = hint.substring(slashPos + 1, lastSlash);
+                            if ( "install".equals(dirName) ) {
+                                hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config/");
+                            } else {
+                                hint = null;
+                            }
+                        }
+                    }
+                }
+                // add
+                path = (hint != null ? hint : this.newConfigPath) + id + ".config";
+                logger.debug("Add of {} at {}", resourceType, path);
+            }
+
+            // write to a byte array stream
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ConfigurationHandler.write(baos, dict);
+            baos.close();
+
+            // get or create file node
+            JcrUtil.createPath(session, path, "nt:file");
+            // get or create resource node
+            final Node dataNode = JcrUtil.createPath(session, path + "/jcr:content", "nt:resource");
+
+            dataNode.setProperty("jcr:data", new ByteArrayInputStream(baos.toByteArray()));
+            dataNode.setProperty("jcr:lastModified", Calendar.getInstance());
             session.save();
 
             final UpdateResult result = new UpdateResult(JcrInstaller.URL_SCHEME + ':' + path);
@@ -643,7 +664,10 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             result.setResourceIsMoved(resourceIsMoved);
             return result;
         } catch (final RepositoryException re) {
-            logger.error("Unable to remove resource from " + path, re);
+            logger.error("Unable to add/update resource " + resourceType + ':' + id, re);
+            return null;
+        } catch (final IOException e) {
+            logger.error("Unable to add/update resource " + resourceType + ':' + id, e);
             return null;
         } finally {
             if ( session != null ) {
