@@ -103,7 +103,12 @@ public class ConfigTaskCreator
                             }
                         }
                         if ( persist ) {
-                            this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict);
+                            Map<String, Object> attrs = null;
+                            if ( config.getBundleLocation() != null ) {
+                                attrs = new HashMap<String, Object>();
+                                attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
+                            }
+                            this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
                         }
                     }
                 } catch ( final Exception ignore) {
