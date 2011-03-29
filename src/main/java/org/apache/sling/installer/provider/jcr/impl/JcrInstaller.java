@@ -656,6 +656,8 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             dataNode.setProperty("jcr:data", new ByteArrayInputStream(baos.toByteArray()));
             dataNode.setProperty("jcr:lastModified", Calendar.getInstance());
+            dataNode.setProperty("jcr:encoding", "UTF-8");
+            dataNode.setProperty("jcr:mimeType", "text/plain");
             session.save();
 
             final UpdateResult result = new UpdateResult(JcrInstaller.URL_SCHEME + ':' + path);
