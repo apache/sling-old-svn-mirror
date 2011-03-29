@@ -661,12 +661,13 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary)
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
      */
     public void resourceAddedOrUpdated(final String resourceType,
             String entityId,
             final InputStream is,
-            final Dictionary<String, Object> dict) {
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes) {
         String key = resourceType + ':' + entityId;
         try {
             final ResourceData data = ResourceData.create(is, dict);
@@ -696,7 +697,8 @@ public class OsgiInstallerImpl
                     } else {
                         final InputStream localIS = data.getInputStream();
                         try {
-                            final UpdateResult result = handler.handleUpdate(resourceType, entityId, tr.getURL(), localIS, data.getDictionary());
+                            final UpdateResult result = (localIS == null ? handler.handleUpdate(resourceType, entityId, tr.getURL(), data.getDictionary(), attributes)
+                                                                         : handler.handleUpdate(resourceType, entityId, tr.getURL(), localIS, attributes));
                             if ( result != null ) {
                                 if ( !result.getURL().equals(tr.getURL()) && !result.getResourceIsMoved() ) {
                                     // resource has been added!
@@ -753,7 +755,8 @@ public class OsgiInstallerImpl
                     for(final UpdateHandler handler : handlerList) {
                         final InputStream localIS = data.getInputStream();
                         try {
-                            final UpdateResult result = handler.handleUpdate(resourceType, entityId, null, localIS, data.getDictionary());
+                            final UpdateResult result = (localIS == null ? handler.handleUpdate(resourceType, entityId, null, data.getDictionary(), attributes)
+                                                                         : handler.handleUpdate(resourceType, entityId, null, localIS, attributes));
                             if ( result != null ) {
                                 final InternalResource internalResource = new InternalResource(result.getScheme(),
                                         result.getResourceId(),
@@ -831,7 +834,7 @@ public class OsgiInstallerImpl
                             logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
                         } else {
                             // we don't need to check the result, we just check if a result is returned
-                            if ( handler.handleUpdate(resourceType, resourceId, tr.getURL(), null, null) != null ) {
+                            if ( handler.handleRemoval(resourceType, resourceId, tr.getURL()) != null ) {
                                 // We first set the state of the resource to uninstall to make setFinishState work in all cases
                                 ((RegisteredResourceImpl)tr).setState(ResourceState.UNINSTALL);
                                 erl.setFinishState(ResourceState.UNINSTALLED);

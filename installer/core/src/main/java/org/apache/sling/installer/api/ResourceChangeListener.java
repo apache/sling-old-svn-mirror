@@ -20,6 +20,7 @@ package org.apache.sling.installer.api;
 
 import java.io.InputStream;
 import java.util.Dictionary;
+import java.util.Map;
 
 
 /**
@@ -44,7 +45,8 @@ public interface ResourceChangeListener {
     void resourceAddedOrUpdated(final String resourceType,
             final String entityId,
             final InputStream is,
-            final Dictionary<String, Object> dict);
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes);
 
     /**
      * Inform the installer about a removed resource
