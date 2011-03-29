@@ -66,20 +66,9 @@ public class FileNodeConverter implements JcrInstaller.NodeConverter {
 	        final String path,
 	        final int priority)
     throws IOException, RepositoryException {
-		String digest = null;
-        if (n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
-        	digest = String.valueOf(n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis());
-        } else {
-        	throw new IOException("Missing " + JCR_CONTENT_LAST_MODIFIED + " property");
-	    }
+		final String digest = String.valueOf(n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis());
 
-        InputStream is = null;
-        if(n.hasProperty(JCR_CONTENT_DATA)) {
-        	is = n.getProperty(JCR_CONTENT_DATA).getStream();
-        } else {
-        	throw new IOException("Missing " + JCR_CONTENT_DATA + " property");
-        }
-
+        final InputStream is =  n.getProperty(JCR_CONTENT_DATA).getStream();
         final Dictionary<String, Object> dict = new Hashtable<String, Object>();
         dict.put(InstallableResource.INSTALLATION_HINT, n.getParent().getName());
         return new InstallableResource(path, is, dict, digest, null, priority);
