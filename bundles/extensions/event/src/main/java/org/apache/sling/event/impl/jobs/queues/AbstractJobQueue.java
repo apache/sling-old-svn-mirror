@@ -364,7 +364,7 @@ public abstract class AbstractJobQueue
     }
 
     protected boolean canBeMarkedForRemoval() {
-        return this.isEmpty() && !this.isWaiting;
+        return this.isEmpty() && !this.isWaiting &&!this.isSuspended();
     }
     /**
      * Mark this queue for removal.
