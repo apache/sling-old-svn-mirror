@@ -75,6 +75,20 @@ public interface JobManager {
     JobsIterator queryJobs(QueryType type, String topic, Map<String, Object>... templates);
 
     /**
+     * Return all jobs either running or scheduled.
+     *
+     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param limit A positive number indicating the maximum number of jobs returned by the iterator.
+     * @param templates A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @since 1.1
+     */
+    JobsIterator queryJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
+
+    /**
      * Find a job - either scheduled or active.
      * This method searches for an event with the given topic and filter properties. If more than one
      * job matches, the first one found is returned which could be any of the matching jobs.
