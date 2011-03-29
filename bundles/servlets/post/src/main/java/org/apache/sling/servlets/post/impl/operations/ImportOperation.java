@@ -122,15 +122,17 @@ public class ImportOperation extends AbstractCreateOperation {
         if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null) {
             // exact name
             targetName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-            if (targetName.length() > 0 && node.hasNode(targetName) && !replace) {
-                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
-                    "Cannot import " + path + "/" + targetName
-                        + ": node exists");
-                return;
+            if (targetName.length() > 0 && node.hasNode(targetName)) {
+                if (replace) {
+                    response.setCreateRequest(false);
+                } else {
+                    response.setStatus(
+                        HttpServletResponse.SC_PRECONDITION_FAILED,
+                        "Cannot import " + path + "/" + targetName
+                            + ": node exists");
+                    return;
+                }
             }
-
-            // node exists to be overwritten
-            response.setCreateRequest(false);
         } else if (request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
             // node name hint only
             String nodePath = generateName(request, basePath);
