@@ -242,19 +242,21 @@ public class StatisticsImpl implements Statistics {
      * Create a new statistics object with exactly the same values.
      */
     public synchronized void copyFrom(final StatisticsImpl other) {
-        this.queuedJobs = other.queuedJobs;
-        this.lastActivated = other.lastActivated;
-        this.lastFinished = other.lastFinished;
-        this.averageWaitingTime = other.averageWaitingTime;
-        this.averageProcessingTime = other.averageProcessingTime;
-        this.waitingTime = other.waitingTime;
-        this.processingTime = other.processingTime;
-        this.waitingCount = other.waitingCount;
-        this.processingCount = other.processingCount;
-        this.finishedJobs = other.finishedJobs;
-        this.failedJobs = other.failedJobs;
-        this.cancelledJobs = other.cancelledJobs;
-        this.activeJobs = other.activeJobs;
+        synchronized ( other ) {
+            this.queuedJobs = other.queuedJobs;
+            this.lastActivated = other.lastActivated;
+            this.lastFinished = other.lastFinished;
+            this.averageWaitingTime = other.averageWaitingTime;
+            this.averageProcessingTime = other.averageProcessingTime;
+            this.waitingTime = other.waitingTime;
+            this.processingTime = other.processingTime;
+            this.waitingCount = other.waitingCount;
+            this.processingCount = other.processingCount;
+            this.finishedJobs = other.finishedJobs;
+            this.failedJobs = other.failedJobs;
+            this.cancelledJobs = other.cancelledJobs;
+            this.activeJobs = other.activeJobs;
+        }
     }
 
     /**

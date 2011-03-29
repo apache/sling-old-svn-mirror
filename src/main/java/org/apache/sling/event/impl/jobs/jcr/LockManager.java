@@ -49,7 +49,7 @@ import org.apache.sling.event.impl.support.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype=true,label="%lm.name",description="%jlm.description")
+@Component(metatype=true,label="%lm.name",description="%lm.description")
 @Services({
     @Service(value=Runnable.class),
     @Service(value=LockManager.class)
