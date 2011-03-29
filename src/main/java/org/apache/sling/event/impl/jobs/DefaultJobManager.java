@@ -217,7 +217,7 @@ public class DefaultJobManager
         for(final AbstractJobQueue jbq : this.queues.values() ) {
             jbq.checkForUnprocessedJobs();
         }
-        
+
         // we only do a full clean up on every fifth run
         this.schedulerRuns++;
         final boolean doFullCleanUp = (schedulerRuns % 5 == 0);
@@ -545,10 +545,11 @@ public class DefaultJobManager
         return true;
     }
 
-    private void queryCollection(
+    private boolean queryCollection(
             final List<Event> result,
             final QueryType type,
             final Collection<JobEvent> collection,
+            final long limit,
             final Map<String, Object>... filterProps) {
         synchronized ( collection ) {
             final Iterator<JobEvent> iter = collection.iterator();
@@ -566,15 +567,30 @@ public class DefaultJobManager
                 }
                 if ( add ) {
                     result.add(job.event);
+                    if ( limit > 0 && result.size() == limit ) {
+                        return true;
+                    }
                 }
             }
         }
+        return false;
     }
+
     /**
      * @see org.apache.sling.event.jobs.JobManager#queryJobs(QueryType, java.lang.String, java.util.Map...)
      */
     public JobsIterator queryJobs(final QueryType type,
             final String topic,
+            final Map<String, Object>... filterProps) {
+        return this.queryJobs(type, topic, -1, filterProps);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#queryJobs(QueryType, java.lang.String, long, java.util.Map...)
+     */
+    public JobsIterator queryJobs(final QueryType type,
+            final String topic,
+            final long limit,
             final Map<String, Object>... filterProps) {
         final List<Event> result = new ArrayList<Event>();
         if ( topic != null ) {
@@ -583,15 +599,18 @@ public class DefaultJobManager
                 l = this.allEventsByTopic.get(topic);
             }
             if ( l != null ) {
-                queryCollection(result, type, l, filterProps);
+                queryCollection(result, type, l, limit, filterProps);
             }
         } else {
             final Set<Collection<JobEvent>> topics;
             synchronized ( this.allEventsByTopic ) {
                 topics = new HashSet<Collection<JobEvent>>(this.allEventsByTopic.values());
             }
-            for(final Collection<JobEvent> l : topics) {
-                queryCollection(result, type, l, filterProps);
+            boolean done = false;
+            final Iterator<Collection<JobEvent>> i = topics.iterator();
+            while ( !done && i.hasNext() ) {
+                final Collection<JobEvent> l = i.next();
+                done = queryCollection(result, type, l, limit, filterProps);
             }
         }
         return new JobsIteratorImpl(result);
