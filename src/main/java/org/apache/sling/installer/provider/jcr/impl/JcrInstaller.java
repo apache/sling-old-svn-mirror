@@ -85,6 +85,15 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     public static final int RUN_LOOP_COUNTER = 2;
     public static final int COUNTERS_COUNT = 3;
 
+    private static final String NT_FILE = "nt:file";
+    private static final String NT_RESOURCE = "nt:resource";
+    private static final String PROP_DATA = "jcr:data";
+    private static final String PROP_MODIFIED = "jcr:lastModified";
+    private static final String PROP_ENC = "jcr:encoding";
+    private static final String PROP_MIME = "jcr:mimeType";
+    private static final String MIME_TXT = "text/plain";
+    private static final String ENCODING = "UTF-8";
+
     /**
      * This class watches the repository for installable resources
      */
@@ -610,6 +619,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 final int pos = url.indexOf(':');
                 final String oldPath = url.substring(pos + 1);
                 final String nodePath = getPathWithHighestPrio(oldPath);
+                // ensure extension 'config'
                 if ( !nodePath.endsWith(".config") && session.itemExists(nodePath) ) {
                     session.getItem(nodePath).remove();
                     path = nodePath + ".config";
@@ -631,10 +641,17 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                         } else {
                             int slashPos = hint.lastIndexOf('/', lastSlash - 1);
                             final String dirName = hint.substring(slashPos + 1, lastSlash);
-                            if ( "install".equals(dirName) ) {
-                                hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config/");
+                            // we prefer having "config" as the dir name
+                            if ( !"config".equals(dirName) ) {
+                                hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config");
+                                // check if config is in regexp
+                                if ( this.folderNameFilter.getPriority(hint) > -1 ) {
+                                    hint = hint + '/';
+                                } else {
+                                    hint = this.getPathWithHighestPrio(hint);
+                                }
                             } else {
-                                hint = null;
+                                hint = this.getPathWithHighestPrio(hint);
                             }
                         }
                     }
@@ -650,14 +667,14 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             baos.close();
 
             // get or create file node
-            JcrUtil.createPath(session, path, "nt:file");
+            JcrUtil.createPath(session, path, NT_FILE);
             // get or create resource node
-            final Node dataNode = JcrUtil.createPath(session, path + "/jcr:content", "nt:resource");
+            final Node dataNode = JcrUtil.createPath(session, path + "/jcr:content", NT_RESOURCE);
 
-            dataNode.setProperty("jcr:data", new ByteArrayInputStream(baos.toByteArray()));
-            dataNode.setProperty("jcr:lastModified", Calendar.getInstance());
-            dataNode.setProperty("jcr:encoding", "UTF-8");
-            dataNode.setProperty("jcr:mimeType", "text/plain");
+            dataNode.setProperty(PROP_DATA, new ByteArrayInputStream(baos.toByteArray()));
+            dataNode.setProperty(PROP_MODIFIED, Calendar.getInstance());
+            dataNode.setProperty(PROP_ENC, ENCODING);
+            dataNode.setProperty(PROP_MIME, MIME_TXT);
             session.save();
 
             final UpdateResult result = new UpdateResult(JcrInstaller.URL_SCHEME + ':' + path);
@@ -677,4 +694,5 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             }
         }
     }
+
 }
