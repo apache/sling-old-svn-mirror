@@ -62,6 +62,9 @@ public class RepositoryTestUtil {
             adminSession = null;
         }
         repository = null;
+        try {
+            Thread.sleep(2000);
+        } catch (final InterruptedException ie) {}
     }
 
     public static Session getAdminSession() {
