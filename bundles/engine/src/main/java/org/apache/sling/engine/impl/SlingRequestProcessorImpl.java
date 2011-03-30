@@ -139,16 +139,18 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         }
 
         try {
+            final ServletResolver sr = this.servletResolver;
+
             // check that we have all required services
             if (resourceResolver == null) {
                 throw new UnavailableException("ResourceResolver");
-            } else if (servletResolver == null) {
+            } else if (sr == null) {
                 throw new UnavailableException("ServletResolver");
             }
 
             // initialize the request data - resolve resource and servlet
             Resource resource = requestData.initResource(resourceResolver);
-            requestData.initServlet(resource);
+            requestData.initServlet(resource, sr);
 
             Filter[] filters = filterManager.getFilters(FilterChainType.REQUEST);
             if (filters != null) {
@@ -309,10 +311,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         } finally {
             requestData.popContent();
         }
-    }
-
-    public ServletResolver getServletResolver() {
-        return servletResolver;
     }
 
     // ---------- Error Handling with Filters

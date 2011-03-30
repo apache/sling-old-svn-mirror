@@ -55,8 +55,6 @@ import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
 import org.apache.sling.engine.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.engine.impl.adapter.SlingServletResponseAdapter;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>RequestData</code> class provides access to objects which are set
@@ -72,9 +70,6 @@ import org.slf4j.LoggerFactory;
  * @see ContentData
  */
 public class RequestData {
-
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(RequestData.class);
 
     /**
      * The default value for the number of recursive inclusions for a single
@@ -203,7 +198,8 @@ public class RequestData {
         return resource;
     }
 
-    public void initServlet(final Resource resource) {
+    public void initServlet(final Resource resource,
+            final ServletResolver sr) {
         // the resource and the request path info, will never be null
         RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource);
         ContentData contentData = pushContent(resource, requestPathInfo);
@@ -211,17 +207,12 @@ public class RequestData {
 	    requestProgressTracker.log("Resource Path Info: {0}", requestPathInfo);
 
         // finally resolve the servlet for the resource
-        ServletResolver sr = slingRequestProcessor.getServletResolver();
-        if (sr != null) {
-            requestProgressTracker.startTimer("ServletResolution");
-            Servlet servlet = sr.resolveServlet(slingRequest);
-            requestProgressTracker.logTimer("ServletResolution",
-                "URI={0} handled by Servlet={1}",
-                getServletRequest().getRequestURI(), RequestUtil.getServletName(servlet));
-            contentData.setServlet(servlet);
-        } else {
-            log.warn("init(): No ServletResolver available");
-        }
+        requestProgressTracker.startTimer("ServletResolution");
+        Servlet servlet = sr.resolveServlet(slingRequest);
+        requestProgressTracker.logTimer("ServletResolution",
+            "URI={0} handled by Servlet={1}",
+            getServletRequest().getRequestURI(), RequestUtil.getServletName(servlet));
+        contentData.setServlet(servlet);
     }
 
     public void dispose() {
