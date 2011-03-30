@@ -22,14 +22,12 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestWrapper;
 import javax.servlet.ServletResponse;
@@ -56,7 +54,6 @@ import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
 import org.apache.sling.engine.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.engine.impl.adapter.SlingServletResponseAdapter;
-import org.apache.sling.engine.impl.output.BufferProvider;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * </ol>
  * @see ContentData
  */
-public class RequestData implements BufferProvider {
+public class RequestData {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(RequestData.class);
@@ -544,7 +541,6 @@ public class RequestData implements BufferProvider {
 
     public ContentData pushContent(Resource resource,
             RequestPathInfo requestPathInfo) {
-        BufferProvider parent;
         if (currentContentData != null) {
             if (contentDataStack == null) {
                 contentDataStack = new LinkedList<ContentData>();
@@ -554,12 +550,9 @@ public class RequestData implements BufferProvider {
             }
 
             contentDataStack.add(currentContentData);
-            parent = currentContentData;
-        } else {
-            parent = this;
         }
 
-        currentContentData = new ContentData(resource, requestPathInfo, parent);
+        currentContentData = new ContentData(resource, requestPathInfo);
         return currentContentData;
     }
 
@@ -628,30 +621,6 @@ public class RequestData implements BufferProvider {
 
     public String getMimeType(String fileName) {
         return SLING_MAIN_SERVLET.getMimeType(fileName);
-    }
-
-    // ---------- BufferProvider -----------------------------------------
-
-    public BufferProvider getBufferProvider() {
-        return (currentContentData != null)
-                ? (BufferProvider) currentContentData
-                : this;
-    }
-
-    public int getBufferSize() {
-        return getServletResponse().getBufferSize();
-    }
-
-    public void setBufferSize(int size) {
-        getServletResponse().setBufferSize(size);
-    }
-
-    public ServletOutputStream getOutputStream() throws IOException {
-        return getServletResponse().getOutputStream();
-    }
-
-    public PrintWriter getWriter() throws IOException {
-        return getServletResponse().getWriter();
     }
 
     // ---------- Parameter support -------------------------------------------
