@@ -127,15 +127,9 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     //---------- SlingHttpServletResponse interface
 
     @Override
-    public Locale getLocale() {
-        // TODO Should use our Locale Resolver and not let the component set the locale, right ??
-        return getResponse().getLocale();
-    }
-
-    @Override
     public ServletOutputStream getOutputStream() throws IOException {
         if (this.out == null) {
-            ServletOutputStream sos = getRequestData().getBufferProvider().getOutputStream();
+            ServletOutputStream sos = getResponse().getOutputStream();
             this.out = new LoggerResponseOutputStream(sos);
         }
         return this.out;
@@ -144,52 +138,10 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     @Override
     public PrintWriter getWriter() throws IOException {
         if (this.writer == null) {
-            PrintWriter pw = getRequestData().getBufferProvider().getWriter();
+            PrintWriter pw = getResponse().getWriter();
             this.writer = new LoggerResponseWriter(pw);
         }
         return this.writer;
-    }
-
-    @Override
-    public boolean isCommitted() {
-        // TODO: integrate with our output catcher
-        return getResponse().isCommitted();
-    }
-
-    @Override
-    public void reset() {
-        if (isCommitted()) {
-            throw new IllegalStateException("Response already committed");
-        }
-        getRequestData().getContentData().resetBuffer();
-        getResponse().reset();
-    }
-
-    @Override
-    public void flushBuffer() throws IOException {
-        getRequestData().getContentData().flushBuffer();
-        getResponse().flushBuffer();
-    }
-
-    @Override
-    public void resetBuffer() {
-        if (isCommitted()) {
-            throw new IllegalStateException("Response already committed");
-        }
-
-        getRequestData().getContentData().resetBuffer();
-        getResponse().resetBuffer();
-    }
-
-    @Override
-    public void setBufferSize(int size) {
-        getRequestData().getContentData().setBufferSize(size);
-        getResponse().setBufferSize(size);
-    }
-
-    @Override
-    public int getBufferSize() {
-        return getRequestData().getContentData().getBufferSize();
     }
 
     // ---------- Redirection support through PathResolver --------------------

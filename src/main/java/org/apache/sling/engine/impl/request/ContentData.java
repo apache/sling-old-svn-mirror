@@ -18,19 +18,9 @@
  */
 package org.apache.sling.engine.impl.request;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-
 import javax.servlet.Servlet;
-import javax.servlet.ServletOutputStream;
-
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.engine.impl.output.Buffer;
-import org.apache.sling.engine.impl.output.BufferProvider;
-import org.apache.sling.engine.impl.output.BufferedPrintWriter;
-import org.apache.sling.engine.impl.output.BufferedServletOutputStream;
 
 /**
  * The <code>ContentData</code> class provides objects which are relevant for
@@ -38,7 +28,7 @@ import org.apache.sling.engine.impl.output.BufferedServletOutputStream;
  *
  * @see RequestData
  */
-public class ContentData implements BufferProvider {
+public class ContentData {
 
     private RequestPathInfo requestPathInfo;
 
@@ -46,29 +36,13 @@ public class ContentData implements BufferProvider {
 
     private Servlet servlet;
 
-    private Buffer buffer;
-
-    private int requestedBufferSize;
-
-    private BufferProvider parent;
-
-    public ContentData(Resource resource, RequestPathInfo requestPathInfo,
-            BufferProvider parent) {
+    public ContentData(Resource resource, RequestPathInfo requestPathInfo) {
         this.resource = resource;
         this.requestPathInfo = requestPathInfo;
-        this.parent = parent;
-        this.requestedBufferSize = parent.getBufferSize();
     }
 
     /* package */void dispose() {
         this.requestPathInfo = null;
-
-        // flush buffer contents to output
-        try {
-            this.flushBuffer();
-        } catch (IOException ioe) {
-            // TODO: handle
-        }
     }
 
     public Resource getResource() {
@@ -85,65 +59,5 @@ public class ContentData implements BufferProvider {
 
     public void setServlet(Servlet servlet) {
         this.servlet = servlet;
-    }
-
-    // ---------- BufferProvider interface -------------------------------
-
-    public void setBufferSize(int buffersize) {
-        if (this.buffer != null) {
-            this.buffer.setBufferSize(buffersize);
-        }
-
-        this.requestedBufferSize = buffersize;
-    }
-
-    public int getBufferSize() {
-        if (this.buffer != null) {
-            return this.buffer.getBufferSize();
-        }
-
-        return this.requestedBufferSize;
-    }
-
-    public void flushBuffer() throws IOException {
-        if (this.buffer != null) {
-            this.buffer.flushBuffer();
-        }
-    }
-
-    public void resetBuffer() {
-        if (this.buffer != null) {
-            this.buffer.resetBuffer();
-        }
-    }
-
-    public ServletOutputStream getOutputStream() throws IOException {
-        if (this.buffer instanceof OutputStream) {
-            return (ServletOutputStream) this.buffer;
-        } else if (this.buffer != null) {
-            throw new IllegalStateException("Writer already retrieved");
-        }
-
-        ServletOutputStream parentStream = this.parent.getOutputStream();
-        BufferedServletOutputStream stream = new BufferedServletOutputStream(
-            parentStream, this.getBufferSize());
-        this.buffer = stream;
-
-        return stream;
-    }
-
-    public PrintWriter getWriter() throws IOException {
-        if (this.buffer instanceof PrintWriter) {
-            return (PrintWriter) this.buffer;
-        } else if (this.buffer != null) {
-            throw new IllegalStateException("OutputStream already retrieved");
-        }
-
-        PrintWriter parentWriter = this.parent.getWriter();
-        BufferedPrintWriter writer = new BufferedPrintWriter(parentWriter,
-            this.getBufferSize());
-        this.buffer = writer;
-
-        return writer;
     }
 }
