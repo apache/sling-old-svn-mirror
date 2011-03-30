@@ -65,6 +65,7 @@ public class JspSlingHttpServletResponseWrapper extends
     /**
      * Returns the writer for this response wrapper.
      */
+    @Override
     public PrintWriter getWriter() {
         return this.printWriter;
     }
@@ -73,6 +74,7 @@ public class JspSlingHttpServletResponseWrapper extends
      * Throws an <code>IllegalStateException</code> as this wrapper only
      * supports writers.
      */
+    @Override
     public ServletOutputStream getOutputStream() {
         throw new IllegalStateException();
     }
@@ -81,6 +83,7 @@ public class JspSlingHttpServletResponseWrapper extends
      * Resets the buffer of the JspWriter underlying the writer of this
      * instance.
      */
+    @Override
     public void resetBuffer() {
         try {
             this.jspWriter.clearBuffer();
