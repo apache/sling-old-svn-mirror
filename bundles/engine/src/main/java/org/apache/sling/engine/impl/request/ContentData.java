@@ -19,6 +19,7 @@
 package org.apache.sling.engine.impl.request;
 
 import javax.servlet.Servlet;
+
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 
@@ -30,19 +31,15 @@ import org.apache.sling.api.resource.Resource;
  */
 public class ContentData {
 
-    private RequestPathInfo requestPathInfo;
+    private final RequestPathInfo requestPathInfo;
 
-    private Resource resource;
+    private final Resource resource;
 
     private Servlet servlet;
 
-    public ContentData(Resource resource, RequestPathInfo requestPathInfo) {
+    public ContentData(final Resource resource, final RequestPathInfo requestPathInfo) {
         this.resource = resource;
         this.requestPathInfo = requestPathInfo;
-    }
-
-    /* package */void dispose() {
-        this.requestPathInfo = null;
     }
 
     public Resource getResource() {

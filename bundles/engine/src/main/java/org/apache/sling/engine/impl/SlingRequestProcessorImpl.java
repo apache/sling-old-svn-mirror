@@ -238,9 +238,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             if (requestLogger != null) {
                 requestLogger.logRequestExit(request, response);
             }
-
-            // dispose any request data
-            requestData.dispose();
         }
     }
 
@@ -295,8 +292,9 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
 
         // get the request data (and btw check the correct type)
-        RequestData requestData = RequestData.getRequestData(cRequest);
-        ContentData contentData = requestData.pushContent(resource, resolvedURL);
+        final RequestData requestData = RequestData.getRequestData(cRequest);
+        final ContentData oldContentData = requestData.getContentData();
+        final ContentData contentData = requestData.setContent(resource, resolvedURL);
 
         try {
             // resolve the servlet
@@ -309,7 +307,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
             processComponent(cRequest, cResponse, type);
         } finally {
-            requestData.popContent();
+            requestData.resetContent(oldContentData);
         }
     }
 
