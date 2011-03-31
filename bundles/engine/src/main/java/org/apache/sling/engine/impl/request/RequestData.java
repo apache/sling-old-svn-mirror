@@ -179,8 +179,8 @@ public class RequestData {
 
         this.requestProgressTracker = new SlingRequestProgressTracker();
         this.requestProgressTracker.log(
-        		"Method=" +  this.slingRequest.getMethod()
-        		+ ", PathInfo=" + this.slingRequest.getPathInfo()
+        		"Method={0}, PathInfo={1}",
+        		this.slingRequest.getMethod(), this.slingRequest.getPathInfo()
         );
     }
 
