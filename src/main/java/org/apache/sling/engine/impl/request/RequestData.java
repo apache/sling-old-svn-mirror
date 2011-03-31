@@ -23,7 +23,6 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.LinkedList;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -35,7 +34,6 @@ import javax.servlet.ServletResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RecursionTooDeepException;
@@ -127,9 +125,6 @@ public class RequestData {
     /** the current ContentData */
     private ContentData currentContentData;
 
-    /** the stack of ContentData objects */
-    private LinkedList<ContentData> contentDataStack;
-
     /**
      * the number of servlets called by
      * {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
@@ -143,6 +138,11 @@ public class RequestData {
      * @see #getActiveServletName()
      */
     private String activeServletName;
+
+    /**
+     * Recursion depth
+     */
+    private int recursionDepth;
 
     public static void setMaxCallCounter(int maxCallCounter) {
         RequestData.maxCallCounter = maxCallCounter;
@@ -202,7 +202,7 @@ public class RequestData {
             final ServletResolver sr) {
         // the resource and the request path info, will never be null
         RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource);
-        ContentData contentData = pushContent(resource, requestPathInfo);
+        ContentData contentData = setContent(resource, requestPathInfo);
 
 	    requestProgressTracker.log("Resource Path Info: {0}", requestPathInfo);
 
@@ -213,32 +213,6 @@ public class RequestData {
             "URI={0} handled by Servlet={1}",
             getServletRequest().getRequestURI(), RequestUtil.getServletName(servlet));
         contentData.setServlet(servlet);
-    }
-
-    public void dispose() {
-        // make sure our request attributes do not exist anymore
-        servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
-        servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
-
-        // clear the content data stack
-        if (contentDataStack != null) {
-            while (!contentDataStack.isEmpty()) {
-                ContentData cd = contentDataStack.removeLast();
-                cd.dispose();
-            }
-        }
-
-        // dispose current content data, if any
-        if (currentContentData != null) {
-            currentContentData.dispose();
-        }
-
-        // clear fields
-        contentDataStack = null;
-        currentContentData = null;
-        servletRequest = null;
-        servletResponse = null;
-        resourceResolver = null;
     }
 
     public SlingRequestProcessorImpl getSlingRequestProcessor() {
@@ -530,51 +504,23 @@ public class RequestData {
 
     // ---------- Content inclusion stacking -----------------------------------
 
-    public ContentData pushContent(Resource resource,
-            RequestPathInfo requestPathInfo) {
-        if (currentContentData != null) {
-            if (contentDataStack == null) {
-                contentDataStack = new LinkedList<ContentData>();
-            } else if (contentDataStack.size() >= maxInclusionCounter) {
-                throw new RecursionTooDeepException(
-                    requestPathInfo.getResourcePath());
-            }
-
-            contentDataStack.add(currentContentData);
+    public ContentData setContent(final Resource resource,
+            final RequestPathInfo requestPathInfo) {
+        if ( this.recursionDepth >=  maxInclusionCounter) {
+            throw new RecursionTooDeepException(requestPathInfo.getResourcePath());
         }
-
+        this.recursionDepth++;
         currentContentData = new ContentData(resource, requestPathInfo);
         return currentContentData;
     }
 
-    public ContentData popContent() {
-        // dispose current content data before replacing it
-        if (currentContentData != null) {
-            currentContentData.dispose();
-        }
-
-        if (contentDataStack != null && !contentDataStack.isEmpty()) {
-            // remove the topmost content data object
-            currentContentData = contentDataStack.removeLast();
-
-        } else {
-            currentContentData = null;
-        }
-
-        return currentContentData;
+    public void resetContent(final ContentData data) {
+        this.recursionDepth--;
+        currentContentData = data;
     }
 
     public ContentData getContentData() {
         return currentContentData;
-    }
-
-    /**
-     * Returns <code>true</code> if request processing is currently processing
-     * a component which has been included by
-     * <code>SlingHttpServletRequestDispatcher.include</code>.
-     */
-    public boolean isContentIncluded() {
-        return contentDataStack != null && !contentDataStack.isEmpty();
     }
 
     public ResourceResolver getResourceResolver() {
