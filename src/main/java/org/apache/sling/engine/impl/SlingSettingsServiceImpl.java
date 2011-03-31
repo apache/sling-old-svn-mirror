@@ -25,7 +25,10 @@ import org.apache.sling.engine.SlingSettingsService;
  * settings module. This is just a wrapper for compatibility.
  * @scr.component metatype=false
  * @scr.service
+ *
+ * @deprecated
  */
+@Deprecated
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
 
