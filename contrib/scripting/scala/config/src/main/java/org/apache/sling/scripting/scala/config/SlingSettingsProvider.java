@@ -128,7 +128,7 @@ public class SlingSettingsProvider extends AbstractSettingsProvider {
                 }
             }
             else {
-                log.warn("Cannot retreive resources from Bundle {}. Skipping.", bundles[k].getSymbolicName());
+                log.warn("Cannot retrieve resources from Bundle {}. Skipping.", bundles[k].getSymbolicName());
             }
         }
         return bundleFs.toArray(new AbstractFile[bundleFs.size()]);
