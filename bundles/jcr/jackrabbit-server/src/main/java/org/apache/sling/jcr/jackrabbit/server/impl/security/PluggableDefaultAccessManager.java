@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 
+import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
@@ -66,6 +67,11 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
     // only warn once, then only warn on debug level.
     private static int pluginWarning = 0;
 
+    /**
+     * the hierarchy manager used to resolve path from itemId
+     */
+    private HierarchyManager hierMgr;
+
     public PluggableDefaultAccessManager() {
     }
 
@@ -92,6 +98,7 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
         this.session = context.getSession();
         this.subject = context.getSubject();
 
+        hierMgr = context.getHierarchyManager();
     }
 
     public void close() throws Exception {
@@ -128,11 +135,18 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
         return super.isGranted(parentPath, childName, permissions);
     }
 
-    public boolean canRead(Path itemPath) throws RepositoryException {
+    public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
         if (this.sanityCheck()) {
-            return this.accessManagerPlugin.canRead(namePathResolver.getJCRPath(itemPath));
+        	String resolvedPath = null; 
+        	if (itemPath != null) {
+        		resolvedPath = namePathResolver.getJCRPath(itemPath);
+        	} else if (itemId != null) {
+        		Path path = hierMgr.getPath(itemId);
+        		resolvedPath = namePathResolver.getJCRPath(path);
+        	}
+            return this.accessManagerPlugin.canRead(resolvedPath);
         }
-        return super.canRead(itemPath);
+        return super.canRead(itemPath, itemId);
     }
 
     public boolean canAccess(String workspaceName) throws RepositoryException {
