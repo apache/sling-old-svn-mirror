@@ -188,4 +188,13 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         }
         return creds;
     }
+
+    @Override
+    protected boolean supportsCredentials(Credentials creds) {
+        if (creds instanceof TrustedCredentials) {
+            return true;
+        }
+        return super.supportsCredentials(creds);
+    }
+    
 }
