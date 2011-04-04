@@ -25,18 +25,23 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.i18n.ResourceBundleProvider;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,31 +51,26 @@ import org.slf4j.LoggerFactory;
  * <code>ResourceBundleProvider</code> interface creating
  * <code>ResourceBundle</code> instances from resources stored in the
  * repository.
- *
- * @scr.component immediate="true" label="%provider.name"
- *                description="%provider.description"
- * @scr.service interface="org.apache.sling.i18n.ResourceBundleProvider"
  */
+@Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
+@Service(ResourceBundleProvider.class)
 public class JcrResourceBundleProvider implements ResourceBundleProvider,
         EventListener {
 
-    /** @scr.property value="" */
+    @Property(value = "")
     private static final String PROP_USER = "user";
 
-    /** @scr.property value="" */
+    @Property(value = "")
     private static final String PROP_PASS = "password";
 
-    /** @scr.property value="en" */
+    @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private SlingRepository repository;
-
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private JcrResourceResolverFactory resourceResolverFactory;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    private ResourceResolverFactory resourceResolverFactory;
 
     /**
      * The default Locale as configured with the <i>locale.default</i>
@@ -84,7 +84,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * access the repository as the anonymous user, which is the case if the
      * <i>user</i> property is not set in the configuration.
      */
-    private Credentials repoCredentials;
+    private Map<String, Object> repoCredentials;
 
     /**
      * The resource resolver used to access the resource bundles. This object is
@@ -162,41 +162,20 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     protected void activate(ComponentContext context) {
         Dictionary<?, ?> props = context.getProperties();
 
-        String user = (String) props.get(PROP_USER);
+        String user = OsgiUtil.toString(props.get(PROP_USER), null);
         if (user == null || user.length() == 0) {
             repoCredentials = null;
         } else {
-            String pass = (String) props.get(PROP_PASS);
+            String pass = OsgiUtil.toString(props.get(PROP_PASS), null);
             char[] pwd = (pass == null) ? new char[0] : pass.toCharArray();
-            repoCredentials = new SimpleCredentials(user, pwd);
+            repoCredentials = new HashMap<String, Object>();
+            repoCredentials.put(ResourceResolverFactory.USER, user);
+            repoCredentials.put(ResourceResolverFactory.PASSWORD, pwd);
         }
 
-        String localeString = (String) props.get(PROP_DEFAULT_LOCALE);
+        String localeString = OsgiUtil.toString(props.get(PROP_DEFAULT_LOCALE),
+            null);
         this.defaultLocale = toLocale(localeString);
-    }
-
-    /**
-     * Binds the new <code>respository</code>. If this new repository
-     * replaces and already bound repository, that latter one is released, that
-     * is the session we have on it is loggged out.
-     */
-    protected void bindRepository(SlingRepository repository) {
-        if (this.repository != null) {
-            releaseRepository();
-        }
-        this.repository = repository;
-    }
-
-    /**
-     * Unbinds the given <code>repository</code>. If this is the same
-     * repository we are bound to, we release it by logging out the session we
-     * may have to it.
-     */
-    protected void unbindRepository(SlingRepository repository) {
-        if (this.repository == repository) {
-            releaseRepository();
-            this.repository = null;
-        }
     }
 
     /**
@@ -204,7 +183,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * bound to another factory, we release that latter one first.
      */
     protected void bindResourceResolverFactory(
-            JcrResourceResolverFactory resourceResolverFactory) {
+            ResourceResolverFactory resourceResolverFactory) {
         if (this.resourceResolverFactory != null) {
             releaseRepository();
         }
@@ -216,7 +195,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * this factory, we release it.
      */
     protected void unbindResourceResolverFactory(
-            JcrResourceResolverFactory resourceResolverFactory) {
+            ResourceResolverFactory resourceResolverFactory) {
         if (this.resourceResolverFactory == resourceResolverFactory) {
             releaseRepository();
             this.resourceResolverFactory = null;
@@ -339,42 +318,39 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      */
     private ResourceResolver getResourceResolver() {
         if (resourceResolver == null) {
-            SlingRepository repo = this.repository;
-            JcrResourceResolverFactory fac = this.resourceResolverFactory;
-            if (repo == null) {
-
-                log.error("getResourceResolver: SlingRepository missing. Cannot login to create ResourceResolver");
-
-            } else if (fac == null) {
+            ResourceResolverFactory fac = this.resourceResolverFactory;
+            if (fac == null) {
 
                 log.error("getResourceResolver: ResourceResolverFactory is missing. Cannot create ResourceResolver");
 
             } else {
-                Session s = null;
+                ResourceResolver resolver = null;
                 try {
                     if (repoCredentials == null) {
-                        s = repo.loginAdministrative(null);
+                        resolver = fac.getAdministrativeResourceResolver(null);
                     } else {
-                        s = repo.login(repoCredentials);
+                        resolver = fac.getResourceResolver(repoCredentials);
                     }
 
+                    final Session s = resolver.adaptTo(Session.class);
                     ObservationManager om = s.getWorkspace().getObservationManager();
                     om.addEventListener(this, 255, "/", true, null,
                         new String[] { "mix:language", "sling:Message" }, true);
 
-                    resourceResolver = fac.getResourceResolver(s);
+                    resourceResolver = resolver;
 
                 } catch (RepositoryException re) {
+
                     log.error(
                         "getResourceResolver: Problem setting up ResourceResolver with Session",
                         re);
 
-                } finally {
-                    // drop session if we can login but not get the resource
-                    // resolver
-                    if (resourceResolver == null && s != null) {
-                        s.logout();
-                    }
+                } catch (LoginException le) {
+
+                    log.error(
+                        "getResourceResolver: Problem setting up ResourceResolver with Session",
+                        le);
+
                 }
 
             }
@@ -409,13 +385,14 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                         t);
                 }
 
-                try {
-                    s.logout();
-                } catch (Throwable t) {
-                    log.info(
-                        "releaseRepository: Unexpected problem logging out from the repository",
-                        t);
-                }
+            }
+
+            try {
+                resolver.close();
+            } catch (Throwable t) {
+                log.info(
+                    "releaseRepository: Unexpected problem closing the ResourceResolver",
+                    t);
             }
         }
     }
