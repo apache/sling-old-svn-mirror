@@ -170,6 +170,18 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             public boolean isLive() {
                 return true;
             }
+
+            public ResourceResolver clone(Map<String, Object> authenticationInfo) {
+                return null;
+            }
+
+            public Iterator<String> getAttributeNames() {
+                return null;
+            }
+
+            public Object getAttribute(String name) {
+                return null;
+            }
         };
 
         createTestContent();
@@ -244,13 +256,13 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
     // create test data
     static {
         // 1. direct child node of language node, using sling:key
-        add(MESSAGES_DE, new Message("", "kitchen", "KŸche", false));
+        add(MESSAGES_DE, new Message("", "kitchen", "Kï¿½che", false));
         // 2. direct child node of language node, using nodename
         add(MESSAGES_DE, new Message("", "plate", "Teller", true));
         // 3. nested node, using sling:key
         add(MESSAGES_DE, new Message("f", "fork", "Gabel", false));
         // 4. nested node, using nodename
-        add(MESSAGES_DE, new Message("s/p/o", "spoon", "Lšffel", true));
+        add(MESSAGES_DE, new Message("s/p/o", "spoon", "Lï¿½ffel", true));
 
         // 5. not present in DE
         add(MESSAGES_DE, PARENT_MSG);
