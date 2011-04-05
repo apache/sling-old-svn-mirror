@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -94,10 +95,11 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     private ResourceResolver resourceResolver;
 
     /**
-     * Matrix of cached resource bundles. The first key is the resource bundle
-     * base name, the second key is the Locale.
+     * Map of cached resource bundles indexed by a key combined of the pertient
+     * base name and <code>Locale</code> used to load and identify the
+     * <code>ResourceBundle</code>.
      */
-    private final Map<String, Map<Locale, ResourceBundle>> resourceBundleCache = new HashMap<String, Map<Locale, ResourceBundle>>();
+    private final ConcurrentHashMap<Key, ResourceBundle> resourceBundleCache = new ConcurrentHashMap<JcrResourceBundleProvider.Key, ResourceBundle>();
 
     /**
      * Return root resource bundle as created on-demand by
@@ -154,9 +156,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      */
     public void onEvent(EventIterator events) {
         log.debug("onEvent: Resource changes, removing cached ResourceBundles");
-        synchronized (resourceBundleCache) {
-            resourceBundleCache.clear();
-        }
+        resourceBundleCache.clear();
     }
 
     // ---------- SCR Integration ----------------------------------------------
@@ -221,36 +221,27 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      */
     private ResourceBundle getResourceBundleInternal(String baseName,
             Locale locale) {
-        ResourceBundle resourceBundle = null;
-        synchronized (resourceBundleCache) {
-            Map<Locale, ResourceBundle> appBundles = resourceBundleCache.get(baseName);
-            if (appBundles != null) {
-                resourceBundle = appBundles.get(locale);
+
+        final Key key = new Key(baseName, locale);
+        ResourceBundle resourceBundle = resourceBundleCache.get(key);
+
+        if (resourceBundle == null) {
+            log.debug(
+                "getResourceBundleInternal({}, {}): reading from Repository",
+                new Object[] { baseName, locale });
+            resourceBundle = createResourceBundle(baseName, locale);
+            if (resourceBundleCache.putIfAbsent(key, resourceBundle) != null) {
+                resourceBundle = resourceBundleCache.get(key);
+                log.debug(
+                    "getResourceBundleInternal({}, {}): duplicate creation, using existing ResourceBundle",
+                    new Object[] { baseName, locale
+                            });
             }
         }
 
-        if (resourceBundle == null) {
-            resourceBundle = createResourceBundle(baseName, locale);
-
-            synchronized (resourceBundleCache) {
-                Map<Locale, ResourceBundle> appBundles = resourceBundleCache.get(baseName);
-                if (appBundles == null) {
-                    appBundles = new HashMap<Locale, ResourceBundle>();
-                    resourceBundleCache.put(baseName, appBundles);
-                }
-
-                // while creating the resource bundle, another thread may
-                // have created the same and already stored it in the cache.
-                // in this case we don't use the one we just created but use
-                // the bundle from the cache. Otherwise, we store our bundle
-                // in the cache and keep using it.
-                if (appBundles.containsKey(locale)) {
-                    resourceBundle = appBundles.get(locale);
-                } else {
-                    appBundles.put(locale, resourceBundle);
-                }
-            }
-
+        if (log.isDebugEnabled()) {
+            log.debug("getResourceBundleInternal({}, {}) ==> {}", new Object[] {
+                baseName, locale, resourceBundle });
         }
 
         return resourceBundle;
@@ -392,10 +383,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         ResourceResolver resolver = this.resourceResolver;
 
         this.resourceResolver = null;
-
-        synchronized (resourceBundleCache) {
-            this.resourceBundleCache.clear();
-        }
+        this.resourceBundleCache.clear();
 
         if (resolver != null) {
 
@@ -485,4 +473,64 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         return new Locale(parts[0], parts[1], parts[2]);
     }
 
+    //---------- internal class
+
+    /**
+     * The <code>Key</code> class encapsulates the base name and Locale for the
+     * key of the {@link #resourceBundleCache} map.
+     */
+    private static class Key {
+
+        final String baseName;
+
+        final Locale locale;
+
+        // precomputed hash code, because this will always be used due to
+        // this instance being used as a key in a HashMap.
+        final int hashCode;
+
+        Key(final String baseName, final Locale locale) {
+
+            int hc = 0;
+            if (baseName != null) {
+                hc += 17 * baseName.hashCode();
+            }
+            if (locale != null) {
+                hc += 13 * locale.hashCode();
+            }
+
+            this.baseName = baseName;
+            this.locale = locale;
+            this.hashCode = hc;
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            } else if (obj instanceof Key) {
+                Key other = (Key) obj;
+                return equals(this.baseName, other.baseName)
+                    && equals(this.locale, other.locale);
+            }
+
+            return false;
+        }
+
+        private static boolean equals(Object o1, Object o2) {
+            if (o1 == null) {
+                if (o2 != null) {
+                    return false;
+                }
+            } else if (!o1.equals(o2)) {
+                return false;
+            }
+            return true;
+        }
+    }
 }
