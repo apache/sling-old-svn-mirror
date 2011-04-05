@@ -34,24 +34,33 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
- * 
- * @scr.component immediate="true" metatype="no"
- * @scr.property name="service.description" value="Internationalization Support Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-700" type="Integer" private="true"
- * @scr.service
  */
+@Component(immediate = true, metatype = false)
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = EngineConstants.SLING_FILTER_SCOPE, value = EngineConstants.FILTER_SCOPE_REQUEST, propertyPrivate = true),
+    @Property(name = Constants.SERVICE_RANKING, intValue = -700, propertyPrivate = true) })
+@Service
 public class I18NFilter implements Filter {
 
     /** default log */
@@ -73,13 +82,11 @@ public class I18NFilter implements Filter {
         }
     };
 
-    /**
-     * @scr.reference cardinality="0..1" policy="dynamic"
-     */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    ResourceBundleProvider resourceBundleProvider;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    private ResourceBundleProvider resourceBundleProvider;
 
     public void init(FilterConfig filterConfig) {
         // nothing to do
@@ -160,7 +167,7 @@ public class I18NFilter implements Filter {
 
             return super.getResourceBundle(baseName, locale);
         }
-        
+
         @Override
         public Locale getLocale() {
             if (locale == null) {
