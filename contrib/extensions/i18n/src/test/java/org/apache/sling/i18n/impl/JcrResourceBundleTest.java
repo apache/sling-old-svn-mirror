@@ -265,7 +265,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         add(MESSAGES_DE, new Message("s/p/o", "spoon", "L�ffel", true));
 
         // 5. not present in DE
-        add(MESSAGES_DE, PARENT_MSG);
+        add(MESSAGES_EN, PARENT_MSG);
 
         // 6. same as 1.-4., but different translations for overwriting into apps
         for (Message msg : MESSAGES_DE.values()) {
@@ -319,6 +319,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
     public void test_handle_missing_key() {
         // test if key is returned if no entry found in repo
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
+        bundle.setParent(new RootResourceBundle());
         assertEquals("missing", bundle.getString("missing"));
     }
 
@@ -339,8 +340,10 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
         JcrResourceBundle parentBundle = new JcrResourceBundle(new Locale("en"), null, resolver);
         bundle.setParent(parentBundle);
+        parentBundle.setParent(new RootResourceBundle());
 
         assertEquals(PARENT_MSG.message, bundle.getObject(PARENT_MSG.key));
+        assertEquals("missing", bundle.getString("missing"));
     }
 
     public void test_search_path() throws Exception {
