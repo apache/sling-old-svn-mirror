@@ -99,6 +99,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      */
     private final Map<String, Map<Locale, ResourceBundle>> resourceBundleCache = new HashMap<String, Map<Locale, ResourceBundle>>();
 
+    /**
+     * Return root resource bundle as created on-demand by
+     * {@link #getRootResourceBundle()}.
+     */
+    private ResourceBundle rootResourceBundle;
+
     // ---------- ResourceBundleProvider ---------------------------------------
 
     /**
@@ -272,6 +278,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         Locale parentLocale = getParentLocale(locale);
         if (parentLocale != null) {
             bundle.setParent(getResourceBundleInternal(baseName, parentLocale));
+        } else {
+            bundle.setParent(getRootResourceBundle());
         }
 
         return bundle;
@@ -303,6 +311,24 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
         // no more parents
         return null;
+    }
+
+    /**
+     * Returns a ResourceBundle which is used as the root resource bundle, that
+     * is the ultimate parent:
+     * <ul>
+     * <li><code>getLocale()</code> returns Locale("", "", "")</li>
+     * <li><code>handleGetObject(String key)</code> returns the <code>key</code></li>
+     * <li><code>getKeys()</code> returns an empty enumeration.
+     * </ul>
+     *
+     * @return The root resource bundle
+     */
+    private ResourceBundle getRootResourceBundle() {
+        if (rootResourceBundle == null) {
+            rootResourceBundle = new RootResourceBundle();
+        }
+        return rootResourceBundle;
     }
 
     /**
