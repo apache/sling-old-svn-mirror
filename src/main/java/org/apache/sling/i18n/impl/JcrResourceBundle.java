@@ -96,8 +96,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     @Override
     protected Object handleGetObject(String key) {
-        Object value = resources.get(key);
-        return (value == null) ? key : value;
+        return resources.get(key);
     }
 
     private HashMap<String, Object> loadFully(
