@@ -40,10 +40,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingFilter;
+import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
-import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.Constants;
@@ -54,13 +54,11 @@ import org.slf4j.LoggerFactory;
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
  */
+@SlingFilter(generateComponent = false, generateService = true, order = -700, scope = SlingFilterScope.REQUEST)
 @Component(immediate = true, metatype = false)
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = EngineConstants.SLING_FILTER_SCOPE, value = EngineConstants.FILTER_SCOPE_REQUEST, propertyPrivate = true),
-    @Property(name = Constants.SERVICE_RANKING, intValue = -700, propertyPrivate = true) })
-@Service
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class I18NFilter implements Filter {
 
     /** default log */
