@@ -23,8 +23,30 @@ import java.util.Locale;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
+/**
+ * The <code>LocaleResolver</code> service interface may be implemented by a
+ * service registered under this name to allow the resolution of the request
+ * <code>Locale</code> to apply.
+ * <p>
+ * This interface is intended to be implemented by providers knowing how to
+ * resolve one or more <code>Locale</code>s applicable to handle the request.
+ * <p>
+ * Only a single <code>LocaleResolver</code> service is currently used.
+ */
 public interface LocaleResolver {
 
+    /**
+     * Return a non-<code>null</code> but possiby empty list of
+     * <code>Locale</code> instances to consider for localization of the current
+     * request. The list returned is assumed to be ordered by preference where
+     * the first entry is the prefered <code>Locale</code> and the last entry is
+     * the least prefered <code>Locale</code>.
+     *
+     * @param request The <code>SlingHttpServletRequest</code> providing hints
+     *            and information for the <code>Locale</code> resolution.
+     * @return The list of <code>Locale</code>s to use for internationalization
+     *         of request processing
+     */
     List<Locale> resolveLocale(SlingHttpServletRequest request);
-    
+
 }

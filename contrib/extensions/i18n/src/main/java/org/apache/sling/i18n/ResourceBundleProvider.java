@@ -25,6 +25,11 @@ import java.util.ResourceBundle;
  * The <code>ResourceBundleProvider</code> service interface defines the API
  * for a service, which is capable of returned <code>ResourceBundle</code> for
  * given any <code>Locale</code>.
+ * <p>
+ * This interface defines the service API implemented by the existing
+ * implementation. It is not intended to be implemented by application bundles.
+ * Rather such bundles should get the <code>ResourceBundleProvider</code>
+ * service from the service registry to access the data provided.
  */
 public interface ResourceBundleProvider {
 
