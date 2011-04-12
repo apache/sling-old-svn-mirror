@@ -147,6 +147,12 @@
                             <httpPort>${run.http.port}</httpPort>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>attach-bundle-list</id>
+                        <goals>
+                            <goal>attach-bundle-list</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
                     <defaultBundleList>
