@@ -79,22 +79,22 @@ public class PostServletOutputContentTypeTest extends HttpTestBase {
     }
     
     public void testJsonContentTypeException() throws Exception {
-      final String testPath = MY_TEST_PATH + "/abs/" + System.currentTimeMillis();
+
+      // Perform a POST that fails: invalid PostServlet operation
+      // with Accept header set to JSON  
       final String url = HTTP_BASE_URL + "/" + MY_TEST_PATH;
-
-      // create dest as parent
-      testClient.createNode(HTTP_BASE_URL + testPath + "/dest", null);
-
-      // Perform a POST that should fail.
       final PostMethod post = new PostMethod(url);
       post.setFollowRedirects(false);
-      post.addParameter(new NameValuePair(SlingPostConstants.RP_DEST, testPath + "/dest/"));
-      post.addParameter(new NameValuePair(SlingPostConstants.RP_OPERATION,
-          SlingPostConstants.OPERATION_COPY));
+      post.addParameter(new NameValuePair(
+          SlingPostConstants.RP_OPERATION,
+          "InvalidTestOperationFor" + getClass().getSimpleName()));
       post.addRequestHeader("Accept", CONTENT_TYPE_JSON);
 
       final int status = httpClient.executeMethod(post);
       assertEquals(500, status);
+      final String contentType = post.getResponseHeader("Content-Type").getValue();
+      final String expected = CONTENT_TYPE_JSON;
+      assertTrue("Expecting content-type " + expected + " for failed POST request, got " + contentType,
+              contentType!=null && contentType.startsWith(expected));
     }
-
 }
