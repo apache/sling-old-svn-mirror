@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.samples.failingtests</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Failing Server-Side Tests</name>
@@ -38,9 +38,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/failing-tests</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/failing-tests</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/failing-tests</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.4</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.tools-1.0.4</url>
     </scm>
 
     <build>
@@ -94,7 +94,7 @@
             <!-- TODO create separate API package, this is just to get the special Sling test runner -->
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         
