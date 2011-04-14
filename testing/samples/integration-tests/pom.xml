@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.samples.integrationtests</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Sample Integration Tests</name>
@@ -83,9 +83,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.samples.integrationtests-1.0.6</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.samples.integrationtests-1.0.6</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.samples.integrationtests-1.0.6</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/integration-tests</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/integration-tests</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/integration-tests</url>
     </scm>
 
     <build>
