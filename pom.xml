@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.samples.integrationtests</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Sample Integration Tests</name>
@@ -83,9 +83,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/samples/integration-tests</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/samples/integration-tests</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/samples/integration-tests</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.4</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.tools-1.0.4</url>
     </scm>
 
     <build>
@@ -234,37 +234,37 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.scriptable</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.samples.sampletests</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.samples.failingtests</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.remote</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         
