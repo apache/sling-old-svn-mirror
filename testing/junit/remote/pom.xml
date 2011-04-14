@@ -27,16 +27,16 @@
     </parent>
 
     <artifactId>org.apache.sling.junit.remote</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JUnit Remote Tests Runners</name>
     <description>Utilities to run server-side JUnit tests remotely</description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.remote-1.0.6</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.remote-1.0.6</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.junit.remote-1.0.6</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/remote</url>
     </scm>
 
     <build>
