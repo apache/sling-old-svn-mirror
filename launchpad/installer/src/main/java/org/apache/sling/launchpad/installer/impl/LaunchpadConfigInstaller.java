@@ -18,7 +18,9 @@ package org.apache.sling.launchpad.installer.impl;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import org.apache.sling.installer.api.InstallableResource;
@@ -43,6 +45,37 @@ public class LaunchpadConfigInstaller {
      */
     private static final String ROOT_INSTALL_PATH = "resources/install";
 
+    private static boolean checkPath(final LaunchpadContentProvider resourceProvider,
+            final Collection<InstallableResource> installables,
+            final String rootPath,
+            final String resourceType) {
+        int count = 0;
+        final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
+        final Iterator<String> configPaths = resourceProvider.getChildren(rootPath);
+        if ( configPaths != null ) {
+            final int hintPos = rootPath.lastIndexOf('/');
+            final String hint = rootPath.substring(hintPos + 1);
+            while (configPaths.hasNext()) {
+                String path = configPaths.next();
+                if ( path.endsWith("/") ) {
+                    path = path.substring(0, path.length() - 1);
+                }
+                if ( !checkPath(resourceProvider, installables, path, resourceType) ) {
+                    logger.info("Launchpad {} file will be installed: {}", resourceType, path);
+                    Dictionary<String, Object> dict = null;
+                    if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
+                        dict = new Hashtable<String, Object>();
+                        dict.put(InstallableResource.INSTALLATION_HINT, hint);
+                    }
+                    final InputStream stream = resourceProvider.getResourceAsStream(path);
+                    installables.add(new InstallableResource(path, stream, dict, null, resourceType, null));
+                    count++;
+                }
+            }
+        }
+        return count > 0;
+    }
+
     public static void install(final OsgiInstaller installer,
             final LaunchpadContentProvider resourceProvider) {
         final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
@@ -52,26 +85,10 @@ public class LaunchpadConfigInstaller {
         final Collection<InstallableResource> installables = new HashSet<InstallableResource>();
 
         // configurations
-        final Iterator<String> configPaths = resourceProvider.getChildren(ROOT_CONFIG_PATH);
-        if ( configPaths != null ) {
-            while (configPaths.hasNext()) {
-                final String path = configPaths.next();
-                logger.info("Config launchpad file will be installed: {}", path);
-                final InputStream stream = resourceProvider.getResourceAsStream(path);
-                installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_PROPERTIES, null));
-            }
-        }
+        checkPath(resourceProvider, installables, ROOT_CONFIG_PATH, InstallableResource.TYPE_PROPERTIES);
 
         // files
-        final Iterator<String> filePaths = resourceProvider.getChildren(ROOT_INSTALL_PATH);
-        if ( filePaths != null ) {
-            while (filePaths.hasNext()) {
-                final String path = filePaths.next();
-                logger.info("Launchpad file will be installed: {}", path);
-                final InputStream stream = resourceProvider.getResourceAsStream(path);
-                installables.add(new InstallableResource(path, stream, null, null, InstallableResource.TYPE_FILE, null));
-            }
-        }
+        checkPath(resourceProvider, installables, ROOT_INSTALL_PATH, InstallableResource.TYPE_FILE);
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
         installer.registerResources("launchpad", (toInstall));
