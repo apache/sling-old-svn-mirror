@@ -158,6 +158,13 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
     private static final String[] DEFAULT_PATHS = new String[] {"/"};
 
+    /**
+     * @scr.property values="html"
+     */
+    public static final String PROP_DEFAULT_EXTENSIONS = "servletresolver.defaultExtensions";
+    
+    private static final String[] DEFAULT_DEFAULT_EXTENSIONS = new String[] {"html"};
+
     /** @scr.reference */
     private ServletContext servletContext;
 
@@ -218,6 +225,11 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      * The allowed execution paths.
      */
     private String[] executionPaths;
+    
+    /**
+     * The default extensions
+     */
+    private String[] defaultExtensions;
 
     // ---------- ServletResolver interface -----------------------------------
 
@@ -572,7 +584,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
         if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
-            final ResourceCollector locationUtil = ResourceCollector.create(request, workspaceName, this.executionPaths);
+            final ResourceCollector locationUtil = ResourceCollector.create(request, workspaceName, this.executionPaths, this.defaultExtensions);
             servlet = getServlet(locationUtil, request, resolver);
 
             if (log.isDebugEnabled()) {
@@ -845,6 +857,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 }
             }
         }
+        this.defaultExtensions = OsgiUtil.toStringArray(properties.get(PROP_DEFAULT_EXTENSIONS), DEFAULT_DEFAULT_EXTENSIONS);
 
         // create cache - if a cache size is configured
         this.cacheSize = OsgiUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);

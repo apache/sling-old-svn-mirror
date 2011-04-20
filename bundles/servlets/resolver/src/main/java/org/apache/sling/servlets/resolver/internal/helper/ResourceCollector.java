@@ -21,6 +21,7 @@ package org.apache.sling.servlets.resolver.internal.helper;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
@@ -60,7 +61,7 @@ public class ResourceCollector extends AbstractResourceCollector {
     private final boolean isGet;
 
     // request is GET or HEAD and extension is html
-    private final boolean isHtml;
+    private final boolean isDefaultExtension;
 
     private final String suffExt;
 
@@ -84,8 +85,9 @@ public class ResourceCollector extends AbstractResourceCollector {
      */
     public static ResourceCollector create(
             final SlingHttpServletRequest request, final String workspaceName,
-            final String[] executionPaths) {
-        return new ResourceCollector(request, workspaceName, executionPaths);
+            final String[] executionPaths, final String[] defaultExtensions) {
+        boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, request.getRequestPathInfo().getExtension());
+        return new ResourceCollector(request, workspaceName, executionPaths, isDefaultExtension);
     }
 
     /**
@@ -114,7 +116,7 @@ public class ResourceCollector extends AbstractResourceCollector {
         this.requestSelectors = new String[0];
         this.numRequestSelectors = 0;
         this.isGet = false;
-        this.isHtml = false;
+        this.isDefaultExtension = false;
 
         this.suffExt = "." + extension;
         this.suffMethod = "." + methodName;
@@ -143,7 +145,8 @@ public class ResourceCollector extends AbstractResourceCollector {
      *            is assumed.
      */
     private ResourceCollector(final SlingHttpServletRequest request,
-            final String workspaceName, final String[] executionPaths) {
+            final String workspaceName, final String[] executionPaths,
+            final boolean isDefaultExtension) {
         super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
             request.getResource().getResourceType(),
             request.getResource().getResourceSuperType(), workspaceName,
@@ -156,11 +159,11 @@ public class ResourceCollector extends AbstractResourceCollector {
 
         RequestPathInfo requestpaInfo = request.getRequestPathInfo();
 
-        requestSelectors = requestpaInfo.getSelectors();
-        numRequestSelectors = requestSelectors.length;
+        this.requestSelectors = requestpaInfo.getSelectors();
+        this.numRequestSelectors = requestSelectors.length;
 
-        isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
-        isHtml = "html".equals(extension);
+        this.isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
+        this.isDefaultExtension = isDefaultExtension;
 
         // create the hash code once
         final String key = methodName + ':' + baseResourceType + ':'
@@ -292,7 +295,7 @@ public class ResourceCollector extends AbstractResourceCollector {
             return true;
         }
 
-        if (isHtml) {
+        if (isDefaultExtension) {
             if (selector != null && matches(scriptName, selector, htmlSuffix)) {
                 addWeightedResource(resources, child, selIdx + 1,
                     WeightedResource.WEIGHT_NONE);
@@ -345,7 +348,7 @@ public class ResourceCollector extends AbstractResourceCollector {
         }
         if (super.equals(obj)) {
             final ResourceCollector o = (ResourceCollector) obj;
-            if (isGet == o.isGet && isHtml == o.isHtml
+            if (isGet == o.isGet && isDefaultExtension == o.isDefaultExtension
                 && numRequestSelectors == o.numRequestSelectors
                 && stringEquals(methodName, o.methodName)) {
                 // now compare selectors
