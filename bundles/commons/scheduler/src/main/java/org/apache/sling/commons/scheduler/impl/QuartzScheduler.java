@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -46,12 +47,10 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.DirectSchedulerFactory;
-import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.simpl.RAMJobStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * The quartz based implementation of the scheduler.
  *
  */
-@Component(immediate=true)
+@Component(immediate=true, metatype=true,label="%scheduler.name",description="%scheduler.description")
 @Service(value=Scheduler.class)
 @References({
     @Reference(name="job", referenceInterface=Job.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC),
@@ -106,6 +105,9 @@ public class QuartzScheduler implements Scheduler {
     /** Service registration for the plugin. */
     private ServiceRegistration plugin;
 
+    @Property
+    private static final String PROPERTY_POOL_NAME = "poolName";
+
     /**
      * Activate this component.
      * Start the scheduler.
@@ -113,9 +115,16 @@ public class QuartzScheduler implements Scheduler {
      * @throws Exception
      */
     protected void activate(final ComponentContext ctx) throws Exception {
+        final Object poolNameObj = ctx.getProperties().get(PROPERTY_POOL_NAME);
+        final String poolName;
+        if ( poolNameObj != null && poolNameObj.toString().trim().length() > 0 ) {
+            poolName = poolNameObj.toString().trim();
+        } else {
+            poolName = null;
+        }
         this.context = ctx;
         // start scheduler
-        this.scheduler = this.init();
+        this.scheduler = this.init(poolName);
 
         final Registration[] regs;
         synchronized ( this.registeredJobs ) {
@@ -153,37 +162,36 @@ public class QuartzScheduler implements Scheduler {
      * @return Return the new scheduler instance.
      * @throws SchedulerException
      */
-    protected org.quartz.Scheduler init() throws SchedulerException {
-        // if we don't have a thread pool manager, we use the default thread pool
+    protected org.quartz.Scheduler init(final String poolName) throws SchedulerException {
         final ThreadPoolManager tpm = this.threadPoolManager;
-        org.quartz.Scheduler s;
+        // sanity null check
         if ( tpm == null ) {
-            final SchedulerFactory factory = new StdSchedulerFactory();
-            s = factory.getScheduler();
-        } else {
-            // create the pool
-            this.threadPool = tpm.get(null);
-            final QuartzThreadPool quartzPool = new QuartzThreadPool(this.threadPool);
+            throw new SchedulerException("Thread pool manager missing");
+        }
 
-            final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
-            // unique run id
-            final String runID = new Date().toString().replace(' ', '_');
-            factory.createScheduler(QUARTZ_SCHEDULER_NAME, runID, quartzPool, new RAMJobStore());
-            // quartz does not provide a way to get the scheduler by name AND runID, so we have to iterate!
-            @SuppressWarnings("unchecked")
-            final Iterator<org.quartz.Scheduler> allSchedulersIter = factory.getAllSchedulers().iterator();
-            s = null;
-            while ( s == null && allSchedulersIter.hasNext() ) {
-                final org.quartz.Scheduler current = allSchedulersIter.next();
-                if ( QUARTZ_SCHEDULER_NAME.equals(current.getSchedulerName())
-                     && runID.equals(current.getSchedulerInstanceId()) ) {
-                    s = current;
-                }
-            }
-            if ( s == null ) {
-                throw new SchedulerException("Unable to find new scheduler with name " + QUARTZ_SCHEDULER_NAME + " and run ID " + runID);
+        // create the pool
+        this.threadPool = tpm.get(poolName);
+        final QuartzThreadPool quartzPool = new QuartzThreadPool(this.threadPool);
+
+        final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
+        // unique run id
+        final String runID = new Date().toString().replace(' ', '_');
+        factory.createScheduler(QUARTZ_SCHEDULER_NAME, runID, quartzPool, new RAMJobStore());
+        // quartz does not provide a way to get the scheduler by name AND runID, so we have to iterate!
+        @SuppressWarnings("unchecked")
+        final Iterator<org.quartz.Scheduler> allSchedulersIter = factory.getAllSchedulers().iterator();
+        org.quartz.Scheduler s = null;
+        while ( s == null && allSchedulersIter.hasNext() ) {
+            final org.quartz.Scheduler current = allSchedulersIter.next();
+            if ( QUARTZ_SCHEDULER_NAME.equals(current.getSchedulerName())
+                 && runID.equals(current.getSchedulerInstanceId()) ) {
+                s = current;
             }
         }
+        if ( s == null ) {
+            throw new SchedulerException("Unable to find new scheduler with name " + QUARTZ_SCHEDULER_NAME + " and run ID " + runID);
+        }
+
         s.start();
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug(PREFIX + "started.");
@@ -196,11 +204,6 @@ public class QuartzScheduler implements Scheduler {
      * @param s The scheduler.
      */
     protected void dispose(final org.quartz.Scheduler s) {
-        final ThreadPoolManager tpm = this.threadPoolManager;
-        if ( tpm != null && this.threadPool != null ) {
-            tpm.release(this.threadPool);
-            this.threadPool = null;
-        }
         if ( s != null ) {
             try {
                 s.shutdown();
@@ -211,6 +214,11 @@ public class QuartzScheduler implements Scheduler {
                 this.logger.debug(PREFIX + "stopped.");
             }
         }
+        final ThreadPoolManager tpm = this.threadPoolManager;
+        if ( tpm != null && this.threadPool != null ) {
+            tpm.release(this.threadPool);
+        }
+        this.threadPool = null;
     }
 
     /**
