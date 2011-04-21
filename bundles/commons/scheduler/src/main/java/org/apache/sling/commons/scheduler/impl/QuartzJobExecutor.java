@@ -40,15 +40,6 @@ public class QuartzJobExecutor implements Job {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
 
-        final JobHandler handler = (JobHandler)data.get(QuartzScheduler.DATA_MAP_JOB_HANDLER);
-        final boolean canRunConcurrently = (handler == null ? true : handler.runConcurrently);
-
-        if (!canRunConcurrently) {
-            if ( !handler.isRunning.compareAndSet(false, true) ) {
-                return;
-            }
-        }
-
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
         final Logger logger = (Logger)data.get(QuartzScheduler.DATA_MAP_LOGGER);
 
@@ -73,10 +64,6 @@ public class QuartzJobExecutor implements Job {
             }
             // there is nothing we can do here, so we just log
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
-        } finally {
-            if (!canRunConcurrently) {
-                handler.isRunning.set(false);
-            }
         }
     }
 

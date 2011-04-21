@@ -72,7 +72,8 @@
                             org.apache.commons.logging.impl,
                             javax.jms,
                             javax.mail,
-                            javax.mail.internet
+                            javax.mail.internet,
+                            com.mchange.v2.c3p0
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             quartz,commons-pool,commons-dbcp,commons-beanutils,commons-digester
@@ -97,6 +98,10 @@
     </reporting>
     <dependencies>
         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
@@ -116,9 +121,9 @@
         </dependency>
         <!-- The following dependencies will be replaced by using the quartz wrapper bundle -->
         <dependency>
-            <groupId>opensymphony</groupId>
+            <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>1.6.3</version>
+            <version>2.0.1</version>
         </dependency>
 		<dependency>
 		    <groupId>commons-pool</groupId>

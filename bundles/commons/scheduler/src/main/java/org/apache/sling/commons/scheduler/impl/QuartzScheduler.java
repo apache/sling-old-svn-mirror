@@ -26,20 +26,30 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
-import org.quartz.CronTrigger;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
-import org.quartz.SimpleTrigger;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.quartz.impl.DirectSchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.simpl.RAMJobStore;
@@ -49,11 +59,13 @@ import org.slf4j.LoggerFactory;
 /**
  * The quartz based implementation of the scheduler.
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.commons.scheduler.Scheduler"
- * @scr.reference name="job" interface="org.apache.sling.commons.scheduler.Job" cardinality="0..n" policy="dynamic"
- * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic"
  */
+@Component(immediate=true)
+@Service(value=Scheduler.class)
+@References({
+    @Reference(name="job", referenceInterface=Job.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC),
+    @Reference(name="task", referenceInterface=Runnable.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+})
 public class QuartzScheduler implements Scheduler {
 
     /** Default log. */
@@ -77,9 +89,6 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
 
-    /** Map key for the job handler */
-    static final String DATA_MAP_JOB_HANDLER = "QuartzJobExecutor.JobHandler";
-
     /** Theq quartz scheduler. */
     protected volatile org.quartz.Scheduler scheduler;
 
@@ -89,10 +98,13 @@ public class QuartzScheduler implements Scheduler {
     /** The component context. */
     protected volatile ComponentContext context;
 
-    /** @scr.reference */
+    @Reference
     protected ThreadPoolManager threadPoolManager;
 
     protected ThreadPool threadPool;
+
+    /** Service registration for the plugin. */
+    private ServiceRegistration plugin;
 
     /**
      * Activate this component.
@@ -119,6 +131,7 @@ public class QuartzScheduler implements Scheduler {
                 this.logger.error("Exception during registering " + reg.componentName + " service " + reg.reference, e);
             }
         }
+        this.plugin = WebConsolePrinter.initPlugin(ctx.getBundleContext(), this);
     }
 
     /**
@@ -127,6 +140,8 @@ public class QuartzScheduler implements Scheduler {
      * @param ctx The component context.
      */
     protected void deactivate(final ComponentContext ctx) {
+        WebConsolePrinter.destroyPlugin(this.plugin);
+        this.plugin = null;
         final org.quartz.Scheduler s = this.scheduler;
         this.scheduler = null;
         this.dispose(s);
@@ -227,7 +242,7 @@ public class QuartzScheduler implements Scheduler {
         // if there is already a job with the name, remove it first
         if ( name != null ) {
             try {
-                final JobDetail jobdetail = s.getJobDetail(name, DEFAULT_QUARTZ_JOB_GROUP);
+                final JobDetail jobdetail = s.getJobDetail(JobKey.jobKey(name));
                 if (jobdetail != null) {
                     this.removeJob(name);
                 }
@@ -238,9 +253,9 @@ public class QuartzScheduler implements Scheduler {
         final String jobName = this.getJobName(name);
 
         // create the data map
-        final JobDataMap jobDataMap = this.initDataMap(jobName, job, config, canRunConcurrently);
+        final JobDataMap jobDataMap = this.initDataMap(jobName, job, config);
 
-        final JobDetail detail = this.createJobDetail(jobName, jobDataMap);
+        final JobDetail detail = this.createJobDetail(jobName, jobDataMap, canRunConcurrently);
 
         this.logger.debug("Scheduling job {} with name {} and trigger {}", new Object[] {job, jobName, trigger});
         s.scheduleJob(detail, trigger);
@@ -256,15 +271,12 @@ public class QuartzScheduler implements Scheduler {
      */
     protected JobDataMap initDataMap(final String  jobName,
                                      final Object  job,
-                                     final Map<String, Serializable> config,
-                                     final boolean concurrent) {
+                                     final Map<String, Serializable> config) {
         final JobDataMap jobDataMap = new JobDataMap();
 
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
-        final JobHandler handler = new JobHandler(concurrent);
-        jobDataMap.put(DATA_MAP_JOB_HANDLER, handler);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
         if ( config != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, config);
@@ -279,9 +291,13 @@ public class QuartzScheduler implements Scheduler {
      * @param jobDataMap
      * @return
      */
-    protected JobDetail createJobDetail(final String name, final JobDataMap jobDataMap) {
-        final JobDetail detail = new JobDetail(name, DEFAULT_QUARTZ_JOB_GROUP, QuartzJobExecutor.class);
-        detail.setJobDataMap(jobDataMap);
+    protected JobDetail createJobDetail(final String name,
+                                        final JobDataMap jobDataMap,
+                                        final boolean concurrent) {
+        final JobDetail detail = JobBuilder.newJob((concurrent ? QuartzJobExecutor.class : NonParallelQuartzJobExecutor.class))
+                .withIdentity(name)
+                .usingJobData(jobDataMap)
+                .build();
         return detail;
     }
 
@@ -304,14 +320,16 @@ public class QuartzScheduler implements Scheduler {
                        final String schedulingExpression,
                        final boolean canRunConcurrently)
     throws SchedulerException {
-        final CronTrigger cronJobEntry = new CronTrigger(name, DEFAULT_QUARTZ_JOB_GROUP);
-
+        final Trigger cronTrigger;
         try {
-            cronJobEntry.setCronExpression(schedulingExpression);
+            cronTrigger = TriggerBuilder.newTrigger()
+                .withIdentity(name)
+                .withSchedule(CronScheduleBuilder.cronSchedule(schedulingExpression))
+                .build();
         } catch (final ParseException pe) {
             throw new IllegalArgumentException("Error during parsing of cron '" + schedulingExpression + "' : " + pe.getMessage(), pe);
         }
-        this.scheduleJob(name, job, config, cronJobEntry, canRunConcurrently);
+        this.scheduleJob(name, job, config, cronTrigger, canRunConcurrently);
     }
 
     /**
@@ -326,11 +344,13 @@ public class QuartzScheduler implements Scheduler {
         final long ms = period * 1000;
         final String jobName = this.getJobName(name);
 
-        final SimpleTrigger timeEntry =
-            new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, new Date(System.currentTimeMillis() + ms), null,
-                              SimpleTrigger.REPEAT_INDEFINITELY, ms);
+        final Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity(jobName)
+            .startAt(new Date(System.currentTimeMillis() + ms))
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().repeatForever().withIntervalInMilliseconds(ms))
+            .build();
 
-        this.scheduleJob(jobName, job, config, timeEntry, canRunConcurrently);
+        this.scheduleJob(jobName, job, config, trigger, canRunConcurrently);
     }
 
     /**
@@ -340,11 +360,15 @@ public class QuartzScheduler implements Scheduler {
     throws SchedulerException {
         this.checkJob(job);
         final String jobName = job.getClass().getName();
-        final JobDataMap dataMap = this.initDataMap(jobName, job, config, true);
+        final JobDataMap dataMap = this.initDataMap(jobName, job, config);
 
-        final JobDetail detail = this.createJobDetail(jobName, dataMap);
+        final JobDetail detail = this.createJobDetail(jobName, dataMap, true);
 
-        final Trigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP);
+        final Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity(jobName)
+            .startNow()
+            .build();
+
         this.scheduler.scheduleJob(detail, trigger);
     }
 
@@ -354,7 +378,10 @@ public class QuartzScheduler implements Scheduler {
     public void fireJobAt(final String name, final Object job, final Map<String, Serializable> config, final Date date)
     throws SchedulerException {
         final String jobName = this.getJobName(name);
-        final SimpleTrigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, date);
+        final Trigger trigger = TriggerBuilder.newTrigger()
+        .withIdentity(jobName)
+        .startAt(date)
+        .build();
         this.scheduleJob(jobName, job, config, trigger, true);
     }
 
@@ -371,11 +398,16 @@ public class QuartzScheduler implements Scheduler {
         }
         final long ms = period * 1000;
         final String jobName = job.getClass().getName();
-        final JobDataMap dataMap = this.initDataMap(jobName, job, config, true);
+        final JobDataMap dataMap = this.initDataMap(jobName, job, config);
 
-        final JobDetail detail = this.createJobDetail(jobName, dataMap);
+        final JobDetail detail = this.createJobDetail(jobName, dataMap, true);
 
-        final Trigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, times, ms);
+        final Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity(jobName)
+            .startNow()
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(times).withIntervalInMilliseconds(ms))
+            .build();
+
         try {
             this.scheduler.scheduleJob(detail, trigger);
         } catch (final SchedulerException se) {
@@ -399,7 +431,13 @@ public class QuartzScheduler implements Scheduler {
         }
         final String jobName = job.getClass().getName();
         final long ms = period * 1000;
-        final SimpleTrigger trigger = new SimpleTrigger(jobName, DEFAULT_QUARTZ_JOB_GROUP, date, null, times, ms);
+
+        final Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity(jobName)
+            .startAt(date)
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(times).withIntervalInMilliseconds(ms))
+            .build();
+
         try {
             this.scheduleJob(jobName, job, config, trigger, true);
         } catch (final SchedulerException se) {
@@ -427,7 +465,7 @@ public class QuartzScheduler implements Scheduler {
         final org.quartz.Scheduler s = this.scheduler;
         if ( s != null ) {
             try {
-                s.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
+                s.deleteJob(JobKey.jobKey(name));
                 this.logger.debug("Unscheduling job with name {}", name);
             } catch (final SchedulerException se) {
                 throw new NoSuchElementException(se.getMessage());
@@ -559,6 +597,10 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    org.quartz.Scheduler getScheduler() {
+        return this.scheduler;
+    }
+
     /**
      * Helper class holding a registration if this service is not active yet.
      */
@@ -592,7 +634,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
 
-    private static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
+    public static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
 
         /** Our executor thread pool */
         private ThreadPool executor;
@@ -616,6 +658,14 @@ public class QuartzScheduler implements Scheduler {
          */
         public void initialize() {
             // nothing to do
+        }
+
+        public void setInstanceId(final String id) {
+            // we ignore this
+        }
+
+        public void setInstanceName(final String name) {
+            // we ignore this
         }
 
         /* (non-Javadoc)

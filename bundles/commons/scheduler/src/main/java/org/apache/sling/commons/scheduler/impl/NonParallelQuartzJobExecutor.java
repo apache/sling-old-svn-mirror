@@ -16,21 +16,16 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.quartz.DisallowConcurrentExecution;
+
 
 /**
- * The job handler controls the invocation of a job
- * like parallel invocation and the number of times
- * the job can be called.
+ * This component is resposible to launch a {@link org.apache.sling.commons.scheduler.Job}
+ * or {@link Runnable} in a Quartz Scheduler but non concurrently.
+ *
  */
-public class JobHandler {
+@DisallowConcurrentExecution
+public class NonParallelQuartzJobExecutor extends QuartzJobExecutor {
 
-    public final boolean runConcurrently;
-
-    public final AtomicBoolean isRunning;
-
-    public JobHandler(final boolean runConcurrently) {
-        this.runConcurrently = runConcurrently;
-        this.isRunning = new AtomicBoolean(false);
-    }
+    // nothing to code here
 }
