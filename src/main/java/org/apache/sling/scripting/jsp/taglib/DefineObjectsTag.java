@@ -192,19 +192,6 @@ public class DefineObjectsTag extends TagSupport {
     }
 
     private void clear() {
-
-        // remove all attributes set on the page context to cleanup
-        if (pageContext != null) {
-            pageContext.removeAttribute(requestName);
-            pageContext.removeAttribute(responseName);
-            pageContext.removeAttribute(resourceName);
-            pageContext.removeAttribute(resourceResolverName);
-            pageContext.removeAttribute(slingName);
-            pageContext.removeAttribute(logName);
-            pageContext.removeAttribute(nodeName);
-            pageContext.removeAttribute(bindingsName);
-        }
-
         // reset fields
         requestName = DEFAULT_REQUEST_NAME;
         responseName = DEFAULT_RESPONSE_NAME;
