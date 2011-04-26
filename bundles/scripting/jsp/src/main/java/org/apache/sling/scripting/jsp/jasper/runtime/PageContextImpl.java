@@ -130,7 +130,7 @@ public class PageContextImpl extends PageContext {
 
 		// initialize state
 		this.servlet = servlet;
-		this.config = servlet.getServletConfig();
+		this.config = new InternalServletConfigWrapper(servlet.getServletConfig(), this);
 		this.context = config.getServletContext();
 		this.errorPageURL = errorPageURL;
 		this.request = request;
