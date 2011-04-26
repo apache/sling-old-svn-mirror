@@ -149,6 +149,10 @@ public final class JspRuntimeContext {
             final Integer count = JspRuntimeContext.USE_OWN_FACTORY.get();
             JspRuntimeContext.USE_OWN_FACTORY.set(count - 1);
         }
+
+        public JspFactory getOriginal() {
+            return original;
+        }
     }
 
     /**
