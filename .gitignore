@@ -10,3 +10,4 @@ derby.log
 coverage.em
 coverage.ec
 coverage/
+.DS_Store
