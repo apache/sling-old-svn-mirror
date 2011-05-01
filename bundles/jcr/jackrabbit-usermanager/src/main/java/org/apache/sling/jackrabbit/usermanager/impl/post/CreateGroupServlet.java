@@ -95,7 +95,7 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
 
         // check that the submitted parameter values have valid values.
         final String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-        if (principalName == null) {
+        if (principalName == null || principalName.length() == 0) {
             throw new RepositoryException("Group name was not submitted");
         }
 
@@ -104,41 +104,37 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
             throw new RepositoryException("JCR Session not found");
         }
 
-        try {
-            UserManager userManager = AccessControlUtil.getUserManager(session);
-            Authorizable authorizable = userManager.getAuthorizable(principalName);
+        UserManager userManager = AccessControlUtil.getUserManager(session);
+        Authorizable authorizable = userManager.getAuthorizable(principalName);
 
-            if (authorizable != null) {
-                // principal already exists!
-                throw new RepositoryException(
-                    "A principal already exists with the requested name: "
-                        + principalName);
-            } else {
-                Group group = userManager.createGroup(new Principal() {
-                    public String getName() {
-                        return principalName;
-                    }
-                });
+        if (authorizable != null) {
+            // principal already exists!
+            throw new RepositoryException(
+                "A principal already exists with the requested name: "
+                    + principalName);
+        } else {
+            Group group = userManager.createGroup(new Principal() {
+                public String getName() {
+                    return principalName;
+                }
+            });
 
-                String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-                    + group.getID();
-                
-                Map<String, RequestProperty> reqProperties = collectContent(
-                    request, response, groupPath);
-                response.setPath(groupPath);
-                response.setLocation(externalizePath(request, groupPath));
-                response.setParentLocation(externalizePath(request,
-                    AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH));
-                changes.add(Modification.onCreated(groupPath));
+            String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+                + group.getID();
+            
+            Map<String, RequestProperty> reqProperties = collectContent(
+                request, response, groupPath);
+            response.setPath(groupPath);
+            response.setLocation(externalizePath(request, groupPath));
+            response.setParentLocation(externalizePath(request,
+                AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH));
+            changes.add(Modification.onCreated(groupPath));
 
-                // write content from form
-                writeContent(session, group, reqProperties, changes);
+            // write content from form
+            writeContent(session, group, reqProperties, changes);
 
-                // update the group memberships
-                updateGroupMembership(request, group, changes);
-            }
-        } catch (RepositoryException re) {
-            throw new RepositoryException("Failed to create new group.", re);
+            // update the group memberships
+            updateGroupMembership(request, group, changes);
         }
     }
 }

@@ -195,7 +195,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
 
         // check that the submitted parameter values have valid values.
         String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-        if (principalName == null) {
+        if (principalName == null || principalName.length() == 0) {
             throw new RepositoryException("User name was not submitted");
         }
         String pwd = request.getParameter("pwd");
