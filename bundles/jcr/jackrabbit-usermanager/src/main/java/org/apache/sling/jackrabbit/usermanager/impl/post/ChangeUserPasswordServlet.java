@@ -33,10 +33,10 @@ import org.apache.sling.servlets.post.Modification;
 
 /**
  * <p>
- * Changes the password associated with a user. a new group. Maps on to nodes of resourceType <code>sling/groups</code> like
+ * Changes the password associated with a user. Maps on to nodes of resourceType <code>sling/user</code> like
  * <code>/rep:system/rep:userManager/rep:users/ae/fd/3e/ieb</code> mapped to a resource url
  * <code>/system/userManager/user/ieb</code>. This servlet responds at
- * <code>/system/userManager/user/ieb.changePassword.create.html</code>
+ * <code>/system/userManager/user/ieb.changePassword.html</code>
  * </p>
  * <h4>Methods</h4>
  * <ul>
@@ -54,11 +54,11 @@ import org.apache.sling.servlets.post.Modification;
  * <h4>Response</h4>
  * <dl>
  * <dt>200</dt>
- * <dd>Sucess sent with no body</dd>
+ * <dd>Success sent with no body</dd>
  * <dt>404</dt>
  * <dd>If the user was not found.</dd>
  * <dt>500</dt>
- * <dd>Failure, including group already exists. HTML explains the failure.</dd>
+ * <dd>Failure, including password validation errors. HTML explains the failure.</dd>
  * </dl>
  * <h4>Example</h4>
  *
