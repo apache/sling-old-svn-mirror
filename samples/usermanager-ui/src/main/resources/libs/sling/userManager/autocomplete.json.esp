@@ -1,0 +1,46 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var jsonArray = new Packages.org.apache.sling.commons.json.JSONArray();
+var offset = 0;
+var maxResults = 15;
+
+var term = request.getParameter("term");
+var searchResults;
+if (term != null && term.length() > 0) {
+   var jcrSession = request.getResourceResolver().adaptTo(Packages.javax.jcr.Session);
+   var userManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getUserManager(jcrSession);
+
+   var query = new Packages.org.apache.sling.usermgr.FindPeopleQuery(3, term, true, offset, maxResults);
+   searchResults = userManager.findAuthorizables(query);
+}
+if (searchResults) {
+    while (searchResults.hasNext()) {
+           var a = searchResults.next();
+           var jsonObj = new Packages.org.apache.sling.commons.json.JSONObject();
+           jsonObj.put("value", a.getID());
+           var labelProp = a.getProperty("displayName");
+           if (labelProp != null && labelProp.length > 0) {
+             jsonObj.put("label", labelProp[0].getString());
+           }
+           
+           jsonArray.put(jsonObj);
+    }
+}
+response.getWriter().write(jsonArray.toString(2));
+%>

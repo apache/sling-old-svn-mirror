@@ -1,0 +1,203 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var privilegesInfo = sling.getService(Packages.org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo);
+var authorizable = resource.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Authorizable);
+var canEdit = privilegesInfo.canUpdateProperties(currentSession, authorizable.getID());
+var canRemove = privilegesInfo.canRemove(currentSession, authorizable.getID()); 
+var canUpdateMembers = privilegesInfo.canUpdateGroupMembers(currentSession, authorizable.getID());
+var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+var isMe = authorizable.getID().equals(request.getRemoteUser());
+
+var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
+
+var propNameSet = new Packages.java.util.TreeSet(valueMap.keySet());
+propNameSet.remove("declaredMemberOf");
+propNameSet.remove("memberOf");
+
+var propKeysCsv = rb.getString("csv.static.user.prop.keys");
+var items = [];
+if (propKeysCsv != null && propKeysCsv.length() > 0 && !propKeysCsv.equals("csv.static.user.prop.keys")) {
+    items = propKeysCsv.split(",");
+}
+for (var i=0; i < items.length; i++) {
+    propNameSet.add(items[i]);
+}
+
+function propLabel(propName) {
+    var key = "prop.label." + propName;
+    var value = rb.getString(key);
+    if (value == key) {
+        return propName;
+    }
+    return value;
+};
+function format(key, args) {
+    var value = rb.getString(key);
+    return Packages.java.text.MessageFormat.format(value, args);
+}
+function displayName(path) {
+    var res = request.getResourceResolver().resolve(path);
+    var resValueMap = res.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+    var value = resValueMap.get("displayName");
+    if (value == null) {
+        value = path.substring(path.lastIndexOf('/') + 1)        
+    }
+    return value;
+}
+%>
+<div class="ui-widget ui-widget-content ui-corner-all usermgmt-body" id="update-user-body" >
+    <h3 class="ui-widget-header ui-corner-all usermgmt-header"><%=format(canEdit ? "header.update.user" : "header.view.user", authorizable.getID())%></h3>
+
+    <div class="info-msg-block" style="display:none;">
+        <div class="ui-state-highlight ui-corner-all"> 
+            <p>
+                <span class="ui-icon ui-icon-info"></span>
+                <span class="info-msg-text"></span>
+            </p>
+        </div>
+    </div>    
+    
+    <form id="update-user-form" accept-charset="UTF-8" 
+            action="<%=request.contextPath%><%=resource.path %>.update.html" 
+            method="post" >
+        <fieldset>
+            <input type="hidden" value="UTF-8" name="_charset_" />
+            <input id="redirect" type="hidden" name=":redirect" value="<%=request.contextPath%><%=resource.path %>.html" />
+
+            <%-- Member Of --%>
+            <% var key = "memberOf"; 
+               var value = valueMap.get(key);
+            %>
+            <div class="prop-line ui-helper-clearfix">
+                <label for="<%=key%>"><%=propLabel(key)%>:</label>
+
+                <ol id="<%=key%>">
+                    <li id="<%=key%>__empty" <%= value.length == 0 ? "" : "style='display:none'" %>><%=rb.getString("memberOf.empty")%></li>
+                    <%                      
+                       for (i = 0; i < value.length; i++) {
+                          var group = value[i];
+                    %>                            
+                        <li>
+                            <a href="<%=request.contextPath%><%=group%>.html"><%=displayName(group)%></a>
+                        </li>
+                    <%
+                       }/* endfor */
+                    %>
+                </ol>
+            </div>
+
+            <%
+                var it = propNameSet.iterator();
+                while (it.hasNext()) {
+                    key = it.next();
+                    value = valueMap.get(key);
+                    if (value == null) {
+                        value = "";
+                    }
+            %>
+            <div class="prop-line ui-helper-clearfix">
+                <label for="<%=key%>"><%=propLabel(key)%>:</label>
+                <input id="<%=key%>" type="text" name="<%=key%>" value='<%=value%>' <%= canEdit ? "" : "disabled=\"disabled\" readonly=\"readonly\" class=\"disabled\""%>/>
+                <% if (canEdit) { %>
+                <a href='#' class="noscript-hide remove-property" title='<%=rb.getString("tooltip.removeProperty")%>'><span class="ui-icon ui-icon-circle-close"></span></a>
+                <% } /* endif(canEdit) */ %>
+            </div>
+            <%
+                } /* endwhile */
+            %>
+
+            <p id="updateSubmitBtns" class="ui-helper-clearfix">
+                <label>&#160;</label>
+                <% if (canEdit) { %><button accesskey="u" id="updateUserBtn" type="submit"><%=rb.getString("button.save")%></button><% } %>
+                <span class="noscript-hide">
+                <% if (canRemove) { %><a href="#" id="removeUserLink"><%=rb.getString("link.remove")%></a> | <% } %>
+                <% if (canEdit) { %><a href="#" id="add_property"><%=rb.getString("link.add.property")%></a><% } %>
+                </span>
+            </p>
+        </fieldset>
+    </form>
+</div>
+
+<% if (canEdit) { %>
+<div id="add-property-dialog" title="<%=rb.getString("dialog.title.add.property")%>" style="display:none">
+    <form id='add-property-form' action="#">
+    <fieldset>
+        <label for="newPropName"><%=rb.getString("label.property.name")%></label>
+        <input type="text" name="name" id="newPropName" />
+    </fieldset>
+    </form>
+</div>
+<% } /*endif(canEdit) */ %>
+
+<% if (canRemove) { %>
+<div id="remove-user-dialog" title='<%=rb.getString("dialog.title.confirm.remove")%>' style="display:none">
+    <form id='remove-user-form' action="<%=resource.path%>.delete.html" method="post">
+    <fieldset>
+        <input type="hidden" name=":redirect" value="<%=request.contextPath%>/system/userManager/user.html" />
+        <p>
+            <%=rb.getString("msg.user.confirm.remove") %>
+        </p>
+    </fieldset>
+    </form>
+</div>
+<% } /*endif(canRemove) */ %>
+
+<% if (isMe) { %>
+<div class="ui-widget ui-widget-content ui-corner-all usermgmt-body" id="update-password-body" >
+    <h3 class="ui-widget-header ui-corner-all usermgmt-header"><%=rb.getString("header.change.password")%></h3>
+    
+    <div class="info-msg-block" style="display:none;">
+        <div class="ui-state-highlight ui-corner-all"> 
+            <p>
+                <span class="ui-icon ui-icon-info"></span>
+                <span class="info-msg-text"></span>
+            </p>
+        </div>
+    </div>    
+    
+    <form id="update-password-form" accept-charset="UTF-8"
+            action="<%=request.contextPath%><%=resource.path %>.changePassword.html" 
+            method="post">
+        <fieldset>
+            <input type="hidden" value="UTF-8" name="_charset_" />
+            <input id="pwdRedirect" type="hidden" name=":redirect" value="<%=request.contextPath%><%=resource.path %>.html" />
+
+            <div class="prop-line ui-helper-clearfix">
+                <label for="oldPwd" accesskey="o"><%=propLabel("oldPwd")%>:</label>
+                <input id="oldPwd" type="password" name="oldPwd" value=''/>
+            </div>
+
+            <div class="prop-line ui-helper-clearfix">
+                <label for="newPwd" accesskey="p"><%=propLabel("newPwd")%>:</label>                
+                <input id="newPwd"  type="password" name="newPwd" value=''/>
+            </div>
+
+            <div class="prop-line ui-helper-clearfix">
+                <label for="newPwdConfirm" accesskey="c"><%=propLabel("newPwdConfirm")%>:</label>
+                <input id="newPwdConfirm" type="password" name="newPwdConfirm" value=''/>
+            </div>
+
+            <div class="ui-helper-clearfix">
+                <label>&#160;</label>
+                <button accesskey="d" id="updatePasswordBtn" type="submit"><%=rb.getString("button.updatePwd")%></button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+<% } /*endif (isme)*/ %>

@@ -1,0 +1,122 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+if (!privilegesInfo.canReadAccessControl(currentNode)) {
+   //user can't read the ACL.
+   response.sendError(403);
+} else {
+	if (!response.isCommitted()) {
+	    //don't allow caching of this page
+        response.setDateHeader("Expires", 0);
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Cache-control", "no-cache, must-revalidate");
+    }
+	
+   var canModify = privilegesInfo.canModifyAccessControl(currentNode);
+   
+   var rb = request.getResourceBundle("org.apache.sling.accessmanager.Resources", null);
+   
+   function format(key, args) {
+      var value = rb.getString(key);
+ 	  return Packages.java.text.MessageFormat.format(value, args);
+   }
+%>
+
+<div class="ui-widget ui-widget-content ui-corner-all accessmgmt-body" id="update-acl-block" >
+<% if (canModify) { %>
+    <div id='modify-acl-header' class="ui-widget-header ui-corner-all ui-helper-clearfix">
+        <h3 class="accessmgmt-header"><%=format("header.update.acl", [currentNode.name])%></h3>
+        <span id="add-ace-block">
+            <a href="<%=request.contextPath%><%=resource.path%>.ace.html"><%=rb.getString("menu.link.add.ace")%></a>
+        </span>
+    </div>
+<% } else { /*end if(canModify) */ %>
+    <h3 class="ui-widget-header ui-corner-all accessmgmt-header"><%=format("header.view.acl", [currentNode.name])%></h3>
+<% } /* endelse */ %>
+
+<%
+   var accessMap = privilegesInfo.getDeclaredAccessRights(currentNode);
+   if (accessMap.isEmpty()) {
+%>
+    <div id="acl-list-empty" class="ui-corner-all ui-state-highlight"><%=rb.getString("msg.acl.empty")%></div>
+<% } else { %>
+   <table id="acl-list" width="100%" class="ui-widget ui-widget-content ui-corner-all">
+        <thead class="ui-widget-header">
+            <tr>
+                <th align="left"><%=rb.getString("column.authorizable.header")%></th>
+                <th align="left" width="125px"><%=rb.getString("column.privileges.header")%></th>
+                <th align="left" width="75px">&#160;</th>
+            </tr>
+        </thead>
+        <tbody>
+		<%
+		   var jcrSession = request.getResourceResolver().adaptTo(Packages.javax.jcr.Session);
+		   var userManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getUserManager(jcrSession);
+		
+		   var entrySet = accessMap.entrySet();
+		   var iterator = entrySet.iterator();
+		   while (iterator.hasNext()) {
+		      var entry = iterator.next();
+		      var principal = entry.getKey();
+		      var accessrights = entry.getValue();
+		
+		      var userDisplayName = principal.getName();
+		      var authorizable = userManager.getAuthorizable(principal.getName());
+		      if (authorizable) {
+		          var values = authorizable.getProperty("displayName");
+		          if (values != null && values.length > 0) {
+		              userDisplayName = values[0].getString();
+		          }
+		      }
+		%>
+            <tr>
+                <td>
+                    <a title='<%=rb.getString(canModify ? "menu.link.update.ace" : "menu.link.view.ace")%>' 
+                        href="<%=request.contextPath%><%=currentNode.path%>.ace.html?pid=<%=principal.getName()%>"><%=userDisplayName%></a>
+                </td>
+                <td width="125px">
+                    <%=accessrights.getPrivilegeSetDisplayName(request.locale)%>
+                </td>
+	            <td width="75px">
+	               <% if (canModify) { %>
+	                  <form method="post" 
+	                        action="<%=request.contextPath%><%=currentNode.path%>.deleteAce.html" >
+	                     <div>
+	                        <input type="hidden" name=":redirect" value="<%=request.contextPath%><%=currentNode.path%>.acl.html" />
+	                        <input type="hidden" name=":applyTo" value="<%=principal.getName()%>" />
+	                        <button class="remove-ace" type="submit">Delete</button>
+	                     </div>
+	                  </form>   
+	               <% } /* endif(canModify) */ %>
+	            </td>
+            </tr>
+<% } /* endwhile */ %>
+        </tbody>
+    </table>
+<% } /* endelse */%>
+</div>
+
+<% if (canModify) { %>
+<div id="remove-ace-dialog" title='<%=rb.getString("dialog.title.confirm.remove")%>' style="display:none">
+    <p>
+        <%=rb.getString("msg.ace.confirm.remove") %>
+    </p>
+</div>
+<% } /*endif(canModify) */ %>
+<% } /* end else (access check) */ %>

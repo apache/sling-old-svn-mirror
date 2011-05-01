@@ -1,0 +1,74 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
+
+var title = request.getAttribute("page.title");
+if (title == null) {
+    title = rb.getString("page.title.find.authorizables");
+}
+
+var spParam = request.getParameter("sp");
+if (spParam == null) {
+    spParam = "";
+}
+var qParam = request.getParameter("q");
+if (qParam == null) {
+    qParam = "";
+}
+var oParam = request.getParameter("o");
+if (oParam == null) {
+    oParam = "0";
+}
+%>
+<div class="ui-widget ui-widget-content ui-corner-all usermgmt-body" id="authorizables-body" >
+    <form id="find-authorizables-form" accept-charset="UTF-8"
+            action="<%=request.contextPath%><%=resource.path%>.html" 
+            method="get">
+        <fieldset class="ui-helper-clearfix">
+            <input type="hidden" value="UTF-8" name="_charset_" />
+            <input type="hidden" id="searchOffset" name="o" value="<%=oParam%>" />
+
+            <div id='find-authorizables-header' class="ui-widget-header ui-corner-all ui-helper-clearfix">
+                <h3 class="usermgmt-header"><%=title%></h3>
+                <span id="find-authorizables-block">
+                    <input id="findAuthorizablesQuery" type="text" name="q" value="<%=qParam%>" />
+                    <button accesskey="s" id="findAuthorizablesBtn" type="submit"><%=rb.getString("button.search")%></button>
+                </span>
+            </div>
+
+            <div id="find-authorizables-quick-nav" style="display:none">
+                <%
+                   var csv = rb.getString("csv.quicksearch.items");
+                   var items = [];
+                   if (csv != null && csv.length() > 0 && !csv.equals("csv.quicksearch.items")) {
+                       items = csv.split(",");
+                   }
+                   for (var i = 0; i < items.length; i++) { 
+                      var c = items[i];
+                %>
+                <input type="radio" id="radio<%=c%>" name="sp" value="<%=c%>" <%=c.equals(spParam) ? "checked='checked'" : "" %>/><label for="radio<%=c%>"><%=c%></label>
+                <% } /*endfor*/%>
+                <input type="radio" id="radioAll" name="sp" value="*" <%="*" == spParam ? "checked='checked'" : "" %>/><label id="radioAllLabel" for="radioAll"><%=rb.getString("quicksearch.label.all")%></label>
+                <input type="radio" id="radioNone" name="sp" value="" <%="" == spParam ? "checked='checked'" : "" %> style="display:none;"/>
+            </div>
+        </fieldset>
+    </form>
+    
+    <% sling.include(resource.path + ".searchresult.html"); %>    
+</div>

@@ -1,0 +1,193 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+if (!privilegesInfo.canReadAccessControl(currentNode)) {
+    //user can't read the ACL.
+    response.sendError(403);
+} else {
+	if (!response.isCommitted()) {
+	   //don't allow caching of this page
+	   response.setDateHeader("Expires", 0);
+	   response.setHeader("Pragma", "no-cache");
+	   response.setHeader("Cache-control", "no-cache, must-revalidate");
+	}
+
+
+    var rb = request.getResourceBundle("org.apache.sling.accessmanager.Resources", null);      
+
+    function format(key, args) {
+        var value = rb.getString(key);
+        return Packages.java.text.MessageFormat.format(value, args);
+    }
+
+   /**
+   * @param p the privilege for the row
+   */
+   function drawPrivilegeRow(p, paddingLeft) {
+      if (p == null) {
+      	return;
+      }
+      var isIgnored, isGranted, isDenied = false;
+      isIgnored = !(granted.contains(p) || denied.contains(p));
+      isGranted = granted.contains(p);
+      isDenied = denied.contains(p);
+      var displayText = rb.getString("label.privilege." + p.getName());
+%>
+      <tr>
+         <td style="padding-left: <%=paddingLeft%>"><span id="privilege_<%=p.getName()%>_label"><%=displayText != null ? displayText : p.getName()%></span></td>
+         <td align="center"><input type="radio" name="privilege@<%=p.getName()%>" value="none" <%=isIgnored ? 'checked="checked"' : ''%> <%=canModify ? '' : 'disabled="disabled"'%>/></td>
+         <td align="center"><input type="radio" name="privilege@<%=p.getName()%>" value="granted" <%=isGranted ? 'checked="checked"' : ''%> <%=canModify ? '' : 'disabled="disabled"'%>/></td>
+         <td align="center"><input type="radio" name="privilege@<%=p.getName()%>" value="denied" <%=isDenied ? 'checked="checked"' : ''%> <%=canModify ? '' : 'disabled="disabled"'%>/></td>
+      </tr>      
+<%      
+   } /* end drawPrivilege function */
+
+   var granted, denied;
+   var principalId = request.getParameter("pid"); //formContext.getFieldValue("principalId"); //get from validation context if available 
+   if (principalId == null) {
+       principalId = new String("");
+   }
+   
+   var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+   if (principalId.equals("")) {
+      //this is a new ACE, so no principal is entered yet.
+      granted = Packages.java.util.Collections.emptySet();
+      denied = Packages.java.util.Collections.emptySet();
+   } else {
+      //updating an existing ACE, so load the current privileges
+      var accessRights = privilegesInfo.getDeclaredAccessRightsForPrincipal(currentNode, principalId);
+      granted = accessRights.getGranted();
+      denied = accessRights.getDenied();
+   }
+   var canModify = privilegesInfo.canModifyAccessControl(currentNode);
+   var canRemove = canModify && !principalId.equals("");
+%>
+
+<div class="ui-widget ui-widget-content ui-corner-all accessmgmt-body" id="update-ace-block" >
+    <h3 class="ui-widget-header ui-corner-all accessmgmt-header"><%=format(canModify ? "header.update.acl" : "header.view.acl", [currentNode.name])%></h3>
+    
+	<form id="update-ace-form" method="post" action="<%=request.contextPath%><%=currentNode.path%>.modifyAce.html" >
+		<div>
+		   <input type="hidden" name=":redirect" value="<%=request.contextPath%><%=currentNode.path%>.acl.html" />
+
+            <div class="prop-line ui-helper-clearfix">
+                <label for="principalId"><%=rb.getString("label.ace.principalId")%></label>
+                <input id="principalId" type="text" name="principalId" value='<%=principalId%>' <%=principalId.equals("") ? "" : "readonly='readonly'" %>/>
+            </div>
+
+            <% if (canModify) { %>
+            <div class="prop-line ui-helper-clearfix">
+                <label for="order"><%=rb.getString("label.ace.order")%></label>
+                <select id="order" name="order">
+                    <option value=""><%=rb.getString("ace.order.option.default")%></option>
+                    <option value="first"><%=rb.getString("ace.order.option.first")%></option>      
+			        <%              
+			           var accessMap = privilegesInfo.getDeclaredAccessRights(currentNode);
+			           var entrySet = accessMap.entrySet();
+			           var iterator = entrySet.iterator();
+			           if (iterator.hasNext()) iterator.next(); //skip the first one since it is covered by the 'first' option.
+			           while (iterator.hasNext()) {
+			              var entry = iterator.next();
+			              var principal = entry.getKey();
+			              if (principal.getName().equals(principalId)) {
+			                  continue; //skip it
+			              }
+			        %>
+                    <option value="before <%=principal.getName()%>"><%=format("ace.order.option.before", [principal.getName()])%></option>
+                    <% } %>
+                    <option value="last"><%=rb.getString("ace.order.option.last")%></option>
+                </select>      
+            </div>
+            <% } /*endif (canModify) */ %>
+		   
+		   <div class="prop-line ui-helper-clearfix">
+		      <label><%=rb.getString("label.ace.privileges")%></label>
+		      
+			   <table id="ace-list" width="100%" class="ui-widget ui-widget-content">
+			      <thead class="ui-widget-header">
+			         <tr>
+			            <th align="left">&#160;</th>
+			            <th align="center"><%=rb.getString("column.privilege.notset")%></th>
+			            <th align="center"><%=rb.getString("column.privilege.granted")%></th>
+			            <th align="center"><%=rb.getString("column.privilege.denied")%></th>
+			         </tr>
+			      </thead>
+			      <tbody>
+					<%
+					   var accessControlManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getAccessControlManager(currentNode.session);
+					   var p = accessControlManager.privilegeFromName("jcr:all");
+					   drawPrivilegeRow(p, "10px");
+					   
+					   p = accessControlManager.privilegeFromName("jcr:read");
+					   drawPrivilegeRow(p, "30px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:write");
+					   drawPrivilegeRow(p, "30px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:modifyProperties");
+					   drawPrivilegeRow(p, "50px");
+					      
+					   p = accessControlManager.privilegeFromName("jcr:removeNode");
+					   drawPrivilegeRow(p, "50px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:addChildNodes");
+					   drawPrivilegeRow(p, "50px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:removeChildNodes");
+					   drawPrivilegeRow(p, "50px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:readAccessControl");
+					   drawPrivilegeRow(p, "30px");   
+					
+					   p = accessControlManager.privilegeFromName("jcr:modifyAccessControl");
+					   drawPrivilegeRow(p, "30px");         
+					%>   
+			      </tbody>
+			   </table>
+           </div>
+		
+		    <% if (canModify) { %>
+            <div id="updateSubmitBtns" class="prop-line ui-helper-clearfix">
+                <label>&#160;</label>
+                <button accesskey="a" id="addAceSaveButton" type="submit"><%=rb.getString("button.save")%></button>
+                <% if (canRemove) { %>
+                <span class="noscript-hide">
+                <a href="#" id="removeAceLink"><%=rb.getString("link.remove")%></a>
+                </span>
+                <% } %>
+            </div>
+            <% } /* endif(canModify) */ %>
+		</div>
+	</form>
+</div>
+
+<% if (canRemove) { %>
+<div id="remove-ace-dialog" title='<%=rb.getString("dialog.title.confirm.remove")%>' style="display:none">
+    <form id='remove-ace-form' action="<%=resource.path%>.deleteAce.html" method="post">
+    <fieldset>
+        <input type="hidden" name=":redirect" value="<%=request.contextPath%><%=currentNode.path%>.acl.html" />
+        <input type="hidden" name=":applyTo" value="<%=principalId%>" />
+        <p>
+            <%=rb.getString("msg.ace.confirm.remove") %>
+        </p>
+    </fieldset>
+    </form>
+</div>
+<% } /*endif(canRemove) */ %>
+<% } /* end else (access check) */ %>

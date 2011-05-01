@@ -1,0 +1,317 @@
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+body {
+    background-color: #ffffff;
+    color: #3b3b3b;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 140%;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #1980af;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #1980af;
+}
+
+a:hover {
+    color: #1faae9;
+    text-decoration: underline;
+}
+
+img, a img
+{
+    border: none;
+}
+
+.title {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: 25px;
+    height: 81px;
+    background: url(../../images/gradient.png)
+        repeat-x;
+    background-position: bottom;
+}
+
+.logo {
+    position: absolute;
+    width: 15em;
+    height: 81px;
+    text-align: center;
+}
+
+.header {
+    text-align: right;
+    margin-right: 20pt;
+}
+
+.menu {
+    border-top: 10px solid #f9bb00;
+    position: absolute;
+    top: 107px;
+    left: 1px;
+    width: 15em;
+    bottom: 0px;
+    padding: 0px;
+    background-color: #fcfcfc
+}
+
+.menu ul {
+    background-color: #fdf5d9;
+    list-style: none;
+    padding-left: 0px;
+    margin-top: 0px;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    margin-left: 0px;
+    color: #4a4a43
+}
+
+.menu ul li {
+    padding-left: 2.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;    
+}
+
+.menu ul li.ui-state-highlight {
+    font-weight: bold;
+}
+
+.menu a {
+    color: #4a4a43
+}
+
+.main {
+    position: absolute;
+    border-top: 10px solid #cde0ea;
+    top: 107px;
+    left: 15em;
+    right: 1px;
+    margin-left: 2px;
+    padding: 10px 10px;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Login/Logout Links  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#menu_login
+{
+    display: inline;
+    margin: 10px 20px;
+    font-size: 11px;
+    padding: 5px 7px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 10;
+}
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Access Manager Pages  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+.accessmgmt-body 
+{
+    padding: 5px;
+}
+
+.accessmgmt-header 
+{
+    font-size: 14px;
+    padding: 5px 10px;
+    margin: 0 0 10px 0;
+}
+
+.info-msg-block
+{
+    margin-left: 10px; 
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+.info-msg-block p 
+{
+    margin: 5px;
+}
+.info-msg-block span.ui-icon 
+{
+    float: left;    
+}
+.info-msg-text
+{
+    margin-left: 5px;
+}
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- ACL Page  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#add-ace-block
+{
+    float: right;
+    line-height: 33px; 
+    padding-right: 10px;
+}
+
+#add-ace-block .ui-button-text-only .ui-button-text
+{
+    line-height: 1;
+    padding: 5px 5px;
+    font-size: 10pt;        
+}
+
+#modify-acl-header
+{
+    margin-bottom: 5px;   
+}
+
+#modify-acl-header h3
+{
+    font-size: 14px; 
+    font-weight: bold; 
+    display: inline; 
+    line-height: 33px; 
+}
+
+#acl-list-empty
+{
+    line-height: 100px;
+    font-size: large;
+    font-weight: bold;
+    text-align: center;
+}
+
+#acl-list td,
+#acl-list th
+{
+    padding: 5px;
+}
+
+#acl-list tr.odd
+{
+    background-color: #eee;
+}
+
+#acl-list form,
+#acl-list form div
+{
+	display: inline;
+}
+
+#acl-list .ui-button-text-only .ui-button-text {
+    line-height: 1;
+    padding: 5px 5px;
+    font-size: 10pt;        
+}
+
+.prop-line 
+{
+    margin-bottom: 5px;
+    line-height: 26px;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- ACE Page  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+#update-ace-form label
+{
+    float: left;
+    display: inline;
+    width: 15%;
+    text-align: right;
+}
+
+#update-ace-form button
+{
+    margin-left: 10px;
+}
+
+#update-ace-form input[type=text],
+#update-ace-form select
+{
+    margin-left: 10px;
+    width: 75%;
+}
+
+#ace-list {
+	position: relative;
+	left: 10px;
+	width: 75%;
+}
+
+#ace-list th,
+#ace-list td
+{
+    padding: 5px;
+}
+#ace-list tr.odd
+{
+    background-color: #eee;
+}
+
+#remove-ace-dialog fieldset
+{
+    border: none;
+    margin: 0;
+    padding: 0;
+    line-height: 20px;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Widget style tweaks  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+
+.ui-autocomplete-loading 
+{ 
+    background: white url('../../images/ui-anim_basic_16x16.gif') right center no-repeat; 
+}
+
+.noscript-hide 
+{
+    display:none;
+}
+
+
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* --- Validation error styles  ---*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+input.error, textarea.error 
+{
+    border: 1px dotted red;
+}
+
+label.error, label.error 
+{
+    color: red;
+    font-style: italic;
+    font-weight: bold;
+    margin-left: 15%;
+    padding-left: 10px;
+    text-align: left !important;
+    width: auto !important;
+}

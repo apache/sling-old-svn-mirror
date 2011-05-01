@@ -1,0 +1,444 @@
+{
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+    "en": {
+        "jcr:mixinTypes": [
+            "mix:language"
+        ],
+        "jcr:language": "en",
+        "sling:basename": "org.apache.sling.usermgr.Resources",
+    
+        "page.template.title": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.template.title",
+            "sling:message": "{0} : Sling"
+        },            
+        "msg.noscript": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.noscript",
+            "sling:message": "Your browser has scripting disabled.  Please enable scripting for a better experience."
+        },   
+    
+        "link.login": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.login",
+            "sling:message": "Login"
+        },            
+        "link.logout": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.logout",
+            "sling:message": "Logout"
+        },
+        "logo.alt": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "logo.alt",
+            "sling:message": "Apache Sling"
+        },
+        
+    
+        "page.title.update.group": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.update.group",
+            "sling:message": "Update Group"
+        },            
+    
+        "header.update.group": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.update.group",
+            "sling:message": "Update Group: {0}"
+        },            
+
+        "page.title.view.group": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.view.group",
+            "sling:message": "View Group"
+        },            
+    
+        "header.view.group": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.view.group",
+            "sling:message": "View Group: {0}"
+        },            
+        
+        "prop.label.email": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.email",
+            "sling:message": "E-Mail"
+        },            
+        "prop.label.displayName": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.displayName",
+            "sling:message": "Display Name"
+        },            
+        "prop.label.password": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.password",
+            "sling:message": "Password"
+        },            
+        "prop.label.confirmPassword": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.confirmPassword",
+            "sling:message": "Confirm Password"
+        },            
+        "prop.label.memberOf": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.memberOf",
+            "sling:message": "Member Of"
+        },            
+        "prop.label.declaredMembers": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.declaredMembers",
+            "sling:message": "Declared Members"
+        },            
+    
+        "button.save": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "button.save",
+            "sling:message": "Save"
+        },
+        "link.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.remove",
+            "sling:message": "Remove"
+        },
+        "link.add.property": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.add.property",
+            "sling:message": "Add Property"
+        },
+        "link.add.member": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.add.member",
+            "sling:message": "Add Member"
+        },            
+        "tooltip.removeMember": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "tooltip.removeMember",
+            "sling:message": "Remove Member"
+        },
+    
+        "dialog.title.add.property": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "dialog.title.add.property",
+            "sling:message": "Add New Property"
+        },            
+        "label.property.name": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.property.name",
+            "sling:message": "Name"
+        },
+        
+        "dialog.title.confirm.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "dialog.title.confirm.remove",
+            "sling:message": "Confirm Remove"
+        },            
+        "msg.group.confirm.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.group.confirm.remove",
+            "sling:message": "Are you sure you want to delete this group?"
+        },
+        
+        "dialog.title.add.member": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "dialog.title.add.member",
+            "sling:message": "Add Group Member"
+        },            
+        "label.group.name": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.group.name",
+            "sling:message": "Name"
+        },
+        
+      
+        
+        "page.title.find.groups": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.find.groups",
+            "sling:message": "Find Groups"
+        },            
+        "button.search": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "button.search",
+            "sling:message": "Search"
+        },
+        "label.column.name": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.column.name",
+            "sling:message": "Name"
+        },
+        "label.column.displayName": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.column.displayName",
+            "sling:message": "Display Name"
+        },
+        "msg.readyToSearch": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.readyToSearch",
+            "sling:message": "Ready to Search"
+        },
+        "msg.noMatchesFound": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.noMatchesFound",
+            "sling:message": "No Matches Found"
+        },
+    
+        "csv.quicksearch.items": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "csv.quicksearch.items",
+            "sling:message": "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"
+        },
+    
+        "quicksearch.label.all": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "quicksearch.label.all",
+            "sling:message": "All"
+        },
+        
+    
+        "page.title.create.group": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.create.group",
+            "sling:message": "Create Group"
+        },            
+        "prop.label.groupid": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.groupid",
+            "sling:message": "Group ID"
+        },
+        "prop.label.displayName": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.displayName",
+            "sling:message": "Display Name"
+        },
+        "button.create": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "button.create",
+            "sling:message": "Create"
+        },
+        
+        
+        
+        "page.title.update.user": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.update.user",
+            "sling:message": "Update User"
+        },            
+        "header.update.user": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.update.user",
+            "sling:message": "Update User: {0}"
+        },
+        "page.title.view.user": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.view.user",
+            "sling:message": "View User"
+        },            
+        "header.view.user": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.view.user",
+            "sling:message": "View User: {0}"
+        },
+                    
+        "msg.user.confirm.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.user.confirm.remove",
+            "sling:message": "Are you sure you want to delete this user?"
+        },
+        
+        "header.change.password": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.change.password",
+            "sling:message": "Change Password"
+        },
+        "prop.label.oldPwd": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.oldPwd",
+            "sling:message": "Old Password"
+        },
+        "prop.label.newPwd": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.newPwd",
+            "sling:message": "New Password"
+        },
+        "prop.label.newPwdConfirm": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.newPwdConfirm",
+            "sling:message": "Confirm Password"
+        },
+        "button.updatePwd": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "button.updatePwd",
+            "sling:message": "Update"
+        },
+
+        "csv.static.group.prop.keys": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "csv.static.group.prop.keys",
+            "sling:message": "displayName"
+        },
+        "csv.static.user.prop.keys": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "csv.static.user.prop.keys",
+            "sling:message": "displayName,email"
+        },
+        
+        
+        "tooltip.removeProperty": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "tooltip.removeProperty",
+            "sling:message": "Remove Property"
+        },
+    
+        
+        
+        "menu.link.authorizables": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.authorizables",
+            "sling:message": "Authorizables"
+        },            
+        "menu.link.users": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.users",
+            "sling:message": "Users"
+        },            
+        "menu.link.groups": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.groups",
+            "sling:message": "Groups"
+        },            
+        "menu.link.createUser": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.createUser",
+            "sling:message": "Create User"
+        },            
+        "menu.link.createGroup": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.createGroup",
+            "sling:message": "Create Group"
+        },
+        "menu.link.updateUser": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.updateUser",
+            "sling:message": "Update User"
+        },
+        "menu.link.updateGroup": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.updateGroup",
+            "sling:message": "Update Group"
+        },
+        "menu.link.viewUser": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.viewUser",
+            "sling:message": "View User"
+        },
+        "menu.link.viewGroup": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.viewGroup",
+            "sling:message": "View Group"
+        },
+
+        "page.title.find.authorizables": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.find.authorizables",
+            "sling:message": "Find Authorizables"
+        },            
+    
+        
+        "page.title.find.users": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.find.users",
+            "sling:message": "Find Users"
+        },            
+        
+        "page.title.create.user": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.create.user",
+            "sling:message": "Create User"
+        },            
+        "prop.label.userid": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.userid",
+            "sling:message": "User ID"
+        },
+        "prop.label.email": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.email",
+            "sling:message": "E-Mail"
+        },
+        "prop.label.pwd": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.pwd",
+            "sling:message": "Password"
+        },
+        "prop.label.pwdConfirm": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.pwdConfirm",
+            "sling:message": "Confirm Password"
+        },
+        
+        "declaredMembers.empty": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "declaredMembers.empty",
+            "sling:message": "No Members"
+        },
+        "memberOf.empty": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "memberOf.empty",
+            "sling:message": "No Groups"
+        },
+        
+        
+        
+        "paging.current.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "paging.current.page",
+            "sling:message": "{0} to {1}"
+        },
+        "label.paging.first.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.paging.first.page",
+            "sling:message": "|<"
+        },
+        "label.paging.prev.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.paging.prev.page",
+            "sling:message": "<<"
+        },
+        "label.paging.next.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.paging.next.page",
+            "sling:message": ">>"
+        },
+        "tooltip.paging.first.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "tooltip.paging.first.page",
+            "sling:message": "First Page"
+        },
+        "tooltip.paging.prev.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "tooltip.paging.prev.page",
+            "sling:message": "Previous Page"
+        },
+        "tooltip.paging.next.page": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "tooltip.paging.next.page",
+            "sling:message": "Next Page"
+        }
+        
+    }
+}

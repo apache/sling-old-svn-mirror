@@ -68,5 +68,7 @@
           <module>slingbucks</module>
           <module>installing-dependencies</module>
           <module>framework-fragment</module>
+          <module>usermanager-ui</module>
+          <module>accessmanager-ui</module>
   </modules>
 </project>

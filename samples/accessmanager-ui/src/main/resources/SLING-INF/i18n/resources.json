@@ -1,0 +1,242 @@
+{
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+    "en": {
+        "jcr:mixinTypes": [
+            "mix:language"
+        ],
+        "jcr:language": "en",
+        "sling:basename": "org.apache.sling.accessmanager.Resources",
+    
+        /* for the page template */
+    
+        "page.template.title": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.template.title",
+            "sling:message": "{0} : Sling"
+        },   
+        "msg.noscript": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.noscript",
+            "sling:message": "Your browser has scripting disabled.  Please enable scripting for a better experience."
+        },   
+    
+        "link.login": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.login",
+            "sling:message": "Login"
+        },            
+        "link.logout": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.logout",
+            "sling:message": "Logout"
+        },
+        "logo.alt": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "logo.alt",
+            "sling:message": "Apache Sling"
+        },
+        
+        /* for ACL page */
+    
+        "page.title.acl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "page.title.acl",
+            "sling:message": "Permissions"
+        },            
+    
+        "header.update.acl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.update.acl",
+            "sling:message": "Update Permissions Of: {0}"
+        },            
+
+        "header.view.acl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "header.view.acl",
+            "sling:message": "View Permissions Of: {0}"
+        },            
+        
+        "msg.acl.empty": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.acl.empty",
+            "sling:message": "No Declared Access Rights"
+        },            
+        
+        "column.authorizable.header": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "column.authorizable.header",
+            "sling:message": "User / Group"
+        },            
+        "column.privileges.header": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "column.privileges.header",
+            "sling:message": "Privileges"
+        },            
+
+        "dialog.title.confirm.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "dialog.title.confirm.remove",
+            "sling:message": "Confirm Remove"
+        },            
+        "msg.ace.confirm.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "msg.ace.confirm.remove",
+            "sling:message": "Are you sure you want to delete this entry?"
+        },
+        
+        
+        /* for ACE page */
+        "label.ace.principalId": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.ace.principalId",
+            "sling:message": "Principal:"
+        },            
+        "label.ace.order": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.ace.order",
+            "sling:message": "Order:"
+        },            
+        "ace.order.option.default": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "ace.order.option.default",
+            "sling:message": "Default"
+        },            
+        "ace.order.option.first": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "ace.order.option.first",
+            "sling:message": "First"
+        },            
+        "ace.order.option.before": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "ace.order.option.before",
+            "sling:message": "Before {0}"
+        },            
+        "ace.order.option.last": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "ace.order.option.last",
+            "sling:message": "Last"
+        },            
+        
+        "label.ace.privileges": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.ace.privileges",
+            "sling:message": "Privileges:"
+        },            
+        "column.privilege.notset": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "column.privilege.notset",
+            "sling:message": "Not Set"
+        },            
+        "column.privilege.granted": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "column.privilege.granted",
+            "sling:message": "Granted"
+        },            
+        "column.privilege.denied": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "column.privilege.denied",
+            "sling:message": "Denied"
+        },            
+
+        "label.privilege.jcr_all": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:all",
+            "sling:message": "Full Control"
+        },            
+        "label.privilege.jcr_read": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:read",
+            "sling:message": "Read"
+        },            
+        "label.privilege.jcr_write": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:write",
+            "sling:message": "Write"
+        },            
+        "label.privilege.jcr_modifyProperties": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:modifyProperties",
+            "sling:message": "Modify Properties"
+        },            
+        "label.privilege.jcr_removeNode": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:removeNode",
+            "sling:message": "Remove"
+        },            
+        "label.privilege.jcr_addChildNodes": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:addChildNodes",
+            "sling:message": "Add Children"
+        },            
+        "label.privilege.jcr_removeChildNodes": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:removeChildNodes",
+            "sling:message": "Remove Children"
+        },            
+        "label.privilege.jcr_readAccessControl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:readAccessControl",
+            "sling:message": "Read Permissions"
+        },            
+        "label.privilege.jcr_modifyAccessControl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:modifyAccessControl",
+            "sling:message": "Modify Permissions"
+        },            
+                    
+        "button.save": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "button.save",
+            "sling:message": "Save"
+        },
+        "link.remove": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "link.remove",
+            "sling:message": "Remove"
+        },        
+                
+        
+        /* for SideBar links */
+        
+        "menu.link.view.acl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.view.acl",
+            "sling:message": "View Permissions"
+        },            
+        "menu.link.update.acl": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.update.acl",
+            "sling:message": "Update Permissions"
+        },            
+        "menu.link.add.ace": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.add.ace",
+            "sling:message": "Add Entry"
+        },            
+        "menu.link.view.ace": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.view.ace",
+            "sling:message": "View Entry"
+        },            
+        "menu.link.update.ace": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "menu.link.update.ace",
+            "sling:message": "Update Entry"
+        }            
+    }
+}

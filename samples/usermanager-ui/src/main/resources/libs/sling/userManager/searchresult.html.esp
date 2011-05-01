@@ -1,0 +1,118 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
+var searchType = request.getAttribute("search.type");
+if (searchType == null) {
+    searchType = 3; //all Authorizables should be searched
+}
+
+function format(key, args) {
+    var value = rb.getString(key);
+    return Packages.java.text.MessageFormat.format(value, args);
+}
+
+var qParam = request.getParameter("q");
+if (qParam != null && qParam.length() == 0) {
+    qParam = "*"; //empty search == 'All'
+}
+
+var isPrefixQuery = false;
+var spParam = request.getParameter("sp");
+if (spParam != null && spParam.length() > 0) {
+    isPrefixQuery = true;
+    if (!spParam.equals("*")) {
+        qParam = spParam + "*";
+    }
+}
+
+var maxResults = 25; //rows per page
+var offset = 0;
+var oParam = request.getParameter("o"); //paging start row
+if (oParam != null && oParam.length() > 0) {
+    offset = parseInt(oParam); 
+}
+
+var searchResults = null;
+if (qParam != null) {
+   var jcrSession = request.getResourceResolver().adaptTo(Packages.javax.jcr.Session);
+   var userManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getUserManager(jcrSession);
+   
+   var query = new Packages.org.apache.sling.usermgr.FindPeopleQuery(searchType, qParam, isPrefixQuery, offset, maxResults);
+   searchResults = userManager.findAuthorizables(query);
+}
+var readyToSearch = qParam == null;
+var noMatches = searchResults != null && !searchResults.hasNext();
+%>
+<div id="authorizables-results-body" >
+<% if (readyToSearch) { %>
+    <div id="search-result-ready-to-search" class="search-empty-msg ui-corner-all ui-state-highlight"><%=rb.getString("msg.readyToSearch")%></div>
+<% } else if (noMatches) { %>
+    <div id="search-result-no-matches" class="search-empty-msg ui-corner-all ui-state-highlight"><%=rb.getString("msg.noMatchesFound")%></div>
+<% } else { %>
+    <table id="search-result" width="100%" class="ui-widget ui-widget-content ui-corner-all">
+        <thead id="search-result-head" class="ui-widget-header">
+            <tr>
+                <th align="left" width="50%"><%=rb.getString("label.column.name")%></th>
+                <th align="left" width="50%"><%=rb.getString("label.column.displayName")%></th>
+            </tr>
+        </thead>
+        <tbody id="search-result-body">
+        <%   var count = 0;
+             var resourceResolver = resource.getResourceResolver();
+             while (count < maxResults && searchResults.hasNext()) {
+                var a = searchResults.next();
+                count++;
+                
+                var principalResource = resourceResolver.getResource("/system/userManager/" + (a.isGroup() ? "group/" : "user/") + a.getID());
+                var valueMap = principalResource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+        %>
+            <tr <%= (count % 2 == 1) ? "" : "class='odd'" %>>
+                <td><a href="<%=request.contextPath%><%=principalResource.path%>.html"><%=a.getID()%></a></td>
+                <td><%=valueMap.get("displayName", "")%></td>
+            </tr>
+        <%   } /*endwhile*/ %>
+        </tbody>
+        <%-- paging --%>
+        <tfoot id="search-result-foot" class="ui-widget-header">
+            <tr>
+                <td id="search-result-paging" align="center" colspan="2">
+                    <form id="find-authorizables-paging-form" accept-charset="UTF-8"
+                            action="<%=request.contextPath%><%=resource.path%>.html" 
+                            method="get">
+                        <input type="hidden" value="UTF-8" name="_charset_" />
+                        <input type="hidden" name="q" value="<%=qParam%>" />
+                        <% if (offset > maxResults) { %>
+                            <button id='first_page' title='<%=rb.getString("tooltip.paging.first.page") %>' type="submit" name="o" value="0"><%=rb.getString("label.paging.first.page")%></button>
+                        <% }
+                           if (offset > 1) { %>
+                            <button id='prev_page' title='<%=rb.getString("tooltip.paging.prev.page") %>' type="submit" name="o" value="<%=Math.max(0, offset - maxResults)%>"><%=rb.getString("label.paging.prev.page")%></button>
+                        <% }
+                           var currentPageMsg = format("paging.current.page", [offset + 1, offset + count]);
+                        %>
+                        <span id='current_page'><%=currentPageMsg%></span>
+                        <% if (searchResults.hasNext()) { %>
+                            <button id='next_page' title='<%=rb.getString("tooltip.paging.next.page") %>' type="submit" name="o" value="<%=offset + maxResults%>"><%=rb.getString("label.paging.next.page")%></button>
+                        <% } %>                
+                    </form>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+<% } /*endelse*/ %>
+</div>

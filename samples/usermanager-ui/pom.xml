@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <!--
+    Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for
+    additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not
+    use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>9</version>
+    <relativePath>../../parent/pom.xml</relativePath>
+  </parent>
+   
+  <groupId>org.apache.sling.samples</groupId>
+  <artifactId>org.apache.sling.samples.usermanager.ui</artifactId>
+  <packaging>bundle</packaging>
+  <version>0.9-SNAPSHOT</version>
+  <name>Apache Sling User Manager UI sample</name>
+  <description>
+    Sample Sling UI for user manager operations.
+  </description>
+  
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/samples/usermanager-ui</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/samples/usermanager-ui</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/samples/usermanager-ui</url>
+  </scm>
+
+  <pluginRepositories>
+    <!-- for yui-compressor-maven-plugin -->
+    <pluginRepository>
+      <name>oss.sonatype.org</name>
+      <id>oss.sonatype.org</id>
+      <url>http://oss.sonatype.org/content/groups/public</url>
+    </pluginRepository>
+  </pluginRepositories>
+  
+  <build>
+    <plugins>
+      <!--  use the yui-compressor to minify the js and css files -->
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>yuicompressor-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>compress</goal>
+            </goals>
+          </execution>
+        </executions>        
+        <configuration>
+          <sourceDirectory>${basedir}/src/main/resources</sourceDirectory>
+          <outputDirectory>${basedir}/src/main/resources</outputDirectory>
+          <suffix>.min</suffix>
+          <excludes>
+            <exclude>**/*.min.*</exclude>
+          </excludes>
+          <!-- 
+          <aggregations>
+            <aggregation>
+              <insertNewLine>true</insertNewLine>
+              <output>${basedir}/src/main/resources/js/usermanager/usermanager.all.min.js</output>
+              <includes>
+                <include>jquery/jquery-1.5.1.min.js</include>
+                <include>jquery/jquery-ui-1.8.11.custom.min.js</include>
+                <include>jquery/jquery-validate/jquery.validate.min.js</include>
+                <include>usermanager.min.js</include>
+              </includes>
+            </aggregation>
+            <aggregation>
+              <insertNewLine>true</insertNewLine>
+              <output>${basedir}/src/main/resources/js/usermanager/usermanager.all.js</output>
+              <includes>
+                <include>jquery/jquery-1.5.1.min.js</include>
+                <include>jquery/jquery-ui-1.8.11.custom.min.js</include>
+                <include>jquery/jquery-validate/jquery.validate.js</include>
+                <include>usermanager.js</include>
+              </includes>
+            </aggregation>
+          </aggregations>
+           -->
+        </configuration>
+      </plugin>
+    
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package>
+                org.apache.sling.usermgr
+            </Export-Package>
+            <Sling-Bundle-Resources>
+                /images,
+                /css/usermanager,
+                /js/usermanager,
+                /libs/sling/group,
+                /libs/sling/groups,
+                /libs/sling/user,
+                /libs/sling/userManager,
+                /libs/sling/usermgmt,
+                /libs/sling/users
+            </Sling-Bundle-Resources>
+            <Sling-Initial-Content>
+                SLING-INF/i18n;overwrite:=false;uninstall:=false;path:=/etc/i18n/org.apache.sling.samples.usermanager.ui
+            </Sling-Initial-Content>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <excludePackageNames></excludePackageNames>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+  
+  <dependencies>
+    <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-api</artifactId>
+        <version>2.2.5</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
+  </dependencies>  
+</project>
