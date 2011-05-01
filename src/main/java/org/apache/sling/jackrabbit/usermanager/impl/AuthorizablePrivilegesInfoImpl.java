@@ -23,6 +23,7 @@ import java.util.Dictionary;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -31,6 +32,9 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,16 +114,18 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
 			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
 
-			if (((User)currentUser).isAdmin()) {
-				return true; //admin user has full control
-			}
-			
-			//check if the user is a member of the 'Group administrator' group
-			Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-			if (groupAdmin instanceof Group) {
-				boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-				if (isMember) {
-					return true;
+			if (currentUser != null) {
+				if (((User)currentUser).isAdmin()) {
+					return true; //admin user has full control
+				}
+				
+				//check if the user is a member of the 'Group administrator' group
+				Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
+				if (groupAdmin instanceof Group) {
+					boolean isMember = ((Group)groupAdmin).isMember(currentUser);
+					if (isMember) {
+						return true;
+					}
 				}
 			}
 		} catch (RepositoryException e) {
@@ -133,22 +139,45 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 	 */
 	public boolean canAddUser(Session jcrSession) {
 		try {
+			//if self-registration is enabled, then anyone can create a user
+			if (componentContext != null) {
+				String filter = "(&(sling.servlet.resourceTypes=sling/users)(|(sling.servlet.methods=POST)(sling.servlet.selectors=create)))";
+				BundleContext bundleContext = componentContext.getBundleContext();
+				ServiceReference[] serviceReferences = bundleContext.getServiceReferences(Servlet.class.getName(), filter);
+				if (serviceReferences != null) {
+					String propName = "self.registration.enabled";
+					for (ServiceReference serviceReference : serviceReferences) {
+						Object propValue = serviceReference.getProperty(propName);
+						if (propValue != null) {
+							boolean selfRegEnabled = Boolean.TRUE.equals(propValue);
+							if (selfRegEnabled) {
+								return true;
+							}
+							break;
+						}
+					}
+				}
+			}
+
 			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
 			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
-
-			if (((User)currentUser).isAdmin()) {
-				return true; //admin user has full control
-			}
-			
-			//check if the user is a member of the 'User administrator' group
-			Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-			if (userAdmin instanceof Group) {
-				boolean isMember = ((Group)userAdmin).isMember(currentUser);
-				if (isMember) {
-					return true;
+			if (currentUser != null) {
+				if (((User)currentUser).isAdmin()) {
+					return true; //admin user has full control
+				}
+				
+				//check if the user is a member of the 'User administrator' group
+				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
+				if (userAdmin instanceof Group) {
+					boolean isMember = ((Group)userAdmin).isMember(currentUser);
+					if (isMember) {
+						return true;
+					}
 				}
 			}
 		} catch (RepositoryException e) {
+			log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
+		} catch (InvalidSyntaxException e) {
 			log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
 		}
 		return false;
@@ -276,6 +305,9 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 
 	// ---------- SCR Integration ----------------------------------------------
 
+	//keep track of the bundle context
+	private ComponentContext componentContext;
+
     /**
      * Called by SCR to activate the component.
      *
@@ -288,6 +320,8 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             throws InvalidKeyException, NoSuchAlgorithmException,
             IllegalStateException, UnsupportedEncodingException {
 
+    	this.componentContext = componentContext;
+    	
         Dictionary<?, ?> properties = componentContext.getProperties();
 
         this.userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME),
