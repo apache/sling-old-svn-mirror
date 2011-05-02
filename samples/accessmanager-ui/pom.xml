@@ -99,7 +99,6 @@
         <configuration>
           <instructions>
             <Export-Package>
-                org.apache.sling.accessmanager
             </Export-Package>
             <Sling-Bundle-Resources>
                 /images,

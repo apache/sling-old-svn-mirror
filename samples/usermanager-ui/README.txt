@@ -1,50 +1,39 @@
-Sling user management UI sample
+Sling user manager UI sample
 ---------------------
 
 WHY THIS SAMPLE?
 ----------------
-This demonstrates some sample UI for user self-regirstration and profile update.
+This demonstrates some sample UI for user/group discovery, creation and update.
+
+PRE-REQUISITES
+--------------
+This sample uses the i18n support provided by the org.apache.sling.i18n bundle,
+so that bundle must be installed into your sling instance first. 
 
 HOW TO INSTALL
 --------------
 Build this bundle and install it in Sling.
 
-For example, if Sling is running on port 8080 (which happens if you start 
-the launchpad/testing module with "mvn jetty:run"), this will build and 
+For example, if Sling is running on port 8888 (which happens if you start 
+the launchpad/builder module with "mvn launchpad:run"), this will build and 
 install it:
 
-    mvn -P autoInstallBundle clean install -Dsling.url=http://localhost:8080/system/console
+    mvn -P autoInstallBundle clean install -Dsling.url=http://localhost:8888/system/console
     
 To verify that the bundle is correctly installed:
 
-1) http://localhost:8080/apps/espblog/html.esp must return the html.esp 
+1) http://localhost:8888/libs/sling/usermgmt/page.html.esp must return the page.html.esp 
    script.
 
-2) The console at http://localhost:8080/system/console/bundles must 
-    list the bundle named "Sling - ESP blog sample" as active.    
+2) The console at http://localhost:8888/system/console/bundles must 
+    list the bundle named "Apache Sling User Manager UI sample" as active.    
 
 HOW TO TEST
 -----------
-Start by logging in at http://localhost:8080/?sling:authRequestLogin=true,
-using username=admin and password=admin (or use the "login" link on the 
-/index.html page).
+Login to sling as the admin user.
 
-Once logged in, /index.html should say "you are currently logged in as
-user "admin" to workspace "default".
+Open http://localhost:8888/system/userManager.html
 
-Then, http://localhost:8080/content/espblog/*.html should display the "Sling ESP
-blog sample" page, with the Home/Admin/New Post/... menu.
+Use the links in the left sidebar to get to the pages that enable you to 
+find, update or create users/groups.
 
-If you get Sling's default HTML rendition instead ("Resource dumped by 
-HtmlRendererServlet") that's probably because the "path-based-rtp" bundle
-is not installed. Run the above "mvn...clean install" command in the
-sling/samples/path-based-rtp folder to install it, and reload the page.
-
-Create a new post using the "New Post" menu.
-
-The post can include an attachment, if that's an image the included
-ThumbnailGeneratorService generates thumbnails in different sizes, displayed
-on the post's page. This happens asynchronously, so depending on your 
-machine's speed the thumbnails might only appear after a few seconds.
-
-The ESP scripts are found under /apps/espblog in the repository.
