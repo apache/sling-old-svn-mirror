@@ -505,7 +505,7 @@ public class QuartzScheduler implements Scheduler {
      * @param type The type (job or task)
      * @param ref The service reference
      */
-    private void register(String type, ServiceReference ref) {
+    private void register(final String type, final ServiceReference ref) {
         // we called from bind, it might be that deactivate has been
         // called in the meantime
         final ComponentContext ctx = this.context;
@@ -522,13 +522,21 @@ public class QuartzScheduler implements Scheduler {
                     } else {
                         final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
                         if ( period != null ) {
-                            this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+                            if ( period < 1 ) {
+                                this.logger.debug("Ignoring service {} : scheduler period is less than 1.", ref);
+                            } else {
+                                this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+                            }
+                        } else {
+                            this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);
                         }
                     }
-                } catch (IllegalStateException e) {
-                    // this can happen if deactivate has been called - therefore ignoring
-                } catch (SchedulerException e) {
-                    // this can happen if deactivate has been called - therefore ignoring
+                } catch (final IllegalStateException e) {
+                    // this can happen if deactivate has been called or the scheduling expression is invalid
+                    this.logger.warn("Ignoring servce " + ref + " : exception occurred during registering.", e);
+                } catch (final SchedulerException e) {
+                    // this can happen if deactivate has been called or the scheduling expression is invalid
+                    this.logger.warn("Ignoring servce " + ref + " : exception occurred during registering.", e);
                 }
             }
         }
@@ -538,7 +546,7 @@ public class QuartzScheduler implements Scheduler {
      * Unregister a service.
      * @param ref The service reference.
      */
-    private void unregister(ServiceReference ref) {
+    private void unregister(final ServiceReference ref) {
         try {
             final String name = getServiceIdentifier(ref);
             this.removeJob(name);
@@ -552,7 +560,7 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      * @throws Exception
      */
-    protected void bindJob(ServiceReference ref) {
+    protected void bindJob(final ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.register(Registration.JOB, ref);
         } else {
@@ -566,7 +574,7 @@ public class QuartzScheduler implements Scheduler {
      * Unbind a job.
      * @param ref
      */
-    protected void unbindJob(ServiceReference ref) {
+    protected void unbindJob(final ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.unregister(ref);
         } else {
@@ -581,7 +589,7 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      * @throws Exception
      */
-    protected void bindTask(ServiceReference ref) {
+    protected void bindTask(final ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.register(Registration.TASK, ref);
         } else {
@@ -595,7 +603,7 @@ public class QuartzScheduler implements Scheduler {
      * Unbind a task.
      * @param ref
      */
-    protected void unbindTask(ServiceReference ref) {
+    protected void unbindTask(final ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.unregister(ref);
         } else {
