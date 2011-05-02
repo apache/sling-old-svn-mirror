@@ -31,6 +31,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
@@ -71,6 +72,9 @@ public class JcrResourceListener implements EventListener {
     /** The event admin tracker. */
     private final ServiceTracker eventAdminTracker;
 
+    /** Is the Jackrabbit event class available? */
+    private final boolean hasJackrabbitEventClass;
+
     /**
      * Constructor.
      * @param workspaceName The workspace name to observe
@@ -100,6 +104,14 @@ public class JcrResourceListener implements EventListener {
         this.session.getWorkspace().getObservationManager().addEventListener(this,
             Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
             this.startPath, true, null, null, false);
+        boolean foundClass = false;
+        try {
+            this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
+            foundClass = true;
+        } catch (final Throwable t) {
+            // we ignore this
+        }
+        this.hasJackrabbitEventClass = foundClass;
     }
 
     /**
@@ -169,6 +181,9 @@ public class JcrResourceListener implements EventListener {
             final Dictionary<String, String> properties = new Hashtable<String, String>();
             properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(e.getKey()));
             properties.put(SlingConstants.PROPERTY_USERID, e.getValue().getUserID());
+            if ( this.isExternal(e.getValue()) ) {
+                properties.put("event.application", "unknown");
+            }
             localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
         }
 
@@ -194,7 +209,7 @@ public class JcrResourceListener implements EventListener {
      * @param topic The topic that should be used for the OSGi event.
      * @param localEA The OSGi Event Admin that can be used to post events.
      */
-    private void sendOsgiEvent(String path, Event event, final String topic, final EventAdmin localEA) {
+    private void sendOsgiEvent(String path, final Event event, final String topic, final EventAdmin localEA) {
         path = createWorkspacePath(path);
         Resource resource = this.resolver.getResource(path);
         if ( resource != null ) {
@@ -225,8 +240,19 @@ public class JcrResourceListener implements EventListener {
             if ( resourceSuperType != null ) {
                 properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
             }
+            if ( this.isExternal(event) ) {
+                properties.put("event.application", "unknown");
+            }
             localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
         }
+    }
+
+    private boolean isExternal(final Event event) {
+        if ( this.hasJackrabbitEventClass && event instanceof JackrabbitEvent) {
+            final JackrabbitEvent jEvent = (JackrabbitEvent)event;
+            return jEvent.isExternal();
+        }
+        return false;
     }
 
     private String createWorkspacePath(final String path) {
