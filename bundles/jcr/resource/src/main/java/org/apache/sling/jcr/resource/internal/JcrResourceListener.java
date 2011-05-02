@@ -129,24 +129,28 @@ public class JcrResourceListener implements EventListener {
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
             try {
-                Map<String, Event> map = null;
-                String nodePath = event.getPath();
+                final String eventPath;
+                if ( this.mountPrefix != null ) {
+                    eventPath = this.mountPrefix + event.getPath();
+                } else {
+                    eventPath = event.getPath();
+                }
                 if ( event.getType() == Event.PROPERTY_ADDED
                      || event.getType() == Event.PROPERTY_REMOVED
                      || event.getType() == Event.PROPERTY_CHANGED ) {
-                    final int lastSlash = nodePath.lastIndexOf('/');
-                    nodePath = nodePath.substring(0, lastSlash);
-                    map = changedEvents;
+                    final int lastSlash = eventPath.lastIndexOf('/');
+                    changedEvents.put(eventPath.substring(0, lastSlash), event);
                 } else if ( event.getType() == Event.NODE_ADDED ) {
-                    map = addedEvents;
-                }   else if ( event.getType() == Event.NODE_REMOVED) {
-                  map = removedEvents;
-                }
-                if ( map != null ) {
-                    if ( this.mountPrefix != null ) {
-                        map.put(mountPrefix + nodePath, event);
+                    // check if this is a remove/add operation
+                    if ( removedEvents.containsKey(eventPath) ) {
+                        changedEvents.put(eventPath, event);
                     } else {
-                        map.put(nodePath, event);
+                        addedEvents.put(eventPath, event);
+                    }
+                } else if ( event.getType() == Event.NODE_REMOVED) {
+                    // check if this is a add/remove operation
+                    if ( !addedEvents.containsKey(eventPath) ) {
+                        removedEvents.put(eventPath, event);
                     }
                 }
             } catch (RepositoryException e) {
@@ -155,7 +159,7 @@ public class JcrResourceListener implements EventListener {
             }
         }
 
-        for (Entry<String, Event> e : removedEvents.entrySet()) {
+        for (final Entry<String, Event> e : removedEvents.entrySet()) {
             // remove is the strongest operation, therefore remove all removed
             // paths from changed and added
             addedEvents.remove(e.getKey());
@@ -169,7 +173,7 @@ public class JcrResourceListener implements EventListener {
         }
 
         // add is stronger than changed
-        for (Entry<String, Event> e : addedEvents.entrySet()) {
+        for (final Entry<String, Event> e : addedEvents.entrySet()) {
             changedEvents.remove(e.getKey());
 
             // Launch an OSGi event.
@@ -177,7 +181,7 @@ public class JcrResourceListener implements EventListener {
         }
 
         // Send the changed events.
-        for (Entry<String, Event> e : changedEvents.entrySet()) {
+        for (final Entry<String, Event> e : changedEvents.entrySet()) {
             // Launch an OSGi event.
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_CHANGED, localEA);
         }
