@@ -1210,6 +1210,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
 
                     // and unlock
                     this.lockManager.unlock(this.backgroundSession, path);
+                    ((DefaultJobManager)this.jobManager).notifyRescheduleJob(info.uniqueId);
                     return true;
                 }
             } catch (RepositoryException re) {

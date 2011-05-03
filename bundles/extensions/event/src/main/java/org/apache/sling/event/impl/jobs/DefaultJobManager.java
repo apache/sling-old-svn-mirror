@@ -459,6 +459,19 @@ public class DefaultJobManager
     }
 
     /**
+     * Job started
+     */
+    public void notifyRescheduleJob(final String key) {
+        final JobEvent job;
+        synchronized ( this.allEvents ) {
+            job = this.allEvents.get(key);
+        }
+        if ( job != null ) {
+            job.started = -1;
+        }
+    }
+
+    /**
      * Check the requested job type
      */
     private boolean checkType(final QueryType type, final JobEvent event) {
@@ -651,7 +664,11 @@ public class DefaultJobManager
         }
         boolean result = true;
         if ( job != null ) {
-            result = job.remove();
+            if ( job.started != 1 ) {
+                result = job.remove();
+            } else {
+                result = false;
+            }
         }
         return result;
     }
@@ -763,6 +780,10 @@ public class DefaultJobManager
         final List<JobEvent> jobs;
         synchronized ( this.allEvents ) {
             jobs = new ArrayList<JobEvent>(this.allEvents.values());
+            this.allEvents.clear();
+        }
+        synchronized ( this.allEventsByTopic ) {
+            this.allEventsByTopic.clear();
         }
         for(final JobEvent job : jobs) {
             job.restart();
