@@ -24,10 +24,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -105,6 +107,23 @@ public class CreateUserServlet extends AbstractUserPostServlet {
     private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
 
     /**
+     * The name of the configuration parameter providing the 
+     * 'User administrator' group name.
+     *
+     * @scr.property valueRef="DEFAULT_USER_ADMIN_GROUP_NAME"
+     */
+    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+
+    /**
+     * The default 'User administrator' group name
+     *
+     * @see #PAR_USER_ADMIN_GROUP_NAME
+     */
+    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
+ 
+    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
+    
+    /**
      * The JCR Repository we access to resolve resources
      *
      * @scr.reference
@@ -155,6 +174,10 @@ public class CreateUserServlet extends AbstractUserPostServlet {
         } else {
             selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
         }
+        
+        this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
+        		DEFAULT_USER_ADMIN_GROUP_NAME);
+        log.info("User Admin Group Name {}", this.userAdminGroupName);
     }
 
     /*
@@ -176,6 +199,18 @@ public class CreateUserServlet extends AbstractUserPostServlet {
             UserManager um = AccessControlUtil.getUserManager(currentSession);
             User currentUser = (User) um.getAuthorizable(currentSession.getUserID());
             administrator = currentUser.isAdmin();
+            
+            if (!administrator) {
+				//check if the user is a member of the 'User administrator' group
+				Authorizable userAdmin = um.getAuthorizable(this.userAdminGroupName);
+				if (userAdmin instanceof Group) {
+					boolean isMember = ((Group)userAdmin).isMember(currentUser);
+					if (isMember) {
+						administrator = true;
+					}
+				}
+            	
+            }
         } catch ( Exception ex ) {
             log.warn("Failed to determin if the user is an admin, assuming not. Cause: "+ex.getMessage());
             administrator = false;

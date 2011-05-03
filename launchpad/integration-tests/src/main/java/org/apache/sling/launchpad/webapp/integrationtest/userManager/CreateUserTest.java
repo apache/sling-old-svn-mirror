@@ -197,5 +197,26 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		//make sure the json response can be parsed as a JSON object
 		JSONObject jsonObj = new JSONObject(json);
 		assertNotNull(jsonObj);
-	}	
+	}
+	
+	/**
+	 * Test for SLING-2070 to verify that members of the UserAdmin group
+	 * can create users.
+	 */
+	public void testCreateUserAsUserAdminGroupMember() throws IOException {
+		testUserId = createTestUser();
+		addUserToUserAdminGroup(testUserId);
+		
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
+
+		String userId = "testUser" + random.nextInt();
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":name", userId));
+		postParams.add(new NameValuePair("pwd", "testPwd"));
+		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
+
+		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+	}
+	
 }
