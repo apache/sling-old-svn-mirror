@@ -22,7 +22,6 @@ var canEdit = privilegesInfo.canUpdateProperties(currentSession, authorizable.ge
 var canRemove = privilegesInfo.canRemove(currentSession, authorizable.getID()); 
 var canUpdateMembers = privilegesInfo.canUpdateGroupMembers(currentSession, authorizable.getID());
 var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
-var isMe = authorizable.getID().equals(request.getRemoteUser());
 
 var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
 
@@ -158,7 +157,30 @@ function displayName(path) {
 </div>
 <% } /*endif(canRemove) */ %>
 
-<% if (isMe) { %>
+<% 
+var canChangePwd = false;
+if (canEdit) {
+	var isMe = authorizable.getID().equals(request.getRemoteUser());
+	if (isMe) {
+	    //a user can always change their own password
+	    canChangePwd = true;
+	} else {
+		if ("admin".equals(request.getRemoteUser())) {
+			canChangePwd = true;
+		} else {
+	        //if the current user is a member of the UserAdmin group, then allow changing the password of other users.
+	        var currentUserRes = request.getResourceResolver().resolve("/system/userManager/user/" + request.getRemoteUser());  
+	        var currentUserAuthorizable = currentUserRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Authorizable);
+
+	        var userAdminRes = request.getResourceResolver().resolve("/system/userManager/group/UserAdmin");
+	        var group = userAdminRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Group);
+	        if (group) {
+	            canChangePwd = group.isMember(currentUserAuthorizable);
+	        }
+		}
+	}
+}
+if (canChangePwd) { %>
 <div class="ui-widget ui-widget-content ui-corner-all usermgmt-body" id="update-password-body" >
     <h3 class="ui-widget-header ui-corner-all usermgmt-header"><%=rb.getString("header.change.password")%></h3>
     
@@ -177,11 +199,12 @@ function displayName(path) {
         <fieldset>
             <input type="hidden" value="UTF-8" name="_charset_" />
             <input id="pwdRedirect" type="hidden" name=":redirect" value="<%=request.contextPath%><%=resource.path %>.html" />
-
+            <% if (isMe) { %>
             <div class="prop-line ui-helper-clearfix">
                 <label for="oldPwd" accesskey="o"><%=propLabel("oldPwd")%>:</label>
                 <input id="oldPwd" type="password" name="oldPwd" value=''/>
             </div>
+            <% } %>
 
             <div class="prop-line ui-helper-clearfix">
                 <label for="newPwd" accesskey="p"><%=propLabel("newPwd")%>:</label>                
@@ -200,4 +223,4 @@ function displayName(path) {
         </fieldset>
     </form>
 </div>
-<% } /*endif (isme)*/ %>
+<% } /*endif (canChangePwd)*/ %>

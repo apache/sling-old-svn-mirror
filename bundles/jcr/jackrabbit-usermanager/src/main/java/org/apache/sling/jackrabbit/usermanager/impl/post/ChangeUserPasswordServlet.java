@@ -17,6 +17,7 @@
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.lang.reflect.Method;
+import java.util.Dictionary;
 import java.util.List;
 
 import javax.jcr.Credentials;
@@ -24,12 +25,19 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -45,7 +53,7 @@ import org.apache.sling.servlets.post.Modification;
  * <h4>Post Parameters</h4>
  * <dl>
  * <dt>oldPwd</dt>
- * <dd>The current password for the user (required)</dd>
+ * <dd>The current password for the user (required for non-administrators)</dd>
  * <dt>newPwd</dt>
  * <dd>The new password for the user (required)</dd>
  * <dt>newPwdConfirm</dt>
@@ -63,13 +71,13 @@ import org.apache.sling.servlets.post.Modification;
  * <h4>Example</h4>
  *
  * <code>
- * curl -FoldPwd=oldpassword -FnewPwd=newpassword =FnewPwdConfirm=newpassword http://localhost:8080/system/userManager/user/ieb.changePassword.html
+ * curl -FoldPwd=oldpassword -FnewPwd=newpassword -FnewPwdConfirm=newpassword http://localhost:8080/system/userManager/user/ieb.changePassword.html
  * </code>
  *
  * <h4>Notes</h4>
  *
  *
- * @scr.component metatype="no" immediate="true"
+ * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
  * @scr.property name="sling.servlet.methods" value="POST"
@@ -78,6 +86,46 @@ import org.apache.sling.servlets.post.Modification;
 public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
     private static final long serialVersionUID = 1923614318474654502L;
 
+    /**
+     * default log
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
+     * The name of the configuration parameter providing the 
+     * name of the group whose members are allowed to reset the password
+     * of a user without the 'oldPwd' value.
+     *
+     * @scr.property valueRef="DEFAULT_USER_ADMIN_GROUP_NAME"
+     */
+    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+
+    /**
+     * The default 'User administrator' group name
+     *
+     * @see #PAR_USER_ADMIN_GROUP_NAME
+     */
+    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
+ 
+    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
+    
+    // ---------- SCR integration ---------------------------------------------
+
+    /**
+     * Activates this component.
+     *
+     * @param componentContext The OSGi <code>ComponentContext</code> of this
+     *            component.
+     */
+    protected void activate(ComponentContext componentContext) {
+        super.activate(componentContext);
+        Dictionary<?, ?> props = componentContext.getProperties();
+        
+        this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
+        		DEFAULT_USER_ADMIN_GROUP_NAME);
+        log.info("User Admin Group Name {}", this.userAdminGroupName);
+    }
+    
     /*
      * (non-Javadoc)
      * @see
@@ -111,10 +159,37 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
             throw new RepositoryException("JCR Session not found");
         }
 
+    	//SLING-2069: if the current user is an administrator, then a missing oldPwd is ok,
+    	// otherwise the oldPwd must be supplied.
+        boolean administrator = false;
+
         // check that the submitted parameter values have valid values.
         String oldPwd = request.getParameter("oldPwd");
         if (oldPwd == null || oldPwd.length() == 0) {
-            throw new RepositoryException("Old Password was not submitted");
+            try {
+                Session currentSession = request.getResourceResolver().adaptTo(Session.class);
+                UserManager um = AccessControlUtil.getUserManager(currentSession);
+                User currentUser = (User) um.getAuthorizable(currentSession.getUserID());
+                administrator = currentUser.isAdmin();
+                
+                if (!administrator) {
+    				//check if the user is a member of the 'User administrator' group
+    				Authorizable userAdmin = um.getAuthorizable(this.userAdminGroupName);
+    				if (userAdmin instanceof Group) {
+    					boolean isMember = ((Group)userAdmin).isMember(currentUser);
+    					if (isMember) {
+    						administrator = true;
+    					}
+    				}
+                	
+                }
+            } catch ( Exception ex ) {
+                log.warn("Failed to determine if the user is an admin, assuming not. Cause: "+ex.getMessage());
+                administrator = false;
+            }
+            if (!administrator) {
+            	throw new RepositoryException("Old Password was not submitted");
+            }
         }
         String newPwd = request.getParameter("newPwd");
         if (newPwd == null || newPwd.length() == 0) {
@@ -126,8 +201,10 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
                 "New Password does not match the confirmation password");
         }
 
-        // verify old password
-        checkPassword(authorizable, oldPwd);
+        if (oldPwd != null && oldPwd.length() > 0) {
+            // verify old password
+            checkPassword(authorizable, oldPwd);
+        }
 
         try {
             ((User) authorizable).changePassword(digestPassword(newPwd));
