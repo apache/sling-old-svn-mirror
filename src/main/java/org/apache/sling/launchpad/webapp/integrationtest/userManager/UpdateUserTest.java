@@ -131,4 +131,41 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 		JSONObject jsonObj = new JSONObject(json);
 		assertNotNull(jsonObj);
 	}	
+	
+
+	/**
+	 * Test for SLING-2069
+	 * @throws IOException
+	 */
+	public void testChangeUserPasswordAsAdministratorWithoutOldPwd() throws IOException {
+		testUserId = createTestUser();
+		
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
+		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
+		
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+	}
+
+	/**
+	 * Test for SLING-2069
+	 * @throws IOException
+	 */
+	public void testChangeUserPasswordAsUserAdminMemberWithoutOldPwd() throws IOException {
+		testUserId = createTestUser();
+		addUserToUserAdminGroup(testUserId);
+		
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
+
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
+		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
+		
+		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+	}
+	
 }
