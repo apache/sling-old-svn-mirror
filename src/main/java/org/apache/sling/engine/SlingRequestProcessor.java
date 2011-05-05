@@ -47,7 +47,7 @@ public interface SlingRequestProcessor {
      *
      * @param request Usually a "synthetic" request, i.e. not supplied by
      *            servlet container
-     * @param resource Usually a "synthetic" response, i.e. not supplied by
+     * @param response Usually a "synthetic" response, i.e. not supplied by
      *            servlet container
      * @param resourceResolver The <code>ResourceResolver</code> used for the
      *            Sling request processing.
@@ -58,7 +58,7 @@ public interface SlingRequestProcessor {
      * @throws ServletException if another servlet related problem occurrs
      */
     void processRequest(HttpServletRequest request,
-            HttpServletResponse resource, ResourceResolver resourceResolver)
+            HttpServletResponse response, ResourceResolver resourceResolver)
             throws ServletException, IOException;
 
 }
