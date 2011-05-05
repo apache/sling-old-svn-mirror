@@ -406,7 +406,10 @@ public class SlingServletContext implements ServletContext {
     public ServletContext getContext(String uripath) {
         ServletContext delegatee = getServletContext();
         if (delegatee != null) {
-            return delegatee.getContext(uripath);
+            ServletContext otherContext = delegatee.getContext(uripath);
+            if (otherContext != null && otherContext != delegatee) {
+                return new ExternalServletContextWrapper(otherContext);
+            }
         }
 
         return null;
