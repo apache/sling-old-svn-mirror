@@ -59,6 +59,22 @@ function displayName(path) {
     }
     return value;
 }
+
+var isAdmin = false;
+if ("admin".equals(request.getRemoteUser())) {
+    isAdmin = true;
+} else {
+    //if the current user is a member of the UserAdmin group, then allow changing the password of other users.
+    var currentUserRes = request.getResourceResolver().resolve("/system/userManager/user/" + request.getRemoteUser());  
+    var currentUserAuthorizable = currentUserRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Authorizable);
+
+    var userAdminRes = request.getResourceResolver().resolve("/system/userManager/group/UserAdmin");
+    var group = userAdminRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Group);
+    if (group) {
+    	isAdmin = group.isMember(currentUserAuthorizable);
+    }
+}
+
 %>
 <div class="ui-widget ui-widget-content ui-corner-all usermgmt-body" id="update-user-body" >
     <h3 class="ui-widget-header ui-corner-all usermgmt-header"><%=format(canEdit ? "header.update.user" : "header.view.user", authorizable.getID())%></h3>
@@ -78,6 +94,21 @@ function displayName(path) {
         <fieldset>
             <input type="hidden" value="UTF-8" name="_charset_" />
             <input id="redirect" type="hidden" name=":redirect" value="<%=request.contextPath%><%=resource.path %>.html" />
+
+            <%-- Enabled/Disabled Status --%>
+            <% if (isAdmin) { %>
+            <div class="prop-line ui-helper-clearfix">
+                <label><%=propLabel("loginEnabled")%>:</label>
+                <span id="loginStatusInput">
+	                <label for="enabled"><input id="enabled" type="radio" name=":disabled" value='false' <%=authorizable.isDisabled() ? "" : "checked='checked'" %>/> <%=propLabel("loginEnabled.yes")%></label>
+	                <label for="disabled"><input id="disabled" type="radio" name=":disabled" value='true' <%=authorizable.isDisabled() ? "checked='checked'" : "" %>/> <%=propLabel("loginEnabled.no")%></label>
+                </span>
+                <span id="disabledReasonPanel" style="display:none">
+                    <label for="disabledReason"><%=propLabel("loginDisabled.reason")%>:</label>
+                    <input id="disabledReason>" type="text" name=":disabledReason" value='<%=authorizable.getDisabledReason()== null ? "" : authorizable.getDisabledReason()%>'/>
+                </span>
+            </div>
+            <% } /*endif(isAdmin) */ %>
 
             <%-- Member Of --%>
             <% var key = "memberOf"; 
@@ -161,23 +192,9 @@ function displayName(path) {
 var canChangePwd = false;
 if (canEdit) {
 	var isMe = authorizable.getID().equals(request.getRemoteUser());
-	if (isMe) {
+	if (isMe || isAdmin) {
 	    //a user can always change their own password
 	    canChangePwd = true;
-	} else {
-		if ("admin".equals(request.getRemoteUser())) {
-			canChangePwd = true;
-		} else {
-	        //if the current user is a member of the UserAdmin group, then allow changing the password of other users.
-	        var currentUserRes = request.getResourceResolver().resolve("/system/userManager/user/" + request.getRemoteUser());  
-	        var currentUserAuthorizable = currentUserRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Authorizable);
-
-	        var userAdminRes = request.getResourceResolver().resolve("/system/userManager/group/UserAdmin");
-	        var group = userAdminRes.adaptTo(Packages.org.apache.jackrabbit.api.security.user.Group);
-	        if (group) {
-	            canChangePwd = group.isMember(currentUserAuthorizable);
-	        }
-		}
 	}
 }
 if (canChangePwd) { %>

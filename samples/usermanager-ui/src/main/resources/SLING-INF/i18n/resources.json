@@ -74,6 +74,27 @@
             "sling:message": "View Group: {0}"
         },            
         
+        "prop.label.loginEnabled": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.loginEnabled",
+            "sling:message": "Login Enabled"
+        },
+        "prop.label.loginEnabled.yes": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.loginEnabled.yes",
+            "sling:message": "Yes"
+        },
+        "prop.label.loginEnabled.no": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.loginEnabled.no",
+            "sling:message": "No"
+        },
+        "prop.label.loginDisabled.reason": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "prop.label.loginDisabled.reason",
+            "sling:message": "Reason"
+        },        
+        
         "prop.label.email": {
             "jcr:primaryType": "sling:MessageEntry",
             "sling:key": "prop.label.email",

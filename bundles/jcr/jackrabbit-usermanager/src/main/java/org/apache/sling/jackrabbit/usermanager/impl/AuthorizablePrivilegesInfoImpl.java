@@ -243,15 +243,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 						return true;
 					}
 				}
-				
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
 			}
 		} catch (RepositoryException e) {
 			log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), groupId);

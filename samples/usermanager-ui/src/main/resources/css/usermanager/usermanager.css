@@ -396,6 +396,30 @@ img, a img
     margin-left: 10px;
 }
 
+#loginStatusInput label,
+#loginStatusInput input
+{
+    width: auto;
+    float: none;
+}
+
+#loginStatusInput
+{
+	width: 75%;
+}
+
+#disabledReasonPanel label 
+{
+    width: auto;
+	margin-left: 15px;
+	float: none;
+}
+
+#disabledReasonPanel input 
+{
+	width: 57%;
+}
+
 .prop-line 
 {
     margin-bottom: 5px;

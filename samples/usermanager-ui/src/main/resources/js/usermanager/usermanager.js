@@ -760,22 +760,24 @@ UserManager.Group.Update = {
 
         //attach an autocomplete handler to the member name field in
         // the add member dialog
-        $( "#memberName" ).autocomplete({
-            source: UserManager.contextPath + "/system/userManager.autocomplete.json",
-            minLength: 1,
-            select: function(event, ui) {
-                var item = ui.item;
-                $("#memberName")
-                    .val(item.value)
-                    .data("item", item);
-            }
-        })
-        .data( "autocomplete" )._renderItem = function( ul, item ) {
-            return $( "<li></li>" )
-                .data( "item.autocomplete", item )
-                .append( "<a>" + (item.label ? (item.label + " (" + item.value + ")") : item.value) + "</a>" )
-                .appendTo( ul );
-        };        
+        if ($("#memberName").length > 0) {
+            $( "#memberName" ).autocomplete({
+                source: UserManager.contextPath + "/system/userManager.autocomplete.json",
+                minLength: 1,
+                select: function(event, ui) {
+                    var item = ui.item;
+                    $("#memberName")
+                        .val(item.value)
+                        .data("item", item);
+                }
+            })
+            .data( "autocomplete" )._renderItem = function( ul, item ) {
+                return $( "<li></li>" )
+                    .data( "item.autocomplete", item )
+                    .append( "<a>" + (item.label ? (item.label + " (" + item.value + ")") : item.value) + "</a>" )
+                    .appendTo( ul );
+            };        
+        }
     }
 };
 
@@ -874,6 +876,22 @@ UserManager.User.Update = {
             messages: {
             }*/
         });
+        
+        var disabledRadioFn = function (e) {
+    	   var disabled = $('input:radio[name=":disabled"]:checked').val();
+    	   if (disabled == "true") {
+    		   $("#disabledReasonPanel").show();
+    	   } else {
+    		   $("#disabledReasonPanel").hide();
+    	   }
+           return false;
+       };
+       
+       /*
+        * Attach event handlers to the status radio buttons
+        */
+       $('input:radio[name=":disabled"]').change(disabledRadioFn);
+       disabledRadioFn();
         
         //hover states on the remove member icons
         $('.remove-property').hover(

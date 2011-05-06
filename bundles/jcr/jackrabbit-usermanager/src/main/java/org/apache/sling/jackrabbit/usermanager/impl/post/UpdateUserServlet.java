@@ -22,14 +22,14 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 /**
  * <p>
@@ -91,10 +91,10 @@ public class UpdateUserServlet extends AbstractUserPostServlet {
     protected void handleOperation(SlingHttpServletRequest request,
             HtmlResponse htmlResponse, List<Modification> changes)
             throws RepositoryException {
-        Authorizable authorizable = null;
+        User authorizable = null;
         Resource resource = request.getResource();
         if (resource != null) {
-            authorizable = resource.adaptTo(Authorizable.class);
+            authorizable = resource.adaptTo(User.class);
         }
 
         // check that the group was located.
@@ -119,7 +119,21 @@ public class UpdateUserServlet extends AbstractUserPostServlet {
 
             // write content from form
             writeContent(session, authorizable, reqProperties, changes);
-
+            
+            //SLING-2072 set the user as enabled or disabled if the request
+            // has supplied the relev
+            String disabledParam = request.getParameter(":disabled");
+            if ("true".equalsIgnoreCase(disabledParam)) {
+            	//set the user as disabled
+            	String disabledReason = request.getParameter(":disabledReason");
+            	if (disabledReason == null) {
+            		disabledReason = "";
+            	}
+            	authorizable.disable(disabledReason);
+            } else if ("false".equalsIgnoreCase(disabledParam)) {
+            	//re-enable a disabled user
+            	authorizable.disable(null);
+            }
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to update user.", re);
         }
