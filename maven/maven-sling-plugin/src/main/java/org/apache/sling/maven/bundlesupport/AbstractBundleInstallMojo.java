@@ -278,9 +278,13 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             if (status == HttpStatus.SC_OK) {
                 getLog().info("Bundle installed");
             } else {
-                getLog().error(
-                    "Installation failed, cause: "
-                        + HttpStatus.getStatusText(status));
+                String msg = "Installation failed, cause: "
+                    + HttpStatus.getStatusText(status);
+                if (failOnError) {
+                    throw new MojoExecutionException(msg);
+                } else {
+                    getLog().error(msg);
+                }
             }
         } catch (Exception ex) {
             throw new MojoExecutionException("Installation on " + targetURL
@@ -301,9 +305,13 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             if (status >= 200 && status < 300) {
                 getLog().info("Bundle installed");
             } else {
-                getLog().error(
-                    "Installation failed, cause: "
-                        + HttpStatus.getStatusText(status));
+                String msg = "Installation failed, cause: "
+                    + HttpStatus.getStatusText(status);
+                if (failOnError) {
+                    throw new MojoExecutionException(msg);
+                } else {
+                    getLog().error(msg);
+                }
             }
         } catch (Exception ex) {
             throw new MojoExecutionException("Installation on " + targetURL
