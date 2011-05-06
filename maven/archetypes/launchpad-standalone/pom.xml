@@ -20,7 +20,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
     <artifactId>sling-launchpad-standalone-archetype</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>maven-archetype</packaging>
     <name>Sling Launchpad Standalone Archetype</name>
     <description>Maven archetype for Sling Launchpad Standalone applications</description>
@@ -40,4 +40,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-launchpad-standalone-archetype-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-launchpad-standalone-archetype-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/sling-launchpad-standalone-archetype-1.0.0</url>
+  </scm>
 </project>
