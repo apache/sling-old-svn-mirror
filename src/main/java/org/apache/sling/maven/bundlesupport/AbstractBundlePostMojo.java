@@ -28,6 +28,15 @@ import org.apache.maven.plugin.AbstractMojo;
 abstract class AbstractBundlePostMojo extends AbstractMojo {
 
     /**
+     * Determines whether or not to fail the build if
+     * the HTTP POST or PUT returns an non-OK response code.
+     *
+     * @parameter expression="${sling.failOnError}" default-value="false"
+     * @required
+     */
+    protected boolean failOnError;
+
+    /**
      * Returns the symbolic name of the given bundle. If the
      * <code>jarFile</code> does not contain a manifest with a
      * <code>Bundle-SymbolicName</code> header <code>null</code> is

@@ -114,9 +114,13 @@ abstract class AbstractBundleDeployMojo extends AbstractBundlePostMojo {
             if (status == HttpStatus.SC_OK) {
                 getLog().info("Bundle deployed");
             } else {
-                this.getLog().error(
-                    "Deployment failed, cause: "
-                        + HttpStatus.getStatusText(status));
+                String msg = "Deployment failed, cause: "
+                    + HttpStatus.getStatusText(status);
+                if (failOnError) {
+                    throw new MojoExecutionException(msg);
+                } else {
+                    getLog().error(msg);
+                }
             }
         } catch (Exception ex) {
             throw new MojoExecutionException("Deployment on " + targetURL
