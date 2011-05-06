@@ -143,7 +143,7 @@ class ExternalServletContextWrapper implements ServletContext {
         return delegate.getServletContextName();
     }
 
-    class RequestDispatcherWrapper implements RequestDispatcher {
+    static class RequestDispatcherWrapper implements RequestDispatcher {
 
         private final RequestDispatcher delegate;
 
@@ -161,7 +161,11 @@ class ExternalServletContextWrapper implements ServletContext {
             delegate.include(unwrapServletRequest(request), unwrapServletResponse(response));
         }
 
-        private ServletRequest unwrapServletRequest(ServletRequest request) {
+        RequestDispatcher getDelegate() {
+            return delegate;
+        }
+
+        static ServletRequest unwrapServletRequest(ServletRequest request) {
             ServletRequest lastRequest = request;
             while (request != null) {
                 if (request instanceof SlingHttpServletRequestImpl) {
@@ -176,12 +180,12 @@ class ExternalServletContextWrapper implements ServletContext {
             return lastRequest;
         }
 
-        private ServletResponse unwrapServletResponse(ServletResponse response) {
+        static ServletResponse unwrapServletResponse(ServletResponse response) {
             ServletResponse lastResponse = response;
             while (response != null) {
-                if (response instanceof SlingHttpServletRequestImpl) {
+                if (response instanceof SlingHttpServletResponseImpl) {
                     return ((SlingHttpServletResponseImpl) response).getResponse();
-                } else if (response instanceof ServletRequestWrapper) {
+                } else if (response instanceof ServletResponseWrapper) {
                     lastResponse = response;
                     response = ((ServletResponseWrapper) response).getResponse();
                 } else {
