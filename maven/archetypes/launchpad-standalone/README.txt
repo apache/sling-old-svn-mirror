@@ -1,6 +1,6 @@
 Sling Servlet Archetype
 
-Maven archetype for Sling Servlets.
+Maven archetype for Sling Launchpad Standalone applications.
 
 Getting Started
 ===============
@@ -21,7 +21,7 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/servlet
+    svn checkout http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/launchpad-standalone
 
 See the Subversion documentation for other source control features.
 

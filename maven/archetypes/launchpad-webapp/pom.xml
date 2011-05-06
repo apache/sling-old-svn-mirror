@@ -24,6 +24,13 @@
     <packaging>maven-archetype</packaging>
     <name>Sling Launchpad Webapp Archetype</name>
     <description>Maven archetype for Sling Launchpad Webapp applications</description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/launchpad-webapp</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/launchpad-webapp</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/maven/archetypes/launchpad-webapp</url>
+    </scm>
+
     <build>
         <extensions>
             <extension>
