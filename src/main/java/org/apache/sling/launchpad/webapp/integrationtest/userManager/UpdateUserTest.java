@@ -23,6 +23,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
@@ -167,5 +168,46 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 	}
-	
+
+	/**
+	 * Test for SLING-2072
+	 * @throws IOException
+	 */
+	public void testDisableUser() throws IOException {
+		testUserId = createTestUser();
+
+		//login before the user is disabled, so login should work
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("j_username", testUserId));
+        params.add(new NameValuePair("j_password", "testPwd"));
+        params.add(new NameValuePair("j_validate", "true"));
+        HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_OK, params, null);
+        assertNull(post.getResponseHeader("X-Reason"));
+		httpClient.getState().clearCredentials();
+		httpClient.getState().clearCookies();
+
+        //update the user to disable it
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".update.html";
+		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":disabled", "true"));
+		postParams.add(new NameValuePair(":disabledReason", "Just Testing"));
+		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+		
+		//the user is now disabled, so login should fail
+        post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN, params, null);
+        assertNotNull(post.getResponseHeader("X-Reason"));
+		httpClient.getState().clearCredentials();
+		httpClient.getState().clearCookies();
+
+		//enable the user again
+		postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair(":disabled", "false"));
+		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+
+		//login after the user is enabled, so login should work
+        post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_OK, params, null);
+        assertNull(post.getResponseHeader("X-Reason"));
+		httpClient.getState().clearCredentials();
+		httpClient.getState().clearCookies();
+	}
 }
