@@ -18,8 +18,11 @@
  */
 package org.apache.sling.i18n.impl;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -34,6 +37,7 @@ import javax.jcr.observation.ObservationManager;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -43,6 +47,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.i18n.ResourceBundleProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +72,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
+    
+    @Property(value = "en", unbounded = PropertyUnbounded.ARRAY)
+    private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -106,6 +115,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * {@link #getRootResourceBundle()}.
      */
     private ResourceBundle rootResourceBundle;
+    
+    private BundleContext bundleContext;
+    
+    private List<ServiceRegistration> bundleServiceRegistrations;
+    
+    private String[] preloadBundles;
 
     // ---------- ResourceBundleProvider ---------------------------------------
 
@@ -156,7 +171,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      */
     public void onEvent(EventIterator events) {
         log.debug("onEvent: Resource changes, removing cached ResourceBundles");
-        resourceBundleCache.clear();
+        clearCache();
+        preloadBundles();
     }
 
     // ---------- SCR Integration ----------------------------------------------
@@ -182,6 +198,17 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         String localeString = OsgiUtil.toString(props.get(PROP_DEFAULT_LOCALE),
             null);
         this.defaultLocale = toLocale(localeString);
+        this.preloadBundles = OsgiUtil.toStringArray(props.get(PROP_PRELOAD_BUNDLES));
+
+        this.bundleContext = context.getBundleContext();
+        this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
+        if (this.resourceResolverFactory != null) {
+            preloadBundles();
+        }
+    }
+    
+    protected void deactivate() {
+        clearCache();
     }
 
     /**
@@ -194,6 +221,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             releaseRepository();
         }
         this.resourceResolverFactory = resourceResolverFactory;
+        if (this.bundleContext != null) {
+            preloadBundles();
+        }
     }
 
     /**
@@ -236,6 +266,16 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                     "getResourceBundleInternal({}, {}): duplicate creation, using existing ResourceBundle",
                     new Object[] { baseName, locale
                             });
+            } else {
+                synchronized (this) {
+                    Dictionary serviceProps = new Hashtable();
+                    if (key.baseName != null) {
+                        serviceProps.put("baseName", key.baseName);
+                    }
+                    serviceProps.put("locale", key.locale.toString());
+                    ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(), resourceBundle, serviceProps);
+                    bundleServiceRegistrations.add(serviceReg);
+                }
             }
         }
 
@@ -375,6 +415,33 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
         return resourceResolver;
     }
+    
+    private void clearCache() {
+        resourceBundleCache.clear();
+        resourceBundleCache.clear();
+        synchronized (this) {
+            for (ServiceRegistration serviceReg : bundleServiceRegistrations) {
+                serviceReg.unregister();
+            }
+            bundleServiceRegistrations.clear();
+        }
+    }
+    
+    private void preloadBundles() {
+        if (preloadBundles != null) {
+            for (String bundleSpec : preloadBundles) {
+                int idx = bundleSpec.indexOf("|");
+                if (idx > -1) {
+                    String baseName = bundleSpec.substring(0, idx);
+                    Locale locale = toLocale(bundleSpec.substring(idx + 1));
+                    getResourceBundle(baseName, locale);
+                } else {
+                    Locale locale = toLocale(bundleSpec);
+                    getResourceBundle(locale);
+                }
+            }
+        }
+    }
 
     /**
      * Logs out from the repository and clears the resource bundle cache.
@@ -383,7 +450,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         ResourceResolver resolver = this.resourceResolver;
 
         this.resourceResolver = null;
-        this.resourceBundleCache.clear();
+        clearCache();
 
         if (resolver != null) {
 
