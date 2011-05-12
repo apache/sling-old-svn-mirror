@@ -38,13 +38,15 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final Logger log = LoggerFactory.getLogger(JcrResourceBundle.class);
 
-    private static final String JCR_PATH = "jcr:path";
+    static final String JCR_PATH = "jcr:path";
 
-    private static final String PROP_KEY = "sling:key";
+    static final String PROP_KEY = "sling:key";
 
-    private static final String PROP_VALUE = "sling:message";
+    static final String PROP_VALUE = "sling:message";
 
-    private static final String PROP_BASENAME = "sling:basename";
+    static final String PROP_BASENAME = "sling:basename";
+
+    static final String PROP_LANGUAGE = "jcr:language";
 
     private final HashMap<String, Object> resources;
 
