@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,10 +35,10 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
+import javax.jcr.query.Query;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -52,6 +53,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.i18n.impl.JcrResourceBundle.*;
 
 /**
  * The <code>JcrResourceBundleProvider</code> implements the
@@ -72,9 +75,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
-    
-    @Property(value = "en", unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -119,8 +119,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     private BundleContext bundleContext;
     
     private List<ServiceRegistration> bundleServiceRegistrations;
-    
-    private String[] preloadBundles;
 
     // ---------- ResourceBundleProvider ---------------------------------------
 
@@ -198,7 +196,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         String localeString = OsgiUtil.toString(props.get(PROP_DEFAULT_LOCALE),
             null);
         this.defaultLocale = toLocale(localeString);
-        this.preloadBundles = OsgiUtil.toStringArray(props.get(PROP_PRELOAD_BUNDLES));
 
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
@@ -268,7 +265,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                             });
             } else {
                 synchronized (this) {
-                    Dictionary serviceProps = new Hashtable();
+                    Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
                     if (key.baseName != null) {
                         serviceProps.put("baseName", key.baseName);
                     }
@@ -418,7 +415,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     
     private void clearCache() {
         resourceBundleCache.clear();
-        resourceBundleCache.clear();
         synchronized (this) {
             for (ServiceRegistration serviceReg : bundleServiceRegistrations) {
                 serviceReg.unregister();
@@ -428,15 +424,16 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     }
     
     private void preloadBundles() {
-        if (preloadBundles != null) {
-            for (String bundleSpec : preloadBundles) {
-                int idx = bundleSpec.indexOf("|");
-                if (idx > -1) {
-                    String baseName = bundleSpec.substring(0, idx);
-                    Locale locale = toLocale(bundleSpec.substring(idx + 1));
-                    getResourceBundle(baseName, locale);
+        @SuppressWarnings("deprecation")
+        Iterator<Map<String, Object>> bundles = getResourceResolver().queryResources(
+                "//element(*,mix:language)", Query.XPATH);
+        while (bundles.hasNext()) {
+            Map<String,Object> bundle = bundles.next();
+            if (bundle.containsKey(PROP_LANGUAGE)) {
+                Locale locale = toLocale(bundle.get(PROP_LANGUAGE).toString());
+                if (bundle.containsKey(PROP_BASENAME)) {
+                    getResourceBundle(bundle.get(PROP_BASENAME).toString(), locale);
                 } else {
-                    Locale locale = toLocale(bundleSpec);
                     getResourceBundle(locale);
                 }
             }
