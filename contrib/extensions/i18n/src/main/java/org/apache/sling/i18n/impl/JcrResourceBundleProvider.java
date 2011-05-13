@@ -21,6 +21,7 @@ package org.apache.sling.i18n.impl;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.RepositoryException;
@@ -67,6 +69,8 @@ import static org.apache.sling.i18n.impl.JcrResourceBundle.*;
 public class JcrResourceBundleProvider implements ResourceBundleProvider,
         EventListener {
 
+    private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
+    
     @Property(value = "")
     private static final String PROP_USER = "user";
 
@@ -75,6 +79,10 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     @Property(value = "en")
     private static final String PROP_DEFAULT_LOCALE = "locale.default";
+
+    @Property(boolValue = DEFAULT_PRELOAD_BUNDLES)
+    private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
+
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -119,6 +127,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     private BundleContext bundleContext;
     
     private List<ServiceRegistration> bundleServiceRegistrations;
+
+    private boolean preloadBundles;
 
     // ---------- ResourceBundleProvider ---------------------------------------
 
@@ -196,6 +206,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         String localeString = OsgiUtil.toString(props.get(PROP_DEFAULT_LOCALE),
             null);
         this.defaultLocale = toLocale(localeString);
+        this.preloadBundles = OsgiUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
 
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
@@ -424,18 +435,24 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     }
     
     private void preloadBundles() {
-        @SuppressWarnings("deprecation")
-        Iterator<Map<String, Object>> bundles = getResourceResolver().queryResources(
-                "//element(*,mix:language)", Query.XPATH);
-        while (bundles.hasNext()) {
-            Map<String,Object> bundle = bundles.next();
-            if (bundle.containsKey(PROP_LANGUAGE)) {
-                Locale locale = toLocale(bundle.get(PROP_LANGUAGE).toString());
-                if (bundle.containsKey(PROP_BASENAME)) {
-                    getResourceBundle(bundle.get(PROP_BASENAME).toString(), locale);
-                } else {
-                    getResourceBundle(locale);
-                }
+        if (preloadBundles) {
+            @SuppressWarnings("deprecation")
+            Iterator<Map<String, Object>> bundles = getResourceResolver().queryResources(
+                    "//element(*,mix:language)", Query.XPATH);
+            Set<Key> usedKeys = new HashSet<Key>();
+            while (bundles.hasNext()) {
+                Map<String,Object> bundle = bundles.next();
+                if (bundle.containsKey(PROP_LANGUAGE)) {
+                    Locale locale = toLocale(bundle.get(PROP_LANGUAGE).toString());
+                    String baseName = null;
+                    if (bundle.containsKey(PROP_BASENAME)) {
+                        baseName = bundle.get(PROP_BASENAME).toString();
+                    }
+                    Key key = new Key(baseName, locale);
+                    if (usedKeys.add(key)) {
+                        getResourceBundle(baseName, locale);
+                    }
+                }   
             }
         }
     }
