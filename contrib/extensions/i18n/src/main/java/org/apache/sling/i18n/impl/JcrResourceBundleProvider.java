@@ -211,7 +211,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
         if (this.resourceResolverFactory != null) {
-            preloadBundles();
+            final Thread t = new Thread() {
+                public void run() {
+                    preloadBundles();
+                }
+            };
+            t.start();
         }
     }
     
