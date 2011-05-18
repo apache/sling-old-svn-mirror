@@ -55,7 +55,8 @@ public class BundleBundleVersionInfo extends BundleVersionInfo<Bundle> {
     }
 
     public Version getVersion() {
-        return (Version)source.getHeaders().get(Constants.BUNDLE_VERSION);
+        final String versionInfo = (String)source.getHeaders().get(Constants.BUNDLE_VERSION);
+        return (versionInfo == null ? null : new Version(versionInfo));
     }
 
     public boolean isBundle() {
