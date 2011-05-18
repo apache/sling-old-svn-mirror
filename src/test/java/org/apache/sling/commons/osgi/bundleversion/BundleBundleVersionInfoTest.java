@@ -40,7 +40,7 @@ import org.osgi.framework.Version;
  */
 public class BundleBundleVersionInfoTest {
     protected Mockery context;
-    
+
     @Before
     public void setUp() {
         context = new JUnit4Mockery();
@@ -48,11 +48,11 @@ public class BundleBundleVersionInfoTest {
 
     private Bundle getMockBundle(final String symbolicName, final Version v, final long lastModified) {
         final Dictionary<String, Object> h = new Hashtable<String, Object>();
-        h.put(Constants.BUNDLE_VERSION, v);
+        h.put(Constants.BUNDLE_VERSION, v.toString());
         if(lastModified > 0) {
             h.put(BundleVersionInfo.BND_LAST_MODIFIED, String.valueOf(lastModified));
         }
-        
+
         final Bundle b = context.mock(Bundle.class);
         context.checking(new Expectations() {{
             allowing(b).getHeaders();
@@ -64,14 +64,14 @@ public class BundleBundleVersionInfoTest {
         }});
         return b;
     }
-    
+
     @Test
     public void testVersionInfo() {
         final String name = "some.bundle";
         final Version version = new Version("1.0.4");
         final long lastMod = 1234L;
-        final Bundle b = getMockBundle(name, version, lastMod); 
-        
+        final Bundle b = getMockBundle(name, version, lastMod);
+
         BundleVersionInfo<?> vi = new BundleBundleVersionInfo(b);
         assertEquals("Symbolic name matches", name, vi.getBundleSymbolicName());
         assertEquals("Version matches", version, vi.getVersion());
@@ -80,14 +80,14 @@ public class BundleBundleVersionInfoTest {
         assertEquals("Last-Modified matches", lastMod, vi.getBundleLastModified());
         assertTrue("Bundle is stored as source", vi.getSource() == b);
     }
-    
+
     @Test
     public void testSnapshot() {
         final String name = "some.bundle";
         final Version version = new Version("1.0.4.SNAPSHOT");
         final long lastMod = 0;
-        final Bundle b = getMockBundle(name, version, lastMod); 
-        
+        final Bundle b = getMockBundle(name, version, lastMod);
+
         BundleVersionInfo<?> vi = new BundleBundleVersionInfo(b);
         assertEquals("Symbolic name matches", name, vi.getBundleSymbolicName());
         assertEquals("Version matches", version, vi.getVersion());
