@@ -25,15 +25,15 @@ import java.util.Set;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
+
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -70,11 +70,12 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  *
  * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="deleteAce"
  */
-public class DeleteAcesServlet extends AbstractAccessPostServlet {
+public class DeleteAcesServlet extends AbstractAccessPostServlet implements DeleteAces {
 	private static final long serialVersionUID = 3784866802938282971L;
 
 	/* (non-Javadoc)
@@ -85,34 +86,42 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet {
 			HtmlResponse htmlResponse, List<Modification> changes)
 			throws RepositoryException {
 
+		Session session = request.getResourceResolver().adaptTo(Session.class);
+    	String resourcePath = request.getResource().getPath();
         String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
-        if (applyTo == null) {
+        deleteAces(session, resourcePath, applyTo);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces#deleteAces(javax.jcr.Session, java.lang.String, java.lang.String[])
+	 */
+	public void deleteAces(Session jcrSession, String resourcePath,
+			String[] principalNamesToDelete) throws RepositoryException {
+
+        if (principalNamesToDelete == null) {
 			throw new RepositoryException("principalIds were not sumitted.");
         } else {
-        	String resourcePath = null;
-        	Resource resource = request.getResource();
-        	if (resource == null) {
-    			throw new ResourceNotFoundException("Resource not found.");
-        	} else {
-        		Item item = resource.adaptTo(Item.class);
-        		if (item != null) {
-        			resourcePath = item.getPath();
-        		} else {
-        			throw new ResourceNotFoundException("Resource is not a JCR Node");
-        		}
+    		if (jcrSession == null) {
+    			throw new RepositoryException("JCR Session not found");
+    		}
+
+        	if (resourcePath == null) {
+    			throw new ResourceNotFoundException("Resource path was not supplied.");
         	}
 
-    		Session session = request.getResourceResolver().adaptTo(Session.class);
-    		if (session == null) {
-    			throw new RepositoryException("JCR Session not found");
+    		Item item = jcrSession.getItem(resourcePath);
+    		if (item != null) {
+    			resourcePath = item.getPath();
+    		} else {
+    			throw new ResourceNotFoundException("Resource is not a JCR Node");
     		}
 
     		//load the principalIds array into a set for quick lookup below
 			Set<String> pidSet = new HashSet<String>();
-			pidSet.addAll(Arrays.asList(applyTo));
+			pidSet.addAll(Arrays.asList(principalNamesToDelete));
 
 			try {
-				AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
+				AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(jcrSession);
 				AccessControlList updatedAcl = getAccessControlList(accessControlManager, resourcePath, false);
 
 				//keep track of the existing Aces for the target principal
@@ -138,5 +147,5 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet {
 			}
         }
 	}
-
+	
 }
