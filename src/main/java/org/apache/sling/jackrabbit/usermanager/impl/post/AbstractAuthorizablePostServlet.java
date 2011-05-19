@@ -16,12 +16,15 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -305,14 +309,14 @@ public abstract class AbstractAuthorizablePostServlet extends
      * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
-            SlingHttpServletRequest request, HtmlResponse response,
+            Map<String, ?> properties,
             String authorizablePath) {
 
-        boolean requireItemPrefix = requireItemPathPrefix(request);
+        boolean requireItemPrefix = requireItemPathPrefix(properties);
 
         // walk the request parameters and collect the properties
         Map<String, RequestProperty> reqProperties = new HashMap<String, RequestProperty>();
-        for (Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
+        for (Map.Entry<String, ?> e : properties.entrySet()) {
             final String paramName = e.getKey();
 
             // do not store parameters with names starting with sling:post
@@ -352,9 +356,9 @@ public abstract class AbstractAuthorizablePostServlet extends
                     reqProperties, propPath,
                     SlingPostConstants.TYPE_HINT_SUFFIX);
 
-                final RequestParameter[] rp = e.getValue();
-                if (rp.length > 0) {
-                    prop.setTypeHintValue(rp[0].getString());
+                String typeHintValue = convertToString(e.getValue());
+                if (typeHintValue != null) {
+                	prop.setTypeHintValue(typeHintValue);
                 }
 
                 continue;
@@ -366,7 +370,7 @@ public abstract class AbstractAuthorizablePostServlet extends
                     reqProperties, propPath,
                     SlingPostConstants.DEFAULT_VALUE_SUFFIX);
 
-                prop.setDefaultValues(e.getValue());
+                prop.setDefaultValues(convertToRequestParameterArray(e.getValue()));
 
                 continue;
             }
@@ -383,9 +387,10 @@ public abstract class AbstractAuthorizablePostServlet extends
                     SlingPostConstants.VALUE_FROM_SUFFIX);
 
                 // @ValueFrom params must have exactly one value, else ignored
-                if (e.getValue().length == 1) {
-                    String refName = e.getValue()[0].getString();
-                    RequestParameter[] refValues = request.getRequestParameters(refName);
+                String [] valueFrom = convertToStringArray(e.getValue());
+                if (valueFrom.length == 1) {
+                    String refName = valueFrom[0];
+                    RequestParameter[] refValues = convertToRequestParameterArray(refName);
                     if (refValues != null) {
                         prop.setValues(refValues);
                     }
@@ -430,7 +435,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             // plain property, create from values
             RequestProperty prop = getOrCreateRequestProperty(reqProperties,
                 propPath, null);
-            prop.setValues(e.getValue());
+            prop.setValues(convertToRequestParameterArray(e.getValue()));
         }
 
         return reqProperties;
@@ -744,17 +749,200 @@ public abstract class AbstractAuthorizablePostServlet extends
      * parameters to be stored.
      */
     protected final boolean requireItemPathPrefix(
-            SlingHttpServletRequest request) {
+            Map<String, ?> properties) {
 
         boolean requirePrefix = false;
 
-        Enumeration<?> names = request.getParameterNames();
-        while (names.hasMoreElements() && !requirePrefix) {
-            String name = (String) names.nextElement();
+        Iterator<String> iterator = properties.keySet().iterator();
+        while (iterator.hasNext() && !requirePrefix) {
+            String name = iterator.next();
             requirePrefix = name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT);
         }
 
         return requirePrefix;
     }
 
+    
+	protected String convertToString(Object obj) {
+		if (obj == null) {
+			return null;
+		}
+		
+		if (obj instanceof String) {
+			return (String)obj;
+		} else if (obj instanceof String[]) {
+			String [] values = (String[])obj;
+			if (values.length > 0) {
+				return values[0];
+			}
+			return null;
+		} else if (obj instanceof RequestParameter) {
+			((RequestParameter)obj).getString();
+		} else if (obj instanceof RequestParameter[]) {
+			RequestParameter[] values = (RequestParameter[])obj;
+			if (values.length > 0) {
+				return values[0].getString();
+			}
+			return null;
+		}
+		return null;
+	}
+    
+	protected String[] convertToStringArray(Object obj) {
+		if (obj == null) {
+			return null;
+		}
+		
+		if (obj instanceof String) {
+			return new String[] {(String)obj};
+		} else if (obj instanceof String[]) {
+			return (String[])obj;
+		} else if (obj instanceof RequestParameter) {
+			return new String[] {((RequestParameter)obj).getString()};
+		} else if (obj instanceof RequestParameter[]) {
+			RequestParameter[] values = (RequestParameter[])obj;
+			String [] strValues = new String[values.length];
+			for (int i=0; i < values.length; i++) {
+				strValues[i] = values[i].getString();
+			}
+			return strValues;
+		}
+		return null;
+	}
+
+	protected RequestParameter[] convertToRequestParameterArray(Object obj) {
+		if (obj == null) {
+			return null;
+		}
+		
+		if (obj instanceof String) {
+			return new RequestParameter[] {
+				new RequestParameterImpl((String)obj, null)	
+			};
+		} else if (obj instanceof String[]) {
+			String [] strValues = (String[])obj;
+			RequestParameter [] values = new RequestParameter[strValues.length];
+			for (int i=0; i < strValues.length; i++) {
+				values[i] = new RequestParameterImpl(strValues[i], null);
+			}
+			return values;
+		} else if (obj instanceof RequestParameter) {
+			return new RequestParameter[] {(RequestParameter)obj};
+		} else if (obj instanceof RequestParameter[]) {
+			return (RequestParameter[])obj;
+		}
+		return null;
+	}
+	
+	static class RequestParameterImpl implements RequestParameter {
+
+	    private String value;
+	    private String encoding;
+
+	    private byte[] content;
+
+	    RequestParameterImpl(String value, String encoding) {
+	    	this.encoding = encoding;
+	        this.value = value;
+	        this.content = null;
+	    }
+
+	    String getEncoding() {
+	        return this.encoding;
+	    }
+	    
+	    void setEncoding(String encoding) {
+	        // recode this parameter by encoding the string with the current
+	        // encoding and decode the bytes with the encoding
+	        try {
+	            this.value = getString(encoding);
+	        } catch (UnsupportedEncodingException uee) {
+	            throw new SlingUnsupportedEncodingException(uee);
+	        }
+	        this.encoding = encoding;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#get()
+	     */
+	    public byte[] get() {
+	        if (content == null) {
+	            try {
+	                content = getString().getBytes(getEncoding());
+	            } catch (Exception e) {
+	                // UnsupportedEncodingException, IllegalArgumentException
+	                content = getString().getBytes();
+	            }
+	        }
+	        return content;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getContentType()
+	     */
+	    public String getContentType() {
+	        // none known for www-form-encoded parameters
+	        return null;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getInputStream()
+	     */
+	    public InputStream getInputStream() {
+	        return new ByteArrayInputStream(this.get());
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getFileName()
+	     */
+	    public String getFileName() {
+	        // no original file name
+	        return null;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getSize()
+	     */
+	    public long getSize() {
+	        return this.get().length;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getString()
+	     */
+	    public String getString() {
+	        return value;
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#getString(java.lang.String)
+	     */
+	    public String getString(String encoding)
+	            throws UnsupportedEncodingException {
+	        return new String(this.get(), encoding);
+	    }
+
+	    /**
+	     * @see org.apache.sling.api.request.RequestParameter#isFormField()
+	     */
+	    public boolean isFormField() {
+	        // www-form-encoded are always form fields
+	        return true;
+	    }
+
+	    public String toString() {
+	        return this.getString();
+	    }
+	}
+	
+	static class SlingUnsupportedEncodingException extends SlingIOException {
+
+	    private static final long serialVersionUID = -4482276105859280247L;
+
+	    SlingUnsupportedEncodingException(UnsupportedEncodingException uee) {
+	        super(uee);
+	    }
+
+	}
+    
 }

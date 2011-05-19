@@ -31,6 +31,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.CreateUser;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
@@ -83,11 +84,12 @@ import org.slf4j.LoggerFactory;
  * @scr.component immediate="true" label="%createUser.post.operation.name"
  *                description="%createUser.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.CreateUser"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/users"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="create"
  */
-public class CreateUserServlet extends AbstractUserPostServlet {
+public class CreateUserServlet extends AbstractUserPostServlet implements CreateUser {
     private static final long serialVersionUID = 6871481922737658675L;
 
     /**
@@ -192,12 +194,44 @@ public class CreateUserServlet extends AbstractUserPostServlet {
             HtmlResponse response, List<Modification> changes)
             throws RepositoryException {
       
+
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
+    	User user = createUser(session, 
+    						principalName, 
+    						request.getParameter("pwd"),
+    						request.getParameter("pwdConfirm"),
+    						request.getRequestParameterMap(), 
+    						changes);
+    	
+        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
+    			+ user.getID();
+        response.setPath(userPath);
+        response.setLocation(externalizePath(request, userPath));
+        response.setParentLocation(externalizePath(request,
+            AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
+    }
+    
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.CreateUser#createUser(javax.jcr.Session, java.lang.String, java.lang.String, java.lang.String, java.util.Map, java.util.List)
+	 */
+	public User createUser(Session jcrSession, 
+							String name, 
+							String password,
+							String passwordConfirm, 
+							Map<String, ?> properties,
+							List<Modification> changes) 
+			throws RepositoryException {
+		
+        if (jcrSession == null) {
+            throw new RepositoryException("JCR Session not found");
+        }
+
         // check for an administrator
         boolean administrator = false;
         try {
-            Session currentSession = request.getResourceResolver().adaptTo(Session.class);
-            UserManager um = AccessControlUtil.getUserManager(currentSession);
-            User currentUser = (User) um.getAuthorizable(currentSession.getUserID());
+            UserManager um = AccessControlUtil.getUserManager(jcrSession);
+            User currentUser = (User) um.getAuthorizable(jcrSession.getUserID());
             administrator = currentUser.isAdmin();
             
             if (!administrator) {
@@ -212,7 +246,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
             	
             }
         } catch ( Exception ex ) {
-            log.warn("Failed to determin if the user is an admin, assuming not. Cause: "+ex.getMessage());
+            log.warn("Failed to determine if the user is an admin, assuming not. Cause: "+ex.getMessage());
             administrator = false;
         }
             
@@ -223,51 +257,46 @@ public class CreateUserServlet extends AbstractUserPostServlet {
                 "Sorry, registration of new users is not currently enabled.  Please try again later.");
         }
 
-        Session session = request.getResourceResolver().adaptTo(Session.class);
-        if (session == null) {
-            throw new RepositoryException("JCR Session not found");
-        }
 
         // check that the submitted parameter values have valid values.
-        String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-        if (principalName == null || principalName.length() == 0) {
+        if (name == null || name.length() == 0) {
             throw new RepositoryException("User name was not submitted");
         }
-        String pwd = request.getParameter("pwd");
-        if (pwd == null) {
+        if (password == null) {
             throw new RepositoryException("Password was not submitted");
         }
-        String pwdConfirm = request.getParameter("pwdConfirm");
-        if (!pwd.equals(pwdConfirm)) {
+        if (!password.equals(passwordConfirm)) {
             throw new RepositoryException(
                 "Password value does not match the confirmation password");
         }
-
-        Session selfRegSession = null;
+        
+        User user = null;
+        Session selfRegSession = jcrSession;
+        boolean useAdminSession = !administrator && selfRegistrationEnabled;
         try {
-            selfRegSession = getSession();
+            if (useAdminSession) {
+            	//the current user doesn't have permission to create the user,
+            	// but self-registration is enabled, so use an admin session
+            	// to do the work.
+                selfRegSession = getSession();
+            }        	
 
             UserManager userManager = AccessControlUtil.getUserManager(selfRegSession);
-            Authorizable authorizable = userManager.getAuthorizable(principalName);
+            Authorizable authorizable = userManager.getAuthorizable(name);
 
             if (authorizable != null) {
                 // user already exists!
                 throw new RepositoryException(
                     "A principal already exists with the requested name: "
-                        + principalName);
+                        + name);
             } else {
-                User user = userManager.createUser(principalName,
-                    digestPassword(pwd));
+                user = userManager.createUser(name, digestPassword(password));
                 String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
                     + user.getID();
                 
                 Map<String, RequestProperty> reqProperties = collectContent(
-                    request, response, userPath);
+                    properties, userPath);
 
-                response.setPath(userPath);
-                response.setLocation(externalizePath(request, userPath));
-                response.setParentLocation(externalizePath(request,
-                    AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
                 changes.add(Modification.onCreated(userPath));
 
                 // write content from form
@@ -276,9 +305,26 @@ public class CreateUserServlet extends AbstractUserPostServlet {
                 if (selfRegSession.hasPendingChanges()) {
                     selfRegSession.save();
                 }
+                
+                if (useAdminSession) {
+                	//lookup the user from the user session so we can return a live object
+                    UserManager userManager2 = AccessControlUtil.getUserManager(jcrSession);
+                    Authorizable authorizable2 = userManager2.getAuthorizable(user.getID());
+                    if (authorizable2 instanceof User) {
+                    	user = (User)authorizable2;
+                    } else {
+                    	user = null;
+                    }
+                }                
             }
         } finally {
-            ungetSession(selfRegSession);
+            if (useAdminSession) {
+            	//done with the self-reg admin session, so clean it up
+                ungetSession(selfRegSession);
+            }        	
         }
-    }
+		
+		return user;
+	}
+    
 }

@@ -23,13 +23,19 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.UpdateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 /**
  * <p>
@@ -72,13 +78,18 @@ import org.apache.sling.servlets.post.Modification;
  *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.UpdateGroup"
  * @scr.property name="sling.servlet.resourceTypes" values="sling/group"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="update"
  */
-public class UpdateGroupServlet extends AbstractGroupPostServlet {
+public class UpdateGroupServlet extends AbstractGroupPostServlet 
+		implements UpdateGroup {
     private static final long serialVersionUID = -8292054361992488797L;
 
+    /** @scr.reference */
+	private JcrResourceResolverFactory resourceResolverFactory;
+    
     /*
      * (non-Javadoc)
      * @see
@@ -90,41 +101,60 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet {
     protected void handleOperation(SlingHttpServletRequest request,
             HtmlResponse htmlResponse, List<Modification> changes)
             throws RepositoryException {
-        Authorizable authorizable = null;
         Resource resource = request.getResource();
-        if (resource != null) {
-            authorizable = resource.adaptTo(Authorizable.class);
-        }
-
-        // check that the group was located.
-        if (authorizable == null) {
-            throw new ResourceNotFoundException(
-                "Group to update could not be determined");
-        }
-
         Session session = request.getResourceResolver().adaptTo(Session.class);
-        if (session == null) {
-            throw new RepositoryException("JCR Session not found");
-        }
-        
-        String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-            + authorizable.getID();
+        updateGroup(session,
+        				resource.getName(),
+        				request.getRequestParameterMap(), 
+        				changes);
+    }
+    
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.UpdateGroup#updateGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
+	 */
+	public Group updateGroup(Session jcrSession, 
+								String name,
+								Map<String, ?> properties, 
+								List<Modification> changes)
+			throws RepositoryException {
 
-        Map<String, RequestProperty> reqProperties = collectContent(request,
-            htmlResponse, groupPath);
+		Group group = null;
+        UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Authorizable authorizable = userManager.getAuthorizable(name);
+        if (authorizable instanceof Group) {
+        	group = (Group)authorizable;
+        } else {
+            throw new ResourceNotFoundException(
+            	"Group to update could not be determined");
+        }
+		
+        String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+            + group.getID();
+
+        Map<String, RequestProperty> reqProperties = collectContent(properties, groupPath);
         try {
             // cleanup any old content (@Delete parameters)
-            processDeletes(authorizable, reqProperties, changes);
+            processDeletes(group, reqProperties, changes);
 
             // write content from form
-            writeContent(session, authorizable, reqProperties, changes);
+            writeContent(jcrSession, group, reqProperties, changes);
 
             // update the group memberships
-            if (authorizable.isGroup()) {
-                updateGroupMembership(request, authorizable, changes);
+            ResourceResolver resourceResolver = null;
+            try {
+            	//create a resource resolver to resolve the relative paths used for group membership values
+                resourceResolver = resourceResolverFactory.getResourceResolver(jcrSession);
+                Resource baseResource = resourceResolver.getResource(groupPath);
+                updateGroupMembership(baseResource, properties, group, changes);
+            } finally {
+            	if (resourceResolver != null) {
+            		resourceResolver.close();
+            	}
             }
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to update group.", re);
         }
-    }
+        return group;
+	}
+    
 }

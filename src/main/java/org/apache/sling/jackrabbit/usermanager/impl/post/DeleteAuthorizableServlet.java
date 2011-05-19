@@ -21,14 +21,23 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables;
+import org.apache.sling.jackrabbit.usermanager.DeleteGroup;
+import org.apache.sling.jackrabbit.usermanager.DeleteUser;
+import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -69,12 +78,16 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteUser"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteGroup"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables"
  * @scr.property name="sling.servlet.resourceTypes" values.0="sling/user"
  *               values.1="sling/group" values.2="sling/userManager"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="delete"
  */
-public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
+public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet
+		implements DeleteUser, DeleteGroup, DeleteAuthorizables {
     private static final long serialVersionUID = 5874621724096106496L;
 
     /*
@@ -89,54 +102,95 @@ public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
             HtmlResponse htmlResponse, List<Modification> changes)
             throws RepositoryException {
 
-        Iterator<Resource> res = getApplyToResources(request);
-        if (res == null) {
-            Resource resource = request.getResource();
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        Resource resource = request.getResource();
+        String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
+        if (applyTo != null) {
+        	deleteAuthorizables(session,
+        			resource,
+        			applyTo, 
+        			changes);
+        } else {
             Authorizable item = resource.adaptTo(Authorizable.class);
             if (item == null) {
                 String msg = "Missing source " + resource.getPath()
                     + " for delete";
                 htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND, msg);
                 throw new ResourceNotFoundException(msg);
+            } else {
+            	if (item instanceof User) {
+            		deleteUser(session, item.getID(), changes);
+            	} else if (item instanceof Group) {
+            		deleteGroup(session, item.getID(), changes);
+            	}
             }
+        }
+    }
+    
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.DeleteUser#deleteUser(javax.jcr.Session, java.lang.String, java.util.List)
+	 */
+	public void deleteUser(Session jcrSession, String name,
+			List<Modification> changes) throws RepositoryException {
 
-            item.remove();
-            changes.add(Modification.onDeleted(resource.getPath()));
+		User user;
+		UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Authorizable authorizable = userManager.getAuthorizable(name);
+        if (authorizable instanceof User) {
+        	user = (User)authorizable;
         } else {
-            while (res.hasNext()) {
-                Resource resource = res.next();
-                Authorizable item = resource.adaptTo(Authorizable.class);
-                if (item != null) {
-                    item.remove();
-                    changes.add(Modification.onDeleted(resource.getPath()));
-                }
+            throw new ResourceNotFoundException(
+        		"User to delete could not be determined");
+        }
+        
+        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
+							+ user.getID();
+        user.remove();
+        changes.add(Modification.onDeleted(userPath));
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.DeleteGroup#deleteGroup(javax.jcr.Session, java.lang.String, java.util.List)
+	 */
+	public void deleteGroup(Session jcrSession, 
+							String name,
+							List<Modification> changes) throws RepositoryException {
+
+		Group group;
+		UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Authorizable authorizable = userManager.getAuthorizable(name);
+        if (authorizable instanceof Group) {
+        	group = (Group)authorizable;
+        } else {
+            throw new ResourceNotFoundException(
+        		"Group to delete could not be determined");
+        }
+        
+        String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+								+ group.getID();
+        group.remove();
+        changes.add(Modification.onDeleted(groupPath));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables#deleteAuthorizables(javax.jcr.Session, org.apache.sling.api.resource.Resource, java.lang.String[], java.util.List)
+	 */
+	public void deleteAuthorizables(Session jcrSession, 
+									Resource baseResource,
+									String[] paths, 
+									List<Modification> changes)
+			throws RepositoryException {
+
+		ApplyToIterator iterator = new ApplyToIterator(baseResource, paths);
+        while (iterator.hasNext()) {
+            Resource resource = iterator.next();
+            Authorizable item = resource.adaptTo(Authorizable.class);
+            if (item != null) {
+                item.remove();
+                changes.add(Modification.onDeleted(resource.getPath()));
             }
         }
-    }
-
-    /**
-     * Returns an iterator on <code>Resource</code> instances addressed in the
-     * {@link SlingPostConstants#RP_APPLY_TO} request parameter. If the request
-     * parameter is not set, <code>null</code> is returned. If the parameter is
-     * set with valid resources an empty iterator is returned. Any resources
-     * addressed in the {@link SlingPostConstants#RP_APPLY_TO} parameter is
-     * ignored.
-     *
-     * @param request The <code>SlingHttpServletRequest</code> object used to
-     *            get the {@link SlingPostConstants#RP_APPLY_TO} parameter.
-     * @return The iterator of resources listed in the parameter or
-     *         <code>null</code> if the parameter is not set in the request.
-     */
-    protected Iterator<Resource> getApplyToResources(
-            SlingHttpServletRequest request) {
-
-        String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
-        if (applyTo == null) {
-            return null;
-        }
-
-        return new ApplyToIterator(request, applyTo);
-    }
+	}
 
     private static class ApplyToIterator implements Iterator<Resource> {
 
@@ -144,15 +198,15 @@ public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
 
         private final Resource baseResource;
 
-        private final String[] paths;
+        private final String [] paths;
 
         private int pathIndex;
 
         private Resource nextResource;
 
-        ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
-            this.resolver = request.getResourceResolver();
-            this.baseResource = request.getResource();
+        ApplyToIterator(Resource baseResource, String [] paths) {
+            this.resolver = baseResource.getResourceResolver();
+            this.baseResource = baseResource;
             this.paths = paths;
             this.pathIndex = 0;
 
