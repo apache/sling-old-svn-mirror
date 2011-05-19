@@ -23,7 +23,10 @@ import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
 
 /**
  * <p>
@@ -92,15 +95,24 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
  *
  * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
  * @scr.property name="sling.servlet.methods" value="GET"
  * @scr.property name="sling.servlet.selectors" value="eacl"
  * @scr.property name="sling.servlet.extensions" value="json"
  */
 @SuppressWarnings("serial")
-public class GetEffectiveAclServlet extends AbstractGetAclServlet {
+public class GetEffectiveAclServlet extends AbstractGetAclServlet implements GetEffectiveAcl {
 
-    @Override
+    /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl#getEffectiveAcl(javax.jcr.Session, java.lang.String)
+	 */
+	public JSONObject getEffectiveAcl(Session jcrSession, String resourcePath)
+			throws RepositoryException, JSONException {
+		return internalGetAcl(jcrSession, resourcePath);
+	}
+
+	@Override
     protected AccessControlEntry[] getAccessControlEntries(Session session, String absPath) throws RepositoryException {
         AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(session);
         AccessControlPolicy[] policies = accessControlManager.getEffectivePolicies(absPath);
