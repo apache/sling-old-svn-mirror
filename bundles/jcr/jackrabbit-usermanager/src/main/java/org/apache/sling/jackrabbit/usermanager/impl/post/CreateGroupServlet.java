@@ -27,10 +27,14 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.CreateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -74,13 +78,17 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * 
  * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.CreateGroup"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/groups"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="create"
  */
-public class CreateGroupServlet extends AbstractGroupPostServlet {
+public class CreateGroupServlet extends AbstractGroupPostServlet implements CreateGroup {
     private static final long serialVersionUID = -1084915263933901466L;
 
+    /** @scr.reference */
+	private JcrResourceResolverFactory resourceResolverFactory;
+    
     /*
      * (non-Javadoc)
      * @see
@@ -93,29 +101,50 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
             HtmlResponse response, List<Modification> changes)
             throws RepositoryException {
 
-        // check that the submitted parameter values have valid values.
-        final String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-        if (principalName == null || principalName.length() == 0) {
-            throw new RepositoryException("Group name was not submitted");
-        }
-
         Session session = request.getResourceResolver().adaptTo(Session.class);
-        if (session == null) {
-            throw new RepositoryException("JCR Session not found");
+        String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
+        Group group = createGroup(session, 
+        		principalName, 
+        		request.getRequestParameterMap(), 
+        		changes);
+
+        String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+        	+ group.getID();
+        response.setPath(groupPath);
+        response.setLocation(externalizePath(request, groupPath));
+        response.setParentLocation(externalizePath(request,
+            AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH));
+        
+    }
+	
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.CreateGroup#createGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
+	 */
+	public Group createGroup(Session jcrSession, final String name,
+			Map<String, ?> properties, List<Modification> changes)
+			throws RepositoryException {
+        // check that the parameter values have valid values.
+		if (jcrSession == null) {
+			throw new IllegalArgumentException("JCR Session not found");
         }
 
-        UserManager userManager = AccessControlUtil.getUserManager(session);
-        Authorizable authorizable = userManager.getAuthorizable(principalName);
+        if (name == null || name.length() == 0) {
+            throw new IllegalArgumentException("Group name was not supplied");
+        }
 
+        UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Authorizable authorizable = userManager.getAuthorizable(name);
+
+        Group group = null;
         if (authorizable != null) {
             // principal already exists!
             throw new RepositoryException(
-                "A principal already exists with the requested name: "
-                    + principalName);
+                "A group already exists with the requested name: "
+                    + name);
         } else {
-            Group group = userManager.createGroup(new Principal() {
+            group = userManager.createGroup(new Principal() {
                 public String getName() {
-                    return principalName;
+                    return name;
                 }
             });
 
@@ -123,18 +152,27 @@ public class CreateGroupServlet extends AbstractGroupPostServlet {
                 + group.getID();
             
             Map<String, RequestProperty> reqProperties = collectContent(
-                request, response, groupPath);
-            response.setPath(groupPath);
-            response.setLocation(externalizePath(request, groupPath));
-            response.setParentLocation(externalizePath(request,
-                AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH));
+                properties, groupPath);
             changes.add(Modification.onCreated(groupPath));
 
             // write content from form
-            writeContent(session, group, reqProperties, changes);
+            writeContent(jcrSession, group, reqProperties, changes);
 
             // update the group memberships
-            updateGroupMembership(request, group, changes);
+            ResourceResolver resourceResolver = null;
+            try {
+            	//create a resource resolver to resolve the relative paths used for group membership values
+                resourceResolver = resourceResolverFactory.getResourceResolver(jcrSession);
+                Resource baseResource = resourceResolver.getResource(AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH);
+                updateGroupMembership(baseResource, properties, group, changes);
+            } finally {
+            	if (resourceResolver != null) {
+            		resourceResolver.close();
+            	}
+            }
         }
-    }
+        
+        return group;
+	}
+    
 }

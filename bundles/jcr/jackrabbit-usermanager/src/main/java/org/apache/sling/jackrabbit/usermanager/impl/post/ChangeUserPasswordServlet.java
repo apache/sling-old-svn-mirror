@@ -33,6 +33,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.jackrabbit.usermanager.ChangeUserPassword;
+import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.osgi.service.component.ComponentContext;
@@ -79,11 +81,12 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
+ * @scr.service interface="org.apache.sling.jackrabbit.usermanager.ChangeUserPassword"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="changePassword"
  */
-public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
+public class ChangeUserPasswordServlet extends AbstractUserPostServlet implements ChangeUserPassword {
     private static final long serialVersionUID = 1923614318474654502L;
 
     /**
@@ -137,39 +140,52 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
     protected void handleOperation(SlingHttpServletRequest request,
             HtmlResponse htmlResponse, List<Modification> changes)
             throws RepositoryException {
-        Authorizable authorizable = null;
+    	
         Resource resource = request.getResource();
-        if (resource != null) {
-            authorizable = resource.adaptTo(Authorizable.class);
-        }
-
-        // check that the user was located.
-        if (authorizable == null || authorizable.isGroup()) {
-            throw new ResourceNotFoundException(
-                "User to update could not be determined.");
-        }
-
-        if ("anonymous".equals(authorizable.getID())) {
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+    	changePassword(session, 
+    			resource.getName(), 
+    			request.getParameter("oldPwd"), 
+    			request.getParameter("newPwd"), 
+    			request.getParameter("newPwdConfirm"), 
+				changes);
+    }
+    
+	/* (non-Javadoc)
+	 * @see org.apache.sling.jackrabbit.usermanager.ChangeUserPassword#changePassword(javax.jcr.Session, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.util.List)
+	 */
+	public User changePassword(Session jcrSession, 
+								String name,
+								String oldPassword, 
+								String newPassword, 
+								String newPasswordConfirm,
+								List<Modification> changes) 
+				throws RepositoryException {
+		
+        if ("anonymous".equals(name)) {
             throw new RepositoryException(
                 "Can not change the password of the anonymous user.");
         }
-
-        Session session = request.getResourceResolver().adaptTo(Session.class);
-        if (session == null) {
-            throw new RepositoryException("JCR Session not found");
+		
+		User user;
+        UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Authorizable authorizable = userManager.getAuthorizable(name);
+        if (authorizable instanceof User) {
+        	user = (User)authorizable;
+        } else {
+            throw new ResourceNotFoundException(
+            	"User to update could not be determined");
         }
-
+        
     	//SLING-2069: if the current user is an administrator, then a missing oldPwd is ok,
     	// otherwise the oldPwd must be supplied.
         boolean administrator = false;
 
         // check that the submitted parameter values have valid values.
-        String oldPwd = request.getParameter("oldPwd");
-        if (oldPwd == null || oldPwd.length() == 0) {
+        if (oldPassword == null || oldPassword.length() == 0) {
             try {
-                Session currentSession = request.getResourceResolver().adaptTo(Session.class);
-                UserManager um = AccessControlUtil.getUserManager(currentSession);
-                User currentUser = (User) um.getAuthorizable(currentSession.getUserID());
+                UserManager um = AccessControlUtil.getUserManager(jcrSession);
+                User currentUser = (User) um.getAuthorizable(jcrSession.getUserID());
                 administrator = currentUser.isAdmin();
                 
                 if (!administrator) {
@@ -191,30 +207,34 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
             	throw new RepositoryException("Old Password was not submitted");
             }
         }
-        String newPwd = request.getParameter("newPwd");
-        if (newPwd == null || newPwd.length() == 0) {
+        if (newPassword == null || newPassword.length() == 0) {
             throw new RepositoryException("New Password was not submitted");
         }
-        String newPwdConfirm = request.getParameter("newPwdConfirm");
-        if (!newPwd.equals(newPwdConfirm)) {
+        if (!newPassword.equals(newPasswordConfirm)) {
             throw new RepositoryException(
                 "New Password does not match the confirmation password");
         }
 
-        if (oldPwd != null && oldPwd.length() > 0) {
+        if (oldPassword != null && oldPassword.length() > 0) {
             // verify old password
-            checkPassword(authorizable, oldPwd);
+            checkPassword(authorizable, oldPassword);
         }
 
         try {
-            ((User) authorizable).changePassword(digestPassword(newPwd));
+            ((User) authorizable).changePassword(digestPassword(newPassword));
 
-            changes.add(Modification.onModified(resource.getPath()
+            String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+            	+ user.getID();
+
+            changes.add(Modification.onModified(userPath
                 + "/rep:password"));
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to change user password.", re);
         }
-    }
+        
+        return user;
+	}
+    
 
     private void checkPassword(Authorizable authorizable, String oldPassword)
             throws RepositoryException {
