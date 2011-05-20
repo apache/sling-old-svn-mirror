@@ -664,19 +664,15 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
      */
     public void resourceAddedOrUpdated(final String resourceType,
-            String entityId,
+            final String entityId,
             final InputStream is,
             final Dictionary<String, Object> dict,
             final Map<String, Object> attributes) {
-        String key = resourceType + ':' + entityId;
+        final String key = resourceType + ':' + entityId;
         try {
             final ResourceData data = ResourceData.create(is, dict);
             synchronized ( this.resourcesLock ) {
                 final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
-                if ( erl != null ) {
-                    entityId = erl.getResourceId();
-                    key = resourceType + ':' + entityId;
-                }
                 logger.debug("Added or updated {} : {}", key, erl);
 
                 // we first check for update
