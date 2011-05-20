@@ -64,7 +64,7 @@ public class InternalResource extends InstallableResource {
 
         if ( is != null &&
              (InstallableResource.TYPE_PROPERTIES.equals(type) ||
-              type == null && isConfigExtension(resource.getId()))) {
+              ((type == null || InstallableResource.TYPE_FILE.equals(type)) && isConfigExtension(resource.getId())))) {
             dict = readDictionary(is, getExtension(resource.getId()));
             if ( dict == null ) {
                 throw new IOException("Unable to read dictionary from input stream: " + resource.getId());
