@@ -299,8 +299,15 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         // setup default path for new configurations
         this.newConfigPath = OsgiUtil.toString(context.getProperties().get(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
         final boolean postSlash = !newConfigPath.endsWith("/");
+        if ( postSlash ) {
+            this.newConfigPath = newConfigPath.concat("/");
+        }
         final boolean preSlash = !newConfigPath.startsWith("/");
-        this.newConfigPath = this.folderNameFilter.getRootPaths()[0] + (preSlash ? "/" : "") + this.newConfigPath + (postSlash ? "/" : "");
+        if ( preSlash ) {
+            this.newConfigPath = this.folderNameFilter.getRootPaths()[0] + "/" + this.newConfigPath;
+        } else {
+            this.newConfigPath = this.newConfigPath;
+        }
 
         backgroundThread = new StoppableThread();
         backgroundThread.start();
