@@ -482,7 +482,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             // Rescan WatchedFolders if needed
             final boolean scanWf = WatchedFolder.getRescanTimer().expired();
-            if(scanWf) {
+            if (scanWf) {
                 session.refresh(false);
                 didRefresh = true;
                 for(WatchedFolder wf : watchedFolders) {
@@ -492,16 +492,25 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                     WatchedFolder.getRescanTimer().reset();
                     counters[SCAN_FOLDERS_COUNTER]++;
                     final WatchedFolder.ScanResult sr = wf.scan();
-                    logger.info("Registering resource with OSGi installer: {}",sr.toAdd);
-                    logger.info("Removing resource from OSGi installer: {}", sr.toRemove);
-                    installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
+                    boolean toDo = false;
+                    if ( sr.toAdd.size() > 0 ) {
+                        logger.info("Registering resource with OSGi installer: {}",sr.toAdd);
+                        toDo = true;
+                    }
+                    if ( sr.toRemove.size() > 0 ) {
+                        logger.info("Removing resource from OSGi installer: {}", sr.toRemove);
+                        toDo = true;
+                    }
+                    if ( toDo ) {
+                        installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
                             sr.toRemove.toArray(new String[sr.toRemove.size()]));
+                    }
                 }
             }
 
             // Update list of WatchedFolder if we got any relevant events,
             // or if there were any WatchedFolder events
-            if(scanWf || updateFoldersListTimer.expired()) {
+            if (scanWf || updateFoldersListTimer.expired()) {
                 if (!didRefresh) {
                     session.refresh(false);
                     didRefresh = true;
@@ -509,14 +518,17 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 updateFoldersListTimer.reset();
                 counters[UPDATE_FOLDERS_LIST_COUNTER]++;
                 final List<String> toRemove = updateFoldersList();
-                logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
-                installer.updateResources(URL_SCHEME, null,
-                        toRemove.toArray(new String[toRemove.size()]));
+                if ( toRemove.size() > 0 ) {
+                    logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
+                    installer.updateResources(URL_SCHEME, null,
+                            toRemove.toArray(new String[toRemove.size()]));
+                }
             }
 
             try {
                 Thread.sleep(RUN_LOOP_DELAY_MSEC);
             } catch(InterruptedException ignore) {
+                // ignore
             }
 
         } catch(Exception e) {
