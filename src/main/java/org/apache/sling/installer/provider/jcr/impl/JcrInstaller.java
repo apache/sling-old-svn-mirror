@@ -156,7 +156,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
     private ComponentContext componentContext;
 
-    private static final String DEFAULT_NEW_CONFIG_PATH = "/apps/sling/config";
+    private static final String DEFAULT_NEW_CONFIG_PATH = "sling/config";
     @Property(value=DEFAULT_NEW_CONFIG_PATH)
     private static final String PROP_NEW_CONFIG_PATH = "sling.jcrinstall.new.config.path";
 
@@ -264,10 +264,6 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         this.componentContext = context;
         logger.info("Activating Apache Sling JCR Installer");
 
-        this.newConfigPath = OsgiUtil.toString(context.getProperties().get(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
-        if ( !newConfigPath.endsWith("/") ) {
-            this.newConfigPath = this.newConfigPath.concat("/");
-        }
         this.writeBack = OsgiUtil.toBoolean(context.getProperties().get(PROP_ENABLE_WRITEBACK), DEFAULT_ENABLE_WRITEBACK);
 
     	// Setup converters
@@ -299,6 +295,13 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         folderNameFilter = new FolderNameFilter(OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
                 folderNameRegexp, settings.getRunModes());
         roots = folderNameFilter.getRootPaths();
+
+        // setup default path for new configurations
+        this.newConfigPath = OsgiUtil.toString(context.getProperties().get(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
+        final boolean postSlash = !newConfigPath.endsWith("/");
+        final boolean preSlash = !newConfigPath.startsWith("/");
+        this.newConfigPath = this.folderNameFilter.getRootPaths()[0] + (preSlash ? "/" : "") + this.newConfigPath + (postSlash ? "/" : "");
+
         backgroundThread = new StoppableThread();
         backgroundThread.start();
     }
@@ -629,35 +632,8 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 resourceIsMoved = nodePath.equals(oldPath);
                 logger.debug("Update of {} at {}", resourceType, path);
             } else {
-                // check for path hint
-                String hint = null;
-                if ( attributes != null ) {
-                    hint = (String)attributes.get(InstallableResource.INSTALLATION_HINT);
-                    if ( hint != null && hint.startsWith(URL_SCHEME + ':')) {
-                        hint = hint.substring(URL_SCHEME.length() + 1);
-                        final int lastSlash = hint.lastIndexOf('/');
-                        if ( lastSlash < 1 ) {
-                            hint = null;
-                        } else {
-                            int slashPos = hint.lastIndexOf('/', lastSlash - 1);
-                            final String dirName = hint.substring(slashPos + 1, lastSlash);
-                            // we prefer having "config" as the dir name
-                            if ( !"config".equals(dirName) ) {
-                                hint = this.getPathWithHighestPrio(hint.substring(0, slashPos + 1) + "config");
-                                // check if config is in regexp
-                                if ( this.folderNameFilter.getPriority(hint) > -1 ) {
-                                    hint = hint + '/';
-                                } else {
-                                    hint = this.getPathWithHighestPrio(hint);
-                                }
-                            } else {
-                                hint = this.getPathWithHighestPrio(hint);
-                            }
-                        }
-                    }
-                }
                 // add
-                path = (hint != null ? hint : this.newConfigPath) + id + ".config";
+                path = this.newConfigPath + id + ".config";
                 logger.debug("Add of {} at {}", resourceType, path);
             }
 
