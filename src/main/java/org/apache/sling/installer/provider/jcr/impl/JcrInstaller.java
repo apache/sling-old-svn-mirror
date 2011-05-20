@@ -628,8 +628,10 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 final String oldPath = url.substring(pos + 1);
                 final String nodePath = getPathWithHighestPrio(oldPath);
                 // ensure extension 'config'
-                if ( !nodePath.endsWith(".config") && session.itemExists(nodePath) ) {
-                    session.getItem(nodePath).remove();
+                if ( !nodePath.endsWith(".config") ) {
+                    if ( session.itemExists(nodePath) ) {
+                        session.getItem(nodePath).remove();
+                    }
                     path = nodePath + ".config";
                 } else {
                     path = nodePath;
@@ -660,7 +662,9 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             final UpdateResult result = new UpdateResult(JcrInstaller.URL_SCHEME + ':' + path);
             // priority
-            result.setPriority(this.folderNameFilter.getPriority(path));
+            final int lastSlash = path.lastIndexOf('/');
+            final String parentPath = path.substring(0, lastSlash);
+            result.setPriority(this.folderNameFilter.getPriority(parentPath));
             result.setResourceIsMoved(resourceIsMoved);
             return result;
         } catch (final RepositoryException re) {
