@@ -68,7 +68,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <dd>Failure. HTML explains the failure.</dd>
  * </dl>
  *
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%deleteAces.post.operation.name"
+ *                description="%deleteAces.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
