@@ -79,7 +79,8 @@ import org.slf4j.LoggerFactory;
  * <h4>Notes</h4>
  *
  *
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%changeUserPassword.post.operation.name"
+ *                description="%changeUserPassword.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.ChangeUserPassword"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"

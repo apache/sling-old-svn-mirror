@@ -75,7 +75,8 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * 
  *
  *
- * @scr.component metatype="no" immediate="true"
+ * @scr.component immediate="true" label="%updateUser.post.operation.name"
+ *                description="%updateUser.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.UpdateUser"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"

@@ -78,7 +78,8 @@ import org.apache.sling.servlets.post.Modification;
  * will not be added to the group. The group will only contain granted privileges.
  * </p>
  *
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%modifyAce.post.operation.name"
+ *                description="%modifyAce.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.ModifyAce"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"

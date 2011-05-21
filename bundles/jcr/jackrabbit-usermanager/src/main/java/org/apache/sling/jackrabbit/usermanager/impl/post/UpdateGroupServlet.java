@@ -76,7 +76,8 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/group/testGroup.update.html
  * </code>
  *
- * @scr.component metatype="no" immediate="true"
+ * @scr.component immediate="true" label="%updateGroup.post.operation.name"
+ *                description="%updateGroup.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.UpdateGroup"
  * @scr.property name="sling.servlet.resourceTypes" values="sling/group"

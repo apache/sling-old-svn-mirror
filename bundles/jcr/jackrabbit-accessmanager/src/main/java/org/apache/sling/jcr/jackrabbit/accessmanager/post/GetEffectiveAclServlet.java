@@ -93,7 +93,8 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
  * </pre>
  * </code>
  *
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%getEffectiveAcl.get.operation.name"
+ *                description="%getEffectiveAcl.get.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"

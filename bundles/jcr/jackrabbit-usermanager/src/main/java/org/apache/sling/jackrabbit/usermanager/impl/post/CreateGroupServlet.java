@@ -76,7 +76,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * 
  * <h4>Notes</h4>
  * 
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%createGroup.post.operation.name"
+ *                description="%createGroup.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.CreateGroup"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/groups"
