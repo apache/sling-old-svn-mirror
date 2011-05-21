@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * Resource Provider implementation for jackrabbit UserManager resources.
  *
  * @scr.component immediate="true" label="%authorizable.resourceprovider.name"
- *                description="authorizable.resourceprovider.description"
+ *                description="%authorizable.resourceprovider.description"
  * @scr.property name="service.description"
  *               value="Resource provider implementation for UserManager resources"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"

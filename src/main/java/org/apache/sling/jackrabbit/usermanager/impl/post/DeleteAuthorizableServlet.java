@@ -76,7 +76,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * </code>
  *
  *
- * @scr.component metatype="no" immediate="true"
+ * @scr.component immediate="true" label="%deleteAuthorizable.post.operation.name"
+ *                description="%deleteAuthorizable.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteUser"
  * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteGroup"
@@ -86,7 +87,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * @scr.property name="sling.servlet.methods" value="POST"
  * @scr.property name="sling.servlet.selectors" value="delete"
  */
-public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet
+public class DeleteAuthorizableServlet extends AbstractPostServlet
 		implements DeleteUser, DeleteGroup, DeleteAuthorizables {
     private static final long serialVersionUID = 5874621724096106496L;
 
