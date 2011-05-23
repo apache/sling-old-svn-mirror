@@ -140,7 +140,7 @@ public class HtmlResponse extends AbstractPostResponse {
                         state = 0;
                         Object prop = getProperty(varBuffer.toString());
                         if (prop != null) {
-                            out.write(prop.toString());
+                            out.write(htmlEscape(prop.toString()));
                         }
                         varBuffer.setLength(0);
                     } else {
@@ -152,4 +152,24 @@ public class HtmlResponse extends AbstractPostResponse {
         out.flush();
     }
 
+    /** HTML escaping */
+    static String htmlEscape(String str) {
+        if(str == null) {
+            return null;
+        }
+        final StringBuilder out = new StringBuilder();
+        for(int i=0; i < str.length(); i++) {
+            final char c = str.charAt(i);
+            if(c == '<') {
+                out.append("&lt;");
+            } else if (c == '>') {
+                out.append("&gt;");
+            } else if(c == '&') {
+                out.append("&amp;");
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
 }
