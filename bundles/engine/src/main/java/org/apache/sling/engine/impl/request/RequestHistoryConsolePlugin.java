@@ -35,8 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -146,11 +146,11 @@ public class RequestHistoryConsolePlugin {
                             currentRequestIndex);
                         final StringBuilder sb = new StringBuilder();
                         sb.append("<a href='" + LABEL + "?index="
-                            + HtmlResponse.escapeHtmlText(info.getKey()) + "'>");
+                            + ResponseUtil.escapeXml(info.getKey()) + "'>");
                         if (isCurrent) {
                             sb.append("<b>");
                         }
-                        sb.append(HtmlResponse.escapeHtmlText(info.getLabel()));
+                        sb.append(ResponseUtil.escapeXml(info.getLabel()));
                         if (isCurrent) {
                             sb.append("</b>");
                         }
@@ -227,8 +227,8 @@ public class RequestHistoryConsolePlugin {
                 pw.println("<tr>");
                 pw.printf(
                     "<th class='ui-widget-header'>Request %s (%s %s) by %s - RequestProgressTracker Info</th>%n",
-                    key, HtmlResponse.escapeHtmlText(info.getMethod()), 
-                    HtmlResponse.escapeHtmlText(info.getPathInfo()), HtmlResponse.escapeHtmlText(info.getUser()));
+                    key, ResponseUtil.escapeXml(info.getMethod()), 
+                    ResponseUtil.escapeXml(info.getPathInfo()), ResponseUtil.escapeXml(info.getUser()));
                 pw.println("</tr>");
                 pw.println("</thead>");
 
@@ -239,7 +239,7 @@ public class RequestHistoryConsolePlugin {
                 final Iterator<String> it = info.getTracker().getMessages();
                 pw.print("<pre>");
                 while (it.hasNext()) {
-                    pw.print(HtmlResponse.escapeHtmlText(it.next()));
+                    pw.print(ResponseUtil.escapeXml(it.next()));
                 }
                 pw.println("</pre></td></tr>");
                 pw.println("</tbody></table>");
