@@ -33,6 +33,8 @@ import org.apache.sling.api.request.ResponseUtil;
  * Generator for a HTML status response that displays the changes made in a post
  * request. see <a href="HtmlResponse.html">HtmlResponse.html</a> for the
  * format.
+ * 
+ * @deprecated use org.apache.sling.servlets.post.HtmlResponse instead.
  */
 public class HtmlResponse {
 
