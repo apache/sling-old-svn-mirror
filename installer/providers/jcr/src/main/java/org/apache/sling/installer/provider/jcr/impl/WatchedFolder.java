@@ -44,14 +44,15 @@ import org.slf4j.LoggerFactory;
  */
 class WatchedFolder implements EventListener{
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final String path;
     private final int priority;
     private final Session session;
-    private static RescanTimer rescanTimer = new RescanTimer();
-    private boolean needsScan;
     private final Collection <JcrInstaller.NodeConverter> converters;
     private final Set<String> existingResourceUrls = new HashSet<String>();
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    private volatile boolean needsScan;
 
     static class ScanResult {
         List<InstallableResource> toAdd = new ArrayList<InstallableResource>();
@@ -66,7 +67,7 @@ class WatchedFolder implements EventListener{
             final int priority,
     		final Collection<JcrInstaller.NodeConverter> converters)
     throws RepositoryException {
-        if(priority < 1) {
+        if (priority < 1) {
             throw new IllegalArgumentException("Cannot watch folder with priority 0:" + path);
         }
 
@@ -75,7 +76,9 @@ class WatchedFolder implements EventListener{
         this.priority = priority;
 
         this.session = session;
+    }
 
+    public void start() throws RepositoryException {
         // observe any changes in our folder (and under it, as changes to properties
         // might be lower in the hierarchy)
         final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
@@ -84,11 +87,12 @@ class WatchedFolder implements EventListener{
         final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
+        this.needsScan = true;
 
         log.info("Watching folder {} (priority {})", path, priority);
     }
 
-    void cleanup() {
+    public void stop() {
     	try {
 	    	session.getWorkspace().getObservationManager().removeEventListener(this);
     	} catch(RepositoryException re) {
@@ -101,38 +105,36 @@ class WatchedFolder implements EventListener{
     	return getClass().getSimpleName() + ":" + path;
     }
 
-    String getPath() {
+    public String getPath() {
         return path;
     }
 
-    /** Set a static "timer" whenever an event occurs */
-    public void onEvent(EventIterator it) {
-        log.debug("JCR event received for path {}", path);
-    	scheduleScan();
-    }
-
-    void scheduleScan() {
-        log.debug("Scheduling scan of {}", path);
-        rescanTimer.scheduleScan();
+    /**
+     * Update scan flag whenever an observation event occurs.
+     */
+    public void onEvent(final EventIterator it) {
+        log.debug("JCR events received for path {}", path);
         needsScan = true;
     }
 
-    boolean needsScan() {
+    /**
+     * Did an observation event occur in the meantime?
+     */
+    public boolean needsScan() {
     	return needsScan;
     }
 
-    static RescanTimer getRescanTimer() {
-    	return rescanTimer;
-    }
-
-    /** Scan the contents of our folder and return the corresponding InstallableResource */
-    ScanResult scan() throws RepositoryException {
+    /**
+     * Scan the contents of our folder and return the corresponding
+     * <code>ScanResult</code> containing the <code>InstallableResource</code>s.
+     */
+    public ScanResult scan() throws RepositoryException {
         log.debug("Scanning {}", path);
         needsScan = false;
 
         Node folder = null;
-        if(session.itemExists(path)) {
-        	Item i = session.getItem(path);
+        if (session.itemExists(path)) {
+        	final Item i = session.getItem(path);
         	if(i.isNode()) {
         		folder = (Node)i;
         	}

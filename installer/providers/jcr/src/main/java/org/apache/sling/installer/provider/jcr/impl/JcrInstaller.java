@@ -228,6 +228,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 // Scan watchedFolders and register resources with installer
                 final List<InstallableResource> resources = new LinkedList<InstallableResource>();
                 for(WatchedFolder f : watchedFolders) {
+                    f.start();
                     final WatchedFolder.ScanResult r = f.scan();
                     logger.debug("Startup: {} provides resources {}", f, r.toAdd);
                     resources.addAll(r.toAdd);
@@ -360,7 +361,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
     /** Find the paths to watch under rootPath, according to our folderNameFilter,
      * 	and add them to result */
-    void findPathsToWatch(final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
+    private void findPathsToWatch(final String rootPath, final List<WatchedFolder> result) throws RepositoryException {
         Session s = null;
 
         try {
@@ -401,7 +402,8 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     }
 
     /** Add WatchedFolder to our list if it doesn't exist yet */
-    private void addWatchedFolder(final WatchedFolder toAdd) {
+    private void addWatchedFolder(final WatchedFolder toAdd)
+    throws RepositoryException {
         WatchedFolder existing = null;
         for(WatchedFolder wf : watchedFolders) {
             if (wf.getPath().equals(toAdd.getPath())) {
@@ -410,10 +412,8 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             }
         }
         if (existing == null) {
+            toAdd.start();
             watchedFolders.add(toAdd);
-            toAdd.scheduleScan();
-        } else {
-            toAdd.cleanup();
         }
     }
 
@@ -441,7 +441,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             if(!session.itemExists(wf.getPath())) {
                 result.addAll(wf.scan().toRemove);
-                wf.cleanup();
+                wf.stop();
                 toRemove.add(wf);
             }
         }
@@ -478,33 +478,33 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         logger.debug("Running watch cycle.");
 
         try {
-            boolean didRefresh = true;
+            boolean didRefresh = false;
 
             // Rescan WatchedFolders if needed
-            final boolean scanWf = WatchedFolder.getRescanTimer().expired();
-            if (scanWf) {
-                session.refresh(false);
-                didRefresh = true;
-                for(WatchedFolder wf : watchedFolders) {
-                    if(!wf.needsScan()) {
-                        continue;
-                    }
-                    WatchedFolder.getRescanTimer().reset();
-                    counters[SCAN_FOLDERS_COUNTER]++;
-                    final WatchedFolder.ScanResult sr = wf.scan();
-                    boolean toDo = false;
-                    if ( sr.toAdd.size() > 0 ) {
-                        logger.info("Registering resource with OSGi installer: {}",sr.toAdd);
-                        toDo = true;
-                    }
-                    if ( sr.toRemove.size() > 0 ) {
-                        logger.info("Removing resource from OSGi installer: {}", sr.toRemove);
-                        toDo = true;
-                    }
-                    if ( toDo ) {
-                        installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
-                            sr.toRemove.toArray(new String[sr.toRemove.size()]));
-                    }
+            boolean scanWf = false;
+            for(WatchedFolder wf : watchedFolders) {
+                if (!wf.needsScan()) {
+                    continue;
+                }
+                scanWf = true;
+                if ( !didRefresh ) {
+                    session.refresh(false);
+                    didRefresh = true;
+                }
+                counters[SCAN_FOLDERS_COUNTER]++;
+                final WatchedFolder.ScanResult sr = wf.scan();
+                boolean toDo = false;
+                if ( sr.toAdd.size() > 0 ) {
+                    logger.info("Registering resource with OSGi installer: {}",sr.toAdd);
+                    toDo = true;
+                }
+                if ( sr.toRemove.size() > 0 ) {
+                    logger.info("Removing resource from OSGi installer: {}", sr.toRemove);
+                    toDo = true;
+                }
+                if ( toDo ) {
+                    installer.updateResources(URL_SCHEME, sr.toAdd.toArray(new InstallableResource[sr.toAdd.size()]),
+                        sr.toRemove.toArray(new String[sr.toRemove.size()]));
                 }
             }
 
@@ -525,18 +525,14 @@ public class JcrInstaller implements EventListener, UpdateHandler {
                 }
             }
 
-            try {
-                Thread.sleep(RUN_LOOP_DELAY_MSEC);
-            } catch(InterruptedException ignore) {
-                // ignore
-            }
 
-        } catch(Exception e) {
-            logger.warn("Exception in run()", e);
-            try {
-                Thread.sleep(RUN_LOOP_DELAY_MSEC);
-            } catch(InterruptedException ignore) {
-            }
+        } catch (final Exception e) {
+            logger.warn("Exception in runOneCycle()", e);
+        }
+        try {
+            Thread.sleep(RUN_LOOP_DELAY_MSEC);
+        } catch (final InterruptedException ignore) {
+            // ignore
         }
         counters[RUN_LOOP_COUNTER]++;
     }
