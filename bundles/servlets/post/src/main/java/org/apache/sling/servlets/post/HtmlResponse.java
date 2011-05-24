@@ -22,7 +22,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.sling.api.request.ResponseUtil;
 
 /**
  * The <code>HtmlResponse</code> is an {@link AbstractPostResponse} preparing
@@ -140,7 +143,7 @@ public class HtmlResponse extends AbstractPostResponse {
                         state = 0;
                         Object prop = getProperty(varBuffer.toString());
                         if (prop != null) {
-                            out.write(htmlEscape(prop.toString()));
+                            out.write(ResponseUtil.escapeXml(prop.toString()));
                         }
                         varBuffer.setLength(0);
                     } else {
@@ -152,24 +155,4 @@ public class HtmlResponse extends AbstractPostResponse {
         out.flush();
     }
 
-    /** HTML escaping */
-    static String htmlEscape(String str) {
-        if(str == null) {
-            return null;
-        }
-        final StringBuilder out = new StringBuilder();
-        for(int i=0; i < str.length(); i++) {
-            final char c = str.charAt(i);
-            if(c == '<') {
-                out.append("&lt;");
-            } else if (c == '>') {
-                out.append("&gt;");
-            } else if(c == '&') {
-                out.append("&amp;");
-            } else {
-                out.append(c);
-            }
-        }
-        return out.toString();
-    }
 }

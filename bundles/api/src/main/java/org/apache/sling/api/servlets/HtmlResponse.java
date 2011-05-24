@@ -27,6 +27,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.request.ResponseUtil;
+
 /**
  * Generator for a HTML status response that displays the changes made in a post
  * request. see <a href="HtmlResponse.html">HtmlResponse.html</a> for the
@@ -476,7 +478,7 @@ public class HtmlResponse {
                         state = 0;
                         Object prop = properties.get(varBuffer.toString());
                         if (prop != null) {
-                            out.write(escapeHtmlText(prop.toString()));
+                            out.write(ResponseUtil.escapeXml(prop.toString()));
                         }
                         varBuffer.setLength(0);
                     } else {
@@ -486,26 +488,6 @@ public class HtmlResponse {
         }
         in.close();
         out.flush();
-    }
-    
-    public static String escapeHtmlText(String str) {
-        if(str == null) {
-            return null;
-        }
-        final StringBuilder out = new StringBuilder();
-        for(int i=0; i < str.length(); i++) {
-            final char c = str.charAt(i);
-            if(c == '<') {
-                out.append("&lt;");
-            } else if (c == '>') {
-                out.append("&gt;");
-            } else if(c == '&') {
-                out.append("&amp;");
-            } else {
-                out.append(c);
-            }
-        }
-        return out.toString();
     }
 
 }
