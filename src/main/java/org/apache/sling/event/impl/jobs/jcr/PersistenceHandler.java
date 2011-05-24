@@ -282,7 +282,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
 
                         // we are only interested in locks
                         if ( JCRHelper.NODE_PROPERTY_LOCK_OWNER.equals(propertyName) ) {
-                            ((DefaultJobManager)this.jobManager).notifyActiveJob(path.substring(this.repositoryPath.length() + 1));
+                            ((DefaultJobManager)this.jobManager).notifyActiveJob(path.substring(this.repositoryPath.length() + 1, pos));
                         }
 
                     } else if ( event.getType() == javax.jcr.observation.Event.NODE_REMOVED) {
