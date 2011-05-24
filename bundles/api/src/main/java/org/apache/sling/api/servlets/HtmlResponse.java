@@ -476,7 +476,7 @@ public class HtmlResponse {
                         state = 0;
                         Object prop = properties.get(varBuffer.toString());
                         if (prop != null) {
-                            out.write(htmlEscape(prop.toString()));
+                            out.write(escapeHtmlText(prop.toString()));
                         }
                         varBuffer.setLength(0);
                     } else {
@@ -488,7 +488,7 @@ public class HtmlResponse {
         out.flush();
     }
     
-    static String htmlEscape(String str) {
+    public static String escapeHtmlText(String str) {
         if(str == null) {
             return null;
         }

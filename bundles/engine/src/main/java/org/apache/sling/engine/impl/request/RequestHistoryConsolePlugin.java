@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.servlets.HtmlResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -145,11 +146,11 @@ public class RequestHistoryConsolePlugin {
                             currentRequestIndex);
                         final StringBuilder sb = new StringBuilder();
                         sb.append("<a href='" + LABEL + "?index="
-                            + info.getKey() + "'>");
+                            + HtmlResponse.escapeHtmlText(info.getKey()) + "'>");
                         if (isCurrent) {
                             sb.append("<b>");
                         }
-                        sb.append(info.getLabel());
+                        sb.append(HtmlResponse.escapeHtmlText(info.getLabel()));
                         if (isCurrent) {
                             sb.append("</b>");
                         }
@@ -226,7 +227,8 @@ public class RequestHistoryConsolePlugin {
                 pw.println("<tr>");
                 pw.printf(
                     "<th class='ui-widget-header'>Request %s (%s %s) by %s - RequestProgressTracker Info</th>%n",
-                    key, info.getMethod(), info.getPathInfo(), info.getUser());
+                    key, HtmlResponse.escapeHtmlText(info.getMethod()), 
+                    HtmlResponse.escapeHtmlText(info.getPathInfo()), HtmlResponse.escapeHtmlText(info.getUser()));
                 pw.println("</tr>");
                 pw.println("</thead>");
 
@@ -237,7 +239,7 @@ public class RequestHistoryConsolePlugin {
                 final Iterator<String> it = info.getTracker().getMessages();
                 pw.print("<pre>");
                 while (it.hasNext()) {
-                    pw.print(escape(it.next()));
+                    pw.print(HtmlResponse.escapeHtmlText(it.next()));
                 }
                 pw.println("</pre></td></tr>");
                 pw.println("</tbody></table>");
@@ -252,24 +254,6 @@ public class RequestHistoryConsolePlugin {
                 resp.sendRedirect(req.getRequestURI());
             }
         }
-
-        private static String escape(String str) {
-            final StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < str.length(); i++) {
-                final char c = str.charAt(i);
-                if (c == '<') {
-                    sb.append("&lt;");
-                } else if (c == '>') {
-                    sb.append("&gt;");
-                } else if (c == '&') {
-                    sb.append("&amp;");
-                } else {
-                    sb.append(c);
-                }
-            }
-            return sb.toString();
-        }
-
     }
 
     private static class RequestInfo {
