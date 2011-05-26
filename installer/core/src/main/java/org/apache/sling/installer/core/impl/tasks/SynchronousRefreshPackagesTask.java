@@ -116,6 +116,5 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
         } finally {
         	this.bundleTaskCreator.getBundleContext().removeFrameworkListener(this);
         }
-        return;
 	}
 }

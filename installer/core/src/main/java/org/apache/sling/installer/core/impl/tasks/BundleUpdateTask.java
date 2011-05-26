@@ -89,7 +89,8 @@ public class BundleUpdateTask extends AbstractInstallTask {
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
-            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
+            ctx.addTaskToNextCycle(new SynchronousRefreshPackagesTask(this.creator));
+            ctx.addTaskToCurrentCycle(new RefreshOptionalPackagesTask(this.creator));
             this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
     	} catch (Exception e) {
             if ( !canRetry ) {

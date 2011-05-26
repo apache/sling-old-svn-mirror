@@ -84,6 +84,7 @@ public class BundleInstallTask extends AbstractInstallTask {
             // mark this resource as installed and to be started
             this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
             ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.creator));
+            ctx.addTaskToNextCycle(new RefreshOptionalPackagesTask(this.creator));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
             this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
