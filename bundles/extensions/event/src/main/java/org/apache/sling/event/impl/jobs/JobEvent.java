@@ -57,4 +57,10 @@ public abstract class JobEvent {
         }
         return this.uniqueId.equals(((JobEvent)obj).uniqueId);
     }
+
+    @Override
+    public String toString() {
+        // TODO Auto-generated method stub
+        return "JobEvent(" + uniqueId + ")";
+    }
 }

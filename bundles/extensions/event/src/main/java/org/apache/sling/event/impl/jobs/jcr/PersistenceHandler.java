@@ -723,7 +723,13 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         try {
             writerSession = this.environment.createAdminSession();
             // we only listen for all node added events not coming from this session(!)
-            writerSession.getWorkspace().getObservationManager().addEventListener(this,
+            writerSession.getWorkspace().getObservationManager().addEventListener(
+                    new EventListener() {
+
+                        public void onEvent(final EventIterator events) {
+                            PersistenceHandler.this.onEvent(events);
+                        }
+                    },
                          javax.jcr.observation.Event.NODE_ADDED,
                          this.repositoryPath,
                          true,
