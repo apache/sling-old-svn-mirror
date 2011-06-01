@@ -55,7 +55,7 @@ public class MapEntries implements EventListener {
 
     public static final String DEFAULT_MAP_ROOT = "/etc/map";
 
-    private static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
+    static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
