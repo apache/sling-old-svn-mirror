@@ -165,6 +165,11 @@ public class MapEntry implements Comparable<MapEntry> {
                 url = url.substring(0, url.length()-1);
             }
 
+            // check whether the url is for ANY_SCHEME_HOST
+            if (url.startsWith(MapEntries.ANY_SCHEME_HOST)) {
+                url = url.substring(MapEntries.ANY_SCHEME_HOST.length());
+            }
+
             String[] internalRedirect = props.get(
                 JcrResourceResolver.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
