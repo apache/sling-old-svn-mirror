@@ -1826,6 +1826,52 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
     }
 
+    public void test_resolve_with_sling_alias_ws() throws Exception {
+
+        Node child = rootWs2Node.addNode("child");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
+        ws2Session.save();
+
+        String path = "/kind";
+
+        HttpServletRequest request = new ResourceResolverTestRequest(path);
+        request.setAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO,
+            "ws2");
+
+        Resource res = mwResResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootWs2Node.getPath() + "/kind",
+            res.getResourceMetadata().getResolutionPath());
+        assertEquals("", res.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNode = res.adaptTo(Node.class);
+        assertNotNull(resNode);
+
+        assertEquals(child.getPath(), resNode.getPath());
+
+        // second level alias
+        Node grandchild = child.addNode("grandchild");
+        grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
+        ws2Session.save();
+
+        // expect kind/enkel due to alias and no parent due to mapping
+        // the rootPath onto root
+        String pathEnkelNoWS = "/kind/enkel";
+        String pathEnkel = "ws2:" + pathEnkelNoWS;
+        String mappedEnkel = mwResResolver.map(request, grandchild.getPath());
+        assertEquals(pathEnkelNoWS, mappedEnkel);
+
+        Resource resEnkel = mwResResolver.resolve(request, pathEnkel);
+        assertNotNull(resEnkel);
+        assertEquals(rootNode.getPath() + "/kind/enkel",
+            resEnkel.getResourceMetadata().getResolutionPath());
+        assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
+
+        Node resNodeEnkel = resEnkel.adaptTo(Node.class);
+        assertNotNull(resNodeEnkel);
+        assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
+    }
+
     public void test_resolve_with_sling_alias_multi_value() throws Exception {
 
         Node child = rootNode.addNode("child");
