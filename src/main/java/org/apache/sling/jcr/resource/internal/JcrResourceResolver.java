@@ -329,22 +329,34 @@ public class JcrResourceResolver
     public Resource resolve(HttpServletRequest request, String absPath) {
         checkClosed();
 
+        String workspaceName = null;
+
         // make sure abspath is not null and is absolute
         if (absPath == null) {
             absPath = "/";
         } else if (!absPath.startsWith("/")) {
-            absPath = "/" + absPath;
+            if (useMultiWorkspaces) {
+                final int wsSepPos = absPath.indexOf(":/");
+                if (wsSepPos != -1) {
+                    workspaceName = absPath.substring(0, wsSepPos);
+                    absPath = absPath.substring(wsSepPos + 1);
+                } else {
+                    absPath = "/" + absPath;
+                }
+            } else {
+                absPath = "/" + absPath;
+            }
         }
 
         // check for special namespace prefix treatment
         absPath = unmangleNamespaces(absPath);
-
-        String workspaceName = null;
         if (useMultiWorkspaces) {
-            // check for workspace info
-            workspaceName = (request == null ? null :
-                (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
-            if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
+            if (workspaceName == null) {
+                // check for workspace info from request
+                workspaceName = (request == null ? null :
+                    (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
+            }
+            if (workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
                 LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
                 try {
                     final ResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
