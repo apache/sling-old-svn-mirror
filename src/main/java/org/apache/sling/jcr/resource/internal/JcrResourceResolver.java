@@ -594,6 +594,22 @@ public class JcrResourceResolver
                         return null;
                     }
                 }
+            } else {
+                // check for workspace info in request
+                workspaceName = (request == null ? null :
+                    (String)request.getAttribute(ResourceResolver.REQUEST_ATTR_WORKSPACE_INFO));
+                if ( workspaceName != null && !workspaceName.equals(getSession().getWorkspace().getName())) {
+                    LOGGER.debug("Delegating resolving to resolver for workspace {}", workspaceName);
+                    try {
+                        JcrResourceResolver wsResolver = getResolverForWorkspace(workspaceName);
+                        res = wsResolver.resolveInternal(mappedPath);
+                    } catch (LoginException e) {
+                        // requested a resource in a workspace I don't have access to.
+                        // we treat this as a not found resource
+                        return null;
+                    }
+
+                }
             }
         }
 
