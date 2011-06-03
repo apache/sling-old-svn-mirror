@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.query.Query;
-
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -114,8 +112,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
      *
      */
     protected String getQueryType(SlingHttpServletRequest req) {
-        return (req.getParameter(QUERY_TYPE) != null && req.getParameter(
-                QUERY_TYPE).equals(Query.SQL)) ? Query.SQL : Query.XPATH;
+        return req.getParameter(QUERY_TYPE);
     }
     
 
