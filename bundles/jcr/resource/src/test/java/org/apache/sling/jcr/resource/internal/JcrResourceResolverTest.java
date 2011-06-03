@@ -1871,11 +1871,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             AccessControlUtil.replaceAccessControlEntry(session, grandchild.getPath(), testUserPrincipal, new String[] { "jcr:all" }, null, null, "first");
             session.save();
 
-            // expect /child/grandchild due to parent node not being
+            // expect /child/enkel due to parent node not being
             // visible to the test user and no parent due to mapping
             // the rootPath onto root
-            // TODO - get partial aliases to work, i.e. this should be /child/enkel
-            String pathEnkel = "/child/grandchild";
+            String pathEnkel = "/child/enkel";
             String mappedEnkel = testUserResolver.map(grandchild.getPath());
             assertEquals(pathEnkel, mappedEnkel);
 

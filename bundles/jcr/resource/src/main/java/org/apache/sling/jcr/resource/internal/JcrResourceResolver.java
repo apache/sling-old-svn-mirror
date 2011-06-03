@@ -634,21 +634,21 @@ public class JcrResourceResolver
                 StringBuilder buf = new StringBuilder();
                 Resource current = res.getResourceResolver().getResource("/");
                 for (String name: segments) {
-                    current = current.getChild(name);
-                    if (current == null) {
+                    Resource child = current.getChild(name);
+                    if (child == null) {
                         LOGGER.warn("map: could not load child resource {}/{} for alias mapping.", buf, name);
-                        buf = new StringBuilder(res.getPath());
-                        break;
+                        current = new NonExistingResource(res.getResourceResolver(), current.getPath() + "/" + name);
+                        buf.append('/').append(name);
+                    } else {
+                        String alias = getProperty(child, PROP_ALIAS);
+                        if (alias == null || alias.length() == 0) {
+                            alias = name;
+                        }
+                        buf.append('/').append(alias);
+                        current = child;
                     }
-                    String alias = getProperty(current, PROP_ALIAS);
-                    if (alias == null || alias.length() == 0) {
-                        alias = name;
-                    }
-                    buf.append('/').append(alias);
                 }
-                if (buf.length() == 0) {
-                    buf.append('/');
-                }
+
                 // reappend the resolutionPathInfo
                 if (resolutionPathInfo != null) {
                     buf.append(resolutionPathInfo);
