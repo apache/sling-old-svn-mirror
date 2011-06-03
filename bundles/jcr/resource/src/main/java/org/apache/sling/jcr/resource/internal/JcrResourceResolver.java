@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -36,7 +35,9 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
@@ -93,6 +94,15 @@ public class JcrResourceResolver
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
 
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
+
+    @SuppressWarnings("deprecation")
+    private static final String DEFAULT_QUERY_LANGUAGE = Query.XPATH;
+
+    /** column name for node path */
+    private static final String QUERY_COLUMN_PATH = "jcr:path";
+
+    /** column name for score value */
+    private static final String QUERY_COLUMN_SCORE = "jcr:score";
 
     /** The root provider for the resource tree. */
     private final JcrResourceProviderEntry rootProvider;
@@ -905,9 +915,12 @@ public class JcrResourceResolver
                                                         final String language)
     throws SlingException {
         checkClosed();
+
+        final String queryLanguage = isSupportedQueryLanguage(language) ? language : DEFAULT_QUERY_LANGUAGE;
+
         try {
             QueryResult result = JcrResourceUtil.query(adaptTo(Session.class), query,
-                language);
+                queryLanguage);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
             return new Iterator<Map<String, Object>>() {
@@ -918,14 +931,31 @@ public class JcrResourceResolver
                 public Map<String, Object> next() {
                     Map<String, Object> row = new HashMap<String, Object>();
                     try {
-                        Value[] values = rows.nextRow().getValues();
+                        Row jcrRow = rows.nextRow();
+                        boolean didPath = false;
+                        boolean didScore = false;
+                        Value[] values = jcrRow.getValues();
                         for (int i = 0; i < values.length; i++) {
                             Value v = values[i];
                             if (v != null) {
-                                row.put(colNames[i],
+                                String colName = colNames[i];
+                                row.put(colName,
                                     JcrResourceUtil.toJavaObject(values[i]));
+                                if (colName.equals(QUERY_COLUMN_PATH)) {
+                                    didPath = true;
+                                }
+                                if (colName.equals(QUERY_COLUMN_SCORE)) {
+                                    didScore = true;
+                                }
                             }
                         }
+                        if (!didPath) {
+                            row.put(QUERY_COLUMN_PATH, jcrRow.getPath());
+                        }
+                        if (!didScore) {
+                            row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
+                        }
+
                     } catch (RepositoryException re) {
                         LOGGER.error(
                             "queryResources$next: Problem accessing row values",
@@ -1288,5 +1318,20 @@ public class JcrResourceResolver
         }
 
         return absPath;
+    }
+
+    private boolean isSupportedQueryLanguage(String language) {
+        try {
+        String[] supportedLanguages = adaptTo(Session.class).getWorkspace().
+            getQueryManager().getSupportedQueryLanguages();
+            for (String lang : supportedLanguages) {
+                if (lang.equals(language)) {
+                    return true;
+                }
+            }
+        } catch (RepositoryException e) {
+            LOGGER.error("Unable to discover supported query languages", e);
+        }
+        return false;
     }
 }
