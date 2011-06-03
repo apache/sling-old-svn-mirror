@@ -111,6 +111,11 @@ public class JsonQueryServletTest extends HttpTestBase {
         assertCount(5, query, "sql", 0, 0);
     }
     
+    public void testSql2() throws IOException {
+        final String query = "select * from [nt:unstructured] where ISDESCENDANTNODE('" + testPath + "/folderB')";
+        assertCount(5, query, "JCR-SQL2", 0, 0);
+    }
+
     public void testOffset() throws IOException {
         assertCount(3, "/" + testPath + "/folderC/*", "xpath", 2, 0);
     }
