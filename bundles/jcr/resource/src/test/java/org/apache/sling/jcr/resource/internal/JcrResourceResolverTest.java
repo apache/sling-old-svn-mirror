@@ -41,6 +41,8 @@ import javax.servlet.http.HttpSession;
 
 import junitx.util.PrivateAccessor;
 
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
@@ -51,6 +53,7 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
@@ -76,6 +79,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private Session ws2Session;
 
     private Node rootWs2Node;
+
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -163,6 +167,15 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootWs2Node.addNode("child1");
         child.addNode("child2");
         ws2Session.save();
+
+        UserManager userMan = AccessControlUtil.getUserManager(session);
+        try {
+            userMan.createUser("testuser", "test");
+        } catch (Exception e) {
+            if (!e.getMessage().equals("User for 'testuser' already exists")) {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -1826,6 +1839,62 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
     }
 
+    public void test_resolve_with_sling_alias_limited_access() throws Exception {
+        Principal testUserPrincipal = AccessControlUtil.getPrincipalManager(session).getPrincipal("testuser");
+
+        Node child = rootNode.addNode("child");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, "kind");
+        AccessControlUtil.replaceAccessControlEntry(session, child.getPath(), testUserPrincipal, null, new String[] {"jcr:all"}, null, "last");
+        session.save();
+
+        Session testUserSession = getRepository().login(new SimpleCredentials("testuser", "test".toCharArray()));
+        ResourceResolver testUserResolver = resFac.getResourceResolver(testUserSession);
+
+        try {
+            // expect child due to the aliased not not being visible and no parent
+            // due to mapping the rootPath onto root
+            String path = "/child";
+            String mapped = testUserResolver.map(child.getPath());
+            assertEquals(path, mapped);
+
+            Resource res = testUserResolver.resolve(null, path);
+            assertNotNull(res);
+            assertTrue(res instanceof NonExistingResource);
+            assertEquals("/child",
+                res.getResourceMetadata().getResolutionPath());
+            // TODO - is this correct?
+            assertEquals(null, res.getResourceMetadata().getResolutionPathInfo());
+
+            // second level alias
+            Node grandchild = child.addNode("grandchild");
+            grandchild.setProperty(JcrResourceResolver.PROP_ALIAS, "enkel");
+            AccessControlUtil.replaceAccessControlEntry(session, grandchild.getPath(), testUserPrincipal, new String[] { "jcr:all" }, null, null, "first");
+            session.save();
+
+            // expect /child/enkel due to alias and the child node not being
+            // visible to the test user and no parent due to mapping
+            // the rootPath onto root
+            String pathEnkel = "/child/grandchild";
+            String mappedEnkel = testUserResolver.map(grandchild.getPath());
+            assertEquals(pathEnkel, mappedEnkel);
+
+            /*
+            Resource resEnkel = testUserResolver.resolve(null, pathEnkel);
+            assertNotNull(resEnkel);
+            assertEquals(rootNode.getPath() + "/kind/enkel",
+                resEnkel.getResourceMetadata().getResolutionPath());
+            assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
+    
+            Node resNodeEnkel = resEnkel.adaptTo(Node.class);
+            assertNotNull(resNodeEnkel);
+            assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
+            */
+        } finally {
+            testUserSession.logout();
+        }
+    }
+
+    
     public void test_resolve_with_sling_alias_ws() throws Exception {
 
         Node child = rootWs2Node.addNode("child");
