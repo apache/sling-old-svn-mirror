@@ -26,3 +26,4 @@
   - sling:vanityPath (string) multiple
   - sling:redirect (boolean)
   - sling:vanityOrder (long)
+  - sling:redirectStatus (long)

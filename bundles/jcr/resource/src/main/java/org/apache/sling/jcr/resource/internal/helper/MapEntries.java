@@ -299,7 +299,7 @@ public class MapEntries implements EventListener {
             List<MapEntry> entries) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
-        final String queryString = "SELECT sling:vanityPath, sling:redirect FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(
             queryString, Query.SQL);
         while (i.hasNext()) {
@@ -325,7 +325,7 @@ public class MapEntries implements EventListener {
                     // whether the target is attained by a 302/FOUND or by an
                     // internal redirect is defined by the sling:redirect property
                     int status = row.get("sling:redirect", false)
-                            ? HttpServletResponse.SC_FOUND
+                            ? row.get("sling:redirectStatus", HttpServletResponse.SC_FOUND)
                             : -1;
 
                     // 1. entry with exact match
