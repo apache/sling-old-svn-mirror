@@ -65,7 +65,7 @@
                             http://sling.apache.org/site/sling-settings-orgapacheslingsettings.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.settings;version=1.0.0
+                            org.apache.sling.settings;version=1.1.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.settings.impl
