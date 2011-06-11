@@ -67,6 +67,13 @@ public interface SlingSettingsService {
      */
     String RUN_MODES_PROPERTY = "sling.run.modes";
 
+    /**
+     * Utility method to generate an absolute path
+     * within Sling Home.
+     *
+     * @since 1.1.0
+     */
+    String getAbsolutePathWithinSlingHome(String relativePath);
 
     /**
      * The identifier of the running Sling instance.

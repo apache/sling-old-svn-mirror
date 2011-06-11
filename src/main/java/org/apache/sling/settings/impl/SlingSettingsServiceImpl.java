@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,7 +64,6 @@ public class SlingSettingsServiceImpl
 
     /** Flag indicating a delayed start of this service. */
     private boolean delayedStart = false;
-
     /**
      * Create the service and search the Sling home urls and
      * get/create a sling id.
@@ -214,6 +215,14 @@ public class SlingSettingsServiceImpl
             }
         }
         return null;
+    }
+
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#getAbsolutePathWithinSlingHome()
+     */
+    public String getAbsolutePathWithinSlingHome(String relativePath) {
+        return new File(slingHome, relativePath).getAbsolutePath();
     }
 
     /**
