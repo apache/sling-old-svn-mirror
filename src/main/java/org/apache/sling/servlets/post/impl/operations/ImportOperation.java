@@ -49,26 +49,26 @@ public class ImportOperation extends AbstractCreateOperation {
     /**
      * Reference to the content importer service
      */
-	private ContentImporter contentImporter;
+    private ContentImporter contentImporter;
 
     public ImportOperation(ContentImporter contentImporter) {
         this.contentImporter = contentImporter;
     }
 
     public void setContentImporter(ContentImporter importer) {
-		this.contentImporter = importer;
-	}
+        this.contentImporter = importer;
+    }
 
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
-    		throws RepositoryException {
-    	ContentImporter importer = contentImporter;
-    	if (importer == null) {
+            throws RepositoryException {
+        ContentImporter importer = contentImporter;
+        if (importer == null) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Missing content importer for import");
             return;
-    	}
-    	Map<String, RequestProperty> reqProperties = collectContent(request,
+        }
+        Map<String, RequestProperty> reqProperties = collectContent(request,
              response);
 
         VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
@@ -110,8 +110,8 @@ public class ImportOperation extends AbstractCreateOperation {
         String basePath = getItemPath(request);
         basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
         if (basePath.endsWith("/")) {
-        	//remove the trailing slash
-        	basePath = basePath.substring(0, basePath.length() - 1);
+            //remove the trailing slash
+            basePath = basePath.substring(0, basePath.length() - 1);
         }
 
         // default to creating content
@@ -150,10 +150,10 @@ public class ImportOperation extends AbstractCreateOperation {
             if (content != null) {
                 contentStream = new ByteArrayInputStream(content.getBytes());
             } else {
-            	RequestParameter contentFile = request.getRequestParameter(SlingPostConstants.RP_CONTENT_FILE);
-            	if (contentFile != null) {
-            		contentStream = contentFile.getInputStream();
-            	}
+                RequestParameter contentFile = request.getRequestParameter(SlingPostConstants.RP_CONTENT_FILE);
+                if (contentFile != null) {
+                    contentStream = contentFile.getInputStream();
+                }
             }
 
             if (contentStream == null) {
@@ -161,78 +161,78 @@ public class ImportOperation extends AbstractCreateOperation {
                         "Missing content for import");
                 return;
             } else {
-            	importer.importContent(node, contentRootName, contentStream,
-    					new ImportOptions() {
+                importer.importContent(node, contentRootName, contentStream,
+                        new ImportOptions() {
 
-							@Override
-							public boolean isCheckin() {
-								return checkin;
-							}
+                            @Override
+                            public boolean isCheckin() {
+                                return checkin;
+                            }
 
-							@Override
-							public boolean isIgnoredImportProvider(
-									String extension) {
-    							// this probably isn't important in this context.
-								return false;
-							}
+                            @Override
+                            public boolean isIgnoredImportProvider(
+                                    String extension) {
+                                // this probably isn't important in this context.
+                                return false;
+                            }
 
-							@Override
-							public boolean isOverwrite() {
-								return replace;
-							}
+                            @Override
+                            public boolean isOverwrite() {
+                                return replace;
+                            }
 
-							/* (non-Javadoc)
-							 * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
-							 */
-							@Override
-							public boolean isPropertyOverwrite() {
-								return replaceProperties;
-							}
-    					},
-    					new ContentImportListener() {
+                            /* (non-Javadoc)
+                             * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
+                             */
+                            @Override
+                            public boolean isPropertyOverwrite() {
+                                return replaceProperties;
+                            }
+                        },
+                        new ContentImportListener() {
 
-							public void onReorder(String orderedPath, String beforeSibbling) {
-								changes.add(Modification.onOrder(orderedPath, beforeSibbling));
-							}
+                            public void onReorder(String orderedPath, String beforeSibbling) {
+                                changes.add(Modification.onOrder(orderedPath, beforeSibbling));
+                            }
 
-							public void onMove(String srcPath, String destPath) {
-								changes.add(Modification.onMoved(srcPath, destPath));
-							}
+                            public void onMove(String srcPath, String destPath) {
+                                changes.add(Modification.onMoved(srcPath, destPath));
+                            }
 
-							public void onModify(String srcPath) {
-								changes.add(Modification.onModified(srcPath));
-							}
+                            public void onModify(String srcPath) {
+                                changes.add(Modification.onModified(srcPath));
+                            }
 
-							public void onDelete(String srcPath) {
-								changes.add(Modification.onDeleted(srcPath));
-							}
+                            public void onDelete(String srcPath) {
+                                changes.add(Modification.onDeleted(srcPath));
+                            }
 
-							public void onCreate(String srcPath) {
-								changes.add(Modification.onCreated(srcPath));
-							}
+                            public void onCreate(String srcPath) {
+                                changes.add(Modification.onCreated(srcPath));
+                            }
 
-							public void onCopy(String srcPath, String destPath) {
-								changes.add(Modification.onMoved(srcPath, destPath));
-							}
-						});
+                            public void onCopy(String srcPath, String destPath) {
+                                changes.add(Modification.onMoved(srcPath, destPath));
+                            }
+                        });
             }
 
             if (!changes.isEmpty()) {
                 //fill in the data for the response report
                 Modification modification = changes.get(0);
                 if (modification.getType() == ModificationType.CREATE) {
-                	String importedPath = modification.getSource();
-                	response.setLocation(externalizePath(request, importedPath));
-                	response.setPath(importedPath);
-                	int lastSlashIndex = importedPath.lastIndexOf('/');
-                	if (lastSlashIndex != -1) {
-                		String parentPath = importedPath.substring(0, lastSlashIndex);
-                		response.setParentLocation(externalizePath(request, parentPath));
-                	}
+                    String importedPath = modification.getSource();
+                    response.setLocation(externalizePath(request, importedPath));
+                    response.setPath(importedPath);
+                    int lastSlashIndex = importedPath.lastIndexOf('/');
+                    if (lastSlashIndex != -1) {
+                        String parentPath = importedPath.substring(0, lastSlashIndex);
+                        response.setParentLocation(externalizePath(request, parentPath));
+                    }
                 }
             }
         } catch (IOException e) {
-        	throw new RepositoryException(e);
+            throw new RepositoryException(e);
         }
     }
 }
