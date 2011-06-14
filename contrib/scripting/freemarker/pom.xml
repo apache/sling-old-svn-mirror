@@ -57,13 +57,23 @@
                         </Private-Package>
 
                         <Embed-Dependency>freemarker;inline=true</Embed-Dependency>
+                        <!--
+                        A few notes on the lines below:
+                        * Freemarker's SLF4J support depends upon org.slf4j.spi. Grrr. They'll have to use Log4J.
+                        * If you want XPath support in Freemarker, it appears you need to provide one of Xalan standalone
+                          Sun's internalized version of Xalan, or Jaxen.
+                        -->
                         <Import-Package>
+                            !org.slf4j.*,
+                            com.sun.org.apache.xml.internal.*;
+                            com.sun.org.apache.xpath.internal.*;
                             javax.servlet.jsp.*; javax.swing.*;
                             org.apache.log; org.apache.log4j;
                             org.apache.tools.ant.*;
                             org.apache.xml.utils; org.apache.xpath.*;
                             org.dom4j.*; org.jaxen.*; org.jdom.*;
                             org.mozilla.javascript;
+                            org.zeroturnaround.javarebel;
                             org.python.*;resolution:=optional, *
                         </Import-Package>
                         
@@ -124,9 +134,9 @@
             <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
-            <groupId>freemarker</groupId>
+            <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.6</version>
+            <version>2.3.18</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
