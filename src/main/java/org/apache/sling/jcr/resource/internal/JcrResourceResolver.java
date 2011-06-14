@@ -1322,8 +1322,8 @@ public class JcrResourceResolver
 
     private boolean isSupportedQueryLanguage(String language) {
         try {
-        String[] supportedLanguages = adaptTo(Session.class).getWorkspace().
-            getQueryManager().getSupportedQueryLanguages();
+            String[] supportedLanguages = adaptTo(Session.class).getWorkspace().
+                getQueryManager().getSupportedQueryLanguages();
             for (String lang : supportedLanguages) {
                 if (lang.equals(language)) {
                     return true;
