@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -193,6 +195,42 @@ public class PostServletCreateTest extends HttpTestBase {
 		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, testNodeName));
 		//expect a 500 status since the name is not unique
 		assertPostStatus(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+    }
+
+    public void testCreatingNodeUnderFile() throws IOException {
+        final String baseWebDavUrl = WEBDAV_BASE_URL + "/CreateFileTest";
+        testClient.mkdir(baseWebDavUrl);
+
+        final String testFile = "/integration-test/testfile.txt";
+        final InputStream data = getClass().getResourceAsStream(testFile);
+
+        final String webdavUrl = baseWebDavUrl + "/" + System.currentTimeMillis() + ".txt";
+        try {
+            assertNotNull("Local test file " + testFile + " must be found", data);
+
+            // Upload a file via WebDAV, verify, delete and verify
+            assertHttpStatus(webdavUrl, 404, "Resource " + webdavUrl + " must not exist before test");
+            int status = testClient.upload(webdavUrl, data);
+            assertEquals("upload must return status code 201", 201, status);
+            assertHttpStatus(webdavUrl, 200, "Resource " + webdavUrl + " must exist after upload");
+        } finally {
+            if (data != null) {
+                data.close();
+            }
+        }
+
+        final String childUrl = webdavUrl + "/*";
+
+        List<NameValuePair> list = new ArrayList<NameValuePair>();
+        list.add(new NameValuePair(":nameHint", "child"));
+        list.add(new NameValuePair("prop", "value"));
+        list.add(new NameValuePair("jcr:primaryType", "nt:unstructured"));
+
+        final HttpMethod method = assertPostStatus(childUrl, 500, list,
+                "Response to creating a child under nt:file should fail.");
+        final String body = method.getResponseBodyAsString();
+        assertTrue("Failure should result from a ConstraintViolationException",
+                body.contains("javax.jcr.nodetype.ConstraintViolationException"));
     }
 
 }

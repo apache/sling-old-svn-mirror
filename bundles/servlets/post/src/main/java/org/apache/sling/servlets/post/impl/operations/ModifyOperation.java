@@ -118,6 +118,14 @@ public class ModifyOperation extends AbstractCreateOperation {
             // resource for part of the path, use request suffix
             suffix = request.getRequestPathInfo().getSuffix();
 
+            if (suffix != null) {
+                // cut off any selectors/extension from the suffix
+                int dotPos = suffix.indexOf('.');
+                if (dotPos > 0) {
+                    suffix = suffix.substring(0, dotPos);
+                }
+            }
+
             // and preset the path buffer with the resource path
             rootPathBuf.append(currentResource.getPath());
 
@@ -127,14 +135,7 @@ public class ModifyOperation extends AbstractCreateOperation {
         boolean doGenerateName = false;
         if (suffix != null) {
 
-            // cut off any selectors/extension from the suffix
-            int dotPos = suffix.indexOf('.');
-            if ((dotPos > 0)
-                && (!(currentResource instanceof NonExistingResource))) {
-                suffix = suffix.substring(0, dotPos);
-            }
-
-            // and check whether it is a create request (trailing /)
+            // check whether it is a create request (trailing /)
             if (suffix.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
                 suffix = suffix.substring(0, suffix.length()
                     - SlingPostConstants.DEFAULT_CREATE_SUFFIX.length());
