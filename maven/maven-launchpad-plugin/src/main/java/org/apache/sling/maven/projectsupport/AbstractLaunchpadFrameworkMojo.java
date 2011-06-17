@@ -30,7 +30,7 @@ import org.codehaus.plexus.util.FileUtils;
  * This class contains the Launchpad-framework specific utility methods.
  *
  */
-public abstract class AbstractLaunchpadFrameworkMojo extends AbstractBundleListMojo {
+public abstract class AbstractLaunchpadFrameworkMojo extends AbstractUsingBundleListMojo {
 
     /**
      * The name of the directory within the output directory into which the base

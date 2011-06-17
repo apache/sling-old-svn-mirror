@@ -32,7 +32,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
  * @goal check-bundle-list-for-snapshots
  *
  */
-public class CheckBundleListForSnapshotsMojo extends AbstractBundleListMojo {
+public class CheckBundleListForSnapshotsMojo extends AbstractUsingBundleListMojo {
 
     /**
      * True if the build should be failed if a snapshot is found.

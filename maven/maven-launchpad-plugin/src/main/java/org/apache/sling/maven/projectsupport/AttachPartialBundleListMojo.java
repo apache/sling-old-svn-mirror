@@ -16,29 +16,20 @@
  */
 package org.apache.sling.maven.projectsupport;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 
 /**
- * Output the bundle list back to the console.
+ * Attaches the bundle list as a project artifact.
  * 
- * @goal output-bundle-list
- * 
+ * @goal attach-partial-bundle-list
+ * @phase package
+ * @description attach the partial bundle list as a project artifact
  */
-public class OutputBundleListMojo extends AbstractUsingBundleListMojo {
+public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
-    @Override
-    protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
-        BundleListXpp3Writer writer = new BundleListXpp3Writer();
-        try {
-            writer.write(new OutputStreamWriter(System.out), getBundleList());
-        } catch (IOException e) {
-            throw new MojoExecutionException("Unable to write bundle list", e);
-        }
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        project.getArtifact().setFile(bundleListFile);
     }
 
 }

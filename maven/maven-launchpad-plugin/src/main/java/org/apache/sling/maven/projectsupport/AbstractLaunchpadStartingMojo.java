@@ -50,7 +50,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.osgi.framework.BundleException;
 
-public abstract class AbstractLaunchpadStartingMojo extends AbstractBundleListMojo implements Notifiable {
+public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleListMojo implements Notifiable {
 
     /** Default log level setting if no set on command line (value is "INFO"). */
     private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
