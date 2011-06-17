@@ -666,6 +666,9 @@ public class JcrResourceResolver
 
                 // and then we have the mapped path to work on
                 mappedPath = buf.toString();
+            } else {
+                // root if no segments
+            	mappedPath = "/";            		            	
             }
 
             LOGGER.debug("map: Alias mapping resolves to path {}", mappedPath);

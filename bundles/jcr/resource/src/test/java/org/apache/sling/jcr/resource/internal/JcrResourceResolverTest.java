@@ -41,7 +41,6 @@ import javax.servlet.http.HttpSession;
 
 import junitx.util.PrivateAccessor;
 
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -1622,6 +1621,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         path = "/child" + selExt;
         mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
+    }
+
+    public void testMapEmptyPath() throws Exception {
+        String mapped = resResolver.map("");
+        assertEquals("/", mapped);
     }
 
     public void testMapExtensionFragmentQuery() throws Exception {
