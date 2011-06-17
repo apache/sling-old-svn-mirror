@@ -31,7 +31,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleLis
  * @phase package
  * @description attach the bundle list as a project artifact
  */
-public class AttachBundleListMojo extends AbstractBundleListMojo {
+public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
 
     private static final String CLASSIFIER = "bundlelist";
 
