@@ -19,7 +19,6 @@
 package org.apache.sling.i18n.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -33,7 +32,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -44,6 +42,7 @@ import org.apache.felix.scr.annotations.sling.SlingFilter;
 import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.i18n.DefaultLocaleResolver;
 import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.Constants;
@@ -64,21 +63,7 @@ public class I18NFilter implements Filter {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(I18NFilter.class.getName());
 
-    private static LocaleResolver DEFAULT_LOCALE_RESOLVER = new LocaleResolver() {
-        public List<Locale> resolveLocale(SlingHttpServletRequest request) {
-
-            // unwrap the request which is a I18NSlingHttpServletRequest
-            request = ((SlingHttpServletRequestWrapper) request).getSlingRequest();
-
-            Enumeration<?> locales = request.getLocales();
-            List<Locale> localeList = new ArrayList<Locale>();
-            while (locales.hasMoreElements()) {
-                localeList.add((Locale) locales.nextElement());
-            }
-
-            return localeList;
-        }
-    };
+    private static LocaleResolver DEFAULT_LOCALE_RESOLVER = new DefaultLocaleResolver();
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
@@ -187,7 +172,7 @@ public class I18NFilter implements Filter {
 
         private List<Locale> getLocaleList() {
             if (localeList == null) {
-                localeList = localeResolver.resolveLocale(this);
+                localeList = localeResolver.resolveLocale(this.getSlingRequest());
             }
 
             return localeList;
