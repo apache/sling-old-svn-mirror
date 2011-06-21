@@ -57,6 +57,7 @@ import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
+import org.apache.sling.engine.jmx.RequestProcessor;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     private ServletResolver servletResolver;
 
     private ServletFilterManager filterManager;
+
+    private RequestProcessor mbean;
 
     // ---------- helper setters
 
@@ -118,6 +121,10 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         this.filterManager = filterManager;
     }
 
+    void setMBean(final RequestProcessor mbean) {
+        this.mbean = mbean;
+    }
+
     // ---------- SlingRequestProcessor interface
 
     public void processRequest(final HttpServletRequest servletRequest,
@@ -137,6 +144,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         if (requestLogger != null) {
             requestLogger.logRequestEntry(request, response);
         }
+
+        long startTimestamp = System.currentTimeMillis();
 
         try {
             final ServletResolver sr = this.servletResolver;
@@ -233,6 +242,10 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             handleError(t, request, response);
 
         } finally {
+            long elapsed = System.currentTimeMillis() - startTimestamp;
+            if (mbean != null) {
+                mbean.addRequestDuration(elapsed);
+            }
 
             // request exit log
             if (requestLogger != null) {
