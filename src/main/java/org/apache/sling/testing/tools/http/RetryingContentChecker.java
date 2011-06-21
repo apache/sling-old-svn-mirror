@@ -17,6 +17,7 @@
 package org.apache.sling.testing.tools.http;
 
 import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.sling.SlingTestBase;
 
 /** Retry a GET on an URL until it returns 200 or 
  *  until this times out.
@@ -38,7 +39,9 @@ public class RetryingContentChecker {
             }
 
             public boolean isTrue() throws Exception {
-                executor.execute(builder.buildGetRequest(path)).assertStatus(expectedStatus);
+                executor.execute(builder.buildGetRequest(path)
+                        .withCredentials(SlingTestBase.ADMIN, SlingTestBase.ADMIN))
+                    .assertStatus(expectedStatus);
                 return assertMore(executor);
             }
                 
