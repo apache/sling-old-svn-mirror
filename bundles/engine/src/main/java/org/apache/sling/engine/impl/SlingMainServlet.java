@@ -56,6 +56,8 @@ import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
+import org.apache.sling.engine.jmx.RequestProcessorMBean;
+import org.apache.sling.engine.jmx.RequestProcessor;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -339,6 +341,17 @@ public class SlingMainServlet extends GenericServlet {
         } catch (Throwable t) {
             log.debug(
                 "Unable to register web console request recorder plugin.", t);
+        }
+
+        try {
+            Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine,service=RequestProcessor");
+
+            RequestProcessor mbean = new RequestProcessor();
+            bundleContext.registerService(RequestProcessorMBean.class.getName(), mbean, mbeanProps);
+            requestProcessor.setMBean(mbean);
+        } catch (Throwable t) {
+            log.debug("Unable to register mbean");
         }
 
         // provide the SlingRequestProcessor service
