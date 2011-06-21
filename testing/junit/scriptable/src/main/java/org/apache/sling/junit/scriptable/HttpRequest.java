@@ -37,10 +37,12 @@ public class HttpRequest implements HttpServletRequest {
     public static final String FAKE_URL_BASE = "http://example.com";
     private final String path;
     private final Map<String, Object> attributes;
+    private final Map<String, String> parameters;
     
     HttpRequest(String path) {
         this.path = path;
         attributes = new HashMap<String, Object>();
+        parameters = new HashMap<String, String>();
     }
     
     public String getAuthType() {
@@ -192,7 +194,7 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public Map<?,?> getParameterMap() {
-        return null;
+        return parameters;
     }
 
     public Enumeration<?> getParameterNames() {

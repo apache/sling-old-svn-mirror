@@ -203,7 +203,8 @@ public class SlingClient {
     }
     
     public boolean exists(String path) throws IOException {
-        final int status = executor.execute(builder.buildGetRequest(path + ".json"))
+        final int status = executor.execute(builder.buildGetRequest(path + ".json")
+                .withCredentials(username, password))
         .getResponse().getStatusLine().getStatusCode();
         return status == 200;
     }
