@@ -25,6 +25,7 @@ import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,7 @@ public class RemoteTestHttpClient {
                 subpath, junitServletUrl);
         final Request r = builder
         .buildPostRequest(subpath.toString())
+        .withCredentials(SlingTestBase.ADMIN, SlingTestBase.ADMIN)
         .withCustomizer(requestCustomizer);
         executor.execute(r).assertStatus(200);
 
