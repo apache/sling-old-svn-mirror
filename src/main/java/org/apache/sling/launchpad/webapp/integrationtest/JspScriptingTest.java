@@ -78,7 +78,8 @@ public class JspScriptingTest extends JspTestBase {
         }
     }
 
-    /* Verify that overwriting a JSP script changes the output immediately */
+    /* Verify that overwriting a JSP script changes the output within a reasonable time 
+     * (might not be immediate as there's some observation and caching involved) */
     public void testChangingJsp() throws Exception {
         String toDelete = null;
 
@@ -86,8 +87,16 @@ public class JspScriptingTest extends JspTestBase {
             final String [] scripts = { "jsp1.jsp", "jsp2.jsp" };
             for(String script : scripts) {
                 toDelete = uploadTestScript(unstructuredNode.scriptPath, script, "html.jsp");
-                final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
+                String content = null;
                 final String expected = "text from " + script + ":" + unstructuredNode.testText;
+                final long timeout = System.currentTimeMillis() + 2000L;
+                while(System.currentTimeMillis() < timeout) {
+                    content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
+                    if(content.contains(expected)) {
+                        break;
+                    }
+                    Thread.sleep(100L);
+                }
                 assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));
             }
         } finally {
