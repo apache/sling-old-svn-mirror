@@ -41,6 +41,9 @@ public interface LocaleResolver {
      * request. The list returned is assumed to be ordered by preference where
      * the first entry is the prefered <code>Locale</code> and the last entry is
      * the least prefered <code>Locale</code>.
+     * <p>
+     * Returning an empty list is equivalent to returning a singleton list whose
+     * single entry is the {@link ResourceBundleProvider#getDefaultLocale()}.
      *
      * @param request The <code>SlingHttpServletRequest</code> providing hints
      *            and information for the <code>Locale</code> resolution.

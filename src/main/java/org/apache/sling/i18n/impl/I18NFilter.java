@@ -154,12 +154,7 @@ public class I18NFilter implements Filter {
         @Override
         public Locale getLocale() {
             if (locale == null) {
-                List<Locale> localeList = getLocaleList();
-                if (localeList.isEmpty()) {
-                    locale = bundleProvider.getDefaultLocale();
-                } else {
-                    locale = localeList.get(0);
-                }
+                locale = this.getLocaleList().get(0);
             }
 
             return locale;
@@ -172,7 +167,10 @@ public class I18NFilter implements Filter {
 
         private List<Locale> getLocaleList() {
             if (localeList == null) {
-                localeList = localeResolver.resolveLocale(this.getSlingRequest());
+                List<Locale> resolved = localeResolver.resolveLocale(this.getSlingRequest());
+                this.localeList = (resolved != null && !resolved.isEmpty())
+                        ? resolved
+                        : Collections.singletonList(this.bundleProvider.getDefaultLocale());
             }
 
             return localeList;
