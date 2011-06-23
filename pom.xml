@@ -96,6 +96,8 @@
 
         <!-- The Sling API -->
         <module>bundles/api</module>
+        <module>bundles/extensions/framework-extension-transaction</module>
+        <module>bundles/extensions/framework-extension-xml</module>
 
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
