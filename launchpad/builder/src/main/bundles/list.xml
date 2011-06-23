@@ -242,6 +242,16 @@
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.1.2</version>
         </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.fragment.xml</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.fragment.transaction</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </bundle>
     </startLevel>
     <startLevel level="5">
         <bundle>
