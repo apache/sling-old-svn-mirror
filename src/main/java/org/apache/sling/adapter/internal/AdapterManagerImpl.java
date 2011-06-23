@@ -38,7 +38,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.service.log.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>AdapterManagerImpl</code> class implements the
@@ -55,12 +56,8 @@ import org.osgi.service.log.LogService;
  */
 public class AdapterManagerImpl implements AdapterManager {
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private LogService log;
-
-    /** Whether to debug this class or not */
-    private boolean debug = false;
-
+    private Logger log = LoggerFactory.getLogger(getClass());
+    
     /**
      * The OSGi <code>ComponentContext</code> to retrieve
      * {@link AdapterFactory} service instances.
@@ -118,19 +115,14 @@ public class AdapterManagerImpl implements AdapterManager {
 
         // have the factory adapt the adaptable if the factory exists
         if (factory != null) {
-            if (debug) {
-                log(LogService.LOG_DEBUG, "Using adapter factory " + factory
-                    + " to map " + adaptable + " to " + type, null);
-            }
+            log.debug("Using adapter factory {} to map {} to {}",
+                    new Object [] { factory, adaptable, type });
 
             return factory.getAdapter(adaptable, type);
         }
 
         // no factory has been found, so we cannot adapt
-        if (debug) {
-            log(LogService.LOG_DEBUG, "No adapter factory found to map "
-                + adaptable + " to " + type, null);
-        }
+        log.debug("No adapter factory found to map {} to {}", adaptable, type);
 
         return null;
     }
@@ -201,20 +193,6 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     Map<String, Map<String, AdapterFactory>> getFactoryCache() {
         return factoryCache;
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    private void log(int level, String message, Throwable t) {
-        LogService logger = this.log;
-        if (logger != null) {
-            logger.log(level, message, t);
-        } else {
-            System.out.println(message);
-            if (t != null) {
-                t.printStackTrace(System.out);
-            }
-        }
     }
 
     /**
