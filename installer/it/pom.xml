@@ -373,6 +373,33 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>invalid-version</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks name="Create invalid-version bundle">
+                                <jar destfile="${project.build.directory}/${project.artifactId}-${project.version}-invalid-version.jar">
+                                    <fileset dir="${project.build.directory}/classes">
+                                        <include name="META-INF/**" />
+                                    </fileset>
+                                    <manifest>
+                                        <attribute name="Manifest-Version" value="2" />
+                                        <attribute name="Bundle-Name" value="OSGi controller test bundle, invalid version number" />
+                                        <attribute name="Bundle-SymbolicName" value="osgi-installer-invalid-version-test" />
+                                          <!-- 
+                                              Use -SNAPSHOT to make bundle version number invalid.
+                                              In real bundles, bnd and similar tools do the conversion to
+                                              valid version strings.
+                                           -->
+                                        <attribute name="Bundle-Version" value="1.0.0-SNAPSHOT" />
+                                    </manifest>
+                                </jar>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>create-test-bundles</id>
                         <phase>test-compile</phase>
                         <configuration>

@@ -106,6 +106,13 @@ public class InvalidBundlesTest extends OsgiInstallerTestBase {
             installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle("test-classes/invalid-jar.jar")), null);
             this.assertNoBundleEvents("Invalid archive should be ignored", listener, null);
         }
+        
+        // Invalid version number in bundle must be ignored
+        {
+            final Object listener = this.startObservingBundleEvents();
+            installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-invalid-version.jar")), null);
+            this.assertNoBundleEvents("Invalid version number should be ignored", listener, null);
+        }
 
     	// Make sure controller is not blocked, by testing an upgrade
     	{
