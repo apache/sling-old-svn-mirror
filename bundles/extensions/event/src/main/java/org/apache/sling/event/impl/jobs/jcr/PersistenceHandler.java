@@ -349,7 +349,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
      */
     public void cleanup() {
         // remove obsolete jobs from the repository
-        if ( this.running ) {
+        if ( this.running && this.jobManager.isJobProcessingEnabled() ) {
             this.logger.debug("Cleaning up repository: removing all finished jobs older than {} minutes.", this.cleanupPeriod);
 
             // we create an own session to avoid concurrency issues
@@ -390,7 +390,8 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     }
 
     /**
-     * Simple empty folder removes empty folders for the last five minutes.
+     * Simple empty folder removes empty folders for the last five minutes
+     * from an hour ago!
      * If folder for minute 59 is removed, we check the hour folder as well.
      */
     private void simpleEmptyFolderCleanup() {
@@ -400,8 +401,9 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         try {
             s = this.environment.createAdminSession();
             final Calendar cleanUpDate = Calendar.getInstance();
+            // go back ten minutes
+            cleanUpDate.add(Calendar.HOUR, -1);
             for(int i = 0; i < 5; i++) {
-                cleanUpDate.add(Calendar.MINUTE, -1);
                 final StringBuilder sb = Utility.getAnonPath(cleanUpDate);
 
                 final String path = this.repositoryPath + '/' + sb.toString();
@@ -424,6 +426,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         }
                     }
                 }
+                cleanUpDate.add(Calendar.MINUTE, -1);
             }
 
         } catch (RepositoryException e) {
@@ -449,6 +452,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             final Node startNode = (s.nodeExists(startPath) ? s.getNode(startPath) : null);
             if ( startNode != null ) {
                 final Calendar now = Calendar.getInstance();
+
                 // we iterate over the application id nodes
                 final NodeIterator idIter = startNode.getNodes();
                 while ( idIter.hasNext() ) {
@@ -479,19 +483,19 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                                 while ( hourIter.hasNext() ) {
                                     final Node hourNode = hourIter.nextNode();
                                     final int hour = Integer.valueOf(hourNode.getName());
-                                    final boolean oldHour = oldDay || hour < now.get(Calendar.HOUR);
+                                    final boolean oldHour = (oldDay && (oldMonth || now.get(Calendar.HOUR_OF_DAY) > 0)) || hour < (now.get(Calendar.HOUR_OF_DAY) -1);
 
-                                    // minutes
-                                    final NodeIterator minuteIter = hourNode.getNodes();
-                                    while ( minuteIter.hasNext() ) {
-                                        final Node minuteNode = minuteIter.nextNode();
-                                        final int minute = Integer.valueOf(minuteNode.getName());
-                                        final boolean oldMinute = oldHour || minute < now.get(Calendar.MINUTE);
+                                    // we only remove minutes if the hour is old
+                                    if ( oldHour ) {
+                                        final NodeIterator minuteIter = hourNode.getNodes();
+                                        while ( minuteIter.hasNext() ) {
+                                            final Node minuteNode = minuteIter.nextNode();
 
-                                        // check if we can delete the minute
-                                        if ( oldMinute && !minuteNode.hasNodes()) {
-                                            minuteNode.remove();
-                                            s.save();
+                                            // check if we can delete the minute
+                                            if ( !minuteNode.hasNodes()) {
+                                                minuteNode.remove();
+                                                s.save();
+                                            }
                                         }
                                     }
 
