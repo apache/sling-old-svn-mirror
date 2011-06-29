@@ -28,6 +28,9 @@ import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The default transformer transforms:
@@ -35,6 +38,9 @@ import org.osgi.framework.Constants;
  */
 public class DefaultTransformer
     implements InternalService, ResourceTransformer {
+
+    /** Logger */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
@@ -74,21 +80,32 @@ public class DefaultTransformer
     private TransformationResult[] checkBundle(final RegisteredResource resource) {
         final Util.BundleHeaders headers = Util.readBundleHeaders(resource);
         if ( headers != null ) {
-            final Map<String, Object> attr = new HashMap<String, Object>();
-            attr.put(Constants.BUNDLE_SYMBOLICNAME, headers.symbolicName);
-            attr.put(Constants.BUNDLE_VERSION, headers.version);
-
-            // check for activation policy
-            if ( headers.activationPolicy != null ) {
-                attr.put(Constants.BUNDLE_ACTIVATIONPOLICY, headers.activationPolicy);
+            // check the version for validity
+            boolean validVersion = true;
+            try {
+                new Version(headers.version);
+            } catch (final IllegalArgumentException iae) {
+                logger.info("Rejecting bundle {} from {} due to invalid version information: {}," +
+                		new Object[] {headers.symbolicName, resource, headers.version});
+                validVersion = false;
             }
+            if ( validVersion ) {
+                final Map<String, Object> attr = new HashMap<String, Object>();
+                attr.put(Constants.BUNDLE_SYMBOLICNAME, headers.symbolicName);
+                attr.put(Constants.BUNDLE_VERSION, headers.version);
 
-            final TransformationResult tr = new TransformationResult();
-            tr.setId(headers.symbolicName);
-            tr.setResourceType(InstallableResource.TYPE_BUNDLE);
-            tr.setAttributes(attr);
+                // check for activation policy
+                if ( headers.activationPolicy != null ) {
+                    attr.put(Constants.BUNDLE_ACTIVATIONPOLICY, headers.activationPolicy);
+                }
 
-            return new TransformationResult[] {tr};
+                final TransformationResult tr = new TransformationResult();
+                tr.setId(headers.symbolicName);
+                tr.setResourceType(InstallableResource.TYPE_BUNDLE);
+                tr.setAttributes(attr);
+
+                return new TransformationResult[] {tr};
+            }
         }
         return null;
     }

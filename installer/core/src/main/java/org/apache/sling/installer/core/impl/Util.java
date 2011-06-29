@@ -109,7 +109,7 @@ public class Util {
                         final String symbolicName = (paramPos == -1 ? sn : sn.substring(0, paramPos));
                         final BundleHeaders headers = new BundleHeaders();
                         headers.symbolicName = symbolicName;
-                        headers.version = v.toString();
+                        headers.version = v;
 
                         // check for activation policy
                         final String actPolicy = m.getMainAttributes().getValue(Constants.BUNDLE_ACTIVATIONPOLICY);
