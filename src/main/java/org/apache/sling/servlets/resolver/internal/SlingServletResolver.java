@@ -368,7 +368,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final NamedScriptResourceCollector locationUtil = NamedScriptResourceCollector.create(scriptName, resource, this.executionPaths);
             servlet = getServlet(locationUtil, null, resolver);
 
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled() && servlet != null) {
                 log.debug("resolveServlet returns servlet {}", RequestUtil.getServletName(servlet));
             }
         }
