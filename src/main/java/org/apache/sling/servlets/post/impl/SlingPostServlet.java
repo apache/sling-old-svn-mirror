@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -128,6 +129,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private static final String PARAM_AUTO_CHECKOUT = ":autoCheckout";
 
     private static final String PARAM_AUTO_CHECKIN = ":autoCheckin";
+
+    private static final String DEFAULT_IGNORED_PARAMETER_NAME_PATTERN = "j_.*";
+
+    @Property(value = DEFAULT_IGNORED_PARAMETER_NAME_PATTERN)
+    private static final String PROP_IGNORED_PARAMETER_NAME_PATTERN = "servlet.post.ignorePattern";
 
     private ModifyOperation modifyOperation;
 
@@ -405,9 +411,16 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         NodeNameGenerator nodeNameGenerator = new DefaultNodeNameGenerator(
             nameHints, nameMax);
 
+        final String paramMatch = OsgiUtil.toString(
+            configuration.get(PROP_IGNORED_PARAMETER_NAME_PATTERN),
+            DEFAULT_IGNORED_PARAMETER_NAME_PATTERN);
+        final Pattern paramMatchPattern = Pattern.compile(paramMatch);
+
         this.modifyOperation.setDateParser(dateParser);
         this.modifyOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
         this.importOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
+        this.modifyOperation.setIgnoredParameterNamePattern(paramMatchPattern);
+        this.importOperation.setIgnoredParameterNamePattern(paramMatchPattern);
     }
 
     @Override

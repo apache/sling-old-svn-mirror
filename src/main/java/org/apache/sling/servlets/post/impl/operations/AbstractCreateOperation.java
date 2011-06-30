@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.regex.Pattern;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -59,8 +59,14 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
      */
     private NodeNameGenerator[] extraNodeNameGenerators;
 
+    /**
+     * regular expression for parameters to ignore
+     */
+    private Pattern ignoredParameterNamePattern;
+
     protected AbstractCreateOperation() {
 		this.defaultNodeNameGenerator = new DefaultNodeNameGenerator();
+		this.ignoredParameterNamePattern = null;
     }
 
     public void setDefaultNodeNameGenerator(
@@ -71,6 +77,11 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     public void setExtraNodeNameGenerators(
             NodeNameGenerator[] extraNodeNameGenerators) {
         this.extraNodeNameGenerators = extraNodeNameGenerators;
+    }
+
+    public void setIgnoredParameterNamePattern(
+            final Pattern ignoredParameterNamePattern) {
+        this.ignoredParameterNamePattern = ignoredParameterNamePattern;
     }
 
     /**
@@ -150,14 +161,10 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         for (Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
-            // do not store parameters with names starting with sling:post
-            if (paramName.startsWith(SlingPostConstants.RP_PREFIX)) {
+            if (ignoreParameter(paramName)) {
                 continue;
             }
-            // SLING-298: skip form encoding parameter
-            if (paramName.equals("_charset_")) {
-                continue;
-            }
+
             // skip parameters that do not start with the save prefix
             if (requireItemPrefix && !hasItemPathPrefix(paramName)) {
                 continue;
@@ -325,9 +332,33 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /**
-     * Returns the <code>paramName</code> as an absolute (unnormalized)
-     * property path by prepending the response path (<code>response.getPath</code>)
-     * to the parameter name if not already absolute.
+     * Returns <code>true</code> if the parameter of the given name should be
+     * ignored.
+     */
+    private boolean ignoreParameter(final String paramName) {
+        // do not store parameters with names starting with sling:post
+        if (paramName.startsWith(SlingPostConstants.RP_PREFIX)) {
+            return true;
+        }
+
+        // SLING-298: skip form encoding parameter
+        if (paramName.equals("_charset_")) {
+            return true;
+        }
+
+        // SLING-2120: ignore parameter match ignoredParameterNamePattern
+        if (this.ignoredParameterNamePattern != null
+            && this.ignoredParameterNamePattern.matcher(paramName).matches()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the <code>paramName</code> as an absolute (unnormalized) property
+     * path by prepending the response path (<code>response.getPath</code>) to
+     * the parameter name if not already absolute.
      */
     private String toPropertyPath(String paramName, PostResponse response) {
         if (!paramName.startsWith("/")) {
