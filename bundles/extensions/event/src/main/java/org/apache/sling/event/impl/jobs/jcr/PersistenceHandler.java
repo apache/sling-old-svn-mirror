@@ -1337,17 +1337,21 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
      */
     public boolean isAlive(final JCRJobEvent info) {
         final String path = this.getNodePath(info.uniqueId);
-        synchronized ( this.backgroundLock ) {
-            try {
-                if ( this.backgroundSession.itemExists(path) ) {
-                    final String finishedPath = path + '/' + JCRHelper.NODE_PROPERTY_FINISHED;
-                    if ( !this.backgroundSession.itemExists(finishedPath) ) {
-                        return true;
-                    }
+        Session s = null;
+        try {
+            s = this.environment.createAdminSession();
+            if ( s.itemExists(path) ) {
+                final String finishedPath = path + '/' + JCRHelper.NODE_PROPERTY_FINISHED;
+                if ( !s.itemExists(finishedPath) ) {
+                    return true;
                 }
-            } catch (final RepositoryException re) {
-                // there is nothing we can do
-                this.ignoreException(re);
+            }
+        } catch (final RepositoryException re) {
+            // there is nothing we can do
+            this.ignoreException(re);
+        } finally {
+            if ( s != null ) {
+                s.logout();
             }
         }
         return false;

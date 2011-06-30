@@ -254,8 +254,6 @@ public class DefaultJobManager
         final boolean doSanityCheck = (schedulerRuns % 12 == 0);
         if ( doSanityCheck ) {
             logger.debug("cleanup: running sanity check");
-            final List<JobEvent> removedEvents = new ArrayList<JobEvent>();
-
             final Map<String, JobEvent> currentEvents;
             synchronized (this.allEvents) {
                 currentEvents = new HashMap<String, JobEvent>(this.allEvents);
@@ -268,19 +266,15 @@ public class DefaultJobManager
                         logger.debug("cleanup: Removing dead job {}", job);
                         this.allEvents.remove(entry.getKey());
                     }
-                    removedEvents.add(job);
-                }
-            }
-
-            for(final JobEvent removedJob : removedEvents) {
-                final String topic = (String)removedJob.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
-                final List<JobEvent> l;
-                synchronized ( this.allEventsByTopic ) {
-                    l = this.allEventsByTopic.get(topic);
-                }
-                if ( l != null ) {
-                    synchronized ( l ) {
-                        l.remove(removedJob);
+                    final String topic = (String)job.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+                    final List<JobEvent> l;
+                    synchronized ( this.allEventsByTopic ) {
+                        l = this.allEventsByTopic.get(topic);
+                    }
+                    if ( l != null ) {
+                        synchronized ( l ) {
+                            l.remove(job);
+                        }
                     }
                 }
             }
