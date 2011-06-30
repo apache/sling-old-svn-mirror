@@ -171,6 +171,7 @@ public abstract class AbstractJobQueue
             }
             public boolean remove() { return true; }
             public boolean reschedule() { return false; }
+            public boolean isAlive() { return false; }
             });
 
         this.processsingJobsLists.clear();

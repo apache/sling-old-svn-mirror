@@ -1331,4 +1331,25 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             }
         }
     }
+
+    /**
+     * Check if the job is still alive = unfinished node in repository
+     */
+    public boolean isAlive(final JCRJobEvent info) {
+        final String path = this.getNodePath(info.uniqueId);
+        synchronized ( this.backgroundLock ) {
+            try {
+                if ( this.backgroundSession.itemExists(path) ) {
+                    final String finishedPath = path + '/' + JCRHelper.NODE_PROPERTY_FINISHED;
+                    if ( !this.backgroundSession.itemExists(finishedPath) ) {
+                        return true;
+                    }
+                }
+            } catch (final RepositoryException re) {
+                // there is nothing we can do
+                this.ignoreException(re);
+            }
+        }
+        return false;
+    }
 }
