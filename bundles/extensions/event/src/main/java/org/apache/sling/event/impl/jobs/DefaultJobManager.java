@@ -213,6 +213,8 @@ public class DefaultJobManager
      * @see java.lang.Runnable#run()
      */
     private void cleanup() {
+        logger.debug("cleanup: Starting #{}", this.schedulerRuns + 1);
+
         // check for unprocessed jobs first
         for(final AbstractJobQueue jbq : this.queues.values() ) {
             jbq.checkForUnprocessedJobs();
@@ -224,6 +226,8 @@ public class DefaultJobManager
 
         if ( doFullCleanUp ) {
             // check for idle queue
+            logger.debug("cleanup: doing full cleanup");
+
            // we synchronize to avoid creating a queue which is about to be removed during cleanup
             synchronized ( queuesLock ) {
                 final Iterator<Map.Entry<String, AbstractJobQueue>> i = this.queues.entrySet().iterator();
@@ -231,6 +235,7 @@ public class DefaultJobManager
                     final Map.Entry<String, AbstractJobQueue> current = i.next();
                     final AbstractJobQueue jbq = current.getValue();
                     if ( jbq.isMarkedForRemoval() ) {
+                        logger.debug("cleanup: Removing idle Job Queue {}", jbq);
                         // close
                         jbq.close();
                         // copy statistics
@@ -240,6 +245,42 @@ public class DefaultJobManager
                     } else {
                         // mark to be removed during next cycle
                         jbq.markForRemoval();
+                    }
+                }
+            }
+        }
+
+        // we do a sanity check every 12th run
+        final boolean doSanityCheck = (schedulerRuns % 12 == 0);
+        if ( doSanityCheck ) {
+            logger.debug("cleanup: running sanity check");
+            final List<JobEvent> removedEvents = new ArrayList<JobEvent>();
+
+            final Map<String, JobEvent> currentEvents;
+            synchronized (this.allEvents) {
+                currentEvents = new HashMap<String, JobEvent>(this.allEvents);
+            }
+
+            for (final Map.Entry<String, JobEvent> entry : currentEvents.entrySet()) {
+                final JobEvent job = entry.getValue();
+                if (!job.isAlive()) {
+                    synchronized (this.allEvents) {
+                        logger.debug("cleanup: Removing dead job {}", job);
+                        this.allEvents.remove(entry.getKey());
+                    }
+                    removedEvents.add(job);
+                }
+            }
+
+            for(final JobEvent removedJob : removedEvents) {
+                final String topic = (String)removedJob.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+                final List<JobEvent> l;
+                synchronized ( this.allEventsByTopic ) {
+                    l = this.allEventsByTopic.get(topic);
+                }
+                if ( l != null ) {
+                    synchronized ( l ) {
+                        l.remove(removedJob);
                     }
                 }
             }

@@ -44,6 +44,7 @@ public abstract class JobEvent {
     public abstract boolean reschedule();
     public abstract boolean remove();
     public abstract void restart();
+    public abstract boolean isAlive();
 
     @Override
     public int hashCode() {

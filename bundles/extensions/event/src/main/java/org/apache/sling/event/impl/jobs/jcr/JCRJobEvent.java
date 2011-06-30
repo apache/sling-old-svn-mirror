@@ -63,4 +63,9 @@ public class JCRJobEvent extends JobEvent {
     public void restart() {
         this.handler.restart(this);
     }
+
+    @Override
+    public boolean isAlive() {
+        return this.handler.isAlive(this);
+    }
 }
