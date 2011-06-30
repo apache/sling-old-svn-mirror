@@ -53,4 +53,9 @@ public class MockSettings implements SlingSettingsService {
         return null;
     }
 
+    public String getAbsolutePathWithinSlingHome(String relativePath) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
