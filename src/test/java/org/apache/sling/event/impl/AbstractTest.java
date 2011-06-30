@@ -130,6 +130,10 @@ public abstract class AbstractTest {
             public Set<String> getRunModes() {
                 return Collections.<String> emptySet();
             }
+
+            public String getAbsolutePathWithinSlingHome(String relativePath) {
+                return null;
+            }
         });
 
         // we need a thread pool
