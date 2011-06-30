@@ -150,9 +150,23 @@ public class JcrResourceBundle extends ResourceBundle {
             final String baseName) {
         StringBuilder buf = new StringBuilder(64);
 
-        buf.append("//element(*,mix:language)[@jcr:language='");
-        buf.append(locale);
-        buf.append('\'');
+        buf.append("//element(*,mix:language)[");
+
+        String localeString = locale.toString();
+        String localeRFC4646String = toRFC4646String(locale);
+
+        if (localeString.equals(localeRFC4646String)) {
+            buf.append("@jcr:language='");
+            buf.append(localeString);
+            buf.append('\'');
+        } else {
+            buf.append("(@jcr:language='");
+            buf.append(localeString);
+            buf.append('\'');
+            buf.append(" or @jcr:language='");
+            buf.append(localeRFC4646String);
+            buf.append("\')");
+        }
 
         if (baseName != null) {
             buf.append(" and @");
@@ -167,5 +181,10 @@ public class JcrResourceBundle extends ResourceBundle {
         buf.append(PROP_KEY).append("|@").append(PROP_VALUE).append(")");
 
         return buf.toString();
+    }
+
+    // Would be nice if Locale.toString() output RFC 4646, but it doesn't
+    private static String toRFC4646String(Locale locale) {
+        return locale.toString().replace('_', '-');
     }
 }
