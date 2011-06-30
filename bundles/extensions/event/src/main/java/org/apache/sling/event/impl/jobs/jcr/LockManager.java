@@ -242,6 +242,11 @@ public class LockManager implements Runnable, EventListener {
                 logger.debug("Heartbeat at {}", Environment.APPLICATION_ID);
             } catch (final RepositoryException re) {
                 this.ignoreException(re);
+                try {
+                    this.backgroundSession.refresh(false);
+                } catch (final RepositoryException ignore) {
+                    this.ignoreException(ignore);
+                }
             }
         }
     }
