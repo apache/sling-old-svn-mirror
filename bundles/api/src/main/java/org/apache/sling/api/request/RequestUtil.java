@@ -24,6 +24,9 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
 
 /**
  * @since 2.1
@@ -160,4 +163,28 @@ public class RequestUtil {
         }
         return oldValue;
     }
+
+    /**
+     * Checks if the request contains a if-last-modified-since header and if the the
+	 * request's underlying resource has a jcr:lastModified property. if the properties were modified
+     * before the header a 304 is sent otherwise the response last modified header is set.
+     * @param req the request
+     * @param resp the response
+     * @return <code>true</code> if the response was set
+     */
+    public static boolean handleIfModifiedSince(SlingHttpServletRequest req, HttpServletResponse resp){
+        boolean responseSet=false;
+        long lastModified=req.getResource().getResourceMetadata().getModificationTime();
+        if (lastModified!=-1){
+            long modifiedTime = lastModified/1000; //seconds
+            long ims = req.getDateHeader(HttpConstants.HEADER_IF_MODIFIED_SINCE)/1000; //seconds
+            if (modifiedTime <= ims) {
+                resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                responseSet=true;
+            }
+            resp.setDateHeader(HttpConstants.HEADER_LAST_MODIFIED, lastModified);
+        }
+        return responseSet;
+    }
+
 }
