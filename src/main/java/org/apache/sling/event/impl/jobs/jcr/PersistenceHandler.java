@@ -861,7 +861,19 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         if ( jobId != null ) {
             eventNode.setProperty(JCRHelper.NODE_PROPERTY_JOBID, jobId);
         }
-        rootNode.getSession().save();
+        boolean refresh = true;
+        try {
+            rootNode.getSession().save();
+            refresh = false;
+        } finally {
+            if ( refresh ) {
+                try {
+                    rootNode.getSession().refresh(false);
+                } catch (final RepositoryException ignore) {
+                    this.ignoreException(ignore);
+                }
+            }
+        }
         return eventNode;
     }
 
@@ -1156,9 +1168,14 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                         this.lockManager.unlock(this.backgroundSession, path);
                     }
                 }
-            } catch (RepositoryException re) {
+            } catch (final RepositoryException re) {
                 // there is nothing we can do
                 this.ignoreException(re);
+                try {
+                    this.backgroundSession.refresh(false);
+                } catch (final RepositoryException ignore) {
+                    this.ignoreException(ignore);
+                }
             }
         }
     }
@@ -1194,6 +1211,11 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     }
                 } catch (RepositoryException e) {
                     this.logger.error("Error during cancelling job at " + path, e);
+                    try {
+                        this.backgroundSession.refresh(false);
+                    } catch (final RepositoryException ignore) {
+                        this.ignoreException(ignore);
+                    }
                 }
             }
         }
@@ -1226,6 +1248,11 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
             } catch (RepositoryException re) {
                 // there is nothing we can do
                 this.ignoreException(re);
+                try {
+                    this.backgroundSession.refresh(false);
+                } catch (final RepositoryException ignore) {
+                    this.ignoreException(ignore);
+                }
             }
         }
         ((DefaultJobManager)this.jobManager).notifyRemoveJob(info.uniqueId);
