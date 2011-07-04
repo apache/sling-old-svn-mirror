@@ -45,12 +45,29 @@ public abstract class AbstractLaunchpadFrameworkMojo extends AbstractUsingBundle
      *
      * @parameter default-value="bundles"
      */
-    protected String bundlesDirectory;
+    private String bundlesDirectory;
+
+    /**
+     * The directory which contains the bootstraop bundle directories.
+     *
+     * @parameter
+     */
+    private String bootDirectory;
+
+    protected String getPathForArtifact(final int startLevel, final String artifactName) {
+        if ( startLevel == -1 && bootDirectory != null ) {
+            return String.format("%s/%s/%s", baseDestination, bootDirectory,
+                    artifactName);
+        }
+        return String.format("%s/%s/%s/%s", baseDestination, bundlesDirectory,
+                (startLevel == -1 ? 1 : startLevel),
+                artifactName);
+    }
 
     protected void copyBundles(BundleList bundles, File outputDirectory) throws MojoExecutionException {
         for (StartLevel startLevel : bundles.getStartLevels()) {
             for (Bundle bundle : startLevel.getBundles()) {
-                copy(new ArtifactDefinition(bundle, startLevel.getLevel()), outputDirectory);
+                copy(new ArtifactDefinition(bundle, startLevel.getStartLevel()), outputDirectory);
             }
         }
     }
@@ -61,8 +78,7 @@ public abstract class AbstractLaunchpadFrameworkMojo extends AbstractUsingBundle
     }
 
     protected void copy(File file, int startLevel, File outputDirectory) throws MojoExecutionException {
-        File destination = new File(outputDirectory, String.format("%s/%s/%s/%s", baseDestination, bundlesDirectory,
-                startLevel, file.getName()));
+        File destination = new File(outputDirectory, getPathForArtifact(startLevel, file.getName().replace('/', File.separatorChar)));
         if (shouldCopy(file, destination)) {
             getLog().info(String.format("Copying bundle from %s to %s", file.getPath(), destination.getPath()));
             try {

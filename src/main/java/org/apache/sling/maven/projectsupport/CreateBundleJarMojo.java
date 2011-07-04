@@ -80,10 +80,8 @@ public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
 		for (StartLevel level : bundles.getStartLevels()) {
 			for (Bundle bundle : level.getBundles()) {
 				Artifact artifact = getArtifact(new ArtifactDefinition(bundle,
-						level.getLevel()));
-				String destFileName = baseDestination + "/" + bundlesDirectory
-						+ "/" + level.getLevel() + "/"
-						+ artifact.getFile().getName();
+						level.getStartLevel()));
+				final String destFileName = getPathForArtifact(level.getStartLevel(), artifact.getFile().getName());
 				try {
 					jarArchiver.addFile(artifact.getFile(), destFileName);
 				} catch (ArchiverException e) {
