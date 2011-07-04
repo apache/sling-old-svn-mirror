@@ -48,7 +48,7 @@ public abstract class BaseBundleList {
 
     /**
      * Merge the current bundle list with an additional list.
-     * @see add(Bundle)
+     * @see #add(Bundle)
      *
      * @param bundleList the new bundle list
      */

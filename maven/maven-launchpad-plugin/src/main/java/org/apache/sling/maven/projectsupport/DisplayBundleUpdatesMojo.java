@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,7 +35,6 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.path.PathTranslator;
 import org.apache.maven.settings.Settings;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
@@ -52,10 +51,10 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 /**
  * Displays all bundles that have newer versions available. Highly based upon the
  * display-dependency-updates goal from the Versions plugin.
- * 
+ *
  * @since 2.0.8
  * @goal display-bundle-updates
- * 
+ *
  */
 public class DisplayBundleUpdatesMojo extends AbstractMojo {
 
@@ -70,25 +69,8 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     /**
-     * @component
-     */
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
-
-    /**
-     * @component
-     */
-    private MavenProjectBuilder projectBuilder;
-
-    /**
-     * @parameter expression="${reactorProjects}"
-     * @required
-     * @readonly
-     */
-    private List reactorProjects;
-
-    /**
      * The artifact metadata source to use.
-     * 
+     *
      * @component
      * @required
      * @readonly
@@ -127,7 +109,7 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
     /**
      * settings.xml's server id for the URL. This is used when wagon needs extra
      * authentication information.
-     * 
+     *
      * @parameter expression="${maven.version.rules.serverId}"
      *            default-value="serverId";
      */
@@ -136,14 +118,14 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
     /**
      * The Wagon URI of a ruleSet file containing the rules that control how to
      * compare version numbers.
-     * 
+     *
      * @parameter expression="${maven.version.rules}"
      */
     private String rulesUri;
 
     /**
      * The Maven Session.
-     * 
+     *
      * @parameter expression="${session}"
      * @required
      * @readonly
@@ -163,7 +145,7 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
     /**
      * Whether to allow snapshots when searching for the latest version of an
      * artifact.
-     * 
+     *
      * @parameter expression="${allowSnapshots}" default-value="false"
      */
     private boolean allowSnapshots;
@@ -177,9 +159,9 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             BundleList bundleList = readBundleList(bundleListFile);
-            
+
             Set<Dependency> bundlesAsDependencies = new HashSet<Dependency>();
-            
+
             for (StartLevel startLevel : bundleList.getStartLevels()) {
                 for (Bundle bundle : startLevel.getBundles()) {
                     bundlesAsDependencies.add(asDependency(bundle));
@@ -200,7 +182,7 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
         dep.setClassifier(bundle.getClassifier());
         dep.setVersion(bundle.getVersion());
         dep.setType(bundle.getType());
-        
+
         return dep;
     }
 
