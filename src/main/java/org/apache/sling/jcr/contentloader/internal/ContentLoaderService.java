@@ -35,7 +35,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -144,7 +143,10 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
                 // we can safely add the content at this point.
                 try {
                     session = this.getSession();
-                    final boolean isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
+                    final boolean isUpdate;
+                    synchronized ( this.updatedBundles ) {
+                        isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
+                    }
                     initialContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
                     log.error(
@@ -158,7 +160,9 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
             case BundleEvent.UPDATED:
                 // we just add the symbolic name to the list of updated bundles
                 // we will use this info when the new start event is triggered
-                this.updatedBundles.add(bundle.getSymbolicName());
+                synchronized ( this.updatedBundles ) {
+                    this.updatedBundles.add(bundle.getSymbolicName());
+                }
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
