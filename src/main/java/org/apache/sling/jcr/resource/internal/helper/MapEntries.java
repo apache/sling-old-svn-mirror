@@ -133,6 +133,9 @@ public class MapEntries implements EventListener {
             // load the configuration into the mapper map
             loadMapConfiguration(factory, newMapMaps);
 
+            // sort List
+            Collections.sort(newResolveMaps);
+
             this.resolveMaps = newResolveMaps;
             this.mapMaps = new TreeSet<MapEntry>(newMapMaps.values());
 
