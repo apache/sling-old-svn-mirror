@@ -52,10 +52,10 @@
             <version>1.0.0</version>
             <superClass>org.apache.sling.maven.projectsupport.bundlelist.BaseStartLevel</superClass>
             <fields>
-            	<field xml.attribute="true">
+            	<field xml.attribute="true" java.setter="false" java.getter="false">
             		<name>level</name>
             		<version>1.0.0</version>
-            		<type>int</type>
+            		<type>String</type>
             	</field>
                 <field>
                     <name>bundles</name>

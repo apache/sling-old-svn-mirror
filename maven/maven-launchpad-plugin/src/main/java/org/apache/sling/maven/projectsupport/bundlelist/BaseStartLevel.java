@@ -23,7 +23,11 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 
 public abstract class BaseStartLevel {
 
+    private static final String BOOT_MARKER = "boot";
+
     public abstract List<Bundle> getBundles();
+
+    private int startLevel;
 
     public boolean removeBundle(Bundle bundle, boolean compareVersions) {
         for (ListIterator<Bundle> it = getBundles().listIterator(); it.hasNext();) {
@@ -57,4 +61,31 @@ public abstract class BaseStartLevel {
                 && bundle1.getGroupId().equals(bundle2.getGroupId()) && bundle1.getType().equals(bundle2.getType());
     }
 
+    /**
+     * Set the level field.
+     *
+     * @param level
+     */
+    public void setLevel( final String level ) {
+        if ( BOOT_MARKER.equalsIgnoreCase(level) ) {
+            this.startLevel = -1;
+        } else {
+            this.startLevel = Integer.valueOf(level);
+            if ( this.startLevel < 0 ) {
+                throw new IllegalArgumentException("Start level must either be '" + BOOT_MARKER + "' or non-negative: " + level);
+            }
+        }
+    }
+
+    public void setRawLevel( final int level ) {
+        this.startLevel = level;
+    }
+
+    public String getLevel() {
+        return String.valueOf(this.startLevel);
+    }
+
+    public int getStartLevel() {
+        return this.startLevel;
+    }
 }

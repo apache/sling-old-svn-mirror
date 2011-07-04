@@ -155,7 +155,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                     int i = Integer.parseInt(startLevel);
                     List<String> bundles = new ArrayList<String>();
                     for (StartLevel level : getBundleList().getStartLevels()) {
-                        if (level.getLevel() == i) {
+                        if (level.getStartLevel() == i) {
                             for (Bundle bundle : level.getBundles()) {
                                 ArtifactDefinition d = new ArtifactDefinition(bundle, i);
                                 try {

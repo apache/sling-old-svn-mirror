@@ -84,7 +84,7 @@ public abstract class BaseBundleList {
             if ( mergeStartLevel == null || newBnd.getStartLevel() > 0) {
                 startLevel = getOrCreateStartLevel(newBnd.getStartLevel());
             } else {
-                startLevel = getOrCreateStartLevel(mergeStartLevel.getLevel());
+                startLevel = getOrCreateStartLevel(mergeStartLevel.getStartLevel());
             }
             startLevel.getBundles().add(newBnd);
         }
@@ -93,14 +93,14 @@ public abstract class BaseBundleList {
 
     private StartLevel getOrCreateStartLevel(int startLevel) {
         for (StartLevel sl : getStartLevels()) {
-            if (sl.getLevel() == startLevel) {
+            if (sl.getStartLevel() == startLevel) {
                 return sl;
             }
         }
 
         StartLevel sl = new StartLevel();
         getStartLevels().add(sl);
-        sl.setLevel(startLevel);
+        sl.setRawLevel(startLevel);
         return sl;
     }
 
