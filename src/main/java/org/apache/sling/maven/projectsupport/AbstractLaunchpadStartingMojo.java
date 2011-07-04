@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,12 +16,10 @@
  */
 package org.apache.sling.maven.projectsupport;
 
-import static org.apache.felix.framework.util.FelixConstants.*;
+import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -83,7 +81,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
     /**
      * The definition of the package to be included to provide web support for
      * JAR-packaged projects (i.e. pax-web).
-     * 
+     *
      * @parameter
      */
     private ArtifactDefinition jarWebSupport;

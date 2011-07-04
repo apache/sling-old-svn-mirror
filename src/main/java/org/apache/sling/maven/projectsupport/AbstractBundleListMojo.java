@@ -45,10 +45,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      */
     protected static final String PARTIAL = "partialbundlelist";
 
-    protected static final String CONFIG_PATH_PREFIX = "resources/config";
-
-    protected static final String BUNDLE_PATH_PREFIX = "resources/bundles";
-
     protected static boolean shouldCopy(File source, File dest) {
         if (!dest.exists()) {
             return true;
