@@ -108,18 +108,20 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
     public void bundleChanged(BundleEvent event) {
-        final boolean reload;
-        if ( event.getType() == BundleEvent.RESOLVED ) {
-            reload = this.service.isBundleUsed(event.getBundle().getBundleId())
-                || this.service.hasUnresolvedPackages(event.getBundle());
-        } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
-            reload = this.service.isBundleUsed(event.getBundle().getBundleId());
-        } else {
-            reload = false;
-        }
-        if ( reload ) {
-            this.unregisterManagerFactory();
-            this.registerManagerFactory();
+        synchronized ( this ) {
+            final boolean reload;
+            if ( event.getType() == BundleEvent.RESOLVED ) {
+                reload = this.service.isBundleUsed(event.getBundle().getBundleId())
+                    || this.service.hasUnresolvedPackages(event.getBundle());
+            } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
+                reload = this.service.isBundleUsed(event.getBundle().getBundleId());
+            } else {
+                reload = false;
+            }
+            if ( reload ) {
+                this.unregisterManagerFactory();
+                this.registerManagerFactory();
+            }
         }
     }
 }
