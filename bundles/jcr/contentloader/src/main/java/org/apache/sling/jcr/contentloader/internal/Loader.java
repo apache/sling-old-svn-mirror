@@ -60,15 +60,12 @@ public class Loader extends BaseImportLoader {
 
     private ContentLoaderService contentLoaderService;
 
-    private final DefaultContentCreator contentCreator;
-
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
     public Loader(ContentLoaderService contentLoaderService) {
     	super();
     	this.contentLoaderService = contentLoaderService;
-        this.contentCreator = new DefaultContentCreator(contentLoaderService);
         this.delayedBundles = new LinkedList<Bundle>();
     }
 
@@ -255,6 +252,7 @@ public class Loader extends BaseImportLoader {
 
         log.debug("Installing initial content from bundle {}",
             bundle.getSymbolicName());
+        final DefaultContentCreator contentCreator = new DefaultContentCreator(this.contentLoaderService);
         try {
 
             while (pathIter.hasNext()) {
@@ -277,7 +275,7 @@ public class Loader extends BaseImportLoader {
 
                     if (targetNode != null) {
                         installFromPath(bundle, entry.getPath(), entry, targetNode,
-                            entry.isUninstall() ? createdNodes : null);
+                            entry.isUninstall() ? createdNodes : null, contentCreator);
                     }
                 }
             }
@@ -307,7 +305,7 @@ public class Loader extends BaseImportLoader {
             }
 
             // finally checkin versionable nodes
-            for (final Node versionable : this.contentCreator.getVersionables()) {
+            for (final Node versionable : contentCreator.getVersionables()) {
                 versionable.checkin();
             }
 
@@ -326,7 +324,7 @@ public class Loader extends BaseImportLoader {
                     "Failure to rollback partial initial content for bundle {}",
                     bundle.getSymbolicName(), re);
             }
-            this.contentCreator.clear();
+            contentCreator.clear();
             for (Session session : createdSessions.values()) {
                 session.logout();
             }
@@ -351,10 +349,11 @@ public class Loader extends BaseImportLoader {
                                  final String path,
                                  final PathEntry configuration,
                                  final Node parent,
-                                 final List<String> createdNodes)
+                                 final List<String> createdNodes,
+                                 final DefaultContentCreator contentCreator)
     throws RepositoryException {
         //  init content creator
-        this.contentCreator.init(configuration, this.defaultImportProviders, createdNodes, null);
+        contentCreator.init(configuration, this.defaultImportProviders, createdNodes, null);
 
         final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
 
@@ -368,17 +367,17 @@ public class Loader extends BaseImportLoader {
                 return;
             }
             // we have a single file content, let's check if this has an import provider extension
-            for (String ext : this.contentCreator.getImportProviders().keySet()) {
+            for (String ext : contentCreator.getImportProviders().keySet()) {
                 if ( path.endsWith(ext) ) {
 
                 }
             }
-            handleFile(path, bundle, processedEntries, configuration, parent, createdNodes);
+            handleFile(path, bundle, processedEntries, configuration, parent, createdNodes, contentCreator);
             return;
         }
 
         // potential parent node import/extension
-        URL parentNodeDescriptor = importParentNode(parent.getSession(), bundle, path, parent);
+        URL parentNodeDescriptor = importParentNode(parent.getSession(), bundle, path, parent, contentCreator);
         if (parentNodeDescriptor != null) {
             processedEntries.put(parentNodeDescriptor, parent);
         }
@@ -392,7 +391,7 @@ public class Loader extends BaseImportLoader {
                 final String base = entry.substring(0, entry.length() - 1);
 
                 URL nodeDescriptor = null;
-                for (String ext : this.contentCreator.getImportProviders().keySet()) {
+                for (String ext : contentCreator.getImportProviders().keySet()) {
                     nodeDescriptor = bundle.getEntry(base + ext);
                     if (nodeDescriptor != null) {
                         break;
@@ -408,7 +407,7 @@ public class Loader extends BaseImportLoader {
                     node = processedEntries.get(nodeDescriptor);
                     if (node == null) {
                         node = createNode(parent, name, nodeDescriptor,
-                                          configuration);
+                                          configuration, contentCreator);
                         processedEntries.put(nodeDescriptor, node);
                     }
                 } else {
@@ -417,12 +416,12 @@ public class Loader extends BaseImportLoader {
 
                 // walk down the line
                 if (node != null) {
-                    installFromPath(bundle, entry, configuration, node, createdNodes);
+                    installFromPath(bundle, entry, configuration, node, createdNodes, contentCreator);
                 }
 
             } else {
                 // file => create file
-                handleFile(entry, bundle, processedEntries, configuration, parent, createdNodes);
+                handleFile(entry, bundle, processedEntries, configuration, parent, createdNodes, contentCreator);
             }
         }
     }
@@ -443,7 +442,8 @@ public class Loader extends BaseImportLoader {
                             final Map<URL, Node> processedEntries,
                             final PathEntry configuration,
                             final Node parent,
-                            final List<String> createdNodes)
+                            final List<String> createdNodes,
+                            final DefaultContentCreator contentCreator)
     throws RepositoryException {
         final URL file = bundle.getEntry(entry);
         final String name = getName(entry);
@@ -455,7 +455,7 @@ public class Loader extends BaseImportLoader {
 
             // check for node descriptor
             URL nodeDescriptor = null;
-            for (String ext : this.contentCreator.getImportProviders().keySet()) {
+            for (String ext : contentCreator.getImportProviders().keySet()) {
                 nodeDescriptor = bundle.getEntry(entry + ext);
                 if (nodeDescriptor != null) {
                     break;
@@ -463,11 +463,11 @@ public class Loader extends BaseImportLoader {
             }
 
             // install if it is a descriptor
-            boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
+            boolean foundProvider = contentCreator.getImportProvider(entry) != null;
 
             Node node = null;
             if (foundProvider) {
-                if ((node = createNode(parent, name, file, configuration)) != null) {
+                if ((node = createNode(parent, name, file, configuration, contentCreator)) != null) {
                     log.debug("Created Node as {} {} ",node.getPath(),name);
                     processedEntries.put(file, node);
                 } else {
@@ -480,7 +480,7 @@ public class Loader extends BaseImportLoader {
             // otherwise just place as file
             if ( node == null ) {
                 try {
-                    createFile(configuration, parent, file, createdNodes);
+                    createFile(configuration, parent, file, createdNodes, contentCreator);
                     node = parent.getNode(name);
                 } catch (IOException ioe) {
                     log.warn("Cannot create file node for {}", file, ioe);
@@ -490,12 +490,12 @@ public class Loader extends BaseImportLoader {
             // process it
             if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
                 try {
-                    this.contentCreator.setIgnoreOverwriteFlag(true);
+                    contentCreator.setIgnoreOverwriteFlag(true);
                     node = createNode(parent, name, nodeDescriptor,
-                                      configuration);
+                                      configuration, contentCreator);
                     processedEntries.put(nodeDescriptor, node);
                 } finally {
-                    this.contentCreator.setIgnoreOverwriteFlag(false);
+                    contentCreator.setIgnoreOverwriteFlag(false);
                 }
             }
         } catch ( RepositoryException e ) {
@@ -518,7 +518,8 @@ public class Loader extends BaseImportLoader {
     private Node createNode(Node parent,
                             String name,
                             URL resourceUrl,
-                            PathEntry configuration)
+                            PathEntry configuration,
+                            final DefaultContentCreator contentCreator)
     throws RepositoryException {
         final String resourcePath = resourceUrl.getPath().toLowerCase();
         try {
@@ -528,7 +529,7 @@ public class Loader extends BaseImportLoader {
             }
 
             // get the node reader for this resource
-            final ImportProvider ip = this.contentCreator.getImportProvider(resourcePath);
+            final ImportProvider ip = contentCreator.getImportProvider(resourcePath);
             if ( ip == null ) {
                 return null;
             }
@@ -539,10 +540,10 @@ public class Loader extends BaseImportLoader {
                 return null;
             }
 
-            this.contentCreator.prepareParsing(parent, toPlainName(name));
-            nodeReader.parse(resourceUrl, this.contentCreator);
+            contentCreator.prepareParsing(parent, toPlainName(name, contentCreator));
+            nodeReader.parse(resourceUrl, contentCreator);
 
-            return this.contentCreator.getCreatedRootNode();
+            return contentCreator.getCreatedRootNode();
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
@@ -580,7 +581,7 @@ public class Loader extends BaseImportLoader {
      * @throws IOException
      * @throws RepositoryException
      */
-    private void createFile(PathEntry configuration, Node parent, URL source, List<String> createdNodes)
+    private void createFile(PathEntry configuration, Node parent, URL source, List<String> createdNodes, final DefaultContentCreator contentCreator)
     throws IOException, RepositoryException {
         final String srcPath = source.getPath();
         int pos = srcPath.lastIndexOf("/");
@@ -592,15 +593,15 @@ public class Loader extends BaseImportLoader {
             path = srcPath.substring(0, pos + 1) + name;
         }
 
-        this.contentCreator.init(configuration, defaultImportProviders, createdNodes, null);
-        this.contentCreator.prepareParsing(parent, name);
+        contentCreator.init(configuration, defaultImportProviders, createdNodes, null);
+        contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
         final long lastModified = Math.min(conn.getLastModified(), configuration.getLastModified());
         final String type = conn.getContentType();
         final InputStream data = conn.getInputStream();
-        this.contentCreator.createFileAndResourceNode(path, data, type, lastModified);
-        this.contentCreator.finishNode();
-        this.contentCreator.finishNode();
+        contentCreator.createFileAndResourceNode(path, data, type, lastModified);
+        contentCreator.finishNode();
+        contentCreator.finishNode();
     }
 
     /**
@@ -808,10 +809,11 @@ public class Loader extends BaseImportLoader {
      * Return the root node descriptor.
      */
     private Descriptor getRootNodeDescriptor(final Bundle bundle,
-                                             final String path) {
+                                             final String path,
+                                             final DefaultContentCreator contentCreator) {
         URL rootNodeDescriptor = null;
 
-        for (Map.Entry<String, ImportProvider> e : this.contentCreator.getImportProviders().entrySet()) {
+        for (Map.Entry<String, ImportProvider> e : contentCreator.getImportProviders().entrySet()) {
             if (e.getValue() != null) {
                 rootNodeDescriptor = bundle.getEntry(path + ROOT_DESCRIPTOR
                     + e.getKey());
@@ -836,17 +838,17 @@ public class Loader extends BaseImportLoader {
      * Imports mixin nodes and properties (and optionally child nodes) of the
      * parent node.
      */
-    private URL importParentNode(Session session, Bundle bundle, String path, Node parent)
+    private URL importParentNode(Session session, Bundle bundle, String path, Node parent, final DefaultContentCreator contentCreator)
     throws RepositoryException {
-        final Descriptor descriptor = getRootNodeDescriptor(bundle, path);
+        final Descriptor descriptor = getRootNodeDescriptor(bundle, path, contentCreator);
         // no root descriptor found
         if (descriptor == null) {
             return null;
         }
 
         try {
-            this.contentCreator.prepareParsing(parent, null);
-            descriptor.nodeReader.parse(descriptor.rootNodeDescriptor, this.contentCreator);
+            contentCreator.prepareParsing(parent, null);
+            descriptor.nodeReader.parse(descriptor.rootNodeDescriptor, contentCreator);
 
             return descriptor.rootNodeDescriptor;
         } catch (RepositoryException re) {
@@ -857,8 +859,8 @@ public class Loader extends BaseImportLoader {
 
     }
 
-    private String toPlainName(String name) {
-        final String providerExt = this.contentCreator.getImportProviderExtension(name);
+    private String toPlainName(final String name, final DefaultContentCreator contentCreator) {
+        final String providerExt = contentCreator.getImportProviderExtension(name);
         if (providerExt != null) {
             return name.substring(0, name.length() - providerExt.length());
         }
