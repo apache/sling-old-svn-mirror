@@ -25,33 +25,9 @@ import org.apache.maven.project.MavenProjectHelper;
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
-     * @parameter expression="${configDirectory}"
-     *            default-value="src/main/config"
-     */
-    protected File configDirectory;
-
-    /**
-     * JAR Packaging type.
-     */
-    protected static final String JAR = "jar";
-
-    /**
-     * WAR Packaging type.
-     */
-    protected static final String WAR = "war";
-
-    /**
      * Partial Bundle List type
      */
     protected static final String PARTIAL = "partialbundlelist";
-
-    protected static boolean shouldCopy(File source, File dest) {
-        if (!dest.exists()) {
-            return true;
-        } else {
-            return source.lastModified() > dest.lastModified();
-        }
-    }
 
     /**
      * @parameter default-value="${basedir}/src/main/bundles/list.xml"
