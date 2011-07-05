@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -41,7 +42,6 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
@@ -639,37 +639,47 @@ public class JcrResourceResolver
             // find aliases for segments. we can't walk the parent chain
             // since the request session might not have permissions to
             // read all parents SLING-2093
-            String[] segments = Text.explode(res.getPath(), '/');
-            if (segments.length > 0) {
-                StringBuilder buf = new StringBuilder();
-                Resource current = res.getResourceResolver().getResource("/");
-                for (String name: segments) {
-                    Resource child = current.getChild(name);
-                    if (child == null) {
-                        LOGGER.warn("map: could not load child resource {}/{} for alias mapping.", buf, name);
-                        current = new NonExistingResource(res.getResourceResolver(), current.getPath() + "/" + name);
-                        buf.append('/').append(name);
-                    } else {
-                        String alias = getProperty(child, PROP_ALIAS);
-                        if (alias == null || alias.length() == 0) {
-                            alias = name;
-                        }
-                        buf.append('/').append(alias);
-                        current = child;
-                    }
-                }
+            final LinkedList<String> names = new LinkedList<String>();
 
-                // reappend the resolutionPathInfo
-                if (resolutionPathInfo != null) {
-                    buf.append(resolutionPathInfo);
+            Resource current = res;
+            String path = res.getPath();
+            while ( path != null ) {
+                String alias = null;
+                if ( current != null ) {
+                    alias = getProperty(current, PROP_ALIAS);
                 }
-
-                // and then we have the mapped path to work on
-                mappedPath = buf.toString();
-            } else {
-                // root if no segments
-            	mappedPath = "/";            		            	
+                if (alias == null || alias.length() == 0) {
+                    alias = ResourceUtil.getName(path);
+                }
+                names.add(alias);
+                path = ResourceUtil.getParent(path);
+                if ( "/".equals(path) ) {
+                    path = null;
+                } else if ( path != null ) {
+                    current = res.getResourceResolver().resolve(path);
+                }
             }
+
+            // build path from segment names
+            final StringBuilder buf = new StringBuilder();
+
+            // construct the path from the segments (or root if none)
+            if (names.isEmpty()) {
+                buf.append('/');
+            } else {
+                while (!names.isEmpty()) {
+                    buf.append('/');
+                    buf.append(names.removeLast());
+                }
+            }
+
+            // reappend the resolutionPathInfo
+            if (resolutionPathInfo != null) {
+                buf.append(resolutionPathInfo);
+            }
+
+            // and then we have the mapped path to work on
+            mappedPath = buf.toString();
 
             LOGGER.debug("map: Alias mapping resolves to path {}", mappedPath);
 
