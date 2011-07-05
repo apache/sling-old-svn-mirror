@@ -30,6 +30,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.auth.core.AuthenticationSupport;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>AbstractAuthenticationHandler</code> implements the
@@ -184,7 +188,10 @@ public abstract class AbstractAuthenticationHandler extends
      * @param response The response used to send the redirect to the client.
      * @param target The target path to redirect the client to. This parameter
      *            must not be prefixed with the request's context path because
-     *            this will be added by this method.
+     *            this will be added by this method. If this parameter is not
+     *            a valid target request as per the
+     *            {@link #isRedirectValid(HttpServletRequest, String)} method
+     *            the target is modified to be the root of the request's context.
      * @param params The map of parameters to be added to the target path. This
      *            may be <code>null</code>.
      * @throws IOException If an error occurrs sending the redirect request
@@ -195,13 +202,20 @@ public abstract class AbstractAuthenticationHandler extends
      *             problem if the encoding required by the specification is
      *             missing.
      * @since 1.0.2 (Bundle version 1.0.4)
+     * @since 1.0.4 (bundle version 1.0.8) the target is validated with the
+     *      {@link #isRedirectValid(HttpServletRequest, String)} method.
      */
     public static void sendRedirect(final HttpServletRequest request,
             final HttpServletResponse response, final String target,
             Map<String, String> params) throws IOException {
         StringBuilder b = new StringBuilder();
         b.append(request.getContextPath());
-        b.append(target);
+
+        if (isRedirectValid(request, target)) {
+            b.append(target);
+        } else {
+            b.append("/");
+        }
 
         if (params == null) {
             params = new HashMap<String, String>();
@@ -236,6 +250,80 @@ public abstract class AbstractAuthenticationHandler extends
         }
 
         response.sendRedirect(b.toString());
+    }
+
+    /**
+     * Returns <code>true</code> if the given redirect <code>target</code> is
+     * valid according to the following list of requirements:
+     * <ul>
+     * <li>The <code>target</code> is neither <code>null</code> nor an empty
+     *   string</li>
+     * <li>The <code>target</code> is not an URL which is identified by the
+     *   character sequence <code>://</code> separating the scheme from the
+     *   host</li>
+     * <li>If a <code>ResourceResolver</code> is available as a request
+     *   attribute the <code>target</code> must resolve to an existing resource
+     *   </li>
+     * <li>If a <code>ResourceResolver</code> is <i>not</i> available as a
+     *   request attribute the <code>target</code> must be an absolute path
+     *   starting with a slash character</li>
+     * </ul>
+     * <p>
+     * If any of the conditions does not hold, the method returns
+     * <code>false</code> and logs a <i>warning</i> level message with the
+     * <i>org.apache.sling.auth.core.spi.AbstractAuthenticationHandler</i>
+     * logger.
+     *
+     *
+     * @param request Providing the <code>ResourceResolver</code> attribute
+     *   and the context to resolve the resource from the <code>target</code>.
+     *   This may be <code>null</code> which cause the target to not be
+     *   validated with a <code>ResoureResolver</code>
+     * @param target The redirect target to validate
+     * @return <code>true</code> if the redirect target can be considered
+     *  valid
+     *
+     * @since 1.0.4 (bundle version 1.0.8)
+     */
+    public static boolean isRedirectValid(final HttpServletRequest request,
+            final String target) {
+        if (target == null || target.length() == 0) {
+            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
+                "isRedirectValid: Redirect target must not be empty or null");
+            return false;
+        }
+
+        if (target.contains("://")) {
+            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
+                "isRedirectValid: Redirect target '{}' must not be an URL",
+                target);
+            return false;
+        }
+
+        final int query = target.indexOf('?');
+        final String path = (query > 0) ? target.substring(0, query) : target;
+
+        if (request != null) {
+            ResourceResolver resolver = (ResourceResolver) request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+            if (resolver != null) {
+                final boolean isValid = !ResourceUtil.isNonExistingResource(resolver.resolve(
+                    request, path));
+                if (!isValid) {
+                    LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
+                        "isRedirectValid: Redirect target '{}' does not resolve to an existing resource",
+                        target);
+                }
+                return isValid;
+            }
+        }
+
+        final boolean isValid = target.startsWith("/");
+        if (!isValid) {
+            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
+                "isRedirectValid: Redirect target '{}' must be an absolute path",
+                target);
+        }
+        return isValid;
     }
 
     /**
