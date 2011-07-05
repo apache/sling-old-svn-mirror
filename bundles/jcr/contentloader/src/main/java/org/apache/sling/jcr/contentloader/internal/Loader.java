@@ -355,7 +355,7 @@ public class Loader extends BaseImportLoader {
         //  init content creator
         contentCreator.init(configuration, this.defaultImportProviders, createdNodes, null);
 
-        final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
+        final Map<String, Node> processedEntries = new HashMap<String, Node>();
 
         @SuppressWarnings("unchecked")
         Enumeration<String> entries = bundle.getEntryPaths(path);
@@ -379,7 +379,7 @@ public class Loader extends BaseImportLoader {
         // potential parent node import/extension
         URL parentNodeDescriptor = importParentNode(parent.getSession(), bundle, path, parent, contentCreator);
         if (parentNodeDescriptor != null) {
-            processedEntries.put(parentNodeDescriptor, parent);
+            processedEntries.put(parentNodeDescriptor.toString(), parent);
         }
 
         while (entries.hasMoreElements()) {
@@ -408,7 +408,7 @@ public class Loader extends BaseImportLoader {
                     if (node == null) {
                         node = createNode(parent, name, nodeDescriptor,
                                           configuration, contentCreator);
-                        processedEntries.put(nodeDescriptor, node);
+                        processedEntries.put(nodeDescriptor.toString(), node);
                     }
                 } else {
                     node = createFolder(parent, name, configuration.isOverwrite());
@@ -439,7 +439,7 @@ public class Loader extends BaseImportLoader {
      */
     private void handleFile(final String entry,
                             final Bundle bundle,
-                            final Map<URL, Node> processedEntries,
+                            final Map<String, Node> processedEntries,
                             final PathEntry configuration,
                             final Node parent,
                             final List<String> createdNodes,
@@ -469,7 +469,7 @@ public class Loader extends BaseImportLoader {
             if (foundProvider) {
                 if ((node = createNode(parent, name, file, configuration, contentCreator)) != null) {
                     log.debug("Created Node as {} {} ",node.getPath(),name);
-                    processedEntries.put(file, node);
+                    processedEntries.put(file.toString(), node);
                 } else {
                     log.warn("No Node created for file {} {} ",file,name);
                 }
@@ -493,7 +493,7 @@ public class Loader extends BaseImportLoader {
                     contentCreator.setIgnoreOverwriteFlag(true);
                     node = createNode(parent, name, nodeDescriptor,
                                       configuration, contentCreator);
-                    processedEntries.put(nodeDescriptor, node);
+                    processedEntries.put(nodeDescriptor.toString(), node);
                 } finally {
                     contentCreator.setIgnoreOverwriteFlag(false);
                 }
