@@ -61,7 +61,7 @@ public class LaunchpadConfigInstaller {
                     path = path.substring(0, path.length() - 1);
                 }
                 if ( !checkPath(resourceProvider, installables, path, resourceType) ) {
-                    logger.info("Launchpad {} file will be installed: {}", resourceType, path);
+                    logger.info("Launchpad {} will be installed: {}", resourceType, path);
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
                         dict = new Hashtable<String, Object>();
