@@ -84,11 +84,16 @@ public class BundleStartTask extends AbstractInstallTask {
 	    if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
 	        return true;
 	    }
-	    if ( b.getHeaders().get(Constants.FRAGMENT_HOST) != null ) {
-	        return true;
-	    }
-        return false;
+	    return ( getFragmentHostHeader(b) != null );
 	}
+
+	/**
+         * Gets the bundle's Fragment-Host header.
+         */
+	public static String getFragmentHostHeader(final Bundle b) {
+	    return (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
+	}
+
 	/**
 	 * Check if the bundle has the lazy activation policy
 	 */
@@ -126,40 +131,50 @@ public class BundleStartTask extends AbstractInstallTask {
 			return;
 		}
 
-        if (isBundleActive(b) ) {
-            this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
-            if ( this.getResource() != null ) {
-                this.setFinishedState(ResourceState.INSTALLED);
+        final String fragmentHostHeader = getFragmentHostHeader(b);
+        if (fragmentHostHeader != null) {
+            this.getLogger().debug("Need to do a refresh of the bundle's host");
+            for (final Bundle bundle : this.creator.getBundleContext().getBundles()) {
+                if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
+                    this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
+                    this.creator.getPackageAdmin().refreshPackages(new Bundle[] { bundle });
+                    break;
+                }
             }
-            return;
-        }
-        // Try to start bundle, and if that doesn't work we'll need to retry
-        try {
-            b.start();
-            if ( this.getResource() != null ) {
-                this.setFinishedState(ResourceState.INSTALLED);
-            }
-            this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
-                    new Object[] {retryCount, bundleId, b.getSymbolicName()});
-        } catch (final BundleException e) {
-            this.getLogger().info("Could not start bundle (retry count={}, bundle ID={}) : {}. Reason: {}. Will retry.",
-                    new Object[] {retryCount, bundleId, b.getSymbolicName(), e});
 
-            // Do the first retry immediately (in case "something" happenened right now
-            // that warrants a retry), but for the next ones wait for at least one bundle
-            // event or framework event
-            if (this.retryCount == 0) {
-                this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount();
-            } else {
-                this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
+            this.setFinishedState(ResourceState.INSTALLED);
+        } else {
+            if (isBundleActive(b) ) {
+                this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
+                this.setFinishedState(ResourceState.INSTALLED);
+                return;
             }
-            this.retryCount++;
-            if ( this.getResource() == null ) {
-                ctx.addTaskToNextCycle(this);
-            } else {
-                this.getResource().setTemporaryAttribute(ATTR_RC, this.retryCount);
-                this.getResource().setTemporaryAttribute(ATTR_EC, this.eventsCountForRetrying);
+            // Try to start bundle, and if that doesn't work we'll need to retry
+            try {
+                b.start();
+                this.setFinishedState(ResourceState.INSTALLED);
+                this.getLogger().info("Bundle started (retry count={}, bundle ID={}) : {}",
+                        new Object[] {retryCount, bundleId, b.getSymbolicName()});
+            } catch (final BundleException e) {
+                this.getLogger().info("Could not start bundle (retry count={}, bundle ID={}) : {}. Reason: {}. Will retry.",
+                        new Object[] {retryCount, bundleId, b.getSymbolicName(), e});
+
+                // Do the first retry immediately (in case "something" happenened right now
+                // that warrants a retry), but for the next ones wait for at least one bundle
+                // event or framework event
+                if (this.retryCount == 0) {
+                    this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount();
+                } else {
+                    this.eventsCountForRetrying = OsgiInstallerImpl.getTotalEventsCount() + 1;
+                }
+                this.retryCount++;
+                if ( this.getResource() == null ) {
+                    ctx.addTaskToNextCycle(this);
+                } else {
+                    this.getResource().setTemporaryAttribute(ATTR_RC, this.retryCount);
+                    this.getResource().setTemporaryAttribute(ATTR_EC, this.eventsCountForRetrying);
+                }
             }
-        }
-	}
+    	}
+    }
 }
