@@ -557,8 +557,8 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         Session session = null;
         try {
             session = this.repository.loginAdministrative(null);
-            if ( session.nodeExists(path) ) {
-                session.getNode(path).remove();
+            if ( session.itemExists(path) ) {
+                session.getItem(path).remove();
                 session.save();
             }
         } catch (final RepositoryException re) {
