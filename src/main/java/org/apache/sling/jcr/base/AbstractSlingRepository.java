@@ -30,6 +30,9 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.Workspace;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.internal.loader.Loader;
@@ -48,31 +51,10 @@ import org.osgi.util.tracker.ServiceTracker;
  * interface may wish to extend this class to benefit from a default
  * implementation.
  *
- * @scr.component metatype="no"
  */
+@Component(componentAbstract=true)
 public abstract class AbstractSlingRepository implements SlingRepository,
         Runnable {
-
-    /** @scr.property value="" */
-    public static final String PROPERTY_DEFAULT_WORKSPACE = "defaultWorkspace";
-
-    /** @scr.property valueRef="DEFAULT_ANONYMOUS_USER" */
-    public static final String PROPERTY_ANONYMOUS_USER = "anonymous.name";
-
-    /** @scr.property valueRef="DEFAULT_ANONYMOUS_PASS" */
-    public static final String PROPERTY_ANONYMOUS_PASS = "anonymous.password";
-
-    /** @scr.property valueRef="DEFAULT_ADMIN_USER" */
-    public static final String PROPERTY_ADMIN_USER = "admin.name";
-
-    /** @scr.property valueRef="DEFAULT_ADMIN_PASS" */
-    public static final String PROPERTY_ADMIN_PASS = "admin.password";
-
-    /** @scr.property valueRef="DEFAULT_POLL_ACTIVE" */
-    public static final String PROPERTY_POLL_ACTIVE = "poll.active";
-
-    /** @scr.property valueRef="DEFAULT_POLL_INACTIVE" */
-    public static final String PROPERTY_POLL_INACTIVE = "poll.inactive";
 
     public static final String DEFAULT_ANONYMOUS_USER = "anonymous";
 
@@ -81,6 +63,21 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     public static final String DEFAULT_ADMIN_USER = "admin";
 
     public static final String DEFAULT_ADMIN_PASS = "admin";
+
+    @Property
+    public static final String PROPERTY_DEFAULT_WORKSPACE = "defaultWorkspace";
+
+    @Property(value=DEFAULT_ANONYMOUS_USER)
+    public static final String PROPERTY_ANONYMOUS_USER = "anonymous.name";
+
+    @Property(value=DEFAULT_ANONYMOUS_PASS)
+    public static final String PROPERTY_ANONYMOUS_PASS = "anonymous.password";
+
+    @Property(value=DEFAULT_ADMIN_USER)
+    public static final String PROPERTY_ADMIN_USER = "admin.name";
+
+    @Property(value=DEFAULT_ADMIN_PASS)
+    public static final String PROPERTY_ADMIN_PASS = "admin.password";
 
     /**
      * The default value for the number of seconds to wait between two
@@ -94,10 +91,16 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      */
     public static final int DEFAULT_POLL_INACTIVE = 10;
 
+    @Property(intValue=DEFAULT_POLL_ACTIVE)
+    public static final String PROPERTY_POLL_ACTIVE = "poll.active";
+
+    @Property(intValue=DEFAULT_POLL_INACTIVE)
+    public static final String PROPERTY_POLL_INACTIVE = "poll.inactive";
+
     /** The minimum number of seconds allowed for any of the two poll times */
     public static final int MIN_POLL = 2;
 
-    /** @scr.reference bind="bindLog" unbind="unbindLog" */
+    @Reference
     private LogService log;
 
     private ComponentContext componentContext;
