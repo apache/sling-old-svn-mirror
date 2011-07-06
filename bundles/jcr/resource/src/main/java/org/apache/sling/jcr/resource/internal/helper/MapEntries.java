@@ -23,7 +23,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,24 +34,23 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.query.Query;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MapEntries implements EventListener {
+public class MapEntries implements EventHandler {
 
     public static MapEntries EMPTY = new MapEntries();
 
@@ -62,9 +63,7 @@ public class MapEntries implements EventListener {
 
     private JcrResourceResolverFactoryImpl factory;
 
-    private JcrResourceResolver resolver;
-
-    private Session session;
+    private ResourceResolver resolver;
 
     private final String mapRoot;
 
@@ -76,8 +75,9 @@ public class MapEntries implements EventListener {
 
     private boolean initializing = false;
 
+    private final ServiceRegistration registration;
+
     private MapEntries() {
-        session = null; // not needed
         factory = null;
         resolver = null;
         mapRoot = DEFAULT_MAP_ROOT;
@@ -85,32 +85,29 @@ public class MapEntries implements EventListener {
 
         resolveMaps = Collections.<MapEntry> emptyList();
         mapMaps = Collections.<MapEntry> emptyList();
+        this.registration = null;
     }
 
-    public MapEntries(JcrResourceResolverFactoryImpl factory,
-            SlingRepository repository) throws RepositoryException {
+    public MapEntries(final JcrResourceResolverFactoryImpl factory,
+                      final BundleContext bundleContext)
+    throws LoginException {
+        this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
-        this.session = repository.loginAdministrative(null);
-        this.resolver = (JcrResourceResolver) factory.getResourceResolver(session);
         this.mapRoot = factory.getMapRoot();
         this.mapRootPrefix = this.mapRoot + "/";
 
         init();
-
-        try {
-            session.getWorkspace().getObservationManager().addEventListener(
-                this, 255, "/", true, null, null, false);
-        } catch (RepositoryException re) {
-            log.error(
-                "MapEntries<init>: Failed registering as observation listener",
-                re);
-        }
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put("event.topics","org/apache/sling/api/resource/*");
+        props.put("service.description","Map Entries Observation");
+        props.put("service.vendor","The Apache Software Foundation");
+        this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
     }
 
     private void init() {
         synchronized (this) {
             // no initialization if the session has already been reset
-            if (session == null) {
+            if (resolver == null) {
                 return;
             }
 
@@ -150,8 +147,7 @@ public class MapEntries implements EventListener {
     }
 
     public void dispose() {
-
-        Session oldSession;
+        final ResourceResolver oldResolver;
 
         // wait at most 10 seconds for a notifcation during initialization
         synchronized (this) {
@@ -163,31 +159,21 @@ public class MapEntries implements EventListener {
                 }
             }
 
-            // immediately set the session field to null to indicate
+            // immediately set the resolver field to null to indicate
             // that we have been disposed (this also signals to the
             // event handler to stop working
-            oldSession = session;
-            session = null;
+            oldResolver = resolver;
+            resolver = null;
+        }
+        if ( this.registration != null ) {
+            this.registration.unregister();
         }
 
-        if (oldSession != null) {
-            try {
-                oldSession.getWorkspace().getObservationManager().removeEventListener(
-                    this);
-            } catch (RepositoryException re) {
-                log.error(
-                    "dispose: Failed unregistering as observation listener", re);
-            }
-
-            try {
-                oldSession.logout();
-            } catch (Exception e) {
-                log.error("dispose: Unexpected problem logging out", e);
-            }
+        if (oldResolver != null) {
+            oldResolver.close();
         }
 
         // clear the rest of the fields
-        resolver = null;
         factory = null;
     }
 
@@ -199,46 +185,34 @@ public class MapEntries implements EventListener {
         return mapMaps;
     }
 
-    public Session getSession() {
-        return session;
-    }
-
     // ---------- EventListener interface
 
-    public void onEvent(EventIterator events) {
+    public void handleEvent(final org.osgi.service.event.Event event) {
         boolean handleEvent = false;
-        while (!handleEvent && session != null && events.hasNext()) {
-            Event event = events.nextEvent();
-            try {
-                String path = event.getPath();
-                handleEvent = mapRoot.equals(path)
-                    || path.startsWith(mapRootPrefix)
-                    || path.endsWith("/sling:vanityPath")
-                    || path.endsWith("/sling:vanityOrder")
-                    || path.endsWith("/sling:redirect");
-            } catch (Throwable t) {
-                log.warn("onEvent: Cannot complete event handling", t);
+        final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+        if ( this.resolver != null && path != null ) {
+            handleEvent = mapRoot.equals(path) || path.startsWith(mapRootPrefix);
+            if ( !handleEvent && !event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
+                final Resource rsrc = this.resolver.getResource(path);
+                final ValueMap props = ResourceUtil.getValueMap(rsrc);
+                handleEvent = props.containsKey("sling:vanityPath")
+                              || props.containsKey("sling:vanityOrder")
+                              || props.containsKey("sling:redirect");
             }
         }
-
         if (handleEvent) {
-            if (session != null) {
-                try {
+            final Thread t = new Thread() {
+                public void run() {
                     init();
-                } catch (Throwable t) {
-                    log.warn("onEvent: Failed initializing after changes", t);
                 }
-            } else {
-                log.info("onEvent: Already disposed, not reinitializing");
-            }
-        } else if (log.isDebugEnabled()) {
-            log.debug("onEvent: Ignoring irrelevant events");
+            };
+            t.start();
         }
     }
 
     // ---------- internal
 
-    private void loadResolverMap(JcrResourceResolver resolver,
+    private void loadResolverMap(final ResourceResolver resolver,
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries) {
         // the standard map configuration
@@ -248,16 +222,16 @@ public class MapEntries implements EventListener {
         }
     }
 
-    private void gather(JcrResourceResolver resolver,
+    private void gather(final ResourceResolver resolver,
             Collection<MapEntry> resolveEntries,
             Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
         // scheme list
         Iterator<Resource> children = ResourceUtil.listChildren(parent);
         while (children.hasNext()) {
-            Resource child = children.next();
+            final Resource child = children.next();
+            final ValueMap vm = ResourceUtil.getValueMap(child);
 
-            String name = resolver.getProperty(child,
-                JcrResourceResolver.PROP_REG_EXP);
+            String name = vm.get(JcrResourceResolver.PROP_REG_EXP, String.class);
             boolean trailingSlash = false;
             if (name == null) {
                 name = ResourceUtil.getName(child).concat("/");
@@ -298,13 +272,13 @@ public class MapEntries implements EventListener {
         }
     }
 
-    private void loadVanityPaths(JcrResourceResolver resolver,
+    private void loadVanityPaths(final ResourceResolver resolver,
             List<MapEntry> entries) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(
-            queryString, Query.SQL);
+            queryString, "sql");
         while (i.hasNext()) {
             Resource resource = i.next();
             ValueMap row = resource.adaptTo(ValueMap.class);

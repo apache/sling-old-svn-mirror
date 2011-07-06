@@ -18,6 +18,9 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
 import java.security.Principal;
@@ -58,6 +61,10 @@ import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class JcrResourceResolverTest extends RepositoryTestBase {
 
@@ -79,6 +86,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     private Node rootWs2Node;
 
+    private JcrResourceListener listener;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -135,7 +143,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Field mapEntriesField = resFac.getClass().getDeclaredField("mapEntries");
         mapEntriesField.setAccessible(true);
-        mapEntries = new MapEntries(resFac, getRepository());
+        mapEntries = new MapEntries(resFac, mock(BundleContext.class));
         mapEntriesField.set(resFac, mapEntries);
 
         try {
@@ -145,6 +153,22 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         } catch (Exception e) {
             // don't care for now
         }
+
+        final EventAdmin mockEA = new EventAdmin() {
+
+            public void postEvent(Event event) {
+                mapEntries.handleEvent(event);
+            }
+
+            public void sendEvent(Event event) {
+                mapEntries.handleEvent(event);
+            }
+        };
+        final ServiceTracker tracker = mock(ServiceTracker.class);
+        when(tracker.getService()).thenReturn(mockEA);
+
+        // observation listener
+        listener = new JcrResourceListener(null, resFac, "/", "/", tracker);
 
         resResolver = resFac.getResourceResolver(session);
 
@@ -193,6 +217,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         if (mapRoot != null) {
             mapRoot.remove();
+        }
+
+        if ( this.listener != null ) {
+            this.listener.dispose();
         }
 
         session.save();
@@ -1888,7 +1916,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             assertEquals(rootNode.getPath() + "/kind/enkel",
                 resEnkel.getResourceMetadata().getResolutionPath());
             assertEquals("", resEnkel.getResourceMetadata().getResolutionPathInfo());
-    
+
             Node resNodeEnkel = resEnkel.adaptTo(Node.class);
             assertNotNull(resNodeEnkel);
             assertEquals(grandchild.getPath(), resNodeEnkel.getPath());
@@ -1898,7 +1926,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
     }
 
-    
+
     public void test_resolve_with_sling_alias_ws() throws Exception {
 
         Node child = rootWs2Node.addNode("child");
