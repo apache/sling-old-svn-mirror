@@ -81,7 +81,7 @@ public abstract class BaseBundleList {
             current.setVersion(newBnd.getVersion());
         } else {
             StartLevel startLevel = null;
-            if ( mergeStartLevel == null || newBnd.getStartLevel() > 0) {
+            if ( mergeStartLevel == null || newBnd.getStartLevel() != 0) {
                 startLevel = getOrCreateStartLevel(newBnd.getStartLevel());
             } else {
                 startLevel = getOrCreateStartLevel(mergeStartLevel.getStartLevel());
