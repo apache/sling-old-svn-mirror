@@ -32,7 +32,7 @@ import org.apache.sling.jcr.base.AbstractNamespaceMappingRepository;
 import org.osgi.framework.BundleContext;
 
 /**
- *
+ * Repository wrapper
  */
 public class SlingRepositoryWrapper
     extends AbstractNamespaceMappingRepository
