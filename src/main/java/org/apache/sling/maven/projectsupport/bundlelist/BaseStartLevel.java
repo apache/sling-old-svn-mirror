@@ -82,7 +82,7 @@ public abstract class BaseStartLevel {
     }
 
     public String getLevel() {
-        return String.valueOf(this.startLevel);
+        return (this.startLevel == -1 ? BOOT_MARKER : String.valueOf(this.startLevel));
     }
 
     public int getStartLevel() {
