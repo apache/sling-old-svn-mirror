@@ -56,26 +56,36 @@ public class SlingRepositoryProvider {
 
     private BundleContext bundleContext;
 
-    private final List<Registration> repositories = new ArrayList<Registration>();
+    /** List of services which are bound before activate is called. */
+    private final List<PendingService> pendingServices = new ArrayList<PendingService>();
 
+    /**
+     * Activate this component.
+     */
     protected void activate(final BundleContext ctx) {
-        final List<Registration> copyList;
-        synchronized ( repositories ) {
+        final List<PendingService> copyList;
+        synchronized ( pendingServices ) {
             this.bundleContext = ctx;
-            copyList = new ArrayList<Registration>(this.repositories);
-            this.repositories.clear();
+            copyList = new ArrayList<PendingService>(this.pendingServices);
+            this.pendingServices.clear();
         }
-        for(final Registration reg : copyList) {
-            this.bindRepository(reg.repository, reg.properties);
+        for(final PendingService reg : copyList) {
+            this.registerRepository(this.bundleContext, reg.repository, reg.properties);
         }
     }
 
+    /**
+     * Deactivate this component.
+     */
     protected void deactivate() {
-        synchronized ( repositories ) {
+        synchronized ( pendingServices ) {
             this.bundleContext = null;
         }
     }
 
+    /**
+     * Check whether this service already provides the SlingRepository service.
+     */
     private boolean isSlingRepository(final Map<String, Object> props) {
         final String[] interfaces = (String[]) props.get(Constants.OBJECTCLASS);
         if ( interfaces != null ) { // sanity check
@@ -88,33 +98,44 @@ public class SlingRepositoryProvider {
         return false;
     }
 
+    private void registerRepository(final BundleContext processContext,
+            final Repository repo,
+            final Map<String, Object> props) {
+        logger.debug("Providing new SlingRepository based on {} : {}", repo, props);
+        final Long key = (Long)props.get(Constants.SERVICE_ID);
+        final RepositoryRegistration reg = new RepositoryRegistration();
+        reg.wrapper = new SlingRepositoryWrapper(repo, processContext);
+        reg.registration = processContext.registerService(SLING_REPOSITORY, reg.wrapper, null);
+        synchronized ( this.registrations ) {
+            this.registrations.put(key, reg);
+        }
+    }
+
+    /**
+     * Bind a new repository.
+     */
     protected void bindRepository(final Repository repo, final Map<String, Object> props) {
         if ( !isSlingRepository(props) ) {
             final BundleContext processContext;
-            synchronized ( repositories ) {
+            synchronized ( pendingServices ) {
                 processContext = this.bundleContext;
                 if ( processContext == null ) {
-                    this.repositories.add(new Registration(repo, props));
+                    this.pendingServices.add(new PendingService(repo, props));
                 }
             }
             if ( processContext != null ) {
-                logger.info("Binding repository!");
-                final Long key = (Long)props.get(Constants.SERVICE_ID);
-                final RepositoryRegistration reg = new RepositoryRegistration();
-                reg.wrapper = new SlingRepositoryWrapper(repo, processContext);
-                reg.registration = processContext.registerService(SLING_REPOSITORY, reg.wrapper, null);
-                synchronized ( this.registrations ) {
-                    this.registrations.put(key, reg);
-                }
+                this.registerRepository(processContext, repo, props);
             }
         }
     }
 
+    /**
+     * Unind a new repository.
+     */
     protected void unbindRepository(final Repository repo, final Map<String, Object> props) {
         if ( !isSlingRepository(props) ) {
-            logger.info("Unbinding repository!");
-            synchronized ( repositories ) {
-                this.repositories.remove(new Registration(repo, props));
+            synchronized ( pendingServices ) {
+                this.pendingServices.remove(new PendingService(repo, props));
             }
             final Long key = (Long)props.get(Constants.SERVICE_ID);
             final RepositoryRegistration slingRepo;
@@ -122,19 +143,23 @@ public class SlingRepositoryProvider {
                 slingRepo = this.registrations.remove(key);
             }
             if ( slingRepo != null ) {
+                logger.debug("Unregistering SlingRepository for {} : {}", repo, props);
                 slingRepo.wrapper.dispose();
                 slingRepo.registration.unregister();
             }
         }
     }
 
-    private static final class Registration {
+    /**
+     * Data class for a pending service.
+     */
+    private static final class PendingService {
         public final Repository repository;
         public final Map<String, Object> properties;
 
         private final long key;
 
-        public Registration(final Repository r, final Map<String, Object> p) {
+        public PendingService(final Repository r, final Map<String, Object> p) {
             this.repository = r;
             this.properties = p;
             this.key = (Long) this.properties.get(Constants.SERVICE_ID);
@@ -150,13 +175,16 @@ public class SlingRepositoryProvider {
             if ( this == obj ) {
                 return true;
             }
-            if ( ! (obj instanceof Registration ) ) {
+            if ( ! (obj instanceof PendingService ) ) {
                 return false;
             }
-            return this.key == ((Registration)obj).key;
+            return this.key == ((PendingService)obj).key;
         }
     }
 
+    /**
+     * Data class for a registration.
+     */
     private static final class RepositoryRegistration {
         public ServiceRegistration registration;
         public SlingRepositoryWrapper wrapper;
