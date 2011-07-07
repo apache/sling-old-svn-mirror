@@ -36,6 +36,10 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The repository provider listens for javax.jcr.Repository services and wraps
+ * them as SlingRepository services (if required)
+ */
 @Component(specVersion="1.1")
 @Reference(name="repository",
            referenceInterface=Repository.class,

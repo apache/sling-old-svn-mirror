@@ -28,13 +28,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * The <code>AbstractSlingRepository</code> is an abstract implementation of
+ * The <code>AbstractNamespaceMappingRepository</code> is an abstract implementation of
  * the {@link SlingRepository} interface which provides default support for
- * attached repositories as well as ensuring live repository connection,
- * reconnecting if needed. Implementations of the <code>SlingRepository</code>
- * interface may wish to extend this class to benefit from a default
- * implementation.
- *
+ * namespace mapping.
  */
 public abstract class AbstractNamespaceMappingRepository implements SlingRepository {
 
@@ -81,6 +77,9 @@ public abstract class AbstractNamespaceMappingRepository implements SlingReposit
         }
     }
 
+    /**
+     * Return a namespace aware session.
+     */
     protected Session getNamespaceAwareSession(final Session session) throws RepositoryException {
         if ( session == null ) {  // sanity check
             return null;
