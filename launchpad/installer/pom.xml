@@ -21,7 +21,7 @@
     </parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.launchpad.installer</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Launchpad Installer</name>
 
@@ -30,9 +30,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.installer-1.0.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.installer-1.0.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.installer-1.0.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/installer</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/installer</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/installer</url>
     </scm>
 
     <build>
