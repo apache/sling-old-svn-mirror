@@ -56,7 +56,7 @@ public abstract class AbstractLaunchpadFrameworkMojo extends AbstractUsingBundle
 
     protected String getPathForArtifact(final int startLevel, final String artifactName) {
         if ( startLevel == -1 && bootDirectory != null ) {
-            return String.format("%s/%s/%s", baseDestination, bootDirectory,
+            return String.format("%s/%s/1/%s", baseDestination, bootDirectory,
                     artifactName);
         }
         return String.format("%s/%s/%s/%s", baseDestination, bundlesDirectory,
