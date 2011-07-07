@@ -34,7 +34,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.NamespaceMapper;
-import org.apache.sling.jcr.base.AbstractSlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.NodeTypeLoader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -54,11 +54,11 @@ public class Loader implements NamespaceMapper, BundleListener {
     public static final String NAMESPACES_BUNDLE_HEADER = "Sling-Namespaces";
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(Loader.class);
-    
+    private final Logger log = LoggerFactory.getLogger(Loader.class);
+
     private final BundleContext bundleContext;
 
-    private final AbstractSlingRepository slingRepository;
+    private final SlingRepository slingRepository;
 
     // bundles whose registration failed and should be retried
     private final List<Bundle> delayedBundles;
@@ -66,7 +66,7 @@ public class Loader implements NamespaceMapper, BundleListener {
     /** Namespace prefix table. */
     private final Map<Long, NamespaceEntry[]> namespaceTable = new HashMap<Long, NamespaceEntry[]>();
 
-    public Loader(AbstractSlingRepository repository, BundleContext bundleContext) {
+    public Loader(final SlingRepository repository, final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.slingRepository = repository;
         this.delayedBundles = new ArrayList<Bundle>();
@@ -341,7 +341,7 @@ public class Loader implements NamespaceMapper, BundleListener {
             session.logout();
         }
     }
-    
+
     private static class NamespaceEntry {
 
         public final String prefix;

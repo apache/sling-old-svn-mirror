@@ -39,9 +39,9 @@ public class SessionProxyHandler  {
     private Class<?>[] interfaces;
 
     /** The repository */
-    private final AbstractSlingRepository repository;
+    private final AbstractNamespaceMappingRepository repository;
 
-    public SessionProxyHandler(final AbstractSlingRepository repo) {
+    public SessionProxyHandler(final AbstractNamespaceMappingRepository repo) {
         this.repository = repo;
     }
 
@@ -81,11 +81,11 @@ public class SessionProxyHandler  {
 
     public static final class SessionProxyInvocationHandler implements InvocationHandler {
         private final Session delegatee;
-        private final AbstractSlingRepository repository;
+        private final AbstractNamespaceMappingRepository repository;
         private final Class<?>[] interfaces;
 
         public SessionProxyInvocationHandler(final Session delegatee,
-                            final AbstractSlingRepository repo,
+                            final AbstractNamespaceMappingRepository repo,
                             final Class<?>[] interfaces) {
             this.delegatee = delegatee;
             this.repository = repo;

@@ -33,15 +33,11 @@ import javax.jcr.Workspace;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>AbstractSlingRepository</code> is an abstract implementation of
@@ -53,8 +49,9 @@ import org.osgi.util.tracker.ServiceTracker;
  *
  */
 @Component(componentAbstract=true)
-public abstract class AbstractSlingRepository implements SlingRepository,
-        Runnable {
+public abstract class AbstractSlingRepository
+    extends AbstractNamespaceMappingRepository
+    implements SlingRepository, Runnable {
 
     public static final String DEFAULT_ANONYMOUS_USER = "anonymous";
 
@@ -119,12 +116,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private char[] adminPass;
 
-    /** Namespace handler. */
-    private Loader namespaceHandler;
-
-    /** Session proxy handler. */
-    private SessionProxyHandler sessionProxyHandler;
-
     // the poll interval used while the repository is not active
     private long pollTimeInActiveSeconds;
 
@@ -137,8 +128,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     // the background thread constantly checking the repository
     private Thread repositoryPinger;
-
-    private ServiceTracker namespaceMapperTracker;
 
     protected AbstractSlingRepository() {
     }
@@ -224,14 +213,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 setDefaultWorkspace(defaultWorkspace);
             }
 
-            defineNamespacePrefixes(session);
-
-            // to support namespace prefixes if session.impersonate is called
-            // we have to use a proxy
-            if ( this.sessionProxyHandler != null ) {
-                return this.sessionProxyHandler.createProxy(session);
-            }
-            return session;
+            return this.getNamespaceAwareSession(session);
 
         } catch (NoSuchWorkspaceException nswe) {
             // if the desired workspace is the default workspace, try to create
@@ -441,9 +423,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param repository The JCR <code>Repository</code> to setup.
      */
     protected void setupRepository(Repository repository) {
-        BundleContext bundleContext = componentContext.getBundleContext();
-        this.namespaceHandler = new Loader(this, bundleContext);
-        this.sessionProxyHandler = new SessionProxyHandler(this);
+        this.setup(componentContext.getBundleContext());
     }
 
     /**
@@ -549,11 +529,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * @param repository
      */
     protected void tearDown(Repository repository) {
-        if (this.namespaceHandler != null) {
-            this.namespaceHandler.dispose();
-            this.namespaceHandler = null;
-        }
-        this.sessionProxyHandler = null;
+        this.tearDown();
     }
 
     /**
@@ -578,10 +554,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      *
      * @throws nothing, but allow derived classes to throw any Exception
      */
-    protected void activate(ComponentContext componentContext) throws Exception {
-        this.namespaceMapperTracker = new ServiceTracker(componentContext.getBundleContext(), NamespaceMapper.class.getName(), null);
-        this.namespaceMapperTracker.open();
-
+    protected void activate(final ComponentContext componentContext) throws Exception {
         this.componentContext = componentContext;
 
         @SuppressWarnings("unchecked")
@@ -625,9 +598,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      *
      * @param componentContext
      */
-    protected void deactivate(ComponentContext componentContext) {
-        this.namespaceMapperTracker.close();
-
+    protected void deactivate(final ComponentContext componentContext) {
         // stop the background thread
         stopRepositoryPinger();
 
@@ -704,21 +675,6 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         // fall back to failure
         return false;
-    }
-
-    void defineNamespacePrefixes(final Session session) throws RepositoryException {
-        if (this.namespaceHandler != null) {
-            // apply namespace mapping
-            this.namespaceHandler.defineNamespacePrefixes(session);
-        }
-
-        // call namespace mappers
-        Object[] nsMappers = namespaceMapperTracker.getServices();
-        if (nsMappers != null) {
-            for (int i = 0; i < nsMappers.length; i++) {
-                ((NamespaceMapper) nsMappers[i]).defineNamespacePrefixes(session);
-            }
-        }
     }
 
     // ---------- Background operation checking repository availability --------
