@@ -193,7 +193,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to copy configuration files", e);
         }
-        
+
     }
 
     private void unpack(File source, File destination, String includes, String excludes)

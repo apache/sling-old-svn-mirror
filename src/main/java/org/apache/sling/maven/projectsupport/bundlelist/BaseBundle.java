@@ -30,4 +30,10 @@ public abstract class BaseBundle {
 
     public abstract String getVersion();
 
+    @Override
+    public String toString() {
+        return "Bundle [artifactId=" + getArtifactId() + ", classifier="
+                + getClassifier() + ", groupId=" + getGroupId() + ", startLevel="
+                + getStartLevel() + ", type=" + getType() + ", version=" + getVersion() + "]";
+    }
 }

@@ -16,11 +16,13 @@
  */
 package org.apache.sling.maven.projectsupport;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Tests of PreparePageMojo

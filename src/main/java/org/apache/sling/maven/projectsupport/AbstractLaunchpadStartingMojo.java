@@ -27,10 +27,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.felix.framework.Logger;
 import org.apache.maven.artifact.Artifact;
@@ -119,9 +121,14 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
 
         public Iterator<String> getChildren(String path) {
             if (path.equals(BUNDLE_PATH_PREFIX)) {
-                List<String> levels = new ArrayList<String>();
-                for (StartLevel level : getBundleList().getStartLevels()) {
-                    levels.add(String.valueOf(BUNDLE_PATH_PREFIX + "/" + level.getLevel()) + "/");
+                final Set<String> levels = new HashSet<String>();
+                for (final StartLevel level : getBundleList().getStartLevels()) {
+                    // we treat the boot level as level 1
+                    if ( level.getStartLevel() == -1 ) {
+                        levels.add(BUNDLE_PATH_PREFIX + "/1/");
+                    } else {
+                        levels.add(BUNDLE_PATH_PREFIX + "/" + level.getLevel() + "/");
+                    }
                 }
                 return levels.iterator();
             } else if (path.equals("resources/corebundles")) {
@@ -150,28 +157,28 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                     return empty.iterator();
                 }
             } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
-                String startLevel = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
+                final String startLevelInfo = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
                 try {
-                    int i = Integer.parseInt(startLevel);
-                    List<String> bundles = new ArrayList<String>();
-                    for (StartLevel level : getBundleList().getStartLevels()) {
-                        if (level.getStartLevel() == i) {
-                            for (Bundle bundle : level.getBundles()) {
-                                ArtifactDefinition d = new ArtifactDefinition(bundle, i);
+                    final int startLevel = Integer.parseInt(startLevelInfo);
+
+                    final List<String> bundles = new ArrayList<String>();
+                    for (final StartLevel level : getBundleList().getStartLevels()) {
+                        if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
+                            for (final Bundle bundle : level.getBundles()) {
+                                final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
                                 try {
-                                    Artifact artifact = getArtifact(d);
+                                    final Artifact artifact = getArtifact(d);
                                     bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
                                 } catch (Exception e) {
                                     getLog().error("Unable to resolve artifact ", e);
                                 }
                             }
-
-                            break;
                         }
                     }
                     return bundles.iterator();
 
                 } catch (NumberFormatException e) {
+                    // we ignore this
                 }
             }
 
