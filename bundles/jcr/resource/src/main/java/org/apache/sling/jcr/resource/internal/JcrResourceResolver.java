@@ -814,7 +814,7 @@ public class JcrResourceResolver
             Resource result = (path != null) ? getResourceInternal(path) : null;
             if ( result != null ) {
                 String workspacePrefix = null;
-                if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
+                if ( useMultiWorkspaces && !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
                     workspacePrefix = getSession().getWorkspace().getName();
                 }
 
@@ -885,7 +885,7 @@ public class JcrResourceResolver
         }
 
         String workspacePrefix = null;
-        if ( !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
+        if ( useMultiWorkspaces && !getSession().getWorkspace().getName().equals(this.factory.getDefaultWorkspaceName()) ) {
             workspacePrefix = getSession().getWorkspace().getName();
         }
 
