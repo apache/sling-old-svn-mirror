@@ -40,9 +40,25 @@ public class SlingRepositoryWrapper
 
     private final Repository delegatee;
 
+    private final String defaultWorkspaceName;
+
     public SlingRepositoryWrapper(final Repository delegatee, final BundleContext bundleContext) {
         this.delegatee = delegatee;
         this.setup(bundleContext);
+        // try to get the default workspace name
+        String workspaceName = null;
+        Session adminSession = null;
+        try {
+            adminSession = this.loginAdministrative(null);
+            workspaceName = adminSession.getWorkspace().getName();
+        } catch (final RepositoryException re) {
+            // ignore
+        } finally {
+            if ( adminSession != null ) {
+                adminSession.logout();
+            }
+        }
+        this.defaultWorkspaceName = workspaceName;
     }
 
     public void dispose() {
@@ -50,12 +66,10 @@ public class SlingRepositoryWrapper
     }
 
     /**
-     * Return <code>null</code> to indicate the default workspace
-     * of the repository is used.
      * @see org.apache.sling.jcr.api.SlingRepository#getDefaultWorkspace()
      */
     public String getDefaultWorkspace() {
-        return null;
+        return this.defaultWorkspaceName;
     }
 
     /**
