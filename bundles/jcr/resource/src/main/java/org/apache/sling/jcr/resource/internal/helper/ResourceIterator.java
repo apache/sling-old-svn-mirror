@@ -155,7 +155,7 @@ public class ResourceIterator implements Iterator<Resource> {
 
         Resource result = nextResource;
         nextResource = seek();
-        log.debug("  Child Resoruce [{}] [{}] ", iteratorPath, result.getPath());
+        log.debug("  Child resource [{}] [{}] ", iteratorPath, result.getPath());
         return result;
     }
 
