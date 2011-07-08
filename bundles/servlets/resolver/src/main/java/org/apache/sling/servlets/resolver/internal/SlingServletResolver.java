@@ -162,7 +162,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      * @scr.property values="html"
      */
     public static final String PROP_DEFAULT_EXTENSIONS = "servletresolver.defaultExtensions";
-    
+
     private static final String[] DEFAULT_DEFAULT_EXTENSIONS = new String[] {"html"};
 
     /** @scr.reference */
@@ -225,7 +225,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
      * The allowed execution paths.
      */
     private String[] executionPaths;
-    
+
     /**
      * The default extensions
      */
@@ -587,7 +587,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final ResourceCollector locationUtil = ResourceCollector.create(request, workspaceName, this.executionPaths, this.defaultExtensions);
             servlet = getServlet(locationUtil, request, resolver);
 
-            if (log.isDebugEnabled()) {
+            if (servlet != null && log.isDebugEnabled()) {
                 log.debug("getServlet returns servlet {}", RequestUtil.getServletName(servlet));
             }
         }
