@@ -211,7 +211,7 @@ public class RequestData {
         Servlet servlet = sr.resolveServlet(slingRequest);
         requestProgressTracker.logTimer("ServletResolution",
             "URI={0} handled by Servlet={1}",
-            getServletRequest().getRequestURI(), RequestUtil.getServletName(servlet));
+            getServletRequest().getRequestURI(), (servlet == null ? "-none-" : RequestUtil.getServletName(servlet)));
         contentData.setServlet(servlet);
     }
 
