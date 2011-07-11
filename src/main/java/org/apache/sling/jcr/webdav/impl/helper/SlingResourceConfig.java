@@ -112,7 +112,7 @@ public class SlingResourceConfig extends ResourceConfig {
             SlingWebDavServlet.DEFAULT_REALM);
         servletInitParams.put(
             SimpleWebdavServlet.INIT_PARAM_AUTHENTICATE_HEADER,
-            "Basic Realm=\"" + value + "\"");
+            "Basic realm=\"" + value + "\"");
     }
 
     // ---------- ResourceConfig overwrites
