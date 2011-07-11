@@ -28,9 +28,7 @@ import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
-import org.codehaus.plexus.components.io.fileselectors.IncludeExcludeFileSelector;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
  * Initialize a Sling application project by extracting bundles into the correct
@@ -184,7 +182,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 									"Project doesn't have a base dependency of groupId %s and artifactId %s",
 									base.getGroupId(), base.getArtifactId()));
 		}
-		unpack(artifact.getFile(), buildOutputDirectory, null, null);
+		unpack(artifact.getFile(), buildOutputDirectory);
 	}
 
     private void copyConfigurationFiles() throws MojoExecutionException {
@@ -196,7 +194,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 
     }
 
-    private void unpack(File source, File destination, String includes, String excludes)
+    private void unpack(File source, File destination)
             throws MojoExecutionException {
         getLog().info("Unpacking " + source.getPath() + " to\n  " + destination.getPath());
         try {
@@ -206,20 +204,6 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 
             unArchiver.setSourceFile(source);
             unArchiver.setDestDirectory(destination);
-
-            if (StringUtils.isNotEmpty(excludes) || StringUtils.isNotEmpty(includes)) {
-                IncludeExcludeFileSelector[] selectors = new IncludeExcludeFileSelector[] { new IncludeExcludeFileSelector() };
-
-                if (StringUtils.isNotEmpty(excludes)) {
-                    selectors[0].setExcludes(excludes.split(","));
-                }
-
-                if (StringUtils.isNotEmpty(includes)) {
-                    selectors[0].setIncludes(includes.split(","));
-                }
-
-                unArchiver.setFileSelectors(selectors);
-            }
 
             unArchiver.extract();
         } catch (NoSuchArchiverException e) {
