@@ -224,7 +224,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             } catch (ArtifactMetadataRetrievalException e) {
                 throw new MojoExecutionException("Unable to find version for artifact", e);
             }
-            
+
         }
 
         try {
@@ -309,7 +309,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 bundleList.remove(def.toBundle(), false);
             }
         }
-        
+
         Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
             if (PARTIAL.equals(artifact.getType())) {
@@ -319,8 +319,8 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 bundleList.merge(readBundleList(artifact.getFile()));
             }
         }
-        
-        
+
+
         initBundleList(bundleList);
 
         rewriteBundleList(bundleList);
@@ -371,4 +371,13 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
     }
 
+    protected File getSlingProperties() {
+        if ( this.configDirectory != null && this.configDirectory.exists() && this.configDirectory.isDirectory() ) {
+            final File slingProps = new File(this.configDirectory, "sling.properties");
+            if ( slingProps.exists() && slingProps.isFile() ) {
+                return slingProps;
+            }
+        }
+        return null;
+    }
 }

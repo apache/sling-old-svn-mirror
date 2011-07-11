@@ -17,7 +17,10 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Properties;
 
 import org.apache.maven.artifact.Artifact;
@@ -26,6 +29,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
+import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.util.FileUtils;
@@ -81,13 +85,28 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 	private File buildOutputDirectory;
 
     /**
+     * The temp directory (i.e. target/maven-launchpad-plugintmp).
+     *
+     * @parameter expression="${project.build.directory}/maven-launchpad-plugintmp"
+     * @readonly
+     */
+    private File tempDirectory;
+
+    /**
      * To look up Archiver/UnArchiver implementations
      *
      * @component
      */
     private ArchiverManager archiverManager;
 
-	public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
+    /**
+     * The Jar archiver.
+     *
+     * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="jar"
+     */
+    private JarArchiver jarArchiver;
+
+    public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
 		copyBaseArtifact();
 		copyBundles(getBundleList(), getOutputDirectory());
 		copyConfigurationFiles();
@@ -131,20 +150,91 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 		File destinationFile = new File(destinationDir, artifact
 				.getArtifactId()
 				+ "." + artifact.getArtifactHandler().getExtension());
-		if (shouldCopy(artifact.getFile(), destinationFile)) {
-			try {
-				getLog().info(
-						String.format("Copying base artifact from %s to %s.",
-								artifact.getFile(), destinationFile));
-				FileUtils.copyFile(artifact.getFile(), destinationFile);
-			} catch (IOException e) {
-				throw new MojoExecutionException(
-						"Unable to copy base artifact.", e);
-			}
+
+		// check if custom sling.properties file exists
+		final File slingProps = this.getSlingProperties();
+		if ( slingProps != null ) {
+    		// unpack to a temp destination
+		    final File dest = new File(this.tempDirectory, "basejar");
+		    try {
+        		unpack(artifact.getFile(), dest);
+        		final File origSlingProps = new File(dest, "sling.properties");
+        		if ( !origSlingProps.exists() ) {
+        		    throw new MojoExecutionException("sling.properties not found at " + origSlingProps);
+        		}
+
+        		// read original properties
+        		final Properties orig = new Properties();
+        		FileInputStream fis = null;
+        		try {
+        		    fis = new FileInputStream(origSlingProps);
+                    orig.load(fis);
+        		} catch (final IOException ioe) {
+        		    throw new MojoExecutionException("Unable to read " + origSlingProps, ioe);
+        		} finally {
+        		    if ( fis != null ) {
+        		        try { fis.close(); } catch (final IOException ignore) {}
+        		    }
+        		}
+
+        		// read additional properties
+                final Properties addProps = new Properties();
+                try {
+                    fis = new FileInputStream(slingProps);
+                    addProps.load(fis);
+                } catch (final IOException ioe) {
+                    throw new MojoExecutionException("Unable to read " + slingProps, ioe);
+                } finally {
+                    if ( fis != null ) {
+                        try { fis.close(); } catch (final IOException ignore) {}
+                    }
+                }
+
+                // patch
+                final Enumeration<Object> keys = addProps.keys();
+                if ( keys.hasMoreElements() ) {
+                    getLog().info("Patching sling.properties");
+                }
+                while ( keys.hasMoreElements() ) {
+                    final Object key = keys.nextElement();
+                    orig.put(key, addProps.get(key));
+                }
+
+                /// and save
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(origSlingProps);
+                    orig.store(fos, null);
+                } catch (final IOException ioe) {
+                    throw new MojoExecutionException("Unable to save " + origSlingProps, ioe);
+                } finally {
+                    if ( fis != null ) {
+                        try { fis.close(); } catch (final IOException ignore) {}
+                    }
+                }
+
+                // and repack again
+        		pack(dest, destinationFile);
+		    } finally {
+		        this.tempDirectory.delete();
+		    }
 		} else {
-			getLog().debug(
-					String.format("Skipping copy of base artifact from %s.",
-							artifact.getFile()));
+		    // we can just copy
+    		if (shouldCopy(artifact.getFile(), destinationFile)) {
+    			try {
+    				getLog().info(
+    						String.format("Copying base artifact from %s to %s.",
+    								artifact.getFile(), destinationFile));
+    				FileUtils.copyFile(artifact.getFile(), destinationFile);
+    			} catch (IOException e) {
+    				throw new MojoExecutionException(
+    						"Unable to copy base artifact.", e);
+    			}
+    		} else {
+    			getLog().debug(
+    					String.format("Skipping copy of base artifact from %s.",
+    							artifact.getFile()));
+    		}
 		}
 	}
 
@@ -210,6 +300,23 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
             throw new MojoExecutionException("Unable to find archiver for " + source.getPath(), e);
         } catch (ArchiverException e) {
             throw new MojoExecutionException("Unable to unpack " + source.getPath(), e);
+        }
+    }
+
+    private void pack(File sourceDir, File destination)
+    throws MojoExecutionException {
+        getLog().info("Packing " + sourceDir.getPath() + " to\n  " + destination.getPath());
+        try {
+            destination.getParentFile().mkdirs();
+
+            jarArchiver.setDestFile(destination);
+            jarArchiver.addDirectory(sourceDir);
+            jarArchiver.setManifest(new File(sourceDir, "META-INF/MANIFEST.MF".replace('/', File.separatorChar)));
+            jarArchiver.createArchive();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to pack " + sourceDir.getPath(), e);
+        } catch (ArchiverException e) {
+            throw new MojoExecutionException("Unable to pack " + sourceDir.getPath(), e);
         }
     }
 }
