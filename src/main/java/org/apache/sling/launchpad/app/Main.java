@@ -67,7 +67,7 @@ public class Main extends Thread implements Notifiable {
     private Main(String[] args) {
 
         // set the thread name
-        super("Sling Terminator");
+        super("Apache Sling Terminator");
 
         this.commandLineArgs = parseCommandLine(args);
 
@@ -81,9 +81,9 @@ public class Main extends Thread implements Notifiable {
         this.slingHome = getSlingHome(commandLineArgs);
         File slingHomeFile = new File(slingHome);
         if (slingHomeFile.isAbsolute()) {
-            info("Starting Sling in " + slingHome, null);
+            info("Starting Apache Sling in " + slingHome, null);
         } else {
-            info("Starting Sling in " + slingHome + " ("
+            info("Starting Apache Sling in " + slingHome + " ("
                 + slingHomeFile.getAbsolutePath() + ")", null);
         }
 
@@ -122,7 +122,7 @@ public class Main extends Thread implements Notifiable {
 
         // now really shutdown sling
         if (sling != null) {
-            info("Stopping Sling", null);
+            info("Stopping Apache Sling", null);
             sling.stop();
         }
     }
@@ -143,7 +143,7 @@ public class Main extends Thread implements Notifiable {
          * removed and remove the shutdown hook (but don't care if that fails).
          */
 
-        info("Sling has been stopped", null);
+        info("Apache Sling has been stopped", null);
 
         // clear the reference to the framework
         sling = null;
@@ -179,7 +179,7 @@ public class Main extends Thread implements Notifiable {
 
         if (updateFile == null) {
 
-            info("Restarting Framework and Sling", null);
+            info("Restarting Framework and Apache Sling", null);
             startSling(null);
 
         } else {
@@ -245,7 +245,7 @@ public class Main extends Thread implements Notifiable {
                 info("Startup completed", null);
                 this.sling = sling;
             } else {
-                error("There was a problem launching Sling", null);
+                error("There was a problem launching Apache Sling", null);
             }
         }
     }
@@ -410,8 +410,8 @@ public class Main extends Thread implements Notifiable {
                 + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
 
             System.out.println("    start         listen for control connection (uses -j)");
-            System.out.println("    stop          terminate running Sling (uses -j)");
-            System.out.println("    status        check whether Sling is running (uses -j)");
+            System.out.println("    stop          terminate running Apache Sling (uses -j)");
+            System.out.println("    status        check whether Apache Sling is running (uses -j)");
             System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default localhost:63000)");
             System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
