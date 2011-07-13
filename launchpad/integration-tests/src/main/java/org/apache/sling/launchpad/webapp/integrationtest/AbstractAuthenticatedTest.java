@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -155,7 +154,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
     }
 
     /** retrieve the contents of given URL and assert its content type
-     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked 
+     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
     protected String getAuthenticatedPostContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> postParams, int expectedStatusCode) throws IOException {
@@ -167,7 +166,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
         Credentials oldCredentials = httpClient.getState().getCredentials(authScope);
     	try {
 			httpClient.getState().setCredentials(authScope, creds);
-			
+
 	        if(postParams!=null) {
 	            final NameValuePair [] nvp = {};
 	            post.setRequestBody(postParams.toArray(nvp));
@@ -204,19 +203,25 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
 	            );
 	        }
 	        return content.toString();
-			
+
     	} finally {
         	httpClient.getState().setCredentials(authScope, oldCredentials);
     	}
     }
-    
 
-    private static Random random = new Random(System.currentTimeMillis());
+
+    private static long randomId = System.currentTimeMillis();
+
+    private static synchronized long getNextInt() {
+        final long val = randomId;
+        randomId++;
+        return val;
+    }
 
     protected String createTestUser() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
-        String testUserId = "testUser" + random.nextInt();
+        String testUserId = "testUser" + getNextInt();
         List<NameValuePair> postParams = new ArrayList<NameValuePair>();
         postParams.add(new NameValuePair(":name", testUserId));
         postParams.add(new NameValuePair("pwd", "testPwd"));
@@ -230,7 +235,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
     protected String createTestGroup() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
-        String testGroupId = "testGroup" + random.nextInt();
+        String testGroupId = "testGroup" + getNextInt();
         List<NameValuePair> postParams = new ArrayList<NameValuePair>();
         postParams.add(new NameValuePair(":name", testGroupId));
 
