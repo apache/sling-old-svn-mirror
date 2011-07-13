@@ -43,12 +43,6 @@ import org.apache.sling.auth.core.AuthenticationSupport;
 public class SlingSessionProvider implements SessionProvider {
 
     /**
-     * The name of the request attribute providing the JCR session (value is
-     * "javax.jcr.Session").
-     */
-    private static final String ATTR_SESSION_NAME = Session.class.getName();
-
-    /**
      * Returns the value of the <code>javax.jcr.Session</code> request
      * attribute or <code>null</code> if the request attribute is not set. If
      * the request is not authenticated, that is the authentication type is
@@ -64,9 +58,9 @@ public class SlingSessionProvider implements SessionProvider {
         }
 
         // otherwise return the session from the request attribute
-        ResourceResolver resourceResolver = (ResourceResolver) 
+        ResourceResolver resourceResolver = (ResourceResolver)
             request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-        
+
         if (resourceResolver == null) {
             return null;
         }
