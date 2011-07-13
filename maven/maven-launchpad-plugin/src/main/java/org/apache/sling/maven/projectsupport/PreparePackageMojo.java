@@ -152,8 +152,8 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 				+ "." + artifact.getArtifactHandler().getExtension());
 
 		// check if custom sling.properties file exists
-		final File slingProps = this.getSlingProperties();
-		if ( slingProps != null ) {
+		final Properties additionalProps = this.getSlingProperties();
+		if ( additionalProps != null ) {
     		// unpack to a temp destination
 		    final File dest = new File(this.tempDirectory, "basejar");
 		    try {
@@ -177,27 +177,14 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
         		    }
         		}
 
-        		// read additional properties
-                final Properties addProps = new Properties();
-                try {
-                    fis = new FileInputStream(slingProps);
-                    addProps.load(fis);
-                } catch (final IOException ioe) {
-                    throw new MojoExecutionException("Unable to read " + slingProps, ioe);
-                } finally {
-                    if ( fis != null ) {
-                        try { fis.close(); } catch (final IOException ignore) {}
-                    }
-                }
-
                 // patch
-                final Enumeration<Object> keys = addProps.keys();
+                final Enumeration<Object> keys = additionalProps.keys();
                 if ( keys.hasMoreElements() ) {
                     getLog().info("Patching sling.properties");
                 }
                 while ( keys.hasMoreElements() ) {
                     final Object key = keys.nextElement();
-                    orig.put(key, addProps.get(key));
+                    orig.put(key, additionalProps.get(key));
                 }
 
                 /// and save
