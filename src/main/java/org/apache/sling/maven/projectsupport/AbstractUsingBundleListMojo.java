@@ -37,6 +37,9 @@ import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
 import org.codehaus.plexus.util.StringUtils;
@@ -57,6 +60,12 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      *            default-value="src/main/config"
      */
     protected File configDirectory;
+
+    /**
+     * @parameter expression="${additionalSlingProps}"
+     *            default-value="src/main/sling/additional.properties"
+     */
+    protected File additionalSlingProps;
 
     /**
      * JAR Packaging type.
@@ -160,6 +169,11 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @readonly
      */
     protected MavenSession mavenSession;
+
+    /**
+     * @component
+     */
+    private MavenFileFilter mavenFileFilter;
 
     public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
@@ -371,11 +385,23 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
     }
 
-    protected File getSlingProperties() {
-        if ( this.configDirectory != null && this.configDirectory.exists() && this.configDirectory.isDirectory() ) {
-            final File slingProps = new File(this.configDirectory, "sling.properties");
-            if ( slingProps.exists() && slingProps.isFile() ) {
-                return slingProps;
+    protected Properties getSlingProperties() throws MojoExecutionException {
+        if (this.additionalSlingProps.exists()) {
+            File tmp = null;
+            try {
+                tmp = File.createTempFile("sling", "props");
+                mavenFileFilter.copyFile(this.additionalSlingProps, tmp, true, project, null, true,
+                        System.getProperty("file.encoding"), mavenSession);
+                final Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
+                return loadedProps;
+            } catch (IOException e) {
+                throw new MojoExecutionException("Unable to create filtered properties file", e);
+            } catch (MavenFilteringException e) {
+                throw new MojoExecutionException("Unable to create filtered properties file", e);
+            } finally {
+                if (tmp != null) {
+                    tmp.delete();
+                }
             }
         }
         return null;
