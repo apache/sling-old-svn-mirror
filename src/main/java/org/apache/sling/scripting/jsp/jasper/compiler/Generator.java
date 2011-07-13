@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -610,11 +610,13 @@ class Generator {
 
         if (pageInfo.isErrorPage()) {
             out.printil("Throwable exception = org.apache.sling.scripting.jsp.jasper.runtime.JspRuntimeLibrary.getThrowable(request);");
-            out.printil("if (exception != null) {");
+            // Removed the following block because of SLING-2094
+            // If we leave it in, an error handler will always set the status code to 500!
+     /*       out.printil("if (exception != null) {");
             out.pushIndent();
             out.printil("response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);");
             out.popIndent();
-            out.printil("}");
+            out.printil("}");*/
         }
 
         out.printil("ServletContext application = null;");

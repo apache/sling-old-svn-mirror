@@ -37,6 +37,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -159,6 +161,54 @@ public class JspScriptEngineFactory
     }
 
     /**
+     * Call the error page
+     * @param bindings
+     * @param scriptHelper
+     * @param context
+     */
+    private void callErrorPageJsp(final Bindings bindings,
+                                  final SlingScriptHelper scriptHelper,
+                                  final ScriptContext context,
+                                  final String scriptName) {
+    	final SlingBindings slingBindings = new SlingBindings();
+        slingBindings.putAll(bindings);
+
+        ResourceResolver resolver = (ResourceResolver) context.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
+                SlingScriptConstants.SLING_SCOPE);
+        if ( resolver == null ) {
+            resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
+        }
+        final SlingIOProvider io = this.ioProvider;
+        io.setRequestResourceResolver(resolver);
+		jspFactoryHandler.incUsage();
+		try {
+			final JspServletWrapperAdapter errorJsp = getJspWrapperAdapter(scriptName);
+			errorJsp.service(slingBindings);
+
+            // The error page could be inside an include.
+	        final SlingHttpServletRequest request = slingBindings.getRequest();
+            final Throwable t = (Throwable)request.getAttribute("javax.servlet.jsp.jspException");
+
+	        final Object newException = request
+                    .getAttribute("javax.servlet.error.exception");
+
+            // t==null means the attribute was not set.
+            if ((newException != null) && (newException == t)) {
+                request.removeAttribute("javax.servlet.error.exception");
+            }
+
+            // now clear the error code - to prevent double handling.
+            request.removeAttribute("javax.servlet.error.status_code");
+            request.removeAttribute("javax.servlet.error.request_uri");
+            request.removeAttribute("javax.servlet.error.status_code");
+            request.removeAttribute("javax.servlet.jsp.jspException");
+		} finally {
+			jspFactoryHandler.decUsage();
+			io.resetRequestResourceResolver();
+		}
+     }
+
+    /**
      * @param scriptHelper
      * @throws SlingServletException
      * @throws SlingIOException
@@ -187,13 +237,11 @@ public class JspScriptEngineFactory
         }
     }
 
-    private JspServletWrapperAdapter getJspWrapperAdapter(final SlingScriptHelper scriptHelper)
+    private JspServletWrapperAdapter getJspWrapperAdapter(final String scriptName)
     throws SlingException {
         final JspRuntimeContext rctxt = jspRuntimeContext;
 
-        final SlingScript script = scriptHelper.getScript();
-        final String scriptName = script.getScriptResource().getPath();
-        JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
+    	JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
         if (wrapper != null) {
             return wrapper;
         }
@@ -215,9 +263,16 @@ public class JspScriptEngineFactory
                 if (je.getCause() != null) {
                     throw new SlingException(je.getMessage(), je.getCause());
                 }
-                throw new SlingException("Cannot create JSP", je);
+                throw new SlingException("Cannot create JSP: " + scriptName, je);
             }
         }
+    }
+
+    private JspServletWrapperAdapter getJspWrapperAdapter(final SlingScriptHelper scriptHelper)
+    throws SlingException {
+        final SlingScript script = scriptHelper.getScript();
+        final String scriptName = script.getScriptResource().getPath();
+        return getJspWrapperAdapter(scriptName);
     }
 
     // ---------- SCR integration ----------------------------------------------
@@ -414,6 +469,8 @@ public class JspScriptEngineFactory
 
                     // fallback to standard behaviour
                     throw new BetterScriptException(e.getMessage(), e);
+                } catch (final SlingPageException sje) {
+                	callErrorPageJsp(props, scriptHelper, context, sje.getErrorPage());
 
                 } catch (Exception e) {
 

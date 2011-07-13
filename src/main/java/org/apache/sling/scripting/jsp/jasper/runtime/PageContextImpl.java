@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,9 @@ import javax.servlet.jsp.el.ExpressionEvaluator;
 import javax.servlet.jsp.el.VariableResolver;
 import javax.servlet.jsp.tagext.BodyContent;
 
-import org.apache.sling.scripting.jsp.jasper.Constants;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.sling.scripting.jsp.SlingPageException;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
 import org.apache.sling.scripting.jsp.jasper.el.ELContextImpl;
 import org.apache.sling.scripting.jsp.jasper.el.ExpressionEvaluatorImpl;
@@ -59,7 +61,7 @@ import org.apache.sling.scripting.jsp.jasper.util.Enumerator;
 /**
  * Implementation of the PageContext class from the JSP spec. Also doubles as a
  * VariableResolver for the EL.
- * 
+ *
  * @author Anil K. Vijendran
  * @author Larry Cable
  * @author Hans Bergsten
@@ -69,6 +71,8 @@ import org.apache.sling.scripting.jsp.jasper.util.Enumerator;
  * @author Jacob Hookom
  */
 public class PageContextImpl extends PageContext {
+
+	private Log log = LogFactory.getLog(PageContextImpl.class);
 
 	private BodyContentImpl[] outs;
 
@@ -94,12 +98,12 @@ public class PageContextImpl extends PageContext {
 	private transient ServletResponse response;
 
 	private transient HttpSession session;
-	
+
 	private transient ELContextImpl elContext;
 
 	private boolean isIncluded;
-	
-	
+
+
 	// initial output stream
 	private transient JspWriter out;
 
@@ -135,7 +139,7 @@ public class PageContextImpl extends PageContext {
 		this.errorPageURL = errorPageURL;
 		this.request = request;
 		this.response = response;
-		
+
 		// initialize application context
 		this.applicationContext = JspApplicationContextImpl.getInstance(context);
 
@@ -571,7 +575,7 @@ public class PageContextImpl extends PageContext {
 	 * Returns the exception associated with this page context, if any. <p/>
 	 * Added wrapping for Throwables to avoid ClassCastException: see Bugzilla
 	 * 31171 for details.
-	 * 
+	 *
 	 * @return The Exception associated with this page context, if any.
 	 */
 	public Exception getException() {
@@ -685,18 +689,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		final String path = getAbsolutePathRelativeToContext(relativeUrlPath);
-		String includeUri = (String) request
-				.getAttribute(Constants.INC_SERVLET_PATH);
 
-		if (includeUri != null)
-			request.removeAttribute(Constants.INC_SERVLET_PATH);
-		try {
-			context.getRequestDispatcher(path).forward(request, response);
-		} finally {
-			if (includeUri != null)
-				request.setAttribute(Constants.INC_SERVLET_PATH, includeUri);
-		}
-	}
+		throw new SlingPageException(path);
+ 	}
 
 	public BodyContent pushBody() {
 		return (BodyContent) pushBody(null);
@@ -879,7 +874,7 @@ public class PageContextImpl extends PageContext {
 	 * go away once the EL interpreter moves out of JSTL and into its own
 	 * project. For now, this is necessary because the standard machinery is too
 	 * slow.
-	 * 
+	 *
 	 * @param expression
 	 *            The expression to be evaluated
 	 * @param expectedType

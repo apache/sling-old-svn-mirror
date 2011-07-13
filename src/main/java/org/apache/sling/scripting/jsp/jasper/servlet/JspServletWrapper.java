@@ -36,6 +36,7 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.commons.classloader.DynamicClassLoader;
+import org.apache.sling.scripting.jsp.SlingPageException;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -394,13 +395,13 @@ public class JspServletWrapper {
               ex);
             }
             return;
-        } catch (ServletException ex) {
+        } catch (final ServletException ex) {
             handleJspException(ex);
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             handleJspException(ex);
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             handleJspException(ex);
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             handleJspException(ex);
         }
 
@@ -438,13 +439,15 @@ public class JspServletWrapper {
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
             return;
-        } catch (ServletException ex) {
+        } catch (final ServletException ex) {
             handleJspException(ex);
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             handleJspException(ex);
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             handleJspException(ex);
-        } catch (Exception ex) {
+        } catch (final SlingPageException ex) {
+        	throw ex;
+        }catch (final Exception ex) {
             handleJspException(ex);
         }
     }
@@ -491,7 +494,7 @@ public class JspServletWrapper {
      * @param ex the exception that was the cause of the problem.
      * @throws a ServletException with more detailed information
      */
-    protected void handleJspException(Exception ex)
+    protected void handleJspException(final Exception ex)
     throws ServletException {
         final Exception jspEx = handleJspExceptionInternal(ex);
         if ( jspEx instanceof ServletException ) {
@@ -503,9 +506,9 @@ public class JspServletWrapper {
     /**
      * Returns only a ServletException or a SlingException
      */
-    private Exception handleJspExceptionInternal(Exception ex)
+    private Exception handleJspExceptionInternal(final Exception ex)
     throws ServletException {
-        Throwable realException = ex;
+    	Throwable realException = ex;
         String exMessage = "";
         if (ex instanceof ServletException) {
             realException = ((ServletException) ex).getRootCause();
