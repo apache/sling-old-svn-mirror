@@ -33,7 +33,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SlingFilter(order=-100000,scope=SlingFilterScope.REQUEST,metatype=true,
+@SlingFilter(order=-1500000000,scope=SlingFilterScope.REQUEST,metatype=true,
         description="%referrer.description",
         label="%referrer.name")
 public class ReferrerFilter implements Filter {
