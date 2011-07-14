@@ -184,6 +184,29 @@ public void testPostPathIsUnique() throws IOException {
         json = new JSONObject(content);
         assertTrue("no jcr:mixinTypes expected after clearing it", !json.has("jcr:mixinTypes"));
     }
+
+    public void testUpdatingNodetype() throws IOException, JSONException {
+        
+        // create a node without mixin node types
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("jcr:primaryType","nt:unstructured");
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        
+        // assert correct nodetype
+        String content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        JSONObject json = new JSONObject(content);
+        assertTrue("jcr:primaryType isn't set correctly", json.getString("jcr:primaryType").equals("nt:unstructured"));
+        
+        // change nodetype
+        props.clear();
+        props.put("jcr:primaryType", "sling:Folder");
+        testClient.createNode(location, props);
+        
+        // assert correct nodetype
+        content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        json = new JSONObject(content);
+        assertTrue("jcr:primaryType isn't set correctly", json.getString("jcr:primaryType").equals("sling:Folder"));
+    }
     
     /**
      * Test for SLING-897 fix: 
