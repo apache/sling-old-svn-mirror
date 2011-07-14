@@ -152,18 +152,18 @@ public class JcrResourceBundle extends ResourceBundle {
 
         buf.append("//element(*,mix:language)[");
 
-        String localeString = locale.toString();
-        String localeRFC4646String = toRFC4646String(locale);
+        String localeString = locale.toString().toLowerCase();
+        String localeRFC4646String = toRFC4646String(locale).toLowerCase();
 
         if (localeString.equals(localeRFC4646String)) {
-            buf.append("@jcr:language='");
+            buf.append("fn:lower-case(@jcr:language)='");
             buf.append(localeString);
             buf.append('\'');
         } else {
-            buf.append("(@jcr:language='");
+            buf.append("(fn:lower-case(@jcr:language)='");
             buf.append(localeString);
             buf.append('\'');
-            buf.append(" or @jcr:language='");
+            buf.append(" or fn:lower-case(@jcr:language)='");
             buf.append(localeRFC4646String);
             buf.append("\')");
         }
