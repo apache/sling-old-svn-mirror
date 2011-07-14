@@ -246,6 +246,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
     public static final Map<String, Message> MESSAGES_EN = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_EN_DASH_US = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_EN_UNDERSCORE_UK = new LinkedHashMap<String, Message>();
+    public static final Map<String, Message> MESSAGES_EN_UNDERSCORE_AU = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_DE_APPS = new LinkedHashMap<String, Message>();
     public static final Map<String, Message> MESSAGES_DE_BASENAME = new LinkedHashMap<String, Message>();
 
@@ -271,6 +272,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         add(MESSAGES_EN_DASH_US, new Message("", "pigment", "color", false));
         add(MESSAGES_EN_UNDERSCORE_UK, new Message("", "pigment", "colour", false));
+        add(MESSAGES_EN_UNDERSCORE_AU, new Message("", "pigment", "colour", false));
 
         // 6. same as 1.-4., but different translations for overwriting into apps
         for (Message msg : MESSAGES_DE.values()) {
@@ -313,12 +315,21 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         getSession().save();
 
-        // some EN US content
+        // some EN UK content
         Node enUnderscoreUK = i18n.addNode("en_UK", "nt:folder");
         enUnderscoreUK.addMixin("mix:language");
         enUnderscoreUK.setProperty("jcr:language", "en_UK");
         for (Message msg : MESSAGES_EN_UNDERSCORE_UK.values()) {
             msg.add(enUnderscoreUK);
+        }
+        getSession().save();
+
+        // some EN AU content
+        Node enUnderscoreAU = i18n.addNode("en_au", "nt:folder");
+        enUnderscoreAU.addMixin("mix:language");
+        enUnderscoreAU.setProperty("jcr:language", "en_au");
+        for (Message msg : MESSAGES_EN_UNDERSCORE_AU.values()) {
+            msg.add(enUnderscoreAU);
         }
         getSession().save();
     }
@@ -338,6 +349,11 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         
         bundle = new JcrResourceBundle(new Locale("en", "uk"), null, resolver);
         for (Message msg : MESSAGES_EN_UNDERSCORE_UK.values()) {
+            assertEquals(msg.message, bundle.getString(msg.key));
+        }
+        
+        bundle = new JcrResourceBundle(new Locale("en", "au"), null, resolver);
+        for (Message msg : MESSAGES_EN_UNDERSCORE_AU.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
     }
