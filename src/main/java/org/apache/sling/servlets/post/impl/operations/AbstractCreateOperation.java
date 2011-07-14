@@ -102,8 +102,32 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             response.setCreateRequest(true);
 
         } else {
-
+            updateNodeType(session, path, reqProperties, changes, versioningConfiguration);
             updateMixins(session, path, reqProperties, changes, versioningConfiguration);
+        }
+    }
+
+    protected void updateNodeType(Session session, String path, Map<String, RequestProperty> reqProperties,
+            List<Modification> changes, VersioningConfiguration versioningConfiguration) throws PathNotFoundException,
+            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
+        String nodeType = getPrimaryType(reqProperties, path);
+        if (nodeType != null) {
+            Item item = session.getItem(path);
+            if (item.isNode()) {
+                Node node = (Node) item;
+                boolean wasVersionable = isVersionable(node);
+
+                checkoutIfNecessary(node, changes, versioningConfiguration);
+                node.setPrimaryType(nodeType);
+
+                // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                // the mix:versionable mixin does an implicit checkout
+                if (!wasVersionable &&
+                        versioningConfiguration.isCheckinOnNewVersionableNode() &&
+                        isVersionable(node)) {
+                    changes.add(Modification.onCheckout(path));
+                }
+            }
         }
     }
 
@@ -426,6 +450,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 startingNode = session.getRootNode();
             } else if (session.itemExists(startingNodePath)) {
                 startingNode = (Node) session.getItem(startingNodePath);
+                updateNodeType(session, startingNodePath, reqProperties, changes, versioningConfiguration);
                 updateMixins(session, startingNodePath, reqProperties, changes, versioningConfiguration);
             } else {
                 int pos = startingNodePath.lastIndexOf('/');
@@ -454,6 +479,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // we do a sanety check.
             if (node.hasNode(name)) {
                 node = node.getNode(name);
+                updateNodeType(session, node.getPath(), reqProperties, changes, versioningConfiguration);
                 updateMixins(session, node.getPath(), reqProperties, changes, versioningConfiguration);
             } else {
                 final String tmpPath = to < 0 ? path : path.substring(0, to);
