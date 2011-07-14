@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 @Service
 @Properties( {
         @Property(name = "filter.scope", value = "request", propertyPrivate=true),
-        @Property(name = "filter.order", intValue = java.lang.Integer.MIN_VALUE, propertyPrivate=true )})
+        @Property(name = "filter.order", intValue = -1000000000, propertyPrivate=true )})
 public class BackgroundServletStarterFilter implements Filter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
