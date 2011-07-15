@@ -44,16 +44,31 @@ public class ReferrerFilter implements Filter {
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /** Default value for allow empty. */
     private static final boolean DEFAULT_ALLOW_EMPTY = true;
 
+    /** Allow empty property. */
     @Property(boolValue=DEFAULT_ALLOW_EMPTY)
     private static final String PROP_ALLOW_EMPTY = "allow.empty";
 
+    /** Default value for allow localhost. */
+    private static final boolean DEFAULT_ALLOW_LOCALHOST = true;
+
+    /** Allow localhost property. */
+    @Property(boolValue=DEFAULT_ALLOW_LOCALHOST)
+    private static final String PROP_ALLOW_LOCALHOST = "allow.localhost";
+
+    /** Allow empty property. */
     @Property(unbounded=PropertyUnbounded.ARRAY)
     private static final String PROP_HOSTS = "allow.hosts";
 
+    /** Do we allow empty referrer? */
     private boolean allowEmpty;
 
+    /** Do we allow localhost referrer? */
+    private boolean allowLocalhost;
+
+    /** Allowed hosts */
     private String[] allowHosts;
 
     /**
@@ -62,6 +77,7 @@ public class ReferrerFilter implements Filter {
     protected void activate(final ComponentContext ctx) {
         this.allowEmpty = OsgiUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
         this.allowHosts = OsgiUtil.toStringArray(ctx.getProperties().get(PROP_HOSTS));
+        this.allowLocalhost = OsgiUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_LOCALHOST), DEFAULT_ALLOW_LOCALHOST);
         if ( this.allowHosts != null ) {
             if ( this.allowHosts.length == 0 ) {
                 this.allowHosts = null;
@@ -109,8 +125,10 @@ public class ReferrerFilter implements Filter {
             // we consider this illegal
             return null;
         }
-        final int endPos = referrer.indexOf('/', startPos);
-        final String hostPart = (endPos == -1 ? referrer.substring(startPos) : referrer.substring(startPos, endPos));
+        final int paramStart = referrer.indexOf('?');
+        final String hostAndPath = (paramStart == -1 ? referrer : referrer.substring(0, paramStart));
+        final int endPos = hostAndPath.indexOf('/', startPos);
+        final String hostPart = (endPos == -1 ? hostAndPath.substring(startPos) : hostAndPath.substring(startPos, endPos));
         final int hostNameStart = hostPart.indexOf('@') + 1;
         final int hostNameEnd = hostPart.lastIndexOf(':');
         if (hostNameEnd < hostNameStart ) {
@@ -141,7 +159,15 @@ public class ReferrerFilter implements Filter {
             return false;
         }
         final boolean valid;
-        if ( this.allowHosts == null ) {
+        boolean isValidLocalHost = false;
+        if ( this.allowLocalhost ) {
+            if ( "localhost".equals(host) || "127.0.0.1".equals(host) ) {
+                isValidLocalHost = true;
+            }
+        }
+        if ( isValidLocalHost ) {
+            valid = true;
+        } else if ( this.allowHosts == null ) {
             valid = host.equals(request.getServerName());
         } else {
             boolean flag = false;

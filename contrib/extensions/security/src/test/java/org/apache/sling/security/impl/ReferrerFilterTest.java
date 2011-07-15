@@ -46,9 +46,16 @@ public class ReferrerFilterTest {
         Assert.assertEquals("somehost", filter.getHost("http://somehost/somewhere"));
         Assert.assertEquals("somehost", filter.getHost("http://somehost:4242/somewhere"));
         Assert.assertEquals("somehost", filter.getHost("http://admin@somehost/somewhere"));
+        Assert.assertEquals("somehost", filter.getHost("http://admin@somehost/somewhere?invald=@gagga"));
         Assert.assertEquals("somehost", filter.getHost("http://admin@somehost:1/somewhere"));
         Assert.assertEquals("somehost", filter.getHost("http://admin:admin@somehost/somewhere"));
         Assert.assertEquals("somehost", filter.getHost("http://admin:admin@somehost:4343/somewhere"));
+        Assert.assertEquals("localhost", filter.getHost("http://localhost"));
+        Assert.assertEquals("127.0.0.1", filter.getHost("http://127.0.0.1"));
+        Assert.assertEquals("localhost", filter.getHost("http://localhost:535"));
+        Assert.assertEquals("127.0.0.1", filter.getHost("http://127.0.0.1:242"));
+        Assert.assertEquals("localhost", filter.getHost("http://localhost:256235/etewteq.ff"));
+        Assert.assertEquals("127.0.0.1", filter.getHost("http://127.0.0.1/wetew.qerq"));
         Assert.assertEquals(null, filter.getHost("http:/admin:admin@somehost:4343/somewhere"));
     }
 
@@ -68,6 +75,8 @@ public class ReferrerFilterTest {
         Assert.assertEquals(true, filter.isValidRequest(getRequest("/relative/but/[illegal]")));
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://somehost")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("http://me")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://localhost")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://127.0.0.1")));
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://somehost/but/[illegal]")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("http://me/but/[illegal]")));
     }
