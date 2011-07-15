@@ -517,6 +517,9 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * as nested variable placeholders, which are substituted from inner most to
      * outer most. Configuration properties override system properties.
      *
+     * NOTE - this is a verbatim copy of the same-named method
+     * in o.a.s.launchpad.base.impl.Sling. Please keep them in sync.
+     *
      * @param val The string on which to perform property substitution.
      * @param currentKey The key of the property being evaluated used to detect
      *            cycles.
