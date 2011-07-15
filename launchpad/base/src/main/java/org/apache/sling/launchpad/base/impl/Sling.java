@@ -948,6 +948,9 @@ public class Sling implements BundleActivator {
      * as nested variable placeholders, which are substituted from inner most to
      * outer most. Configuration properties override system properties.
      *
+     * NOTE - this is a verbatim copy of the same-named method
+     * in o.a.s.launchpad.webapp.SlingServlet. Please keep them in sync.
+     *
      * @param val The string on which to perform property substitution.
      * @param currentKey The key of the property being evaluated used to detect
      *            cycles.
