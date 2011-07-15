@@ -21,15 +21,11 @@ package ${package};
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -39,15 +35,25 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Hello World Servlet registered by resource type
+ *
+ * Annotations below are short version of:
+ * 
+ * @Component
+ * @Service(Servlet.class)
+ * @Properties({
+ *    @Property(name="service.description", value="Hello World Type Servlet"),
+ *    @Property(name="service.vendor", value="The Apache Software Foundation"),
+ *    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+ *    @Property(name="sling.servlet.selectors", value="hello"),
+ *    @Property(name="sling.servlet.extensions", value="html")
+ * })
  */
-@Component
-@Service(Servlet.class)
-@Properties({ @Property(name="service.description", value="Hello World Type Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name = "sling.servlet.resourceTypes", value = "sling/servlet/default"),
-    @Property(name = "sling.servlet.selectors", value = "hello"),
-    @Property(name = "sling.servlet.extensions", value = "html")
+@SlingServlet(resourceTypes="sling/servlet/default", selectors="hello", extensions="html")
+@Properties({
+    @Property(name="service.description", value="Hello World Type Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation")
 })
+@SuppressWarnings("serial")
 public class ByResourceTypeServlet extends SlingSafeMethodsServlet {
     
     private final Logger log = LoggerFactory.getLogger(ByResourceTypeServlet.class);
