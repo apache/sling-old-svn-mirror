@@ -1,19 +1,22 @@
 /*
- * Copyright 1997-2011 Day Management AG
- * Barfuesserplatz 6, 4001 Basel, Switzerland
- * All Rights Reserved.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * This software is the confidential and proprietary information of
- * Day Management AG, ("Confidential Information"). You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with Day.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.sling.security.impl;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -37,6 +40,9 @@ import org.slf4j.LoggerFactory;
         description="%referrer.description",
         label="%referrer.name")
 public class ReferrerFilter implements Filter {
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final boolean DEFAULT_ALLOW_EMPTY = true;
 
@@ -64,9 +70,6 @@ public class ReferrerFilter implements Filter {
             }
         }
     }
-
-    /** Logger. */
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private boolean isModification(final HttpServletRequest req) {
         final String method = req.getMethod();
@@ -100,7 +103,23 @@ public class ReferrerFilter implements Filter {
         chain.doFilter(req, res);
     }
 
-    private boolean isValidRequest(final HttpServletRequest request) {
+    String getHost(final String referrer) {
+        final int startPos = referrer.indexOf("://") + 3;
+        if ( startPos == 2 ) {
+            // we consider this illegal
+            return null;
+        }
+        final int endPos = referrer.indexOf('/', startPos);
+        final String hostPart = (endPos == -1 ? referrer.substring(startPos) : referrer.substring(startPos, endPos));
+        final int hostNameStart = hostPart.indexOf('@') + 1;
+        final int hostNameEnd = hostPart.lastIndexOf(':');
+        if (hostNameEnd < hostNameStart ) {
+            return hostPart.substring(hostNameStart);
+        }
+        return hostPart.substring(hostNameStart, hostNameEnd);
+    }
+
+    boolean isValidRequest(final HttpServletRequest request) {
         final String referrer = request.getHeader("referer");
         // check for missing/empty referrer
         if ( referrer == null || referrer.trim().length() == 0 ) {
@@ -113,16 +132,14 @@ public class ReferrerFilter implements Filter {
         if ( referrer.indexOf(":/") == - 1 ) {
             return true;
         }
-        final URI uri;
-        try {
-            uri = new URI(referrer);
-        } catch (URISyntaxException e) {
+
+        final String host = getHost(referrer);
+        if ( host == null ) {
             // if this is invalid we just return invalid
             this.logger.info("Rejected illegal referrer header for {} request to {} : {}",
                     new Object[] {request.getMethod(), request.getRequestURI(), referrer});
             return false;
         }
-        final String host = uri.getHost();
         final boolean valid;
         if ( this.allowHosts == null ) {
             valid = host.equals(request.getServerName());
