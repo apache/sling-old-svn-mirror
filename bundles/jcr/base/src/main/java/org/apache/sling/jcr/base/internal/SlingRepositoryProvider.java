@@ -111,21 +111,42 @@ public class SlingRepositoryProvider {
         }
     }
 
+    private void registerPrinter(final BundleContext processContext,
+            final Repository repo,
+            final Map<String, Object> props) {
+        logger.info("Providing new configuration printer for {} : {}", repo, props);
+        final Long key = (Long)props.get(Constants.SERVICE_ID);
+        RepositoryRegistration reg;
+        synchronized ( this.registrations ) {
+            reg = this.registrations.get(key);
+        }
+        if ( reg == null ) {
+            reg = new RepositoryRegistration();
+            synchronized ( this.registrations ) {
+                this.registrations.put(key, reg);
+            }
+        }
+        final RepositoryPrinter printer = new RepositoryPrinter(repo, props);
+        reg.printer = processContext.registerService(RepositoryPrinter.class.getName(),
+                printer, printer.getProperties());
+    }
+
     /**
      * Bind a new repository.
      */
     protected void bindRepository(final Repository repo, final Map<String, Object> props) {
-        if ( !isSlingRepository(props) ) {
-            final BundleContext processContext;
-            synchronized ( pendingServices ) {
-                processContext = this.bundleContext;
-                if ( processContext == null ) {
-                    this.pendingServices.add(new PendingService(repo, props));
-                }
+        final BundleContext processContext;
+        synchronized ( pendingServices ) {
+            processContext = this.bundleContext;
+            if ( processContext == null ) {
+                this.pendingServices.add(new PendingService(repo, props));
             }
-            if ( processContext != null ) {
+        }
+        if ( processContext != null ) {
+            if ( !isSlingRepository(props) ) {
                 this.registerRepository(processContext, repo, props);
             }
+            this.registerPrinter(processContext, repo, props);
         }
     }
 
@@ -133,19 +154,22 @@ public class SlingRepositoryProvider {
      * Unind a new repository.
      */
     protected void unbindRepository(final Repository repo, final Map<String, Object> props) {
-        if ( !isSlingRepository(props) ) {
-            synchronized ( pendingServices ) {
-                this.pendingServices.remove(new PendingService(repo, props));
-            }
-            final Long key = (Long)props.get(Constants.SERVICE_ID);
-            final RepositoryRegistration slingRepo;
-            synchronized ( this.registrations ) {
-                slingRepo = this.registrations.remove(key);
-            }
-            if ( slingRepo != null ) {
+        synchronized ( pendingServices ) {
+            this.pendingServices.remove(new PendingService(repo, props));
+        }
+        final Long key = (Long)props.get(Constants.SERVICE_ID);
+        final RepositoryRegistration slingRepo;
+        synchronized ( this.registrations ) {
+            slingRepo = this.registrations.remove(key);
+        }
+        if ( slingRepo != null ) {
+            if ( slingRepo.wrapper != null ) {
                 logger.debug("Unregistering SlingRepository for {} : {}", repo, props);
                 slingRepo.wrapper.dispose();
                 slingRepo.registration.unregister();
+            }
+            if ( slingRepo.printer != null ) {
+                slingRepo.printer.unregister();
             }
         }
     }
@@ -187,6 +211,7 @@ public class SlingRepositoryProvider {
      */
     private static final class RepositoryRegistration {
         public ServiceRegistration registration;
+        public ServiceRegistration printer;
         public SlingRepositoryWrapper wrapper;
     }
 }
