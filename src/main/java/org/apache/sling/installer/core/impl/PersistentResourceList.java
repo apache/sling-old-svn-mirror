@@ -125,6 +125,15 @@ public class PersistentResourceList {
                 }
             }
         }
+        for(final RegisteredResource rr : this.untransformedResources ) {
+            try {
+                if ( rr.getInputStream() != null ) {
+                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                }
+            } catch (final IOException ioe) {
+                // we just ignore this
+            }
+        }
     }
 
     /**
@@ -155,7 +164,14 @@ public class PersistentResourceList {
      * @param input The installable resource
      */
     public RegisteredResource addOrUpdate(final InternalResource input) {
-        // first check if there are resources with the same url and digest
+        // first check untransformed resource if there are resources with the same url and digest
+        for(final RegisteredResource rr : this.untransformedResources ) {
+            if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest())) ) {
+                // if we found the resource we can immediately return
+                return rr;
+            }
+        }
+        // installed resources are next
         for(final EntityResourceList group : this.data.values()) {
             for(final RegisteredResource rr : group.getResources()) {
                 if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {

@@ -145,7 +145,9 @@ public class FileDataStore {
                 }
             }
         }
-        final String filename = (hint == null ? "unknown" : hint) + "-resource-" + getNextSerialNumber() + ".ser";
+        final int pos = url.lastIndexOf('/');
+        final String name = url.substring(pos + 1);
+        final String filename = (hint == null ? "rsrc" : hint) + '-' + name + '-' + getNextSerialNumber() + ".ser";
         final File file = this.getDataFile(filename);
 
         this.copyToLocalStorage(stream, file);
