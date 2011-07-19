@@ -174,5 +174,72 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.sun.japex</groupId>
+            <artifactId>japex</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>benchmarks</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-commons-math-for-japex</id>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <includeArtifactIds>commons-math</includeArtifactIds>
+                                    <outputDirectory>${project.build.directory}/japex-dependency</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.sun.japex</groupId>
+                        <artifactId>japex-maven-plugin</artifactId>
+                        <version>1.2.3</version>
+                        <executions>
+                            <execution>
+                                <id>japex</id>
+                                <goals>
+                                    <goal>japex</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <japexConfig>
+                                <testSuite name="StatisticsTest"
+                                    xmlns="http://www.sun.com/japex/testSuite">
+                                    <param name="japex.classPath" value="${project.build.outputDirectory}" />
+                                    <param name="japex.classPath" value="${project.build.testOutputDirectory}" />
+                                    <param name="japex.classPath" value="${project.build.directory}/japex-dependency/*.jar" />
+                                    <param name="japex.resultUnit" value="ms" />
+                                    <param name="japex.warmupIterations" value="5" />
+                                    <param name="japex.runIterations" value="1000" />
+                                    <param name="japex.numberOfThreads" value="50" />
+                                    <driver name="AddToStatsDirect">
+                                        <param name="japex.driverClass" value="org.apache.sling.engine.benchmarks.AddValueToStatisticsDirectDriver" />
+                                        <param name="description" value="Add a value to statistics through direct invocation." />
+                                    </driver>
+                                    <driver name="AddToStatsViaExecutor">
+                                        <param name="japex.driverClass" value="org.apache.sling.engine.benchmarks.AddValueToStatisticsViaExecutorDriver" />
+                                        <param name="description" value="Add a value to statistics via a separate thread." />
+                                    </driver>
+                                    <testCase name="test" />
+                                </testSuite>
+                            </japexConfig>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
