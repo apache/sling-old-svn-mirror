@@ -17,36 +17,26 @@
 package org.apache.sling.engine.benchmarks;
 
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
 
 import com.sun.japex.JapexDriverBase;
 import com.sun.japex.TestCase;
 
-public class AddValueToStatisticsViaExecutorDriver extends JapexDriverBase {
+public class AddValueToStatisticsDriver extends JapexDriverBase {
 
     private final Random random = new Random();
 
     private SynchronizedSummaryStatistics statistics;
-    private ExecutorService operationExecutor;
 
     @Override
     public void prepare(TestCase tc) {
         this.statistics = new SynchronizedSummaryStatistics();
-        this.operationExecutor = Executors.newSingleThreadExecutor();
     }
 
     @Override
     public void run(TestCase tc) {
-        final long value = random.nextLong();
-        operationExecutor.execute(new Runnable() {
-
-            public void run() {
-                statistics.addValue(value);
-            }
-        });
+        statistics.addValue(random.nextLong());
     }
 
 }

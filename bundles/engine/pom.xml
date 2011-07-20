@@ -223,7 +223,7 @@
                                     <param name="japex.classPath" value="${project.build.directory}/japex-dependency/*.jar" />
                                     <param name="japex.resultUnit" value="ms" />
                                     <param name="japex.warmupIterations" value="5" />
-                                    <param name="japex.runIterations" value="1000" />
+                                    <param name="japex.runIterations" value="100" />
                                     <param name="japex.numberOfThreads" value="50" />
                                     <driver name="AddToStatsDirect">
                                         <param name="japex.driverClass" value="org.apache.sling.engine.benchmarks.AddValueToStatisticsDirectDriver" />
@@ -232,6 +232,10 @@
                                     <driver name="AddToStatsViaExecutor">
                                         <param name="japex.driverClass" value="org.apache.sling.engine.benchmarks.AddValueToStatisticsViaExecutorDriver" />
                                         <param name="description" value="Add a value to statistics via a separate thread." />
+                                    </driver>
+                                    <driver name="AddToStats">
+                                        <param name="japex.driverClass" value="org.apache.sling.engine.benchmarks.AddValueToStatisticsDriver" />
+                                        <param name="description" value="Add a value to statistics using atomic objects." />
                                     </driver>
                                     <testCase name="test" />
                                 </testSuite>

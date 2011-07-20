@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -17,25 +17,30 @@
 package org.apache.sling.engine.benchmarks;
 
 import java.util.Random;
-
-import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.japex.JapexDriverBase;
 import com.sun.japex.TestCase;
 
 public class AddValueToStatisticsDirectDriver extends JapexDriverBase {
-    
-    private SynchronizedSummaryStatistics statistics;
+
+    private final Random random = new Random();
+
+    private AtomicInteger count;
+
+    private AtomicLong sum;
 
     @Override
     public void prepare(TestCase tc) {
-        this.statistics = new SynchronizedSummaryStatistics();
+        this.count = new AtomicInteger();
+        this.sum = new AtomicLong();
     }
 
     @Override
     public void run(TestCase tc) {
-        Random random = new Random();
-        statistics.addValue(random.nextLong());
+        this.count.incrementAndGet();
+        this.sum.addAndGet(random.nextLong());
     }
-    
+
 }
