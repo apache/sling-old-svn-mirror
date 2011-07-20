@@ -30,7 +30,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.2</version>
                 <executions>
                     <execution>
                         <id>generate-scr-descriptor</id>
@@ -94,7 +94,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.5.0</version>
+            <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
