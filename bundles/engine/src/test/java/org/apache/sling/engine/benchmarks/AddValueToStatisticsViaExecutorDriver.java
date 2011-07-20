@@ -19,6 +19,7 @@ package org.apache.sling.engine.benchmarks;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
 
@@ -48,5 +49,15 @@ public class AddValueToStatisticsViaExecutorDriver extends JapexDriverBase {
             }
         });
     }
+    /*
+    @Override
+    public void finish(TestCase testCase) {
+        operationExecutor.shutdown();
+        try {
+            operationExecutor.awaitTermination(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }*/
 
 }
