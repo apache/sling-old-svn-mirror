@@ -27,21 +27,13 @@ import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
 public class RequestProcessor implements RequestProcessorMBean {
 
     private final SynchronizedSummaryStatistics durationStatistics;
-    
-    private final ExecutorService operationExecutor;
 
     public RequestProcessor() {
         this.durationStatistics = new SynchronizedSummaryStatistics();
-        this.operationExecutor = Executors.newSingleThreadExecutor();
     }
 
     public void addRequestDuration(final long value) {
-        operationExecutor.execute(new Runnable() {
-
-            public void run() {
-                durationStatistics.addValue(value);
-            }
-        });
+        durationStatistics.addValue(value);
     }
 
     public long getCount() {
@@ -53,13 +45,7 @@ public class RequestProcessor implements RequestProcessorMBean {
     }
     
     public void resetStatistics() {
-        operationExecutor.execute(new Runnable() {
-            
-            public void run() {
-                durationStatistics.clear();
-                
-            }
-        });
+        durationStatistics.clear();
     }
 
 }

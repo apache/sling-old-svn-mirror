@@ -17,26 +17,30 @@
 package org.apache.sling.engine.benchmarks;
 
 import java.util.Random;
-
-import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.japex.JapexDriverBase;
 import com.sun.japex.TestCase;
 
-public class AddValueToStatisticsDriver extends JapexDriverBase {
+public class AddValueToAtomicsDriver extends JapexDriverBase {
 
     private final Random random = new Random();
 
-    private SynchronizedSummaryStatistics statistics;
+    private AtomicInteger count;
+
+    private AtomicLong sum;
 
     @Override
     public void prepare(TestCase tc) {
-        this.statistics = new SynchronizedSummaryStatistics();
+        this.count = new AtomicInteger();
+        this.sum = new AtomicLong();
     }
 
     @Override
     public void run(TestCase tc) {
-        statistics.addValue(random.nextLong());
+        this.count.incrementAndGet();
+        this.sum.addAndGet(random.nextLong());
     }
 
 }
