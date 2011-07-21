@@ -40,9 +40,21 @@ public class RequestProcessorMBeanImpl extends StandardMBean implements RequestP
     public long getRequestsCount() {
         return durationStatistics.getN();
     }
+
+    public double getMaxRequestDurationMsec() {
+        return durationStatistics.getMax();
+    }
+
+    public double getStandardDeviationDurationMsec() {
+        return durationStatistics.getStandardDeviation();
+    }
     
     public double getMeanRequestDurationMsec() {
         return durationStatistics.getMean();
+    }
+
+    public double getMinRequestDurationMsec() {
+        return durationStatistics.getMin();
     }
     
     public void resetStatistics() {
