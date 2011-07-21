@@ -57,7 +57,6 @@ import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
-import org.apache.sling.engine.jmx.RequestProcessor;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +78,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
     private ServletFilterManager filterManager;
 
-    private RequestProcessor mbean;
+    private RequestProcessorMBeanImpl mbean;
 
     // ---------- helper setters
 
@@ -121,7 +120,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         this.filterManager = filterManager;
     }
 
-    void setMBean(final RequestProcessor mbean) {
+    void setMBean(final RequestProcessorMBeanImpl mbean) {
         this.mbean = mbean;
     }
 
