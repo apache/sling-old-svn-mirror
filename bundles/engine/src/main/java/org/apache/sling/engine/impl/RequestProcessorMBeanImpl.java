@@ -14,21 +14,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.engine.jmx;
+package org.apache.sling.engine.impl;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import javax.management.StandardMBean;
 
 import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
+import org.apache.sling.engine.jmx.RequestProcessorMBean;
 
 /**
  * This is the implementation of the management interface for the RequestProcessor.
  */
-public class RequestProcessor implements RequestProcessorMBean {
+public class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcessorMBean {
 
     private final SynchronizedSummaryStatistics durationStatistics;
 
-    public RequestProcessor() {
+    public RequestProcessorMBeanImpl() {
+        super(RequestProcessorMBean.class, false);
         this.durationStatistics = new SynchronizedSummaryStatistics();
     }
 
@@ -36,11 +37,11 @@ public class RequestProcessor implements RequestProcessorMBean {
         durationStatistics.addValue(value);
     }
 
-    public long getCount() {
+    public long getRequestsCount() {
         return durationStatistics.getN();
     }
     
-    public double getMeanRequestDuration() {
+    public double getMeanRequestDurationMsec() {
         return durationStatistics.getMean();
     }
     

@@ -22,9 +22,9 @@ package org.apache.sling.engine.jmx;
  */
 public interface RequestProcessorMBean {
 
-    long getCount();
+    long getRequestsCount();
     
-    double getMeanRequestDuration();
+    double getMeanRequestDurationMsec();
     
     void resetStatistics();
 
