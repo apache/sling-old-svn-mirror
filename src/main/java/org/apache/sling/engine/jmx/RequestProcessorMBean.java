@@ -24,8 +24,14 @@ public interface RequestProcessorMBean {
 
     long getRequestsCount();
     
+    double getMaxRequestDurationMsec();
+
     double getMeanRequestDurationMsec();
     
+    double getMinRequestDurationMsec();
+
+    double getStandardDeviationDurationMsec();
+
     void resetStatistics();
 
 }
