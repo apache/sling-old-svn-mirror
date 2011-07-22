@@ -23,8 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,7 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +39,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
-
-    public static final String ENGINE_SYMBOLIC_NAME = "org.apache.sling.engine";
 
     /** The logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -62,8 +57,6 @@ public class SlingSettingsServiceImpl
     /** The name of the data file holding the sling id. */
     private static final String DATA_FILE = "sling.id.file";
 
-    /** Flag indicating a delayed start of this service. */
-    private boolean delayedStart = false;
     /**
      * Create the service and search the Sling home urls and
      * get/create a sling id.
@@ -103,24 +96,6 @@ public class SlingSettingsServiceImpl
             throw new RuntimeException("Unable to read from bundle data file.");
         }
         this.slingId = this.readSlingId(idFile);
-
-        // if we don't have an id yet, we look for the engine bundle for compatibility reasons
-        if ( this.slingId == null ) {
-            final Bundle engineBundle = this.searchEngineBundle(context);
-            if ( engineBundle != null && engineBundle.getState() != Bundle.UNINSTALLED ) {
-                final BundleContext engineCtx = engineBundle.getBundleContext();
-                if ( engineCtx == null ) {
-                    // we need a delayed start
-                    this.delayedStart = true;
-                    return;
-                }
-                final File engineIdFile = engineCtx.getDataFile(DATA_FILE);
-                this.slingId = this.readSlingId(engineIdFile);
-                if ( this.slingId != null ) {
-                    this.writeSlingId(idFile, this.slingId);
-                }
-            }
-        }
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
@@ -206,22 +181,10 @@ public class SlingSettingsServiceImpl
         }
     }
 
-    /** Search the engine bundle. */
-    private Bundle searchEngineBundle(final BundleContext bc) {
-        final Bundle[] bundles = bc.getBundles();
-        for(final Bundle b : bundles) {
-            if ( ENGINE_SYMBOLIC_NAME.equals(b.getSymbolicName()) ) {
-                return b;
-            }
-        }
-        return null;
-    }
-
-
     /**
-     * @see org.apache.sling.settings.SlingSettingsService#getAbsolutePathWithinSlingHome()
+     * @see org.apache.sling.settings.SlingSettingsService#getAbsolutePathWithinSlingHome(String)
      */
-    public String getAbsolutePathWithinSlingHome(String relativePath) {
+    public String getAbsolutePathWithinSlingHome(final String relativePath) {
         return new File(slingHome, relativePath).getAbsolutePath();
     }
 
@@ -251,14 +214,5 @@ public class SlingSettingsServiceImpl
      */
     public Set<String> getRunModes() {
         return this.runModes;
-    }
-
-    public boolean isDelayedStart() {
-        return this.delayedStart;
-    }
-
-    public void initDelayed(final BundleContext context) {
-        this.delayedStart = false;
-        this.setupSlingId(context);
     }
 }

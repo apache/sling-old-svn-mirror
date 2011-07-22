@@ -24,8 +24,6 @@ import java.util.Hashtable;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
@@ -34,67 +32,29 @@ import org.osgi.framework.ServiceRegistration;
  * It registers the SlingSettingsService.
  *
  */
-public class Activator implements BundleActivator, BundleListener {
+public class Activator implements BundleActivator {
 
     /** The service registration */
     private ServiceRegistration serviceRegistration;
 
-    /** The bundle context. */
-    private BundleContext bundleContext;
-
-    /** The settings service. */
-    private SlingSettingsServiceImpl settingsService;
-
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(BundleContext context) throws Exception {
-        this.bundleContext = context;
-        this.settingsService = new SlingSettingsServiceImpl(context);
-        // for compatibility, we might have to wait for the engine bundle
-        // to be started to get the Sling ID
+    public void start(final BundleContext bundleContext) throws Exception {
+        final SlingSettingsService settingsService = new SlingSettingsServiceImpl(bundleContext);
 
-        if ( this.settingsService.isDelayedStart() ) {
-            this.bundleContext.addBundleListener(this);
-            this.tryToStart();
-        } else {
-            this.startService();
-        }
-    }
-
-    /**
-     * @param event
-     */
-    public void bundleChanged(BundleEvent event) {
-        if ( SlingSettingsServiceImpl.ENGINE_SYMBOLIC_NAME.equals(event.getBundle().getSymbolicName())) {
-            this.tryToStart();
-        }
-
-    }
-
-    private synchronized void tryToStart() {
-        if ( this.settingsService.isDelayedStart() ) {
-            this.settingsService.initDelayed(this.bundleContext);
-            if ( !this.settingsService.isDelayedStart() ) {
-                this.bundleContext.removeBundleListener(this);
-                this.startService();
-            }
-        }
-    }
-
-    private void startService() {
         final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, this.settingsService.getClass().getName());
+        props.put(Constants.SERVICE_PID, settingsService.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Settings Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = this.bundleContext.registerService(new String[] {
+        serviceRegistration = bundleContext.registerService(new String[] {
                                                SlingSettingsService.class.getName()},
-                                               this.settingsService, props);
-        SlingPropertiesPrinter.initPlugin(this.bundleContext);
-        SlingSettingsPrinter.initPlugin(this.bundleContext, this.settingsService);
+                                               settingsService, props);
+        SlingPropertiesPrinter.initPlugin(bundleContext);
+        SlingSettingsPrinter.initPlugin(bundleContext, settingsService);
         try {
-            RunModeCommand.initPlugin(this.bundleContext, this.settingsService.getRunModes());
+            RunModeCommand.initPlugin(bundleContext, settingsService.getRunModes());
         } catch (Throwable ignore) {
             // we just ignore this
         }
@@ -104,8 +64,7 @@ public class Activator implements BundleActivator, BundleListener {
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(BundleContext context) throws Exception {
-        this.bundleContext.removeBundleListener(this);
+    public void stop(final BundleContext context) throws Exception {
         try {
             RunModeCommand.destroyPlugin();
         } catch (Throwable ignore) {
@@ -118,6 +77,5 @@ public class Activator implements BundleActivator, BundleListener {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }
-        this.settingsService = null;
     }
 }
