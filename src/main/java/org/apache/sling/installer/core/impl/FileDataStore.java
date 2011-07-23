@@ -148,7 +148,11 @@ public class FileDataStore {
         final int pos = url.lastIndexOf('/');
         final String name = url.substring(pos + 1);
         final String filename = (hint == null ? "rsrc" : hint) + '-' + name + '-' + getNextSerialNumber() + ".ser";
-        final File file = this.getDataFile(filename);
+        
+        //replace special characters from the filename that are not allowed by the OS
+        final String filename2 = filename.replaceAll("[\\*\"/\\\\\\[\\]\\:\\;\\|\\=\\,]+", "_"); // Windows
+      
+        final File file = this.getDataFile(filename2);
 
         this.copyToLocalStorage(stream, file);
 
