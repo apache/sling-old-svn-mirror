@@ -169,6 +169,7 @@ public class SlingIntegrationTestClient {
                 final Part [] parts = partList.toArray(new Part[partList.size()]);
                 post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
             } else {
+            	post.getParams().setContentCharset("UTF-8");
                 for(NameValuePair e : nodeProperties) {
                     post.addParameter(e.getName(),e.getValue());
                 }
