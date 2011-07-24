@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,6 +65,17 @@ public class PostServletImportTest extends HttpTestBase {
         final byte [] buffer = new byte[16384];
         int n = 0;
         while( (n = is.read(buffer, 0, buffer.length)) > 0) {
+            content.append(new String(buffer, 0, n));
+        }
+        return content.toString();
+    }
+
+	static String getStreamAsString(InputStream is, String charset) throws IOException {
+		InputStreamReader reader = new InputStreamReader(is, charset);
+        final StringBuilder content = new StringBuilder();
+        final char [] buffer = new char[16384];
+        int n = 0;
+        while( (n = reader.read(buffer, 0, buffer.length)) > 0) {
             content.append(new String(buffer, 0, n));
         }
         return content.toString();
@@ -696,5 +708,37 @@ public class PostServletImportTest extends HttpTestBase {
 		assertPostStatus(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
     }
 
-    
+    /**
+     * SLING-2143: test import where json is in a UTF-8 charset
+     */
+    public void testImportJSONWithUTF8Content() throws IOException, JSONException {
+        final String testPath = TEST_BASE_PATH;
+        Map<String, String> props = new HashMap<String, String>();
+        String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
+        urlsToDelete.add(testNode);
+
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION,
+        		SlingPostConstants.OPERATION_IMPORT);
+        
+        String testNodeName = "testNode_" + String.valueOf(random.nextInt());
+        props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
+        String jsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_utf8.json"), "UTF-8");
+        props.put(SlingPostConstants.RP_CONTENT, jsonContent);
+        props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
+
+        String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, props);
+
+        // assert content at new location
+        String content = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+		JSONObject jsonObj = new JSONObject(content);
+		assertNotNull(jsonObj);
+
+		//assert the imported content is there.
+        String expectedJsonContent = (String)getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_utf8.json"), "UTF-8");
+		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+    }
+
 }
