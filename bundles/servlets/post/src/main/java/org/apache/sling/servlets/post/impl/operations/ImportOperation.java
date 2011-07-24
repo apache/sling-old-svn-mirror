@@ -16,7 +16,6 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -59,6 +58,14 @@ public class ImportOperation extends AbstractCreateOperation {
         this.contentImporter = importer;
     }
 
+    private String getRequestParamAsString(SlingHttpServletRequest request, String key) {
+    	RequestParameter requestParameter = request.getRequestParameter(key);
+    	if (requestParameter == null) {
+    		return null;
+    	}
+    	return requestParameter.getString();
+    }
+    
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
             throws RepositoryException {
@@ -95,7 +102,7 @@ public class ImportOperation extends AbstractCreateOperation {
             return;
         }
 
-        String contentType = request.getParameter(SlingPostConstants.RP_CONTENT_TYPE);
+        String contentType = getRequestParamAsString(request, SlingPostConstants.RP_CONTENT_TYPE);
         if (contentType == null) {
             response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
             "Required :contentType parameter is missing");
@@ -103,9 +110,9 @@ public class ImportOperation extends AbstractCreateOperation {
         }
 
         //import options passed as request parameters.
-        final boolean replace = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE));
-        final boolean replaceProperties = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_REPLACE_PROPERTIES));
-        final boolean checkin = "true".equalsIgnoreCase(request.getParameter(SlingPostConstants.RP_CHECKIN));
+        final boolean replace = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE));
+        final boolean replaceProperties = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE_PROPERTIES));
+        final boolean checkin = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_CHECKIN));
 
         String basePath = getItemPath(request);
         basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
@@ -119,9 +126,9 @@ public class ImportOperation extends AbstractCreateOperation {
 
         final String targetName;
         //check if a name was posted to use as the name of the imported root node
-        if (request.getParameter(SlingPostConstants.RP_NODE_NAME) != null) {
+        if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME) != null) {
             // exact name
-            targetName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
+            targetName = getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME);
             if (targetName.length() > 0 && node.hasNode(targetName)) {
                 if (replace) {
                     response.setCreateRequest(false);
@@ -133,7 +140,7 @@ public class ImportOperation extends AbstractCreateOperation {
                     return;
                 }
             }
-        } else if (request.getParameter(SlingPostConstants.RP_NODE_NAME_HINT) != null) {
+        } else if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME_HINT) != null) {
             // node name hint only
             String nodePath = generateName(request, basePath);
             String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
@@ -146,9 +153,9 @@ public class ImportOperation extends AbstractCreateOperation {
 
         try {
             InputStream contentStream = null;
-            String content = request.getParameter(SlingPostConstants.RP_CONTENT);
-            if (content != null) {
-                contentStream = new ByteArrayInputStream(content.getBytes());
+        	RequestParameter contentParameter = request.getRequestParameter(SlingPostConstants.RP_CONTENT);
+            if (contentParameter != null) {
+                contentStream = contentParameter.getInputStream();
             } else {
                 RequestParameter contentFile = request.getRequestParameter(SlingPostConstants.RP_CONTENT_FILE);
                 if (contentFile != null) {
