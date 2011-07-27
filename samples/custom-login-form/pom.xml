@@ -53,7 +53,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Fragment-Host>org.apache.sling.formauth</Fragment-Host>
+                        <Fragment-Host>org.apache.sling.auth.form</Fragment-Host>
                     </instructions>
                 </configuration>
             </plugin>
