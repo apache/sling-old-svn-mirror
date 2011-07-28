@@ -93,6 +93,7 @@
         <module>maven/archetypes/launchpad-webapp</module>
         <module>maven/archetypes/initial-content</module>
         <module>maven/archetypes/servlet</module>
+        <module>maven/archetypes/bundle</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
