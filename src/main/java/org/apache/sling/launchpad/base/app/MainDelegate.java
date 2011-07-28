@@ -160,7 +160,7 @@ public class MainDelegate implements Launcher {
                 // just ignore
             }
         }
-        logger.log(Logger.LOG_ERROR, "Logger is using level " + logger.getLogLevel());
+
         try {
             LaunchpadContentProvider resProvider = new ClassLoaderResourceProvider(
                 getClass().getClassLoader());
