@@ -202,7 +202,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
         File slingStartupDir = getSlingStartupDir(slingHome);
 
         // execute bootstrap commands, if needed
-        BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
+        final BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
         cmd.execute(context);
 
         boolean shouldInstall = false;
@@ -420,23 +420,30 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
                     continue;
                 }
 
-                // ensure we have a directory for the startlevel only when
-                // needed
-                if (startUpLevelDir == null) {
-                    startUpLevelDir = getOrCreateDirectory(slingStartupDir,
-                        String.valueOf(startLevel));
-                }
-
-                // copy over the bundle based on the startlevel
-                String bundleFileName = extractFileName(path);
-                File bundleFile = new File(startUpLevelDir, bundleFileName);
                 try {
-                    copyStreamToFile(ins, bundleFile);
-                } catch (IOException e) {
-                    // should this fail here or just log a warning?
-                    throw new RuntimeException("Failure copying file from "
-                        + path + " to startup dir (" + startUpLevelDir
-                        + ") and name (" + bundleFileName + "): " + e, e);
+                    // ensure we have a directory for the startlevel only when
+                    // needed
+                    if (startUpLevelDir == null) {
+                        startUpLevelDir = getOrCreateDirectory(slingStartupDir,
+                            String.valueOf(startLevel));
+                    }
+
+                    // copy over the bundle based on the startlevel
+                    String bundleFileName = extractFileName(path);
+                    File bundleFile = new File(startUpLevelDir, bundleFileName);
+                    try {
+                        copyStreamToFile(ins, bundleFile);
+                    } catch (IOException e) {
+                        // should this fail here or just log a warning?
+                        throw new RuntimeException("Failure copying file from "
+                            + path + " to startup dir (" + startUpLevelDir
+                            + ") and name (" + bundleFileName + "): " + e, e);
+                    }
+                } finally {
+                    try {
+                        ins.close();
+                    } catch (IOException ignore) {
+                    }
                 }
             }
         }
