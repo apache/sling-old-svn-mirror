@@ -81,6 +81,9 @@ public class MainDelegate implements Launcher {
     /** The Sling configuration property name setting the initial log file */
     private static final String PROP_LOG_FILE = "org.apache.sling.commons.log.file";
 
+    /** The Sling system property name setting the bootstrap log level */
+    private static final String PROP_BOOT_LOG_LEVEL = "sling.launchpad.log.level";
+
     /** Default log level setting if no set on command line (value is "INFO"). */
     private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
 
@@ -142,14 +145,22 @@ public class MainDelegate implements Launcher {
                 DEFAULT_LOG_LEVEL);
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
-        Logger logger = new Logger();
+        final Logger logger = new Logger();
 
         // Display port number on console, in case HttpService doesn't
         info("HTTP server port: " + commandLine.get(PROP_PORT), null);
 
-        // prevent tons of needless WARN from the framework
+        // default log level: prevent tons of needless WARN from the framework
         logger.setLogLevel(Logger.LOG_ERROR);
-
+        if ( System.getProperty(PROP_BOOT_LOG_LEVEL) != null ) {
+            try {
+                logger.setLogLevel(
+                    Integer.parseInt(System.getProperty(PROP_BOOT_LOG_LEVEL)));
+            } catch (final NumberFormatException ex) {
+                // just ignore
+            }
+        }
+        logger.log(Logger.LOG_ERROR, "Logger is using level " + logger.getLogLevel());
         try {
             LaunchpadContentProvider resProvider = new ClassLoaderResourceProvider(
                 getClass().getClassLoader());
