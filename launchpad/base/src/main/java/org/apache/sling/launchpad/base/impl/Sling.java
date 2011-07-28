@@ -862,6 +862,13 @@ public class Sling implements BundleActivator {
                 } catch (IOException ioe) {
                     this.logger.log(Logger.LOG_ERROR,
                         "Error loading config properties from " + file, ioe);
+                } finally {
+                    if ( is != null ) {
+                        try {
+                            is.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
                 }
             }
         }
@@ -884,6 +891,11 @@ public class Sling implements BundleActivator {
             } catch (IOException ioe) {
                 this.logger.log(Logger.LOG_ERROR,
                     "Error loading config properties from " + resource, ioe);
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException ignore) {
+                }
             }
         }
     }
