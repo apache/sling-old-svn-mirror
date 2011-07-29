@@ -16,6 +16,7 @@
  */
 package org.apache.sling.engine.impl;
 
+import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
 import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
@@ -28,8 +29,8 @@ public class RequestProcessorMBeanImpl extends StandardMBean implements RequestP
 
     private final SynchronizedSummaryStatistics durationStatistics;
 
-    public RequestProcessorMBeanImpl() {
-        super(RequestProcessorMBean.class, false);
+    public RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
+        super(RequestProcessorMBean.class);
         this.durationStatistics = new SynchronizedSummaryStatistics();
     }
 
