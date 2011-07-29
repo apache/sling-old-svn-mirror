@@ -108,6 +108,11 @@ public class ConfigTaskCreator
                                 attrs = new HashMap<String, Object>();
                                 attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
                             }
+                            attrs.put(Constants.SERVICE_PID, event.getPid());
+                            // Factory?
+                            if (event.getFactoryPid() != null) {
+                                attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
+                            }
                             this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
                         }
                     }
