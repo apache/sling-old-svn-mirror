@@ -710,6 +710,9 @@ public class OsgiInstallerImpl
                                     final TransformationResult transRes = new TransformationResult();
                                     transRes.setId(entityId);
                                     transRes.setResourceType(resourceType);
+                                    if ( attributes != null ) {
+                                        transRes.setAttributes(attributes);
+                                    }
                                     this.persistentList.transform(rr, new TransformationResult[] {
                                             transRes
                                     });
@@ -766,6 +769,9 @@ public class OsgiInstallerImpl
                                 final TransformationResult transRes = new TransformationResult();
                                 transRes.setId(entityId);
                                 transRes.setResourceType(resourceType);
+                                if ( attributes != null ) {
+                                    transRes.setAttributes(attributes);
+                                }
                                 this.persistentList.transform(rr, new TransformationResult[] {
                                         transRes
                                 });
