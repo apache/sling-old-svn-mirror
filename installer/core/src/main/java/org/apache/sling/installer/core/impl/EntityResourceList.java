@@ -203,6 +203,20 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                     // and now set resource to uninstalled
                     state = ResourceState.UNINSTALLED;
                 }
+            } else if ( state == ResourceState.INSTALLED ) {
+                // make sure that no other resource has state INSTALLED
+                if ( this.resources.size() > 1 ) {
+                    // to get the second item in the set we have to use an iterator!
+                    final Iterator<TaskResource> i = this.resources.iterator();
+                    i.next(); // skip first
+                    while ( i.hasNext() ) {
+                        final TaskResource rsrc = i.next();
+                        if ( rsrc.getState() == ResourceState.INSTALLED ) {
+                            ((RegisteredResourceImpl)rsrc).setState(ResourceState.INSTALL);
+                        }
+                    }
+                }
+
             }
             ((RegisteredResourceImpl)toActivate).setState(state);
             if ( state == ResourceState.UNINSTALLED ) {
