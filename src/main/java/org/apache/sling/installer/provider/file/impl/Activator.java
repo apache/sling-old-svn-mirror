@@ -32,6 +32,7 @@ public class Activator implements BundleActivator {
 
     public static final String KEY_DIR = "sling.fileinstall.dir";
     public static final String KEY_DELAY = "sling.fileinstall.interval";
+    public static final String KEY_WRITEBACK = "sling.fileinstall.writeback";
 
     /** The services listener will activate the installer. */
     private ServicesListener servicesListener;
@@ -42,10 +43,10 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) {
         // read initial scan configurations
         final List<ScanConfiguration> configs = new ArrayList<ScanConfiguration>();
-        final Object dir = this.getProp(context, KEY_DIR);
+        final Object dir = getProp(context, KEY_DIR);
         if ( dir != null ) {
             Long delay = null;
-            final Object interval = this.getProp(context, KEY_DELAY);
+            final Object interval = getProp(context, KEY_DELAY);
             if ( interval != null ) {
                 if ( interval instanceof Number ) {
                     delay = ((Number)interval).longValue();
@@ -73,10 +74,13 @@ public class Activator implements BundleActivator {
         this.servicesListener = null;
     }
 
-    private Object getProp(final BundleContext bundleContext, final String key) {
+    public static Object getProp(final BundleContext bundleContext, final String key) {
         Object o = bundleContext.getProperty(key);
         if (o == null) {
-            o = System.getProperty(key.toUpperCase().replace('.', '_'));
+            o = System.getProperty(key);
+            if ( o == null ) {
+                o = System.getProperty(key.toUpperCase().replace('.', '_'));
+            }
         }
         return o;
     }

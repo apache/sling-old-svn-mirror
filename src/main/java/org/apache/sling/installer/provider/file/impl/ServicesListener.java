@@ -18,19 +18,19 @@
  */
 package org.apache.sling.installer.provider.file.impl;
 
-import java.io.File;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.UpdateHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,26 +53,29 @@ public class ServicesListener {
     /** The listener for the installer. */
     private final Listener installerListener;
 
-    /** All active scan configurations. */
-    private final List<ScanConfiguration> scanConfigurations = new ArrayList<ScanConfiguration>();
+    /** The file installer. */
+    private final FileInstaller installer;
 
-    /** All monitors. */
-    private final List<FileMonitor> monitors = new ArrayList<FileMonitor>();
+    /** Service registration. */
+    private ServiceRegistration registration;
 
     private boolean running = false;
 
     public ServicesListener(final BundleContext bundleContext,
             final List<ScanConfiguration> configs) {
-        if ( configs != null ) {
-            scanConfigurations.addAll(configs);
-        }
         this.bundleContext = bundleContext;
+        boolean writeBack = true;
+        final Object writeBackObj = Activator.getProp(this.bundleContext, Activator.KEY_WRITEBACK);
+        if ( writeBackObj != null && "false".equalsIgnoreCase(writeBackObj.toString())) {
+            writeBack = false;
+        }
+        this.installer = new FileInstaller(configs, writeBack);
         this.installerListener = new Listener(INSTALLER_SERVICE_NAME);
         this.installerListener.start();
     }
 
     public synchronized void notifyChange() {
-        final boolean shouldRun = !this.scanConfigurations.isEmpty();
+        final boolean shouldRun = this.installer.hasConfigurations();
         if ( (shouldRun && !running) || (!shouldRun && running) ) {
             final OsgiInstaller installer = (OsgiInstaller)this.installerListener.getService();
 
@@ -94,23 +97,30 @@ public class ServicesListener {
         this.stopScanner();
     }
 
+    /** Vendor of all registered services. */
+    public static final String VENDOR = "The Apache Software Foundation";
+
     private void startScanner(final OsgiInstaller installer) {
         if ( !running ) {
-            for(final ScanConfiguration config : this.scanConfigurations) {
-                logger.debug("Starting monitor for {}", config.directory);
-                this.monitors.add(new FileMonitor(new File(config.directory),
-                        config.scanInterval, new Installer(installer, hash(config.directory))));
-            }
+            this.installer.start(installer);
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling File Installer Controller Service");
+            props.put(Constants.SERVICE_VENDOR, VENDOR);
+            props.put(UpdateHandler.PROPERTY_SCHEMES, this.installer.getSchemes());
+
+            this.registration = this.bundleContext.registerService(UpdateHandler.class.getName(),
+                    this.installer, props);
             running = true;
         }
     }
 
     private void stopScanner() {
         if ( running ) {
-            for(final FileMonitor monitor : this.monitors) {
-                monitor.stop();
+            if ( this.registration != null ) {
+                this.registration.unregister();
+                this.registration = null;
             }
-            this.monitors.clear();
+            this.installer.stop();
             running = false;
         }
     }
@@ -176,21 +186,6 @@ public class ServicesListener {
             } else if ( event.getType() == ServiceEvent.UNREGISTERING && this.service != null ) {
                 this.releaseService();
             }
-        }
-    }
-
-    /**
-     * Hash the string
-     */
-    private static String hash(String value) {
-        try {
-            final MessageDigest d = MessageDigest.getInstance("MD5");
-            d.update(value.getBytes("UTF-8"));
-            final BigInteger bigInt = new BigInteger(1, d.digest());
-            return new String(bigInt.toString(16));
-        } catch (Exception ignore) {
-            // if anything goes wrong we just return the value
-            return value;
         }
     }
 }

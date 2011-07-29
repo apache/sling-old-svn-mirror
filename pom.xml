@@ -57,6 +57,9 @@
                         <Private-Package>
                             org.apache.sling.installer.provider.file.impl.*
                         </Private-Package>
+                        <Embed-Dependency>
+                            org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -79,7 +82,15 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.0.0</version>
+            <version>3.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+      <!-- We use a class from the config admin implementation to read config files -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.2.8</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
