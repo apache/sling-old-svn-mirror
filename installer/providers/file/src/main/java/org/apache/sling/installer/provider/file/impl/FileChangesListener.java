@@ -26,4 +26,6 @@ public interface FileChangesListener {
     void initialSet(List<File> files);
 
     void updated(List<File> added, List<File> changed, List<File> removed);
+
+    String getScheme();
 }

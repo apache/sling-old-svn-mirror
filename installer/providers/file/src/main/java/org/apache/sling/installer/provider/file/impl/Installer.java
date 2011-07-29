@@ -37,10 +37,8 @@ import org.slf4j.LoggerFactory;
  * OSGi installer
  *
  */
-public class Installer implements FileChangesListener {
-
-    /** The scheme we use to register our resources. */
-    private static final String SCHEME_PREFIX = "fileinstall";
+public class Installer
+    implements FileChangesListener {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -53,8 +51,15 @@ public class Installer implements FileChangesListener {
 
     public Installer(final OsgiInstaller installer,
             final String id) {
-        this.scheme = SCHEME_PREFIX + id;
+        this.scheme = FileInstaller.SCHEME_PREFIX + id;
         this.installer = installer;
+    }
+
+    /**
+     * @see org.apache.sling.installer.provider.file.impl.FileChangesListener#getScheme()
+     */
+    public String getScheme() {
+        return this.scheme;
     }
 
     /**

@@ -59,6 +59,14 @@ public class FileMonitor extends TimerTask {
         timer.schedule(this, 0, (interval != null ? interval : 5000));
     }
 
+    public File getRoot() {
+        return this.root.file;
+    }
+
+    public FileChangesListener getListener() {
+        return this.listener;
+    }
+
     private void collect(final File file, final List<File> files) {
         if ( file.exists() ) {
             if ( file.isDirectory() ) {
