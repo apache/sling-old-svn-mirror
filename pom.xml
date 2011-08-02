@@ -94,6 +94,7 @@
         <module>maven/archetypes/initial-content</module>
         <module>maven/archetypes/servlet</module>
         <module>maven/archetypes/bundle</module>
+        <module>maven/archetypes/bundle-for-jcrinstall</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
