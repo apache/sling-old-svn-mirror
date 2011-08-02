@@ -16,15 +16,30 @@
  */
 package org.apache.sling.jcr.davex.impl.servlets;
 
-import javax.jcr.Repository;
-import javax.servlet.Servlet;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
 
+import javax.jcr.LoginException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.auth.core.AuthenticationSupport;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.HttpService;
 
 /**
  * DavEx WebDav servlet which acquires a Repository instance via the OSGi
@@ -32,7 +47,6 @@ import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
  *
  */
 @Component(label = "%dav.name", description = "%dav.description")
-@Service(Servlet.class)
 @Properties( { @Property(name = "alias", value = "/server"),
         @Property(name = "init.resource-path-prefix", value = "/server"),
         @Property(name = "init.missing-auth-mapping", value = ""),
@@ -40,12 +54,73 @@ import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
         @Property(name = "service.vendor", value = "The Apache Software Foundation") })
 public class SlingDavExServlet extends JcrRemotingServlet {
 
+    private static final String INIT_KEY_PREFIX = "init.";
+
     @Reference
     private Repository repository;
+
+    @Reference
+    private HttpService httpService;
+
+    @Reference
+    private AuthenticationSupport authentiator;
+
+    @Activate
+    protected void activate(final ComponentContext ctx)
+    throws Exception {
+        final AuthHttpContext context = new AuthHttpContext();
+        context.setAuthenticationSupport(authentiator);
+
+        final String alias = (String)ctx.getProperties().get("alias");
+        final Dictionary<String, String> initProps = new Hashtable<String, String>();
+        @SuppressWarnings("unchecked")
+        final Enumeration<String> keyEnum = ctx.getProperties().keys();
+        while ( keyEnum.hasMoreElements() ) {
+            final String key = keyEnum.nextElement();
+            if ( key.startsWith(INIT_KEY_PREFIX) ) {
+                final String paramKey = key.substring(INIT_KEY_PREFIX.length());
+                final Object paramValue = ctx.getProperties().get(key);
+
+                if (paramValue != null) {
+                    initProps.put(paramKey, paramValue.toString());
+                }
+            }
+        }
+
+        this.httpService.registerServlet(alias, this, initProps, context);
+    }
+
+    @Deactivate
+    protected void deactivate(final Map<String, Object> props) {
+        final String alias = (String)props.get("alias");
+        this.httpService.unregister(alias);
+    }
 
     @Override
     protected Repository getRepository() {
         return repository;
+    }
+
+    @Override
+    protected SessionProvider getSessionProvider() {
+        return new SessionProvider() {
+
+            public Session getSession(final HttpServletRequest req,
+                    final Repository paramRepository,
+                    final String paramString)
+            throws LoginException, ServletException, RepositoryException {
+                final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+                if ( resolver != null ) {
+                    return resolver.adaptTo(Session.class);
+                }
+                return null;
+            }
+
+            public void releaseSession(Session paramSession) {
+                // nothing to do
+
+            }
+        };
     }
 
 }
