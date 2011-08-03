@@ -57,7 +57,7 @@ public class ReferrerFilter implements Filter {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** Default value for allow empty. */
-    private static final boolean DEFAULT_ALLOW_EMPTY = false;
+    private static final boolean DEFAULT_ALLOW_EMPTY = true;
 
     /** Allow empty property. */
     @Property(boolValue=DEFAULT_ALLOW_EMPTY)

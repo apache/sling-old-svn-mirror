@@ -68,7 +68,7 @@ public class ReferrerFilterTest {
     }
 
     @Test public void testValidRequest() {
-        Assert.assertEquals(false, filter.isValidRequest(getRequest(null)));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest(null)));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("relative")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("/relative/too")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("/relative/but/[illegal]")));
