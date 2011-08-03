@@ -125,6 +125,7 @@ public class ReferrerFilter implements Filter {
         referrers.add("https://localhost" + ":0");
         referrers.add("https://127.0.0.1" + ":0");
         referrers.add("https://[::1]" + ":0");
+        referrers.add("https://[::1]" + ":0");
         return referrers;
     }
 
@@ -265,6 +266,10 @@ public class ReferrerFilter implements Filter {
         }
         // check for relative referrer - which is always allowed
         if ( referrer.indexOf(":/") == - 1 ) {
+            return true;
+        }
+        // check for air referrer - which is always allowed
+        if ( referrer.startsWith("app:/") ) {
             return true;
         }
 
