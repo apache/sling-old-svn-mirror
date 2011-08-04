@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
            referenceInterface=Repository.class,
             policy=ReferencePolicy.DYNAMIC,
             cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
-public class SlingRepositoryProvider {
+public class RepositoryPrinterProvider {
 
     /** The logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
