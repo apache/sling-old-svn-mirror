@@ -203,7 +203,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
 
         // execute bootstrap commands, if needed
         final BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
-        cmd.execute(context);
+        boolean requireRestart = cmd.execute(context);
 
         boolean shouldInstall = false;
 
@@ -263,24 +263,24 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             List<Bundle> installed = new LinkedList<Bundle>();
 
             // get all bundles from the startup location and install them
-            boolean requireRestart = installBundles(slingStartupDir, context, bySymbolicName, installed);
+            requireRestart |= installBundles(slingStartupDir, context, bySymbolicName, installed);
 
             // start all the newly installed bundles (existing bundles are not started if they are stopped)
             startBundles(installed);
 
             // mark everything installed
             markInstalled(context, slingStartupDir);
+        }
 
-            // due to the upgrade of a framework extension bundle, the framework
-            // has to be restarted. For this reason, set the target start level
-            // to a negative value.
-            if (requireRestart) {
-                logger.log(
-                    Logger.LOG_INFO,
-                    "Framework extension(s) have been updated, restarting framework after startup has completed");
+        // due to the upgrade of a framework extension bundle, the framework
+        // has to be restarted. For this reason, set the target start level
+        // to a negative value.
+        if (requireRestart) {
+            logger.log(
+                Logger.LOG_INFO,
+                "Framework extension(s) have been updated, restarting framework after startup has completed");
 
-                targetStartLevel = -1;
-            }
+            targetStartLevel = -1;
         }
     }
 
