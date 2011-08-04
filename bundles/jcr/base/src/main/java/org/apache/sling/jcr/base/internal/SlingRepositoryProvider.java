@@ -29,7 +29,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -37,8 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The repository provider listens for javax.jcr.Repository services and wraps
- * them as SlingRepository services (if required)
+ * The repository provider listens for javax.jcr.Repository services and
+ * registers a web console plugin
  */
 @Component(specVersion="1.1")
 @Reference(name="repository",
@@ -47,12 +46,10 @@ import org.slf4j.LoggerFactory;
             cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
 public class SlingRepositoryProvider {
 
-    private static final String SLING_REPOSITORY = SlingRepository.class.getName();
-
     /** The logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final Map<Long, RepositoryRegistration> registrations = new HashMap<Long, RepositoryRegistration>();
+    private final Map<Long, ServiceRegistration> registrations = new HashMap<Long, ServiceRegistration>();
 
     private BundleContext bundleContext;
 
@@ -70,7 +67,7 @@ public class SlingRepositoryProvider {
             this.pendingServices.clear();
         }
         for(final PendingService reg : copyList) {
-            this.registerRepository(this.bundleContext, reg.repository, reg.properties);
+            this.registerPrinter(this.bundleContext, reg.repository, reg.properties);
         }
     }
 
@@ -83,52 +80,17 @@ public class SlingRepositoryProvider {
         }
     }
 
-    /**
-     * Check whether this service already provides the SlingRepository service.
-     */
-    private boolean isSlingRepository(final Map<String, Object> props) {
-        final String[] interfaces = (String[]) props.get(Constants.OBJECTCLASS);
-        if ( interfaces != null ) { // sanity check
-            for(final String name : interfaces) {
-                if ( SLING_REPOSITORY.equals(name) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void registerRepository(final BundleContext processContext,
-            final Repository repo,
-            final Map<String, Object> props) {
-        logger.debug("Providing new SlingRepository based on {} : {}", repo, props);
-        final Long key = (Long)props.get(Constants.SERVICE_ID);
-        final RepositoryRegistration reg = new RepositoryRegistration();
-        reg.wrapper = new SlingRepositoryWrapper(repo, processContext);
-        reg.registration = processContext.registerService(SLING_REPOSITORY, reg.wrapper, null);
-        synchronized ( this.registrations ) {
-            this.registrations.put(key, reg);
-        }
-    }
-
     private void registerPrinter(final BundleContext processContext,
             final Repository repo,
             final Map<String, Object> props) {
         logger.info("Providing new configuration printer for {} : {}", repo, props);
         final Long key = (Long)props.get(Constants.SERVICE_ID);
-        RepositoryRegistration reg;
-        synchronized ( this.registrations ) {
-            reg = this.registrations.get(key);
-        }
-        if ( reg == null ) {
-            reg = new RepositoryRegistration();
-            synchronized ( this.registrations ) {
-                this.registrations.put(key, reg);
-            }
-        }
         final RepositoryPrinter printer = new RepositoryPrinter(repo, props);
-        reg.printer = processContext.registerService(RepositoryPrinter.class.getName(),
+        final ServiceRegistration reg = processContext.registerService(RepositoryPrinter.class.getName(),
                 printer, printer.getProperties());
+        synchronized ( this.registrations ) {
+            this.registrations.put(key, reg);
+        }
     }
 
     /**
@@ -143,9 +105,6 @@ public class SlingRepositoryProvider {
             }
         }
         if ( processContext != null ) {
-            if ( !isSlingRepository(props) ) {
-                this.registerRepository(processContext, repo, props);
-            }
             this.registerPrinter(processContext, repo, props);
         }
     }
@@ -158,19 +117,12 @@ public class SlingRepositoryProvider {
             this.pendingServices.remove(new PendingService(repo, props));
         }
         final Long key = (Long)props.get(Constants.SERVICE_ID);
-        final RepositoryRegistration slingRepo;
+        final ServiceRegistration reg;
         synchronized ( this.registrations ) {
-            slingRepo = this.registrations.remove(key);
+            reg = this.registrations.remove(key);
         }
-        if ( slingRepo != null ) {
-            if ( slingRepo.wrapper != null ) {
-                logger.debug("Unregistering SlingRepository for {} : {}", repo, props);
-                slingRepo.wrapper.dispose();
-                slingRepo.registration.unregister();
-            }
-            if ( slingRepo.printer != null ) {
-                slingRepo.printer.unregister();
-            }
+        if ( reg != null ) {
+            reg.unregister();
         }
     }
 
@@ -204,14 +156,5 @@ public class SlingRepositoryProvider {
             }
             return this.key == ((PendingService)obj).key;
         }
-    }
-
-    /**
-     * Data class for a registration.
-     */
-    private static final class RepositoryRegistration {
-        public ServiceRegistration registration;
-        public ServiceRegistration printer;
-        public SlingRepositoryWrapper wrapper;
     }
 }
