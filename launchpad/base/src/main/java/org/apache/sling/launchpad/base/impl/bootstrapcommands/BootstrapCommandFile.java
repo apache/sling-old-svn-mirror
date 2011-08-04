@@ -80,11 +80,13 @@ public class BootstrapCommandFile {
         return result;
     }
 
-    /** Execute commands if needed, and store execution timestamp
-     *  @return number of commands executed */
-    public int execute(BundleContext ctx) throws IOException {
-        int count = 0;
-        if(anythingToExecute(ctx)) {
+    /**
+     * Execute commands if needed, and store execution timestamp
+     * @return If system bundle needs a restart.
+     */
+    public boolean execute(BundleContext ctx) throws IOException {
+        boolean needsRestart = false;
+        if (anythingToExecute(ctx)) {
             InputStream is = null;
             try {
                 is = new FileInputStream(commandFile);
@@ -92,8 +94,7 @@ public class BootstrapCommandFile {
                 for(Command cmd : cmds) {
                     try {
                         logger.log(Logger.LOG_DEBUG, "Executing command: " + cmd);
-                        cmd.execute(logger, ctx);
-                        count++;
+                        needsRestart |= cmd.execute(logger, ctx);
                     } catch(Exception e) {
                         logger.log(Logger.LOG_WARNING, "Exception in command execution (" + cmd + ") :" + e);
                     }
@@ -114,7 +115,7 @@ public class BootstrapCommandFile {
                 logger.log(Logger.LOG_WARNING, "IOException while storing timestamp", ioe);
             }
         }
-        return count;
+        return needsRestart;
     }
 
     /** Parse commands from supplied input stream.

@@ -24,6 +24,7 @@ import org.apache.felix.framework.Logger;
 import org.osgi.framework.BundleContext;
 
 interface Command {
+
     @SuppressWarnings("serial")
     static class ParseException extends IOException {
         ParseException(String reason) {
@@ -36,7 +37,10 @@ interface Command {
      * @throws ParseException if we know the command but syntax is wrong
      */
     Command parse(String commandLine) throws ParseException;
-    
-    /** Execute this command */
-    void execute(Logger logger, BundleContext ctx) throws Exception;
+
+    /**
+     * Execute this command.
+     * @return Return true if system bundle needs a restart.
+     */
+    boolean execute(Logger logger, BundleContext ctx) throws Exception;
 }
