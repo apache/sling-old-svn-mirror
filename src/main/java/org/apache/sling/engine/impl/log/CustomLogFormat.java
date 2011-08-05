@@ -184,8 +184,8 @@ class CustomLogFormat {
                 param = new LocalIPParameter();
                 break;
 
-            case 'b': // no supported fall through to default
-            case 'B': // no supported fall through to default
+            case 'b':
+            case 'B':
                 param = new ByteCountParameter((char) c);
                 break;
 
