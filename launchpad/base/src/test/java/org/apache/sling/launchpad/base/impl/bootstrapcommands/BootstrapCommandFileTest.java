@@ -18,16 +18,14 @@
  */
 package org.apache.sling.launchpad.base.impl.bootstrapcommands;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.felix.framework.Logger;
@@ -64,6 +62,8 @@ public class BootstrapCommandFileTest {
             allowing(b1).getVersion();
             will(returnValue(new Version("1.0.0")));
             allowing(b1).uninstall();
+            allowing(b1).getHeaders();
+            will(returnValue(new Hashtable()));
         }});
         final Bundle [] bundles = { b1 };
 
@@ -104,7 +104,7 @@ public class BootstrapCommandFileTest {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
         assertTrue("Expecting anythingToExecute true for existing file",
                 bcf.anythingToExecute(bundleContext));
-        assertEquals("Expecting two commands to be executed", 2, bcf.execute(bundleContext));
+        assertEquals("Expecting no need to restart", false, bcf.execute(bundleContext));
         assertFalse("Expecting anythingToExecute false after execution",
                 bcf.anythingToExecute(bundleContext));
     }
@@ -138,13 +138,16 @@ public class BootstrapCommandFileTest {
             + "\n"
             + "# another comment\n"
             + "uninstall symbolicname1 1.0\n"
+            + "\n"
+            + "# another comment\n"
+            + "uninstall symbolicname1 1.0 fail\n"
             ;
         try {
             bcf.parse(new ByteArrayInputStream(cmdString.getBytes()));
             fail("Expecting IOException for syntax error");
         } catch(IOException ioe) {
             assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line",
-                    ioe.getMessage().contains("only_one_field"));
+                    ioe.getMessage().contains("fail"));
         }
     }
 

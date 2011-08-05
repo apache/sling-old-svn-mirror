@@ -20,6 +20,8 @@ package org.apache.sling.launchpad.base.impl.bootstrapcommands;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Hashtable;
+
 import org.apache.felix.framework.Logger;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -53,6 +55,8 @@ public class UninstallBundleCommandTest {
             allowing(b[0]).getVersion();
             will(returnValue(new Version("1.0.0")));
             exactly(1).of(b[0]).uninstall();
+            allowing(b[0]).getHeaders();
+            will(returnValue(new Hashtable()));
         }});
 
         // b1 is not in version range, not uninstalled
@@ -61,6 +65,8 @@ public class UninstallBundleCommandTest {
             will(returnValue("testbundle"));
             allowing(b[1]).getVersion();
             will(returnValue(new Version("2.0.0")));
+            allowing(b[1]).getHeaders();
+            will(returnValue(new Hashtable()));
         }});
 
         // b2 has different symbolic name, not uninstalled
@@ -69,6 +75,8 @@ public class UninstallBundleCommandTest {
             will(returnValue("otherbundle"));
             allowing(b[2]).getVersion();
             will(returnValue(new Version("1.0.0")));
+            allowing(b[2]).getHeaders();
+            will(returnValue(new Hashtable()));
         }});
 
         bundleContext = mockery.mock(BundleContext.class);
