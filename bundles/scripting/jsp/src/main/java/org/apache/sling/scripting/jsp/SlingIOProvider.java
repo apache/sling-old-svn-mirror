@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
  */
 class SlingIOProvider implements IOProvider {
 
+    private static final String WEB_INF_TAGS = "/WEB-INF/tags";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
@@ -165,11 +167,19 @@ class SlingIOProvider implements IOProvider {
         ResourceResolver resolver = requestResourceResolver.get();
         if (resolver != null) {
             try {
-                Resource resource = resolver.getResource(cleanPath(path));
+                final String cleanedPath = cleanPath(path, false);
+                final boolean startsWithWebInfTags = cleanedPath.startsWith(WEB_INF_TAGS);
+
+                Resource resource = resolver.getResource(startsWithWebInfTags ? cleanedPath.substring(WEB_INF_TAGS.length()) : cleanedPath);
                 if (resource != null) {
                     Iterator<Resource> entries = resolver.listChildren(resource);
                     while (entries.hasNext()) {
-                        paths.add(entries.next().getPath());
+                        final String entryPath = entries.next().getPath();
+                        if (startsWithWebInfTags) {
+                            paths.add(WEB_INF_TAGS + entryPath);
+                        } else {
+                            paths.add(entryPath);
+                        }
                     }
                 }
             } catch (SlingException se) {
@@ -184,7 +194,7 @@ class SlingIOProvider implements IOProvider {
     private Resource getResourceInternal(String path) throws SlingException {
         ResourceResolver resolver = requestResourceResolver.get();
         if (resolver != null) {
-            return resolver.getResource(cleanPath(path));
+            return resolver.getResource(cleanPath(path, true));
         }
 
         return null;
@@ -192,13 +202,17 @@ class SlingIOProvider implements IOProvider {
 
     // ---------- internal -----------------------------------------------------
 
-    private String cleanPath(String path) {
+    private String cleanPath(String path, boolean removeWebInfTags) {
         // replace backslash by slash
         path = path.replace('\\', '/');
 
         // cut off trailing slash
         while (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
+        }
+
+        if (removeWebInfTags && path.startsWith(WEB_INF_TAGS)) {
+            path = path.substring(WEB_INF_TAGS.length());
         }
 
         return path;
