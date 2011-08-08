@@ -18,7 +18,10 @@
  */
 package org.apache.sling.launchpad.base.impl.bootstrapcommands;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -59,11 +62,11 @@ public class BootstrapCommandFileTest {
         mockery.checking(new Expectations() {{
             allowing(b1).getSymbolicName();
             will(returnValue("somebundle"));
+            allowing(b1).getHeaders();
+            will(returnValue(new Hashtable<String, String>()));
             allowing(b1).getVersion();
             will(returnValue(new Version("1.0.0")));
             allowing(b1).uninstall();
-            allowing(b1).getHeaders();
-            will(returnValue(new Hashtable()));
         }});
         final Bundle [] bundles = { b1 };
 
@@ -74,6 +77,8 @@ public class BootstrapCommandFileTest {
             will(returnValue(dataFile));
             allowing(bundleContext).getBundles();
             will(returnValue(bundles));
+            allowing(bundleContext).getServiceReference(with(any(String.class)));
+            will(returnValue(null));
         }});
 
         cmdFile = File.createTempFile(getClass().getSimpleName(), "cmd");
@@ -104,7 +109,7 @@ public class BootstrapCommandFileTest {
         final BootstrapCommandFile bcf = new BootstrapCommandFile(logger, cmdFile);
         assertTrue("Expecting anythingToExecute true for existing file",
                 bcf.anythingToExecute(bundleContext));
-        assertEquals("Expecting no need to restart", false, bcf.execute(bundleContext));
+        assertEquals("Expecting two commands to be executed", false, bcf.execute(bundleContext));
         assertFalse("Expecting anythingToExecute false after execution",
                 bcf.anythingToExecute(bundleContext));
     }
@@ -140,14 +145,14 @@ public class BootstrapCommandFileTest {
             + "uninstall symbolicname1 1.0\n"
             + "\n"
             + "# another comment\n"
-            + "uninstall symbolicname1 1.0 fail\n"
+            + "uninstall three args 1.0\n"
             ;
         try {
             bcf.parse(new ByteArrayInputStream(cmdString.getBytes()));
             fail("Expecting IOException for syntax error");
         } catch(IOException ioe) {
             assertTrue("Exception message (" + ioe.getMessage() + ") should contain command line",
-                    ioe.getMessage().contains("fail"));
+                    ioe.getMessage().contains("three args"));
         }
     }
 
