@@ -158,28 +158,28 @@ class ExternalServletContextWrapper implements ServletContext {
 
         public void forward(ServletRequest request, ServletResponse response) throws ServletException,
                 IOException {
-            JspFactory saveDefaultFactory = JspFactory.getDefaultFactory();
-            if (saveDefaultFactory instanceof JspFactoryHandler) {
+            JspFactory jspFactory = JspFactory.getDefaultFactory();
+            if (jspFactory instanceof JspFactoryHandler) {
                 pageContext.getOut().flush();
-                JspFactory.setDefaultFactory(((JspFactoryHandler)saveDefaultFactory).getOriginal());
+                final int count = ((JspFactoryHandler)jspFactory).resetUsage();
                 try {
                     delegate.forward(request, response);
                 } finally {
-                    JspFactory.setDefaultFactory(saveDefaultFactory);
+                    ((JspFactoryHandler)jspFactory).setUsage(count);
                 }
             }
         }
 
         public void include(ServletRequest request, ServletResponse response) throws ServletException,
                 IOException {
-            JspFactory saveDefaultFactory = JspFactory.getDefaultFactory();
-            if (saveDefaultFactory instanceof JspFactoryHandler) {
+            JspFactory jspFactory = JspFactory.getDefaultFactory();
+            if (jspFactory instanceof JspFactoryHandler) {
                 pageContext.getOut().flush();
-                JspFactory.setDefaultFactory(((JspFactoryHandler)saveDefaultFactory).getOriginal());
+                final int count = ((JspFactoryHandler)jspFactory).resetUsage();
                 try {
                     delegate.include(request, response);
                 } finally {
-                    JspFactory.setDefaultFactory(saveDefaultFactory);
+                    ((JspFactoryHandler)jspFactory).setUsage(count);
                 }
             }
 

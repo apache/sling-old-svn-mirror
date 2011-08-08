@@ -150,8 +150,14 @@ public final class JspRuntimeContext {
             JspRuntimeContext.USE_OWN_FACTORY.set(count - 1);
         }
 
-        public JspFactory getOriginal() {
-            return original;
+        public int resetUsage() {
+            final Integer count = JspRuntimeContext.USE_OWN_FACTORY.get();
+            JspRuntimeContext.USE_OWN_FACTORY.set(0);
+            return count;
+        }
+
+        public void setUsage(int count) {
+            JspRuntimeContext.USE_OWN_FACTORY.set(count);
         }
     }
 
