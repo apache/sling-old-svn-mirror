@@ -95,6 +95,20 @@ public class InstallableResource {
      */
     public static final String INSTALLATION_HINT = "installation.hint";
 
+    /**
+     * Optional parameter in the dictionary if a resource (not a dict) is installed.
+     * If this parameter is specified, the installer uses the URI to get the input
+     * stream of the resource! Usually the installer copies the resource into the
+     * file system and uses this copy. To optimize this, if the URI of the resource
+     * is always available (like a file URI), this property can be used to avoid
+     * copying the resource.
+     * It is only evaluated if the resource type is either unknown (null) or
+     * {@link #TYPE_FILE} and a digest for the resource is delivered.
+     * The value of this property is a string.
+     * @since 3.2.2
+     */
+    public static final String RESOURCE_URI_HINT = "resource.uri.hint";
+
     /** Default resource priority */
     public static final int DEFAULT_PRIORITY = 100;
 

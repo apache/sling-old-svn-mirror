@@ -54,13 +54,21 @@ public class InternalResource extends InstallableResource {
         // an input stream or a dictionary
         InputStream is = resource.getInputStream();
         Dictionary<String, Object> dict = resource.getDictionary();
-        String type = resource.getType();
+
         // Handle deprecated types and map them to new types
+        String type = resource.getType();
         if ( InstallableResource.TYPE_BUNDLE.equals(type) ) {
             type = InstallableResource.TYPE_FILE;
         } else if ( InstallableResource.TYPE_CONFIG.equals(type) ) {
             type = InstallableResource.TYPE_PROPERTIES;
         }
+
+        // check for optional uri (only if type is file and digest is available)
+        final String resourceUri = (dict != null
+                                    && (type == null || InstallableResource.TYPE_FILE.equals(type))
+                                    && resource.getDigest() != null
+                                    && resource.getDigest().length() > 0) ?
+                              (String)dict.get(InstallableResource.RESOURCE_URI_HINT) : null;
 
         if ( is != null &&
              (InstallableResource.TYPE_PROPERTIES.equals(type) ||
@@ -80,18 +88,22 @@ public class InternalResource extends InstallableResource {
             // we always compute a digest
             digest = FileDataStore.computeDigest(dict);
         } else {
-            final String url = scheme + ':' + resource.getId();
-            // if input stream is not null, file is expected!
-            dataFile = FileDataStore.SHARED.createNewDataFile(is,
-                    url,
-                    resource.getDigest(),
-                    resource.getType());
-            type = (type != null ? type : InstallableResource.TYPE_FILE);
-            if (resource.getDigest() != null && resource.getDigest().length() > 0) {
+            if ( resourceUri != null ) {
                 digest = resource.getDigest();
             } else {
-                digest = FileDataStore.computeDigest(dataFile);
-                FileDataStore.SHARED.updateDigestCache(url, digest);
+                final String url = scheme + ':' + resource.getId();
+                // if input stream is not null, file is expected!
+                dataFile = FileDataStore.SHARED.createNewDataFile(is,
+                        url,
+                        resource.getDigest(),
+                        resource.getType());
+                type = (type != null ? type : InstallableResource.TYPE_FILE);
+                if (resource.getDigest() != null && resource.getDigest().length() > 0) {
+                    digest = resource.getDigest();
+                } else {
+                    digest = FileDataStore.computeDigest(dataFile);
+                    FileDataStore.SHARED.updateDigestCache(url, digest);
+                }
             }
         }
         return new InternalResource(scheme,
@@ -101,14 +113,18 @@ public class InternalResource extends InstallableResource {
                 type,
                 digest,
                 resource.getPriority(),
-                dataFile);
+                dataFile,
+                resourceUri);
     }
 
     /** The unique resource url. */
     private final String url;
 
     /** The data file (if copied) */
-    private File dataFile;
+    private final File dataFile;
+
+    /** The resource uri */
+    private final String resourceUri;
 
     public InternalResource(
             final String scheme,
@@ -118,10 +134,12 @@ public class InternalResource extends InstallableResource {
             final String type,
             final String digest,
             final Integer priority,
-            final File dataFile) {
+            final File dataFile,
+            final String resourceUri) {
         super(id, is, dict, digest, type, priority);
         this.url = scheme + ':' + id;
         this.dataFile = dataFile;
+        this.resourceUri = resourceUri;
     }
 
     /** The unique url of the resource. */
@@ -152,6 +170,13 @@ public class InternalResource extends InstallableResource {
      */
     public File getPrivateCopyOfFile() throws IOException {
         return this.dataFile;
+    }
+
+    /**
+     * Return the resource uri (or null)
+     */
+    public String getResourceUri() {
+        return this.resourceUri;
     }
 
     /**

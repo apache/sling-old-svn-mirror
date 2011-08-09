@@ -116,22 +116,14 @@ public class PersistentResourceList {
     private void updateCache() {
         for(final EntityResourceList group : this.data.values()) {
             for(final RegisteredResource rr : group.getResources()) {
-                try {
-                    if ( rr.getInputStream() != null ) {
-                        FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
-                    }
-                } catch (final IOException ioe) {
-                    // we just ignore this
+                if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
+                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
                 }
             }
         }
         for(final RegisteredResource rr : this.untransformedResources ) {
-            try {
-                if ( rr.getInputStream() != null ) {
-                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
-                }
-            } catch (final IOException ioe) {
-                // we just ignore this
+            if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
+                FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
             }
         }
     }
