@@ -705,7 +705,8 @@ public class OsgiInstallerImpl
                                             (data.getDictionary() != null ? InstallableResource.TYPE_PROPERTIES : InstallableResource.TYPE_FILE),
                                             data.getDigest(result.getURL(), result.getDigest()),
                                             result.getPriority(),
-                                            data.getDataFile());
+                                            data.getDataFile(),
+                                            null);
                                     final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
                                     final TransformationResult transRes = new TransformationResult();
                                     transRes.setId(entityId);
@@ -764,7 +765,8 @@ public class OsgiInstallerImpl
                                         (data.getDictionary() != null ? InstallableResource.TYPE_PROPERTIES : InstallableResource.TYPE_FILE),
                                         data.getDigest(result.getURL(), result.getDigest()),
                                         result.getPriority(),
-                                        data.getDataFile());
+                                        data.getDataFile(),
+                                        null);
                                 final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
                                 final TransformationResult transRes = new TransformationResult();
                                 transRes.setId(entityId);

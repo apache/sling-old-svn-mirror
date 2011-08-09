@@ -24,6 +24,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -47,7 +49,7 @@ public class RegisteredResourceImpl
     private static final long serialVersionUID = 6L;
 
     /** Serialization version. */
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
 
     /** The resource url. */
     private String url;
@@ -66,6 +68,8 @@ public class RegisteredResourceImpl
 
 	/** Additional attributes. */
 	private final Map<String, Object> attributes = new HashMap<String, Object>();
+
+	private String dataUri;
 
 	private File dataFile;
 
@@ -105,6 +109,7 @@ public class RegisteredResourceImpl
         out.writeInt(priority);
         out.writeObject(state.toString());
         out.writeLong(this.lastChange);
+        out.writeObject(this.dataUri);
     }
 
     /**
@@ -133,6 +138,9 @@ public class RegisteredResourceImpl
         } else {
             this.lastChange = 0;
         }
+        if ( version > 2 ) {
+            this.dataUri = (String)in.readObject();
+        }
     }
 
     /**
@@ -143,6 +151,7 @@ public class RegisteredResourceImpl
     throws IOException {
         final int schemePos = input.getURL().indexOf(':');
         return new RegisteredResourceImpl(input.getId(),
+                input.getResourceUri(),
                 input.getPrivateCopyOfFile(),
                 input.getPrivateCopyOfDictionary(),
                 input.getType(),
@@ -158,6 +167,7 @@ public class RegisteredResourceImpl
 	 * The only exception is the digest!
 	 */
 	private RegisteredResourceImpl(final String id,
+	        final String resourceUri,
 	        final File file,
 	        final Dictionary<String, Object> dict,
 	        final String type,
@@ -165,6 +175,7 @@ public class RegisteredResourceImpl
 	        final int priority,
 	        final String scheme) {
         this.url = scheme + ':' + id;
+        this.dataUri = resourceUri;
         this.dataFile = file;
         this.dictionary = dict;
         this.resourceType = type;
@@ -210,6 +221,10 @@ public class RegisteredResourceImpl
 	    return sb.toString();
 	}
 
+	public boolean hasDataFile() {
+	    return this.dataFile != null;
+	}
+
 	/**
 	 * Remove the data file
 	 */
@@ -217,6 +232,7 @@ public class RegisteredResourceImpl
         if ( this.dataFile != null && this.dataFile.exists() ) {
             dataFile.delete();
         }
+        this.dataUri = null;
 	}
 
 	/**
@@ -241,6 +257,14 @@ public class RegisteredResourceImpl
 	 * @see org.apache.sling.installer.api.tasks.RegisteredResource#getInputStream()
 	 */
 	public InputStream getInputStream() throws IOException {
+	    if ( this.dataUri != null ) {
+	        try {
+    	        final URI uri = new URI(this.dataUri);
+    	        return uri.toURL().openStream();
+	        } catch (final URISyntaxException use) {
+	            throw (IOException)new IOException().initCause(use);
+	        }
+	    }
 	    if (this.dataFile != null && this.dataFile.exists() ) {
 	        return new BufferedInputStream(new FileInputStream(this.dataFile));
 	    }
@@ -492,6 +516,7 @@ public class RegisteredResourceImpl
         final int schemePos = this.url.indexOf(':');
         final RegisteredResourceImpl rr = new RegisteredResourceImpl(
                 this.url.substring(schemePos + 1),
+                this.dataUri,
                 this.dataFile,
                 this.dictionary,
                 this.resourceType,

@@ -129,19 +129,19 @@ public class Installer
             final InputStream is = new FileInputStream(file);
             final String digest = String.valueOf(file.lastModified());
             // if this is a bundle check for start level directory!
-            Dictionary<String, Object> dict = null;
+            final Dictionary<String, Object> dict = new Hashtable<String, Object>();
             if ( file.getName().endsWith(".jar") || file.getName().endsWith(".war") ) {
                 final String parentName = file.getParentFile().getName();
                 try {
                     final int startLevel = Integer.valueOf(parentName);
                     if ( startLevel > 0 ) {
-                        dict = new Hashtable<String, Object>();
                         dict.put(InstallableResource.BUNDLE_START_LEVEL, startLevel);
                     }
                 } catch (NumberFormatException nfe) {
                     // ignore this
                 }
             }
+            dict.put(InstallableResource.RESOURCE_URI_HINT, file.toURI().toString());
             return new InstallableResource(file.getAbsolutePath(), is, dict, digest,
                 null, null);
         } catch (IOException io) {
