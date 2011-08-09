@@ -54,6 +54,7 @@ if ( resource )
             id = id.replace(/\(/g, '_');// due to the css selectors
             id = id.replace(/\)/g, '_');// due to the css selectors
             id = id.replace(/\s/g, '_');// due to the css selectors
+            id = id.replace(/=/g, '_');// due to the css selectors
             %>
             <li>
                 <p id="<%= id %>">
