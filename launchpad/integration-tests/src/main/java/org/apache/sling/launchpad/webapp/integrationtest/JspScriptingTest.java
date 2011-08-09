@@ -78,6 +78,27 @@ public class JspScriptingTest extends JspTestBase {
         }
     }
 
+    public void testTagFile() throws Exception {
+        String tagFile = null;
+        String tagUsingScript = null;
+        try {
+            testClient.mkdirs(WEBDAV_BASE_URL, "/apps/testing/tags");
+            tagFile = uploadTestScript("/apps/testing/tags", "example.tag", "example.tag");
+            tagUsingScript = uploadTestScript(unstructuredNode.scriptPath, "withtag.jsp", "html.jsp");
+
+            final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>Hello, Sling User</h1>"));
+
+        } finally {
+            if (tagFile != null) {
+                testClient.delete(tagFile);
+            }
+            if (tagUsingScript != null) {
+                testClient.delete(tagUsingScript);
+            }
+        }
+    }
+
     /* Verify that overwriting a JSP script changes the output within a reasonable time 
      * (might not be immediate as there's some observation and caching involved) */
     public void testChangingJsp() throws Exception {
