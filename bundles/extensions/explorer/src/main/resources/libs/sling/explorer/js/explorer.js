@@ -324,6 +324,7 @@ path_2_id = function( path ) {
     id = id.replace(/\(/g, '_');// due to the css selectors
     id = id.replace(/\)/g, '_');// due to the css selectors
     id = id.replace(/\s/g, '_');// due to the css selectors
+    id = id.replace(/=/g, '_');// due to the css selectors
     return id;
 }
 
