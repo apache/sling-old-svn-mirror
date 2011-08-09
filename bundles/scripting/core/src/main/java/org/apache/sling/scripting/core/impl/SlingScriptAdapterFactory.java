@@ -19,9 +19,9 @@ package org.apache.sling.scripting.core.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -172,8 +172,8 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     protected void activate(ComponentContext context) {
         this.bundleContext = context.getBundleContext();
 
-        this.genericBindingsValuesProviders = new HashMap<Object, BindingsValuesProvider>();
-        this.langBindingsValuesProviders = new HashMap<String, Map<Object, BindingsValuesProvider>>();
+        this.genericBindingsValuesProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
+        this.langBindingsValuesProviders = new ConcurrentHashMap<String, Map<Object, BindingsValuesProvider>>();
 
         ServiceTrackerCustomizer customizer = new BindingsValuesProviderCustomizer();
 
@@ -208,10 +208,10 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     }
 
     private Collection<BindingsValuesProvider> getBindingsValuesProviders(ScriptEngineFactory scriptEngineFactory) {
-        List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
+        final List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
         results.addAll(genericBindingsValuesProviders.values());
-        for (String name : scriptEngineFactory.getNames()) {
-            Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
+        for (final String name : scriptEngineFactory.getNames()) {
+            final Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
             if (langProviders != null) {
                 results.addAll(langProviders.values());
             }
@@ -222,33 +222,35 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     private class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
 
         @SuppressWarnings("unchecked")
-        public Object addingService(ServiceReference ref) {
-            String engineName = (String) ref.getProperty(ScriptEngine.NAME);
-            Object serviceId = ref.getProperty(Constants.SERVICE_ID);
+        public Object addingService(final ServiceReference ref) {
+            final String engineName = (String) ref.getProperty(ScriptEngine.NAME);
+            final Object serviceId = ref.getProperty(Constants.SERVICE_ID);
             Object service = bundleContext.getService(ref);
-            if (service instanceof Map) {
-                service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
-            }
-            if (engineName == null || ANY_ENGINE.contains(engineName.toUpperCase())) {
-                genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
-            } else {
-                Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
-                if (langProviders == null) {
-                    langProviders = new HashMap<Object, BindingsValuesProvider>();
-                    langBindingsValuesProviders.put(engineName, langProviders);
+            if ( service != null ) {
+                if (service instanceof Map) {
+                    service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
                 }
+                if (engineName == null || ANY_ENGINE.contains(engineName.toUpperCase())) {
+                    genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
+                } else {
+                    Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
+                    if (langProviders == null) {
+                        langProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
+                        langBindingsValuesProviders.put(engineName, langProviders);
+                    }
 
-                langProviders.put(serviceId, (BindingsValuesProvider) service);
+                    langProviders.put(serviceId, (BindingsValuesProvider) service);
+                }
             }
             return service;
         }
 
-        public void modifiedService(ServiceReference ref, Object service) {
+        public void modifiedService(final ServiceReference ref, final Object service) {
             removedService(ref, service);
             addingService(ref);
         }
 
-        public void removedService(ServiceReference ref, Object service) {
+        public void removedService(final ServiceReference ref, final Object service) {
             Object serviceId = ref.getProperty(Constants.SERVICE_ID);
             if (genericBindingsValuesProviders.remove(serviceId) == null) {
                 for (Map<Object, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
