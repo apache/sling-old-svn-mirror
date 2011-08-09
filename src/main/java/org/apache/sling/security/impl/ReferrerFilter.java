@@ -39,18 +39,19 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.sling.SlingFilter;
-import org.apache.felix.scr.annotations.sling.SlingFilterScope;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SlingFilter(order=-1500000000,scope=SlingFilterScope.REQUEST,metatype=true,
-        description="%referrer.description",
+@Component(metatype=true, description="%referrer.description",
         label="%referrer.name")
+@Property(name="pattern", value="/.*", propertyPrivate=true)
+@Service(value=Filter.class)
 public class ReferrerFilter implements Filter {
 
     /** Logger. */
