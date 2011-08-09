@@ -25,6 +25,7 @@ import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.service.startlevel.StartLevel;
 
 /** Update a bundle from a RegisteredResource. Creates
  *  a bundleStartTask to restart the bundle if it was
@@ -42,6 +43,20 @@ public class BundleUpdateTask extends AbstractInstallTask {
                             final BundleTaskCreator creator) {
         super(r);
         this.creator = creator;
+    }
+
+    /**
+     * Check if the bundle is active.
+     * This is true if the bundle has the active state or of the bundle
+     * is in the starting state and has the lazy activation policy.
+     * Or if the bundle is a fragment, it's considered active as well
+     */
+    protected boolean isBundleActive(final Bundle b) {
+        if ( BundleStartTask.isBundleActive(b) ) {
+            return true;
+        }
+        final StartLevel startLevelService = this.creator.getStartLevel();
+        return startLevelService.isBundlePersistentlyStarted(b);
     }
 
     /**
@@ -72,7 +87,7 @@ public class BundleUpdateTask extends AbstractInstallTask {
     	try {
             // If the bundle is active before the update - restart it once updated, but
             // in sequence, not right now
-            final boolean reactivate = BundleStartTask.isBundleActive(b);
+            final boolean reactivate = this.isBundleActive(b);
             b.stop();
 
             b.update(getResource().getInputStream());
