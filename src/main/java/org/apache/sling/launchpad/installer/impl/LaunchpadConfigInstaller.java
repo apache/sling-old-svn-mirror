@@ -16,7 +16,10 @@
  */
 package org.apache.sling.launchpad.installer.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashSet;
@@ -62,13 +65,26 @@ public class LaunchpadConfigInstaller {
                 }
                 if ( !checkPath(resourceProvider, installables, path, resourceType) ) {
                     logger.info("Launchpad {} will be installed: {}", resourceType, path);
+                    final URL url = resourceProvider.getResource(path);
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
                         dict = new Hashtable<String, Object>();
                         dict.put(InstallableResource.INSTALLATION_HINT, hint);
+                        try {
+                            dict.put(InstallableResource.RESOURCE_URI_HINT, url.toURI().toString());
+                        } catch (final URISyntaxException e) {
+                            // we just ignore this
+                        }
                     }
+                    long lastModified = -1;
+                    try {
+                        lastModified = url.openConnection().getLastModified();
+                    } catch (final IOException e) {
+                        // we ignore this
+                    }
+                    final String digest = (lastModified > 0 ? String.valueOf(lastModified) : null);
                     final InputStream stream = resourceProvider.getResourceAsStream(path);
-                    installables.add(new InstallableResource(path, stream, dict, null, resourceType, null));
+                    installables.add(new InstallableResource(path, stream, dict, digest, resourceType, null));
                     count++;
                 }
             }
