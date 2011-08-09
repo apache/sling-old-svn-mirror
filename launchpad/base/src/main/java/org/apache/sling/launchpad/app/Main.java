@@ -435,8 +435,8 @@ public class Main extends Thread implements Notifiable {
             sl.shutdownServer();
             System.exit(0);
         } else if (commandLineArgs.remove(ControlListener.COMMAND_STATUS) != null) {
-            sl.statusServer();
-            System.exit(0);
+            final int status = sl.statusServer();
+            System.exit(status);
         } else if (commandLineArgs.remove("start") != null) {
             sl.listen();
         }

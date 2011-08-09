@@ -124,8 +124,8 @@ class ControlListener implements Runnable {
      * Implements the client side of the control connection sending the command
      * to check whether Sling is active.
      */
-    void statusServer() {
-        sendCommand(COMMAND_STATUS);
+    int statusServer() {
+        return sendCommand(COMMAND_STATUS);
     }
 
     // ---------- Runnable interface
@@ -211,7 +211,15 @@ class ControlListener implements Runnable {
         return null;
     }
 
-    private void sendCommand(String command) {
+    /**
+     * Sends the given command to the server indicated by the configured
+     * socket address and logs the reply.
+     *
+     * @param command The command to send
+     *
+     * @return A code indicating success of sending the command.
+     */
+    private int sendCommand(String command) {
         if (socketAddress != null) {
             Socket socket = null;
             try {
@@ -221,11 +229,14 @@ class ControlListener implements Runnable {
                 String result = readLine(socket);
                 Main.info("Sent '" + command + "' to " + socketAddress + ": "
                     + result, null);
+                return 0; // LSB code for everything's fine
             } catch (ConnectException ce) {
                 Main.info("No Sling running at " + socketAddress, null);
+                return 3; // LSB code for programm not running
             } catch (IOException ioe) {
                 Main.error("Failed sending '" + command + "' to "
                     + socketAddress, ioe);
+                return 1; // LSB code for programm dead
             } finally {
                 if (socket != null) {
                     try {
@@ -236,6 +247,7 @@ class ControlListener implements Runnable {
             }
         } else {
             Main.info("No socket address to send '" + command + "' to", null);
+            return 4; // LSB code for unknown status
         }
     }
 
