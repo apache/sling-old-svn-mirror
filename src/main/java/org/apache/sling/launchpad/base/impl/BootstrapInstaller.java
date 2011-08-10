@@ -34,7 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.JarInputStream;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
@@ -42,12 +42,9 @@ import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.bootstrapcommands.BootstrapCommandFile;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.startlevel.StartLevel;
@@ -61,7 +58,7 @@ import org.osgi.service.startlevel.StartLevel;
  * to 1 and started. Any bundle already installed is not installed again and
  * will also not be started here.
  */
-class BootstrapInstaller implements BundleActivator, FrameworkListener {
+class BootstrapInstaller {
 
     /**
      * The Bundle location scheme (protocol) used for bundles installed by this
@@ -146,32 +143,14 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      */
     private final LaunchpadContentProvider resourceProvider;
 
-    private BundleContext bundleContext;
+    /** The bundle context. */
+    private final BundleContext bundleContext;
 
-    /**
-     * The OSGi start level into which the framework is taken by the
-     * {@link #frameworkEvent(FrameworkEvent)} method when the framework has
-     * reached the originally specified start level.
-     * <p>
-     * If this value is smaller than 1 the framework is restarted. This is
-     * particularly the case if the {@link #start(BundleContext)} method causes
-     * the update of an installed framework extension bundle.
-     * <p>
-     * This value is preset by the
-     * {@link #BootstrapInstaller(Logger, LaunchpadContentProvider, Map)} constructor to
-     * the value set in the <code>org.osgi.framework.startlevel.beginning</code>
-     * property of the supplied map.
-     */
-    private int targetStartLevel;
-
-    BootstrapInstaller(Logger logger, LaunchpadContentProvider resourceProvider,
-            Map<String, String> props) {
+    BootstrapInstaller(final BundleContext bundleContext, Logger logger, LaunchpadContentProvider resourceProvider) {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
-        this.targetStartLevel = getStartLevel(props);
+        this.bundleContext = bundleContext;
     }
-
-    //---------- BundleActivator interface
 
     /**
      * https://issues.apache.org/jira/browse/SLING-922
@@ -190,36 +169,30 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      *   So you could place your bundles in that structure and get them installed
      *   at the requested start level (0 being "default bundle start level").
      */
-    public void start(final BundleContext context) throws Exception {
+    boolean install() throws IOException {
 
-        // prepare for further startup after initial startup
-        // see the frameworkEvent method for details
-        this.bundleContext = context;
-        this.bundleContext.addFrameworkListener(this);
-
-        // get the startup location in sling home
-        String slingHome = context.getProperty(SharedConstants.SLING_HOME);
+        String slingHome = bundleContext.getProperty(SharedConstants.SLING_HOME);
         File slingStartupDir = getSlingStartupDir(slingHome);
 
         // execute bootstrap commands, if needed
         final BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
-        boolean requireRestart = cmd.execute(context);
+        boolean requireRestart = cmd.execute(bundleContext);
 
         boolean shouldInstall = false;
 
         // see if the loading of bundles from the package is forced
-        String fpblString = context.getProperty(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING);
+        String fpblString = bundleContext.getProperty(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING);
         if (Boolean.valueOf(fpblString)) {
             shouldInstall = true;
         } else {
-            shouldInstall = !isAlreadyInstalled(context, slingStartupDir);
+            shouldInstall = !isAlreadyInstalled(bundleContext, slingStartupDir);
         }
 
         if (shouldInstall) {
             // only run the war/jar copies when this war/jar is new/changed
 
             // see if the loading of bundles from the package is disabled
-            String dpblString = context.getProperty(SharedConstants.DISABLE_PACKAGE_BUNDLE_LOADING);
+            String dpblString = bundleContext.getProperty(SharedConstants.DISABLE_PACKAGE_BUNDLE_LOADING);
             Boolean disablePackageBundleLoading = Boolean.valueOf(dpblString);
 
             if (disablePackageBundleLoading) {
@@ -253,7 +226,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             }
 
             // get the set of all existing (installed) bundles by symbolic name
-            Bundle[] bundles = context.getBundles();
+            Bundle[] bundles = bundleContext.getBundles();
             Map<String, Bundle> bySymbolicName = new HashMap<String, Bundle>();
             for (int i = 0; i < bundles.length; i++) {
                 bySymbolicName.put(bundles[i].getSymbolicName(), bundles[i]);
@@ -263,13 +236,13 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             List<Bundle> installed = new LinkedList<Bundle>();
 
             // get all bundles from the startup location and install them
-            requireRestart |= installBundles(slingStartupDir, context, bySymbolicName, installed);
+            requireRestart |= installBundles(slingStartupDir, bundleContext, bySymbolicName, installed);
 
             // start all the newly installed bundles (existing bundles are not started if they are stopped)
             startBundles(installed);
 
             // mark everything installed
-            markInstalled(context, slingStartupDir);
+            markInstalled(bundleContext, slingStartupDir);
         }
 
         // due to the upgrade of a framework extension bundle, the framework
@@ -279,73 +252,9 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
             logger.log(
                 Logger.LOG_INFO,
                 "Framework extension(s) have been updated, restarting framework after startup has completed");
-
-            targetStartLevel = -1;
         }
-    }
 
-    /** Nothing to be done on stop */
-    public void stop(BundleContext context) {
-        this.bundleContext = null;
-    }
-
-    //---------- Framework Listener
-
-    /**
-     * Called whenever a framework event is taking place. This method only cares
-     * for the framework event emitted once the framework startup has completed.
-     * Once the framework startup has completed, this method takes further
-     * actions (besides unregistering as a framework listener):
-     * <ul>
-     * <li>If bundle installation in the {@link #start(BundleContext)} method
-     * included an update of a framework extension fragment bundle, the
-     * framework has to be restarted. This is effectuated by calling the
-     * <code>Bundle.update()</code> method on the system bundle.</li>
-     * <li>If a restart is not required, the StartLevel service is instructed to
-     * raise the framework start level to the value requested by the framework
-     * launcher.</li>
-     * </ul>
-     */
-    public void frameworkEvent(FrameworkEvent event) {
-        if (event.getType() == FrameworkEvent.STARTED) {
-
-            // don't care for further events
-            this.bundleContext.removeFrameworkListener(this);
-
-            if (targetStartLevel < 1) {
-
-                // restart
-                logger.log(Logger.LOG_INFO,
-                    "Restarting framework to resolve new framework extension(s)");
-                try {
-                    bundleContext.getBundle(0).update();
-                } catch (BundleException be) {
-                    logger.log(
-                        Logger.LOG_ERROR,
-                        "Failed restarting to resolve new framework extension(s)",
-                        be);
-                }
-
-            } else {
-
-                // raise start level to the desired target
-                ServiceReference sr = bundleContext.getServiceReference(StartLevel.class.getName());
-                if (sr != null) {
-                    StartLevel sl = (StartLevel) bundleContext.getService(sr);
-                    try {
-                        logger.log(Logger.LOG_INFO, "Setting start level to "
-                            + targetStartLevel);
-                        sl.setStartLevel(targetStartLevel);
-                    } finally {
-                        bundleContext.ungetService(sr);
-                    }
-                } else {
-                    logger.log(Logger.LOG_WARNING,
-                        "StartLevel service not available, will not set the start level");
-                }
-
-            }
-        }
+        return requireRestart;
     }
 
     //---------- Startup folder maintenance
@@ -706,34 +615,19 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      *            of this instance.
      */
     private Manifest getManifest(File jar) {
+        JarFile jarFile = null;
         try {
-            InputStream ins = new FileInputStream(jar);
-            return getManifest(ins);
-        } catch (FileNotFoundException e) {
-            logger.log(Logger.LOG_WARNING, "Could not get inputstream from file ("+jar+"):"+e);
-            //throw new IllegalArgumentException("Could not get inputstream from file ("+jar+"):"+e, e);
-        }
-        return null;
-    }
-
-    /**
-     * Return the manifest from a jar if it is possible to get it,
-     * this will also handle closing out the stream
-     *
-     * @param ins the inputstream for the jar
-     * @return the manifest OR null if it cannot be obtained
-     */
-    Manifest getManifest(InputStream ins) {
-        try {
-            JarInputStream jis = new JarInputStream(ins);
-            return jis.getManifest();
-        } catch (IOException ioe) {
-            logger.log(Logger.LOG_ERROR, "Failed to read manifest from stream: "
-                    + ins, ioe);
+            jarFile = new JarFile(jar, false);
+            return jarFile.getManifest();
+        } catch (IOException e) {
+            logger.log(Logger.LOG_WARNING,
+                "Could not get inputstream from file (" + jar + "):" + e);
         } finally {
-            try {
-                ins.close();
-            } catch (IOException ignore) {
+            if (jarFile != null) {
+                try {
+                    jarFile.close();
+                } catch (IOException ignore) {
+                }
             }
         }
         return null;
@@ -749,7 +643,7 @@ class BootstrapInstaller implements BundleActivator, FrameworkListener {
      *
      * @param manifest The Manifest from which to extract the header.
      */
-    String getBundleSymbolicName(Manifest manifest) {
+    static String getBundleSymbolicName(Manifest manifest) {
         return manifest.getMainAttributes().getValue(
             Constants.BUNDLE_SYMBOLICNAME);
     }

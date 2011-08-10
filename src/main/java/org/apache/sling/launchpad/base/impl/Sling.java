@@ -24,11 +24,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -43,17 +41,17 @@ import javax.management.AttributeList;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
-import org.osgi.framework.BundleActivator;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.launch.Framework;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 
@@ -89,10 +87,7 @@ import org.osgi.service.url.URLStreamHandlerService;
  * <code>${inner}</code>.
  * <p>
  */
-public class Sling implements BundleActivator {
-
-    /** Pseduo class version ID to keep the IDE quite. */
-    private static final long serialVersionUID = 1L;
+public class Sling {
 
     /**
      * The name of the configuration property defining the Sling home directory
@@ -161,6 +156,14 @@ public class Sling implements BundleActivator {
     public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
     /**
+     * Timeout to wait for the initialized framework to actually stop for it to
+     * be reinitialized. This is set to a second, which should be ample time to
+     * do this. If this time passes without the framework being stopped, an
+     * error is issued.
+     */
+    private static final long REINIT_TIMEOUT = 1000L;
+
+    /**
      * List of multiple Execution Environment names supported by various
      * Java Runtime versions.
      * @see #setExecutionEnvironment(Map)
@@ -181,14 +184,7 @@ public class Sling implements BundleActivator {
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
      */
-    private Felix felix;
-
-    /**
-     * The <code>BundleContext</code> of the OSGi framework system bundle.
-     * This is used for service registration and service access to get at the
-     * delegatee servlet.
-     */
-    private BundleContext bundleContext;
+    private Framework framework;
 
     /**
      * Initializes this servlet by loading the framework configuration
@@ -205,7 +201,7 @@ public class Sling implements BundleActivator {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
-        this.logger.log(Logger.LOG_INFO, "Starting Sling");
+        this.logger.log(Logger.LOG_INFO, "Starting Apache Sling");
 
         // read the default parameters
         Map<String, String> props = this.loadConfigProperties(propOverwrite);
@@ -216,28 +212,24 @@ public class Sling implements BundleActivator {
         // ensure execution environment
         this.setExecutionEnvironment(props);
 
-        // prepare bootstrap installer and ensure the framework only goes into
-        // level 1 in the first place
-        final BootstrapInstaller bi = new BootstrapInstaller(logger,
-            resourceProvider, props);
-        props.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, "1");
-
-        // the custom activator list just contains this servlet
-        List<BundleActivator> activators = new ArrayList<BundleActivator>();
-        activators.add(this);
-        activators.add(bi);
-
         // create the framework and start it
-        Map<String, Object> felixProps = new HashMap<String, Object>(props);
-        felixProps.put(FelixConstants.LOG_LOGGER_PROP, logger);
-        felixProps.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators);
         try {
-            Felix tmpFelix = new SlingFelix(notifiable, felixProps);
-            tmpFelix.init(); // call needed due to FELIX-910
-            tmpFelix.start();
+            Framework tmpFramework = createFramework(notifiable, logger, props);
+
+            init(tmpFramework);
+
+            if (new BootstrapInstaller(tmpFramework.getBundleContext(), logger,
+                resourceProvider).install()) {
+                stop(tmpFramework);
+                tmpFramework = createFramework(notifiable, logger, props);
+                init(tmpFramework);
+            }
+
+            // finally start
+            tmpFramework.start();
 
             // only assign field if start succeeds
-            this.felix = tmpFelix;
+            this.framework = tmpFramework;
         } catch (BundleException be) {
             throw be;
         } catch (Exception e) {
@@ -246,7 +238,7 @@ public class Sling implements BundleActivator {
         }
 
         // log sucess message
-        this.logger.log(Logger.LOG_INFO, "Sling started");
+        this.logger.log(Logger.LOG_INFO, "Apache Sling started");
     }
 
     /**
@@ -254,21 +246,21 @@ public class Sling implements BundleActivator {
      * delegatee servlet if one is set at all.
      */
     public final void destroy() {
-        if (felix != null) {
+        if (framework != null) {
             // get a private copy of the reference and remove the class ref
-            Felix myFelix;
+            Framework myFramework;
             synchronized (this) {
-                myFelix = felix;
-                felix = null;
+                myFramework = framework;
+                framework = null;
             }
 
             // shutdown the Felix container
-            if (myFelix != null) {
-                logger.log(Logger.LOG_INFO, "Shutting down Sling");
+            if (myFramework != null) {
+                logger.log(Logger.LOG_INFO, "Shutting down Apache Sling");
                 try {
 
-                    myFelix.stop();
-                    myFelix.waitForStop(0);
+                    myFramework.stop();
+                    myFramework.waitForStop(0);
 
                 } catch (BundleException be) {
 
@@ -286,7 +278,7 @@ public class Sling implements BundleActivator {
 
                 }
 
-                logger.log(Logger.LOG_INFO, "Sling stopped");
+                logger.log(Logger.LOG_INFO, "Apache Sling stopped");
             }
         }
     }
@@ -303,10 +295,9 @@ public class Sling implements BundleActivator {
      *
      * @param bundleContext The <code>BundleContext</code> of the system
      *            bundle of the OSGi framework.
-     * @throws Exception May be thrown if the {@link #doStartBundle()} throws.
+     * @throws BundleException May be thrown if the {@link #doStartBundle()} throws.
      */
-    public final void start(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
+    private final void startup(BundleContext bundleContext) throws BundleException {
 
         // register the context URL handler
         Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -343,7 +334,11 @@ public class Sling implements BundleActivator {
         bundleContext.registerService(LaunchpadContentProvider.class.getName(), resourceProvider, null);
 
         // execute optional bundle startup tasks of an extension
-        this.doStartBundle();
+        try {
+            this.doStartBundle();
+        } catch (Exception e) {
+            throw new BundleException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -355,19 +350,47 @@ public class Sling implements BundleActivator {
      * @param bundleContext The <code>BundleContext</code> of the system
      *            bundle of the OSGi framework.
      */
-    public final void stop(BundleContext bundleContext) {
+    private final void shutdown() {
         // execute optional bundle stop tasks of an extension
         try {
             this.doStopBundle();
         } catch (Exception e) {
             this.logger.log(Logger.LOG_ERROR, "Unexpected exception caught", e);
         }
-
-        // drop bundle context reference
-        this.bundleContext = null;
     }
 
-    // ---------- Configuration Loading ----------------------------------------
+    // ---------- Creating the framework instance
+
+    @SuppressWarnings("unchecked")
+    private Framework createFramework(final Notifiable notifiable,
+            final Logger logger, @SuppressWarnings("rawtypes") Map props)
+            throws Exception {
+        props.put(FelixConstants.LOG_LOGGER_PROP, logger);
+        return new SlingFelix(notifiable, props);
+    }
+
+    private void init(final Framework framework) throws BundleException {
+        // initialize the framework
+        framework.init();
+
+        // do first startup setup
+        this.startup(framework.getBundleContext());
+    }
+
+    private void stop(final Framework framework) throws BundleException {
+        if ((framework.getState() & (Bundle.STARTING|Bundle.ACTIVE|Bundle.STOPPING)) != 0) {
+            framework.stop();
+
+            try {
+                framework.waitForStop(REINIT_TIMEOUT);
+            } catch (InterruptedException ie) {
+                throw new BundleException(
+                    "Interrupted while waiting for the framework stop before reinitialization");
+            }
+        }
+    }
+
+    // ---------- Configuration Loading
 
     /**
      * Loads the configuration properties in the configuration property file
@@ -377,9 +400,9 @@ public class Sling implements BundleActivator {
      * located in the <tt>conf/</tt> directory of the Felix installation
      * directory and is called "<tt>config.properties</tt>". The
      * installation directory of Felix is assumed to be the parent directory of
-     * the <tt>felix.jar</tt> file as found on the system class path property.
+     * the <tt>framework.jar</tt> file as found on the system class path property.
      * The precise file from which to load configuration properties can be set
-     * by initializing the "<tt>felix.config.properties</tt>" system
+     * by initializing the "<tt>framework.config.properties</tt>" system
      * property to an arbitrary URL.
      *
      * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was
@@ -415,23 +438,23 @@ public class Sling implements BundleActivator {
         slingHome = slingHomeFile.getAbsolutePath();
 
         // overlay with ${sling.home}/sling.properties
-        this.logger.log(Logger.LOG_INFO, "Starting sling in " + slingHome);
+        this.logger.log(Logger.LOG_INFO, "Starting Apache Sling in " + slingHome);
         File propFile = new File(slingHome, CONFIG_PROPERTIES);
         this.load(staticProps, propFile);
 
         // migrate old properties to new properties
-        migrateProp(staticProps, "felix.cache.profiledir", Constants.FRAMEWORK_STORAGE);
+        migrateProp(staticProps, "framework.cache.profiledir", Constants.FRAMEWORK_STORAGE);
         migrateProp(staticProps, "sling.osgi-core-packages", "osgi-core-packages");
         migrateProp(staticProps, "sling.osgi-compendium-services", "osgi-compendium-services");
 
         // migrate initial start level property: Felix used to have
-        // felix.startlevel.framework, later moved to org.osgi.framework.startlevel
+        // framework.startlevel.framework, later moved to org.osgi.framework.startlevel
         // and finally now uses org.osgi.framework.startlevel.beginning as
         // speced in the latest R 4.2 draft (2009/03/10). We first check the
         // intermediate Felix property, then the initial property, thus allowing
         // the older (and more probable value) to win
         migrateProp(staticProps, "org.osgi.framework.startlevel", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
-        migrateProp(staticProps, "felix.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
+        migrateProp(staticProps, "framework.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
 
         // create a copy of the properties to perform variable substitution
         final Map<String, String> runtimeProps = new HashMap<String, String>();
@@ -758,7 +781,7 @@ public class Sling implements BundleActivator {
      * before it is being stopped.
      */
     protected final BundleContext getBundleContext() {
-        return this.bundleContext;
+        return this.framework.getBundleContext();
     }
 
     /**
