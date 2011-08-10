@@ -105,7 +105,7 @@ class ControlListener implements Runnable {
         if (socketAddress != null) {
             Thread listener = new Thread(this);
             listener.setDaemon(true);
-            listener.setName("Sling Control Listener@" + socketAddress);
+            listener.setName("Apache Sling Control Listener@" + socketAddress);
             listener.start();
         } else {
             Main.info("No socket address to listen to", null);
@@ -139,7 +139,7 @@ class ControlListener implements Runnable {
         try {
             server = new ServerSocket();
             server.bind(socketAddress);
-            Main.info("Sling Control Server started", null);
+            Main.info("Apache Sling Control Server started", null);
         } catch (IOException ioe) {
             Main.error("Failed to start Sling Control Server", ioe);
             return;
@@ -157,7 +157,7 @@ class ControlListener implements Runnable {
                         slingMain.shutdown();
                         writeLine(s, RESPONSE_OK);
 
-                        Main.info("Sling shut down, exiting Java VM", null);
+                        Main.info("Apache Sling shut down, exiting Java VM", null);
                         System.exit(0);
 
                     } else if (COMMAND_STATUS.equals(command)) {
@@ -231,7 +231,7 @@ class ControlListener implements Runnable {
                     + result, null);
                 return 0; // LSB code for everything's fine
             } catch (ConnectException ce) {
-                Main.info("No Sling running at " + socketAddress, null);
+                Main.info("No Apache Sling running at " + socketAddress, null);
                 return 3; // LSB code for programm not running
             } catch (IOException ioe) {
                 Main.error("Failed sending '" + command + "' to "

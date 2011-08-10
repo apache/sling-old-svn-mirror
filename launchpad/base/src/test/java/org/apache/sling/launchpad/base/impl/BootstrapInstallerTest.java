@@ -25,9 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.jar.Manifest;
-
 import org.junit.Test;
 
 /**
@@ -184,46 +181,6 @@ public class BootstrapInstallerTest {
 
         assertFalse(BootstrapInstaller.isBlank("Test"));
         assertFalse(BootstrapInstaller.isBlank(" asdf "));
-    }
-
-    /**
-     * Test method for
-     * {@link org.apache.sling.launchpad.base.impl.BootstrapInstaller#getManifest(java.io.InputStream)}
-     * .
-     */
-    @Test
-    public void testGetManifestInputStream() {
-        BootstrapInstaller bsi = new BootstrapInstaller(null, null, new HashMap<String, String>());
-        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
-            "holaworld.jar");
-        Manifest m = bsi.getManifest(is);
-        assertNotNull(m);
-
-        is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
-            "holaworld-nomanifest.jar");
-        m = bsi.getManifest(is);
-        assertNull(m);
-    }
-
-    /**
-     * Test method for
-     * {@link org.apache.sling.launchpad.base.impl.BootstrapInstaller#getBundleSymbolicName(java.util.jar.Manifest)}
-     * .
-     */
-    @Test
-    public void testGetBundleSymbolicName() {
-        BootstrapInstaller bsi = new BootstrapInstaller(null, null, new HashMap<String, String>());
-        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
-            "holaworld.jar");
-        Manifest m = bsi.getManifest(is);
-        String sname = bsi.getBundleSymbolicName(m);
-        assertNotNull(sname);
-
-        is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
-            "holaworld-invalid.jar");
-        m = bsi.getManifest(is);
-        sname = bsi.getBundleSymbolicName(m);
-        assertNull(sname);
     }
 
     // TODO eventually add in tests that create a context so we can test more

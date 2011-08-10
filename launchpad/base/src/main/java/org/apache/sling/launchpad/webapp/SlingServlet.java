@@ -112,7 +112,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         if (slingHome != null) {
             startSling();
         } else {
-            log("Sling cannot be started yet, because sling.home is not defined yet");
+            log("Apache Sling cannot be started yet, because sling.home is not defined yet");
         }
 
         log("Servlet " + getServletName() + " initialized");
@@ -160,7 +160,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
             ((HttpServletResponse) res).sendError(
                 HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                "Sling is currently starting up, please try again");
+                "Apache Sling is currently starting up, please try again");
         }
     }
 
@@ -200,7 +200,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
          * removed and remove the shutdown hook (but don't care if that fails).
          */
 
-        log("Sling has been stopped");
+        log("Apache Sling has been stopped");
 
         // clear the reference to the framework
         sling = null;
@@ -234,7 +234,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         if (updateFile == null) {
 
-            log("Restarting Framework and Sling");
+            log("Restarting Framework and Apache Sling");
             startSling((URL) null);
 
         } else {
@@ -301,7 +301,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
             startSling(launcherJar);
         } catch (MalformedURLException mue) {
-            log("Cannot load Sling Launcher JAR "
+            log("Cannot load Apache Sling Launcher JAR "
                 + SharedConstants.DEFAULT_SLING_LAUNCHER_JAR, mue);
         }
     }
@@ -313,10 +313,10 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private void startSling(URL launcherJar) {
         synchronized (this) {
             if (sling != null) {
-                log("Sling already started, nothing to do");
+                log("Apache Sling already started, nothing to do");
                 return;
             } else if (startingSling != null) {
-                log("Sling being started by Thread " + startingSling);
+                log("Apache Sling being started by Thread " + startingSling);
                 return;
             }
 
@@ -439,7 +439,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
             }
         }
-        
+
         slingHome = substVars(slingHome, null, null, null);
 
         log("Setting sling.home=" + slingHome + " (" + source + ")");
@@ -477,7 +477,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         // ensure message
         if (message == null) {
-            message = "Failed to start Sling in " + slingHome;
+            message = "Failed to start Apache Sling in " + slingHome;
         }
 
         // unwrap to get the real cause
@@ -494,7 +494,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
             startingSling = null;
         }
     }
-    
+
     // ---------- Property file variable substition support --------------------
 
     /**

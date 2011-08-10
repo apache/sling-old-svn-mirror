@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launchpad.base.webapp;
 
-import static org.apache.felix.framework.util.FelixConstants.*;
+import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -192,7 +192,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
         try {
 
-            log("Starting Sling in " + slingHome);
+            log("Starting Apache Sling in " + slingHome);
 
             // read the default parameters
             Map<String, String> props = loadConfigProperties(slingHome);
@@ -212,7 +212,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             // them destroyed in the finally clause.
             if (servletDestroyed) {
 
-                log("SlingServletDelegate destroyed while starting Sling, shutting Sling down");
+                log("SlingServletDelegate destroyed while starting Apache Sling, shutting Apache Sling down");
 
             } else {
 
@@ -224,20 +224,20 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
                 tmpSling = null;
                 tmpDelegatee = null;
 
-                log("Sling successfully started in " + slingHome);
+                log("Apache Sling successfully started in " + slingHome);
             }
 
         } catch (BundleException be) {
 
-            throw new ServletException("Failed to start Sling in " + slingHome, be);
+            throw new ServletException("Failed to start Apache Sling in " + slingHome, be);
 
         } catch (ServletException se) {
 
-            throw new ServletException("Failed to start bridge servlet for Sling", se);
+            throw new ServletException("Failed to start bridge servlet for Apache Sling", se);
 
         } catch (Throwable t) {
 
-            throw new ServletException("Uncaught Failure starting Sling", t);
+            throw new ServletException("Uncaught Failure starting Apache Sling", t);
 
         } finally {
 
