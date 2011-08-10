@@ -118,7 +118,7 @@ public class PostServletImportTest extends HttpTestBase {
 					assertTrue(actualValuesSet.contains(expectedArray.get(i)));
 				}
     		} else {
-    			assertEquals(object, object2);
+    			assertEquals("Value of key: " + key, object, object2);
     		}
     	}
     }
@@ -723,7 +723,7 @@ public class PostServletImportTest extends HttpTestBase {
 
         String testNodeName = "testNode_" + String.valueOf(random.nextInt());
         props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
-        String jsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_utf8.json"), "UTF-8");
+        final String jsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_utf8.json"), "UTF-8");
         props.put(SlingPostConstants.RP_CONTENT, jsonContent);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
         props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
@@ -737,8 +737,7 @@ public class PostServletImportTest extends HttpTestBase {
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-        String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_utf8.json"), "UTF-8");
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
     }
 
 }
