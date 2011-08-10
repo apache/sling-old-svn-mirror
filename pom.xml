@@ -82,7 +82,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.2.1-SNAPSHOT</version>
+            <version>3.2.2</version>
             <scope>provided</scope>
         </dependency>
       <!-- We use a class from the config admin implementation to read config files -->
