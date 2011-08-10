@@ -332,31 +332,6 @@ public class Sling {
         bundleContext.registerService(MBeanServer.class.getName(),
             platformMBeanServer, mbeanProps);
         bundleContext.registerService(LaunchpadContentProvider.class.getName(), resourceProvider, null);
-
-        // execute optional bundle startup tasks of an extension
-        try {
-            this.doStartBundle();
-        } catch (Exception e) {
-            throw new BundleException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Called when the OSGi framework is being shut down. This implementation
-     * first calls the {@link #doStopBundle()} method method before
-     * unregistering as a service listener and ungetting an servlet delegatee if
-     * one has been acquired.
-     *
-     * @param bundleContext The <code>BundleContext</code> of the system
-     *            bundle of the OSGi framework.
-     */
-    private final void shutdown() {
-        // execute optional bundle stop tasks of an extension
-        try {
-            this.doStopBundle();
-        } catch (Exception e) {
-            this.logger.log(Logger.LOG_ERROR, "Unexpected exception caught", e);
-        }
     }
 
     // ---------- Creating the framework instance
@@ -782,31 +757,6 @@ public class Sling {
      */
     protected final BundleContext getBundleContext() {
         return this.framework.getBundleContext();
-    }
-
-    /**
-     * Executes additional startup tasks and is called by the
-     * {@link #start(BundleContext)} method.
-     * <p>
-     * This implementation does nothing and may be overwritten by extensions
-     * requiring additional startup tasks.
-     *
-     * @throws Exception May be thrown in case of problems.
-     */
-    protected void doStartBundle() throws Exception {
-    }
-
-    /**
-     * Executes additional shutdown tasks and is called by the
-     * {@link #stop(BundleContext)} method.
-     * <p>
-     * This implementation does nothing and may be overwritten by extensions
-     * requiring additional shutdown tasks.
-     * <p>
-     * When overwriting this method, it must be made sure, that no exception may
-     * be thrown, otherwise unexpected behaviour may result.
-     */
-    protected void doStopBundle() {
     }
 
     // ---------- Property file support ----------------------------------------
