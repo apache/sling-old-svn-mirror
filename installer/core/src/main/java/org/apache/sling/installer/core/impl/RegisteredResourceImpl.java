@@ -408,6 +408,11 @@ public class RegisteredResourceImpl
             }
         }
         if ( result == 0 ) {
+            if ( a.getState() == ResourceState.INSTALLED ) {
+                return -1;
+            } else if ( b.getState() == ResourceState.INSTALLED ) {
+                return 1;
+            }
             result = a.getURL().compareTo(b.getURL());
         }
         return result;
