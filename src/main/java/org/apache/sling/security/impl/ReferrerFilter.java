@@ -43,7 +43,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,8 +162,8 @@ public class ReferrerFilter implements Filter {
      * Activate
      */
     protected void activate(final ComponentContext ctx) {
-        this.allowEmpty = OsgiUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
-        String[] allowHosts = OsgiUtil.toStringArray(ctx.getProperties().get(PROP_HOSTS));
+        this.allowEmpty = PropertiesUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
+        String[] allowHosts = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_HOSTS));
         if ( allowHosts != null ) {
             if ( allowHosts.length == 0 ) {
                 allowHosts = null;
@@ -178,7 +178,7 @@ public class ReferrerFilter implements Filter {
             }
         }
         this.allowedReferrers = this.createReferrerUrls(allowedReferrers);
-        this.filterMethods = OsgiUtil.toStringArray(ctx.getProperties().get(PROP_METHODS));
+        this.filterMethods = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_METHODS));
         if ( this.filterMethods != null && this.filterMethods.length == 1 && (this.filterMethods[0] == null || this.filterMethods[0].trim().length() == 0) ) {
             this.filterMethods = null;
         }
@@ -212,8 +212,8 @@ public class ReferrerFilter implements Filter {
             if ( this.isModification(request) ) {
                 if ( !this.isValidRequest(request) ) {
                     final HttpServletResponse response = (HttpServletResponse)res;
-                    // we use 500
-                    response.sendError(500);
+                    // we use 403
+                    response.sendError(403);
                     return;
                 }
             }
