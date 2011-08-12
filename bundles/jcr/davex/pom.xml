@@ -52,12 +52,6 @@
                             <!-- ignore HTTP client methods of webdav -->
                             !org.apache.commons.httpclient.*,
 
-                            <!-- ignore XML resolver of xerces -->
-                            !org.apache.xml.resolver.*,
-
-                            <!-- don't import any sun stuff -->
-                            !sun.*,
-
                             <!-- import the rest -->
                             *
                         </Import-Package>
@@ -93,6 +87,12 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
+            <version>2.2.5</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
             <version>2.2.5</version>
             <scope>compile</scope>
         </dependency>
