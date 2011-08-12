@@ -103,15 +103,18 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
     @Override
     protected SessionProvider getSessionProvider() {
+        // TODO - we have to fix this!!
+        final SessionProvider sp = super.getSessionProvider();
         return new SessionProvider() {
 
             public Session getSession(final HttpServletRequest req,
-                    final Repository paramRepository,
-                    final String paramString)
+                    final Repository repository,
+                    final String workspace)
             throws LoginException, ServletException, RepositoryException {
                 final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
                 if ( resolver != null ) {
-                    return resolver.adaptTo(Session.class);
+                    final Session superSession = sp.getSession(req, repository, workspace);
+                    return superSession;
                 }
                 return null;
             }
