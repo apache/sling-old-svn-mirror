@@ -21,10 +21,12 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -101,10 +103,10 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         return repository;
     }
 
+    private static char[] EMPTY_PW = new char[0];
+
     @Override
     protected SessionProvider getSessionProvider() {
-        // TODO - we have to fix this!!
-        final SessionProvider sp = super.getSessionProvider();
         return new SessionProvider() {
 
             public Session getSession(final HttpServletRequest req,
@@ -113,15 +115,20 @@ public class SlingDavExServlet extends JcrRemotingServlet {
             throws LoginException, ServletException, RepositoryException {
                 final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
                 if ( resolver != null ) {
-                    final Session superSession = sp.getSession(req, repository, workspace);
-                    return superSession;
+                    final Session session = resolver.adaptTo(Session.class);
+                    // as the session might be longer used by davex than the request
+                    // we have to create a new session!
+                    if ( session != null ) {
+                        final Credentials credentials = new SimpleCredentials(session.getUserID(), EMPTY_PW);
+                        final Session newSession = session.impersonate(credentials);
+                        return newSession;
+                    }
                 }
                 return null;
             }
 
-            public void releaseSession(Session paramSession) {
-                // nothing to do
-
+            public void releaseSession(final Session session) {
+                session.logout();
             }
         };
     }
