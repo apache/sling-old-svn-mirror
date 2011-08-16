@@ -23,6 +23,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 
 /**
@@ -31,14 +33,21 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * will be the Servlet Container's implementation of this method and thus be
  * based on the client's <code>Accept-Language</code> header.
  */
-public class DefaultLocaleResolver implements LocaleResolver {
+public class DefaultLocaleResolver implements LocaleResolver, RequestLocaleResolver {
 
     /**
      * Return the Locales provided by the
      * <code>ServletRequest.getLocales()</code> method collected in a
      * <code>List</code>.
      */
-    public List<Locale> resolveLocale(SlingHttpServletRequest request) {
+    public List<Locale> resolveLocale(final SlingHttpServletRequest request) {
+        return this.resolveLocale((HttpServletRequest)request);
+    }
+
+    /**
+     * @see org.apache.sling.i18n.RequestLocaleResolver#resolveLocale(javax.servlet.http.HttpServletRequest)
+     */
+    public List<Locale> resolveLocale(final HttpServletRequest request) {
         Enumeration<?> locales = request.getLocales();
         ArrayList<Locale> localeList = new ArrayList<Locale>();
         while (locales.hasMoreElements()) {
@@ -46,5 +55,4 @@ public class DefaultLocaleResolver implements LocaleResolver {
         }
         return localeList;
     }
-
 }

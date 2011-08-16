@@ -34,6 +34,12 @@ import java.util.ResourceBundle;
 public interface ResourceBundleProvider {
 
     /**
+     * Request attribute to get the resource bundle.
+     * @since 2.2
+     */
+    String BUNDLE_REQ_ATTR = "org.apache.sling.i18n.resourcebundle";
+
+    /**
      * Returns the default <code>Locale</code> assumed by this instance.
      */
     Locale getDefaultLocale();
