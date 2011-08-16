@@ -21,21 +21,20 @@ package org.apache.sling.i18n;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.sling.api.SlingHttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 /**
- * The <code>LocaleResolver</code> service interface may be implemented by a
+ * The <code>GlobalLocaleResolver</code> service interface may be implemented by a
  * service registered under this name to allow the resolution of the request
  * <code>Locale</code> to apply.
  * <p>
  * This interface is intended to be implemented by providers knowing how to
  * resolve one or more <code>Locale</code>s applicable to handle the request.
  * <p>
- * Only a single <code>LocaleResolver</code> service is currently used.
- * @deprecated The {@link RequestLocaleResolver} should be used instead.
+ * Only a single <code>GlobalLocaleResolver</code> service is currently used.
+ * @since 2.2
  */
-@Deprecated
-public interface LocaleResolver {
+public interface RequestLocaleResolver {
 
     /**
      * Return a non-<code>null</code> but possiby empty list of
@@ -52,6 +51,6 @@ public interface LocaleResolver {
      * @return The list of <code>Locale</code>s to use for internationalization
      *         of request processing
      */
-    List<Locale> resolveLocale(SlingHttpServletRequest request);
+    List<Locale> resolveLocale(HttpServletRequest request);
 
 }
