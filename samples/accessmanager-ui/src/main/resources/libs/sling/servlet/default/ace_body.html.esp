@@ -156,7 +156,22 @@ if (!privilegesInfo.canReadAccessControl(currentNode)) {
 					   drawPrivilegeRow(p, "30px");   
 					
 					   p = accessControlManager.privilegeFromName("jcr:modifyAccessControl");
-					   drawPrivilegeRow(p, "30px");         
+					   drawPrivilegeRow(p, "30px");
+					   
+                       p = accessControlManager.privilegeFromName("jcr:lockManagement");
+                       drawPrivilegeRow(p, "30px");
+
+                       p = accessControlManager.privilegeFromName("jcr:versionManagement");
+                       drawPrivilegeRow(p, "30px");
+
+                       p = accessControlManager.privilegeFromName("jcr:nodeTypeManagement");
+                       drawPrivilegeRow(p, "30px");
+
+                       p = accessControlManager.privilegeFromName("jcr:retentionManagement");
+                       drawPrivilegeRow(p, "30px");
+
+                       p = accessControlManager.privilegeFromName("jcr:lifecycleManagement");
+                       drawPrivilegeRow(p, "30px");
 					%>   
 			      </tbody>
 			   </table>

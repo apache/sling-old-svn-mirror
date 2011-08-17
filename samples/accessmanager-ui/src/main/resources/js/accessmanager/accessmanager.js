@@ -205,6 +205,12 @@ AccessManager.Ace = {
 
 			m.setAggregatePrivilege("jcr:readAccessControl", value);
 			m.setAggregatePrivilege("jcr:modifyAccessControl", value);
+
+			m.setAggregatePrivilege("jcr:lockManagement", value);
+			m.setAggregatePrivilege("jcr:versionManagement", value);
+			m.setAggregatePrivilege("jcr:nodeTypeManagement", value);
+			m.setAggregatePrivilege("jcr:retentionManagement", value);
+			m.setAggregatePrivilege("jcr:lifecycleManagement", value);
 		} else {
 			var writeGranted = $("input[name='privilege@jcr:write'][value=granted]:radio:checked");
 			var writeDenied = $("input[name='privilege@jcr:write'][value=denied]:radio:checked");
@@ -227,6 +233,12 @@ AccessManager.Ace = {
 
 			m.setAggregatePrivilege("jcr:readAccessControl", this.value);
 			m.setAggregatePrivilege("jcr:modifyAccessControl", this.value);
+
+			m.setAggregatePrivilege("jcr:lockManagement", this.value);
+			m.setAggregatePrivilege("jcr:versionManagement", this.value);
+			m.setAggregatePrivilege("jcr:nodeTypeManagement", this.value);
+			m.setAggregatePrivilege("jcr:retentionManagement", this.value);
+			m.setAggregatePrivilege("jcr:lifecycleManagement", this.value);
 		});
 		
 		$("input[name='privilege@jcr:write']:radio").bind("change", function(e) {

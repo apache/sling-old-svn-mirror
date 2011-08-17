@@ -197,6 +197,31 @@
             "jcr:primaryType": "sling:MessageEntry",
             "sling:key": "label.privilege.jcr:modifyAccessControl",
             "sling:message": "Modify Permissions"
+        },
+        "label.privilege.jcr_lockManagement": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:lockManagement",
+            "sling:message": "Lock Management"
+        },            
+        "label.privilege.jcr_versionManagement": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:versionManagement",
+            "sling:message": "Version Management"
+        },            
+        "label.privilege.jcr_nodeTypeManagement": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:nodeTypeManagement",
+            "sling:message": "NodeType Management"
+        },            
+        "label.privilege.jcr_retentionManagement": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:retentionManagement",
+            "sling:message": "Retention Management"
+        },            
+        "label.privilege.jcr_lifecycleManagement": {
+            "jcr:primaryType": "sling:MessageEntry",
+            "sling:key": "label.privilege.jcr:lifecycleManagement",
+            "sling:message": "Lifecycle Management"
         },            
                     
         "button.save": {
