@@ -104,8 +104,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SlingServletResolver implements ServletResolver, SlingScriptResolver, ErrorHandler, EventHandler {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    /** Servlet resolver logger */
+    public static final Logger LOGGER = LoggerFactory.getLogger(SlingServletResolver.class);
 
     /**
      * @scr.property valueRef="DEFAULT_SERVLET_ROOT"
@@ -245,8 +245,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         tracker.startTimer(timerName);
 
         final String type = resource.getResourceType();
-        if (log.isDebugEnabled()) {
-            log.debug("resolveServlet called for resource {}", resource);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("resolveServlet called for resource {}", resource);
         }
 
         Servlet servlet = null;
@@ -268,8 +268,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
         // last resort, use the core bundle default servlet
         if (servlet == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("No specific servlet found, trying default");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No specific servlet found, trying default");
             }
             servlet = getDefaultServlet();
         }
@@ -282,11 +282,11 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         }
 
         // log the servlet found
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             if (servlet != null) {
-                log.debug("Servlet {} found for resource={}", RequestUtil.getServletName(servlet), resource);
+                LOGGER.debug("Servlet {} found for resource={}", RequestUtil.getServletName(servlet), resource);
             } else {
-                log.debug("No servlet found for resource={}", resource);
+                LOGGER.debug("No servlet found for resource={}", resource);
             }
         }
 
@@ -300,18 +300,18 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         if ( resource == null ) {
             throw new IllegalArgumentException("Resource must not be null");
         }
-        if (log.isDebugEnabled()) {
-            log.debug("resolveServlet called for resource {} with script name {}", resource, scriptName);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("resolveServlet called for resource {} with script name {}", resource, scriptName);
         }
 
         final Servlet servlet = resolveServlet(scriptResolver, resource, scriptName);
 
         // log the servlet found
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             if (servlet != null) {
-                log.debug("Servlet {} found for resource {} and script name {}", new Object[] {RequestUtil.getServletName(servlet), resource, scriptName});
+                LOGGER.debug("Servlet {} found for resource {} and script name {}", new Object[] {RequestUtil.getServletName(servlet), resource, scriptName});
             } else {
-                log.debug("No servlet found for resource {} and script name {}", resource, scriptName);
+                LOGGER.debug("No servlet found for resource {} and script name {}", resource, scriptName);
             }
         }
 
@@ -325,18 +325,18 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         if ( resolver == null ) {
             throw new IllegalArgumentException("Resource resolver must not be null");
         }
-        if (log.isDebugEnabled()) {
-            log.debug("resolveServlet called for for script name {}", scriptName);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("resolveServlet called for for script name {}", scriptName);
         }
 
         final Servlet servlet = resolveServlet(scriptResolver, null, scriptName);
 
         // log the servlet found
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             if (servlet != null) {
-                log.debug("Servlet {} found for script name {}", RequestUtil.getServletName(servlet), scriptName);
+                LOGGER.debug("Servlet {} found for script name {}", RequestUtil.getServletName(servlet), scriptName);
             } else {
-                log.debug("No servlet found for script name {}", scriptName);
+                LOGGER.debug("No servlet found for script name {}", scriptName);
             }
         }
 
@@ -357,8 +357,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
-                if (servlet != null && log.isDebugEnabled()) {
-                    log.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet),
+                if (servlet != null && LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet),
                                     scriptName);
                 }
             }
@@ -368,8 +368,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final NamedScriptResourceCollector locationUtil = NamedScriptResourceCollector.create(scriptName, resource, this.executionPaths);
             servlet = getServlet(locationUtil, null, resolver);
 
-            if (log.isDebugEnabled() && servlet != null) {
-                log.debug("resolveServlet returns servlet {}", RequestUtil.getServletName(servlet));
+            if (LOGGER.isDebugEnabled() && servlet != null) {
+                LOGGER.debug("resolveServlet returns servlet {}", RequestUtil.getServletName(servlet));
             }
         }
         return servlet;
@@ -411,9 +411,9 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
         // some logging
         if (script != null) {
-            log.debug("findScript: Using script {} for {}", script.getScriptResource().getPath(), name);
+            LOGGER.debug("findScript: Using script {} for {}", script.getScriptResource().getPath(), name);
         } else {
-            log.info("findScript: No script {} found in path", name);
+            LOGGER.info("findScript: No script {} found in path", name);
         }
 
         // and finally return the script (null or not)
@@ -431,7 +431,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
         // do not handle, if already handling ....
         if (request.getAttribute(SlingConstants.ERROR_REQUEST_URI) != null) {
-            log.error("handleError: Recursive invocation. Not further handling status " + status + "(" + message + ")");
+            LOGGER.error("handleError: Recursive invocation. Not further handling status " + status + "(" + message + ")");
             return;
         }
 
@@ -485,7 +485,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     throws IOException {
         // do not handle, if already handling ....
         if (request.getAttribute(SlingConstants.ERROR_REQUEST_URI) != null) {
-            log.error("handleError: Recursive invocation. Not further handling Throwable:", throwable);
+            LOGGER.error("handleError: Recursive invocation. Not further handling Throwable:", throwable);
             return;
         }
 
@@ -576,8 +576,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
-                if (servlet != null && log.isDebugEnabled()) {
-                    log.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet),
+                if (servlet != null && LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet),
                                     type);
                 }
             }
@@ -587,8 +587,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final ResourceCollector locationUtil = ResourceCollector.create(request, workspaceName, this.executionPaths, this.defaultExtensions);
             servlet = getServlet(locationUtil, request, resolver);
 
-            if (servlet != null && log.isDebugEnabled()) {
-                log.debug("getServlet returns servlet {}", RequestUtil.getServletName(servlet));
+            if (servlet != null && LOGGER.isDebugEnabled()) {
+                LOGGER.debug("getServlet returns servlet {}", RequestUtil.getServletName(servlet));
             }
         }
         return servlet;
@@ -620,29 +620,29 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             final ResourceResolver scriptResolver) {
         final Servlet scriptServlet = (this.cache != null ? this.cache.get(locationUtil) : null);
         if (scriptServlet != null) {
-            if ( log.isDebugEnabled() ) {
-                log.debug("Using cached servlet {}", RequestUtil.getServletName(scriptServlet));
+            if ( LOGGER.isDebugEnabled() ) {
+                LOGGER.debug("Using cached servlet {}", RequestUtil.getServletName(scriptServlet));
             }
             return scriptServlet;
         }
 
         final Collection<Resource> candidates = locationUtil.getServlets(scriptResolver);
 
-        if (log.isDebugEnabled()) {
+        if (LOGGER.isDebugEnabled()) {
             if (candidates.isEmpty()) {
-                log.debug("No servlet candidates found");
+                LOGGER.debug("No servlet candidates found");
             } else {
-                log.debug("Ordered list of servlet candidates follows");
+                LOGGER.debug("Ordered list of servlet candidates follows");
                 for (Resource candidateResource : candidates) {
-                    log.debug("Servlet candidate: {}", candidateResource.getPath());
+                    LOGGER.debug("Servlet candidate: {}", candidateResource.getPath());
                 }
             }
         }
 
         boolean hasOptingServlet = false;
         for (Resource candidateResource : candidates) {
-            if (log.isDebugEnabled()) {
-                log.debug("Checking if candidate resource {} adapts to servlet and accepts request", candidateResource
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Checking if candidate resource {} adapts to servlet and accepts request", candidateResource
                         .getPath());
             }
             Servlet candidate = candidateResource.adaptTo(Servlet.class);
@@ -655,22 +655,22 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                             this.cache.put(locationUtil, candidate);
                         } else if ( this.logCacheSizeWarning ) {
                             this.logCacheSizeWarning = false;
-                            log.warn("Script cache has reached its limit of {}. You might want to increase the cache size for the servlet resolver.",
+                            LOGGER.warn("Script cache has reached its limit of {}. You might want to increase the cache size for the servlet resolver.",
                                     this.cacheSize);
                         }
                     }
-                    log.debug("Using servlet provided by candidate resource {}", candidateResource.getPath());
+                    LOGGER.debug("Using servlet provided by candidate resource {}", candidateResource.getPath());
                     return candidate;
                 }
                 if (isOptingServlet) {
                     hasOptingServlet = true;
                 }
-                if (log.isDebugEnabled()) {
-                    log.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());
                 }
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Candidate {} does not adapt to a servlet, ignored", candidateResource.getPath());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Candidate {} does not adapt to a servlet, ignored", candidateResource.getPath());
                 }
             }
         }
@@ -691,7 +691,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                 servlet.init(new SlingServletConfig(servletContext, null, "Sling Core Default Servlet"));
                 defaultServlet = servlet;
             } catch (ServletException se) {
-                log.error("Failed to initialize default servlet", se);
+                LOGGER.error("Failed to initialize default servlet", se);
             }
         }
 
@@ -741,7 +741,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                     null, "Sling (Ad Hoc) Default Error Handler Servlet"));
                 fallbackErrorServlet = defaultServlet;
             } catch (ServletException se) {
-                log.error("Failed to initialize error servlet", se);
+                LOGGER.error("Failed to initialize error servlet", se);
             }
         }
         return fallbackErrorServlet;
@@ -764,8 +764,8 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
             // forware the IOException
             throw ioe;
         } catch (Throwable t) {
-            log.error("Calling the error handler resulted in an error", t);
-            log.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
+            LOGGER.error("Calling the error handler resulted in an error", t);
+            LOGGER.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
                     (Throwable) request.getAttribute(SlingConstants.ERROR_EXCEPTION));
         }
     }
@@ -955,7 +955,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         // check for a name, this is required
         final String name = getName(reference);
         if (name == null) {
-            log.error("bindServlet: Cannot register servlet {} without a servlet name", reference);
+            LOGGER.error("bindServlet: Cannot register servlet {} without a servlet name", reference);
             return false;
         }
 
@@ -971,10 +971,10 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         try {
             servlet = (Servlet) context.locateService(REF_SERVLET, reference);
         } catch (Throwable t) {
-            log.warn("bindServlet: Failed getting the service for reference " + reference, t);
+            LOGGER.warn("bindServlet: Failed getting the service for reference " + reference, t);
         }
         if (servlet == null) {
-            log.error("bindServlet: Servlet service not available from reference {}", reference);
+            LOGGER.error("bindServlet: Servlet service not available from reference {}", reference);
             return false;
         }
 
@@ -984,12 +984,12 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         // initialize now
         try {
             servlet.init(new SlingServletConfig(servletContext, reference, name));
-            log.debug("bindServlet: Servlet {} added", name);
+            LOGGER.debug("bindServlet: Servlet {} added", name);
         } catch (ServletException ce) {
-            log.error("bindServlet: Component " + name + " failed to initialize", ce);
+            LOGGER.error("bindServlet: Component " + name + " failed to initialize", ce);
             return false;
         } catch (Throwable t) {
-            log.error("bindServlet: Unexpected problem initializing component " + name, t);
+            LOGGER.error("bindServlet: Unexpected problem initializing component " + name, t);
             return false;
         }
 
@@ -1001,7 +1001,7 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
         final ServiceRegistration reg = context.getBundleContext()
                 .registerService(ResourceProvider.SERVICE_NAME, provider, params);
 
-        log.info("Registered {}", provider.toString());
+        LOGGER.info("Registered {}", provider.toString());
         synchronized (this.servletsByReference) {
             servletsByReference.put(reference, new ServletReg(servlet, reg));
         }
@@ -1024,12 +1024,12 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
 
             registration.registration.unregister();
             final String name = RequestUtil.getServletName(registration.servlet);
-            log.debug("unbindServlet: Servlet {} removed", name);
+            LOGGER.debug("unbindServlet: Servlet {} removed", name);
 
             try {
                 registration.servlet.destroy();
             } catch (Throwable t) {
-                log.error("unbindServlet: Unexpected problem destroying servlet " + name, t);
+                LOGGER.error("unbindServlet: Unexpected problem destroying servlet " + name, t);
             }
         }
     }

@@ -27,6 +27,7 @@ import java.util.TreeSet;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.servlets.resolver.internal.SlingServletResolver;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
@@ -203,6 +204,9 @@ public abstract class AbstractResourceCollector {
             } else if ( path.equals(config) ) {
                 return true;
             }
+        }
+        if ( SlingServletResolver.LOGGER.isDebugEnabled() ) {
+            SlingServletResolver.LOGGER.debug("Ignoring servlet at '{}' as the path is not in the configured execution paths.", path);
         }
         return false;
     }
