@@ -135,8 +135,8 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                 List<String> empty = Collections.emptyList();
                 return empty.iterator();
             } else if (path.equals(CONFIG_PATH_PREFIX)) {
-                if (configDirectory.exists() && configDirectory.isDirectory()) {
-                    File[] configFiles = configDirectory.listFiles(new FileFilter() {
+                if (getConfigDirectory().exists() && getConfigDirectory().isDirectory()) {
+                    File[] configFiles = getConfigDirectory().listFiles(new FileFilter() {
 
                         public boolean accept(File file) {
                             return file.isFile();
@@ -188,7 +188,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
 
         public URL getResource(String path) {
             if (path.startsWith(CONFIG_PATH_PREFIX)) {
-                File configFile = new File(configDirectory, path.substring(CONFIG_PATH_PREFIX.length() + 1));
+                File configFile = new File(getConfigDirectory(), path.substring(CONFIG_PATH_PREFIX.length() + 1));
                 if (configFile.exists()) {
                     try {
                         return configFile.toURI().toURL();

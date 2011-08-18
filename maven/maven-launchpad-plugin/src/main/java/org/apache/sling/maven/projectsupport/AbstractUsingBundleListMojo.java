@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -44,6 +45,9 @@ import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
+import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.drools.KnowledgeBase;
@@ -56,24 +60,6 @@ import org.drools.io.ResourceFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
 
 public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo {
-
-    /**
-     * @parameter expression="${configDirectory}"
-     *            default-value="src/main/config"
-     */
-    protected File configDirectory;
-
-    /**
-     * @parameter expression="${additionalSlingProps}"
-     *            default-value="src/main/sling/additional.properties"
-     */
-    private File additionalSlingProps;
-
-    /**
-     * @parameter expression="${additionalSlingBootstrap}"
-     *            default-value="src/main/sling/bootstrap.txt"
-     */
-    private File additionalSlingBootstrap;
 
     /**
      * JAR Packaging type.
@@ -182,6 +168,29 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      */
     private MavenFileFilter mavenFileFilter;
 
+    /**
+     * The zip unarchiver.
+     *
+     * @component role="org.codehaus.plexus.archiver.UnArchiver" roleHint="zip"
+     */
+    private ZipUnArchiver zipUnarchiver;
+
+    private Properties slingProperties;
+
+    private String slingBootstrapCommand;
+
+    /**
+     * @parameter default-value="${project.build.directory}/tmpBundleListconfig"
+     */
+    private File tmpOutputDir;
+
+    /**
+     * @parameter default-value="${project.build.directory}/tmpConfigDir"
+     */
+    private File tempConfigDir;
+
+    private File overlayConfigDir;
+
     public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
             initBundleList();
@@ -192,6 +201,14 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
         executeWithArtifacts();
 
+    }
+
+    @Override
+    protected File getConfigDirectory() {
+        if ( this.overlayConfigDir != null ) {
+            return this.overlayConfigDir;
+        }
+        return super.getConfigDirectory();
     }
 
     /**
@@ -331,13 +348,62 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             }
         }
 
-        Set<Artifact> dependencies = project.getDependencyArtifacts();
+        final Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
             if (PARTIAL.equals(artifact.getType())) {
                 getLog().info(
                         String.format("merging partial bundle list for %s:%s:%s", artifact.getGroupId(),
                                 artifact.getArtifactId(), artifact.getVersion()));
                 bundleList.merge(readBundleList(artifact.getFile()));
+
+                // check for configuration artifact
+                Artifact cfgArtifact = null;
+                try {
+                    cfgArtifact = getArtifact(artifact.getGroupId(),
+                            artifact.getArtifactId(),
+                            artifact.getVersion(),
+                            AttachPartialBundleListMojo.CONFIG_TYPE,
+                            AttachPartialBundleListMojo.CONFIG_CLASSIFIER);
+                } catch (final MojoExecutionException ignore) {
+                    // we just ignore this
+                }
+                if ( cfgArtifact != null ) {
+                    getLog().info(
+                            String.format("merging partial bundle list configuration for %s:%s:%s", cfgArtifact.getGroupId(),
+                                    cfgArtifact.getArtifactId(), cfgArtifact.getVersion()));
+
+                    // extract
+                    zipUnarchiver.setSourceFile(cfgArtifact.getFile());
+                    try {
+                        this.tmpOutputDir.mkdirs();
+                        zipUnarchiver.setDestDirectory(this.tmpOutputDir);
+                        zipUnarchiver.extract();
+
+                        final File slingDir = new File(this.tmpOutputDir, "sling");
+                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_ADDITIONAL_PROPS));
+                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_BOOTSTRAP));
+
+                        // and now configurations
+                        if ( this.overlayConfigDir == null ) {
+                            this.tempConfigDir.mkdirs();
+                            if ( this.getConfigDirectory().exists() ) {
+                                FileUtils.copyDirectory(this.getConfigDirectory(), this.tempConfigDir,
+                                        null, FileUtils.getDefaultExcludesAsString());
+                            }
+                            this.overlayConfigDir = this.tempConfigDir;
+                        }
+                        final File configDir = new File(this.tmpOutputDir, "config");
+                        if ( configDir.exists() ) {
+                            FileUtils.copyDirectory(configDir, this.tempConfigDir,
+                                    null, FileUtils.getDefaultExcludesAsString());
+                        }
+                    } catch (final ArchiverException ae) {
+                        throw new MojoExecutionException("Unable to extract configuration archive.",ae);
+                    } finally {
+                        // and delete at the end
+                        FileUtils.deleteDirectory(this.tmpOutputDir);
+                    }
+                }
             }
         }
 
@@ -392,15 +458,23 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
     }
 
-    protected Properties getSlingProperties() throws MojoExecutionException {
-        if (this.additionalSlingProps.exists()) {
+    private void readSlingProperties(final File propsFile) throws MojoExecutionException {
+        if (propsFile.exists()) {
             File tmp = null;
             try {
                 tmp = File.createTempFile("sling", "props");
-                mavenFileFilter.copyFile(this.additionalSlingProps, tmp, true, project, null, true,
+                mavenFileFilter.copyFile(propsFile, tmp, true, project, null, true,
                         System.getProperty("file.encoding"), mavenSession);
                 final Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
-                return loadedProps;
+                if ( this.slingProperties == null ) {
+                    this.slingProperties = loadedProps;
+                } else {
+                    final Enumeration<Object> keys = loadedProps.keys();
+                    while ( keys.hasMoreElements() ) {
+                        final Object key = keys.nextElement();
+                        this.slingProperties.put(key, loadedProps.get(key));
+                    }
+                }
             } catch (IOException e) {
                 throw new MojoExecutionException("Unable to create filtered properties file", e);
             } catch (MavenFilteringException e) {
@@ -411,32 +485,38 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 }
             }
         }
-        return null;
+    }
+
+    protected Properties getSlingProperties() throws MojoExecutionException {
+        readSlingProperties(this.additionalSlingProps);
+        return this.slingProperties;
     }
 
     /**
-     * Try to read the bootstrap command file and return its content
+     * Try to read the bootstrap command file
      * The filter is copied to a tmp location to apply filtering.
-     * @return The contents are <code>null</code>
      * @throws MojoExecutionException
      */
-    protected String getSlingBootstrap() throws MojoExecutionException {
-        if (this.additionalSlingBootstrap.exists()) {
+    private void readSlingBootstrap(final File bootstrapFile) throws MojoExecutionException {
+        if (bootstrapFile.exists()) {
             File tmp = null;
             Reader reader = null;
             try {
                 tmp = File.createTempFile("sling", "bootstrap");
-                mavenFileFilter.copyFile(this.additionalSlingBootstrap, tmp, true, project, null, true,
+                mavenFileFilter.copyFile(bootstrapFile, tmp, true, project, null, true,
                         System.getProperty("file.encoding"), mavenSession);
                 reader = new FileReader(tmp);
                 final StringBuilder sb = new StringBuilder();
+                if ( this.slingBootstrapCommand != null ) {
+                    sb.append(this.slingBootstrapCommand);
+                }
                 final char[] buffer = new char[2048];
                 int l;
                 while ( (l = reader.read(buffer, 0, buffer.length) ) != -1 ) {
                     sb.append(buffer, 0, l);
                 }
 
-                return sb.toString();
+                this.slingBootstrapCommand = sb.toString();
             } catch (IOException e) {
                 throw new MojoExecutionException("Unable to create filtered bootstrap file", e);
             } catch (MavenFilteringException e) {
@@ -452,6 +532,17 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 }
             }
         }
-        return null;
+    }
+
+    /**
+     * Try to read the bootstrap command file and return its content
+     * The filter is copied to a tmp location to apply filtering.
+     * @return The contents are <code>null</code>
+     * @throws MojoExecutionException
+     */
+    protected String getSlingBootstrap() throws MojoExecutionException {
+        this.readSlingBootstrap(this.additionalSlingBootstrap);
+
+        return this.slingBootstrapCommand;
     }
 }
