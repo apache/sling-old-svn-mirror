@@ -18,7 +18,9 @@ package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -65,7 +67,13 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @parameter expression="${additionalSlingProps}"
      *            default-value="src/main/sling/additional.properties"
      */
-    protected File additionalSlingProps;
+    private File additionalSlingProps;
+
+    /**
+     * @parameter expression="${additionalSlingBootstrap}"
+     *            default-value="src/main/sling/bootstrap.txt"
+     */
+    private File additionalSlingBootstrap;
 
     /**
      * JAR Packaging type.
@@ -84,9 +92,8 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     protected static boolean shouldCopy(File source, File dest) {
         if (!dest.exists()) {
             return true;
-        } else {
-            return source.lastModified() > dest.lastModified();
         }
+        return source.lastModified() > dest.lastModified();
     }
 
     /**
@@ -149,7 +156,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @readonly
      * @required
      */
-    private List remoteRepos;
+    private List<?> remoteRepos;
 
     /**
      * Used to look up Artifacts in the remote repository.
@@ -232,7 +239,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         // This code kicks in when the version specifier is a range.
         if (vr.getRecommendedVersion() == null) {
             try {
-                List availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
+                List<?> availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
                 ArtifactVersion resolvedVersion = vr.matchVersion(availVersions);
                 artifact.setVersion(resolvedVersion.toString());
             } catch (ArtifactMetadataRetrievalException e) {
@@ -401,6 +408,47 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             } finally {
                 if (tmp != null) {
                     tmp.delete();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Try to read the bootstrap command file and return its content
+     * The filter is copied to a tmp location to apply filtering.
+     * @return The contents are <code>null</code>
+     * @throws MojoExecutionException
+     */
+    protected String getSlingBootstrap() throws MojoExecutionException {
+        if (this.additionalSlingBootstrap.exists()) {
+            File tmp = null;
+            Reader reader = null;
+            try {
+                tmp = File.createTempFile("sling", "bootstrap");
+                mavenFileFilter.copyFile(this.additionalSlingBootstrap, tmp, true, project, null, true,
+                        System.getProperty("file.encoding"), mavenSession);
+                reader = new FileReader(tmp);
+                final StringBuilder sb = new StringBuilder();
+                final char[] buffer = new char[2048];
+                int l;
+                while ( (l = reader.read(buffer, 0, buffer.length) ) != -1 ) {
+                    sb.append(buffer, 0, l);
+                }
+
+                return sb.toString();
+            } catch (IOException e) {
+                throw new MojoExecutionException("Unable to create filtered bootstrap file", e);
+            } catch (MavenFilteringException e) {
+                throw new MojoExecutionException("Unable to create filtered bootstrap file", e);
+            } finally {
+                if (tmp != null) {
+                    tmp.delete();
+                }
+                if ( reader != null ) {
+                    try {
+                        reader.close();
+                    } catch (final IOException ignore) {}
                 }
             }
         }

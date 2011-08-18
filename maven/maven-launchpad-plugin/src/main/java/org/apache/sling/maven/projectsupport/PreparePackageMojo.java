@@ -19,6 +19,7 @@ package org.apache.sling.maven.projectsupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -137,13 +138,86 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
         }
     }
 
-	private void copyBaseArtifact() throws MojoExecutionException {
+    /**
+     * Patch the sling properties
+     */
+    private void patchSlingProperties(final File dest, final Properties additionalProps)
+    throws MojoExecutionException {
+        final File origSlingProps = new File(dest, "sling.properties");
+        if ( !origSlingProps.exists() ) {
+            throw new MojoExecutionException("sling.properties not found at " + origSlingProps);
+        }
+
+        // read original properties
+        final Properties orig = new Properties();
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(origSlingProps);
+            orig.load(fis);
+        } catch (final IOException ioe) {
+            throw new MojoExecutionException("Unable to read " + origSlingProps, ioe);
+        } finally {
+            if ( fis != null ) {
+                try { fis.close(); } catch (final IOException ignore) {}
+            }
+        }
+
+        // patch
+        final Enumeration<Object> keys = additionalProps.keys();
+        if ( keys.hasMoreElements() ) {
+            getLog().info("Patching sling.properties");
+        }
+        while ( keys.hasMoreElements() ) {
+            final Object key = keys.nextElement();
+            orig.put(key, additionalProps.get(key));
+        }
+
+        /// and save
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(origSlingProps);
+            orig.store(fos, null);
+        } catch (final IOException ioe) {
+            throw new MojoExecutionException("Unable to save " + origSlingProps, ioe);
+        } finally {
+            if ( fis != null ) {
+                try { fis.close(); } catch (final IOException ignore) {}
+            }
+        }
+    }
+
+    /**
+     * Patch the sling bootstrap command file
+     */
+    private void patchSlingBootstrap(final File dest, final String additionalCmd)
+    throws MojoExecutionException {
+        getLog().info("Patching sling.bootstrap.txt");
+        final File origSlingCmd = new File(dest, "sling_bootstrap.txt");
+        FileWriter writer = null;
+
+        /// and write or append
+        try {
+            if ( !origSlingCmd.exists() ) {
+                writer = new FileWriter(origSlingCmd);
+            } else {
+                writer = new FileWriter(origSlingCmd, true);
+            }
+
+            writer.write(additionalCmd);
+        } catch (final IOException ioe) {
+            throw new MojoExecutionException("Unable to save " + origSlingCmd, ioe);
+        } finally {
+            if ( writer != null ) {
+                try { writer.close(); } catch (final IOException ignore) {}
+            }
+        }
+    }
+
+    private void copyBaseArtifact() throws MojoExecutionException {
 		Artifact artifact = getBaseArtifact();
 		if (artifact == null) {
 			throw new MojoExecutionException(
-					String
-							.format(
-									"Project doesn't have a base dependency of groupId %s and artifactId %s",
+					String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
 									base.getGroupId(), base.getArtifactId()));
 		}
 		File destinationDir = new File(getOutputDirectory(), baseDestination);
@@ -151,53 +225,23 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 				.getArtifactId()
 				+ "." + artifact.getArtifactHandler().getExtension());
 
-		// check if custom sling.properties file exists
+		// check if custom sling.properties file or bootstrap command exists
 		final Properties additionalProps = this.getSlingProperties();
-		if ( additionalProps != null ) {
+		final String bootstrapCmd = this.getSlingBootstrap();
+		if ( additionalProps != null || bootstrapCmd != null ) {
     		// unpack to a temp destination
 		    final File dest = new File(this.tempDirectory, "basejar");
 		    try {
         		unpack(artifact.getFile(), dest);
-        		final File origSlingProps = new File(dest, "sling.properties");
-        		if ( !origSlingProps.exists() ) {
-        		    throw new MojoExecutionException("sling.properties not found at " + origSlingProps);
+
+        		// patch sling properties
+        		if ( additionalProps != null ) {
+        		    this.patchSlingProperties(dest, additionalProps);
         		}
 
-        		// read original properties
-        		final Properties orig = new Properties();
-        		FileInputStream fis = null;
-        		try {
-        		    fis = new FileInputStream(origSlingProps);
-                    orig.load(fis);
-        		} catch (final IOException ioe) {
-        		    throw new MojoExecutionException("Unable to read " + origSlingProps, ioe);
-        		} finally {
-        		    if ( fis != null ) {
-        		        try { fis.close(); } catch (final IOException ignore) {}
-        		    }
-        		}
-
-                // patch
-                final Enumeration<Object> keys = additionalProps.keys();
-                if ( keys.hasMoreElements() ) {
-                    getLog().info("Patching sling.properties");
-                }
-                while ( keys.hasMoreElements() ) {
-                    final Object key = keys.nextElement();
-                    orig.put(key, additionalProps.get(key));
-                }
-
-                /// and save
-                FileOutputStream fos = null;
-                try {
-                    fos = new FileOutputStream(origSlingProps);
-                    orig.store(fos, null);
-                } catch (final IOException ioe) {
-                    throw new MojoExecutionException("Unable to save " + origSlingProps, ioe);
-                } finally {
-                    if ( fis != null ) {
-                        try { fis.close(); } catch (final IOException ignore) {}
-                    }
+        		// patch bootstrap command
+                if  ( bootstrapCmd != null ) {
+                    this.patchSlingBootstrap(dest, bootstrapCmd);
                 }
 
                 // and repack again
@@ -245,9 +289,8 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 	protected File getOutputDirectory() {
 		if (WAR.equals(packaging)) {
 			return warOutputDirectory;
-		} else {
-			return buildOutputDirectory;
-		}
+        }
+		return buildOutputDirectory;
 	}
 
 	protected void unpackBaseArtifact() throws MojoExecutionException {
