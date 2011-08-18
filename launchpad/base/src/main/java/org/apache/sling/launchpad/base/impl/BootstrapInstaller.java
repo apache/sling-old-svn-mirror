@@ -129,7 +129,7 @@ class BootstrapInstaller {
     /**
      * The name of the bootstrap commands file
      */
-    private static final String BOOTSTRAP_CMD_FILENAME = "sling_bootstrap.txt";
+    public static final String BOOTSTRAP_CMD_FILENAME = "sling_bootstrap.txt";
 
     /**
      * The {@link Logger} use for logging messages during installation and
@@ -266,18 +266,8 @@ class BootstrapInstaller {
      * @throws IllegalStateException if the sling home or startup directories cannot be created/accessed
      */
     private File getSlingStartupDir(String slingHome) {
-        if (isBlank(slingHome)) {
-            throw new IllegalStateException("Fatal error in bootstrap: Cannot get the "+SharedConstants.SLING_HOME+" value: " + slingHome);
-        }
-        File slingHomeDir = new File(slingHome).getAbsoluteFile();
-        if (! slingHomeDir.exists()
-                || ! slingHomeDir.canRead()
-                || ! slingHomeDir.canWrite()
-                || ! slingHomeDir.isDirectory()) {
-            throw new IllegalStateException("Fatal error in bootstrap: Cannot find accessible existing "
-                    +SharedConstants.SLING_HOME+" directory: " + slingHomeDir);
-        }
-        File slingHomeStartupDir = getOrCreateDirectory(slingHomeDir, PATH_STARTUP);
+        final File slingHomeDir = new File(slingHome);
+        final File slingHomeStartupDir = getOrCreateDirectory(slingHomeDir, PATH_STARTUP);
         return slingHomeStartupDir;
     }
 
