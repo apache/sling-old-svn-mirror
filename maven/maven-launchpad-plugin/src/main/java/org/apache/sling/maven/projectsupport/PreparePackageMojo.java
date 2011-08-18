@@ -195,13 +195,9 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
         final File origSlingCmd = new File(dest, "sling_bootstrap.txt");
         FileWriter writer = null;
 
-        /// and write or append
+        /// and write
         try {
-            if ( !origSlingCmd.exists() ) {
-                writer = new FileWriter(origSlingCmd);
-            } else {
-                writer = new FileWriter(origSlingCmd, true);
-            }
+            writer = new FileWriter(origSlingCmd);
 
             writer.write(additionalCmd);
         } catch (final IOException ioe) {
