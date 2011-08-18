@@ -100,11 +100,13 @@ public class I18NFilter implements Filter {
     throws IOException, ServletException {
         final boolean runGlobal = this.initCount == 2;
         if ( request instanceof SlingHttpServletRequest ) {
-            // check if we have to wrap
+            // check if we can use the simple version to wrap
             if ( !runGlobal || this.requestLocaleResolver == DEFAULT_LOCALE_RESOLVER ) {
                 // wrap with our ResourceBundle provisioning
                 request = new I18NSlingHttpServletRequest(request,
                     resourceBundleProvider, localeResolver);
+            } else {
+                request = new BaseI18NSlingHttpServletRequest(request, resourceBundleProvider);
             }
         } else {
             request = new I18NHttpServletRequest(request,
@@ -208,37 +210,20 @@ public class I18NFilter implements Filter {
 
     }
 
-    private static class I18NSlingHttpServletRequest
+    private static class BaseI18NSlingHttpServletRequest
         extends SlingHttpServletRequestWrapper {
 
-        private final ResourceBundleProvider bundleProvider;
+        protected final ResourceBundleProvider bundleProvider;
 
-        private final LocaleResolver localeResolver;
-
-        private Locale locale;
-
-        private List<Locale> localeList;
-
-        I18NSlingHttpServletRequest(final ServletRequest delegatee,
-                final ResourceBundleProvider bundleProvider,
-                final LocaleResolver localeResolver) {
+        BaseI18NSlingHttpServletRequest(final ServletRequest delegatee,
+                final ResourceBundleProvider bundleProvider) {
             super((SlingHttpServletRequest) delegatee);
             this.bundleProvider = bundleProvider;
-            this.localeResolver = localeResolver;
         }
 
         @Override
         public ResourceBundle getResourceBundle(Locale locale) {
             return getResourceBundle(null, locale);
-        }
-
-        @Override
-        public Object getAttribute(final String name) {
-            if ( ResourceBundleProvider.BUNDLE_REQ_ATTR.equals(name) ) {
-                final Object superValue = super.getAttribute(name);
-                return (superValue != null ? superValue : this.getResourceBundle(null));
-            }
-            return super.getAttribute(name);
         }
 
         @Override
@@ -260,6 +245,32 @@ public class I18NFilter implements Filter {
             }
 
             return super.getResourceBundle(baseName, locale);
+        }
+    }
+
+    private static class I18NSlingHttpServletRequest
+        extends BaseI18NSlingHttpServletRequest {
+
+        private final LocaleResolver localeResolver;
+
+        private Locale locale;
+
+        private List<Locale> localeList;
+
+        I18NSlingHttpServletRequest(final ServletRequest delegatee,
+                final ResourceBundleProvider bundleProvider,
+                final LocaleResolver localeResolver) {
+            super(delegatee, bundleProvider);
+            this.localeResolver = localeResolver;
+        }
+
+        @Override
+        public Object getAttribute(final String name) {
+            if ( ResourceBundleProvider.BUNDLE_REQ_ATTR.equals(name) ) {
+                final Object superValue = super.getAttribute(name);
+                return (superValue != null ? superValue : this.getResourceBundle(null));
+            }
+            return super.getAttribute(name);
         }
 
         @Override
