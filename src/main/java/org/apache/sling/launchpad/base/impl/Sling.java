@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -204,7 +205,10 @@ public class Sling {
         this.logger.log(Logger.LOG_INFO, "Starting Apache Sling");
 
         // read the default parameters
-        Map<String, String> props = this.loadConfigProperties(propOverwrite);
+        final Map<String, String> props = this.loadConfigProperties(propOverwrite);
+
+        // check for bootstrap command file
+        copyBootstrapCommandFile(props);
 
         // check for auto-start bundles
         this.setInstallBundles(props);
@@ -384,7 +388,7 @@ public class Sling {
      *         an error.
      */
     private Map<String, String> loadConfigProperties(
-            Map<String, String> propOverwrite) throws BundleException {
+            final Map<String, String> propOverwrite) throws BundleException {
         // The config properties file is either specified by a system
         // property or it is in the same directory as the Felix JAR file.
         // Try to load it from one of these places.
@@ -1034,5 +1038,47 @@ public class Sling {
 
         // Return the value.
         return val;
+    }
+
+    private void copyBootstrapCommandFile(final Map<String, String> props) {
+        // check last modification date
+        final URL url = this.resourceProvider.getResource(BootstrapInstaller.BOOTSTRAP_CMD_FILENAME);
+        if ( url != null ) {
+            this.logger.log(Logger.LOG_DEBUG, "Checking last modification date of bootstrap command file.");
+            InputStream is = null;
+            OutputStream os = null;
+            try {
+                final long lastModified = url.openConnection().getLastModified();
+                final File slingHome = new File(props.get(SharedConstants.SLING_HOME));
+                final File cmdFile = new File(slingHome, BootstrapInstaller.BOOTSTRAP_CMD_FILENAME);
+                boolean copyFile = true;
+                if ( cmdFile.exists() && cmdFile.lastModified() >= lastModified ) {
+                    copyFile = false;
+                }
+                if ( copyFile ) {
+                    this.logger.log(Logger.LOG_INFO, "Copying bootstrap command file.");
+                    is = this.resourceProvider.getResourceAsStream(BootstrapInstaller.BOOTSTRAP_CMD_FILENAME);
+                    os = new FileOutputStream(cmdFile);
+                    final byte[] buffer = new byte[2048];
+                    int l;
+                    while ( (l = is.read(buffer, 0, buffer.length)) != -1 ) {
+                        os.write(buffer, 0, l);
+                    }
+                }
+
+            } catch (final IOException ioe) {
+                this.logger.log(Logger.LOG_INFO, "Ignoring exception during processing of bootstrap command file.", ioe);
+            } finally {
+                if ( is != null ) {
+                    try { is.close(); } catch (final IOException ignore) {}
+                }
+                if ( os != null ) {
+                    try { os.close(); } catch (final IOException ignore) {}
+                }
+            }
+        } else {
+            this.logger.log(Logger.LOG_DEBUG, "Bootstrap command file not found.");
+        }
+
     }
 }
