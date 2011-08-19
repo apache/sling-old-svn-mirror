@@ -48,6 +48,8 @@ public class LaunchpadConfigInstaller {
      */
     private static final String ROOT_INSTALL_PATH = "resources/install";
 
+    private static final Integer PRIORITY = new Integer(50);
+
     private static boolean checkPath(final LaunchpadContentProvider resourceProvider,
             final Collection<InstallableResource> installables,
             final String rootPath,
@@ -84,7 +86,7 @@ public class LaunchpadConfigInstaller {
                     }
                     final String digest = (lastModified > 0 ? String.valueOf(lastModified) : null);
                     final InputStream stream = resourceProvider.getResourceAsStream(path);
-                    installables.add(new InstallableResource(path, stream, dict, digest, resourceType, null));
+                    installables.add(new InstallableResource(path, stream, dict, digest, resourceType, PRIORITY));
                     count++;
                 }
             }
