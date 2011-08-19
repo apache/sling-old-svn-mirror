@@ -136,15 +136,18 @@ public class RegisteredResourceComparatorTest {
         final MockBundleResource a = new MockBundleResource("a", "1.2.0", 0, "digestA");
         final MockBundleResource b = new MockBundleResource("a", "1.2.0", 0, "digestB");
         assertEquals("Digests must not be included in bundles comparison", 0, a.compareTo(b));
+        final MockBundleResource c = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "1000");
+        final MockBundleResource d = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "2000");
+        assertEquals("Digests should be compared with highest first", 1, c.compareTo(d));
     }
 
     @Test
     public void testSnapshotSerialNumber() {
         // Verify that snapshots with a higher serial number come first
         final RegisteredResource [] inOrder = new RegisteredResource [3];
-        inOrder[2] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestC");
+        inOrder[0] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestC");
         inOrder[1] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestB");
-        inOrder[0] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestA");
+        inOrder[2] = new MockBundleResource("a", "1.2.0.SNAPSHOT", 0, "digestA");
         assertOrder(inOrder);
     }
 
