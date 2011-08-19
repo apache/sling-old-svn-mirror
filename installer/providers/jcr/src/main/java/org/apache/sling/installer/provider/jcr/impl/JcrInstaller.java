@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name="service.description", value="Sling JCR Install Service"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name=UpdateHandler.PROPERTY_SCHEMES, value=JcrInstaller.URL_SCHEME),
+    @Property(name=UpdateHandler.PROPERTY_SCHEMES, value=JcrInstaller.URL_SCHEME, unbounded=PropertyUnbounded.ARRAY),
     @Property(name="service.ranking", intValue=100)
 })
 @Service(value=UpdateHandler.class)
