@@ -403,7 +403,8 @@ public class RegisteredResourceImpl
 
                 // check digest
                 if ( result == 0 ) {
-                    result = a.getDigest().compareTo(b.getDigest());
+                    // higher digest has more priority, must come first so invert comparison
+                    result = b.getDigest().compareTo(a.getDigest());
                 }
             }
         }
@@ -442,7 +443,8 @@ public class RegisteredResourceImpl
         }
 
         if (result == 0 && isSnapshot) {
-            result = a.getDigest().compareTo(b.getDigest());
+            // higher digest has more priority, must come first so invert comparison
+            result = b.getDigest().compareTo(a.getDigest());
         }
 
         return result;
