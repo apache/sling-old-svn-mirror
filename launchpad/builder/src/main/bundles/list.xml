@@ -252,6 +252,11 @@
             <artifactId>org.apache.sling.fragment.transaction</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.fragment.activation</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </bundle>
     </startLevel>
     <startLevel level="5">
         <bundle>
