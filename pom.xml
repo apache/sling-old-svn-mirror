@@ -64,7 +64,12 @@
         <!--
             Sling home directory when starting with jetty:run
         -->
-        <jetty.sling.home>target/sling-test</jetty.sling.home>
+        <jetty.sling.home>target/sling-jetty-test</jetty.sling.home>
+
+        <!--
+            Sling home directory when starting with cargo
+        -->
+        <cargo.sling.home>target/sling-cargo-test</cargo.sling.home>
         
         <!--
             Defines which tests are for the "integration-testing" phase
@@ -264,9 +269,9 @@
                         <containerId>jetty6x</containerId>
                         <type>embedded</type>
                         <systemProperties>
-                            <sling.home>
-                                ${basedir}/target/it/sling
-                            </sling.home>
+                            <test.sling.home>
+                                ${basedir}/${cargo.sling.home}
+                            </test.sling.home>
                         </systemProperties>
                     </container>
                     <configuration>
