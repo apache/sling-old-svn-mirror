@@ -62,7 +62,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
 
     /**
      * @parameter expression="${commonSlingBootstrap}"
-     *            default-value="src/main/sling/bootstrap.txt"
+     *            default-value="src/main/sling/common.bootstrap.txt"
      */
     protected File commonSlingBootstrap;
 

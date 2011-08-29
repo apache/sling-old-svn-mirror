@@ -191,7 +191,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
      */
     private void patchSlingBootstrap(final File dest, final String additionalCmd)
     throws MojoExecutionException {
-        getLog().info("Patching sling.bootstrap.txt");
+        getLog().info("Patching sling_bootstrap.txt");
         final File origSlingCmd = new File(dest, "sling_bootstrap.txt");
         FileWriter writer = null;
 

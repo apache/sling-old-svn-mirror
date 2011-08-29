@@ -40,7 +40,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String SLING_COMMON_PROPS = "common.properties";
 
-    public static final String SLING_COMMON_BOOTSTRAP = "bootstrap.txt";
+    public static final String SLING_COMMON_BOOTSTRAP = "common.bootstrap.txt";
 
     /**
      * @parameter default-value="${project.build.directory}/bundleListconfig"
