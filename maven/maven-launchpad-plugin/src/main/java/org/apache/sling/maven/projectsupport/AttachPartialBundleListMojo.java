@@ -38,9 +38,9 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String CONFIG_TYPE = "zip";
 
-    public static final String SLING_ADDITIONAL_PROPS = "additional.properties";
+    public static final String SLING_COMMON_PROPS = "common.properties";
 
-    public static final String SLING_BOOTSTRAP = "bootstrap.txt";
+    public static final String SLING_COMMON_BOOTSTRAP = "bootstrap.txt";
 
     /**
      * @parameter default-value="${project.build.directory}/bundleListconfig"
@@ -82,8 +82,8 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
         }
         // check if we have configurations
         boolean hasConfigs = this.checkFile(this.getConfigDirectory());
-        hasConfigs |= this.checkFile(this.additionalSlingBootstrap);
-        hasConfigs |= this.checkFile(this.additionalSlingProps);
+        hasConfigs |= this.checkFile(this.commonSlingBootstrap);
+        hasConfigs |= this.checkFile(this.commonSlingProps);
 
         if ( !hasConfigs ) {
             this.getLog().debug("No configurations to attach.");
@@ -91,15 +91,15 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
         }
         // copy configuration, as this project might use different names we have to copy everything!
         this.configOutputDir.mkdirs();
-        if ( this.checkFile(this.additionalSlingBootstrap) ) {
+        if ( this.checkFile(this.commonSlingBootstrap) ) {
             final File slingDir = new File(this.configOutputDir, "sling");
             slingDir.mkdirs();
-            FileUtils.copyFile(this.additionalSlingBootstrap, new File(slingDir, SLING_BOOTSTRAP));
+            FileUtils.copyFile(this.commonSlingBootstrap, new File(slingDir, SLING_COMMON_BOOTSTRAP));
         }
-        if ( this.checkFile(this.additionalSlingProps) ) {
+        if ( this.checkFile(this.commonSlingProps) ) {
             final File slingDir = new File(this.configOutputDir, "sling");
             slingDir.mkdirs();
-            FileUtils.copyFile(this.additionalSlingProps, new File(slingDir, SLING_ADDITIONAL_PROPS));
+            FileUtils.copyFile(this.commonSlingProps, new File(slingDir, SLING_COMMON_PROPS));
         }
         if ( this.checkFile(this.getConfigDirectory()) ) {
             final File configDir = new File(this.configOutputDir, "config");

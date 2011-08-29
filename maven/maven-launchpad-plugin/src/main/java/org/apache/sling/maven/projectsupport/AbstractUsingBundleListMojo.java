@@ -380,8 +380,8 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         zipUnarchiver.extract();
 
                         final File slingDir = new File(this.tmpOutputDir, "sling");
-                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_ADDITIONAL_PROPS));
-                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_BOOTSTRAP));
+                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_PROPS));
+                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_BOOTSTRAP));
 
                         // and now configurations
                         if ( this.overlayConfigDir == null ) {
@@ -488,7 +488,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     }
 
     protected Properties getSlingProperties() throws MojoExecutionException {
-        readSlingProperties(this.additionalSlingProps);
+        readSlingProperties(this.commonSlingProps);
         return this.slingProperties;
     }
 
@@ -541,7 +541,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @throws MojoExecutionException
      */
     protected String getSlingBootstrap() throws MojoExecutionException {
-        this.readSlingBootstrap(this.additionalSlingBootstrap);
+        this.readSlingBootstrap(this.commonSlingBootstrap);
 
         return this.slingBootstrapCommand;
     }

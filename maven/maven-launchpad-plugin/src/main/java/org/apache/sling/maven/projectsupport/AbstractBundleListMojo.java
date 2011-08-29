@@ -55,16 +55,16 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     private File configDirectory;
 
     /**
-     * @parameter expression="${additionalSlingProps}"
-     *            default-value="src/main/sling/additional.properties"
+     * @parameter expression="${commonSlingProps}"
+     *            default-value="src/main/sling/common.properties"
      */
-    protected File additionalSlingProps;
+    protected File commonSlingProps;
 
     /**
-     * @parameter expression="${additionalSlingBootstrap}"
+     * @parameter expression="${commonSlingBootstrap}"
      *            default-value="src/main/sling/bootstrap.txt"
      */
-    protected File additionalSlingBootstrap;
+    protected File commonSlingBootstrap;
 
     protected File getConfigDirectory() {
         return this.configDirectory;
