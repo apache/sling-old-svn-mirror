@@ -130,11 +130,22 @@ public class SlingMainServlet extends GenericServlet {
     private SlingServletContext slingServletContext;
 
     /**
+     * The product information part of the {@link #serverInfo} returns from the
+     * <code>ServletContext.getServerInfo()</code> method. This field defaults
+     * to {@link #PRODUCT_NAME} and is ammended with the major and minor version
+     * of the Sling Engine bundle while this component is being
+     * {@link #activate(BundleContext, Map)} activated}.
+     */
+    private String productInfo = PRODUCT_NAME;
+
+    /**
      * The server information to report in the {@link #getServerInfo()} method.
-     * By default this is just the {@link #PRODUCT_NAME}. The
-     * {@link #activate(org.osgi.service.component.ComponentContext)} method
-     * appends this value with the version (major and minor part) of this bundle
+     * By default this is just the {@link #PRODUCT_NAME} (same as
+     * {@link #productInfo}. During {@link #activate(BundleContext, Map)}
+     * activation} the field is updated with the full {@link #productInfo} value
      * as well as the operating system and java version it is running on.
+     * Finally during servlet initialization the product information from the
+     * servlet container's server info is added to the comment section.
      */
     private String serverInfo = PRODUCT_NAME;
 
@@ -249,8 +260,78 @@ public class SlingMainServlet extends GenericServlet {
 
     // ---------- Internal helper ----------------------------------------------
 
+    /**
+     * Sets the {@link #productInfo} field from the providing bundle's version
+     * and the {@link #PRODUCT_NAME}.
+     * <p>
+     * Also {@link #setServerInfo() updates} the {@link #serverInfo} based
+     * on the product info calculated.
+     *
+     * @param bundleContext Provides access to the "Bundle-Version" manifest
+     *            header of the containing bundle.
+     */
+    private void setProductInfo(final BundleContext bundleContext) {
+        final Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
+        final Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
+        final String productVersion = bundleVersion.getMajor() + "."
+            + bundleVersion.getMinor();
+        this.productInfo = PRODUCT_NAME + "/" + productVersion;
+
+        // update the server info
+        this.setServerInfo();
+    }
+
     public String getServerInfo() {
         return serverInfo;
+    }
+
+    /**
+     * Sets up the server info to be returned for the
+     * <code>ServletContext.getServerInfo()</code> method for servlets and
+     * filters deployed inside Sling. The {@link SlingRequestProcessor} instance
+     * is also updated with the server information.
+     * <p>
+     * This server information is made up of the following components:
+     * <ol>
+     * <li>The {@link #productInfo} field as the primary product information</li>
+     * <li>The primary product information of the servlet container into which
+     * the Sling Main Servlet is deployed. If the servlet has not yet been
+     * deployed this will show as <i>unregistered</i>. If the servlet container
+     * does not provide a server info this will show as <i>unknown</i>.</li>
+     * <li>The name and version of the Java VM as reported by the
+     * <code>java.vm.name</code> and <code>java.vm.version</code> system
+     * properties</li>
+     * <li>The name, version, and architecture of the OS platform as reported by
+     * the <code>os.name</code>, <code>os.version</code>, and
+     * <code>os.arch</code> system properties</li>
+     * </ol>
+     */
+    private void setServerInfo() {
+        final String containerProductInfo;
+        if (getServletConfig() == null || getServletContext() == null) {
+            containerProductInfo = "unregistered";
+        } else {
+            final String containerInfo = getServletContext().getServerInfo();
+            if (containerInfo != null && containerInfo.length() > 0) {
+                int lbrace = containerInfo.indexOf('(');
+                if (lbrace < 0) {
+                    lbrace = containerInfo.length();
+                }
+                containerProductInfo = containerInfo.substring(0, lbrace).trim();
+            } else {
+                containerProductInfo = "unknown";
+            }
+        }
+
+        this.serverInfo = String.format("%s (%s, %s %s, %s %s %s)",
+            this.productInfo, containerProductInfo,
+            System.getProperty("java.vm.name"),
+            System.getProperty("java.version"), System.getProperty("os.name"),
+            System.getProperty("os.version"), System.getProperty("os.arch"));
+
+        if (this.requestProcessor != null) {
+            this.requestProcessor.setServerInfo(serverInfo);
+        }
     }
 
     // ---------- Property Setter for SCR --------------------------------------
@@ -260,17 +341,7 @@ public class SlingMainServlet extends GenericServlet {
             final Map<String, Object> componentConfig) {
 
         // setup server info
-        final Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
-        final Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
-        final String productVersion = bundleVersion.getMajor() + "."
-            + bundleVersion.getMinor();
-        this.serverInfo = PRODUCT_NAME + "/" + productVersion + " ("
-            + System.getProperty("java.vm.name") + " "
-            + System.getProperty("java.version") + "; "
-            + System.getProperty("os.name") + " "
-            + System.getProperty("os.version") + " "
-            + System.getProperty("os.arch") + ")";
-        this.requestProcessor.setServerInfo(serverInfo);
+        setProductInfo(bundleContext);
 
         // prepare the servlet configuration from the component config
         final Hashtable<String, Object> configuration = new Hashtable<String, Object>(
@@ -278,8 +349,7 @@ public class SlingMainServlet extends GenericServlet {
 
         // ensure the servlet name
         if (!(configuration.get("servlet-name") instanceof String)) {
-            configuration.put("servlet-name", PRODUCT_NAME + " "
-                + productVersion);
+            configuration.put("servlet-name", this.productInfo);
         }
 
         // configure method filter
@@ -359,6 +429,11 @@ public class SlingMainServlet extends GenericServlet {
         srpProps.put(Constants.SERVICE_DESCRIPTION, "Sling Request Processor");
         requestProcessorRegistration = bundleContext.registerService(
             SlingRequestProcessor.NAME, requestProcessor, srpProps);
+    }
+
+    @Override
+    public void init() {
+        setServerInfo();
     }
 
     @Deactivate
