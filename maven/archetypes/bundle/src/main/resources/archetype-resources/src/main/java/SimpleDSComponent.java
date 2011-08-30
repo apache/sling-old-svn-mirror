@@ -43,7 +43,7 @@ public class SimpleDSComponent implements Runnable {
     }
     
     protected void activate(ComponentContext ctx) {
-        this.bundleContext = bundleContext;
+        this.bundleContext = ctx.getBundleContext();
     }
     
     protected void deactivate() {
