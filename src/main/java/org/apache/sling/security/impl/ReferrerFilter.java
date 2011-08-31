@@ -282,6 +282,12 @@ public class ReferrerFilter implements Filter {
             return false;
         }
 
+        // allow the request if the host name of the referrer is
+        // the same as the request's host name
+        if ( info.host.equals(request.getServerName()) ) {
+            return true;
+        }
+
         boolean valid = false;
         for(final URL ref : this.allowedReferrers) {
             if ( info.host.equals(ref.getHost()) && info.scheme.equals(ref.getProtocol()) ) {
