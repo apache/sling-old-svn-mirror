@@ -58,6 +58,9 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
+                        <Embed-Dependency>
+                            org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/PropertiesUtil.*
+                        </Embed-Dependency>
                         <Private-Package>
                             org.apache.sling.security.impl
                         </Private-Package>
