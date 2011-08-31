@@ -17,6 +17,7 @@
 package org.apache.sling.security.impl;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -25,8 +26,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -44,6 +47,9 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +86,8 @@ public class ReferrerFilter implements Filter {
 
     /** Methods to be filtered. */
     private String[] filterMethods;
+
+    private ServiceRegistration configPrinterRegistration;
 
     /**
      * Create a default list of referrers
@@ -187,7 +195,27 @@ public class ReferrerFilter implements Filter {
                 filterMethods[i] = filterMethods[i].toUpperCase();
             }
         }
+        this.configPrinterRegistration = registerConfigPrinter(ctx.getBundleContext());
     }
+
+    protected void deactivate() {
+        this.configPrinterRegistration.unregister();
+    }
+
+    private ServiceRegistration registerConfigPrinter(BundleContext bundleContext) {
+        final ConfigurationPrinter cfgPrinter = new ConfigurationPrinter();
+        final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
+        serviceProps.put(Constants.SERVICE_DESCRIPTION,
+            "Apache Sling Referrer Filter Configuration Printer");
+        serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        serviceProps.put("felix.webconsole.label", "slingreferrerfilter");
+        serviceProps.put("felix.webconsole.title", "Sling Referrer Filter");
+        serviceProps.put("felix.webconsole.configprinter.modes", "always");
+
+       return bundleContext.registerService(Object.class.getName(),
+                cfgPrinter, serviceProps);
+    }
+
 
     private boolean isModification(final HttpServletRequest req) {
         final String method = req.getMethod();
@@ -316,5 +344,22 @@ public class ReferrerFilter implements Filter {
      */
     public void destroy() {
         // nothing to do
+    }
+
+    public class ConfigurationPrinter {
+
+        /**
+         * Print out the allowedReferrers
+         * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+         */
+        @SuppressWarnings("unused")
+        public void printConfiguration(PrintWriter pw) {
+            pw.println("Current Apache Sling Referrer Filter Allowed Referrers:");
+            pw.println();
+            for (final URL url : allowedReferrers) {
+                pw.println(url.toString());
+            }
+        }
+
     }
 }
