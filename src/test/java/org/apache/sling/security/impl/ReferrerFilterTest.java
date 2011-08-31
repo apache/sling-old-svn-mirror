@@ -16,8 +16,8 @@
  */
 package org.apache.sling.security.impl;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.*;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 
 public class ReferrerFilterTest {
@@ -36,8 +38,13 @@ public class ReferrerFilterTest {
     @Before public void setup() {
         filter = new ReferrerFilter();
         final ComponentContext ctx = mock(ComponentContext.class);
+        final BundleContext bundleCtx = mock(BundleContext.class);
+        final ServiceRegistration reg = mock(ServiceRegistration.class);
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        when(ctx.getProperties()).thenReturn(props);
+        doReturn(props).when(ctx).getProperties();
+        doReturn(bundleCtx).when(ctx).getBundleContext();
+        doReturn(reg).when(bundleCtx).registerService(any(String[].class), any(), any(Dictionary.class));
+        doNothing().when(reg).unregister();
         filter.activate(ctx);
     }
 
