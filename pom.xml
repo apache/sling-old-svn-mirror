@@ -81,6 +81,8 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
+        <module>maven/apache-sling-jar-resource-bundle</module>
+
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
