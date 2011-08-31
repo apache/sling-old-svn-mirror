@@ -74,10 +74,13 @@ public class BundleStatePreservedTest extends OsgiInstallerTestBase {
     	// Execute some OsgiController operations
         Object listener = this.startObservingBundleEvents();
         installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar")), null);
+        sleep(150);
         installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.2.jar")), null);
+        sleep(150);
         installer.updateResources(URL_SCHEME, getInstallableResource(getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.1.jar")), null);
         this.waitForBundleEvents("Bundle must be installed", listener,
-                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.INSTALLED),
+                new BundleEvent("osgi-installer-testbundle", "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.UPDATED),
                 new BundleEvent("osgi-installer-testbundle", "1.2", org.osgi.framework.BundleEvent.STARTED));
         assertBundle("After installing testbundle", "osgi-installer-testbundle", "1.2", Bundle.ACTIVE);
 

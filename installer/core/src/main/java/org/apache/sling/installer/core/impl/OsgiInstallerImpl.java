@@ -202,11 +202,6 @@ public class OsgiInstallerImpl
                     }
                 }
             }
-            // Some integration tests depend on this delay, make sure to
-            // rerun/adapt them if changing this value
-            try {
-                Thread.sleep(250);
-            } catch (final InterruptedException ignore) {}
         }
     }
 
