@@ -18,20 +18,8 @@
  */
 package org.apache.sling.jcr.webdav.impl.helper;
 
-import java.net.URL;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.server.io.DefaultHandler;
-import org.apache.jackrabbit.server.io.DirListingExportHandler;
 import org.apache.jackrabbit.server.io.IOManager;
-import org.apache.jackrabbit.server.io.IOManagerImpl;
 import org.apache.jackrabbit.server.io.PropertyManager;
-import org.apache.jackrabbit.server.io.PropertyManagerImpl;
 import org.apache.jackrabbit.webdav.simple.DefaultItemFilter;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
@@ -39,6 +27,13 @@ import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.webdav.impl.servlets.SlingWebDavServlet;
+
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import java.net.URL;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 public class SlingResourceConfig extends ResourceConfig {
 
@@ -55,8 +50,12 @@ public class SlingResourceConfig extends ResourceConfig {
     private final Dictionary<String, String> servletInitParams;
 
     public SlingResourceConfig(MimeTypeService mimeTypeService,
-            Dictionary<?, ?> config) {
+            Dictionary<?, ?> config,
+            IOManager ioManager,
+            PropertyManager propertyManager) {
         super(new SlingTikaDetector(mimeTypeService));
+        this.ioManager = ioManager;
+        this.propertyManager = propertyManager;
         collectionTypes = OsgiUtil.toStringArray(
             config.get(SlingWebDavServlet.COLLECTION_TYPES),
             SlingWebDavServlet.COLLECTION_TYPES_DEFAULT);
@@ -75,29 +74,6 @@ public class SlingResourceConfig extends ResourceConfig {
         itemFilter.setFilteredPrefixes(filterPrefixes);
         itemFilter.setFilteredURIs(filterURIs);
         itemFilter.setFilteredNodetypes(filterNodeTypes);
-
-        String collectionType = OsgiUtil.toString(
-            config.get(SlingWebDavServlet.TYPE_COLLECTIONS),
-            SlingWebDavServlet.TYPE_COLLECTIONS_DEFAULT);
-        String nonCollectionType = OsgiUtil.toString(
-            config.get(SlingWebDavServlet.TYPE_NONCOLLECTIONS),
-            SlingWebDavServlet.TYPE_NONCOLLECTIONS_DEFAULT);
-        String contentType = OsgiUtil.toString(
-            config.get(SlingWebDavServlet.TYPE_CONTENT),
-            SlingWebDavServlet.TYPE_CONTENT_DEFAULT);
-
-        // share these handlers between the IOManager and the PropertyManager
-        DirListingExportHandler dirHandler = new DirListingExportHandler();
-        DefaultHandler defaultHandler = new DefaultHandler(null, collectionType,
-            nonCollectionType, contentType);
-
-        ioManager = new IOManagerImpl();
-        ioManager.addIOHandler(dirHandler);
-        ioManager.addIOHandler(defaultHandler);
-
-        propertyManager = new PropertyManagerImpl();
-        propertyManager.addPropertyHandler(dirHandler);
-        propertyManager.addPropertyHandler(defaultHandler);
 
         servletContextPath = OsgiUtil.toString(
             config.get(SlingWebDavServlet.PROP_CONTEXT),

@@ -55,6 +55,11 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling,jcr</Bundle-Category>
+                        <_exportcontents>
+                            org.apache.jackrabbit.server.io; version=2.3,
+                            org.apache.jackrabbit.webdav;
+                            org.apache.jackrabbit.webdav.property; version=2.3
+                        </_exportcontents>
                         <Private-Package>
                             org.apache.sling.jcr.webdav.impl.*
                         </Private-Package>
@@ -74,7 +79,6 @@
                         <Embed-Dependency>
                             jackrabbit-jcr-server,
                             jackrabbit-webdav,
-                            xercesImpl,
                             jackrabbit-jcr-commons
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
@@ -117,7 +121,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
-            <version>2.2.5</version>
+            <version>2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -137,6 +141,10 @@
         </dependency>
 
         <!-- OSGi Libraries -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>

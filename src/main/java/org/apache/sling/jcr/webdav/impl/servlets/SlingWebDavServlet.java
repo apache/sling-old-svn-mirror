@@ -23,14 +23,28 @@ import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.server.io.IOHandler;
+import org.apache.jackrabbit.server.io.PropertyHandler;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.webdav.impl.handler.SlingIOManager;
+import org.apache.sling.jcr.webdav.impl.handler.SlingPropertyManager;
 import org.apache.sling.jcr.webdav.impl.helper.SlingLocatorFactory;
 import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
 import org.apache.sling.jcr.webdav.impl.helper.SlingSessionProvider;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
@@ -38,7 +52,7 @@ import org.osgi.service.http.NamespaceException;
 /**
  * The <code>SlingWebDavServlet</code> implements the WebDAV protocol as a
  * default servlet for Sling handling all WebDAV methods.
- * 
+ *
  * @scr.component name="org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet"
  *                label="%dav.name" description="%dav.description"
  *                immediate="true"
@@ -49,68 +63,89 @@ import org.osgi.service.http.NamespaceException;
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="*" private="true"
  */
+@Component(name = "org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet", label = "%dav.name", description = "%dav.description", immediate = true)
+@Service(Servlet.class)
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling WebDAV Servlet"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = "sling.servlet.resourceTypes", value = "sling/servlet/default", propertyPrivate = true),
+    @Property(name = "sling.servlet.methods", value = "*", propertyPrivate = true) })
+    @References({
+        @Reference(name = SlingWebDavServlet.IOHANDLER_REF_NAME, referenceInterface = IOHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = SlingWebDavServlet.PROPERTYHANDLER_REF_NAME, referenceInterface = PropertyHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+})
 public class SlingWebDavServlet extends SimpleWebdavServlet {
-
-    /** @scr.property valueRef="DEFAULT_CONTEXT" */
-    public static final String PROP_CONTEXT = "dav.root";
-
-    /** @scr.property valueRef="DEFAULT_REALM" */
-    public static final String PROP_REALM = "dav.realm";
-
-    /** @scr.property valueRef="COLLECTION_TYPES_DEFAULT" */
-    public static final String COLLECTION_TYPES = "collection.types";
-
-    /** @scr.property valueRef="FILTER_PREFIXES_DEFAULT" */
-    public static final String FILTER_PREFIXES = "filter.prefixes";
-
-    /** @scr.property valueRef="EMPTY_DEFAULT" */
-    public static final String FILTER_TYPES = "filter.types";
-
-    /** @scr.property valueRef="EMPTY_DEFAULT" */
-    public static final String FILTER_URIS = "filter.uris";
-
-    /** @scr.property valueRef="TYPE_COLLECTIONS_DEFAULT" */
-    public static final String TYPE_COLLECTIONS = "type.collections";
-
-    /** @scr.property valueRef="TYPE_NONCOLLECTIONS_DEFAULT" */
-    public static final String TYPE_NONCOLLECTIONS = "type.noncollections";
-
-    /** @scr.property valueRef="TYPE_CONTENT_DEFAULT" */
-    public static final String TYPE_CONTENT = "type.content";
 
     public static final String DEFAULT_CONTEXT = "/dav";
 
+    @Property(DEFAULT_CONTEXT)
+    public static final String PROP_CONTEXT = "dav.root";
+
     public static final String DEFAULT_REALM = "Sling WebDAV";
 
-    public static final String[] EMPTY_DEFAULT = new String[0];
+    @Property(DEFAULT_REALM)
+    public static final String PROP_REALM = "dav.realm";
 
-    public static final String[] FILTER_PREFIXES_DEFAULT = new String[] {
-        "rep", "jcr" };
-
-    public static final String TYPE_COLLECTIONS_DEFAULT = "sling:Folder";
+    public static final String COLLECTION_TYPES = "collection.types";
 
     public static final String TYPE_NONCOLLECTIONS_DEFAULT = "nt:file";
 
     public static final String TYPE_CONTENT_DEFAULT = "nt:resource";
 
+    @Property(name = COLLECTION_TYPES)
     public static final String[] COLLECTION_TYPES_DEFAULT = new String[] {
         TYPE_NONCOLLECTIONS_DEFAULT, TYPE_CONTENT_DEFAULT };
 
-    /** @scr.reference */
+    public static final String FILTER_PREFIXES = "filter.prefixes";
+
+    @Property(name = FILTER_PREFIXES)
+    public static final String[] FILTER_PREFIXES_DEFAULT = new String[] {
+        "rep", "jcr" };
+
+    public static final String[] EMPTY_DEFAULT = new String[0];
+
+    @Property({})
+    public static final String FILTER_TYPES = "filter.types";
+
+    @Property({})
+    public static final String FILTER_URIS = "filter.uris";
+
+    public static final String TYPE_COLLECTIONS_DEFAULT = "sling:Folder";
+
+    @Property(TYPE_COLLECTIONS_DEFAULT)
+    public static final String TYPE_COLLECTIONS = "type.collections";
+
+    @Property(TYPE_NONCOLLECTIONS_DEFAULT)
+    public static final String TYPE_NONCOLLECTIONS = "type.noncollections";
+
+    @Property(TYPE_CONTENT_DEFAULT)
+    public static final String TYPE_CONTENT = "type.content";
+
+    static final String IOHANDLER_REF_NAME = "IOHandler";
+
+    static final String PROPERTYHANDLER_REF_NAME = "PropertyHandler";
+
+    @Reference
     private SlingRepository repository;
 
-    /** @scr.reference */
+    @Reference
     private HttpService httpService;
 
-    /** @scr.reference */
+    @Reference
     private MimeTypeService mimeTypeService;
+
+    private final SlingIOManager ioManager = new SlingIOManager(
+        IOHANDLER_REF_NAME);
+
+    private final SlingPropertyManager propertyManager = new SlingPropertyManager(
+        PROPERTYHANDLER_REF_NAME);
 
     private SlingResourceConfig resourceConfig;
 
     private DavLocatorFactory locatorFactory;
 
     private SessionProvider sessionProvider;
-    
+
     private boolean simpleWebDavServletRegistered;
 
     // ---------- SimpleWebdavServlet overwrites -------------------------------
@@ -118,10 +153,10 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        
+
         setResourceConfig(resourceConfig);
     }
-    
+
     @Override
     public Repository getRepository() {
         return repository;
@@ -169,8 +204,13 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     protected void activate(ComponentContext context)
             throws NamespaceException, ServletException {
 
+        this.ioManager.setComponentContext(context);
+        this.propertyManager.setComponentContext(context);
+
         resourceConfig = new SlingResourceConfig(mimeTypeService,
-            context.getProperties());
+            context.getProperties(),
+            ioManager,
+            propertyManager);
 
         // Register servlet, and set the contextPath field to signal successful
         // registration
@@ -182,12 +222,30 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     }
 
     protected void deactivate(ComponentContext context) {
-        
+
         if (simpleWebDavServletRegistered) {
             httpService.unregister(resourceConfig.getServletContextPath());
             simpleWebDavServletRegistered = false;
         }
 
-        resourceConfig = null;
+        this.resourceConfig = null;
+        this.ioManager.setComponentContext(null);
+        this.propertyManager.setComponentContext(null);
+    }
+
+    public void bindIOHandler(final ServiceReference ioHandlerReference) {
+        this.ioManager.bindIOHandler(ioHandlerReference);
+    }
+
+    public void unbindIOHandler(final ServiceReference ioHandlerReference) {
+        this.ioManager.unbindIOHandler(ioHandlerReference);
+    }
+
+    public void bindPropertyHandler(final ServiceReference propertyHandlerReference) {
+        this.propertyManager.bindPropertyHandler(propertyHandlerReference);
+    }
+
+    public void unbindPropertyHandler(final ServiceReference propertyHandlerReference) {
+        this.propertyManager.unbindPropertyHandler(propertyHandlerReference);
     }
 }
