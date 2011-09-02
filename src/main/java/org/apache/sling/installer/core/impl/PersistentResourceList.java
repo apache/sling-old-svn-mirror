@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.tasks.InstallationListener;
+import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;

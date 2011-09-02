@@ -16,34 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.api.tasks;
+package org.apache.sling.installer.api.event;
+
 
 /**
  * Optional listener which can be used to monitor the activities
  * of the installer.
  *
- * @since 1.2
+ * @since 1.0
  */
-public interface InstallationListener {
+public interface InstallationEvent {
+
+    public enum TYPE {
+        STARTED,
+        SUSPENDED,
+        PROCESSED
+    };
 
     /**
-     * A resource has been processed
-     * The state of the resource can be queried to see whether
-     * the resource has been installed or removed.
-     * @param resource The resource
+     * Return the event type.
      */
-    void processed(final TaskResource resource);
+    TYPE getType();
 
     /**
-     * Indication that the installer starts a new cycle.
-     * Several starting methods might be invoked one after
-     * the other without a processed or suspended inbetween.
+     * Return the source of the event.
+     * For {@link TYPE#STARTED} and {@link TYPE#SUSPENDED} events
+     * this is <code>null</code>.
+     * For {@link TYPE#PROCESSED} events this is a
+     * {@link org.apache.sling.installer.api.tasks.TaskResource}.
      */
-    void started();
-
-    /**
-     * The installer is suspended and has processed all current
-     * resources.
-     */
-    void suspended();
+    Object getSource();
 }

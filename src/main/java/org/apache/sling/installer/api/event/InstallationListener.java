@@ -16,14 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.core.impl.tasks;
+package org.apache.sling.installer.api.event;
 
-import org.apache.sling.installer.api.event.InstallationEvent;
-import org.apache.sling.installer.api.event.InstallationListener;
 
-public class MockInstallationListener implements InstallationListener {
+/**
+ * Optional listener which can be used to monitor the activities
+ * of the installer.
+ *
+ * @since 1.0
+ */
+public interface InstallationListener {
 
-    public void onEvent(final InstallationEvent event) {
-        // nothing to do
-    }
+    /**
+     * Receive an installation event.
+     */
+    void onEvent(final InstallationEvent event);
 }

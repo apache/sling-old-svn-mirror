@@ -35,7 +35,6 @@ import org.osgi.framework.Constants;
  */
 public class MockBundleResource implements TaskResource, Comparable<MockBundleResource> {
 
-    private static final long serialVersionUID = 1L;
     private final Map<String, Object> attributes = new HashMap<String, Object>();
     private final Map<String, Object> tempAttributes = new HashMap<String, Object>();
 	private ResourceState state = ResourceState.INSTALL;
