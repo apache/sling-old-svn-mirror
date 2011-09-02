@@ -33,6 +33,7 @@ import org.apache.sling.installer.core.impl.tasks.BundleInstallTask;
 import org.apache.sling.installer.core.impl.tasks.BundleRemoveTask;
 import org.apache.sling.installer.core.impl.tasks.BundleStartTask;
 import org.apache.sling.installer.core.impl.tasks.BundleUpdateTask;
+import org.apache.sling.installer.core.impl.tasks.MockInstallationListener;
 import org.apache.sling.installer.core.impl.tasks.SynchronousRefreshPackagesTask;
 
 /** Test the ordering and duplicates elimination of
@@ -64,7 +65,7 @@ public class TaskOrderingTest {
         }
         rr = (RegisteredResourceImpl)rr.clone(tr[0]);
 
-        final EntityResourceList erl = new EntityResourceList("test");
+        final EntityResourceList erl = new EntityResourceList("test", new MockInstallationListener());
 	    erl.addOrUpdate(rr);
 	    return erl;
 	}
