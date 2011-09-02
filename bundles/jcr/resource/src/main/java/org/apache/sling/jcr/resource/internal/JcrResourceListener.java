@@ -165,9 +165,8 @@ public class JcrResourceListener implements EventListener {
                         removedEvents.put(eventPath, event);
                     }
                 }
-            } catch (RepositoryException e) {
-                logger.error("Error during modificatiozas" +
-                		"n: {}", e.getMessage());
+            } catch (final RepositoryException e) {
+                logger.error("Error during modification: {}", e.getMessage());
             }
         }
 
