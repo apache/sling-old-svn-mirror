@@ -39,6 +39,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
+import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -176,7 +177,16 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
-            listener.started();
+            listener.onEvent(new InstallationEvent() {
+
+                public TYPE getType() {
+                    return TYPE.STARTED;
+                }
+
+                public Object getSource() {
+                    return null;
+                }
+            });
             logger.debug("Starting new cycle");
 
             this.mergeNewlyRegisteredResources();
@@ -201,7 +211,16 @@ public class OsgiInstallerImpl
                         // No tasks to execute - wait until new resources are
                         // registered
                         logger.debug("No tasks to process, going idle");
-                        listener.suspended();
+                        listener.onEvent(new InstallationEvent() {
+
+                            public TYPE getType() {
+                                return TYPE.SUSPENDED;
+                            }
+
+                            public Object getSource() {
+                                return null;
+                            }
+                        });
                         try {
                             this.resourcesLock.wait();
                         } catch (InterruptedException ignore) {}

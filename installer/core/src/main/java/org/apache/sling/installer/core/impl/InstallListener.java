@@ -18,8 +18,8 @@
  */
 package org.apache.sling.installer.core.impl;
 
-import org.apache.sling.installer.api.tasks.InstallationListener;
-import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.event.InstallationEvent;
+import org.apache.sling.installer.api.event.InstallationListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -37,32 +37,16 @@ public class InstallListener implements InstallationListener {
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.InstallationListener#processed(org.apache.sling.installer.api.tasks.TaskResource)
+     * @see org.apache.sling.installer.api.event.InstallationListener#onEvent(org.apache.sling.installer.api.event.InstallationEvent)
      */
-    public void processed(final TaskResource resource) {
-        final InstallationListener l = (InstallationListener) this.tracker.getService();
-        if ( l != null ) {
-            l.processed(resource);
-        }
-    }
-
-    /**
-     * @see org.apache.sling.installer.api.tasks.InstallationListener#started()
-     */
-    public void started() {
-        final InstallationListener l = (InstallationListener) this.tracker.getService();
-        if ( l != null ) {
-            l.started();
-        }
-    }
-
-    /**
-     * @see org.apache.sling.installer.api.tasks.InstallationListener#suspended()
-     */
-    public void suspended() {
-        final InstallationListener l = (InstallationListener) this.tracker.getService();
-        if ( l != null ) {
-            l.suspended();
+    public void onEvent(final InstallationEvent event) {
+        final Object[] listeners = this.tracker.getServices();
+        if ( listeners != null ) {
+            for(final Object l : listeners) {
+                if ( l instanceof InstallationListener ) {
+                    ((InstallationListener)l).onEvent(event);
+                }
+            }
         }
     }
 }
