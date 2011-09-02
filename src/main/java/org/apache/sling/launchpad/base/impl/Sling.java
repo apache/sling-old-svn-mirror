@@ -542,6 +542,11 @@ public class Sling {
             // copy the values into a temporary properties structure to store
             Properties tmp = new Properties();
             tmp.putAll(staticProps);
+
+            // remove properties where overlay makes no sense
+            tmp.remove(SharedConstants.SLING_HOME);
+            tmp.remove(SharedConstants.SLING_PROPERTIES);
+
             tmp.store(os, "Overlay properties for configuration");
         } catch (Exception ex) {
             this.logger.log(Logger.LOG_ERROR,
