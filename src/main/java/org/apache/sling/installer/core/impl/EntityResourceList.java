@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.installer.api.tasks.InstallationListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
@@ -58,8 +59,12 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     /** The resource id of this group. */
     private String resourceId;
 
-    public EntityResourceList(final String resourceId) {
+    /** The listener. */
+    private transient InstallationListener listener;
+
+    public EntityResourceList(final String resourceId, final InstallationListener listener) {
         this.resourceId = resourceId;
+        this.listener = listener;
     }
     /**
      * Serialize the object
@@ -180,6 +185,13 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     /**
+     * Set the listener
+     */
+    public void setListener(final InstallationListener listener) {
+        this.listener = listener;
+    }
+
+    /**
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState)
      */
     public void setFinishState(ResourceState state) {
@@ -219,6 +231,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
 
             }
             ((RegisteredResourceImpl)toActivate).setState(state);
+            this.listener.processed(toActivate);
             if ( state == ResourceState.UNINSTALLED ) {
                 this.cleanup(toActivate);
             }

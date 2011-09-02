@@ -110,13 +110,16 @@ public class OsgiInstallerImpl
     /** New resources lock. */
     private final Object resourcesLock = new Object();
 
+    private final InstallListener listener;
+
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         // Initialize file util
         new FileDataStore(ctx);
         final File f = FileDataStore.SHARED.getDataFile("RegisteredResourceList.ser");
-        this.persistentList = new PersistentResourceList(f);
+        this.listener = new InstallListener(ctx);
+        this.persistentList = new PersistentResourceList(f, listener);
     }
 
     /**
@@ -132,6 +135,8 @@ public class OsgiInstallerImpl
         // remove as listener
         ctx.removeBundleListener(this);
         ctx.removeFrameworkListener(this);
+
+        this.listener.dispose();
 
         // wake up sleeping thread
         this.wakeUp();
@@ -171,6 +176,7 @@ public class OsgiInstallerImpl
     public void run() {
         this.init();
         while (active) {
+            listener.started();
             logger.debug("Starting new cycle");
 
             this.mergeNewlyRegisteredResources();
@@ -195,6 +201,7 @@ public class OsgiInstallerImpl
                         // No tasks to execute - wait until new resources are
                         // registered
                         logger.debug("No tasks to process, going idle");
+                        listener.suspended();
                         try {
                             this.resourcesLock.wait();
                         } catch (InterruptedException ignore) {}

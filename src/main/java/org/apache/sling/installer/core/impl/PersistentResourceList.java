@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.tasks.InstallationListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
@@ -66,9 +67,12 @@ public class PersistentResourceList {
     /** All untransformed resources. */
     private final List<RegisteredResource> untransformedResources;
 
+    private final InstallationListener listener;
+
     @SuppressWarnings("unchecked")
-    public PersistentResourceList(final File dataFile) {
+    public PersistentResourceList(final File dataFile, final InstallationListener listener) {
         this.dataFile = dataFile;
+        this.listener = listener;
 
         Map<String, EntityResourceList> restoredData = null;
         List<RegisteredResource> unknownList = null;
@@ -107,6 +111,7 @@ public class PersistentResourceList {
         // update resource ids
         for(final Map.Entry<String, EntityResourceList> entry : this.data.entrySet()) {
             entry.getValue().setResourceId(entry.getKey());
+            entry.getValue().setListener(listener);
         }
     }
 
@@ -192,7 +197,7 @@ public class PersistentResourceList {
 
             EntityResourceList t = this.data.get(input.getEntityId());
             if (t == null) {
-                t = new EntityResourceList(input.getEntityId());
+                t = new EntityResourceList(input.getEntityId(), this.listener);
                 this.data.put(input.getEntityId(), t);
             }
 

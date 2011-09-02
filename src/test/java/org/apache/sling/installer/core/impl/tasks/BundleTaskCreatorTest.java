@@ -44,7 +44,7 @@ public class BundleTaskCreatorTest {
 	    }
 		final SortedSet<InstallTask> tasks = new TreeSet<InstallTask>();
         for(final TaskResource r : sortedResources) {
-            final EntityResourceList erl = new EntityResourceList(r.getEntityId());
+            final EntityResourceList erl = new EntityResourceList(r.getEntityId(), new MockInstallationListener());
             erl.addOrUpdate(r);
   		    tasks.add(btc.createTask(erl));
         }
