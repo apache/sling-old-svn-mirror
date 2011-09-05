@@ -66,6 +66,30 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      */
     protected File commonSlingBootstrap;
 
+    /**
+     * @parameter expression="${webappSlingProps}"
+     *            default-value="src/main/sling/webapp.properties"
+     */
+    protected File webappSlingProps;
+
+    /**
+     * @parameter expression="${webappSlingBootstrap}"
+     *            default-value="src/main/sling/webapp.bootstrap.txt"
+     */
+    protected File webappSlingBootstrap;
+
+    /**
+     * @parameter expression="${standaloneSlingProps}"
+     *            default-value="src/main/sling/standalone.properties"
+     */
+    protected File standaloneSlingProps;
+
+    /**
+     * @parameter expression="${standaloneSlingBootstrap}"
+     *            default-value="src/main/sling/standalone.bootstrap.txt"
+     */
+    protected File standaloneSlingBootstrap;
+
     protected File getConfigDirectory() {
         return this.configDirectory;
     }

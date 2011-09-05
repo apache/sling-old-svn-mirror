@@ -177,7 +177,15 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
 
     private Properties slingProperties;
 
+    private Properties slingWebappProperties;
+
+    private Properties slingStandaloneProperties;
+
     private String slingBootstrapCommand;
+
+    private String slingWebappBootstrapCommand;
+
+    private String slingStandaloneBootstrapCommand;
 
     /**
      * @parameter default-value="${project.build.directory}/tmpBundleListconfig"
@@ -380,8 +388,12 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         zipUnarchiver.extract();
 
                         final File slingDir = new File(this.tmpOutputDir, "sling");
-                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_PROPS));
-                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_BOOTSTRAP));
+                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_PROPS), 0);
+                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_PROPS), 1);
+                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_PROPS), 2);
+                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_BOOTSTRAP), 0);
+                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_BOOTSTRAP), 1);
+                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_BOOTSTRAP), 2);
 
                         // and now configurations
                         if ( this.overlayConfigDir == null ) {
@@ -458,7 +470,15 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
     }
 
-    private void readSlingProperties(final File propsFile) throws MojoExecutionException {
+    private void copyProperties(final Properties source, final Properties dest) {
+        final Enumeration<Object> keys = source.keys();
+        while ( keys.hasMoreElements() ) {
+            final Object key = keys.nextElement();
+            dest.put(key, source.get(key));
+        }
+    }
+
+    private void readSlingProperties(final File propsFile, final int mode) throws MojoExecutionException {
         if (propsFile.exists()) {
             File tmp = null;
             try {
@@ -466,13 +486,23 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 mavenFileFilter.copyFile(propsFile, tmp, true, project, null, true,
                         System.getProperty("file.encoding"), mavenSession);
                 final Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
-                if ( this.slingProperties == null ) {
-                    this.slingProperties = loadedProps;
+                if ( mode == 0 ) {
+                    if ( this.slingProperties == null ) {
+                        this.slingProperties = loadedProps;
+                    } else {
+                        this.copyProperties(loadedProps, this.slingProperties);
+                    }
+                } else if ( mode == 1 ) {
+                    if ( this.slingWebappProperties == null ) {
+                        this.slingWebappProperties = loadedProps;
+                    } else {
+                        this.copyProperties(loadedProps, this.slingWebappProperties);
+                    }
                 } else {
-                    final Enumeration<Object> keys = loadedProps.keys();
-                    while ( keys.hasMoreElements() ) {
-                        final Object key = keys.nextElement();
-                        this.slingProperties.put(key, loadedProps.get(key));
+                    if ( this.slingStandaloneProperties == null ) {
+                        this.slingStandaloneProperties = loadedProps;
+                    } else {
+                        this.copyProperties(loadedProps, this.slingStandaloneProperties);
                     }
                 }
             } catch (IOException e) {
@@ -487,8 +517,18 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
     }
 
-    protected Properties getSlingProperties() throws MojoExecutionException {
-        readSlingProperties(this.commonSlingProps);
+    protected Properties getSlingProperties(final boolean standalone) throws MojoExecutionException {
+        readSlingProperties(this.commonSlingProps, 0);
+        final Properties additionalProps = (standalone ? this.slingStandaloneProperties : this.slingWebappProperties);
+        if ( this.slingProperties == null) {
+            return additionalProps;
+        }
+        if ( additionalProps != null ) {
+            final Properties combinedProps = new Properties();
+            this.copyProperties(this.slingProperties, combinedProps);
+            this.copyProperties(additionalProps, combinedProps);
+            return combinedProps;
+        }
         return this.slingProperties;
     }
 
@@ -497,7 +537,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * The filter is copied to a tmp location to apply filtering.
      * @throws MojoExecutionException
      */
-    private void readSlingBootstrap(final File bootstrapFile) throws MojoExecutionException {
+    private void readSlingBootstrap(final File bootstrapFile, final int mode) throws MojoExecutionException {
         if (bootstrapFile.exists()) {
             File tmp = null;
             Reader reader = null;
@@ -507,19 +547,34 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         System.getProperty("file.encoding"), mavenSession);
                 reader = new FileReader(tmp);
                 final StringBuilder sb = new StringBuilder();
-                if ( this.slingBootstrapCommand != null ) {
-                    sb.append(this.slingBootstrapCommand);
+                if ( mode == 0 ) {
+                    if ( this.slingBootstrapCommand != null ) {
+                        sb.append(this.slingBootstrapCommand);
+                    }
+                } else if ( mode == 1 ) {
+                    if ( this.slingWebappBootstrapCommand != null ) {
+                        sb.append(this.slingWebappBootstrapCommand);
+                    }
+                } else {
+                    if ( this.slingStandaloneBootstrapCommand != null ) {
+                        sb.append(this.slingStandaloneBootstrapCommand);
+                    }
                 }
                 final char[] buffer = new char[2048];
                 int l;
                 while ( (l = reader.read(buffer, 0, buffer.length) ) != -1 ) {
                     sb.append(buffer, 0, l);
                 }
-
-                this.slingBootstrapCommand = sb.toString();
-            } catch (IOException e) {
+                if ( mode == 0 ) {
+                    this.slingBootstrapCommand = sb.toString();
+                } else if ( mode == 1 ) {
+                    this.slingWebappBootstrapCommand = sb.toString();
+                } else {
+                    this.slingStandaloneBootstrapCommand = sb.toString();
+                }
+            } catch (final IOException e) {
                 throw new MojoExecutionException("Unable to create filtered bootstrap file", e);
-            } catch (MavenFilteringException e) {
+            } catch (final MavenFilteringException e) {
                 throw new MojoExecutionException("Unable to create filtered bootstrap file", e);
             } finally {
                 if (tmp != null) {
@@ -540,9 +595,17 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @return The contents are <code>null</code>
      * @throws MojoExecutionException
      */
-    protected String getSlingBootstrap() throws MojoExecutionException {
-        this.readSlingBootstrap(this.commonSlingBootstrap);
-
+    protected String getSlingBootstrap(final boolean standalone) throws MojoExecutionException {
+        this.readSlingBootstrap(this.commonSlingBootstrap, 0);
+        final String addCmds = (standalone ? this.slingStandaloneBootstrapCommand : this.slingWebappBootstrapCommand);
+        if ( this.slingBootstrapCommand == null ) {
+            return addCmds;
+        }
+        if ( addCmds != null ) {
+            final StringBuilder builder = new StringBuilder(this.slingBootstrapCommand);
+            builder.append(addCmds);
+            return builder.toString();
+        }
         return this.slingBootstrapCommand;
     }
 }

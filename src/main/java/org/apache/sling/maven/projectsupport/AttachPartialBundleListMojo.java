@@ -42,6 +42,14 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String SLING_COMMON_BOOTSTRAP = "common.bootstrap.txt";
 
+    public static final String SLING_WEBAPP_PROPS = "webapp.properties";
+
+    public static final String SLING_WEBAPP_BOOTSTRAP = "webapp.bootstrap.txt";
+
+    public static final String SLING_STANDALONE_PROPS = "standalone.properties";
+
+    public static final String SLING_STANDALONE_BOOTSTRAP = "standalone.bootstrap.txt";
+
     /**
      * @parameter default-value="${project.build.directory}/bundleListconfig"
      */
@@ -75,6 +83,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
     private boolean checkFile(final File f) {
         return f != null && f.exists();
     }
+
     private void attachConfigurations() throws MojoExecutionException, IOException, ArchiverException {
         if ( this.ignoreBundleListConfig ) {
             this.getLog().debug("ignoreBundleListConfig is set to true, therefore not attaching configurations.");
@@ -84,6 +93,10 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
         boolean hasConfigs = this.checkFile(this.getConfigDirectory());
         hasConfigs |= this.checkFile(this.commonSlingBootstrap);
         hasConfigs |= this.checkFile(this.commonSlingProps);
+        hasConfigs |= this.checkFile(this.webappSlingBootstrap);
+        hasConfigs |= this.checkFile(this.webappSlingProps);
+        hasConfigs |= this.checkFile(this.standaloneSlingBootstrap);
+        hasConfigs |= this.checkFile(this.standaloneSlingProps);
 
         if ( !hasConfigs ) {
             this.getLog().debug("No configurations to attach.");
@@ -100,6 +113,26 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
             final File slingDir = new File(this.configOutputDir, "sling");
             slingDir.mkdirs();
             FileUtils.copyFile(this.commonSlingProps, new File(slingDir, SLING_COMMON_PROPS));
+        }
+        if ( this.checkFile(this.webappSlingBootstrap) ) {
+            final File slingDir = new File(this.configOutputDir, "sling");
+            slingDir.mkdirs();
+            FileUtils.copyFile(this.webappSlingBootstrap, new File(slingDir, SLING_WEBAPP_BOOTSTRAP));
+        }
+        if ( this.checkFile(this.webappSlingProps) ) {
+            final File slingDir = new File(this.configOutputDir, "sling");
+            slingDir.mkdirs();
+            FileUtils.copyFile(this.webappSlingProps, new File(slingDir, SLING_WEBAPP_PROPS));
+        }
+        if ( this.checkFile(this.standaloneSlingBootstrap) ) {
+            final File slingDir = new File(this.configOutputDir, "sling");
+            slingDir.mkdirs();
+            FileUtils.copyFile(this.standaloneSlingBootstrap, new File(slingDir, SLING_STANDALONE_BOOTSTRAP));
+        }
+        if ( this.checkFile(this.standaloneSlingProps) ) {
+            final File slingDir = new File(this.configOutputDir, "sling");
+            slingDir.mkdirs();
+            FileUtils.copyFile(this.standaloneSlingProps, new File(slingDir, SLING_STANDALONE_PROPS));
         }
         if ( this.checkFile(this.getConfigDirectory()) ) {
             final File configDir = new File(this.configOutputDir, "config");
