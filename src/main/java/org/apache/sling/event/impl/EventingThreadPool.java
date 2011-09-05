@@ -23,7 +23,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -64,11 +64,11 @@ public class EventingThreadPool implements ThreadPool {
      */
     protected void activate(final ComponentContext ctx) {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
-        config.setMinPoolSize(OsgiUtil.toInteger(ctx.getProperties().get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE));
+        config.setMinPoolSize(PropertiesUtil.toInteger(ctx.getProperties().get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE));
         config.setMaxPoolSize(config.getMinPoolSize());
         config.setQueueSize(-1); // unlimited
         config.setShutdownGraceful(true);
-        config.setPriority(ThreadPriority.valueOf(OsgiUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
+        config.setPriority(ThreadPriority.valueOf(PropertiesUtil.toString(ctx.getProperties().get(PROPERTY_PRIORITY), "NORM")));
         config.setDaemon(true);
         this.threadPool = threadPoolManager.create(config, "Apache Sling Eventing Thread Pool");
     }

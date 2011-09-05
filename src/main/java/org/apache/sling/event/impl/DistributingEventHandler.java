@@ -34,7 +34,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
 import org.osgi.service.component.ComponentContext;
@@ -79,7 +79,7 @@ public class DistributingEventHandler
     protected void activate(ComponentContext context) {
         @SuppressWarnings("unchecked")
         final Dictionary<String, Object> props = context.getProperties();
-        this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
+        this.cleanupPeriod = PropertiesUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
         super.activate(context);
     }
 

@@ -48,8 +48,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.DefaultJobManager;
@@ -71,11 +70,7 @@ import org.slf4j.LoggerFactory;
 @Component(label="%job.persistence.name",
         description="%job.persistence.description",
         metatype=true,immediate=true)
-@Services({
-    @Service(value=PersistenceHandler.class),
-    @Service(value=EventHandler.class),
-    @Service(value=Runnable.class)
-})
+@Service(value={PersistenceHandler.class,EventHandler.class,Runnable.class})
 @Properties({
     @Property(name="event.topics",propertyPrivate=true,
             value={"org/osgi/framework/BundleEvent/UPDATED",
@@ -175,11 +170,11 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
     protected void activate(final ComponentContext context) throws RepositoryException {
         @SuppressWarnings("unchecked")
         final Dictionary<String, Object> props = context.getProperties();
-        this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
+        this.cleanupPeriod = PropertiesUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
         if ( this.cleanupPeriod < 1 ) {
             this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
         }
-        this.repositoryPath = OsgiUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
+        this.repositoryPath = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
         this.running = true;
 
         // start writer background thread
@@ -192,10 +187,10 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
         writerThread.start();
 
         // start background thread which loads jobs from the repository
-        final long loadThreshold = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_LOAD_THREASHOLD), DEFAULT_LOAD_THRESHOLD);
-        final long backgroundLoadDelay = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
-        final long backgroundCheckDelay = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_CHECK_DELAY), DEFAULT_BACKGROUND_CHECK_DELAY);
-        final long maxLoadJobs = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_MAX_LOAD_JOBS), DEFAULT_MAXIMUM_LOAD_JOBS);
+        final long loadThreshold = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_LOAD_THREASHOLD), DEFAULT_LOAD_THRESHOLD);
+        final long backgroundLoadDelay = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+        final long backgroundCheckDelay = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_CHECK_DELAY), DEFAULT_BACKGROUND_CHECK_DELAY);
+        final long maxLoadJobs = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_MAX_LOAD_JOBS), DEFAULT_MAXIMUM_LOAD_JOBS);
         final Thread loaderThread = new Thread(new Runnable() {
             public void run() {
                 loadJobsInTheBackground(backgroundLoadDelay, backgroundCheckDelay, loadThreshold, maxLoadJobs);

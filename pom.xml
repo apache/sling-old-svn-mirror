@@ -80,7 +80,7 @@
                         </Sling-Namespaces>
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
-                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/OsgiUtil.*"
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -146,7 +146,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.0.6</version>
+            <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

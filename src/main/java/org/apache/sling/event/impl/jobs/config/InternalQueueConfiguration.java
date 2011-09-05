@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobEvent;
 import org.apache.sling.event.impl.support.Environment;
@@ -127,15 +127,15 @@ public class InternalQueueConfiguration
      */
     @Activate
     protected void activate(final Map<String, Object> params) {
-        this.name = OsgiUtil.toString(params.get(ConfigurationConstants.PROP_NAME), null);
-        this.priority = JobUtil.JobPriority.valueOf(OsgiUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
-        this.type = Type.valueOf(OsgiUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
-        this.runLocal = OsgiUtil.toBoolean(params.get(ConfigurationConstants.PROP_RUN_LOCAL), ConfigurationConstants.DEFAULT_RUN_LOCAL);
-        this.retries = OsgiUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
-        this.retryDelay = OsgiUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
-        final int maxParallel = OsgiUtil.toInteger(params.get(ConfigurationConstants.PROP_MAX_PARALLEL), ConfigurationConstants.DEFAULT_MAX_PARALLEL);
+        this.name = PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_NAME), null);
+        this.priority = JobUtil.JobPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
+        this.type = Type.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
+        this.runLocal = PropertiesUtil.toBoolean(params.get(ConfigurationConstants.PROP_RUN_LOCAL), ConfigurationConstants.DEFAULT_RUN_LOCAL);
+        this.retries = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
+        this.retryDelay = PropertiesUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
+        final int maxParallel = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_MAX_PARALLEL), ConfigurationConstants.DEFAULT_MAX_PARALLEL);
         this.maxParallelProcesses = (maxParallel == -1 ? ConfigurationConstants.NUMBER_OF_PROCESSORS : maxParallel);
-        final String appIds[] = OsgiUtil.toStringArray(params.get(ConfigurationConstants.PROP_APP_IDS));
+        final String appIds[] = PropertiesUtil.toStringArray(params.get(ConfigurationConstants.PROP_APP_IDS));
         if ( appIds == null
              || appIds.length == 0
              || (appIds.length == 1 && (appIds[0] == null || appIds[0].length() == 0)) ) {
@@ -143,7 +143,7 @@ public class InternalQueueConfiguration
         } else {
             this.applicationIds = appIds;
         }
-        final String[] topicsParam = OsgiUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
+        final String[] topicsParam = PropertiesUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
         if ( topicsParam == null
              || topicsParam.length == 0
              || (topicsParam.length == 1 && (topicsParam[0] == null || topicsParam[0].length() == 0))) {
@@ -169,7 +169,7 @@ public class InternalQueueConfiguration
             matchers = newMatchers;
             this.topics = topicsParam;
         }
-        this.serviceRanking = OsgiUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
+        this.serviceRanking = PropertiesUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
         this.pid = (String)params.get(Constants.SERVICE_PID);
         this.valid = this.checkIsValid();
     }
