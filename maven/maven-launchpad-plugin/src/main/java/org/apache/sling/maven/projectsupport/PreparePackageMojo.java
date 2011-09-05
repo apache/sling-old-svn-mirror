@@ -222,8 +222,8 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 				+ "." + artifact.getArtifactHandler().getExtension());
 
 		// check if custom sling.properties file or bootstrap command exists
-		final Properties additionalProps = this.getSlingProperties();
-		final String bootstrapCmd = this.getSlingBootstrap();
+		final Properties additionalProps = this.getSlingProperties(JAR.equals(this.packaging));
+		final String bootstrapCmd = this.getSlingBootstrap(JAR.equals(this.packaging));
 		if ( additionalProps != null || bootstrapCmd != null ) {
     		// unpack to a temp destination
 		    final File dest = new File(this.tempDirectory, "basejar");
