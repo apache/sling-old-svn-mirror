@@ -33,7 +33,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.impl.jobs.jcr.JCRHelper;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.JobUtil;
@@ -93,7 +93,7 @@ public abstract class AbstractRepositoryEventHandler
      * @param context
      */
     protected void activate(final ComponentContext context) {
-        this.repositoryPath = OsgiUtil.toString(context.getProperties().get(
+        this.repositoryPath = PropertiesUtil.toString(context.getProperties().get(
             CONFIG_PROPERTY_REPO_PATH), DEFAULT_PROPERTY_REPO_PATH);
 
         this.running = true;

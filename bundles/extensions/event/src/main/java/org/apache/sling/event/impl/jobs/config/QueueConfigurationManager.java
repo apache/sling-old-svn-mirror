@@ -22,7 +22,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
 import org.apache.sling.event.impl.jobs.JobEvent;
 import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.framework.BundleContext;
@@ -36,9 +35,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * obsolete events.
  */
 @Component
-@Services({
-    @Service(value=QueueConfigurationManager.class)
-})
+@Service(value=QueueConfigurationManager.class)
 public class QueueConfigurationManager {
 
     /** Configurations - ordered by service ranking. */

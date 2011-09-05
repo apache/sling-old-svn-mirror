@@ -36,10 +36,10 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EnvironmentComponent;
@@ -74,11 +74,7 @@ import org.slf4j.LoggerFactory;
 @Component(label="%job.events.name",
         description="%job.events.description",
         metatype=true,immediate=true)
-@Services({
-    @Service(value=Runnable.class),
-    @Service(value=JobManager.class),
-    @Service(value=EventHandler.class)
-})
+@Service(value={Runnable.class,JobManager.class,EventHandler.class})
 @Properties({
     @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
@@ -146,6 +142,9 @@ public class DefaultJobManager
 
     private boolean enabled = DEFAULT_ENABLED;
 
+    @Property(unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROP_ENABLED_APP_IDS = "jobmanager.applicationids";
+
     /** We count the scheduler runs. */
     private long schedulerRuns;
 
@@ -174,7 +173,7 @@ public class DefaultJobManager
         queueProps.put(ConfigurationConstants.PROP_TYPE, InternalQueueConfiguration.Type.UNORDERED);
 
         // check max parallel - this should never be lower than 2!
-        final int maxParallel = OsgiUtil.toInteger(queueProps.get(ConfigurationConstants.PROP_MAX_PARALLEL),
+        final int maxParallel = PropertiesUtil.toInteger(queueProps.get(ConfigurationConstants.PROP_MAX_PARALLEL),
                 ConfigurationConstants.DEFAULT_MAX_PARALLEL);
         if ( maxParallel < 2 ) {
             this.logger.debug("Ignoring invalid setting of {} for {}. Setting to minimum value: 2",
@@ -184,7 +183,26 @@ public class DefaultJobManager
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
 
         final boolean oldEnabled = this.enabled;
-        this.enabled = OsgiUtil.toBoolean(props.get(PROP_ENABLED), DEFAULT_ENABLED);
+        final boolean enabledByConfig = PropertiesUtil.toBoolean(props.get(PROP_ENABLED), DEFAULT_ENABLED);
+
+        if ( enabledByConfig ) {
+            // check application ids
+            final String[] enabledIds = PropertiesUtil.toStringArray(props.get(PROP_ENABLED_APP_IDS));
+            if ( enabledIds != null && enabledIds.length > 0 ) {
+                boolean doEnable = false;
+                for(int i=0; i<enabledIds.length; i++) {
+                    if ( Environment.APPLICATION_ID.equals(enabledIds[i]) ) {
+                        doEnable = true;
+                        break;
+                    }
+                }
+                this.enabled = doEnable;
+            } else {
+                this.enabled = true;
+            }
+        } else {
+            this.enabled = false;
+        }
 
         // if we have been disabled before and now get enabled, restart to get processing going
         if ( this.enabled != oldEnabled && this.enabled ) {

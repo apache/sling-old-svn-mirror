@@ -42,18 +42,14 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.support.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(metatype=true,label="%lm.name",description="%lm.description")
-@Services({
-    @Service(value=Runnable.class),
-    @Service(value=LockManager.class)
-})
+@Service(value={Runnable.class,LockManager.class})
 @Properties({
     @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
@@ -134,7 +130,7 @@ public class LockManager implements Runnable, EventListener {
      */
     @Activate
     protected void activate(final Map<String, Object> props) throws RepositoryException {
-        this.repositoryPath = OsgiUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
+        this.repositoryPath = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH), DEFAULT_REPOSITORY_PATH);
         this.idNodePath = repositoryPath + '/' + Environment.APPLICATION_ID;
 
         // create the background session and register a listener
@@ -182,7 +178,7 @@ public class LockManager implements Runnable, EventListener {
     @Modified
     protected void update(final Map<String, Object> props) {
         final LockMode oldMode = this.mode;
-        final String modeString = OsgiUtil.toString(props.get(CONFIG_PROPERTY_MODE), DEFAULT_MODE);
+        final String modeString = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_MODE), DEFAULT_MODE);
         this.mode = LockMode.valueOf(modeString);
         if ( oldMode != this.mode ) {
             this.running = this.mode == LockMode.open;
