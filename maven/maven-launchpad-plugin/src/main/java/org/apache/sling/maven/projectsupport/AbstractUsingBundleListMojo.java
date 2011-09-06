@@ -565,6 +565,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 while ( (l = reader.read(buffer, 0, buffer.length) ) != -1 ) {
                     sb.append(buffer, 0, l);
                 }
+                sb.append('\n');
                 if ( mode == 0 ) {
                     this.slingBootstrapCommand = sb.toString();
                 } else if ( mode == 1 ) {
@@ -603,6 +604,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
         if ( addCmds != null ) {
             final StringBuilder builder = new StringBuilder(this.slingBootstrapCommand);
+            builder.append('\n');
             builder.append(addCmds);
             return builder.toString();
         }
