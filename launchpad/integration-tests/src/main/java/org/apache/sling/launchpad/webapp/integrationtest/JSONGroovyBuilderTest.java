@@ -1,15 +1,32 @@
-package org.apache.sling.extensions.groovy.it;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
-public class JSONGroovyBuilderIT extends RenderingTestBase {
+public class JSONGroovyBuilderTest extends RenderingTestBase {
     private String slingResourceType;
 
     @Override
@@ -32,8 +49,8 @@ public class JSONGroovyBuilderIT extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
 
-    public void testJSONGroovyBuilder() throws IOException, JSONException {
-        final String toDelete = uploadTestScript("builder.groovy","json.groovy");
+    public void testObject() throws IOException, JSONException {
+        final String toDelete = uploadTestScript("builder_object.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
             JSONObject jo = new JSONObject(content);
@@ -44,15 +61,28 @@ public class JSONGroovyBuilderIT extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-
-    public void testJSONGroovyBuilder2() throws IOException, JSONException {
-        final String toDelete = uploadTestScript("builder2.groovy","json.groovy");
+    
+    public void testRichObject() throws IOException, JSONException {
+        final String toDelete = uploadTestScript("builder_rich_object.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
+            System.out.println(content);
             JSONObject jo = new JSONObject(content);
-            assertEquals("Content contained wrong number of items", 1, jo.length());
-            assertEquals("Content contained wrong key", "text", jo.keys().next());
+            assertEquals("Content contained wrong number of items", 2, jo.length());
             assertEquals("Content contained wrong data", testText, jo.get("text"));
+            assertEquals("Content contained wrong data", "bar", ((JSONObject) jo.get("obj")).get("foo"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testArray() throws IOException, JSONException {
+        final String toDelete = uploadTestScript("builder_array.groovy","json.groovy");
+        try {
+            final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
+            JSONArray jo = new JSONArray(content);
+            assertEquals("Content contained wrong number of items", 1, jo.length());
+            assertEquals("Content contained wrong data", testText, jo.get(0));
         } finally {
             testClient.delete(toDelete);
         }

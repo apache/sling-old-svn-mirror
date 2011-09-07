@@ -16,7 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+jsonBuilder {
+    text currentNode.getProperty("text").string
+    obj {
+        foo "bar"
+    }
+}
 
-out.write jsonBuilder.json {
-	text currentNode.getProperty("text").string
-} as String
+out.write jsonBuilder // or jsonBuilder.writeTo(out)

@@ -17,6 +17,6 @@
  * under the License.
  */
 
-jsonBuilder.write(out).json {
-    text currentNode.getProperty("text").string
-}
+jsonBuilder(currentNode.getProperty("text").string)
+
+jsonBuilder.writeTo(out) // or out.write jsonBuilder

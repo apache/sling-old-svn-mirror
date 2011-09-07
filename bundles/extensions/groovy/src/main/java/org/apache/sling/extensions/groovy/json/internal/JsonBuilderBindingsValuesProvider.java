@@ -16,17 +16,19 @@
  */
 package org.apache.sling.extensions.groovy.json.internal;
 
+import groovy.json.JsonBuilder;
+
 import java.util.HashMap;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.extensions.groovy.json.JSONGroovyBuilder;
 
 /**
- * BindingsValuesProvider which binds an instance of JSONGroovyBuilder.
+ * BindingsValuesProvider which binds an instance of JsonBuilder.
  */
+@SuppressWarnings("serial")
 @Component(immediate=true, metatype=false)
 @Service
 @Properties({
@@ -34,11 +36,11 @@ import org.apache.sling.extensions.groovy.json.JSONGroovyBuilder;
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="javax.script.name", value="groovy")
 })
-public class JSONGroovyBuilderBindingsValuesProvider extends HashMap<String, Object> {
+public class JsonBuilderBindingsValuesProvider extends HashMap<String, Object> {
 
-    public JSONGroovyBuilderBindingsValuesProvider() {
+    public JsonBuilderBindingsValuesProvider() {
         super();
-        put("jsonBuilder", new JSONGroovyBuilder());
+        put("jsonBuilder", new JsonBuilder());
     }
 
 }
