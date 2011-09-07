@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>13-SNAPSHOT</version>
+    <version>12</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -213,7 +213,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         </goals>
                         <configuration>
                             <resourceBundles>
-                                <resourceBundle>org.apache.sling:apache-sling-jar-resource-bundle:1.0.1-SNAPSHOT</resourceBundle>
+                                <resourceBundle>org.apache.sling:apache-sling-jar-resource-bundle:1.0.0</resourceBundle>
                                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
                             </resourceBundles>
                         </configuration>
