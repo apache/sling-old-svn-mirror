@@ -31,6 +31,7 @@ import javax.script.ScriptEngineManager;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -223,23 +224,28 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
         @SuppressWarnings("unchecked")
         public Object addingService(final ServiceReference ref) {
-            final String engineName = (String) ref.getProperty(ScriptEngine.NAME);
+            final String[] engineNames = PropertiesUtil
+                    .toStringArray(ref.getProperty(ScriptEngine.NAME), new String[0]);
             final Object serviceId = ref.getProperty(Constants.SERVICE_ID);
             Object service = bundleContext.getService(ref);
-            if ( service != null ) {
+            if (service != null) {
                 if (service instanceof Map) {
                     service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
                 }
-                if (engineName == null || ANY_ENGINE.contains(engineName.toUpperCase())) {
+                if (engineNames.length == 0) {
+                    genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
+                } else if (engineNames.length == 1 && ANY_ENGINE.contains(engineNames[0].toUpperCase())) {
                     genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
                 } else {
-                    Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
-                    if (langProviders == null) {
-                        langProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
-                        langBindingsValuesProviders.put(engineName, langProviders);
-                    }
+                    for (String engineName : engineNames) {
+                        Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
+                        if (langProviders == null) {
+                            langProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
+                            langBindingsValuesProviders.put(engineName, langProviders);
+                        }
 
-                    langProviders.put(serviceId, (BindingsValuesProvider) service);
+                        langProviders.put(serviceId, (BindingsValuesProvider) service);
+                    }
                 }
             }
             return service;

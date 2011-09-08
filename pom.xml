@@ -61,6 +61,9 @@
                             org.apache.sling.scripting.core.impl,
                             org.apache.sling.scripting.core.impl.helper
                         </Private-Package>
+                        <Embed-Dependency>
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -96,6 +99,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
             <version>2.0.2-incubator</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
