@@ -22,6 +22,8 @@ import java.util.List;
 import javax.script.ScriptEngine;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -32,8 +34,16 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
  */
 @Component
 @Service
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="GSP Script Engine")
+})
 public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
     
+    public GSPScriptEngineFactory() {
+        setNames("gsp", "GSP");
+    }
+
     @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
