@@ -34,6 +34,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
@@ -51,11 +55,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Component which exposes a ScriptEngineManager service.
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.reference name="ScriptEngineFactory"
- *                interface="javax.script.ScriptEngineFactory"
- *                cardinality="0..n" policy="dynamic"
  */
+@Component(metatype=false, immediate=true)
+@Reference(name="ScriptEngineFactory", referenceInterface=ScriptEngineFactory.class,
+           policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
 public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(ScriptEngineManagerFactory.class);

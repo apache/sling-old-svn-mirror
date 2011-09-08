@@ -28,6 +28,11 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
@@ -47,18 +52,16 @@ import org.slf4j.LoggerFactory;
 /**
  * AdapterFactory that adapts Resources to the DefaultSlingScript servlet, which
  * executes the Resources as scripts.
- *
- * @scr.component metatype="no" immediate="true"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Default SlingScriptResolver"
- * @scr.property name="adaptables"
- *               value="org.apache.sling.api.resource.Resource";
- * @scr.property name="adapters"
- *               values.0="org.apache.sling.api.scripting.SlingScript"
- *               values.1="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
- * @scr.service interface="org.apache.sling.commons.mime.MimeTypeProvider"
  */
+@Component(metatype=false, immediate=true)
+@Service({AdapterFactory.class, MimeTypeProvider.class})
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="Default SlingScriptResolver"),
+    @Property(name="adaptables", value="org.apache.sling.api.resource.Resource"),
+    @Property(name="adapters", value={"org.apache.sling.api.scripting.SlingScript",
+                                      "javax.servlet.Servlet"})
+})
 public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider {
 
     private final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
@@ -95,9 +98,8 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
     /**
      * The script engine manager.
-     *
-     * @scr.reference
      */
+    @Reference
     private ScriptEngineManager scriptEngineManager;
 
     // ---------- AdapterFactory -----------------------------------------------
