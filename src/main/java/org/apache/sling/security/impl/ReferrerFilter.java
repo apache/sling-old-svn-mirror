@@ -134,7 +134,7 @@ public class ReferrerFilter implements Filter {
         referrers.add("https://localhost" + ":0");
         referrers.add("https://127.0.0.1" + ":0");
         referrers.add("https://[::1]" + ":0");
-        referrers.add("https://[::1]" + ":0");
+
         return referrers;
     }
 
