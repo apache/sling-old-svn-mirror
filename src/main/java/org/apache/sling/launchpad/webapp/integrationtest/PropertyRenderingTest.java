@@ -20,11 +20,17 @@ import java.io.IOException;
 
 import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Test the rendering of JCR Properties, directly addressed by URLs.
  *  See SLING-133
  */
 public class PropertyRenderingTest extends RenderingTestBase {
+
+    /** Logger instance */
+    private static final Logger log =
+            LoggerFactory.getLogger(PropertyRenderingTest.class);
 
     private String slingResourceType;
 
@@ -87,7 +93,7 @@ public class PropertyRenderingTest extends RenderingTestBase {
 
     public void testMultiValuedTextHtml() throws IOException {
         final String data = getContent(displayUrl + "/multiText.html", CONTENT_TYPE_HTML);
-        System.out.println(data);
+        log.debug("multiText.html content: {}", data);
         assertTrue(data.contains(testMultiText1));
         assertTrue(data.contains(testMultiText2));
     }
