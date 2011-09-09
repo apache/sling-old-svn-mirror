@@ -18,9 +18,12 @@ package org.apache.sling.maven.projectsupport.bundlelist;
 
 import java.util.List;
 
+import org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
+import org.apache.maven.shared.osgi.Maven2OsgiConverter;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
+import org.osgi.framework.Version;
 
 public abstract class BaseBundleList {
 
@@ -78,7 +81,14 @@ public abstract class BaseBundleList {
     private void add(StartLevel mergeStartLevel, Bundle newBnd) {
         Bundle current = get(newBnd, false);
         if (current != null) {
-            current.setVersion(newBnd.getVersion());
+            final Maven2OsgiConverter converter = new DefaultMaven2OsgiConverter();
+
+            // compare versions, the highest will be used
+            final Version newVersion = new Version(converter.getVersion(newBnd.getVersion()));
+            final Version oldVersion = new Version(converter.getVersion(current.getVersion()));
+            if ( newVersion.compareTo(oldVersion) > 0 ) {
+                current.setVersion(newBnd.getVersion());
+            }
         } else {
             StartLevel startLevel = null;
             if ( mergeStartLevel == null || newBnd.getStartLevel() != 0) {
@@ -88,7 +98,6 @@ public abstract class BaseBundleList {
             }
             startLevel.getBundles().add(newBnd);
         }
-
     }
 
     private StartLevel getOrCreateStartLevel(int startLevel) {
@@ -103,5 +112,4 @@ public abstract class BaseBundleList {
         sl.setRawLevel(startLevel);
         return sl;
     }
-
 }
