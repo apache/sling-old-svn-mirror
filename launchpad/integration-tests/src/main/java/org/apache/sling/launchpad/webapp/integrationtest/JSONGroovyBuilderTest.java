@@ -25,8 +25,15 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JSONGroovyBuilderTest extends RenderingTestBase {
+
+    /** Logger instance */
+    private static final Logger log =
+            LoggerFactory.getLogger(JSONGroovyBuilderTest.class);
+
     private String slingResourceType;
 
     @Override
@@ -66,7 +73,7 @@ public class JSONGroovyBuilderTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("builder_rich_object.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
-            System.out.println(content);
+            log.debug("{} content: {}", displayUrl, content);
             JSONObject jo = new JSONObject(content);
             assertEquals("Content contained wrong number of items", 2, jo.length());
             assertEquals("Content contained wrong data", testText, jo.get("text"));

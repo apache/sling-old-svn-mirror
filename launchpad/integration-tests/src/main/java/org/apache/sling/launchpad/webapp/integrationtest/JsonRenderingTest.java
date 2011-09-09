@@ -24,9 +24,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends HttpTestBase {
+
+    /** Logger instance */
+    private static final Logger log =
+            LoggerFactory.getLogger(JsonRenderingTest.class);
 
 	private final String testPath = "/" + getClass().getSimpleName();
     private String postUrl;
@@ -128,7 +134,8 @@ public class JsonRenderingTest extends HttpTestBase {
       final String url = testClient.createNode(postUrl, props);
       final String json = getContent(url + ".infinity.json",
           CONTENT_TYPE_JSON, null, 300);
-      System.err.println("Url: " + url + "\npostUrl: " + postUrl);
+      log.info("Url: {}", url);
+      log.info("postUrl: {}", postUrl);
       // Get the resource url. (everything after the port)
       // We skip http://localhost:8888/org.apache.sling.launchpad.testing-6-SNAPSHOT/
       // or http://localhost:8888/
