@@ -69,6 +69,11 @@ public final class JspRuntimeContext {
     // Logger
     private Log log = LogFactory.getLog(JspRuntimeContext.class);
 
+    /**
+     * Prefixes, in which repository paths and script paths can differ.
+     */
+    private static final String[] PATH_PREFIXES = {"", "/WEB-INF/tags"};
+
     /*
      * Counts how many times the webapp's JSPs have been reloaded.
      */
@@ -279,17 +284,19 @@ public final class JspRuntimeContext {
     }
 
     private void invalidate(final JspServletWrapper jsw) {
+        log.debug("Invalidating script " + jsw.getJspUri());
         jsw.clearLastModificationTest();
     }
 
-    public void handleModification(final String scriptName) {
+    public void handleModification(final String repositoryPath) {
+        final String scriptName = getScriptPath(repositoryPath);
         synchronized ( this ) {
             // first check if jsps contains this
             JspServletWrapper wrapper = jsps.get(scriptName);
             if ( wrapper != null ) {
                 invalidate(wrapper);
             }
-            if ( wrapper == null ) {
+            if (wrapperIsValid(wrapper)) {
                 synchronized ( depToJsp ) {
                     final Set<String> deps = depToJsp.get(scriptName);
                     if ( deps != null ) {
@@ -305,6 +312,20 @@ public final class JspRuntimeContext {
         }
     }
 
+    private String getScriptPath(String repositoryPath) {
+        for (final String prefix : PATH_PREFIXES) {
+            final String path = prefix + repositoryPath;
+            if (depToJsp.containsKey(path)) {
+                return path;
+            }
+        }
+        return repositoryPath;
+    }
+
+    private boolean wrapperIsValid(JspServletWrapper wrapper) {
+        return wrapper == null || wrapper.getLastModificationTest() == -1;
+    }
+
     /**
      * Add a new JspServletWrapper.
      *
@@ -313,6 +334,7 @@ public final class JspRuntimeContext {
      */
     public void addWrapper(String jspUri, JspServletWrapper jsw) {
         jsps.put(jspUri, jsw);
+        addJspDependencies(jsw);
     }
 
     /**
