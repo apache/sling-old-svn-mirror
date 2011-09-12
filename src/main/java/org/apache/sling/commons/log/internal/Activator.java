@@ -24,6 +24,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * The <code>Activator</code> class is the <code>BundleActivator</code> for
@@ -34,6 +35,8 @@ import org.osgi.service.log.LogService;
 public class Activator implements BundleActivator {
 
     private static final String VENDOR = "The Apache Software Foundation";
+
+    private static final String JUL_SUPPORT = "org.apache.sling.commons.log.julenabled";
 
     private LogManager logManager;
 
@@ -65,12 +68,18 @@ public class Activator implements BundleActivator {
             "Apache Sling LogReaderService implementation");
         props.put(Constants.SERVICE_VENDOR, VENDOR);
         context.registerService(LogReaderService.class.getName(), lrsf, props);
+
+        if (Boolean.parseBoolean(context.getProperty(JUL_SUPPORT))) {
+            SLF4JBridgeHandler.install();
+        }
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) throws Exception {
+        SLF4JBridgeHandler.uninstall();
+
         if (logSupport != null) {
             context.removeBundleListener(logSupport);
             context.removeFrameworkListener(logSupport);
