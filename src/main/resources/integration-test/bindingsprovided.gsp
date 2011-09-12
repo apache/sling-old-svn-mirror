@@ -17,10 +17,10 @@
  * under the License.
  */
 
-out.write """<html>
+<html>
     <body>
-        <h1>Groovy template</h1>
+        <h1>GSP template</h1>
         <p>helloWorld:${helloWorld}</p>
         <p>groovyHelloWorld:${groovyHelloWorld}</p>
     </body>
-</html>"""
+</html>
