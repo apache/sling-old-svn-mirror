@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
     private static final Logger log = LoggerFactory.getLogger(SlingAnnotationsTestRunner.class);
 
-    private static TestObjectProcessor testObjectProcessor;  
-    
     public SlingAnnotationsTestRunner(Class<?> clazz) throws InitializationError {
         super(clazz);
     }
@@ -42,19 +40,15 @@ public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
     @Override
     protected Object createTest() throws Exception {
         final BundleContext ctx = Activator.getBundleContext();
-        if(testObjectProcessor == null && ctx != null) {
-            final ServiceReference ref = ctx.getServiceReference(TestObjectProcessor.class.getName());
-            if(ref != null) {
-                testObjectProcessor = (TestObjectProcessor)ctx.getService(ref);
-            }
-            log.info("Got TestObjectProcessor {}", testObjectProcessor);
-        }
+        final ServiceReference ref = ctx.getServiceReference(TestObjectProcessor.class.getName());
+        final TestObjectProcessor top = ref == null ? null : (TestObjectProcessor)ctx.getService(ref);
 
-        if(testObjectProcessor == null) {
+        if(top == null) {
             log.info("No TestObjectProcessor service available, annotations will not be processed");
             return super.createTest();
         } else { 
-            return testObjectProcessor.process(super.createTest());
+            log.debug("Using TestObjectProcessor {}", top);
+            return top.process(super.createTest());
         }
     }
 }

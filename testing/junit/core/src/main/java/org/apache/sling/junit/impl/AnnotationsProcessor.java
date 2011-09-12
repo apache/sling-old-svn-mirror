@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Processor for annotations in test classes */
-@Component
+@Component(immediate=true)
 @Service
 public class AnnotationsProcessor implements TestObjectProcessor {
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -40,14 +40,17 @@ public class AnnotationsProcessor implements TestObjectProcessor {
         if(bundleContext == null) {
             throw new IllegalArgumentException("Null BundleContext in activate()");
         }
+        log.debug("{} activated, BundleContext={}", this, bundleContext);
     }
     
     protected void deactivate(ComponentContext ctx) {
         bundleContext = null;
+        log.debug("{} deactivated", this);
     }
     
     /** Process annotations on the test object */
     public Object process(Object testObject) throws Exception {
+        log.debug("processing {}", testObject);
         for(Field f : testObject.getClass().getDeclaredFields()) {
             if(f.isAnnotationPresent(TestReference.class)) {
                 processTestReference(testObject, f);
@@ -59,7 +62,9 @@ public class AnnotationsProcessor implements TestObjectProcessor {
     /** Process the TestReference annotation to inject services into fields */
     private void processTestReference(Object testObject, Field f) throws Exception {
         if(bundleContext == null) {
-            throw new IllegalArgumentException("Null BundleContext in processTestReference(), not activated?");
+            final String msg = "Null BundleContext in processTestReference(), not activated?";
+            log.error(msg);
+            throw new IllegalArgumentException(msg);
         }
         
         final Class<?> serviceType = f.getType();
