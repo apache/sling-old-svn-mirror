@@ -36,7 +36,8 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 @Service
 @Properties({
     @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.description", value="GSP Script Engine")
+    @Property(name="service.description", value="GSP Script Engine"),
+    @Property(name="compatible.javax.script.name", value="groovy")
 })
 public class GSPScriptEngineFactory extends AbstractScriptEngineFactory {
     
