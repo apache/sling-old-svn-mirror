@@ -19,7 +19,9 @@
 package org.apache.sling.scripting.core.impl.helper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -28,6 +30,7 @@ import javax.script.ScriptEngineManager;
 public class SlingScriptEngineManager extends ScriptEngineManager {
 
     private final List<ScriptEngineFactory> factories = new ArrayList<ScriptEngineFactory>();
+    private final Map<ScriptEngineFactory, Map<Object, Object>> factoryProperties = new HashMap<ScriptEngineFactory, Map<Object, Object>>();
 
     public SlingScriptEngineManager(ClassLoader classLoader) {
         super(classLoader);
@@ -47,7 +50,11 @@ public class SlingScriptEngineManager extends ScriptEngineManager {
         return result;
     }
 
-    public void registerScriptEngineFactory(ScriptEngineFactory factory) {
+    public Map<Object, Object> getProperties(ScriptEngineFactory factory) {
+        return factoryProperties.get(factory);
+    }
+
+    public void registerScriptEngineFactory(ScriptEngineFactory factory, Map<Object, Object> props) {
         for (Object ext : factory.getExtensions()) {
             registerEngineExtension((String) ext, factory);
         }
@@ -61,6 +68,10 @@ public class SlingScriptEngineManager extends ScriptEngineManager {
         }
 
         factories.add(factory);
+
+        if (props != null) {
+            factoryProperties.put(factory, props);
+        }
     }
 
 }
