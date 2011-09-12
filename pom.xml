@@ -55,7 +55,6 @@
                         </Export-Package>
                         <Import-Package>
                             org.apache.commons.exec.*; resolution:=optional,
-                            org.apache.http.*; resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
