@@ -19,6 +19,8 @@ package org.apache.sling.launchpad.testservices.servlets;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
@@ -36,6 +38,7 @@ class TestServlet extends SlingAllMethodsServlet {
   @Override
   protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
   throws ServletException, IOException {
+    Logger.getLogger(TestServlet.class.getName()).log(Level.SEVERE, "test JUL message");
     dumpRequestAsProperties(request, response);
   }
   
