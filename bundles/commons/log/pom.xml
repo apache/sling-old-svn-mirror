@@ -86,6 +86,9 @@
                         <DynamicImport-Package>
                             org.osgi.service.cm;version=1.2
                         </DynamicImport-Package>
+                        <Embed-Dependency>
+                            jul-to-slf4j;inline="org/slf4j/bridge/SLF4JBridgeHandler.class"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -124,6 +127,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
             <version>${slf4j.version}</version>
             <scope>compile</scope>
             <optional>true</optional>
