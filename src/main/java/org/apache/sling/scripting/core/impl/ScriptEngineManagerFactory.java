@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(metatype=false, immediate=true)
+@Component(metatype=false, immediate=true, specVersion="1.1")
 @Reference(name="ScriptEngineFactory", referenceInterface=ScriptEngineFactory.class,
            policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
 public class ScriptEngineManagerFactory implements BundleListener {
@@ -253,13 +253,10 @@ public class ScriptEngineManagerFactory implements BundleListener {
         this.bundleContext = null;
     }
 
-
-
-    protected void bindScriptEngineFactory(ServiceReference ref) {
-        final ScriptEngineFactory scriptEngineFactory = (ScriptEngineFactory) bundleContext.getService(ref);
+    protected void bindScriptEngineFactory(final ScriptEngineFactory scriptEngineFactory, final Map<Object, Object> props) {
         if (scriptEngineFactory != null) {
             synchronized ( this ) {
-                this.engineSpiServices.put(scriptEngineFactory, getProperties(ref));
+                this.engineSpiServices.put(scriptEngineFactory, props);
                 if ( this.scriptEngineManager != null ) {
                     this.scriptEngineManager = null;
                     this.refreshScriptEngineManager();
@@ -270,7 +267,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
         }
     }
 
-    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
+    protected void unbindScriptEngineFactory(final ScriptEngineFactory scriptEngineFactory) {
         synchronized ( this ) {
             if ( this.engineSpiServices.remove(scriptEngineFactory) != null ) {
                 if ( this.scriptEngineManager != null ) {
@@ -281,14 +278,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
         }
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
-    }
-
-    private Map<Object, Object> getProperties(final ServiceReference ref) {
-        final Map<Object, Object> props = new HashMap<Object, Object>();
-        for (final String key : ref.getPropertyKeys()) {
-            props.put(key, ref.getProperty(key));
-        }
-        return props;
     }
 
     /**
