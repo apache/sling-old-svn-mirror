@@ -16,14 +16,19 @@
  */
 package org.apache.sling.testing.tools.osgi;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.apache.sling.testing.tools.http.RetryingContentChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +40,10 @@ public class WebconsoleClient {
     private final String username;
     private final String password;
     
+    public static final String JSON_KEY_DATA = "data";
+    public static final String JSON_KEY_STATE = "state";
+    public static final String CONSOLE_BUNDLES_PATH = "/system/console/bundles";
+    
     public WebconsoleClient(String slingServerUrl, String username, String password) {
         this.builder = new RequestBuilder(slingServerUrl);
         this.executor = new RequestExecutor(new DefaultHttpClient());
@@ -44,7 +53,7 @@ public class WebconsoleClient {
     
     /** Install a bundle using the Felix webconsole HTTP interface */
     public void installBundle(File f, boolean startBundle) throws Exception {
-        log.info("Installing additional bundle {}", f.getName());
+        log.info("Installing bundle {}", f.getName());
         
         // Setup request for Felix Webconsole bundle install
         final MultipartEntity entity = new MultipartEntity();
@@ -57,9 +66,67 @@ public class WebconsoleClient {
         // Console returns a 302 on success (and in a POST this
         // is not handled automatically as per HTTP spec)
         executor.execute(
-                builder.buildPostRequest("/system/console/bundles")
+                builder.buildPostRequest(CONSOLE_BUNDLES_PATH)
                 .withCredentials(username, password)
                 .withEntity(entity)
         ).assertStatus(302);
+    }
+    
+    /** Check that specified bundle is installed - must be called
+     *  before other methods that take a symbolicName parameter, 
+     *  in case installBundle was just called and the actual 
+     *  installation hasn't happened yet. */
+    public void checkBundleInstalled(String symbolicName, int timeoutSeconds) {
+        final String path = getBundlePath(symbolicName, ".json");
+        new RetryingContentChecker(executor, builder).check(path, 200, timeoutSeconds, 500);
+    }
+    
+    /** Get specified bundle state */
+    public String getBundleState(String symbolicName) throws Exception {
+        // This returns a data structure like
+        // {"status":"Bundle information: 173 bundles in total - all 173 bundles active.","s":[173,171,2,0,0],"data":
+        //  [
+        //      {"id":0,"name":"System Bundle","fragment":false,"stateRaw":32,"state":"Active","version":"3.0.7","symbolicName":"org.apache.felix.framework","category":""},
+        //  ]}
+        final String path = getBundlePath(symbolicName, ".json");
+        final String content = executor.execute(
+                builder.buildGetRequest(path)
+                .withCredentials(username, password)
+        ).assertStatus(200)
+        .getContent();
+        
+        final JSONObject root = new JSONObject(content);
+        if(!root.has(JSON_KEY_DATA)) {
+            fail(path + " does not provide '" + JSON_KEY_DATA + "' element, JSON content=" + content);
+        }
+        final JSONArray data = root.getJSONArray(JSON_KEY_DATA);
+        if(data.length() < 1) {
+            fail(path + "." + JSON_KEY_DATA + " is empty, JSON content=" + content);
+        }
+        final JSONObject bundle = data.getJSONObject(0);
+        if(!bundle.has(JSON_KEY_STATE)) {
+            fail(path + ".data[0].state missing, JSON content=" + content);
+        }
+        return bundle.getString(JSON_KEY_STATE);
+    }
+    
+    /** Start specified bundle */
+    public void startBundle(String symbolicName) throws Exception {
+        // To start the bundle we POST action=start to its URL
+        final String path = getBundlePath(symbolicName, null);
+        log.info("Starting bundle {} via {}", symbolicName, path);
+        
+        final MultipartEntity entity = new MultipartEntity();
+        entity.addPart("action",new StringBody("start"));
+        executor.execute(
+                builder.buildPostRequest(path)
+                .withCredentials(username, password)
+                .withEntity(entity)
+        ).assertStatus(200);
+    }
+    
+    private String getBundlePath(String symbolicName, String extension) {
+        return CONSOLE_BUNDLES_PATH + "/" + symbolicName 
+        + (extension == null ? "" : extension);
     }
 }

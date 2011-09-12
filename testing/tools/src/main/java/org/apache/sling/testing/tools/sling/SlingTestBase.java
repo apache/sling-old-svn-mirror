@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -44,22 +45,27 @@ public class SlingTestBase {
     public static final String SERVER_HOSTNAME_PROP = "test.server.hostname";
     public static final String ADDITONAL_BUNDLES_PATH = "additional.bundles.path";
     public static final String BUNDLE_TO_INSTALL_PREFIX = "sling.additional.bundle";
+    public static final String START_BUNDLES_TIMEOUT_SECONDS = "start.bundles.timeout.seconds";
+    public static final String BUNDLE_INSTALL_TIMEOUT_SECONDS = "bundle.install.timeout.seconds";
     public static final String ADMIN = "admin";
     
     private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
     private final String serverBaseUrl;
-    private static RequestBuilder builder;
-    private static DefaultHttpClient httpClient = new DefaultHttpClient();
-    private static RequestExecutor executor = new RequestExecutor(httpClient);
-    private static WebconsoleClient webconsoleClient;
+    private RequestBuilder builder;
+    private DefaultHttpClient httpClient = new DefaultHttpClient();
+    private RequestExecutor executor = new RequestExecutor(httpClient);
+    private WebconsoleClient webconsoleClient;
+    private BundlesInstaller bundlesInstaller;
     private static boolean serverStarted;
     private static boolean serverStartedByThisClass;
     private static boolean serverReady;
     private static boolean serverReadyTestFailed;
+    private static boolean installBundlesFailed;
     private static boolean extraBundlesInstalled;
     private static boolean startupInfoProvided;
+    private static boolean serverInfoLogged;
 
-    private static final Logger log = LoggerFactory.getLogger(SlingTestBase.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private static JarExecutor jarExecutor;
     
     /** Get configuration but do not start server yet, that's done on demand */
@@ -87,10 +93,15 @@ public class SlingTestBase {
             serverBaseUrl = "http://" + serverHost + ":" + jarExecutor.getServerPort();
         }
 
-        log.info("Server base URL={}", serverBaseUrl);
         builder = new RequestBuilder(serverBaseUrl);
         webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
         builder = new RequestBuilder(serverBaseUrl);
+        bundlesInstaller = new BundlesInstaller(webconsoleClient);
+        
+        if(!serverInfoLogged) {
+            log.info("Server base URL={}", serverBaseUrl);
+            serverInfoLogged = true;
+        }
     }
 
     /** Start the server, if not done yet */
@@ -110,12 +121,51 @@ public class SlingTestBase {
             }
             startupInfoProvided = true;
             waitForServerReady();
-            installExtraBundles();
+            installAdditionalBundles();
             blockIfRequested();
         } catch(Exception e) {
             log.error("Exception in maybeStartServer()", e);
             fail("maybeStartServer() failed: " + e);
         }
+    }
+    
+    protected void installAdditionalBundles() {
+        if(installBundlesFailed) {
+            fail("Bundles could not be installed, cannot run tests");
+        } else if(!extraBundlesInstalled) {
+            final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
+            if(path == null) {
+                log.info("System property {} not set, additional bundles won't be installed", 
+                        ADDITONAL_BUNDLES_PATH);
+            } else {
+                final List<File> toInstall = getBundlesToInstall(path);
+                
+                try {
+                    // Install bundles, check that they are installed and start them all
+                    bundlesInstaller.installBundles(toInstall, false);
+                    final List<String> symbolicNames = new LinkedList<String>();
+                    for(File f : toInstall) {
+                        symbolicNames.add(bundlesInstaller.getBundleSymbolicName(f));
+                    }
+                    bundlesInstaller.waitForBundlesInstalled(symbolicNames, 
+                            TimeoutsProvider.getInstance().getTimeout(BUNDLE_INSTALL_TIMEOUT_SECONDS, 10));
+                    bundlesInstaller.startAllBundles(symbolicNames,
+                            TimeoutsProvider.getInstance().getTimeout(START_BUNDLES_TIMEOUT_SECONDS, 30));
+                } catch(AssertionError ae) {
+                    log.info("Exception while installing additional bundles", ae);
+                    installBundlesFailed = true;
+                } catch(Exception e) {
+                    log.info("Exception while installing additional bundles", e);
+                    installBundlesFailed = true;
+                }
+                
+                if(installBundlesFailed) {
+                    fail("Could not start all installed bundles:" + toInstall);
+                }
+            }
+        }
+        
+        extraBundlesInstalled = !installBundlesFailed;
     }
     
     /** Start server if needed, and return a RequestBuilder that points to it */
@@ -215,29 +265,17 @@ public class SlingTestBase {
         }
     }
     
-    /** Install all bundles found under our additional bundles path */
-    protected void installExtraBundles() throws Exception {
-        if(extraBundlesInstalled) {
-            return;
-        }
-        extraBundlesInstalled = true;
-        
-        if(!serverStartedByThisClass) {
-            log.info("Server was not started here, additional bundles will not be installed");
-            return;
+    /** Get the list of additional bundles to install, as specified by path parameter */ 
+    protected List<File> getBundlesToInstall(String additionalBundlesPath) {
+        final List<File> result = new LinkedList<File>(); 
+        if(additionalBundlesPath == null) {
+            return result;
         }
         
-        final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
-        if(path == null) {
-            log.info("System property {} not set, additional bundles won't be installed", 
-                    ADDITONAL_BUNDLES_PATH);
-            return;
-        }
-        
-        final File dir = new File(path);
+        final File dir = new File(additionalBundlesPath);
         if(!dir.isDirectory() || !dir.canRead()) {
             log.info("Cannot read additional bundles directory {}, ignored", dir.getAbsolutePath());
-            return;
+            return result;
         }
         
         // Collect all filenames of candidate bundles
@@ -251,8 +289,7 @@ public class SlingTestBase {
             }
         }
         
-        // And install those that are specified by system properties, in order
-        int count = 0;
+        // We'll install those that are specified by system properties, in order
         final List<String> sortedPropertyKeys = new ArrayList<String>();
         for(Object key : System.getProperties().keySet()) {
             final String str = key.toString();
@@ -265,15 +302,14 @@ public class SlingTestBase {
             final String filenamePrefix = System.getProperty(key);
             for(String bundleFilename : bundleNames) {
                 if(bundleFilename.startsWith(filenamePrefix)) {
-                    webconsoleClient.installBundle(new File(dir, bundleFilename), true);
-                    count++;
+                    result.add(new File(dir, bundleFilename));
                 }
             }
         }
         
-        log.info("{} additional bundles installed from {}", count, dir.getAbsolutePath());
+        return result;
     }
- 
+    
     protected boolean isServerStartedByThisClass() {
         return serverStartedByThisClass;
     }
