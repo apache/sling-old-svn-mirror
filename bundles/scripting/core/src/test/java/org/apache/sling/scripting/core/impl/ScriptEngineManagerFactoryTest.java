@@ -88,7 +88,7 @@ public class ScriptEngineManagerFactoryTest {
     @Test
     public void checkNonNullManagerAfterActivate() throws Exception  {
         context.checking(new Expectations(){{
-            one(bundleCtx).registerService(with(equal("javax.script.ScriptEngineManager")), with(any(Object.class)), with(any(Dictionary.class)));
+            one(bundleCtx).registerService(with(equal(new String[] {"javax.script.ScriptEngineManager", "org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager"})), with(any(Object.class)), with(any(Dictionary.class)));
             will(returnValue(new MockServiceRegistration()));
         }});
 
@@ -101,7 +101,7 @@ public class ScriptEngineManagerFactoryTest {
     @Test
     public void checkAddingScriptBundle() throws Exception {
         context.checking(new Expectations(){{
-            exactly(2).of(bundleCtx).registerService(with(equal("javax.script.ScriptEngineManager")), with(any(Object.class)), with(any(Dictionary.class)));
+            exactly(2).of(bundleCtx).registerService(with(equal(new String[] {"javax.script.ScriptEngineManager", "org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager"})), with(any(Object.class)), with(any(Dictionary.class)));
             will(returnValue(new MockServiceRegistration()));
         }});
 

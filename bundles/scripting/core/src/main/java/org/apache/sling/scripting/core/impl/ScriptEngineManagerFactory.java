@@ -23,9 +23,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -44,6 +46,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -76,7 +79,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Set<Bundle> engineSpiBundles = new HashSet<Bundle>();
 
-    private final Set<ScriptEngineFactory> engineSpiServices = new HashSet<ScriptEngineFactory>();
+    private final Map<ScriptEngineFactory, Map<Object, Object>> engineSpiServices = new HashMap<ScriptEngineFactory, Map<Object, Object>>();
 
     private ServiceRegistration scriptEngineManagerRegistration;
 
@@ -106,15 +109,16 @@ public class ScriptEngineManagerFactory implements BundleListener {
         }
 
         // register script engines from registered services
-        for (final ScriptEngineFactory factory : this.engineSpiServices) {
-            extensions.addAll(registerFactory(tmp, factory));
+        for (final Map.Entry<ScriptEngineFactory, Map<Object, Object>> factory : this.engineSpiServices.entrySet()) {
+            extensions.addAll(registerFactory(tmp, factory.getKey(), factory.getValue()));
         }
 
         scriptEngineManager = tmp;
 
         if (bundleContext != null) {
             scriptEngineManagerRegistration = bundleContext.registerService(
-                ScriptEngineManager.class.getName(), scriptEngineManager,
+                new String[] { ScriptEngineManager.class.getName(), SlingScriptEngineManager.class.getName() },
+                scriptEngineManager,
                 new Hashtable<String, Object>());
         }
 
@@ -149,7 +153,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 	                try {
 	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
 	                    ScriptEngineFactory spi = clazz.newInstance();
-	                    registerFactory(mgr, spi);
+	                    registerFactory(mgr, spi, null);
 	                    extensions.addAll(spi.getExtensions());
 	                } catch (Throwable t) {
 	                    log.error("Cannot register ScriptEngineFactory " + line, t);
@@ -170,11 +174,11 @@ public class ScriptEngineManagerFactory implements BundleListener {
         return extensions;
     }
 
-    private Collection<?> registerFactory(final SlingScriptEngineManager mgr, final ScriptEngineFactory factory) {
+    private Collection<?> registerFactory(final SlingScriptEngineManager mgr, final ScriptEngineFactory factory, final Map<Object, Object> props) {
         log.info("Adding ScriptEngine {}, {} for language {}, {}", new Object[] { factory.getEngineName(), factory.getEngineVersion(),
                 factory.getLanguageName(), factory.getLanguageVersion() });
 
-        mgr.registerScriptEngineFactory(factory);
+        mgr.registerScriptEngineFactory(factory, props);
 
         return factory.getExtensions();
     }
@@ -251,21 +255,24 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
 
 
-    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
-        synchronized ( this ) {
-            this.engineSpiServices.add(scriptEngineFactory);
-            if ( this.scriptEngineManager != null ) {
-                this.scriptEngineManager = null;
-                this.refreshScriptEngineManager();
+    protected void bindScriptEngineFactory(ServiceReference ref) {
+        final ScriptEngineFactory scriptEngineFactory = (ScriptEngineFactory) bundleContext.getService(ref);
+        if (scriptEngineFactory != null) {
+            synchronized ( this ) {
+                this.engineSpiServices.put(scriptEngineFactory, getProperties(ref));
+                if ( this.scriptEngineManager != null ) {
+                    this.scriptEngineManager = null;
+                    this.refreshScriptEngineManager();
+                }
             }
+            // send event
+            postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
         }
-        // send event
-        postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
     }
 
     protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         synchronized ( this ) {
-            if ( this.engineSpiServices.remove(scriptEngineFactory) ) {
+            if ( this.engineSpiServices.remove(scriptEngineFactory) != null ) {
                 if ( this.scriptEngineManager != null ) {
                     this.scriptEngineManager = null;
                     this.refreshScriptEngineManager();
@@ -274,6 +281,14 @@ public class ScriptEngineManagerFactory implements BundleListener {
         }
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
+    }
+
+    private Map<Object, Object> getProperties(final ServiceReference ref) {
+        final Map<Object, Object> props = new HashMap<Object, Object>();
+        for (final String key : ref.getPropertyKeys()) {
+            props.put(key, ref.getProperty(key));
+        }
+        return props;
     }
 
     /**

@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -38,6 +37,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -100,7 +100,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      * The script engine manager.
      */
     @Reference
-    private ScriptEngineManager scriptEngineManager;
+    private SlingScriptEngineManager scriptEngineManager;
 
     // ---------- AdapterFactory -----------------------------------------------
 
@@ -213,12 +213,27 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     private Collection<BindingsValuesProvider> getBindingsValuesProviders(ScriptEngineFactory scriptEngineFactory) {
         final List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
         results.addAll(genericBindingsValuesProviders.values());
+
+        // we load the compatible language ones first so that the most specific
+        // overrides these
+        Map<Object, Object> factoryProps = scriptEngineManager.getProperties(scriptEngineFactory);
+        if (factoryProps != null) {
+            String[] compatibleLangs = PropertiesUtil.toStringArray(factoryProps.get("compatible.javax.script.name"), new String[0]);
+            for (final String name : compatibleLangs) {
+                final Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
+                if (langProviders != null) {
+                    results.addAll(langProviders.values());
+                }
+            }
+        }
+
         for (final String name : scriptEngineFactory.getNames()) {
             final Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
             if (langProviders != null) {
                 results.addAll(langProviders.values());
             }
         }
+
         return results;
     }
 
