@@ -18,18 +18,17 @@
  */
 package org.apache.sling.jcr.resource;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,12 +38,12 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +59,9 @@ public class JcrPropertyMap
 
     /** The underlying node. */
     private final Node node;
-
+    
     /** A cache for the properties. */
-    final Map<String, CacheEntry> cache;
+    final Map<String, JcrPropertyMapCacheEntry> cache;
 
     /** A cache for the values. */
     final Map<String, Object> valueCache;
@@ -88,7 +87,7 @@ public class JcrPropertyMap
      */
     public JcrPropertyMap(final Node node, final ClassLoader dynamicCL) {
         this.node = node;
-        this.cache = new LinkedHashMap<String, CacheEntry>();
+        this.cache = new LinkedHashMap<String, JcrPropertyMapCacheEntry>();
         this.valueCache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
         this.dynamicClassLoader = dynamicCL;
@@ -123,7 +122,7 @@ public class JcrPropertyMap
             return (T) get(key);
         }
 
-        CacheEntry entry = cache.get(key);
+        JcrPropertyMapCacheEntry entry = cache.get(key);
         if (entry == null) {
             entry = read(key);
         }
@@ -162,11 +161,11 @@ public class JcrPropertyMap
      */
     public Object get(final Object aKey) {
         final String key = checkKey(aKey.toString());
-        CacheEntry entry = cache.get(key);
+        JcrPropertyMapCacheEntry entry = cache.get(key);
         if (entry == null) {
             entry = read(key);
         }
-        final Object value = (entry == null ? null : entry.defaultValue);
+        final Object value = (entry == null ? null : entry.getDefaultValueOrNull());
         return value;
     }
 
@@ -205,7 +204,20 @@ public class JcrPropertyMap
      */
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
-        return valueCache.entrySet();
+        if (cache.size() == valueCache.size()) {
+            return valueCache.entrySet();
+        } else {
+            Set<Map.Entry<String, Object>> result = new LinkedHashSet<Map.Entry<String, Object>>(cache.size());
+            for (Map.Entry<String, JcrPropertyMapCacheEntry> entry : cache.entrySet()) {
+                try {
+                    Map.Entry<String, Object> newEntry = new AbstractMap.SimpleEntry<String, Object>(entry.getKey(), entry.getValue().getDefaultValue());
+                    result.add(newEntry);
+                } catch (RepositoryException e) {
+                    
+                }
+            }
+            return result;
+        }
     }
 
     /**
@@ -221,7 +233,18 @@ public class JcrPropertyMap
      */
     public Collection<Object> values() {
         readFully();
-        return valueCache.values();
+        if (cache.size() == valueCache.size()) {
+            return valueCache.values();
+        } else {
+            Set<Object> values = new LinkedHashSet<Object>(cache.size());
+            for (JcrPropertyMapCacheEntry entry : cache.values()) {
+                try {
+                    values.add(entry.getDefaultValue());
+                } catch (RepositoryException e) {
+                }
+            }
+            return values;
+        }
     }
 
     /**
@@ -241,7 +264,7 @@ public class JcrPropertyMap
 
     // ---------- Helpers to access the node's property ------------------------
 
-    CacheEntry read(final String key) {
+    JcrPropertyMapCacheEntry read(final String key) {
 
         // if the node has been completely read, we need not check
         // again if the key does not point to a sub node
@@ -254,9 +277,12 @@ public class JcrPropertyMap
         try {
             if (node.hasProperty(name)) {
                 final Property prop = node.getProperty(name);
-                final CacheEntry entry = new CacheEntry(prop);
+                final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(prop);
                 cache.put(key, entry);
-                valueCache.put(key, entry.defaultValue);
+                Object defaultValue = entry.getDefaultValue();
+                if (defaultValue != null) {
+                    valueCache.put(key, entry.getDefaultValue());
+                }
                 return entry;
             }
         } catch (RepositoryException re) {
@@ -276,9 +302,12 @@ public class JcrPropertyMap
                     final String name = prop.getName();
                     final String key = ISO9075.decode(name);
                     if (!cache.containsKey(key)) {
-                        final CacheEntry entry = new CacheEntry(prop);
+                        final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(prop);
                         cache.put(key, entry);
-                        valueCache.put(key, entry.defaultValue);
+                        Object defaultValue = entry.getDefaultValue();
+                        if (defaultValue != null) {
+                            valueCache.put(key, entry.getDefaultValue());
+                        }
                     }
                 }
                 fullyRead = true;
@@ -309,7 +338,7 @@ public class JcrPropertyMap
     // ---------- Implementation helper
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(final CacheEntry entry, Class<T> type) {
+    private <T> T convertToType(final JcrPropertyMapCacheEntry entry, Class<T> type) {
         T result = null;
 
         try {
@@ -343,17 +372,17 @@ public class JcrPropertyMap
             }
 
         } catch (ValueFormatException vfe) {
-            LOGGER.info("converToType: Cannot convert value of " + entry.defaultValue
+            LOGGER.info("converToType: Cannot convert value of " + entry.getDefaultValueOrNull()
                 + " to " + type, vfe);
         } catch (RepositoryException re) {
-            LOGGER.info("converToType: Cannot get value of " + entry.defaultValue, re);
+            LOGGER.info("converToType: Cannot get value of " + entry.getDefaultValueOrNull(), re);
         }
 
         // fall back to nothing
         return result;
     }
 
-    private <T> T[] convertToArray(final CacheEntry entry, Class<T> type)
+    private <T> T[] convertToArray(final JcrPropertyMapCacheEntry entry, Class<T> type)
     throws ValueFormatException, RepositoryException {
         List<T> values = new ArrayList<T>();
         for (int i = 0; i < entry.values.length; i++) {
@@ -370,13 +399,14 @@ public class JcrPropertyMap
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(final CacheEntry entry,
+    private <T> T convertToType(final JcrPropertyMapCacheEntry entry,
                                 final int index,
                                 final Value jcrValue,
                                 final Class<T> type)
     throws ValueFormatException, RepositoryException {
-        if ( type.isInstance(entry.defaultValue) ) {
-            return (T) entry.defaultValue;
+        Object defaultValue = entry.getDefaultValue();
+        if ( type.isInstance(defaultValue) ) {
+            return (T) defaultValue;
         }
 
         if (String.class == type) {
@@ -460,80 +490,6 @@ public class JcrPropertyMap
             type = Property.class;
         }
         return type;
-    }
-
-    static final class CacheEntry {
-        public final Property property;
-        public final boolean isMulti;
-        public final Value[] values;
-
-        public final Object defaultValue;
-
-        /**
-         * Create a value for the object.
-         * If the value type is supported directly through a jcr property type,
-         * the corresponding value is created. If the value is serializable,
-         * it is serialized through an object stream. Otherwise null is returned.
-         */
-        private Value createValue(final Object obj, final Session session)
-        throws RepositoryException {
-            Value value = JcrResourceUtil.createValue(obj, session);
-            if ( value == null && obj instanceof Serializable ) {
-                try {
-                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    final ObjectOutputStream oos = new ObjectOutputStream(baos);
-                    oos.writeObject(obj);
-                    oos.close();
-                    final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                    value = session.getValueFactory().createValue(bais);
-                } catch (IOException ioe) {
-                    // we ignore this here and return null
-                }
-            }
-            return value;
-        }
-
-        /**
-         * Create a new cache entry from a property.
-         */
-        public CacheEntry(final Property prop)
-        throws RepositoryException {
-            this.property = prop;
-            if ( prop.getDefinition().isMultiple() ) {
-                isMulti = true;
-                values = prop.getValues();
-            } else {
-                isMulti = false;
-                values = new Value[] {prop.getValue()};
-            }
-            this.defaultValue = JcrResourceUtil.toJavaObject(prop);
-        }
-
-        /**
-         * Create a new cache entry from a value.
-         */
-        public CacheEntry(final Object value, final Session session)
-        throws RepositoryException {
-            this.property = null;
-            this.defaultValue = value;
-            if ( value.getClass().isArray() ) {
-                this.isMulti = true;
-                final Object[] values = (Object[])value;
-                this.values = new Value[values.length];
-                for(int i=0; i<values.length; i++) {
-                    this.values[i] = this.createValue(values[i], session);
-                    if ( this.values[i] == null ) {
-                        throw new IllegalArgumentException("Value can't be stored in the repository: " + values[i]);
-                    }
-                }
-            } else {
-                this.isMulti = false;
-                this.values = new Value[] {this.createValue(value, session)};
-                if ( this.values[0] == null ) {
-                    throw new IllegalArgumentException("Value can't be stored in the repository: " + value);
-                }
-            }
-        }
     }
 
     /**

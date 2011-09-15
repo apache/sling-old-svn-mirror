@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -28,6 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
@@ -147,6 +150,26 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         // default value
         result = map.get(PROP_NAME_NIL, defaultValue);
         assertSame(defaultValue, result);
+    }
+    
+    public void testInputStream() throws Exception {
+        InputStream instream = new ByteArrayInputStream("this too shall pass".getBytes());
+        
+        ValueFactory valueFactory = rootNode.getSession().getValueFactory();
+
+        rootNode.setProperty("bin", valueFactory.createBinary(instream));
+        rootNode.getSession().save();
+        
+        ValueMap map = new JcrPropertyMap(rootNode);
+        instream = map.get("bin", InputStream.class);
+        assertNotNull(instream);
+        String read = IOUtils.toString(instream);
+        assertEquals("Stream read successfully", "this too shall pass", read);
+        
+        instream = map.get("bin", InputStream.class);
+        assertNotNull(instream);
+        read = IOUtils.toString(instream);
+        assertEquals("Stream read successfully a second time", "this too shall pass", read);
     }
 
     // ---------- internal
