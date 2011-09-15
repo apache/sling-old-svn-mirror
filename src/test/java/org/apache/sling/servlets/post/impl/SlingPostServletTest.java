@@ -68,7 +68,7 @@ public class SlingPostServletTest extends TestCase {
             }
         };
         SlingPostServlet servlet = new SlingPostServlet();
-        PostResponse result = servlet.createHtmlResponse(req);
+        PostResponse result = servlet.createPostResponse(req);
         assertTrue(result instanceof JSONResponse);
     }
 
