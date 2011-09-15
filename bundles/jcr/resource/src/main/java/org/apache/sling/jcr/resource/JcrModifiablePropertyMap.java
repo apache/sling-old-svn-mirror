@@ -31,6 +31,7 @@ import javax.jcr.nodetype.NodeType;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**
  * This implementation of the value map allows to change
@@ -90,7 +91,7 @@ public final class JcrModifiablePropertyMap
         readFully();
         final Object oldValue = this.get(key);
         try {
-            this.cache.put(key, new CacheEntry(value, getNode().getSession()));
+            this.cache.put(key, new JcrPropertyMapCacheEntry(value, getNode().getSession()));
         } catch (RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
@@ -187,7 +188,7 @@ public final class JcrModifiablePropertyMap
             final String mixinTypesKey = ISO9075.decode(MIXIN_TYPES);
             if ( this.changedProperties.contains(mixinTypesKey) ) {
                 if ( cache.containsKey(mixinTypesKey) ) {
-                    final CacheEntry entry = cache.get(mixinTypesKey);
+                    final JcrPropertyMapCacheEntry entry = cache.get(mixinTypesKey);
                     handleMixinTypes(node, entry.values);
                 } else {
                     // remove all mixin types!
@@ -199,7 +200,7 @@ public final class JcrModifiablePropertyMap
                 final String name = ISO9075.encodePath(key);
                 if ( !MIXIN_TYPES.equals(name) ) {
                     if ( cache.containsKey(key) ) {
-                        final CacheEntry entry = cache.get(key);
+                        final JcrPropertyMapCacheEntry entry = cache.get(key);
                         if ( entry.isMulti ) {
                             node.setProperty(name, entry.values);
                         } else {
