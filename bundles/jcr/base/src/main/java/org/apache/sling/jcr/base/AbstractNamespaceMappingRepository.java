@@ -68,11 +68,13 @@ public abstract class AbstractNamespaceMappingRepository implements SlingReposit
             localHandler.defineNamespacePrefixes(session);
         }
 
-        // call namespace mappers
-        final Object[] nsMappers = namespaceMapperTracker.getServices();
-        if (nsMappers != null) {
-            for (int i = 0; i < nsMappers.length; i++) {
-                ((NamespaceMapper) nsMappers[i]).defineNamespacePrefixes(session);
+        if (namespaceMapperTracker != null) {
+            // call namespace mappers
+            final Object[] nsMappers = namespaceMapperTracker.getServices();
+            if (nsMappers != null) {
+                for (int i = 0; i < nsMappers.length; i++) {
+                    ((NamespaceMapper) nsMappers[i]).defineNamespacePrefixes(session);
+                }
             }
         }
     }
