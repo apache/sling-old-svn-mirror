@@ -49,6 +49,7 @@ import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.PostResponse;
+import org.apache.sling.servlets.post.PostResponseCreator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
@@ -86,6 +87,7 @@ import org.slf4j.LoggerFactory;
     @Reference(name = "postProcessor", referenceInterface = SlingPostProcessor.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "postOperation", referenceInterface = PostOperation.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "nodeNameGenerator", referenceInterface = NodeNameGenerator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+    @Reference(name = "postResponseCreator", referenceInterface = PostResponseCreator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "contentImporter", referenceInterface = ContentImporter.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC) })
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -155,6 +157,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private NodeNameGenerator[] cachedNodeNameGenerators = new NodeNameGenerator[0];
 
+    private final List<ServiceReference> delayedPostResponseCreators = new ArrayList<ServiceReference>();
+
+    private final List<ServiceReference> postResponseCreators = new ArrayList<ServiceReference>();
+
+    private PostResponseCreator[] cachedPostResponseCreators = new PostResponseCreator[0];
+
     private ComponentContext componentContext;
 
     private ImportOperation importOperation;
@@ -174,7 +182,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         request.setAttribute(VersioningConfiguration.class.getName(), localVersioningConfig);
 
         // prepare the response
-        PostResponse htmlResponse = createHtmlResponse(request);
+        PostResponse htmlResponse = createPostResponse(request);
         htmlResponse.setReferer(request.getHeader("referer"));
 
         PostOperation operation = getSlingPostOperation(request);
@@ -218,7 +226,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     }
 
     /**
-     * Creates an instance of a HtmlResponse.
+     * Creates an instance of a PostResponse.
      * @param req The request being serviced
      * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
      * <ul>
@@ -226,9 +234,17 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      *   <li>the request is a JSON POST request (see SLING-1172)</li>
      *   <li>the request has a request parameter <code>:accept=application/json</code></li>
      * </ul>
-     * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
+     * or a {@link org.apache.sling.api.servlets.PostResponse} otherwise
      */
-     PostResponse createHtmlResponse(SlingHttpServletRequest req) {
+    PostResponse createPostResponse(SlingHttpServletRequest req) {
+        for (final PostResponseCreator creator : cachedPostResponseCreators) {
+            PostResponse response = creator.createPostResponse(req);
+            if (response != null) {
+                return response;
+            }
+        }
+
+        // Fall through to default behavior
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         MediaRangeList mediaRangeList = new MediaRangeList(req);
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE))) {
@@ -349,6 +365,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 this.registerNodeNameGenerator(ref);
             }
             this.delayedNodeNameGenerators.clear();
+        }
+
+        synchronized ( this.delayedPostResponseCreators ) {
+            for(final ServiceReference ref : this.delayedPostResponseCreators) {
+                this.registerPostResponseCreator(ref);
+            }
+            this.delayedPostResponseCreators.clear();
         }
 
         // default operation: create/modify
@@ -577,6 +600,53 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
         if (this.importOperation != null) {
         	this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+        }
+    }
+
+    protected void bindPostResponseCreator(ServiceReference ref) {
+        synchronized ( this.delayedPostResponseCreators ) {
+            if ( this.componentContext == null ) {
+                this.delayedPostResponseCreators.add(ref);
+            } else {
+                this.registerPostResponseCreator(ref);
+            }
+        }
+    }
+
+    protected void unbindPostResponseCreator(ServiceReference ref) {
+        synchronized ( this.delayedPostResponseCreators ) {
+            this.delayedPostResponseCreators.remove(ref);
+            this.postResponseCreators.remove(ref);
+        }
+    }
+
+    protected void registerPostResponseCreator(ServiceReference ref) {
+        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
+        int index = 0;
+        while ( index < this.postResponseCreators.size() &&
+            ranking < OsgiUtil.toInteger(this.postResponseCreators.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
+            index++;
+        }
+        if ( index == this.postResponseCreators.size() ) {
+            this.postResponseCreators.add(ref);
+        } else {
+            this.postResponseCreators.add(index, ref);
+        }
+        this.cachedPostResponseCreators = new PostResponseCreator[this.postResponseCreators.size()];
+        index = 0;
+        for(final ServiceReference current : this.postResponseCreators) {
+            final PostResponseCreator creator = (PostResponseCreator) this.componentContext.locateService("postResponseCreator", current);
+            if ( creator != null ) {
+                this.cachedPostResponseCreators[index] = creator;
+                index++;
+            }
+        }
+        if ( index < this.cachedPostResponseCreators.length ) {
+            PostResponseCreator[] oldArray = this.cachedPostResponseCreators;
+            this.cachedPostResponseCreators = new PostResponseCreator[index];
+            for(int i=0;i<index;i++) {
+                this.cachedPostResponseCreators[i] = oldArray[i];
+            }
         }
     }
 
