@@ -27,16 +27,16 @@
     </parent>
 
     <artifactId>sling-jcrinstall-bundle-archetype</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling JCRInstall Bundle Archetype</name>
     <description>Maven archetype for a generic OSGi bundle installed via JCR Install.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-jcrinstall-bundle-archetype-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-jcrinstall-bundle-archetype-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/sling-jcrinstall-bundle-archetype-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/bundle-for-jcrinstall</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/archetypes/bundle-for-jcrinstall</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/maven/archetypes/bundle-for-jcrinstall</url>
     </scm>
 
     <build>
