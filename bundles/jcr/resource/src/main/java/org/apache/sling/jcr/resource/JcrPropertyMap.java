@@ -22,10 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -45,6 +48,9 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 
 /**
  * An implementation of the value map based on a JCR node.
@@ -203,20 +209,13 @@ public class JcrPropertyMap
      */
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
+        final Map<String, Object> sourceMap;
         if (cache.size() == valueCache.size()) {
-            return valueCache.entrySet();
+            sourceMap = valueCache;
         } else {
-            Set<Map.Entry<String, Object>> result = new LinkedHashSet<Map.Entry<String, Object>>(cache.size());
-            for (Map.Entry<String, JcrPropertyMapCacheEntry> entry : cache.entrySet()) {
-                try {
-                    Map.Entry<String, Object> newEntry = new SimpleImmutableEntry<String, Object>(entry.getKey(), entry.getValue().getDefaultValue());
-                    result.add(newEntry);
-                } catch (RepositoryException e) {
-                    
-                }
-            }
-            return result;
+            sourceMap = Maps.transformEntries(cache, entryTransformer);
         }
+        return Collections.unmodifiableSet(sourceMap.entrySet());
     }
 
     /**
@@ -232,18 +231,13 @@ public class JcrPropertyMap
      */
     public Collection<Object> values() {
         readFully();
+        final Map<String, Object> sourceMap;
         if (cache.size() == valueCache.size()) {
-            return valueCache.values();
+            sourceMap = valueCache;
         } else {
-            Set<Object> values = new LinkedHashSet<Object>(cache.size());
-            for (JcrPropertyMapCacheEntry entry : cache.values()) {
-                try {
-                    values.add(entry.getDefaultValue());
-                } catch (RepositoryException e) {
-                }
-            }
-            return values;
+            sourceMap = Maps.transformEntries(cache, entryTransformer);
         }
+        return Collections.unmodifiableCollection(sourceMap.values());
     }
 
     /**
@@ -491,6 +485,13 @@ public class JcrPropertyMap
         return type;
     }
 
+    private static Maps.EntryTransformer<String, JcrPropertyMapCacheEntry, Object> entryTransformer = new Maps.EntryTransformer<String, JcrPropertyMapCacheEntry, Object>() {
+
+        public Object transformEntry(String key, JcrPropertyMapCacheEntry value) {
+            return value.getDefaultValueOrNull();
+        }
+    };
+
     /**
      * This is an extended version of the object input stream which uses the
      * thread context class loader.
@@ -513,87 +514,6 @@ public class JcrPropertyMap
                 return this.classloader.loadClass(classDesc.getName());
             }
             return super.resolveClass(classDesc);
-        }
-    }
-    
-    /**
-     * Adapted from edu.emory.mathcs.backport.java.util.AbstractMap.SimpleImmutableEntry
-     * which is public domain
-     */
-    private static class SimpleImmutableEntry<K,V> implements Entry<K, V> {
-        private final K key;
-        private final V value;
-
-        /**
-         * Creates an entry representing a mapping from the specified
-         * key to the specified value.
-         *
-         * @param key the key represented by this entry
-         * @param value the value represented by this entry
-         */
-        public SimpleImmutableEntry(K key, V value) {
-            this.key   = key;
-            this.value = value;
-        }
-
-        /**
-         * Returns the key corresponding to this entry.
-         *
-         * @return the key corresponding to this entry
-         */
-        public K getKey() {
-            return key;
-        }
-
-        /**
-         * Returns the value corresponding to this entry.
-         *
-         * @return the value corresponding to this entry
-         */
-        public V getValue() {
-            return value;
-        }
-
-        /**
-         * Replaces the value corresponding to this entry with the specified
-         * value (optional operation).  This implementation simply throws
-         * <tt>UnsupportedOperationException</tt>, as this class implements
-         * an <i>immutable</i> map entry.
-         *
-         * @param value new value to be stored in this entry
-         * @return (Does not return)
-         * @throws UnsupportedOperationException always
-         */
-        public V setValue(V value) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean equals(Object o) {
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
-            return eq(key, e.getKey()) && eq(value, e.getValue());
-        }
-
-        public int hashCode() {
-            return ((key   == null) ? 0 :   key.hashCode()) ^
-                   ((value == null) ? 0 : value.hashCode());
-        }
-
-        /**
-         * Returns a String representation of this map entry.  This
-         * implementation returns the string representation of this
-         * entry's key followed by the equals character ("<tt>=</tt>")
-         * followed by the string representation of this entry's value.
-         *
-         * @return a String representation of this map entry
-         */
-        public String toString() {
-            return key + "=" + value;
-        }
-
-        private static boolean eq(Object o1, Object o2) {
-            return (o1 == null ? o2 == null : o1.equals(o2));
         }
     }
 }

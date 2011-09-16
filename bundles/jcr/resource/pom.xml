@@ -84,7 +84,8 @@
                         <!-- Include URL support from Jackrabbit -->
                         <Embed-Dependency>
                             jackrabbit-classloader;inline="org/apache/jackrabbit/net/**|org/apache/jackrabbit/classloader/Util.*",
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*"
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*",
+                            guava;inline="com/google/common/collect/Maps*.*|com/google/common/base/Preconditions.*|com/google/common/primitives/Ints.*"
                         </Embed-Dependency>
 
                         <Sling-Namespaces>
@@ -172,6 +173,12 @@
            <groupId>commons-collections</groupId>
            <artifactId>commons-collections</artifactId>
            <version>3.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r09</version>
             <scope>provided</scope>
         </dependency>
 
