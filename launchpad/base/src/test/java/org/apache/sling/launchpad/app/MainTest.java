@@ -164,17 +164,38 @@ public class MainTest extends TestCase {
         Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
             {
                 put("j", "j");
-                put("start", "start");
-                put("stop", "stop");
-                put("status", "status");
             }
         });
         assertNotNull(props);
-        assertEquals(4, props.size());
+        assertEquals(1, props.size());
         assertEquals("j", props.get("j"));
-        assertEquals("start", props.get("start"));
-        assertEquals("stop", props.get("stop"));
-        assertEquals("status", props.get("status"));
+
+        Map<String, String> propsStart = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("start", "start");
+            }
+        });
+        assertNotNull(propsStart);
+        assertEquals(1, propsStart.size());
+        assertEquals("start", propsStart.get("sling.control.action"));
+
+        Map<String, String> propsStatus = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("status", "status");
+            }
+        });
+        assertNotNull(propsStatus);
+        assertEquals(1, propsStatus.size());
+        assertEquals("status", propsStatus.get("sling.control.action"));
+
+        Map<String, String> propsStop = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("stop", "stop");
+            }
+        });
+        assertNotNull(propsStop);
+        assertEquals(1, propsStop.size());
+        assertEquals("stop", propsStop.get("sling.control.action"));
     }
 
     public void test_converCommandLineArgs_l() {
