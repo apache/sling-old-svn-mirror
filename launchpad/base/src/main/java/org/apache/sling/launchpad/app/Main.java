@@ -289,7 +289,7 @@ public class Main {
         // The Loader helper
         Loader loaderTmp = null;
         try {
-            loaderTmp = new Loader(slingHomeFile) {
+            loaderTmp = new Loader(slingHome) {
                 @Override
                 protected void info(String msg) {
                     Main.info(msg, null);
