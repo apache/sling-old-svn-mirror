@@ -154,7 +154,7 @@ class ControlListener implements Runnable {
                     Main.info(s.getRemoteSocketAddress() + ">" + command, null);
 
                     if (COMMAND_STOP.equals(command)) {
-                        slingMain.shutdown();
+                        slingMain.doStop();
                         writeLine(s, RESPONSE_OK);
 
                         Main.info("Apache Sling shut down, exiting Java VM", null);
