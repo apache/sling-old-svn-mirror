@@ -659,7 +659,7 @@ public class Main {
                 }
             } else if ("start".equals(arg.getKey())
                 || "stop".equals(arg.getKey()) || "status".equals(arg.getKey())) {
-                props.put(arg.getKey(), arg.getValue());
+                props.put(PROP_CONTROL_ACTION, arg.getValue());
             } else {
                 errorArg(arg.getKey(), "Unrecognized option");
                 errorArg = true;
