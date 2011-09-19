@@ -250,7 +250,7 @@ public class Main {
             }
 
             try {
-                return ControlAction.valueOf(action.toString());
+                return ControlAction.valueOf(action.toString().toUpperCase());
             } catch (IllegalArgumentException iae) {
                 error("Illegal control action value: " + action, null);
             }
