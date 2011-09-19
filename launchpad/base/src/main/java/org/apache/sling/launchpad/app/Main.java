@@ -625,15 +625,6 @@ public class Main {
                         props.put(SharedConstants.SLING_HOME, value);
                         break;
 
-                    case 'i':
-                        if (value == arg.getKey()) {
-                            errorArg("-i", "Missing launchpad directory value");
-                            errorArg = true;
-                            continue;
-                        }
-                        props.put(SharedConstants.SLING_LAUNCHPAD, value);
-                        break;
-
                     case 'a':
                         if (value == arg.getKey()) {
                             errorArg("-a", "Missing address value");
