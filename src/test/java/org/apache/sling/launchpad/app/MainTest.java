@@ -166,9 +166,16 @@ public class MainTest extends TestCase {
                 put("j", "j");
             }
         });
-        assertNotNull(props);
-        assertEquals(1, props.size());
-        assertEquals("j", props.get("j"));
+        assertNull(props);
+
+        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("j", "host:port");
+            }
+        });
+        assertNotNull(props1);
+        assertEquals(1, props1.size());
+        assertEquals("host:port", props1.get("sling.control.socket"));
 
         Map<String, String> propsStart = Main.convertCommandLineArgs(new HashMap<String, String>() {
             {
