@@ -872,25 +872,6 @@ class BootstrapInstaller {
     };
 
     //---------- helper
-
-    private static int getStartLevel(Map<String, String> props) {
-        // check requested startlevel from the startup properties
-        final String startLevelS = props.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
-        if (startLevelS != null) {
-            try {
-                int startLevel = Integer.parseInt(startLevelS);
-                if (startLevel >= 1) {
-                    return startLevel;
-                }
-            } catch (NumberFormatException nfe) {
-                // don't care much
-            }
-        }
-
-        // fall back to default startlevel
-        return 1;
-    }
-
     /**
      * Simple check to see if a string is blank since
      * StringUtils is not available here, maybe fix this later
